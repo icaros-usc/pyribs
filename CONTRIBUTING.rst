@@ -1,11 +1,11 @@
-.. highlight:: shell
-
 ============
 Contributing
 ============
 
 Contributions are welcome, and they are greatly appreciated! Every little bit
 helps, and credit will always be given.
+
+.. contents ::
 
 You can contribute in many ways:
 
@@ -73,13 +73,22 @@ Ready to contribute? Here's how to set up `ribs` for local development.
     $ mkvirtualenv ribs
     $ cd ribs/
     $ python setup.py develop
-    $ pip install -r ./requirements_dev.txt
+    $ pip install -r requirements_dev.txt
 
 4. Create a branch for local development::
 
     $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
+
+   * Make sure to follow the `Google Style Guide
+     <https://google.github.io/styleguide/pyguide.html>`_ (particularly when
+     writing docstrings).
+   * Make sure to auto-format your code using YAPF. We highly recommend
+     installing a plugin to your editor that auto-formats on save, but you can
+     also run YAPF on the command line: ::
+
+       yapf -i FILES
 
 5. When you're done making changes, check that your changes pass flake8 and the
    tests, including testing other Python versions with tox::
@@ -110,6 +119,13 @@ Before you submit a pull request, check that it meets these guidelines:
 3. The pull request should work for Python 3.6, 3.7 and 3.8. Check
    https://travis-ci.com/icaros-usc/ribs/pull_requests and make sure that the
    tests pass for all supported Python versions.
+
+Style
+-----
+
+Code should follow the `Google Style Guide
+<https://google.github.io/styleguide/pyguide.html>`_ and be auto-formatted using
+`YAPF <https://github.com/google/yapf>`_.
 
 Tips
 ----
