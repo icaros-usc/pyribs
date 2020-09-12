@@ -10,6 +10,7 @@ yapf
 # Testing
 tox==3.14.0
 pytest==4.6.5
+pytest-cov==2.10.1
 pytest-runner==5.1
 
 # Documentation

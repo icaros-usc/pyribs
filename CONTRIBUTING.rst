@@ -68,11 +68,11 @@ Ready to contribute? Here's how to set up `ribs` for local development.
     $ # Or, if you do not have SSH set up:
     $ git clone https://github.com/your_name_here/pyribs.git
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
+3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development. You can also use a Conda environment if you would like.::
 
     $ mkvirtualenv ribs
     $ cd ribs/
-    $ python setup.py develop
+    $ pip install -e .
     $ pip install -r requirements_dev.txt
 
 4. Create a branch for local development::
@@ -95,7 +95,7 @@ Ready to contribute? Here's how to set up `ribs` for local development.
 
     $ flake8 ribs tests
     $ python setup.py test or pytest
-    $ tox
+    $ tox  # Don't worry if this does not run; we will run it in CI/CD
 
    To get flake8 and tox, just pip install them into your virtualenv.
 
