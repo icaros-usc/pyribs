@@ -90,14 +90,14 @@ Ready to contribute? Here's how to set up `ribs` for local development.
 
        yapf -i FILES
 
-5. When you're done making changes, check that your changes pass flake8 and the
+5. When you're done making changes, check that your changes pass pylint and the
    tests, including testing other Python versions with tox::
 
-    $ flake8 ribs tests
+    $ pylint ribs tests
     $ python setup.py test or pytest
     $ tox  # Don't worry if this does not run; we will run it in CI/CD
 
-   To get flake8 and tox, just pip install them into your virtualenv.
+   To get pylint, pylint, and tox, just pip install them into your virtualenv.
 
 6. Commit your changes and push your branch to GitHub::
 
