@@ -7,7 +7,7 @@ helps, and credit will always be given.
 
 .. contents ::
 
-You can contribute in many ways:
+You can contribute in many ways.
 
 Types of Contributions
 ----------------------
@@ -121,7 +121,7 @@ Before you submit a pull request, check that it meets these guidelines:
    tests pass for all supported Python versions.
 
 Style
------
+~~~~~
 
 Code should follow the `Google Style Guide
 <https://google.github.io/styleguide/pyguide.html>`_ and be auto-formatted using
@@ -130,10 +130,21 @@ Code should follow the `Google Style Guide
 Tips
 ----
 
+Running a Subset of Tests
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
 To run a subset of tests::
 
 $ pytest tests.test_ribs
 
+Previewing Individual reST files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To preview individual reST files outside of the documentation (such as
+CONTRIBUTING.rst and README.rst), install `restview
+<https://pypi.org/project/restview/>`_ and run::
+
+  restview FILE
 
 Deploying
 ---------
