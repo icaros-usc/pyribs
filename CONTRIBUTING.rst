@@ -1,5 +1,3 @@
-.. highlight:: shell
-
 ============
 Contributing
 ============
@@ -7,7 +5,9 @@ Contributing
 Contributions are welcome, and they are greatly appreciated! Every little bit
 helps, and credit will always be given.
 
-You can contribute in many ways:
+.. contents ::
+
+You can contribute in many ways.
 
 Types of Contributions
 ----------------------
@@ -68,12 +68,12 @@ Ready to contribute? Here's how to set up `ribs` for local development.
     $ # Or, if you do not have SSH set up:
     $ git clone https://github.com/your_name_here/pyribs.git
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
+3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development. You can also use a Conda environment if you would like.::
 
     $ mkvirtualenv ribs
     $ cd ribs/
-    $ python setup.py develop
-    $ pip install -r ./requirements_dev.txt
+    $ pip install -e .
+    $ pip install -r requirements_dev.txt
 
 4. Create a branch for local development::
 
@@ -81,14 +81,23 @@ Ready to contribute? Here's how to set up `ribs` for local development.
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the
+   * Make sure to follow the `Google Style Guide
+     <https://google.github.io/styleguide/pyguide.html>`_ (particularly when
+     writing docstrings).
+   * Make sure to auto-format your code using YAPF. We highly recommend
+     installing a plugin to your editor that auto-formats on save, but you can
+     also run YAPF on the command line: ::
+
+       yapf -i FILES
+
+5. When you're done making changes, check that your changes pass pylint and the
    tests, including testing other Python versions with tox::
 
-    $ flake8 ribs tests
+    $ pylint ribs tests
     $ python setup.py test or pytest
-    $ tox
+    $ tox  # Don't worry if this does not run; we will run it in CI/CD
 
-   To get flake8 and tox, just pip install them into your virtualenv.
+   To get pylint, pylint, and tox, just pip install them into your virtualenv.
 
 6. Commit your changes and push your branch to GitHub::
 
@@ -111,13 +120,32 @@ Before you submit a pull request, check that it meets these guidelines:
    https://travis-ci.com/icaros-usc/ribs/pull_requests and make sure that the
    tests pass for all supported Python versions.
 
+Style
+~~~~~
+
+Code should follow the `Google Style Guide
+<https://google.github.io/styleguide/pyguide.html>`_ and be auto-formatted using
+`YAPF <https://github.com/google/yapf>`_.
+
 Tips
 ----
+
+Running a Subset of Tests
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To run a subset of tests::
 
 $ pytest tests.test_ribs
 
+Previewing Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Preview documentation with::
+
+$ make servedocs
+
+This will open up a window in your browser, and as you make changes to the docs,
+the new pages will reload automatically.
 
 Deploying
 ---------

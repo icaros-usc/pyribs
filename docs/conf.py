@@ -77,13 +77,12 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-
 # -- Options for HTML output -------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a
 # theme further.  For a list of options available for each theme, see the
@@ -96,12 +95,10 @@ html_theme = 'alabaster'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-
 # -- Options for HTMLHelp output ---------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'ribsdoc'
-
 
 # -- Options for LaTeX output ------------------------------------------
 
@@ -127,22 +124,14 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass
 # [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ribs.tex',
-     'pyribs Documentation',
-     'ICAROS Lab', 'manual'),
+    (master_doc, 'ribs.tex', 'pyribs Documentation', 'ICAROS Lab', 'manual'),
 ]
-
 
 # -- Options for manual page output ------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'ribs',
-     'pyribs Documentation',
-     [author], 1)
-]
-
+man_pages = [(master_doc, 'ribs', 'pyribs Documentation', [author], 1)]
 
 # -- Options for Texinfo output ----------------------------------------
 
@@ -150,13 +139,6 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ribs',
-     'pyribs Documentation',
-     author,
-     'ribs',
-     'One line description of project.',
-     'Miscellaneous'),
+    (master_doc, 'ribs', 'pyribs Documentation', author, 'ribs',
+     'One line description of project.', 'Miscellaneous'),
 ]
-
-
-
