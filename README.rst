@@ -15,7 +15,7 @@ pyribs
 
 Bare-bones implementations of Quality Diversity algorithms.
 
-* Documentation: https://ribs.readthedocs.io.
+Documentation: https://ribs.readthedocs.io
 
 Installation
 ------------
@@ -43,8 +43,15 @@ Features
 Documentation
 -------------
 
-* TODO: Add instructions for loading up documentation
-* TODO: Add documentation link when public
+See here for the documentation: https://ribs.readthedocs.io
+
+To serve the documentation locally, clone the repo and run::
+
+$ make servedocs
+
+This will open up a window in your browser with the documentation automatically
+loaded. Furthermore, every time you make changes to the documentation, the
+preview will also reload.
 
 Contributors
 ------------
