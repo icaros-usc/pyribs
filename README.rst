@@ -46,11 +46,6 @@ Documentation
 * TODO: Add instructions for loading up documentation
 * TODO: Add documentation link when public
 
-Contributing
-------------
-
-See `CONTRIBUTING.rst <CONTRIBUTING.rst>`_.
-
 Contributors
 ------------
 
