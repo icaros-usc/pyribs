@@ -147,15 +147,6 @@ $ make servedocs
 This will open up a window in your browser, and as you make changes to the docs,
 the new pages will reload automatically.
 
-Previewing Individual reST files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To preview individual reST files outside of the documentation (such as
-CONTRIBUTING.rst and README.rst), install `restview
-<https://pypi.org/project/restview/>`_ and run::
-
-$ restview FILE
-
 Deploying
 ---------
 
