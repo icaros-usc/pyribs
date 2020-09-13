@@ -13,7 +13,7 @@ pyribs
         :alt: Documentation Status
 
 
-Bare-bones implementations of Quality Diversity algorithms.
+*Bare-bones* implementations of Quality Diversity algorithms, i.e. algorithms that provide *Rapid Illumination of Behavior Spaces (RIBS)*.
 
 Documentation: https://ribs.readthedocs.io
 
@@ -23,11 +23,13 @@ Installation
 pyribs supports Python 3.6 and greater. Earlier versions may work but are not
 officially supported.
 
-Clone this repo, and run ::
+To install from PyPI, run ::
+
+  pip install ribs
+
+To install a development version, clone this repo, and run ::
 
   pip install -e .
-
-TODO: Add PyPI installation when project is public
 
 To test your installation, run ::
 
@@ -49,7 +51,7 @@ To serve the documentation locally, clone the repo and run::
 
 $ make servedocs
 
-This will open up a window in your browser with the documentation automatically
+This will open a window in your browser with the documentation automatically
 loaded. Furthermore, every time you make changes to the documentation, the
 preview will also reload.
 
@@ -58,8 +60,8 @@ Contributors
 
 This project was completed in the `ICAROS Lab <http://icaros.usc.edu>`_ at USC.
 
-* `Matt Fontaine <https://github.com/tehqin>`_
 * `Bryon Tjanaka <https://btjanaka.net>`_
+* `Matt Fontaine <https://github.com/tehqin>`_
 * `Sam Sommerer <https://github.com/sam-som-usc>`_
 * `Stefanos Nikolaidis <https://stefanosnikolaidis.net>`_
 
