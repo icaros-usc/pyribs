@@ -27,7 +27,7 @@ To install from PyPI, run ::
 
   pip install ribs
 
-To install a development version, clone this repo, and run ::
+To install a development version, clone this repo, cd into it, and run ::
 
   pip install -e .
 
