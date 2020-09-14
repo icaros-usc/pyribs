@@ -6,10 +6,6 @@ labels: enhancement
 assignees:
 ---
 
-- Pick Me version:
-- Python version:
-- Operating System:
-
 ### Description
 
 <!--
