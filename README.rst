@@ -5,8 +5,8 @@ pyribs
 .. image:: https://img.shields.io/pypi/v/ribs.svg
         :target: https://pypi.python.org/pypi/ribs
 
-.. .. image:: https://img.shields.io/travis/icaros-usc/ribs.svg
-..         :target: https://travis-ci.com/icaros-usc/ribs
+.. image:: https://github.com/icaros-usc/pyribs/workflows/.github/workflows/testing.yml/badge.svg
+        :target: https://github.com/icaros-usc/pyribs/actions
 
 .. image:: https://readthedocs.org/projects/ribs/badge/?version=latest
         :target: https://ribs.readthedocs.io/en/latest/?badge=latest
