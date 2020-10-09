@@ -12,6 +12,7 @@ class GaussianEmitter:
     def ask(self):
 
         if self.archive.is_empty():
+            # Use x0 only on the first iteration in the Gaussian Emitter.
             parents = [self.x0]
         else:
             parents = [

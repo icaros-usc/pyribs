@@ -1,5 +1,6 @@
-import numpy as np
 from random import choice
+
+import numpy as np
 
 
 class GridArchive:
@@ -14,6 +15,8 @@ class GridArchive:
         self.interval_size = self.upper_bounds - self.lower_bounds
 
     def _get_index(self, behavior_values):
+        # epsilon = 1e-9 accounts for floating point precision errors that
+        # happen from transforming the behavior values into grid coordinates.
         behavior_values = np.clip(behavior_values + 1e-9, self.lower_bounds,
                                   self.upper_bounds)
         index = ((behavior_values - self.lower_bounds) \
@@ -37,5 +40,5 @@ class GridArchive:
         return self.grid[index]
 
     # index0, index1, ..., indexd-1, bv0, bv1, ..., bvd-1, f, solution
-    def as_pandas():
+    def as_pandas(self):
         pass

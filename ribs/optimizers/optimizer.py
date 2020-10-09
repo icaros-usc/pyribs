@@ -1,6 +1,7 @@
+import numpy as np
+
 from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
-import numpy as np
 
 
 class Optimizer:
