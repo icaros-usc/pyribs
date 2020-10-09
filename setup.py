@@ -9,7 +9,9 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = []
+requirements = [
+    'numpy==1.19.2',
+]
 
 setup_requirements = [
     'pytest-runner',
@@ -32,7 +34,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
-    description="Bare-bones implementations of Quality Diversity algorithms.",
+    description="A bare-bones quality diversity optimization library.",
     install_requires=requirements,
     license="MIT license",
     long_description=readme + '\n\n' + history,

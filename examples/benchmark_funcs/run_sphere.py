@@ -9,4 +9,6 @@ if __name__ == '__main__':
         objs = [sum(s) for s in sols]
         bcs = [(s[0], s[1]) for s in sols]
 
+        print(sols)
+
         opt.tell(sols, objs, bcs)
