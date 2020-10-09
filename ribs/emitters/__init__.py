@@ -1,4 +1,4 @@
-from ribs.emitters.gaussian_emitter import GaussianEmitter
+from ribs.emitters._gaussian_emitter import GaussianEmitter
 
 __all__ = [
     "GaussianEmitter",
