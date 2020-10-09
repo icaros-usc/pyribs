@@ -20,6 +20,9 @@ class GridArchive:
                 / self.interval_size) * self.dims
         return tuple(index.astype(int))
 
+    def is_empty(self):
+        return not self.grid
+
     def add(self, solution, objective_value, behavior_values):
         index = self._get_index(behavior_values)
         print(behavior_values, index)

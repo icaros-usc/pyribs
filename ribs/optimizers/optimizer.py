@@ -14,23 +14,16 @@ class Optimizer:
         self.last_batch = None
 
         self.emitters = [
-            GaussianEmitter(self.sigma0, batch_size, self.archive)
+            GaussianEmitter(self.x0, self.sigma0, batch_size, self.archive)
             for _ in range(2)
         ]
 
     def ask(self):
-        self.num_iters += 1
 
-        if self.num_iters == 1:
-            return np.random.normal(loc=self.x0,
-                                    scale=self.sigma0,
-                                    size=(self.batch_size * len(self.emitters),
-                                          len(self.x0)))
-        else:
-            solutions = []
-            for emitter in self.emitters:
-                solutions.append(emitter.ask())
-            return np.concatenate(solutions)
+        solutions = []
+        for emitter in self.emitters:
+            solutions.append(emitter.ask())
+        return np.concatenate(solutions)
 
     def tell(self, solutions, objective_values, behavior_values):
 
