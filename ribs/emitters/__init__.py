@@ -1,0 +1,1 @@
+from ribs.emitters.gaussian_emitter import GaussianEmitter

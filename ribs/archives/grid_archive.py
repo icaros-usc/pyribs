@@ -1,4 +1,5 @@
 import numpy as np
+from random import choice
 
 
 class GridArchive:
@@ -23,10 +24,14 @@ class GridArchive:
         index = self._get_index(behavior_values)
         print(behavior_values, index)
 
-        if index in self.grid:
+        if index not in self.grid or self.grid[index][1] < objective_value:
             self.grid[index] = (solution, objective_value)
             return True
         return False
+
+    def get_random_elite(self):
+        index = choice(list(self.grid))
+        return self.grid[index]
 
     # index0, index1, ..., indexd-1, bv0, bv1, ..., bvd-1, f, solution
     def as_pandas():

@@ -1,4 +1,5 @@
 from ribs.archives import GridArchive
+from ribs.emitters import GaussianEmitter
 import numpy as np
 
 
@@ -12,17 +13,24 @@ class Optimizer:
         self.num_iters = 0
         self.last_batch = None
 
+        self.emitters = [
+            GaussianEmitter(self.sigma0, batch_size, self.archive)
+            for _ in range(2)
+        ]
+
     def ask(self):
         self.num_iters += 1
 
         if self.num_iters == 1:
             return np.random.normal(loc=self.x0,
                                     scale=self.sigma0,
-                                    size=(self.batch_size, len(self.x0)))
+                                    size=(self.batch_size * len(self.emitters),
+                                          len(self.x0)))
         else:
-            return np.random.normal(loc=self.x0,
-                                    scale=self.sigma0,
-                                    size=(self.batch_size, len(self.x0)))
+            solutions = []
+            for emitter in self.emitters:
+                solutions.append(emitter.ask())
+            return np.concatenate(solutions)
 
     def tell(self, solutions, objective_values, behavior_values):
 
@@ -30,5 +38,9 @@ class Optimizer:
         objective_values = np.array(objective_values)
         behavior_values = np.array(behavior_values)
 
-        for sol, obj, beh in zip(solutions, objective_values, behavior_values):
-            self.archive.add(sol, obj, beh)
+        pos = 0
+        for emitter in self.emitters:
+            end = pos + emitter.batch_size
+            emitter.tell(solutions[pos:end], objective_values[pos:end],
+                         behavior_values[pos:end])
+            pos = end
