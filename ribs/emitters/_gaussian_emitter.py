@@ -13,7 +13,7 @@ class GaussianEmitter:
 
         if self.archive.is_empty():
             # Use x0 only on the first iteration in the Gaussian Emitter.
-            parents = [self.x0]
+            parents = np.expand_dims(self.x0, axis=0)
         else:
             parents = [
                 self.archive.get_random_elite()[0]
