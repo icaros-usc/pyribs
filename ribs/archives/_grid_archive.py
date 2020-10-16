@@ -1,6 +1,7 @@
 from random import choice
 
 import numpy as np
+import pandas as pd
 
 
 class GridArchive:
@@ -28,10 +29,9 @@ class GridArchive:
 
     def add(self, solution, objective_value, behavior_values):
         index = self._get_index(behavior_values)
-        print(behavior_values, index)
 
-        if index not in self.grid or self.grid[index][1] < objective_value:
-            self.grid[index] = (solution, objective_value)
+        if index not in self.grid or self.grid[index][0] < objective_value:
+            self.grid[index] = (objective_value, behavior_values, solution)
             return True
         return False
 
@@ -41,4 +41,18 @@ class GridArchive:
 
     # index0, index1, ..., indexd-1, bv0, bv1, ..., bvd-1, f, solution
     def as_pandas(self):
-        pass
+        num_dims = len(self.dims)
+        column_titles = ['index-{}'.format(i) for i in range(num_dims)]
+        column_titles += ['behavior-{}'.format(i) for i in range(num_dims)]
+        column_titles += ['objective', 'solution']
+
+        rows = []
+        for index in self.grid:
+            solution = self.grid[index]
+            row = list(index)
+            row += list(solution[1])
+            row.append(solution[0])
+            row.append(solution[2])
+            rows.append(row)
+
+        return pd.DataFrame(rows, columns=column_titles)

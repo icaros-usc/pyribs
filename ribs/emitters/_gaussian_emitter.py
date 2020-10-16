@@ -16,7 +16,7 @@ class GaussianEmitter:
             parents = np.expand_dims(self.x0, axis=0)
         else:
             parents = [
-                self.archive.get_random_elite()[0]
+                self.archive.get_random_elite()[2]
                 for _ in range(self.batch_size)
             ]
 

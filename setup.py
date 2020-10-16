@@ -11,6 +11,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'numpy>=1.17.0',  # Mainly because of default_rng.
+    'pandas>=1.0.0',
 ]
 
 setup_requirements = [

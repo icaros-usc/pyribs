@@ -1,22 +1,20 @@
 import numpy as np
 
-from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
 
 
 class Optimizer:
 
-    def __init__(self, x0, sigma0, batch_size):
-        self.archive = GridArchive((100, 100), [(-4, 4), (-4, 4)])
+    def __init__(self, x0, sigma0, batch_size, archive):
+        self.archive = archive
         self.x0 = np.array(x0)
         self.sigma0 = sigma0
-        self.batch_size = batch_size
         self.num_iters = 0
         self.last_batch = None
 
         self.emitters = [
             GaussianEmitter(self.x0, self.sigma0, batch_size, self.archive)
-            for _ in range(2)
+            for _ in range(1)
         ]
 
     def ask(self):
