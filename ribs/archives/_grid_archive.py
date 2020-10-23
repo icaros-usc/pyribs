@@ -110,7 +110,7 @@ class GridArchive:
         return self._grid[index]
 
     def as_pandas(self):
-        """Convert the archive into a Pandas dataframe.
+        """Converts the archive into a Pandas dataframe.
 
         Returns:
             A dataframe where each row is an entry in the archive. The dataframe
