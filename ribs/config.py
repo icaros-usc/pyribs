@@ -5,6 +5,9 @@ __all__ = [
     "update",
 ]
 
+# TODO: Print out this config on some page.
+
+#: Default configuration.
 DEFAULT_CONFIG = {
     # This is a comment.
     "option1": 2.0,
