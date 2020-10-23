@@ -12,6 +12,6 @@ pytest-cov==2.10.1
 pytest-runner==5.1
 
 # Documentation
-Sphinx==1.8.5
+Sphinx==3.2.1
 sphinx-book-theme==0.0.37
-watchdog==0.9.0
+sphinx-autobuild==2020.9.1
