@@ -4,7 +4,7 @@ import pytest
 
 from ribs.archives import GridArchive
 
-# pylint: disable=invalid-name
+# pylint: disable = invalid-name
 
 
 @pytest.fixture

@@ -1,1 +1,1 @@
-"""Unit test package for ribs."""
+"""Test and benchmark package for ribs."""
