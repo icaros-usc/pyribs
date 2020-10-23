@@ -162,3 +162,9 @@ texinfo_documents = [
     (master_doc, 'ribs', 'pyribs Documentation', author, 'ribs',
      'One line description of project.', 'Miscellaneous'),
 ]
+
+# -- Extension config -------------------------------------------------
+
+autodoc_default_options = {
+    "member-order": "bysource",
+}

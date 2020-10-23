@@ -1,22 +1,20 @@
 ribs package
 ============
 
-Submodules
-----------
+Subpackages
+-----------
 
-ribs.ribs module
-----------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: ribs.ribs
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   ribs.archives
+   ribs.emitters
+   ribs.optimizers
 
 Module contents
 ---------------
 
 .. automodule:: ribs
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
