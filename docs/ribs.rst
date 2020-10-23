@@ -11,6 +11,17 @@ Subpackages
    ribs.emitters
    ribs.optimizers
 
+Submodules
+----------
+
+ribs.config module
+------------------
+
+.. automodule:: ribs.config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
