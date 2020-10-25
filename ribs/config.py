@@ -6,8 +6,6 @@ __all__ = [
     "merge_with_default_config",
 ]
 
-# TODO: Print out this config on some page.
-
 #: Default configuration.
 DEFAULT_CONFIG = {
     # (int) The size of each batch.

@@ -6,8 +6,8 @@ from ribs.optimizers import Optimizer
 
 if __name__ == '__main__':
 
-    archive = GridArchive((100, 100), [(-4, 4), (-4, 4)])
-    opt = Optimizer([0.0] * 10, 0.1, 4, archive)
+    archive = GridArchive((100, 100), [(-4, 4), (-4, 4)], config={"seed": 42})
+    opt = Optimizer([0.0] * 10, 0.1, archive, config={"batch_size": 4})
 
     for i in range(10**5):
         sols = opt.ask()

@@ -1,13 +1,15 @@
 import numpy as np
 
+from ribs.config import DEFAULT_CONFIG
+
 
 class GaussianEmitter:
 
-    def __init__(self, x0, sigma0, batch_size, archive):
+    def __init__(self, x0, sigma0, archive, config=DEFAULT_CONFIG):
         self.x0 = x0
         self.sigma0 = sigma0
         self.archive = archive
-        self.batch_size = batch_size
+        self.batch_size = config["batch_size"]
 
     def ask(self):
 
@@ -16,7 +18,7 @@ class GaussianEmitter:
             parents = np.expand_dims(self.x0, axis=0)
         else:
             parents = [
-                self.archive.get_random_elite()[2]
+                self.archive.get_random_elite().solution
                 for _ in range(self.batch_size)
             ]
 
