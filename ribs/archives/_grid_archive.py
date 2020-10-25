@@ -36,12 +36,25 @@ class GridArchive:
 
     def __init__(self, dims, ranges):
         self.dims = np.array(dims)
-        self._grid = dict()
-
         ranges = list(zip(*ranges))
         self.lower_bounds = np.array(ranges[0])
         self.upper_bounds = np.array(ranges[1])
         self.interval_size = self.upper_bounds - self.lower_bounds
+
+        # Create components of the grid. We separate the components so that they
+        # each be efficiently represented as a numpy array.
+
+        self._initialized = np.zeros(self.dims, dtype=bool)
+        self._objective_values = np.empty(self.dims, dtype=float)
+
+        # Stores a behavior value at each index.
+        self._behavior_values = np.empty(list(self.dims) + [len(self.dims)],
+                                         dtype=float)
+        self._solutions = np.full(self.dims, None, dtype=object)
+
+        # Having a list of occupied indices allows us to efficiently choose
+        # random elites.
+        self._occupied_indices = []
 
     def _get_index(self, behavior_values):
         """Returns a tuple of archive indices for the given behavior values.
@@ -49,10 +62,13 @@ class GridArchive:
         If the behavior values are outside the dimensions of the container, they
         are clipped.
         """
-        # epsilon = 1e-9 accounts for floating point precision errors that
-        # happen from transforming the behavior values into grid coordinates.
-        behavior_values = np.clip(behavior_values + 1e-9, self.lower_bounds,
-                                  self.upper_bounds)
+        # Adding epsilon to behavior values accounts for floating point
+        # precision errors from transforming behavior values. Subtracting
+        # epsilon from upper bounds makes sure we do not have indices outside
+        # the grid.
+        epsilon = 1e-9
+        behavior_values = np.clip(behavior_values + epsilon, self.lower_bounds,
+                                  self.upper_bounds - epsilon)
         index = ((behavior_values - self.lower_bounds) \
                 / self.interval_size) * self.dims
         return tuple(index.astype(int))
@@ -74,10 +90,20 @@ class GridArchive:
         """
         index = self._get_index(behavior_values)
 
-        if index not in self._grid or self._grid[index][0] < objective_value:
-            self._grid[index] = Individual(objective_value, behavior_values,
-                                           solution)
+        if (not self._initialized[index] or
+                self._objective_values[index] < objective_value):
+            # Insert into the archive.
+            self._objective_values[index] = objective_value
+            self._behavior_values[index] = behavior_values
+            self._solutions[index] = solution
+
+            # Track this index if it has not been seen before.
+            if not self._initialized[index]:
+                self._initialized[index] = True
+                self._occupied_indices.append(index)
+
             return True
+
         return False
 
     def is_empty(self):
@@ -86,7 +112,7 @@ class GridArchive:
         Returns:
             True if the archive is empty, False otherwise.
         """
-        return not self._grid
+        return not self._occupied_indices
 
     def get_random_elite(self):
         """Select a random elite from one of the archive's bins.
@@ -96,11 +122,15 @@ class GridArchive:
         Raises:
             IndexError: The archive is empty.
         """
-        if len(self._grid) == 0:
+        if len(self._occupied_indices) == 0:
             raise IndexError("No elements in archive.")
 
-        index = choice(list(self._grid))
-        return self._grid[index]
+        index = choice(self._occupied_indices)
+        return Individual(
+            self._objective_values[index],
+            self._behavior_values[index],
+            self._solutions[index],
+        )
 
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.
@@ -118,12 +148,11 @@ class GridArchive:
         column_titles += ['objective', 'solution']
 
         rows = []
-        for index in self._grid:
-            solution = self._grid[index]
+        for index in self._occupied_indices:
             row = list(index)
-            row += list(solution[1])
-            row.append(solution[0])
-            row.append(solution[2])
+            row += list(self._behavior_values[index])
+            row.append(self._objective_values[index])
+            row.append(self._solutions[index])
             rows.append(row)
 
         return pd.DataFrame(rows, columns=column_titles)

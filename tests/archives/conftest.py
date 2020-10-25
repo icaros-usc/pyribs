@@ -6,7 +6,7 @@ from ribs.archives import GridArchive
 
 
 @pytest.fixture
-def benchmark_data():
+def benchmark_data_100k():
     """Provides a set of standardized benchmark data.
 
     Includes:

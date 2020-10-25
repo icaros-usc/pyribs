@@ -7,19 +7,6 @@ from ribs.archives import GridArchive
 # pylint: disable = invalid-name
 
 
-def _assert_archive_has_entry(archive, indices, behavior_values,
-                              objective_value, solution):
-    """Assert that the archive has one specific entry."""
-    archive_data = archive.as_pandas()
-    assert len(archive_data) == 1
-    assert (archive_data.iloc[0][:-1] == (list(indices) +
-                                          list(behavior_values) +
-                                          [objective_value])).all()
-    archive_sol = archive_data.iloc[0][-1]
-    assert archive_sol.shape == solution.shape
-    assert np.all(archive_sol == solution)
-
-
 @pytest.fixture
 def _archive_fixture():
     """Returns a simple 2D archive."""
@@ -36,6 +23,19 @@ def _archive_fixture():
             objective_value)
 
 
+def _assert_archive_has_entry(archive, indices, behavior_values,
+                              objective_value, solution):
+    """Assert that the archive has one specific entry."""
+    archive_data = archive.as_pandas()
+    assert len(archive_data) == 1
+    assert (archive_data.iloc[0][:-1] == (list(indices) +
+                                          list(behavior_values) +
+                                          [objective_value])).all()
+    archive_sol = archive_data.iloc[0][-1]
+    assert archive_sol.shape == solution.shape
+    assert np.all(archive_sol == solution)
+
+
 def test_attributes_correctly_constructed(_archive_fixture):
     archive, *_ = _archive_fixture
 
@@ -50,6 +50,26 @@ def test_add_to_archive(_archive_fixture):
      objective_value) = _archive_fixture
 
     _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
+                              objective_value, solution)
+
+
+def test_add_with_low_behavior_val(_archive_fixture):
+    archive, *_, solution, objective_value = _archive_fixture
+    behavior_values = np.array([-2, -3])
+    indices = (0, 0)
+    archive.add(solution, objective_value, behavior_values)
+
+    _assert_archive_has_entry(archive, indices, behavior_values,
+                              objective_value, solution)
+
+
+def test_add_with_high_behavior_val(_archive_fixture):
+    archive, *_, solution, objective_value = _archive_fixture
+    behavior_values = np.array([2, 3])
+    indices = (9, 19)
+    archive.add(solution, objective_value, behavior_values)
+
+    _assert_archive_has_entry(archive, indices, behavior_values,
                               objective_value, solution)
 
 
