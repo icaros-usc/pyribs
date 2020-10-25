@@ -4,6 +4,8 @@ from random import choice
 import numpy as np
 import pandas as pd
 
+from ribs.archives._individual import Individual
+
 
 class GridArchive:
     """An archive that divides each dimension into a fixed number of bins.
@@ -11,14 +13,16 @@ class GridArchive:
     This archive is the container described in the original MAP-Elites paper:
     https://arxiv.org/pdf/1504.04909.pdf. It can be visualized as an
     n-dimensional grid in the behavior space that is divided into a certain
-    number of bins in each dimension.
+    number of bins in each dimension. Each bin contains an elite, i.e. a
+    solution that `maximizes` the objective function for the behavior values in
+    that bin.
 
     Args:
         dims (array-like): Number of bins in each dimension of the behavior
             space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions
             with 20, 30, and 40 bins. (The number of dimensions is implicitly
             defined in the length of this argument).
-        ranges (array-like of array-like): Upper and lower bound of each
+        ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``.
@@ -71,20 +75,10 @@ class GridArchive:
         index = self._get_index(behavior_values)
 
         if index not in self._grid or self._grid[index][0] < objective_value:
-            self._grid[index] = (objective_value, behavior_values, solution)
+            self._grid[index] = Individual(objective_value, behavior_values,
+                                           solution)
             return True
         return False
-
-    def get(self, index):
-        """Returns the entry at the given index in the archive.
-
-        Args:
-            index (tuple): Tuple of bin indices in the archive.
-        Returns:
-            None if there is no entry, otherwise the elite in that bin.
-        """
-        # TODO: document what exactly is in this elite.
-        return self._grid[index]
 
     def is_empty(self):
         """Checks if the archive has no elements in it.
@@ -98,7 +92,7 @@ class GridArchive:
         """Select a random elite from one of the archive's bins.
 
         Returns:
-            An elite from the archive, chosen uniformly at random.
+            (Individual) An elite from the archive, chosen uniformly at random.
         Raises:
             IndexError: The archive is empty.
         """
@@ -106,14 +100,13 @@ class GridArchive:
             raise IndexError("No elements in archive.")
 
         index = choice(list(self._grid))
-        # TODO: document what exactly is in this elite.
         return self._grid[index]
 
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.
 
         Returns:
-            A dataframe where each row is an entry in the archive. The dataframe
+            A dataframe where each row is an elite in the archive. The dataframe
             has `n_dims` columns called ``index-{i}`` for the archive index,
             `n_dims` columns called ``behavior-{i}`` for the behavior values, 1
             column for the objective function value called ``objective``, and 1

@@ -7,6 +7,19 @@ from ribs.archives import GridArchive
 # pylint: disable = invalid-name
 
 
+def _assert_archive_has_entry(archive, indices, behavior_values,
+                              objective_value, solution):
+    """Assert that the archive has one specific entry."""
+    archive_data = archive.as_pandas()
+    assert len(archive_data) == 1
+    assert (archive_data.iloc[0][:-1] == (list(indices) +
+                                          list(behavior_values) +
+                                          [objective_value])).all()
+    archive_sol = archive_data.iloc[0][-1]
+    assert archive_sol.shape == solution.shape
+    assert np.all(archive_sol == solution)
+
+
 @pytest.fixture
 def _archive_fixture():
     """Returns a simple 2D archive."""
@@ -36,11 +49,8 @@ def test_add_to_archive(_archive_fixture):
     (_, archive_with_entry, behavior_values, indices, solution,
      objective_value) = _archive_fixture
 
-    retrieved = archive_with_entry.get(indices)
-    assert retrieved is not None
-    assert retrieved[0] == objective_value
-    assert np.all(retrieved[1] == behavior_values)
-    assert np.all(retrieved[2] == solution)
+    _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
+                              objective_value, solution)
 
 
 def test_add_and_overwrite(_archive_fixture):
@@ -53,11 +63,9 @@ def test_add_and_overwrite(_archive_fixture):
 
     assert archive_with_entry.add(new_solution, new_objective_value,
                                   behavior_values)
-    retrieved = archive_with_entry.get(indices)
-    assert retrieved is not None
-    assert retrieved[0] == new_objective_value
-    assert np.all(retrieved[1] == behavior_values)
-    assert np.all(retrieved[2] == new_solution)
+
+    _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
+                              new_objective_value, new_solution)
 
 
 def test_add_without_overwrite(_archive_fixture):
@@ -70,11 +78,9 @@ def test_add_without_overwrite(_archive_fixture):
 
     assert not archive_with_entry.add(new_solution, new_objective_value,
                                       behavior_values)
-    retrieved = archive_with_entry.get(indices)
-    assert retrieved is not None
-    assert retrieved[0] == objective_value
-    assert np.all(retrieved[1] == behavior_values)
-    assert np.all(retrieved[2] == solution)
+
+    _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
+                              objective_value, solution)
 
 
 def test_new_archive_is_empty(_archive_fixture):
