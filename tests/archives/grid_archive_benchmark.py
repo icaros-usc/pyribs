@@ -1,21 +1,16 @@
-"""Tests for the GridArchive."""
-import numpy as np
-
-from ribs.archives import GridArchive
+"""Benchmarks for the GridArchive."""
 
 # pylint: disable = invalid-name, unused-variable, missing-function-docstring
 
+from ribs.archives import GridArchive
 
-def benchmark_add_hundred_thousand_entries(benchmark):
-    itrs = int(1e5)
 
-    solutions = np.random.uniform(-1, 1, (itrs, 2))
-    objective_values = np.random.uniform(-10, 10, itrs)
-    behavior_values = solutions
+def benchmark_add_hundred_thousand_entries(benchmark, benchmark_data):
+    n, solutions, objective_values, behavior_values = benchmark_data
 
     @benchmark
     def insert_hundred_thousand_entries():
-        archive = GridArchive([64, 64], [(-1, 1), (-1, 1)])
+        archive = GridArchive((64, 64), [(-1, 1), (-1, 1)])
         assert archive.is_empty()
-        for i in range(itrs):
+        for i in range(n):
             archive.add(solutions[i], objective_values[i], behavior_values[i])
