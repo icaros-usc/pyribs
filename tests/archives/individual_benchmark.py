@@ -2,9 +2,9 @@
 
 from ribs.archives import Individual
 
-# pylint: disable = invalid-name, unused-variable, missing-function-docstring
+from .utils import benchmark_data_100k
 
-# See conftest.py for benchmark_data_100k.
+# pylint: disable = invalid-name, unused-variable, missing-function-docstring
 
 
 def benchmark_individual_construction(benchmark, benchmark_data_100k):

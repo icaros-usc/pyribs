@@ -1,10 +1,10 @@
 """Benchmarks for the GridArchive."""
 
-# pylint: disable = invalid-name, unused-variable, missing-function-docstring
-
 from ribs.archives import GridArchive
 
-# See conftest.py for benchmark_data_100k.
+from .utils import benchmark_data_100k
+
+# pylint: disable = invalid-name, unused-variable, missing-function-docstring
 
 
 def benchmark_construct_and_add_100k(benchmark, benchmark_data_100k):

@@ -2,8 +2,6 @@
 import numpy as np
 import pytest
 
-from ribs.archives import GridArchive
-
 
 @pytest.fixture
 def benchmark_data_100k():
@@ -15,8 +13,8 @@ def benchmark_data_100k():
     - 100k random objective values drawn from the standard normal distribution
     - 100k random behavior values in the range (-1,1) in each dim
     """
-    n = int(1e5)
-    solutions = np.random.uniform(-1, 1, (n, 10))
-    objective_values = np.random.randn(n)
-    behavior_values = np.random.uniform(-1, 1, (n, 2))
-    return n, solutions, objective_values, behavior_values
+    n_vals = int(1e5)
+    solutions = np.random.uniform(-1, 1, (n_vals, 10))
+    objective_values = np.random.randn(n_vals)
+    behavior_values = np.random.uniform(-1, 1, (n_vals, 2))
+    return n_vals, solutions, objective_values, behavior_values
