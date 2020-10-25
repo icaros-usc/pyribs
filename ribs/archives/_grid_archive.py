@@ -1,10 +1,9 @@
 """Contains the GridArchive class."""
-from random import choice
-
 import numpy as np
 import pandas as pd
 
 from ribs.archives._individual import Individual
+from ribs.config import DEFAULT_CONFIG
 
 
 class GridArchive:
@@ -26,6 +25,8 @@ class GridArchive:
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``.
+        config (dict): Configuration object. See
+            :attr:`ribs.config.DEFAULT_CONFIG`.
     Attributes:
         dims (np.ndarray): Number of bins in each dimension.
         lower_bounds (np.ndarray): Lower bound of each dimension.
@@ -34,12 +35,15 @@ class GridArchive:
             lower_bounds``).
     """
 
-    def __init__(self, dims, ranges):
+    def __init__(self, dims, ranges, config=DEFAULT_CONFIG):
         self.dims = np.array(dims)
         ranges = list(zip(*ranges))
         self.lower_bounds = np.array(ranges[0])
         self.upper_bounds = np.array(ranges[1])
         self.interval_size = self.upper_bounds - self.lower_bounds
+
+        # Random number generator for all random operations in the archive.
+        self._rng = np.random.default_rng(config["seed"])
 
         # Create components of the grid. We separate the components so that they
         # each be efficiently represented as a numpy array.
@@ -125,7 +129,8 @@ class GridArchive:
         if len(self._occupied_indices) == 0:
             raise IndexError("No elements in archive.")
 
-        index = choice(self._occupied_indices)
+        random_idx = self._rng.integers(len(self._occupied_indices))
+        index = self._occupied_indices[random_idx]
         return Individual(
             self._objective_values[index],
             self._behavior_values[index],

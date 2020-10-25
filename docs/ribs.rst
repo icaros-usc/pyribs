@@ -5,7 +5,6 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
 
    ribs.archives
    ribs.emitters
@@ -21,6 +20,7 @@ ribs.config module
    :members:
    :undoc-members:
    :show-inheritance:
+
 
 Module contents
 ---------------
