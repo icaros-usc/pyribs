@@ -53,6 +53,9 @@ lint: ## check style with pylint
 test: ## run tests quickly with the default Python
 	pytest
 
+test-failed: ## run only tests that filed
+	pytest --last-failed
+
 test-all: ## run tests on every Python version with tox
 	tox
 
