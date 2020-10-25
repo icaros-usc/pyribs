@@ -11,6 +11,8 @@ class GaussianEmitter:
         self.archive = archive
         self.batch_size = config["batch_size"]
 
+        self._rng = np.random.default_rng(config["seed"])
+
     def ask(self):
 
         if self.archive.is_empty():
@@ -22,7 +24,7 @@ class GaussianEmitter:
                 for _ in range(self.batch_size)
             ]
 
-        return parents + np.random.normal(scale=self.sigma0,
+        return parents + self._rng.normal(scale=self.sigma0,
                                           size=(self.batch_size, len(self.x0)))
 
     def tell(self, solutions, objective_values, behavior_values):
