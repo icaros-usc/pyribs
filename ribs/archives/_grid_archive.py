@@ -47,7 +47,7 @@ class GridArchive:
         self._initialized = np.zeros(self.dims, dtype=bool)
         self._objective_values = np.empty(self.dims, dtype=float)
 
-        # Stores a behavior value at each index.
+        # Stores an array of behavior values at each index.
         self._behavior_values = np.empty(list(self.dims) + [len(self.dims)],
                                          dtype=float)
         self._solutions = np.full(self.dims, None, dtype=object)
