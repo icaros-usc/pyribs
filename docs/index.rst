@@ -8,7 +8,7 @@ Welcome to pyribs's documentation!
    readme
    installation
    usage
-   modules
+   api
    contributing
    history
 

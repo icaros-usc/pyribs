@@ -1,10 +1,5 @@
-ribs.archives package
-=====================
-
-Module contents
----------------
+ribs.archives
+=============
 
 .. automodule:: ribs.archives
-   :members:
-   :undoc-members:
-   :show-inheritance:
+  :members:

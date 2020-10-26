@@ -1,10 +1,5 @@
-ribs.emitters package
-=====================
-
-Module contents
----------------
+ribs.emitters
+=============
 
 .. automodule:: ribs.emitters
-   :members:
-   :undoc-members:
-   :show-inheritance:
+  :members:

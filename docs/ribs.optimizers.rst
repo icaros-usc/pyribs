@@ -1,10 +1,5 @@
-ribs.optimizers package
-=======================
-
-Module contents
----------------
+ribs.optimizers
+===============
 
 .. automodule:: ribs.optimizers
-   :members:
-   :undoc-members:
-   :show-inheritance:
+  :members:

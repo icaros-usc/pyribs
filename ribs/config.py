@@ -6,7 +6,9 @@ __all__ = [
     "merge_with_default",
 ]
 
-#: Default configuration.
+# Do not remove the words "Default configuration" (and the period after it) in
+# the following line.
+#: Default configuration. Also see the Config Options section in :doc:`usage`.
 DEFAULT_CONFIG = {
     # (int) The size of each batch.
     "batch_size": 64,
@@ -14,6 +16,7 @@ DEFAULT_CONFIG = {
     # Seed for random number generators. Leave None to avoid seeding.
     "seed": None,
 }
+# End of default configuration. <-- Do not remove this line.
 
 
 def update(default, new):
@@ -63,7 +66,7 @@ def update(default, new):
         new (dict): New configuration options.
     Raises:
         TypeError: When one attempts to override a non-dict value with a dict
-        value.
+            value.
     """
     for key in new:
         if isinstance(new[key], dict):
@@ -78,19 +81,20 @@ def update(default, new):
 
 
 def merge_with_default(config=None):
-    """Creates a configuration that updates ``DEFAULT_CONFIG`` with ``config``.
+    """Creates a config that updates :attr:`DEFAULT_CONFIG` with ``config``.
 
-    Values in ``DEFAULT_CONFIG`` are overridden by those in ``config``,
+    Values in :attr:`DEFAULT_CONFIG` are overridden by those in ``config``,
     including those in nested dicts.
 
     Args:
         config (dict or None): A configuration dict to use to update
-            ``DEFAULT_CONFIG``. None indicates an empty dict (for the curious,
-            see `Why empty dict is a dangerous default value
+            :attr:`DEFAULT_CONFIG`. None indicates an empty dict (for those
+            curious about why we include this, see `Why empty dict is a
+            dangerous default value
             <https://stackoverflow.com/questions/26320899/why-is-the-empty-dictionary-a-dangerous-default-value-in-python>`_
     Returns:
-        dict: An updated version of ``DEFAULT_CONFIG``. The update is made with
-        ``update``.
+        dict: An updated version of :attr:`DEFAULT_CONFIG`. The update is made
+        with :meth:`update`.
     """
     new_config = {}
     update(new_config, DEFAULT_CONFIG)
