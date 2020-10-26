@@ -3,7 +3,7 @@
 __all__ = [
     "DEFAULT_CONFIG",
     "update",
-    "merge_with_default_config",
+    "merge_with_default",
 ]
 
 #: Default configuration.
@@ -77,19 +77,23 @@ def update(default, new):
             default[key] = new[key]
 
 
-def merge_with_default_config(config):
+def merge_with_default(config=None):
     """Creates a configuration that updates ``DEFAULT_CONFIG`` with ``config``.
 
     Values in ``DEFAULT_CONFIG`` are overridden by those in ``config``,
     including those in nested dicts.
 
     Args:
-        config (dict): A configuration dict to use to update ``DEFAULT_CONFIG``.
+        config (dict or None): A configuration dict to use to update
+            ``DEFAULT_CONFIG``. None indicates an empty dict (for the curious,
+            see `Why empty dict is a dangerous default value
+            <https://stackoverflow.com/questions/26320899/why-is-the-empty-dictionary-a-dangerous-default-value-in-python>`_
     Returns:
         dict: An updated version of ``DEFAULT_CONFIG``. The update is made with
         ``update``.
     """
     new_config = {}
     update(new_config, DEFAULT_CONFIG)
-    update(new_config, config)
+    if config is not None:
+        update(new_config, config)
     return new_config

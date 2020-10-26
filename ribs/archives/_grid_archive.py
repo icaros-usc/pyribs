@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from ribs.archives._individual import Individual
-from ribs.config import DEFAULT_CONFIG
+from ribs.config import merge_with_default
 
 
 class GridArchive:
@@ -25,8 +25,10 @@ class GridArchive:
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``.
-        config (dict): Configuration object. See
-            :attr:`ribs.config.DEFAULT_CONFIG`.
+        config (dict): Configuration object. This config is merged with
+            :attr:`ribs.config.DEFAULT_CONFIG` using
+            :meth:`ribs.config.merge_with_default`. Leave as ``None`` if you are
+            fine with defaults.
     Attributes:
         dims (np.ndarray): Number of bins in each dimension.
         lower_bounds (np.ndarray): Lower bound of each dimension.
@@ -35,7 +37,9 @@ class GridArchive:
             lower_bounds``).
     """
 
-    def __init__(self, dims, ranges, config=DEFAULT_CONFIG):
+    def __init__(self, dims, ranges, config=None):
+        config = merge_with_default(config)
+
         self.dims = np.array(dims)
         ranges = list(zip(*ranges))
         self.lower_bounds = np.array(ranges[0])
@@ -47,10 +51,8 @@ class GridArchive:
 
         # Create components of the grid. We separate the components so that they
         # each be efficiently represented as a numpy array.
-
         self._initialized = np.zeros(self.dims, dtype=bool)
         self._objective_values = np.empty(self.dims, dtype=float)
-
         # Stores an array of behavior values at each index.
         self._behavior_values = np.empty(list(self.dims) + [len(self.dims)],
                                          dtype=float)

@@ -1,7 +1,7 @@
 """Tests for ribs config functions."""
 import pytest
 
-from ribs.config import DEFAULT_CONFIG, merge_with_default_config, update
+from ribs.config import DEFAULT_CONFIG, merge_with_default, update
 
 # pylint: disable = invalid-name
 
@@ -131,4 +131,4 @@ def test_override_non_dict_val_fails():
 
 
 def test_merging_default_with_nothing_gives_default():
-    assert merge_with_default_config({}) == DEFAULT_CONFIG
+    assert merge_with_default({}) == DEFAULT_CONFIG

@@ -1,11 +1,13 @@
 import numpy as np
 
-from ribs.config import DEFAULT_CONFIG
+from ribs.config import merge_with_default
 
 
 class GaussianEmitter:
 
-    def __init__(self, x0, sigma0, archive, config=DEFAULT_CONFIG):
+    def __init__(self, x0, sigma0, archive, config=None):
+        config = merge_with_default(config)
+
         self.x0 = x0
         self.sigma0 = sigma0
         self.archive = archive

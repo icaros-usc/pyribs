@@ -1,12 +1,14 @@
 import numpy as np
 
-from ribs.config import DEFAULT_CONFIG
+from ribs.config import merge_with_default
 from ribs.emitters import GaussianEmitter
 
 
 class Optimizer:
 
-    def __init__(self, x0, sigma0, archive, config=DEFAULT_CONFIG):
+    def __init__(self, x0, sigma0, archive, config=None):
+        config = merge_with_default(config)
+
         self.archive = archive
         self.x0 = np.array(x0)
         self.sigma0 = sigma0
