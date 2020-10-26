@@ -6,8 +6,12 @@ from ribs.optimizers import Optimizer
 
 if __name__ == '__main__':
 
-    archive = GridArchive((100, 100), [(-4, 4), (-4, 4)], config={"seed": 42})
-    opt = Optimizer([0.0] * 10, 0.1, archive, config={"batch_size": 4})
+    config = {
+        "seed": 42,
+        "batch_size": 4,
+    }
+    archive = GridArchive((100, 100), [(-4, 4), (-4, 4)], config=config)
+    opt = Optimizer([0.0] * 10, 0.1, archive, config=config)
 
     for i in range(10**5):
         sols = opt.ask()
@@ -24,3 +28,5 @@ if __name__ == '__main__':
             #ax = sns.heatmap(data)
             #plt.savefig('images/arc-{:05d}'.format(i))
             #plt.close()
+
+    print(archive.as_pandas().iloc[:10])
