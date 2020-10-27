@@ -1,12 +1,5 @@
-Usage
-=====
-
-To use pyribs in a project::
-
-    import ribs
-
-Config Options
---------------
+Configuration
+=============
 
 ribs uses a global config object that is passed to all classes. The default
 configuration is stored in :attr:`ribs.config.DEFAULT_CONFIG`, shown below.

@@ -8,7 +8,7 @@ __all__ = [
 
 # Do not remove the words "Default configuration" (and the period after it) in
 # the following line.
-#: Default configuration. Also see the Config Options section in :doc:`usage`.
+#: Default configuration. Also see :doc:`configuration`.
 DEFAULT_CONFIG = {
     # (int) The size of each batch.
     "batch_size": 64,
