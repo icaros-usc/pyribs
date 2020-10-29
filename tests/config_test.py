@@ -57,7 +57,6 @@ def test_update_adds_new_keys():
             "d": 3,
         },
     }
-
     new = {
         "a": 4,
         "b": {
@@ -76,6 +75,24 @@ def test_update_adds_new_keys():
             "e": 6,
         },
         "f": 7,
+    }
+
+
+def test_update_adds_new_dict_keys():
+    default = {}
+    new = {
+        "a": {
+            "b": 1,
+            "c": 2,
+        },
+    }
+    update(default, new)
+
+    assert default == {
+        "a": {
+            "b": 1,
+            "c": 2,
+        },
     }
 
 
