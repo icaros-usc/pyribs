@@ -56,6 +56,9 @@ test: ## run tests quickly with the default Python
 test-failed: ## run only tests that filed
 	pytest --last-failed
 
+test-only: ## run tests without benchmarks, as benchmarks take a while
+	pytest -c pytest_no_benchmark.ini
+
 test-all: ## run tests on every Python version with tox
 	tox
 

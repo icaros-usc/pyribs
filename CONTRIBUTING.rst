@@ -94,10 +94,19 @@ Ready to contribute? Here's how to set up `ribs` for local development.
    tests, including testing other Python versions with tox::
 
     $ pylint ribs tests
-    $ python setup.py test or pytest
+    $ pytest
+    $ python setup.py test # ^ same as above
+    $ make test # ^ also same as above
     $ tox  # Don't worry if this does not run; we will run it in CI/CD
 
-   To get pylint, pylint, and tox, just pip install them into your virtualenv.
+   If you wish to run the tests without benchmarks (which can take a while),
+   run::
+
+    $ pytest -c pytest_no_benchmark.ini
+    $ make test-only # ^ same as above, but shorter
+
+   To get pylint, pylint, and tox, pip install them into your virtualenv. They
+   should already be in ``requirements_dev.txt``, however.
 
 6. Commit your changes and push your branch to GitHub::
 
