@@ -29,4 +29,4 @@ if __name__ == '__main__':
             #plt.savefig('images/arc-{:05d}'.format(i))
             #plt.close()
 
-    print(archive.as_pandas().iloc[:10])
+    print(archive.as_pandas().head())
