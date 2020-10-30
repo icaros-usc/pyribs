@@ -4,6 +4,7 @@ import numpy as np
 import seaborn as sns
 
 from ribs.archives import GridArchive
+from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
 
 
@@ -18,7 +19,10 @@ def sphere(sol):
 def main():
     """Demo of MAP-Elites on the Sphere function."""
     archive = GridArchive((100, 100), [(-4, 4), (-4, 4)], config={"seed": 42})
-    opt = Optimizer([0.0] * 10, 0.1, archive)
+    emitters = [
+        GaussianEmitter([0.0] * 10, 0.1, archive, config={"batch_size": 4})
+    ]
+    opt = Optimizer([0.0] * 10, 0.1, archive, emitters)
 
     for i in range(10**5):
         sols = opt.ask()
