@@ -1,103 +1,34 @@
-"""Ribs config options and functions for dealing with configs."""
-
-__all__ = [
-    "DEFAULT_CONFIG",
-    "update",
-    "merge_with_default",
-]
-
-# Do not remove the words "Default configuration" (and the period after it) in
-# the following line.
-#: Default configuration. Also see :doc:`configuration`.
-DEFAULT_CONFIG = {
-    # (int) The size of each batch.
-    "batch_size": 64,
-
-    # Seed for random number generators. Leave None to avoid seeding.
-    "seed": None,
-}
-# End of default configuration. <-- Do not remove this line.
+"""Functions for dealing with configs."""
 
 
-def update(default, new):
-    """Merges two configuration dicts, overriding ``default`` with ``new``.
+def create_config(config, config_class):
+    """Creates an instance of ``config_class`` given the user's ``config``.
 
-    ``default`` is modified in-place with the new options.
-
-    Handles nested dict options as well.
-
-    Note that ``new`` is allowed to provide new keys to ``default``.
-
-    If we have:
-
-        ::
-
-            default = {
-                "a": 1,
-                "b": {
-                    "c": 2,
-                    "d": 3,
-                },
-            }
-
-            new = {
-                "a": 4,
-                "b": {
-                    "c": 5,
-                },
-                "e": 6,
-            }
-
-    Then ``update(default, new)`` modifies ``default`` to be:
-
-        ::
-
-            default = {
-                "a": 4,
-                "b": {
-                    "c": 5,
-                    "d": 3,
-                }
-                "e": 6,
-            }
+    - If ``config`` is None, a default instance of ``config_class`` is created.
+    - If ``config`` is a dict, the dict is passed into ``config_class`` as
+      keyword args.
+    - Otherwise, ``config`` is simply returned (we assume it is an instance of
+      ``config_class``).
 
     Args:
-        default (dict): Default configuration options.
-        new (dict): New configuration options.
-    Raises:
-        TypeError: When one attempts to override a non-dict value with a dict
-            value.
-    """
-    for key in new:
-        if isinstance(new[key], dict):
-            if key not in default:
-                default[key] = {}
-            if not isinstance(default[key], dict):
-                raise TypeError(f"The value at key `{key}` in new is a dict, "
-                                f"but in default, it is {default[key]}")
-            update(default[key], new[key])
-        else:
-            default[key] = new[key]
-
-
-def merge_with_default(config=None):
-    """Creates a config that updates :attr:`DEFAULT_CONFIG` with ``config``.
-
-    Values in :attr:`DEFAULT_CONFIG` are overridden by those in ``config``,
-    including those in nested dicts.
-
-    Args:
-        config (dict or None): A configuration dict to use to update
-            :attr:`DEFAULT_CONFIG`. None indicates an empty dict (for those
-            curious about why we include this, see `Why empty dict is a
-            dangerous default value
-            <https://stackoverflow.com/questions/26320899/why-is-the-empty-dictionary-a-dangerous-default-value-in-python>`_
+        config (None, dict, or config_class): User-provided configuration.
     Returns:
-        dict: An updated version of :attr:`DEFAULT_CONFIG`. The update is made
-        with :meth:`update`.
+        An instance of ``config_class``, described as above.
     """
-    new_config = {}
-    update(new_config, DEFAULT_CONFIG)
-    if config is not None:
-        update(new_config, config)
-    return new_config
+    if config is None:
+        return config_class()
+    if isinstance(config, dict):
+        return config_class(**config)
+    return config
+
+
+def save_configs(optimizer_config, archive_config, emitter_configs, filename):
+    """Saves all configs to a ___ file."""
+
+    # TODO
+
+
+def load_configs(filename):
+    """Loads configs from a file to reconstruct an optimizer."""
+
+    # TODO

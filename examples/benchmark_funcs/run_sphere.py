@@ -15,19 +15,15 @@ def sphere(sol):
     return -np.sum(np.square(sol))
 
 
-if __name__ == '__main__':
-
-    config = {
-        "seed": 42,
-        "batch_size": 4,
-    }
-    archive = GridArchive((100, 100), [(-4, 4), (-4, 4)], config=config)
-    opt = Optimizer([0.0] * 10, 0.1, archive, config=config)
+def main():
+    """Demo of MAP-Elites on the Sphere function."""
+    archive = GridArchive((100, 100), [(-4, 4), (-4, 4)], config={"seed": 42})
+    opt = Optimizer([0.0] * 10, 0.1, archive)
 
     for i in range(10**5):
         sols = opt.ask()
         objs = [sphere(s) for s in sols]
-        bcs = [(np.sum(s[:5]), np.sum(s[5:])) for s in sols]
+        bcs = [(s[0], s[1]) for s in sols]
 
         opt.tell(sols, objs, bcs)
 
@@ -45,3 +41,7 @@ if __name__ == '__main__':
     data = data.pivot('index-0', 'index-1', 'objective')
     sns.heatmap(data)
     plt.savefig('sphere-map-elites.png')
+
+
+if __name__ == '__main__':
+    main()

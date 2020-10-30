@@ -1,13 +1,22 @@
+"""Provides the Optimizer and corresponding OptimizerConfig."""
+from collections import namedtuple
+
 import numpy as np
 
-from ribs.config import merge_with_default
+from ribs.config import create_config
 from ribs.emitters import GaussianEmitter
+
+#: Configuration for the Optimizer.
+#:
+#: Attributes:
+OptimizerConfig = namedtuple("OptimizerConfig", [])
+OptimizerConfig.__new__.__defaults__ = ()
 
 
 class Optimizer:
 
-    def __init__(self, x0, sigma0, archive, config=None):
-        config = merge_with_default(config)
+    def __init__(self, x0, sigma0, archive, emitters=None, config=None):
+        config = create_config(config, OptimizerConfig)
 
         self.archive = archive
         self.x0 = np.array(x0)
@@ -15,10 +24,13 @@ class Optimizer:
         self.num_iters = 0
         self.last_batch = None
 
-        self.emitters = [
-            GaussianEmitter(self.x0, self.sigma0, self.archive, config)
-            for _ in range(1)
-        ]
+        if emitters is None:
+            self.emitters = [
+                GaussianEmitter(self.x0, self.sigma0, self.archive)
+                for _ in range(1)
+            ]
+        else:
+            self.emitters = emitters
 
     def ask(self):
 

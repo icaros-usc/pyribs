@@ -1,7 +1,25 @@
-"""Provides the GaussianEmitter class."""
+"""Provides the GaussianEmitter and corresponding GaussianEmitterConfig."""
+from collections import namedtuple
+
 import numpy as np
 
-from ribs.config import merge_with_default
+from ribs.config import create_config
+
+#: Configuration for the GaussianEmitter.
+#:
+#: Attributes:
+#:     seed (float or int): Value to seed the random number generator. Set to
+#:         None to avoid seeding. Default: None
+#:     batch_size (int): Number of solutions to send back in the ask() method.
+#:         Default: 64
+GaussianEmitterConfig = namedtuple("GaussianEmitterConfig", [
+    "seed",
+    "batch_size",
+])
+GaussianEmitterConfig.__new__.__defaults__ = (
+    None,
+    64,
+)
 
 
 class GaussianEmitter:
@@ -23,27 +41,27 @@ class GaussianEmitter:
         archive (ribs archive): An archive to use when creating and inserting
             solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        config (dict): Configuration object. This config is merged with
-            :attr:`ribs.config.DEFAULT_CONFIG` using
-            :meth:`ribs.config.merge_with_default`. Leave as ``None`` if you are
-            fine with defaults.
+        config (GaussianEmitterConfig or dict): Configuration object. If None,
+            a default GaussianEmitterConfig is constructed. A dict may also be
+            passed in, in which case its arguments will be passed into
+            GaussianEmitterConfig.
     Attributes:
         x0 (np.ndarray): See args.
         sigma0 (np.ndarray): See args.
         archive (ribs archive): See args.
         batch_size (int): Number of solutions to generate on each call to ask().
-            Passed in via ``config["batch_size"]``.
+            Passed in via ``config.batch_size``.
     """
 
     def __init__(self, x0, sigma0, archive, config=None):
-        config = merge_with_default(config)
+        config = create_config(config, GaussianEmitterConfig)
 
         self.x0 = np.array(x0)
         self.sigma0 = np.array(sigma0)
         self.archive = archive
-        self.batch_size = config["batch_size"]
+        self.batch_size = config.batch_size
 
-        self._rng = np.random.default_rng(config["seed"])
+        self._rng = np.random.default_rng(config.seed)
 
     def ask(self):
         """Generates ``self.batch_size`` solutions.

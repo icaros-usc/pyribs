@@ -1,9 +1,21 @@
-"""Contains the GridArchive class."""
+"""Contains the GridArchive and corresponding GridArchiveConfig."""
+from collections import namedtuple
+
 import numpy as np
 import pandas as pd
 
 from ribs.archives._individual import Individual
-from ribs.config import merge_with_default
+from ribs.config import create_config
+
+#: Configuration for the GridArchive.
+#:
+#: Attributes:
+#:     seed (float or int): Value to seed the random number generator. Set to
+#:         None to avoid any seeding. Default: None
+GridArchiveConfig = namedtuple("GridArchiveConfig", [
+    "seed",
+])
+GridArchiveConfig.__new__.__defaults__ = (None,)
 
 
 class GridArchive:
@@ -25,10 +37,9 @@ class GridArchive:
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``.
-        config (dict): Configuration object. This config is merged with
-            :attr:`ribs.config.DEFAULT_CONFIG` using
-            :meth:`ribs.config.merge_with_default`. Leave as ``None`` if you are
-            fine with defaults.
+        config (GridArchiveConfig): Configuration object. If None, a default
+            GridArchiveConfig is constructed. A dict may also be passed in, in
+            which case its arguments will be passed into GridArchiveConfig.
     Attributes:
         dims (np.ndarray): Number of bins in each dimension.
         lower_bounds (np.ndarray): Lower bound of each dimension.
@@ -38,7 +49,7 @@ class GridArchive:
     """
 
     def __init__(self, dims, ranges, config=None):
-        config = merge_with_default(config)
+        config = create_config(config, GridArchiveConfig)
 
         self.dims = np.array(dims)
         ranges = list(zip(*ranges))
@@ -47,7 +58,7 @@ class GridArchive:
         self.interval_size = self.upper_bounds - self.lower_bounds
 
         # Random number generator for all random operations in the archive.
-        self._rng = np.random.default_rng(config["seed"])
+        self._rng = np.random.default_rng(config.seed)
 
         # Create components of the grid. We separate the components so that they
         # each be efficiently represented as a numpy array.
