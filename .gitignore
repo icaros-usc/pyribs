@@ -104,3 +104,4 @@ ENV/
 # Editor and IDE settings
 .vscode/
 .*.swp
+*.vim
