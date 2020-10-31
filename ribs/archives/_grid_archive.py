@@ -51,15 +51,13 @@ class GridArchive:
 
     def __init__(self, dims, ranges, config=None):
         self.config = create_config(config, GridArchiveConfig)
+        self._rng = np.random.default_rng(self.config.seed)
 
         self.dims = np.array(dims)
         ranges = list(zip(*ranges))
         self.lower_bounds = np.array(ranges[0])
         self.upper_bounds = np.array(ranges[1])
         self.interval_size = self.upper_bounds - self.lower_bounds
-
-        # Random number generator for all random operations in the archive.
-        self._rng = np.random.default_rng(self.config.seed)
 
         # Create components of the grid. We separate the components so that they
         # each be efficiently represented as a numpy array.

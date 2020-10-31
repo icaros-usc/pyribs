@@ -56,13 +56,12 @@ class GaussianEmitter:
 
     def __init__(self, x0, sigma0, archive, config=None):
         self.config = create_config(config, GaussianEmitterConfig)
+        self._rng = np.random.default_rng(self.config.seed)
 
         self.x0 = np.array(x0)
         self.sigma0 = np.array(sigma0)
         self.archive = archive
         self.batch_size = self.config.batch_size
-
-        self._rng = np.random.default_rng(self.config.seed)
 
     def ask(self):
         """Generates ``self.batch_size`` solutions.
