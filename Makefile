@@ -62,12 +62,28 @@ test-only: ## run tests without benchmarks, as benchmarks take a while
 test-all: ## run tests on every Python version with tox
 	tox
 
-docs: ## generate documentation
-	mkdocs build
-	$(BROWSER) site/
+docs: ## generate Sphinx HTML documentation, including API docs
+	rm -f docs/ribs.rst
+	rm -f docs/modules.rst
+	sphinx-apidoc -o docs/ ribs
+	$(MAKE) -C docs clean
+	$(MAKE) -C docs html
+	$(BROWSER) docs/_build/html/index.html
 
 servedocs: ## compile the docs watching for changes
-	mkdocs serve
+	sphinx-autobuild \
+		--open-browser \
+		--watch ribs/ \
+		docs/ \
+		docs/_build/html
+
+servedocs-ignore-vim: ## compile the docs watching for changes, ignore vim .swp files
+	sphinx-autobuild \
+		--open-browser \
+		--watch ribs/ \
+		--ignore *.swp \
+		docs/ \
+		docs/_build/html
 
 release: dist ## package and upload a release
 	twine upload dist/*

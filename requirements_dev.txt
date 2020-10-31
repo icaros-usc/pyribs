@@ -1,4 +1,4 @@
-pip==20.2.4
+pip==20.2.3
 bump2version==0.5.11
 wheel==0.33.6
 twine==1.14.0
@@ -12,6 +12,6 @@ pytest-cov==2.10.1
 pytest-benchmark==3.2.3
 
 # Documentation
-mkdocs==1.1.2
-mkdocs-material==6.1.0
-mkdocstrings==0.13.6
+Sphinx==3.2.1
+sphinx-book-theme==0.0.37
+sphinx-autobuild==2020.9.1
