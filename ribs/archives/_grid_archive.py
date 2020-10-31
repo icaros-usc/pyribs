@@ -41,6 +41,7 @@ class GridArchive:
             GridArchiveConfig is constructed. A dict may also be passed in, in
             which case its arguments will be passed into GridArchiveConfig.
     Attributes:
+        config (GridArchiveConfig): Configuration object.
         dims (np.ndarray): Number of bins in each dimension.
         lower_bounds (np.ndarray): Lower bound of each dimension.
         upper_bounds (np.ndarray): Upper bound of each dimension.
@@ -49,7 +50,7 @@ class GridArchive:
     """
 
     def __init__(self, dims, ranges, config=None):
-        config = create_config(config, GridArchiveConfig)
+        self.config = create_config(config, GridArchiveConfig)
 
         self.dims = np.array(dims)
         ranges = list(zip(*ranges))
@@ -58,7 +59,7 @@ class GridArchive:
         self.interval_size = self.upper_bounds - self.lower_bounds
 
         # Random number generator for all random operations in the archive.
-        self._rng = np.random.default_rng(config.seed)
+        self._rng = np.random.default_rng(self.config.seed)
 
         # Create components of the grid. We separate the components so that they
         # each be efficiently represented as a numpy array.

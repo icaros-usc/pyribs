@@ -16,7 +16,7 @@ OptimizerConfig.__new__.__defaults__ = ()
 class Optimizer:
 
     def __init__(self, x0, sigma0, archive, emitters=None, config=None):
-        config = create_config(config, OptimizerConfig)
+        self.config = create_config(config, OptimizerConfig)
 
         self.archive = archive
         self.x0 = np.array(x0)
