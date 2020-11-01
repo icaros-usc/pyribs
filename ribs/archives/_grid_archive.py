@@ -61,7 +61,6 @@ class GridArchive:
 
         # Create components of the grid. We separate the components so that they
         # each be efficiently represented as a numpy array.
-        self._initialized = np.zeros(self.dims, dtype=bool)
         self._objective_values = np.empty(self.dims, dtype=float)
         # Stores an array of behavior values at each index.
         self._behavior_values = np.empty(list(self.dims) + [len(self.dims)],
@@ -106,17 +105,17 @@ class GridArchive:
         """
         index = self._get_index(behavior_values)
 
-        if (not self._initialized[index] or
+        if (self._solutions[index] is None or
                 self._objective_values[index] < objective_value):
+            # Track this index if it has not been seen before -- important that
+            # we do this before inserting the solution.
+            if self._solutions[index] is None:
+                self._occupied_indices.append(index)
+
             # Insert into the archive.
             self._objective_values[index] = objective_value
             self._behavior_values[index] = behavior_values
             self._solutions[index] = solution
-
-            # Track this index if it has not been seen before.
-            if not self._initialized[index]:
-                self._initialized[index] = True
-                self._occupied_indices.append(index)
 
             return True
 
