@@ -1,7 +1,4 @@
 pip==20.2.4
-bump2version==0.5.11
-wheel==0.33.6
-twine==1.14.0
 pylint
 yapf
 
@@ -16,3 +13,8 @@ Sphinx==3.2.1
 sphinx-book-theme==0.0.37
 sphinx-autobuild==2020.9.1
 autodocsumm==0.2.1
+
+# Distribution
+bump2version==0.5.11
+wheel==0.33.6
+twine==1.14.0
