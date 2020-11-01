@@ -19,6 +19,7 @@ Contents
    ribs.emitters
    ribs.optimizers
    ribs.config
+   ribs.visualize
 
 .. toctree::
    :maxdepth: 2

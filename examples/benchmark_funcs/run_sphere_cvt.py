@@ -4,6 +4,7 @@ import numpy as np
 from ribs.archives import CVTArchive
 from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
+from ribs.visualize import cvt_archive_heatmap
 
 
 def sphere(sol):
@@ -41,7 +42,7 @@ def main():
             #  plt.savefig('images/arc-{:05d}'.format(i))
             #  plt.close()
 
-    archive.heatmap("sphere-cvt-map-elites.png")
+    cvt_archive_heatmap(archive, "sphere-cvt-map-elites.png")
     data = archive.as_pandas()
     print(data.head())
 
