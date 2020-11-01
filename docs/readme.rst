@@ -34,9 +34,14 @@ To install from PyPI, run ::
 
   pip install ribs
 
+This command only installs dependencies for the core of ribs. To be able to use
+tools like ``ribs.visualize``, run ::
+
+  pip install ribs[all]
+
 To install a development version, clone this repo, cd into it, and run ::
 
-  pip install -e .
+  pip install -e .[all]
 
 To test your installation, run ::
 
@@ -56,7 +61,7 @@ See here for the documentation: https://ribs.readthedocs.io
 
 To serve the documentation locally, clone the repo and run::
 
-$ make servedocs
+  make servedocs
 
 This will open a window in your browser with the documentation automatically
 loaded. Furthermore, every time you make changes to the documentation, the

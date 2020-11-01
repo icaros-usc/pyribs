@@ -1,5 +1,4 @@
-Welcome to the pyribs documentation!
-======================================
+.. include:: readme.rst
 
 Contents
 --------
@@ -8,7 +7,6 @@ Contents
    :maxdepth: 2
    :caption: Overview
 
-   readme
    getting-started
    configuration
    examples
