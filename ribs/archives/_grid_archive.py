@@ -83,10 +83,10 @@ class GridArchive(ArchiveBase):
 
         Returns:
             A dataframe where each row is an elite in the archive. The dataframe
-            has `n_dims` columns called ``index-{i}`` for the archive index,
-            `n_dims` columns called ``behavior-{i}`` for the behavior values, 1
-            column for the objective function value called ``objective``, and 1
-            column for solution objects called ``solution``.
+            has ``n_dims`` columns called ``index-{i}`` for the archive index,
+            ``n_dims`` columns called ``behavior-{i}`` for the behavior values,
+            1 column for the objective function value called ``objective``, and
+            1 column for solution objects called ``solution``.
         """
         column_titles = [
             *[f"index-{i}" for i in range(self._n_dims)],

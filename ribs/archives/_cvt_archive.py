@@ -47,18 +47,38 @@ class CVTArchive(ArchiveBase):
 
     This archive originates in the CVT-MAP-Elites paper
     https://ieeexplore.ieee.org/document/8000667. It uses Centroidal Voronoi
-    Tesselation (CVT) to divide an n-dimensional space into k bins.
+    Tesselation (CVT) to divide an n-dimensional behavior space into k bins. The
+    CVT is created by sampling points uniformly from the n-dimensional behavior
+    space and using k-means clustering to identify k centroids. When items are
+    inserted into the archive, we identify their bin by identifying the closest
+    centroid in behavior space (using Euclidean distance).
+
+    Currently, finding the closes centroid is implemented as an O(k) search,
+    though we are considering implementing an O(log k) search in the future.
 
     Args:
-        ranges: TODO
-        bins: TODO
-        samples: TODO
-        config: TODO
+        ranges (array-like of (float, float)): Upper and lower bound of each
+            dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
+            indicates the first dimension should have bounds ``(-1, 1)``, and
+            the second dimension should have bounds ``(-2, 2)``. Note that the
+            length of this array defines the dimensionality of the behavior
+            space.
+        bins (int): The number of bins to use in the archive, equivalent to the
+            number of areas in the CVT.
+        samples (array-like): A (num_samples, n_dims) array where samples[i] is
+            a sample to use when creating the CVT. These samples may be passed
+            in instead of generating the samples uniformly at random (u.a.r.) --
+            this can be useful when, for instance, samples generated u.a.r. in
+            the behavior space are not physically possible, such as in the case
+            of trajectories represented by a series of points.
+        config (CVTArchiveConfig): Configuration object. If None, a default
+            CVTArchiveConfig is constructed. A dict may also be passed in, in
+            which case its arguments will be passed into CVTArchiveConfig.
     Attributes:
-        lower_bounds: TODO
-        upper_bounds: TODO
-        samples: TODO
-        centroids: TODO
+        lower_bounds (np.ndarray): Lower bound of each dimension.
+        upper_bounds (np.ndarray): Upper bound of each dimension.
+        samples: The samples used in creating the CVT.
+        centroids: The centroids used in the CVT.
     """
 
     def __init__(self, ranges, bins, samples=None, config=None):
@@ -77,11 +97,12 @@ class CVTArchive(ArchiveBase):
         self.lower_bounds = np.array(ranges[0])
         self.upper_bounds = np.array(ranges[1])
 
-        self.samples = samples if samples is not None else self._rng.uniform(
-            self.lower_bounds,
-            self.upper_bounds,
-            size=(self.config.samples, dims),
-        )
+        self.samples = (np.array(samples)
+                        if samples is not None else self._rng.uniform(
+                            self.lower_bounds,
+                            self.upper_bounds,
+                            size=(self.config.samples, dims),
+                        ))
         initial_centroids = self._rng.uniform(
             self.lower_bounds,
             self.upper_bounds,
@@ -152,6 +173,17 @@ class CVTArchive(ArchiveBase):
         return np.argmin(distances)
 
     def as_pandas(self):
+        """Converts the archive into a Pandas dataframe.
+
+        Returns:
+            A dataframe where each row is an elite in the archive. The dataframe
+            consists of 1 ``index`` column indicating the index of the centroid
+            in ``self.centroids``, ``n_dims`` columns called ``centroid-{i}``
+            for the coordinates of the centroid, ``n_dims`` columns called
+            ``behavior-{i}`` for the behavior values, 1 column for the objective
+            function value called ``objective``, and 1 column for solution
+            objects called ``solution``.
+        """
         column_titles = [
             "index",
             *[f"centroid-{i}" for i in range(self._n_dims)],
