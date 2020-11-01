@@ -7,6 +7,7 @@ import pandas as pd
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
+from ribs.archives._archive_base import ArchiveBase
 from ribs.config import create_config
 
 #: Configuration for the CVTArchive.
@@ -41,7 +42,7 @@ CVTArchiveConfig.__new__.__defaults__ = (
 )
 
 
-class CVTArchive:
+class CVTArchive(ArchiveBase):
     """An archive that divides the space into a fixed number of bins.
 
     This archive originates in the CVT-MAP-Elites paper
@@ -62,22 +63,29 @@ class CVTArchive:
 
     def __init__(self, ranges, bins, samples=None, config=None):
         self.config = create_config(config, CVTArchiveConfig)
-        self._rng = np.random.default_rng(self.config.seed)
+        dims = len(ranges)
+        ArchiveBase.__init__(
+            self,
+            dims,  # n_dims
+            bins,  # objective_value_dim
+            (bins, dims),  # behavior_value_dim
+            bins,  # solution_dim
+            self.config.seed,
+        )
 
         ranges = list(zip(*ranges))
         self.lower_bounds = np.array(ranges[0])
         self.upper_bounds = np.array(ranges[1])
 
-        self._n_dims = self.lower_bounds.shape[0]
         self.samples = samples if samples is not None else self._rng.uniform(
             self.lower_bounds,
             self.upper_bounds,
-            size=(self.config.samples, self._n_dims),
+            size=(self.config.samples, dims),
         )
         initial_centroids = self._rng.uniform(
             self.lower_bounds,
             self.upper_bounds,
-            size=(bins, self._n_dims),
+            size=(bins, dims),
         )
         self.centroids = self._k_means_cluster(
             initial_centroids,
@@ -85,11 +93,6 @@ class CVTArchive:
             self.config.k_means_threshold,
             self.config.k_means_itrs,
         )
-
-        self._objective_values = np.empty(bins, dtype=float)
-        self._behavior_values = np.empty((bins, self._n_dims), dtype=float)
-        self._solutions = np.full(bins, None, dtype=object)
-        self._occupied_indices = []
 
     @staticmethod
     def _k_means_cluster(centroids, points, threshold, total_itrs):
@@ -148,40 +151,6 @@ class CVTArchive:
         distances = np.sum(np.square(distances), axis=1)
         return np.argmin(distances)
 
-    def add(self, solution, objective_value, behavior_values):
-        index = self._get_index(behavior_values)
-
-        if (self._solutions[index] is None or
-                self._objective_values[index] < objective_value):
-            # Track this index if it has not been seen before -- important that
-            # we do this before inserting the solution.
-            if self._solutions[index] is None:
-                self._occupied_indices.append(index)
-
-            # Insert into the archive.
-            self._objective_values[index] = objective_value
-            self._behavior_values[index] = behavior_values
-            self._solutions[index] = solution
-
-            return True
-
-        return False
-
-    def is_empty(self):
-        return not self._occupied_indices
-
-    def get_random_elite(self):
-        if self.is_empty():
-            raise IndexError("No elements in archive.")
-
-        random_idx = self._rng.integers(len(self._occupied_indices))
-        index = self._occupied_indices[random_idx]
-        return (
-            self._objective_values[index],
-            self._behavior_values[index],
-            self._solutions[index],
-        )
-
     def as_pandas(self):
         column_titles = [
             "index",
@@ -205,6 +174,7 @@ class CVTArchive:
         return pd.DataFrame(rows, columns=column_titles)
 
     # TODO: figure out how to pass in ax parameter.
+    # TODO: move somewhere else.
     def heatmap(self,
                 filename=None,
                 plot_samples=False,

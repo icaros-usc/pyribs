@@ -4,6 +4,7 @@ from collections import namedtuple
 import numpy as np
 import pandas as pd
 
+from ribs.archives._archive_base import ArchiveBase
 from ribs.config import create_config
 
 #: Configuration for the GridArchive.
@@ -17,7 +18,7 @@ GridArchiveConfig = namedtuple("GridArchiveConfig", [
 GridArchiveConfig.__new__.__defaults__ = (None,)
 
 
-class GridArchive:
+class GridArchive(ArchiveBase):
     """An archive that divides each dimension into a fixed number of bins.
 
     This archive is the container described in the original MAP-Elites paper:
@@ -50,33 +51,22 @@ class GridArchive:
 
     def __init__(self, dims, ranges, config=None):
         self.config = create_config(config, GridArchiveConfig)
-        self._rng = np.random.default_rng(self.config.seed)
-
         self.dims = np.array(dims)
+        ArchiveBase.__init__(
+            self,
+            len(self.dims),  # n_dims
+            self.dims,  # objective_value_dim
+            (*self.dims, len(self.dims)),  # behavior_value_dim
+            self.dims,  # solution_dim
+            self.config.seed,
+        )
+
         ranges = list(zip(*ranges))
         self.lower_bounds = np.array(ranges[0])
         self.upper_bounds = np.array(ranges[1])
         self.interval_size = self.upper_bounds - self.lower_bounds
 
-        # Create components of the grid. We separate the components so that they
-        # each be efficiently represented as a numpy array.
-        self._n_dims = len(self.dims)
-        self._objective_values = np.empty(self.dims, dtype=float)
-        # Stores an array of behavior values at each index.
-        self._behavior_values = np.empty((*self.dims, self._n_dims),
-                                         dtype=float)
-        self._solutions = np.full(self.dims, None, dtype=object)
-
-        # Having a list of occupied indices allows us to efficiently choose
-        # random elites.
-        self._occupied_indices = []
-
     def _get_index(self, behavior_values):
-        """Returns a tuple of archive indices for the given behavior values.
-
-        If the behavior values are outside the dimensions of the container, they
-        are clipped.
-        """
         # Adding epsilon to behavior values accounts for floating point
         # precision errors from transforming behavior values. Subtracting
         # epsilon from upper bounds makes sure we do not have indices outside
@@ -87,72 +77,6 @@ class GridArchive:
         index = ((behavior_values - self.lower_bounds) \
                 / self.interval_size) * self.dims
         return tuple(index.astype(int))
-
-    def add(self, solution, objective_value, behavior_values):
-        """Attempts to insert a new solution into the archive.
-
-        The behavior values are first clipped to fit in the dimensions of the
-        grid. Then, the behavior values are discretized to find the appropriate
-        bin in the archive, and the solution is inserted if it has `higher`
-        performance than the previous solution.
-
-        Args:
-            solution (np.ndarray): Parameters for the solution.
-            objective_value (float): Objective function evaluation of this
-                solution.
-            behavior_values (np.ndarray): Coordinates in behavior space of this
-                solution.
-        Returns:
-            Whether the value was inserted into the archive.
-        """
-        index = self._get_index(behavior_values)
-
-        if (self._solutions[index] is None or
-                self._objective_values[index] < objective_value):
-            # Track this index if it has not been seen before -- important that
-            # we do this before inserting the solution.
-            if self._solutions[index] is None:
-                self._occupied_indices.append(index)
-
-            # Insert into the archive.
-            self._objective_values[index] = objective_value
-            self._behavior_values[index] = behavior_values
-            self._solutions[index] = solution
-
-            return True
-
-        return False
-
-    def is_empty(self):
-        """Checks if the archive has no elements in it.
-
-        Returns:
-            True if the archive is empty, False otherwise.
-        """
-        return not self._occupied_indices
-
-    def get_random_elite(self):
-        """Select an elite uniformly at random from one of the archive's bins.
-
-        Returns:
-            solution (np.ndarray): Parameters for the solution.
-            objective_value (float): The objective function evaluation of this
-                elite.
-            behavior_values (np.ndarray): Coordinates in behavior space of the
-                elite.
-        Raises:
-            IndexError: The archive is empty.
-        """
-        if self.is_empty():
-            raise IndexError("No elements in archive.")
-
-        random_idx = self._rng.integers(len(self._occupied_indices))
-        index = self._occupied_indices[random_idx]
-        return (
-            self._solutions[index],
-            self._objective_values[index],
-            self._behavior_values[index],
-        )
 
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.
