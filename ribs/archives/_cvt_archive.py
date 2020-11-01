@@ -1,9 +1,11 @@
 """Contains the CVTArchive class."""
-
 from collections import namedtuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.cm import ScalarMappable
+from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 from ribs.archives._individual import Individual
 from ribs.config import create_config
@@ -203,4 +205,76 @@ class CVTArchive:
 
         return pd.DataFrame(rows, columns=column_titles)
 
-    # TODO: Add voronoi method
+    def heatmap(self,
+                filename=None,
+                plot_samples=False,
+                figsize=(8, 6),
+                colormap="magma"):
+        """Plots heatmap of the 2D archive and saves it to a file.
+
+        Essentially, we create a Voronoi diagram and shade in each cell with a
+        color corresponding to the value of that cell's elite.
+
+        Raises:
+            RuntimeError: The archive is not 2D.
+        """
+        if self._n_dims != 2:
+            raise RuntimeError("Cannot plot heatmap for non-2D archive.")
+        colormap = plt.get_cmap(colormap)
+
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.set_aspect("equal")
+        ax.set_xlim(self.lower_bounds[0], self.upper_bounds[0])
+        ax.set_ylim(self.lower_bounds[1], self.upper_bounds[1])
+
+        # Add faraway points so that the edge regions of the Voronoi diagram are
+        # filled in. Refer to
+        # https://stackoverflow.com/questions/20515554/colorize-voronoi-diagram
+        # for more info.
+        interval = self.upper_bounds - self.lower_bounds
+        scale = 1000
+        faraway_pts = [
+            self.upper_bounds + interval * scale,  # Far upper right.
+            self.upper_bounds + interval * [-1, 1] * scale,  # Far upper left.
+            self.lower_bounds + interval * [-1, -1] * scale,  # Far bottom left.
+            self.lower_bounds + interval * [1, -1] * scale,  # Far bottom right.
+        ]
+        vor = Voronoi(np.append(self.centroids, faraway_pts, axis=0))
+
+        # Calculate objective value for each region. `vor.point_region` contains
+        # the region index of each point.
+        region_obj = [None] * len(vor.regions)
+        min_obj, max_obj = np.inf, np.NINF
+        for index, region_idx in enumerate(
+                vor.point_region[:-4]):  # Exclude faraway_pts.
+            if region_idx != -1 and self._solutions[index] is not None:
+                obj = self._objective_values[index]
+                min_obj = min(min_obj, obj)
+                max_obj = max(max_obj, obj)
+                region_obj[region_idx] = obj
+
+        # Shade the regions.
+        for region, objective in zip(vor.regions, region_obj):
+            # This check is O(n), but n is typically small, and creating
+            # `polygon` is also O(n) anyway.
+            if -1 not in region:
+                if objective is None:
+                    color = "white"
+                else:
+                    normalized_obj = (objective - min_obj) / (max_obj - min_obj)
+                    color = colormap(normalized_obj)
+                polygon = [vor.vertices[i] for i in region]
+                ax.fill(*zip(*polygon), color=color, ec="w", lw=0.5)
+        mappable = ScalarMappable(cmap=colormap)
+        mappable.set_clim(min_obj, max_obj)
+        fig.colorbar(mappable, ax=ax, pad=0.1)
+
+        # Plot the sample points and centroids.
+        if plot_samples:
+            ax.plot(self.samples[:, 0], self.samples[:, 1], "o", c="gray", ms=1)
+        ax.plot(self.centroids[:, 0], self.centroids[:, 1], "ko")
+
+        if filename is not None:
+            fig.savefig(filename)
+
+        return fig, ax
