@@ -61,9 +61,10 @@ class GridArchive:
 
         # Create components of the grid. We separate the components so that they
         # each be efficiently represented as a numpy array.
+        self._n_dims = len(self.dims)
         self._objective_values = np.empty(self.dims, dtype=float)
         # Stores an array of behavior values at each index.
-        self._behavior_values = np.empty(list(self.dims) + [len(self.dims)],
+        self._behavior_values = np.empty((*self.dims, self._n_dims),
                                          dtype=float)
         self._solutions = np.full(self.dims, None, dtype=object)
 
@@ -103,6 +104,7 @@ class GridArchive:
         Returns:
             Whether the value was inserted into the archive.
         """
+        # TODO: document args.
         index = self._get_index(behavior_values)
 
         if (self._solutions[index] is None or
@@ -137,7 +139,7 @@ class GridArchive:
         Raises:
             IndexError: The archive is empty.
         """
-        if len(self._occupied_indices) == 0:
+        if self.is_empty():
             raise IndexError("No elements in archive.")
 
         random_idx = self._rng.integers(len(self._occupied_indices))
@@ -158,9 +160,8 @@ class GridArchive:
             column for the objective function value called ``objective``, and 1
             column for solution objects called ``solution``.
         """
-        num_dims = len(self.dims)
-        column_titles = ['index-{}'.format(i) for i in range(num_dims)]
-        column_titles += ['behavior-{}'.format(i) for i in range(num_dims)]
+        column_titles = ['index-{}'.format(i) for i in range(self._n_dims)]
+        column_titles += ['behavior-{}'.format(i) for i in range(self._n_dims)]
         column_titles += ['objective', 'solution']
 
         rows = []
