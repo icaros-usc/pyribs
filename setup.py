@@ -9,12 +9,15 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [
+install_requires = [
     'numpy>=1.17.0',  # >=1.17.0 mainly because of default_rng.
     'pandas>=1.0.0',
-    'matplotlib>=3.0.0',
     'scipy>=1.0.0',
 ]
+
+extras_require = {
+    'all': ['matplotlib>=3.0.0',],
+}
 
 setup(
     author="ICAROS Lab",
@@ -30,7 +33,8 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     description="A bare-bones quality diversity optimization library.",
-    install_requires=requirements,
+    install_requires=install_requires,
+    extras_require=extras_require,
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
