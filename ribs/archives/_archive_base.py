@@ -66,7 +66,7 @@ class ArchiveBase:
             behavior_values (np.ndarray): Coordinates in behavior space of this
                 solution.
         Returns:
-            Whether the value was inserted into the archive.
+            bool: Whether the value was inserted into the archive.
         """
         index = self._get_index(behavior_values)
 
@@ -90,7 +90,7 @@ class ArchiveBase:
         """Checks if the archive has no elements in it.
 
         Returns:
-            True if the archive is empty, False otherwise.
+            bool: True if the archive is empty, False otherwise.
         """
         return not self._occupied_indices
 
@@ -98,11 +98,13 @@ class ArchiveBase:
         """Select an elite uniformly at random from one of the archive's bins.
 
         Returns:
-            solution (np.ndarray): Parameters for the solution.
-            objective_value (float): The objective function evaluation of this
-                elite.
-            behavior_values (np.ndarray): Coordinates in behavior space of the
-                elite.
+            tuple: 3-element tuple containing:
+
+                **solution** (*np.ndarray*): Parameters for the solution.
+
+                **objective_value** (*float*): Objective function evaluation.
+
+                **behavior_values** (*np.ndarray*): Coordinates in behavior space.
         Raises:
             IndexError: The archive is empty.
         """

@@ -172,4 +172,5 @@ texinfo_documents = [
 autodoc_default_options = {
     "member-order": "bysource",
     "autosummary": True,
+    "inherited-members": True,
 }
