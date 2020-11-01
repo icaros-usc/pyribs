@@ -160,16 +160,21 @@ class GridArchive:
             column for the objective function value called ``objective``, and 1
             column for solution objects called ``solution``.
         """
-        column_titles = ['index-{}'.format(i) for i in range(self._n_dims)]
-        column_titles += ['behavior-{}'.format(i) for i in range(self._n_dims)]
-        column_titles += ['objective', 'solution']
+        column_titles = [
+            *[f"index-{i}" for i in range(self._n_dims)],
+            *[f"behavior-{i}" for i in range(self._n_dims)],
+            "objective",
+            "solution",
+        ]
 
         rows = []
         for index in self._occupied_indices:
-            row = list(index)
-            row += list(self._behavior_values[index])
-            row.append(self._objective_values[index])
-            row.append(self._solutions[index])
+            row = [
+                *index,
+                *self._behavior_values[index],
+                self._objective_values[index],
+                self._solutions[index],
+            ]
             rows.append(row)
 
         return pd.DataFrame(rows, columns=column_titles)
