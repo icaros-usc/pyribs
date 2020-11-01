@@ -16,14 +16,6 @@ requirements = [
     'scipy>=1.0.0',
 ]
 
-setup_requirements = [
-    'pytest-runner',
-]
-
-test_requirements = [
-    'pytest>=3',
-]
-
 setup(
     author="ICAROS Lab",
     author_email='tjanaka@usc.edu',
@@ -45,9 +37,7 @@ setup(
     keywords='ribs',
     name='ribs',
     packages=find_packages(include=['ribs', 'ribs.*']),
-    setup_requires=setup_requirements,
     test_suite='tests',
-    tests_require=test_requirements,
     url='https://github.com/icaros-usc/ribs',
     version='0.0.0',
     zip_safe=False,
