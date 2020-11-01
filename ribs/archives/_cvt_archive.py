@@ -264,7 +264,7 @@ class CVTArchive:
                     normalized_obj = (objective - min_obj) / (max_obj - min_obj)
                     color = colormap(normalized_obj)
                 polygon = [vor.vertices[i] for i in region]
-                ax.fill(*zip(*polygon), color=color, ec="w", lw=0.5)
+                ax.fill(*zip(*polygon), color=color, ec="k", lw=0.5)
         mappable = ScalarMappable(cmap=colormap)
         mappable.set_clim(min_obj, max_obj)
         fig.colorbar(mappable, ax=ax, pad=0.1)
