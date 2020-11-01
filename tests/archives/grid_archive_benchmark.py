@@ -26,4 +26,4 @@ def benchmark_get_100k_random_elites(benchmark, benchmark_data_100k):
     @benchmark
     def get_hundred_thousand_elites():
         for i in range(n):
-            ind = archive.get_random_elite()
+            sol, obj, beh = archive.get_random_elite()

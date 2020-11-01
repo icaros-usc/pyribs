@@ -117,9 +117,9 @@ def test_random_elite_gets_single_elite(_archive_fixture):
     (_, archive_with_entry, behavior_values, _, solution,
      objective_value) = _archive_fixture
     retrieved = archive_with_entry.get_random_elite()
-    assert retrieved[0] == objective_value
-    assert np.all(retrieved[1] == behavior_values)
-    assert np.all(retrieved[2] == solution)
+    assert np.all(retrieved[0] == solution)
+    assert retrieved[1] == objective_value
+    assert np.all(retrieved[2] == behavior_values)
 
 
 def test_random_elite_fails_when_empty(_archive_fixture):

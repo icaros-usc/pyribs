@@ -4,7 +4,6 @@ from collections import namedtuple
 import numpy as np
 import pandas as pd
 
-from ribs.archives._individual import Individual
 from ribs.config import create_config
 
 #: Configuration for the GridArchive.
@@ -98,13 +97,14 @@ class GridArchive:
         performance than the previous solution.
 
         Args:
-            solution (np.ndarray):
-            objective_value (float):
-            behavior_values (np.ndarray):
+            solution (np.ndarray): Parameters for the solution.
+            objective_value (float): Objective function evaluation of this
+                solution.
+            behavior_values (np.ndarray): Coordinates in behavior space of this
+                solution.
         Returns:
             Whether the value was inserted into the archive.
         """
-        # TODO: document args.
         index = self._get_index(behavior_values)
 
         if (self._solutions[index] is None or
@@ -132,10 +132,14 @@ class GridArchive:
         return not self._occupied_indices
 
     def get_random_elite(self):
-        """Select a random elite from one of the archive's bins.
+        """Select an elite uniformly at random from one of the archive's bins.
 
         Returns:
-            (Individual) An elite from the archive, chosen uniformly at random.
+            solution (np.ndarray): Parameters for the solution.
+            objective_value (float): The objective function evaluation of this
+                elite.
+            behavior_values (np.ndarray): Coordinates in behavior space of the
+                elite.
         Raises:
             IndexError: The archive is empty.
         """
@@ -144,10 +148,10 @@ class GridArchive:
 
         random_idx = self._rng.integers(len(self._occupied_indices))
         index = self._occupied_indices[random_idx]
-        return Individual(
+        return (
+            self._solutions[index],
             self._objective_values[index],
             self._behavior_values[index],
-            self._solutions[index],
         )
 
     def as_pandas(self):
