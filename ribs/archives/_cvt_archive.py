@@ -7,7 +7,6 @@ import pandas as pd
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
-from ribs.archives._individual import Individual
 from ribs.config import create_config
 
 #: Configuration for the CVTArchive.
@@ -177,7 +176,7 @@ class CVTArchive:
 
         random_idx = self._rng.integers(len(self._occupied_indices))
         index = self._occupied_indices[random_idx]
-        return Individual(
+        return (
             self._objective_values[index],
             self._behavior_values[index],
             self._solutions[index],
@@ -205,6 +204,7 @@ class CVTArchive:
 
         return pd.DataFrame(rows, columns=column_titles)
 
+    # TODO: figure out how to pass in ax parameter.
     def heatmap(self,
                 filename=None,
                 plot_samples=False,
@@ -220,8 +220,8 @@ class CVTArchive:
         """
         if self._n_dims != 2:
             raise RuntimeError("Cannot plot heatmap for non-2D archive.")
-        colormap = plt.get_cmap(colormap)
 
+        colormap = plt.get_cmap(colormap)
         fig, ax = plt.subplots(figsize=figsize)
         ax.set_aspect("equal")
         ax.set_xlim(self.lower_bounds[0], self.upper_bounds[0])
