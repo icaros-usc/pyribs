@@ -104,7 +104,7 @@ class ArchiveBase:
 
                 **objective_value** (*float*): Objective function evaluation.
 
-                **behavior_values** (*np.ndarray*): Coordinates in behavior space.
+                **behavior_values** (*np.ndarray*): Behavior space coordinates.
         Raises:
             IndexError: The archive is empty.
         """
