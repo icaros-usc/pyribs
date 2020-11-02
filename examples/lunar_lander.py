@@ -62,7 +62,7 @@ def simulate(
             time.sleep(delay / 1000)
         action = np.argmax(model @ obs)  # Deterministic.
         obs, reward, done, _ = env.step(action)
-        total_reward += reward  # Cost is negative of reward.
+        total_reward += reward
         time_steps += 1
 
     env.close()
@@ -106,31 +106,15 @@ def train_model(
         sols = opt.ask()
 
         objs = list()
-        # states = list()
-        # time = list()
         bcs = list()
-
-        # for s in sols:
-        #     #reward, state, timesteps = simulate(env_name, np.reshape(s, (action_dim, obs_dim)), seed)
-        #     reward, state, timesteps = client.submit(lambda sol: simulate(env_name, np.reshape(s, (action_dim, obs_dim)), seed), s)
-        #     objs.append(reward)
-        #     states.append(state)
-        #     time.append(timesteps)
 
         futures = client.map(lambda sol: simulate(env_name, np.reshape(s, (action_dim, obs_dim)), seed), sols)
 
         results = client.gather(futures)
 
-        #objs = [ -1. * simulate(env_name, np.reshape(s, (action_dim, obs_dim)), seed) for s in sols]
-
-        #bcs = [(s[0], s[1]) for s in sols] # episode timesteps, x position (https://github.com/openai/gym/blob/master/gym/envs/box2d/lunar_lander.py#L306)
-
         for reward, state, timesteps in results:
             objs.append(reward)
             bcs.append((timesteps, state[0]))
-
-        # for timesteps, state in zip(time, states):
-        #     bcs.append((timesteps, state[0]))
 
         opt.tell(sols, objs, bcs)
 
@@ -143,47 +127,6 @@ def train_model(
     df = df.pivot('index-0', 'index-1', 'objective')
     sns.heatmap(df)
     plt.savefig('lunar_landerV2-map-elites.png')
-
-    # use seaborn to make heatmap
-
-
-    # Train with CMA-ES.
-    # cmaes = cma.CMAEvolutionStrategy(
-    #     np.zeros(action_dim * obs_dim),
-    #     sigma,
-    # )
-    # while not cmaes.stop():
-    #     solutions = cmaes.ask()
-        # results = client.map(
-        #     lambda sol: simulate(
-        #         env_name,
-        #         np.reshape(sol, (action_dim, obs_dim)),  # Model.
-        #         seed,
-        #     ),
-        #     solutions,
-        # )
-    #     cmaes.tell(solutions, client.gather(results))
-    #     cmaes.logger.add()
-    #     cmaes.disp()
-
-    #     if cmaes.countiter % cmaes.opts['verb_disp'] == 0:
-    #         save_model(
-    #             cmaes.result.xbest.reshape((action_dim, obs_dim)),
-    #             model_filename,
-    #             verbose=True,
-    #         )
-
-    # cmaes.result_pretty()
-
-    # # Save results.
-    # cmaes.logger.plot()
-    # cma.s.figsave(plot_filename)
-    # print("Saved plot to", plot_filename)
-    # save_model(
-    #     cmaes.result.xbest.reshape((action_dim, obs_dim)),
-    #     model_filename,
-    #     verbose=True,
-    # )
 
 
 def run_evaluation(model_filename, env_name, seed):
@@ -227,24 +170,6 @@ def cma_es_discrete(
         run_evaluation(model_filename, "LunarLander-v2", seed)
         return
 
-    # Dask initialization. Get rid of this.
-    # if slurm:
-    #     # 1 process per CPU since cores == processes
-    #     cluster = SLURMCluster(
-    #         project="nikolaid_548",
-    #         cores=slurm_cpus_per_worker,
-    #         memory="4GB",
-    #         processes=slurm_cpus_per_worker,
-    #     )
-
-    #     print("### SLURM Job script ###")
-    #     print("--------------------------------------")
-    #     print(cluster.job_script())
-    #     print("--------------------------------------")
-
-    #     cluster.scale(jobs=slurm_workers)
-    #     client = Client(cluster)  # pylint: disable=unused-variable
-    # else:
         # Initialize on a local machine. See the docs here:
         # https://docs.dask.org/en/latest/setup/single-distributed.html for more
         # info on LocalCluster. Keep in mind that for LocalCluster, the
