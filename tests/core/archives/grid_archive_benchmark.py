@@ -2,8 +2,6 @@
 
 from ribs.archives import GridArchive
 
-from .utils import benchmark_data_100k
-
 # pylint: disable = invalid-name, unused-variable
 
 
