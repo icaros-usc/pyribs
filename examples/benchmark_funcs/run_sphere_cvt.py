@@ -17,8 +17,8 @@ def sphere(sol):
 
 def main():
     """Initializes CVT, runs it with Sphere function, and plots results."""
-    archive = CVTArchive([(-1, 1), (-1, 1)], 100, config={
-        "samples": 10000,
+    archive = CVTArchive([(-1, 1), (-1, 1)], 1000, config={
+        "samples": 10_000,
     })
 
     emitters = [

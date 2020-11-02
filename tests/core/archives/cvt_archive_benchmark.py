@@ -9,4 +9,4 @@ def benchmark_construction_and_k_means(benchmark):
 
     @benchmark
     def construct():
-        CVTArchive([(-1, 1), (-1, 1)], 100, config={"samples": 10_000})
+        CVTArchive([(-1, 1), (-1, 1)], 1000, config={"samples": 10_000})
