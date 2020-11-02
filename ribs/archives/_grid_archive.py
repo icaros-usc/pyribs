@@ -47,7 +47,7 @@ class GridArchive(ArchiveBase):
     Attributes:
         config (GridArchiveConfig): Configuration object.
         dims (np.ndarray): Number of bins in each dimension.
-        n_dims (int): Number of dimensions in the archive.
+        n_dims (int): Number of dimensions of the archive behavior space.
         lower_bounds (np.ndarray): Lower bound of each dimension.
         upper_bounds (np.ndarray): Upper bound of each dimension.
         interval_size (np.ndarray): The size of each dimension (``upper_bounds -
