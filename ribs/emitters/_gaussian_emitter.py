@@ -1,25 +1,26 @@
 """Provides the GaussianEmitter and corresponding GaussianEmitterConfig."""
-from collections import namedtuple
-
 import numpy as np
 
 from ribs.config import create_config
 
-#: Configuration for the GaussianEmitter.
-#:
-#: Attributes:
-#:     seed (float or int): Value to seed the random number generator. Set to
-#:         None to avoid seeding. Default: None
-#:     batch_size (int): Number of solutions to send back in the ask() method.
-#:         Default: 64
-GaussianEmitterConfig = namedtuple("GaussianEmitterConfig", [
-    "seed",
-    "batch_size",
-])
-GaussianEmitterConfig.__new__.__defaults__ = (
-    None,
-    64,
-)
+
+class GaussianEmitterConfig:
+    """Configuration for the GaussianEmitter.
+
+    Args:
+        seed (float or int): Value to seed the random number generator. Set to
+            None to avoid seeding. Default: None
+        batch_size (int): Number of solutions to send back in the ask() method.
+            Default: 64
+    """
+
+    def __init__(
+        self,
+        seed=None,
+        batch_size=64,
+    ):
+        self.seed = seed
+        self.batch_size = batch_size
 
 
 class GaussianEmitter:

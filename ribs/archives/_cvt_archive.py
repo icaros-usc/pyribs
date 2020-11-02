@@ -1,42 +1,44 @@
 """Contains the CVTArchive class."""
-from collections import namedtuple
-
 import numpy as np
 import pandas as pd
 
 from ribs.archives._archive_base import ArchiveBase
 from ribs.config import create_config
 
-#: Configuration for the CVTArchive.
-#:
-#: Attributes:
-#:     seed (float or int): Value to seed the random number generator. Set to
-#:         None to avoid any seeding. Default: None
-#:     samples (int): Number of samples to generate before creating the archive.
-#:         If ``samples`` is passed into ``CVTArchive``, this option is ignored.
-#:     k_means_threshold (float): When running k-means to find the centroids
-#:         during initialization, we will calculate the cost of the clustering
-#:         at each iteration, where the cost is the sum of the distances from
-#:         each point to its centroid. When the change in cost between
-#:         iterations goes below this threshold, k-means will terminate. By
-#:         default, this is set to 1e-9 to facilitate convergence (i.e. the
-#:         centroids no longer move between iterations.
-#:     k_means_itrs (int): If you prefer to run k-means for a set number of
-#:         iterations at the beginning, set this value. By default, it is None,
-#:         which means that ``k_means_threshold`` is used instead. If provided,
-#:         this value will have precedence over ``k_means_threshold``.
-CVTArchiveConfig = namedtuple("CVTArchiveConfig", [
-    "seed",
-    "samples",
-    "k_means_threshold",
-    "k_means_itrs",
-])
-CVTArchiveConfig.__new__.__defaults__ = (
-    None,
-    100000,
-    1e-9,
-    None,
-)
+
+class CVTArchiveConfig:
+    """Configuration for the CVTArchive.
+
+    Args:
+        seed (float or int): Value to seed the random number generator. Set to
+            None to avoid any seeding. Default: None
+        samples (int): Number of samples to generate before creating the
+            archive.  If ``samples`` is passed into ``CVTArchive``, this option
+            is ignored.
+        k_means_threshold (float): When running k-means to find the centroids
+            during initialization, we will calculate the cost of the clustering
+            at each iteration, where the cost is the sum of the distances from
+            each point to its centroid. When the change in cost between
+            iterations goes below this threshold, k-means will terminate. By
+            default, this is set to 1e-9 to facilitate convergence (i.e. the
+            centroids no longer move between iterations.
+        k_means_itrs (int): If you prefer to run k-means for a set number of
+            iterations at the beginning, set this value. By default, it is None,
+            which means that ``k_means_threshold`` is used instead. If provided,
+            this value will have precedence over ``k_means_threshold``.
+    """
+
+    def __init__(
+        self,
+        seed=None,
+        samples=100_000,
+        k_means_threshold=1e-9,
+        k_means_itrs=None,
+    ):
+        self.seed = seed
+        self.samples = samples
+        self.k_means_threshold = k_means_threshold
+        self.k_means_itrs = k_means_itrs
 
 
 class CVTArchive(ArchiveBase):

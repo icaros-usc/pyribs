@@ -1,16 +1,19 @@
 """Provides the Optimizer and corresponding OptimizerConfig."""
-from collections import namedtuple
-
 import numpy as np
 
 from ribs.config import create_config
 from ribs.emitters import GaussianEmitter
 
-#: Configuration for the Optimizer.
-#:
-#: Attributes:
-OptimizerConfig = namedtuple("OptimizerConfig", [])
-OptimizerConfig.__new__.__defaults__ = ()
+
+class OptimizerConfig:
+    """Configuration for the Optimizer.
+
+    Args:
+        (none yet)
+    """
+
+    def __init__(self):
+        pass
 
 
 class Optimizer:

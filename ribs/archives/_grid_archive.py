@@ -1,21 +1,24 @@
 """Contains the GridArchive and corresponding GridArchiveConfig."""
-from collections import namedtuple
-
 import numpy as np
 import pandas as pd
 
 from ribs.archives._archive_base import ArchiveBase
 from ribs.config import create_config
 
-#: Configuration for the GridArchive.
-#:
-#: Attributes:
-#:     seed (float or int): Value to seed the random number generator. Set to
-#:         None to avoid any seeding. Default: None
-GridArchiveConfig = namedtuple("GridArchiveConfig", [
-    "seed",
-])
-GridArchiveConfig.__new__.__defaults__ = (None,)
+
+class GridArchiveConfig:
+    """Configuration for the GridArchive.
+
+    Args:
+        seed (float or int): Value to seed the random number generator. Set to
+            None to avoid any seeding. Default: None
+    """
+
+    def __init__(
+        self,
+        seed=None,
+    ):
+        self.seed = seed
 
 
 class GridArchive(ArchiveBase):
