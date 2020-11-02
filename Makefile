@@ -51,7 +51,7 @@ lint: ## check style with pylint
 	pylint ribs tests
 
 test: ## run tests quickly with the default Python
-	pytest
+	pytest tests
 
 test-core: ## only test the core of ribs
 	pytest tests/core
@@ -60,7 +60,7 @@ test-failed: ## run only tests that filed
 	pytest --last-failed
 
 test-only: ## run tests without benchmarks, as benchmarks take a while
-	pytest -c pytest_no_benchmark.ini
+	pytest -c pytest_no_benchmark.ini tests
 
 test-all: ## run tests on every Python version with tox
 	tox

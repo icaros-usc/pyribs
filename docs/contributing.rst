@@ -72,7 +72,7 @@ Ready to contribute? Here's how to set up `ribs` for local development.
     cd pyribs
     conda create --prefix ./env python=3.6 # 3.6 is the minimum version pyribs supports.
     conda activate ./env
-    pip install -e .
+    pip install -e .[all]
     pip install -r requirements_dev.txt
 
 4. Create a branch for local development::
@@ -94,7 +94,7 @@ Ready to contribute? Here's how to set up `ribs` for local development.
    tests, including testing other Python versions with tox::
 
     pylint ribs tests
-    pytest
+    pytest tests/
     make test # ^ same as above
     tox  # Don't worry if this does not run; we will run it in CI/CD
 
