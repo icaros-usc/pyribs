@@ -5,7 +5,8 @@ from ribs.archives import CVTArchive
 # pylint: disable = invalid-name, unused-variable
 
 
-def benchmark_construction_and_k_means(benchmark):
+def benchmark_construction(benchmark):
+    """Construction includes k-means clustering and building a kd-tree."""
 
     @benchmark
     def construct():
@@ -17,8 +18,8 @@ def benchmark_100k_additions(benchmark, benchmark_data_100k):
 
     def setup():
         archive = CVTArchive([(-1, 1), (-1, 1)],
-                             1000,
-                             config={"samples": 10_000})
+                             10000,
+                             config={"samples": 100_000})
         return (archive,), {}
 
     def add_100k(archive):
