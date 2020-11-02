@@ -1,6 +1,7 @@
 """Contains the CVTArchive class."""
 import numpy as np
 import pandas as pd
+from scipy.cluster import vq
 
 from ribs.archives._archive_base import ArchiveBase
 from ribs.config import create_config
@@ -15,30 +16,22 @@ class CVTArchiveConfig:
         samples (int): Number of samples to generate before creating the
             archive.  If ``samples`` is passed into ``CVTArchive``, this option
             is ignored.
-        k_means_threshold (float): When running k-means to find the centroids
-            during initialization, we will calculate the cost of the clustering
-            at each iteration, where the cost is the sum of the distances from
-            each point to its centroid. When the change in cost between
-            iterations goes below this threshold, k-means will terminate. By
-            default, this is set to 1e-9 to facilitate convergence (i.e. the
-            centroids no longer move between iterations.
-        k_means_itrs (int): If you prefer to run k-means for a set number of
-            iterations at the beginning, set this value. By default, it is None,
-            which means that ``k_means_threshold`` is used instead. If provided,
-            this value will have precedence over ``k_means_threshold``.
+        k_means_threshold (float): When finding the centroids at the beginning,
+            k-means will terminate when the difference in distortion between
+            iterations goes below this threshold (see `here
+            <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_) for
+            more info.
     """
 
     def __init__(
         self,
         seed=None,
         samples=100_000,
-        k_means_threshold=1e-9,
-        k_means_itrs=None,
+        k_means_threshold=1e-6,
     ):
         self.seed = seed
         self.samples = samples
         self.k_means_threshold = k_means_threshold
-        self.k_means_itrs = k_means_itrs
 
 
 class CVTArchive(ArchiveBase):
@@ -54,6 +47,9 @@ class CVTArchive(ArchiveBase):
 
     Currently, finding the closes centroid is implemented as an O(k) search,
     though we are considering implementing an O(log k) search in the future.
+
+    For k-means clustering, note that we use `scipy.cluster.vq
+    <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_
 
     Args:
         ranges (array-like of (float, float)): Upper and lower bound of each
@@ -109,64 +105,12 @@ class CVTArchive(ArchiveBase):
             self.upper_bounds,
             size=(bins, self.n_dims),
         )
-        self.centroids = self._k_means_cluster(
-            initial_centroids,
+        self.centroids = vq.kmeans(
             self.samples,
-            self.config.k_means_threshold,
-            self.config.k_means_itrs,
-        )
-
-    @staticmethod
-    def _k_means_cluster(centroids, points, threshold, total_itrs):
-        """Clusters the given points, uses the centroids to initialize.
-
-        Args:
-            centroids ((n_centroids, n_dims) array): Initial centroids.
-            points ((n_points, n_dims) array): Points to cluster.
-            threshold: See ``CVTArchiveConfig.k_means_threshold``.
-            total_itrs: See ``CVTArchiveConfig.k_means_itrs``.
-        """
-        previous_cost = None
-        itrs = 0
-
-        while True:
-            # Check termination with itrs.
-            if total_itrs is not None and itrs >= total_itrs:
-                break
-
-            # Calculate distance between centroids and points. Start by making
-            # `distances` an (n_points, n_dims, n_clusters) array -- we want to
-            # subtract every point in centroids from every point in points.
-            distances = np.expand_dims(points, axis=2) - np.expand_dims(
-                centroids.T, axis=0)
-            # Now we square distances and sum it along axis 1 to get an
-            # (n_points, n_centroids) array where (i,j) is the distance from
-            # point i to centroid j.
-            distances = np.sum(np.square(distances), axis=1)
-
-            # Check termination with threshold.
-            current_cost = np.sum(distances)
-            if (total_itrs is None and previous_cost is not None and
-                    abs(previous_cost - current_cost) < threshold):
-                break
-            previous_cost = current_cost
-
-            # Find the closest centroid for each point.
-            closest = np.argmin(distances, axis=1)
-
-            # Indices of the points (in `points`) that belong to each centroid.
-            centroid_pts = [[] for _ in range(len(centroids))]
-            for pt_idx, centroid_idx in enumerate(closest):
-                centroid_pts[centroid_idx].append(pt_idx)
-
-            # Reassign the centroids.
-            for centroid_idx, pts_idx in enumerate(centroid_pts):
-                if len(pts_idx) != 0:  # No reassignment if no points assigned.
-                    centroids[centroid_idx] = np.mean(points[pts_idx], axis=0)
-
-            itrs += 1
-
-        return centroids
+            initial_centroids,
+            iter=1,
+            thresh=self.config.k_means_threshold,
+        )[0]
 
     def _get_index(self, behavior_values):
         distances = np.expand_dims(behavior_values, axis=0) - self.centroids
