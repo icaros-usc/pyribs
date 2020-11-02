@@ -109,8 +109,8 @@ html_sidebars = {
 html_theme_path = sphinx_material.html_theme_path()
 html_context = sphinx_material.get_html_context()
 html_theme = "sphinx_material"
-html_logo = "_static/logo.svg"
-html_favicon = "_static/favicon.ico"
+html_logo = "_static/imgs/logo.svg"
+html_favicon = "_static/imgs/favicon.ico"
 html_title = "pyribs v" + ribs.__version__
 
 # material theme options (see theme.conf for more information)
