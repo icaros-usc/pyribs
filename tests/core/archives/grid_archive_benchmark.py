@@ -4,7 +4,7 @@ from ribs.archives import GridArchive
 
 from .utils import benchmark_data_100k
 
-# pylint: disable = invalid-name, unused-variable, missing-function-docstring
+# pylint: disable = invalid-name, unused-variable
 
 
 def benchmark_construct_and_add_100k(benchmark, benchmark_data_100k):
