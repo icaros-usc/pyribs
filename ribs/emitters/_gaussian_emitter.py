@@ -42,9 +42,9 @@ class GaussianEmitter:
         archive (ribs archive): An archive to use when creating and inserting
             solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        config (GaussianEmitterConfig or dict): Configuration object. If None,
-            a default GaussianEmitterConfig is constructed. A dict may also be
-            passed in, in which case its arguments will be passed into
+        config (None or dict or GaussianEmitterConfig): Configuration object. If
+            None, a default GaussianEmitterConfig is constructed. A dict may
+            also be passed in, in which case its arguments will be passed into
             GaussianEmitterConfig.
     Attributes:
         config (GaussianEmitterConfig): Configuration object.

@@ -70,10 +70,13 @@ class CVTArchive(ArchiveBase):
             this can be useful when, for instance, samples generated u.a.r. in
             the behavior space are not physically possible, such as in the case
             of trajectories represented by a series of points.
-        config (CVTArchiveConfig): Configuration object. If None, a default
-            CVTArchiveConfig is constructed. A dict may also be passed in, in
-            which case its arguments will be passed into CVTArchiveConfig.
+        config (None or dict or CVTArchiveConfig): Configuration object. If
+            None, a default CVTArchiveConfig is constructed. A dict may also be
+            passed in, in which case its arguments will be passed into
+            CVTArchiveConfig.
     Attributes:
+        config (CVTArchiveConfig): Configuration object.
+        n_dims (int): Number of dimensions in the archive.
         lower_bounds (np.ndarray): Lower bound of each dimension.
         upper_bounds (np.ndarray): Upper bound of each dimension.
         samples: The samples used in creating the CVT.
@@ -82,12 +85,11 @@ class CVTArchive(ArchiveBase):
 
     def __init__(self, ranges, bins, samples=None, config=None):
         self.config = create_config(config, CVTArchiveConfig)
-        dims = len(ranges)
+        self.n_dims = len(ranges)
         ArchiveBase.__init__(
             self,
-            dims,  # n_dims
             bins,  # objective_value_dim
-            (bins, dims),  # behavior_value_dim
+            (bins, self.n_dims),  # behavior_value_dim
             bins,  # solution_dim
             self.config.seed,
         )
@@ -100,12 +102,12 @@ class CVTArchive(ArchiveBase):
                         if samples is not None else self._rng.uniform(
                             self.lower_bounds,
                             self.upper_bounds,
-                            size=(self.config.samples, dims),
+                            size=(self.config.samples, self.n_dims),
                         ))
         initial_centroids = self._rng.uniform(
             self.lower_bounds,
             self.upper_bounds,
-            size=(bins, dims),
+            size=(bins, self.n_dims),
         )
         self.centroids = self._k_means_cluster(
             initial_centroids,
@@ -185,8 +187,8 @@ class CVTArchive(ArchiveBase):
         """
         column_titles = [
             "index",
-            *[f"centroid-{i}" for i in range(self._n_dims)],
-            *[f"behavior-{i}" for i in range(self._n_dims)],
+            *[f"centroid-{i}" for i in range(self.n_dims)],
+            *[f"behavior-{i}" for i in range(self.n_dims)],
             "objective",
             "solution",
         ]
