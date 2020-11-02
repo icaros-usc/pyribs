@@ -53,6 +53,9 @@ lint: ## check style with pylint
 test: ## run tests quickly with the default Python
 	pytest
 
+test-core: ## only test the core of ribs
+	pytest tests/core
+
 test-failed: ## run only tests that filed
 	pytest --last-failed
 
