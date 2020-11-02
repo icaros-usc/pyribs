@@ -6,7 +6,6 @@ ribs.visualize``.
 """
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
@@ -75,14 +74,11 @@ def cvt_archive_heatmap(archive,
     # the region index of each point.
     region_obj = [None] * len(vor.regions)
     min_obj, max_obj = np.inf, np.NINF
-    # TODO: Come up with a more efficient way to retrieve these.
-    archive_data = archive.as_pandas()
-    objective_values = pd.DataFrame(archive_data.loc[:, "objective"],
-                                    index=archive_data.loc[:, "index"])
+    # TODO: Come up with a better way to retrieve these.
     for pt_idx, region_idx in enumerate(
             vor.point_region[:-4]):  # Exclude faraway_pts.
-        if region_idx != -1 and pt_idx in objective_values.index:
-            obj = objective_values.loc[pt_idx, "objective"]
+        if region_idx != -1 and archive._solutions[pt_idx] is not None:
+            obj = archive._objective_values[pt_idx]
             min_obj = min(min_obj, obj)
             max_obj = max(max_obj, obj)
             region_obj[region_idx] = obj
