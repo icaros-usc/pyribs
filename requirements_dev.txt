@@ -10,7 +10,7 @@ pytest-benchmark==3.2.3
 
 # Documentation
 Sphinx==3.2.1
-sphinx-book-theme==0.0.37
+sphinx-material==0.0.32
 sphinx-autobuild==2020.9.1
 autodocsumm==0.2.1
 

@@ -74,14 +74,14 @@ docs: ## generate Sphinx HTML documentation, including API docs
 	$(BROWSER) docs/_build/html/index.html
 
 servedocs: ## compile the docs watching for changes
-	sphinx-autobuild \
+	DOCS_MODE=dev sphinx-autobuild \
 		--open-browser \
 		--watch ribs/ \
 		docs/ \
 		docs/_build/html
 
 servedocs-ignore-vim: ## compile the docs watching for changes, ignore vim .swp files
-	sphinx-autobuild \
+	DOCS_MODE=dev sphinx-autobuild \
 		--open-browser \
 		--watch ribs/ \
 		--ignore *.swp \

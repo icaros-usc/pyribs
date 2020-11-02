@@ -20,9 +20,12 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+import sphinx_material
 
 import ribs
+
+sys.path.insert(0, os.path.abspath('..'))
+DEV_MODE = os.environ.get("DOCS_MODE", "regular") == "dev"
 
 # -- General configuration ---------------------------------------------
 
@@ -40,6 +43,8 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.intersphinx',
     'autodocsumm',
+    'sphinx_material',
+    'sphinx_copybutton',
 ]
 
 # Napoleon
@@ -79,7 +84,7 @@ release = ribs.__version__
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -87,32 +92,67 @@ language = None
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+#  pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
 # -- Options for HTML output -------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-html_theme = 'sphinx_book_theme'
-html_logo = "_static/logo.png"
+html_show_sourcelink = True
+html_sidebars = {
+    "**": [
+        "logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"
+    ]
+}
+
+html_theme_path = sphinx_material.html_theme_path()
+html_context = sphinx_material.get_html_context()
+html_theme = "sphinx_material"
+html_logo = "_static/logo.svg"
 html_favicon = "_static/favicon.ico"
 html_title = "pyribs v" + ribs.__version__
 
-# Theme options are theme-specific and customize the look and feel of a
-# theme further.  For a list of options available for each theme, see the
-# documentation.
-#
+# material theme options (see theme.conf for more information)
 html_theme_options = {
-    "repository_url": "https://github.com/icaros-usc/pyribs/",
-    "use_repository_button": True,
-    "use_issues_button": True,
-    "use_edit_page_button": True,
-    "path_to_docs": "docs/",
+    "nav_title": "pyribs",
+    "base_url": "https://ribs.readthedocs.io",
+    "repo_url": "https://github.com/icaros-usc/pyribs",
+    "repo_name": "pyribs",
+    "google_analytics_account": None,
+    "html_minify": not DEV_MODE,
+    "css_minify": not DEV_MODE,
+    #  "logo_icon": "&#xe869",
+    "repo_type": "github",
+    "globaltoc_depth": 2,
+    "color_primary": "indigo",
+    "color_accent": "light-blue",
+    "touch_icon": "images/apple-icon-152x152.png",
+    #  "theme_color": "#2196f3",
+    "master_doc": False,
+    "nav_links": [{
+        "href": "index",
+        "internal": True,
+        "title": "pyribs"
+    },],
+    "heroes": {
+        "index": "A bare-bones quality diversity optimization library."
+    },
+    #  "version_dropdown": True,
+    #  "version_json": "_static/versions.json",
+    #  "version_info": {
+    #      "Release": "https://bashtage.github.io/sphinx-material/",
+    #      "Development": "https://bashtage.github.io/sphinx-material/devel/",
+    #      "Release (rel)": "/sphinx-material/",
+    #      "Development (rel)": "/sphinx-material/devel/",
+    #  },
+    "table_classes": ["plain"],
 }
+
+html_last_updated_fmt = ""
+
+html_use_index = True
+html_domain_indices = True
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
