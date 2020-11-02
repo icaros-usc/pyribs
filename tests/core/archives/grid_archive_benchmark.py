@@ -22,6 +22,6 @@ def benchmark_get_100k_random_elites(benchmark, benchmark_data_100k):
         archive.add(solutions[i], objective_values[i], behavior_values[i])
 
     @benchmark
-    def get_hundred_thousand_elites():
+    def get_elites():
         for i in range(n):
             sol, obj, beh = archive.get_random_elite()
