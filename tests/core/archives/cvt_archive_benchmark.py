@@ -10,3 +10,19 @@ def benchmark_construction_and_k_means(benchmark):
     @benchmark
     def construct():
         CVTArchive([(-1, 1), (-1, 1)], 1000, config={"samples": 10_000})
+
+
+def benchmark_100k_additions(benchmark, benchmark_data_100k):
+    n, solutions, objective_values, behavior_values = benchmark_data_100k
+
+    def setup():
+        archive = CVTArchive([(-1, 1), (-1, 1)],
+                             1000,
+                             config={"samples": 10_000})
+        return (archive,), {}
+
+    def add_100k(archive):
+        for i in range(n):
+            archive.add(solutions[i], objective_values[i], behavior_values[i])
+
+    benchmark.pedantic(add_100k, setup=setup, rounds=5, iterations=1)
