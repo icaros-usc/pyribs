@@ -1,4 +1,11 @@
 """Functions for dealing with configs."""
+import json
+
+__all__ = [
+    "create_config",
+    "save_configs",
+    "load_configs",
+]
 
 
 def create_config(config, config_class):
@@ -22,13 +29,83 @@ def create_config(config, config_class):
     return config
 
 
-def save_configs(optimizer_config, archive_config, emitter_configs, filename):
-    """Saves all configs to a ___ file."""
+def _single_config_data(config):
+    """Returns a dict with the data to save for a single config."""
+    return {
+        "type": config.__class__.__name__,
+        "data": config.__dict__,
+    }
 
-    # TODO
+
+def save_configs(optimizer_config, archive_config, emitter_configs, filename):
+    """Saves all configs to a JSON file.
+
+    Args:
+        optimizer_config: Configuration object for an optimizer, such as
+            :class:`ribs.optimizers.OptimizerConfig`.
+        archive_config: Configuration object for an archive, such as
+            :class:`ribs.archives.GridArchiveConfig`.
+        emitter_configs (list): List of configuration objects for emitters, such
+            as :class:`ribs.emitters.GaussianEmitterConfig`.
+        filename (str): Path to save the JSON file.
+    """
+    with open(filename, "w") as file:
+        json.dump(
+            {
+                "optimizer":
+                    _single_config_data(optimizer_config),
+                "archive":
+                    _single_config_data(archive_config),
+                "emitters":
+                    [_single_config_data(config) for config in emitter_configs],
+            },
+            file,
+        )
+
+
+def _load_single_config(data, name_to_config_class):
+    """Creates one config from data returned by :meth:`_single_config_data`."""
+    config_class = name_to_config_class[data["type"]]
+    return config_class(**data["data"])
 
 
 def load_configs(filename):
-    """Loads configs from a file to reconstruct an optimizer."""
+    """Loads configs from a JSON file to reconstruct an optimizer.
 
-    # TODO
+    Args:
+        filename (str): Path from which to load the JSON file.
+    Returns:
+        tuple: 3-element tuple containing:
+
+            **optimizer_config**: Configuration object for an optimizer.
+
+            **archive_config**: Configuration object for an archive.
+
+            **emitter_configs**: List of configuration objects for emitters.
+    """
+    # We cannot import these at top-level because all these modules import this
+    # one (config), so we would have a circular dependency.
+    # pylint: disable = import-outside-toplevel
+    from ribs.archives._cvt_archive import CVTArchiveConfig
+    from ribs.archives._grid_archive import GridArchiveConfig
+    from ribs.emitters._gaussian_emitter import GaussianEmitterConfig
+    from ribs.optimizers._optimizer import OptimizerConfig
+
+    name_to_config_class = {
+        "GridArchiveConfig": GridArchiveConfig,
+        "CVTArchiveConfig": CVTArchiveConfig,
+        "GaussianEmitterConfig": GaussianEmitterConfig,
+        "OptimizerConfig": OptimizerConfig,
+    }
+
+    with open(filename, "r") as file:
+        data = json.load(file)
+        optimizer_config = _load_single_config(data["optimizer"],
+                                               name_to_config_class)
+        archive_config = _load_single_config(data["archive"],
+                                             name_to_config_class)
+        emitter_configs = [
+            _load_single_config(d, name_to_config_class)
+            for d in data["emitters"]
+        ]
+        return optimizer_config, archive_config, emitter_configs
