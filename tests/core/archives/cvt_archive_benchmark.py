@@ -18,8 +18,8 @@ def benchmark_100k_additions(benchmark, benchmark_data_100k):
 
     def setup():
         archive = CVTArchive([(-1, 1), (-1, 1)],
-                             10000,
-                             config={"samples": 100_000})
+                             1000,
+                             config={"samples": 10_000})
         return (archive,), {}
 
     def add_100k(archive):

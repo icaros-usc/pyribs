@@ -1,7 +1,8 @@
 """Contains the CVTArchive class."""
 import numpy as np
 import pandas as pd
-from scipy.cluster import vq
+from scipy.cluster.vq import kmeans
+from scipy.spatial import KDTree
 
 from ribs.archives._archive_base import ArchiveBase
 from ribs.config import create_config
@@ -21,6 +22,10 @@ class CVTArchiveConfig:
             iterations goes below this threshold (see `here
             <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_) for
             more info.
+        use_kd_tree (bool): If True, use a KDTree for finding the closest
+            centroid when inserting into the archive. This may result in a
+            speedup for larger dimensions; refer to
+            :class:`~ribs.archives.CVTArchive` for more info.
     """
 
     def __init__(
@@ -28,10 +33,12 @@ class CVTArchiveConfig:
         seed=None,
         samples=100_000,
         k_means_threshold=1e-6,
+        use_kd_tree=False,
     ):
         self.seed = seed
         self.samples = samples
         self.k_means_threshold = k_means_threshold
+        self.use_kd_tree = use_kd_tree
 
 
 class CVTArchive(ArchiveBase):
@@ -45,11 +52,15 @@ class CVTArchive(ArchiveBase):
     inserted into the archive, we identify their bin by identifying the closest
     centroid in behavior space (using Euclidean distance).
 
-    Currently, finding the closes centroid is implemented as an O(k) search,
-    though we are considering implementing an O(log k) search in the future.
-
     For k-means clustering, note that we use `scipy.cluster.vq
     <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_
+
+    Finding the closest centroid is done in O(bins) time by default; however, if
+    the config has ``use_kd_tree`` set, it can be done in roughly O(log bins)
+    time using `scipy.spatial.KDTree
+    <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.html>`_.
+    However, note that using the KDTree may actually lower performance for small
+    numbers of bins (TODO: performance comparison).
 
     Args:
         ranges (array-like of (float, float)): Upper and lower bound of each
@@ -72,7 +83,7 @@ class CVTArchive(ArchiveBase):
             CVTArchiveConfig.
     Attributes:
         config (CVTArchiveConfig): Configuration object.
-        n_dims (int): Number of dimensions in the archive.
+        n_dims (int): Number of dimensions of the archive behavior space.
         lower_bounds (np.ndarray): Lower bound of each dimension.
         upper_bounds (np.ndarray): Upper bound of each dimension.
         samples: The samples used in creating the CVT.
@@ -105,14 +116,21 @@ class CVTArchive(ArchiveBase):
             self.upper_bounds,
             size=(bins, self.n_dims),
         )
-        self.centroids = vq.kmeans(
+        self.centroids = kmeans(
             self.samples,
             initial_centroids,
             iter=1,
             thresh=self.config.k_means_threshold,
         )[0]
 
+        if self.config.use_kd_tree:
+            self._centroid_kd_tree = KDTree(self.centroids)
+
     def _get_index(self, behavior_values):
+        if self.config.use_kd_tree:
+            return self._centroid_kd_tree.query(behavior_values)[1]
+
+        # Default: calculate nearest neighbor with brute force.
         distances = np.expand_dims(behavior_values, axis=0) - self.centroids
         distances = np.sum(np.square(distances), axis=1)
         return np.argmin(distances)
