@@ -6,6 +6,7 @@ ribs.visualize``.
 """
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
@@ -14,26 +15,44 @@ __all__ = [
 ]
 
 
-# TODO: figure out how to pass in ax parameter.
 def cvt_archive_heatmap(archive,
-                        filename=None,
                         plot_samples=False,
+                        ax=None,
                         figsize=(8, 6),
-                        colormap="magma"):
+                        filename=None,
+                        colormap=None):
     """Plots heatmap of a 2D :class:`ribs.archives.CVTArchive`.
 
     Essentially, we create a Voronoi diagram and shade in each cell with a
     color corresponding to the value of that cell's elite.
 
+    Args:
+        archive (CVTArchive): A 2D CVTArchive.
+        plot_samples (bool): Whether to plot the samples used when generating
+            the clusters.
+        colormap (matplotlib.colors.Colormap): A colormap to use when plotting
+            intensity. If None, will default to matplotlib's "magma" colormap.
+        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
+            a new axis will be created.
+        figsize (tuple of (float, float)): Size of figure to create if ``ax`` is
+            not passed in.
+        filename (str): File to save the figure to. Can be used even when
+            passing in an axis. Leave as None to avoid saving any figure.
     Raises:
         RuntimeError: The archive is not 2D.
     """
-    # TODO: stop accessing this.
-    if archive._n_dims != 2:
+    if archive.n_dims != 2:
         raise RuntimeError("Cannot plot heatmap for non-2D archive.")
 
-    colormap = plt.get_cmap(colormap)
-    fig, ax = plt.subplots(figsize=figsize)
+    # Try getting the colormap early in case it fails.
+    if colormap is None:
+        colormap = plt.get_cmap("magma")
+
+    # Retrieve and initialize the axis.
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.fig
     ax.set_aspect("equal")
     ax.set_xlim(archive.lower_bounds[0], archive.upper_bounds[0])
     ax.set_ylim(archive.lower_bounds[1], archive.upper_bounds[1])
@@ -56,11 +75,14 @@ def cvt_archive_heatmap(archive,
     # the region index of each point.
     region_obj = [None] * len(vor.regions)
     min_obj, max_obj = np.inf, np.NINF
-    for index, region_idx in enumerate(
+    # TODO: Come up with a more efficient way to retrieve these.
+    archive_data = archive.as_pandas()
+    objective_values = pd.DataFrame(archive_data.loc[:, "objective"],
+                                    index=archive_data.loc[:, "index"])
+    for pt_idx, region_idx in enumerate(
             vor.point_region[:-4]):  # Exclude faraway_pts.
-        # TODO: Stop accessing private members -- get solutions from as_pandas()
-        if region_idx != -1 and archive._solutions[index] is not None:
-            obj = archive._objective_values[index]
+        if region_idx != -1 and pt_idx in objective_values.index:
+            obj = objective_values.loc[pt_idx, "objective"]
             min_obj = min(min_obj, obj)
             max_obj = max(max_obj, obj)
             region_obj[region_idx] = obj
@@ -77,6 +99,8 @@ def cvt_archive_heatmap(archive,
                 color = colormap(normalized_obj)
             polygon = [vor.vertices[i] for i in region]
             ax.fill(*zip(*polygon), color=color, ec="k", lw=0.5)
+
+    # Create a colorbar.
     mappable = ScalarMappable(cmap=colormap)
     mappable.set_clim(min_obj, max_obj)
     fig.colorbar(mappable, ax=ax, pad=0.1)
@@ -90,6 +114,7 @@ def cvt_archive_heatmap(archive,
                 ms=1)
     ax.plot(archive.centroids[:, 0], archive.centroids[:, 1], "ko")
 
+    # Save figure if necessary.
     if filename is not None:
         fig.savefig(filename)
 

@@ -42,7 +42,7 @@ def main():
             #  plt.savefig('images/arc-{:05d}'.format(i))
             #  plt.close()
 
-    cvt_archive_heatmap(archive, "sphere-cvt-map-elites.png")
+    cvt_archive_heatmap(archive, filename="sphere-cvt-map-elites.png")
     data = archive.as_pandas()
     print(data.head())
 
