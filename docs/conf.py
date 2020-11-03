@@ -138,8 +138,8 @@ html_theme_options = {
     "heroes": {
         "index": "A bare-bones quality diversity optimization library."
     },
-    #  "version_dropdown": True,
-    #  "version_json": "_static/versions.json",
+    "version_dropdown": False,
+    "version_json": None,
     #  "version_info": {
     #      "Release": "https://bashtage.github.io/sphinx-material/",
     #      "Development": "https://bashtage.github.io/sphinx-material/devel/",
