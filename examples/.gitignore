@@ -1,2 +1,7 @@
-# Heatmap outputs.
+# Plots.
 *.png
+*.jpg
+*.pdf
+
+# Data.
+*.json
