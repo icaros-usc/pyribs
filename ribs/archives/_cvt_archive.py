@@ -111,14 +111,9 @@ class CVTArchive(ArchiveBase):
                             self.upper_bounds,
                             size=(self.config.samples, self.n_dims),
                         ))
-        initial_centroids = self._rng.uniform(
-            self.lower_bounds,
-            self.upper_bounds,
-            size=(bins, self.n_dims),
-        )
         self.centroids = kmeans(
             self.samples,
-            initial_centroids,
+            bins,
             iter=1,
             thresh=self.config.k_means_threshold,
         )[0]
