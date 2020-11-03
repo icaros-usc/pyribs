@@ -1,37 +1,50 @@
 """Benchmarks for the CVTArhive."""
-
 from ribs.archives import CVTArchive
 
 # pylint: disable = invalid-name, unused-variable
 
 
-def benchmark_construction(benchmark):
+def benchmark_construction(use_kd_tree, benchmark):
     """Construction includes k-means clustering and building a kd-tree."""
 
     @benchmark
     def construct():
-        CVTArchive([(-1, 1), (-1, 1)], 1000, config={"samples": 10_000})
+        CVTArchive([(-1, 1), (-1, 1)],
+                   1000,
+                   config={
+                       "samples": 10_000,
+                       "use_kd_tree": use_kd_tree,
+                   })
 
 
-def benchmark_100k_additions(benchmark, benchmark_data_100k):
+def benchmark_10k_additions(use_kd_tree, benchmark, benchmark_data_100k):
     n, solutions, objective_values, behavior_values = benchmark_data_100k
 
     def setup():
         archive = CVTArchive([(-1, 1), (-1, 1)],
                              1000,
-                             config={"samples": 10_000})
+                             config={
+                                 "samples": 10_000,
+                                 "use_kd_tree": use_kd_tree,
+                             })
         return (archive,), {}
 
     def add_100k(archive):
-        for i in range(n):
+        for i in range(10_000):
             archive.add(solutions[i], objective_values[i], behavior_values[i])
 
     benchmark.pedantic(add_100k, setup=setup, rounds=5, iterations=1)
 
 
-def benchmark_get_100k_random_elites(benchmark, benchmark_data_100k):
+def benchmark_get_100k_random_elites(use_kd_tree, benchmark,
+                                     benchmark_data_100k):
     n, solutions, objective_values, behavior_values = benchmark_data_100k
-    archive = CVTArchive([(-1, 1), (-1, 1)], 1000, config={"samples": 10_000})
+    archive = CVTArchive([(-1, 1), (-1, 1)],
+                         1000,
+                         config={
+                             "samples": 10_000,
+                             "use_kd_tree": use_kd_tree,
+                         })
     for i in range(n):
         archive.add(solutions[i], objective_values[i], behavior_values[i])
 
