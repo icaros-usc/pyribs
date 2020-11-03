@@ -19,8 +19,14 @@ def _archive_fixture():
     objective_value = 1.0
     archive_with_entry.add(solution, objective_value, behavior_values)
 
-    return (archive, archive_with_entry, behavior_values, indices, solution,
-            objective_value)
+    return (
+        archive,
+        archive_with_entry,
+        behavior_values,
+        indices,
+        solution,
+        objective_value,
+    )
 
 
 def _assert_archive_has_entry(archive, indices, behavior_values,
@@ -31,6 +37,8 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
     assert (archive_data.iloc[0][:-1] == (list(indices) +
                                           list(behavior_values) +
                                           [objective_value])).all()
+
+    # Solution comparison separate since the solution is itself an array.
     archive_sol = archive_data.iloc[0][-1]
     assert archive_sol.shape == solution.shape
     assert np.all(archive_sol == solution)
@@ -39,6 +47,7 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
 def test_attributes_correctly_constructed(_archive_fixture):
     archive, *_ = _archive_fixture
 
+    assert archive.n_dims == 2
     assert np.all(archive.dims == [10, 20])
     assert np.all(archive.lower_bounds == [-1, -2])
     assert np.all(archive.upper_bounds == [1, 2])
