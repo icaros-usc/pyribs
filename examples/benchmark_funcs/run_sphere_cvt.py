@@ -33,14 +33,8 @@ def main():
 
         opt.tell(sols, objs, bcs)
 
-        if i % 1000 == 0:
-            print('saving {}'.format(i))
-            #  data = opt.archive.as_pandas()
-            #  data = data.pivot('index-0', 'index-1', 'objective')
-
-            #  ax = sns.heatmap(data)
-            #  plt.savefig('images/arc-{:05d}'.format(i))
-            #  plt.close()
+        if (i + 1) % 1000 == 0:
+            print(f"Finished {i + 1} rounds")
 
     cvt_archive_heatmap(archive, filename="sphere-cvt-map-elites.png")
     data = archive.as_pandas()
