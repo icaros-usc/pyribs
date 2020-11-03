@@ -1,8 +1,8 @@
 """Miscellaneous visualization tools.
 
 Note that this module only works when you install ``ribs[all]``. As such, we do
-not import it when you run ``import ribs``, and you will need to use ``import
-ribs.visualize``.
+not import it when you run ``import ribs``, and you will need to explicitly use
+``import ribs.visualize``.
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,6 +12,19 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 __all__ = [
     "cvt_archive_heatmap",
 ]
+
+
+def _get_pt_to_obj(cvt_archive):
+    """Creates a dict from point index to objective value from a CVTArchive."""
+
+    # Hopefully as_pandas() is okay in terms of efficiency since there are only
+    # 7 columns (1 index, 2 centroid, 2 behavior, 1 objective, 1 solution).
+    data = cvt_archive.as_pandas()
+
+    pt_to_obj = {}
+    for _, row in data.iterrows():
+        pt_to_obj[row["index"]] = row["objective"]
+    return pt_to_obj
 
 
 def cvt_archive_heatmap(archive,
@@ -32,7 +45,7 @@ def cvt_archive_heatmap(archive,
         colormap (matplotlib.colors.Colormap): A colormap to use when plotting
             intensity. If None, will default to matplotlib's "magma" colormap.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
-            a new axis will be created.
+            a new figure and axis will be created with ``plt.subplots()``.
         figsize (tuple of (float, float)): Size of figure to create if ``ax`` is
             not passed in.
         filename (str): File to save the figure to. Can be used even when
@@ -51,7 +64,7 @@ def cvt_archive_heatmap(archive,
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
     else:
-        fig = ax.fig
+        fig = ax.get_figure()
     ax.set_aspect("equal")
     ax.set_xlim(archive.lower_bounds[0], archive.upper_bounds[0])
     ax.set_ylim(archive.lower_bounds[1], archive.upper_bounds[1])
@@ -74,11 +87,11 @@ def cvt_archive_heatmap(archive,
     # the region index of each point.
     region_obj = [None] * len(vor.regions)
     min_obj, max_obj = np.inf, np.NINF
-    # TODO: Come up with a better way to retrieve these.
+    pt_to_obj = _get_pt_to_obj(archive)
     for pt_idx, region_idx in enumerate(
             vor.point_region[:-4]):  # Exclude faraway_pts.
-        if region_idx != -1 and archive._solutions[pt_idx] is not None:
-            obj = archive._objective_values[pt_idx]
+        if region_idx != -1 and pt_idx in pt_to_obj:
+            obj = pt_to_obj[pt_idx]
             min_obj = min(min_obj, obj)
             max_obj = max(max_obj, obj)
             region_obj[region_idx] = obj
