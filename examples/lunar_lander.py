@@ -108,7 +108,7 @@ def train_model(
         objs = list()
         bcs = list()
 
-        futures = client.map(lambda sol: simulate(env_name, np.reshape(s, (action_dim, obs_dim)), seed), sols)
+        futures = client.map(lambda sol: simulate(env_name, np.reshape(sol, (action_dim, obs_dim)), seed), sols)
 
         results = client.gather(futures)
 
