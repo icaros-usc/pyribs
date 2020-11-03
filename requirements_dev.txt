@@ -4,9 +4,10 @@ yapf
 
 # Testing
 tox==3.14.0
-pytest==4.6.5
+pytest==6.1.2
 pytest-cov==2.10.1
 pytest-benchmark==3.2.3
+pytest-xdist==2.1.0
 
 # Documentation
 Sphinx==3.2.1
