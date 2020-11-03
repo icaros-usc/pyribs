@@ -1,4 +1,4 @@
-"""Tests for ribs config functions."""
+"""Tests for ribs.config."""
 
 from ribs.archives import GridArchiveConfig
 from ribs.config import create_config, load_configs, save_configs
