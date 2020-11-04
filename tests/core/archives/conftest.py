@@ -18,3 +18,9 @@ def benchmark_data_100k():
     objective_values = np.random.randn(n_vals)
     behavior_values = np.random.uniform(-1, 1, (n_vals, 2))
     return n_vals, solutions, objective_values, behavior_values
+
+
+@pytest.fixture(params=[False, True], ids=["brute_force", "kd_tree"])
+def use_kd_tree(request):
+    """Whether to use the KD Tree in CVTArchive."""
+    return request.param

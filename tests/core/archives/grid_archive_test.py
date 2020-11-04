@@ -19,8 +19,14 @@ def _archive_fixture():
     objective_value = 1.0
     archive_with_entry.add(solution, objective_value, behavior_values)
 
-    return (archive, archive_with_entry, behavior_values, indices, solution,
-            objective_value)
+    return (
+        archive,
+        archive_with_entry,
+        behavior_values,
+        indices,
+        solution,
+        objective_value,
+    )
 
 
 def _assert_archive_has_entry(archive, indices, behavior_values,
@@ -31,6 +37,8 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
     assert (archive_data.iloc[0][:-1] == (list(indices) +
                                           list(behavior_values) +
                                           [objective_value])).all()
+
+    # Solution comparison separate since the solution is itself an array.
     archive_sol = archive_data.iloc[0][-1]
     assert archive_sol.shape == solution.shape
     assert np.all(archive_sol == solution)
@@ -103,6 +111,11 @@ def test_add_without_overwrite(_archive_fixture):
                               objective_value, solution)
 
 
+def test_archive_is_2d(_archive_fixture):
+    archive, *_ = _archive_fixture
+    assert archive.is_2d()
+
+
 def test_new_archive_is_empty(_archive_fixture):
     (archive, *_) = _archive_fixture
     assert archive.is_empty()
@@ -117,9 +130,9 @@ def test_random_elite_gets_single_elite(_archive_fixture):
     (_, archive_with_entry, behavior_values, _, solution,
      objective_value) = _archive_fixture
     retrieved = archive_with_entry.get_random_elite()
-    assert retrieved[0] == objective_value
-    assert np.all(retrieved[1] == behavior_values)
-    assert np.all(retrieved[2] == solution)
+    assert np.all(retrieved[0] == solution)
+    assert retrieved[1] == objective_value
+    assert np.all(retrieved[2] == behavior_values)
 
 
 def test_random_elite_fails_when_empty(_archive_fixture):

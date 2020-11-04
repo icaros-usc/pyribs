@@ -2,9 +2,7 @@
 
 from ribs.archives import GridArchive
 
-from .utils import benchmark_data_100k
-
-# pylint: disable = invalid-name, unused-variable, missing-function-docstring
+# pylint: disable = invalid-name, unused-variable
 
 
 def benchmark_construct_and_add_100k(benchmark, benchmark_data_100k):
@@ -24,6 +22,6 @@ def benchmark_get_100k_random_elites(benchmark, benchmark_data_100k):
         archive.add(solutions[i], objective_values[i], behavior_values[i])
 
     @benchmark
-    def get_hundred_thousand_elites():
+    def get_elites():
         for i in range(n):
-            ind = archive.get_random_elite()
+            sol, obj, beh = archive.get_random_elite()

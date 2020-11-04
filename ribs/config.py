@@ -1,103 +1,111 @@
-"""Ribs config options and functions for dealing with configs."""
+"""Functions for dealing with configs."""
+import json
 
 __all__ = [
-    "DEFAULT_CONFIG",
-    "update",
-    "merge_with_default",
+    "create_config",
+    "save_configs",
+    "load_configs",
 ]
 
-# Do not remove the words "Default configuration" (and the period after it) in
-# the following line.
-#: Default configuration. Also see the Config Options section in :doc:`usage`.
-DEFAULT_CONFIG = {
-    # (int) The size of each batch.
-    "batch_size": 64,
 
-    # Seed for random number generators. Leave None to avoid seeding.
-    "seed": None,
-}
-# End of default configuration. <-- Do not remove this line.
+def create_config(config, config_class):
+    """Creates an instance of ``config_class`` given the user's ``config``.
 
-
-def update(default, new):
-    """Merges two configuration dicts, overriding ``default`` with ``new``.
-
-    ``default`` is modified in-place with the new options.
-
-    Handles nested dict options as well.
-
-    Note that ``new`` is allowed to provide new keys to ``default``.
-
-    If we have:
-
-        ::
-
-            default = {
-                "a": 1,
-                "b": {
-                    "c": 2,
-                    "d": 3,
-                },
-            }
-
-            new = {
-                "a": 4,
-                "b": {
-                    "c": 5,
-                },
-                "e": 6,
-            }
-
-    Then ``update(default, new)`` modifies ``default`` to be:
-
-        ::
-
-            default = {
-                "a": 4,
-                "b": {
-                    "c": 5,
-                    "d": 3,
-                }
-                "e": 6,
-            }
+    - If ``config`` is None, a default instance of ``config_class`` is created.
+    - If ``config`` is a dict, the dict is passed into ``config_class`` as
+      keyword args.
+    - Otherwise, ``config`` is simply returned (we assume it is an instance of
+      ``config_class``).
 
     Args:
-        default (dict): Default configuration options.
-        new (dict): New configuration options.
-    Raises:
-        TypeError: When one attempts to override a non-dict value with a dict
-            value.
-    """
-    for key in new:
-        if isinstance(new[key], dict):
-            if key not in default:
-                default[key] = {}
-            if not isinstance(default[key], dict):
-                raise TypeError(f"The value at key `{key}` in new is a dict, "
-                                f"but in default, it is {default[key]}")
-            update(default[key], new[key])
-        else:
-            default[key] = new[key]
-
-
-def merge_with_default(config=None):
-    """Creates a config that updates :attr:`DEFAULT_CONFIG` with ``config``.
-
-    Values in :attr:`DEFAULT_CONFIG` are overridden by those in ``config``,
-    including those in nested dicts.
-
-    Args:
-        config (dict or None): A configuration dict to use to update
-            :attr:`DEFAULT_CONFIG`. None indicates an empty dict (for those
-            curious about why we include this, see `Why empty dict is a
-            dangerous default value
-            <https://stackoverflow.com/questions/26320899/why-is-the-empty-dictionary-a-dangerous-default-value-in-python>`_
+        config (None, dict, or config_class): User-provided configuration.
     Returns:
-        dict: An updated version of :attr:`DEFAULT_CONFIG`. The update is made
-        with :meth:`update`.
+        An instance of ``config_class``, described as above.
     """
-    new_config = {}
-    update(new_config, DEFAULT_CONFIG)
-    if config is not None:
-        update(new_config, config)
-    return new_config
+    if config is None:
+        return config_class()
+    if isinstance(config, dict):
+        return config_class(**config)
+    return config
+
+
+def _single_config_data(config):
+    """Returns a dict with the data to save for a single config."""
+    return {
+        "type": config.__class__.__name__,
+        "data": config.__dict__,
+    }
+
+
+def save_configs(optimizer_config, archive_config, emitter_configs, filename):
+    """Saves all configs to a JSON file.
+
+    Args:
+        optimizer_config: Configuration object for an optimizer, such as
+            :class:`ribs.optimizers.OptimizerConfig`.
+        archive_config: Configuration object for an archive, such as
+            :class:`ribs.archives.GridArchiveConfig`.
+        emitter_configs (list): List of configuration objects for emitters, such
+            as :class:`ribs.emitters.GaussianEmitterConfig`.
+        filename (str): Path to save the JSON file.
+    """
+    with open(filename, "w") as file:
+        json.dump(
+            {
+                "optimizer":
+                    _single_config_data(optimizer_config),
+                "archive":
+                    _single_config_data(archive_config),
+                "emitters":
+                    [_single_config_data(config) for config in emitter_configs],
+            },
+            file,
+        )
+
+
+def _load_single_config(data, name_to_config_class):
+    """Creates one config from data returned by :meth:`_single_config_data`."""
+    config_class = name_to_config_class[data["type"]]
+    return config_class(**data["data"])
+
+
+def load_configs(filename):
+    """Loads configs from a JSON file to reconstruct an optimizer.
+
+    Args:
+        filename (str): Path from which to load the JSON file.
+    Returns:
+        tuple: 3-element tuple containing:
+
+            **optimizer_config**: Configuration object for an optimizer.
+
+            **archive_config**: Configuration object for an archive.
+
+            **emitter_configs**: List of configuration objects for emitters.
+    """
+    # We cannot import these at top-level because all these modules import this
+    # one (config), so we would have a circular dependency.
+    # pylint: disable = import-outside-toplevel
+    from ribs.archives._cvt_archive import CVTArchiveConfig
+    from ribs.archives._grid_archive import GridArchiveConfig
+    from ribs.emitters._gaussian_emitter import GaussianEmitterConfig
+    from ribs.optimizers._optimizer import OptimizerConfig
+
+    name_to_config_class = {
+        "GridArchiveConfig": GridArchiveConfig,
+        "CVTArchiveConfig": CVTArchiveConfig,
+        "GaussianEmitterConfig": GaussianEmitterConfig,
+        "OptimizerConfig": OptimizerConfig,
+    }
+
+    with open(filename, "r") as file:
+        data = json.load(file)
+        optimizer_config = _load_single_config(data["optimizer"],
+                                               name_to_config_class)
+        archive_config = _load_single_config(data["archive"],
+                                             name_to_config_class)
+        emitter_configs = [
+            _load_single_config(d, name_to_config_class)
+            for d in data["emitters"]
+        ]
+        return optimizer_config, archive_config, emitter_configs

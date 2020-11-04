@@ -10,4 +10,5 @@ __all__ = [
     "archives",
     "emitters",
     "optimizers",
+    "config",
 ]
