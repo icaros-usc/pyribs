@@ -9,7 +9,6 @@ import time
 import cma
 import fire
 import gym
-import matplotlib.pyplot
 import numpy as np
 from dask_jobqueue import SLURMCluster
 
@@ -21,9 +20,12 @@ import seaborn as sns
 from ribs.archives import GridArchive
 from ribs.optimizers import Optimizer
 
-cma.s.figsave = matplotlib.pyplot.savefig  # See https://github.com/CMA-ES/pycma/issues/131
+cma.s.figsave = plt.savefig  # See https://github.com/CMA-ES/pycma/issues/131
 
 # pylint: disable = too-many-arguments
+# pylint: disable = C0330
+# pylint: disable = C0301
+
 
 
 def simulate(
@@ -60,10 +62,10 @@ def simulate(
             env.render()
         if delay is not None:
             time.sleep(delay / 1000)
-        action = np.argmax(model @ obs)  # Deterministic.
+        action = np.argmax(model @ obs)  # Deterministic. Here is the action. Multiply observation by policy. Model is the policy and obs is state
         obs, reward, done, _ = env.step(action)
         total_reward += reward
-        time_steps += 1
+        timesteps += 1
 
     env.close()
 
@@ -79,12 +81,12 @@ def save_model(model, filename, verbose=False):
 
 def train_model(
     client: Client,
-    env_name: str = "LunarLander-v2",
     seed: int,
     sigma: float,
     model_filename: str,
     plot_filename: str,
     iterations: int,
+    env_name: str = "LunarLander-v2",
 ):
     """Trains a model with CMA-ES and saves it."""
     # Environment properties.
@@ -98,10 +100,10 @@ def train_model(
     }
 
 
-    archive = GridArchive((16, 16), [(-4, 4), (-4, 4)], config=config)
+    archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)], config=config) # 0 to 1000 for time steps
     opt = Optimizer(np.zeros(action_dim * obs_dim), sigma, archive, config=config)
 
-    for i in range(0, iterations - 1):
+    for _ in range(0, iterations - 1):
 
         sols = opt.ask()
 
@@ -142,11 +144,8 @@ def cma_es_discrete(
     seed: int = 42,
     local_workers: int = 8,
     sigma: float = 10.0,
-    slurm: bool = False,
-    slurm_workers: int = 2,
-    slurm_cpus_per_worker: int = 4,
     plot_filename: str = "lunar_lander_plot.png",
-    model_filename: str = "lunar_lander_model.npy",
+    model_filename: str = "lunar_lander_model.csv",
     run_eval: bool = False,
 ):
     """Uses CMA-ES to train an agent in an environment with discrete actions.
@@ -190,7 +189,7 @@ def cma_es_discrete(
     print("Cluster config:")
     print(client.ncores())
 
-    train_model(client, "LunarLander-v2", seed, sigma, model_filename, plot_filename)
+    train_model(client, seed, sigma, model_filename, plot_filename, 10)
 
 
 if __name__ == "__main__":

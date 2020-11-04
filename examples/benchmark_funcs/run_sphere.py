@@ -22,11 +22,11 @@ if __name__ == '__main__':
 
         if i % 1000 == 0:
             print('saving {}'.format(i))
-            #data = opt.archive.as_pandas()
-            #data = data.pivot('index-0', 'index-1', 'objective')
+            data = opt.archive.as_pandas()
+            data = data.pivot('index-0', 'index-1', 'objective')
 
-            #ax = sns.heatmap(data)
-            #plt.savefig('images/arc-{:05d}'.format(i))
-            #plt.close()
+            ax = sns.heatmap(data)
+            plt.savefig('arc-{:05d}'.format(i))
+            plt.close()
 
     print(archive.as_pandas().iloc[:10])
