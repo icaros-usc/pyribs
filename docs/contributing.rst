@@ -143,10 +143,13 @@ To run a subset of tests::
 
   pytest tests.test_ribs
 
-Previewing Documentation
-~~~~~~~~~~~~~~~~~~~~~~~~
+Documentation
+~~~~~~~~~~~~~
 
-Preview documentation with::
+In addition to reStructuredText, you can write documentation in Markdown, as we
+use `MyST <https://myst-parser.readthedocs.io/en/latest/>`_.
+
+To preview documentation, use::
 
   make servedocs
 
