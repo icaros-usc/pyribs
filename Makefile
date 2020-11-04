@@ -55,6 +55,8 @@ test: ## run tests with the default Python
 	pytest tests
 test-core: ## only test the core of ribs
 	pytest tests/core
+test-extras: ## only test the extras of ribs
+	pytest tests/extras
 test-failed: ## run only tests that filed
 	pytest --last-failed
 test-only: ## run tests without benchmarks, as benchmarks take a while
