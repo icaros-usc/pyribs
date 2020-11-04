@@ -2,6 +2,6 @@
 from ribs.optimizers._optimizer import Optimizer, OptimizerConfig
 
 __all__ = [
-    "OptimizerConfig",
     "Optimizer",
+    "OptimizerConfig",
 ]

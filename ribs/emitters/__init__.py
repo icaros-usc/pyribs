@@ -3,6 +3,6 @@ from ribs.emitters._gaussian_emitter import (GaussianEmitter,
                                              GaussianEmitterConfig)
 
 __all__ = [
-    "GaussianEmitterConfig",
     "GaussianEmitter",
+    "GaussianEmitterConfig",
 ]
