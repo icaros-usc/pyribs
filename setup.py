@@ -17,7 +17,11 @@ install_requires = [
 
 extras_require = {
     'all': ['matplotlib>=3.0.0',],
-    'examples': ['seaborn>=0.11.0',],
+    'examples': [
+        'matplotlib>=3.0.0',
+        'seaborn>=0.11.0',
+        'jupyterlab',
+    ],
     'dev': [
         'pip==20.2.4',
         'pylint',
@@ -36,7 +40,7 @@ extras_require = {
         'sphinx-autobuild==2020.9.1',
         'sphinx-copybutton==0.3.1',
         'autodocsumm==0.2.1',
-        'myst-parser==0.12.10',
+        'myst-nb==0.10.1',
 
         # Distribution
         'bump2version==0.5.11',

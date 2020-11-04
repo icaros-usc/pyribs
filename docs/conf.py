@@ -45,7 +45,7 @@ extensions = [
     'autodocsumm',
     'sphinx_material',
     'sphinx_copybutton',
-    'myst_parser',
+    'myst_nb',  # Covers both Markdown and Jupyter notebooks.
 ]
 
 # Napoleon
@@ -54,14 +54,15 @@ napoleon_numpy_docstring = False
 napoleon_use_param = False
 napoleon_use_ivar = True
 
+# MyST NB -- exclude execution of Jupyter notebooks because they can take a
+# while to run.
+jupyter_execute_notebooks = "off"
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md', '.ipynb']
 
 # The master toctree document.
 master_doc = 'index'

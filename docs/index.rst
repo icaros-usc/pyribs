@@ -9,7 +9,7 @@ Contents
 
    getting-started
    configuration
-   examples
+   tutorials
 
 .. toctree::
    :maxdepth: 2
