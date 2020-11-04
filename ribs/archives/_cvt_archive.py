@@ -97,7 +97,6 @@ class CVTArchive(ArchiveBase):
             CVTArchiveConfig.
     Attributes:
         config (CVTArchiveConfig): Configuration object.
-        n_dims (int): Number of dimensions of the archive behavior space.
         lower_bounds (np.ndarray): Lower bound of each dimension.
         upper_bounds (np.ndarray): Upper bound of each dimension.
         samples: The samples used in creating the CVT.
@@ -106,13 +105,14 @@ class CVTArchive(ArchiveBase):
 
     def __init__(self, ranges, bins, samples=None, config=None):
         self.config = create_config(config, CVTArchiveConfig)
-        self.n_dims = len(ranges)
+        n_dims = len(ranges)
         ArchiveBase.__init__(
             self,
-            bins,  # objective_value_dim
-            (bins, self.n_dims),  # behavior_value_dim
-            bins,  # solution_dim
-            self.config.seed,
+            n_dims=n_dims,
+            objective_value_dim=bins,
+            behavior_value_dim=(bins, n_dims),
+            solution_dim=bins,
+            seed=self.config.seed,
         )
 
         ranges = list(zip(*ranges))
@@ -123,7 +123,7 @@ class CVTArchive(ArchiveBase):
                         if samples is not None else self._rng.uniform(
                             self.lower_bounds,
                             self.upper_bounds,
-                            size=(self.config.samples, self.n_dims),
+                            size=(self.config.samples, self._n_dims),
                         ))
         self.centroids = kmeans(
             self.samples,
@@ -158,8 +158,8 @@ class CVTArchive(ArchiveBase):
         """
         column_titles = [
             "index",
-            *[f"centroid-{i}" for i in range(self.n_dims)],
-            *[f"behavior-{i}" for i in range(self.n_dims)],
+            *[f"centroid-{i}" for i in range(self._n_dims)],
+            *[f"behavior-{i}" for i in range(self._n_dims)],
             "objective",
             "solution",
         ]

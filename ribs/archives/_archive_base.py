@@ -7,6 +7,7 @@ class ArchiveBase:
     """Base class for archives; contains several useful methods.
 
     Args:
+        n_dims (int): Number of dimensions in the archive's behavior space.
         objective_value_dim (array-like): The dimensions to use for the
             objective value.
         behavior_value_dim (array-like): The dimensions to use for the behavior
@@ -15,6 +16,7 @@ class ArchiveBase:
             array.
         seed (float): Seed for the random number generator.
     Attributes:
+        _n_dims (int): See ``n_dims``.
         _objective_values (np.ndarray): Float array storing the objective values
             of each solution, shape is ``objective_value_dim``.
         _behavior_value_dim (np.ndarray): Float array storing the behavior
@@ -26,10 +28,12 @@ class ArchiveBase:
             for generating random elites.
     """
 
-    def __init__(self, objective_value_dim, behavior_value_dim, solution_dim,
-                 seed):
+    def __init__(self, n_dims, objective_value_dim, behavior_value_dim,
+                 solution_dim, seed):
         """Initializes the components of the archive."""
         self._rng = np.random.default_rng(seed)
+
+        self._n_dims = n_dims
 
         # Create components of the grid. We separate the components so that they
         # can each be efficiently represented as numpy arrays.
@@ -82,6 +86,16 @@ class ArchiveBase:
             return True
 
         return False
+
+    def is_2d(self):
+        """Checks if the archive has 2D.
+
+        This is useful when checking whether we can visualize the archive.
+
+        Returns:
+            bool: True if the archive is 2D, False otherwise.
+        """
+        return self._n_dims == 2
 
     def is_empty(self):
         """Checks if the archive has no elements in it.

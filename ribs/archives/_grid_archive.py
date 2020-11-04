@@ -47,7 +47,6 @@ class GridArchive(ArchiveBase):
     Attributes:
         config (GridArchiveConfig): Configuration object.
         dims (np.ndarray): Number of bins in each dimension.
-        n_dims (int): Number of dimensions of the archive behavior space.
         lower_bounds (np.ndarray): Lower bound of each dimension.
         upper_bounds (np.ndarray): Upper bound of each dimension.
         interval_size (np.ndarray): The size of each dimension (``upper_bounds -
@@ -57,13 +56,14 @@ class GridArchive(ArchiveBase):
     def __init__(self, dims, ranges, config=None):
         self.config = create_config(config, GridArchiveConfig)
         self.dims = np.array(dims)
-        self.n_dims = len(self.dims)
+        n_dims = len(self.dims)
         ArchiveBase.__init__(
             self,
-            self.dims,  # objective_value_dim
-            (*self.dims, self.n_dims),  # behavior_value_dim
-            self.dims,  # solution_dim
-            self.config.seed,
+            n_dims=n_dims,
+            objective_value_dim=self.dims,
+            behavior_value_dim=(*self.dims, n_dims),
+            solution_dim=self.dims,
+            seed=self.config.seed,
         )
 
         ranges = list(zip(*ranges))
@@ -94,8 +94,8 @@ class GridArchive(ArchiveBase):
             1 column for solution objects called ``solution``.
         """
         column_titles = [
-            *[f"index-{i}" for i in range(self.n_dims)],
-            *[f"behavior-{i}" for i in range(self.n_dims)],
+            *[f"index-{i}" for i in range(self._n_dims)],
+            *[f"behavior-{i}" for i in range(self._n_dims)],
             "objective",
             "solution",
         ]

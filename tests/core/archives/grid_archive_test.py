@@ -47,7 +47,6 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
 def test_attributes_correctly_constructed(_archive_fixture):
     archive, *_ = _archive_fixture
 
-    assert archive.n_dims == 2
     assert np.all(archive.dims == [10, 20])
     assert np.all(archive.lower_bounds == [-1, -2])
     assert np.all(archive.upper_bounds == [1, 2])
@@ -110,6 +109,11 @@ def test_add_without_overwrite(_archive_fixture):
 
     _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
                               objective_value, solution)
+
+
+def test_archive_is_2d(_archive_fixture):
+    archive, *_ = _archive_fixture
+    assert archive.is_2d()
 
 
 def test_new_archive_is_empty(_archive_fixture):
