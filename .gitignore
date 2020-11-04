@@ -106,3 +106,4 @@ ENV/
 .vscode/
 .*.swp
 *.vim
+.DS_Store
