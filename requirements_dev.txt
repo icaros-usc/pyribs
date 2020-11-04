@@ -14,6 +14,7 @@ Sphinx==3.2.1
 sphinx-material==0.0.32
 sphinx-autobuild==2020.9.1
 autodocsumm==0.2.1
+myst-parser==0.12.10
 
 # Distribution
 bump2version==0.5.11

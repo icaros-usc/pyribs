@@ -45,6 +45,7 @@ extensions = [
     'autodocsumm',
     'sphinx_material',
     'sphinx_copybutton',
+    'myst_parser',
 ]
 
 # Napoleon
