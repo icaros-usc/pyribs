@@ -6,7 +6,6 @@ Usage:
 
 import time
 
-import cma
 import fire
 import gym
 import numpy as np
@@ -19,14 +18,6 @@ import seaborn as sns
 
 from ribs.archives import GridArchive
 from ribs.optimizers import Optimizer
-
-cma.s.figsave = plt.savefig  # See https://github.com/CMA-ES/pycma/issues/131
-
-# pylint: disable = too-many-arguments
-# pylint: disable = C0330
-# pylint: disable = C0301
-
-
 
 def simulate(
     env_name: str,
@@ -62,7 +53,9 @@ def simulate(
             env.render()
         if delay is not None:
             time.sleep(delay / 1000)
-        action = np.argmax(model @ obs)  # Deterministic. Here is the action. Multiply observation by policy. Model is the policy and obs is state
+
+        # Deterministic. Here is the action. Multiply observation by policy. Model is the policy and obs is state
+        action = np.argmax(model @ obs)  
         obs, reward, done, _ = env.step(action)
         total_reward += reward
         timesteps += 1
@@ -70,13 +63,6 @@ def simulate(
     env.close()
 
     return total_reward, obs, timesteps
-
-
-def save_model(model, filename, verbose=False):
-    """Saves the model to the given file."""
-    np.save(filename, model)
-    if verbose:
-        print("Model saved to", filename)
 
 
 def train_model(
@@ -100,7 +86,7 @@ def train_model(
     }
 
 
-    archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)], config=config) # 0 to 1000 for time steps
+    archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)], config=config)
     opt = Optimizer(np.zeros(action_dim * obs_dim), sigma, archive, config=config)
 
     for _ in range(0, iterations - 1):
@@ -128,7 +114,7 @@ def train_model(
     df = archive.as_pandas()
     df = df.pivot('index-0', 'index-1', 'objective')
     sns.heatmap(df)
-    plt.savefig('lunar_landerV2-map-elites.png')
+    plt.savefig(plot_filename)
 
 
 def run_evaluation(model_filename, env_name, seed):
@@ -140,7 +126,7 @@ def run_evaluation(model_filename, env_name, seed):
     print("Reward:", -cost)
 
 
-def cma_es_discrete(
+def map_elites(
     seed: int = 42,
     local_workers: int = 8,
     sigma: float = 10.0,
@@ -193,4 +179,4 @@ def cma_es_discrete(
 
 
 if __name__ == "__main__":
-    fire.Fire(cma_es_discrete)
+    fire.Fire(map_elites)
