@@ -85,7 +85,7 @@ def load_configs(filename):
     """
     # We cannot import these at top-level because all these modules import this
     # one (config), so we would have a circular dependency.
-    # pylint: disable = import-outside-toplevel
+    # pylint: disable = import-outside-toplevel, cyclic-import
     from ribs.archives._cvt_archive import CVTArchiveConfig
     from ribs.archives._grid_archive import GridArchiveConfig
     from ribs.emitters._gaussian_emitter import GaussianEmitterConfig
