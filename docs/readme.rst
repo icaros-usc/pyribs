@@ -10,7 +10,7 @@ pyribs
 |                                                  |     :alt: PyPI                                                      |     :alt: Automated Testing                                                                                                              |                                                      |     :alt: Documentation Status                                                           |
 +--------------------------------------------------+---------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------+------------------------------------------------------------------------------------------+
 
-*Bare-bones* implementations of Quality Diversity algorithms, i.e. algorithms that provide *Rapid Illumination of Behavior Spaces (RIBS)*.
+A *bare-bones* quality diversity optimization library. The algorithms implemented here enable *Rapid Illumination of Behavior Spaces (RIBS)*.
 
 Installation
 ------------
