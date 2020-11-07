@@ -87,7 +87,9 @@ def train_model(
 
 
     archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)], config=config)
-    opt = Optimizer(np.zeros(action_dim * obs_dim), sigma, archive, config=config)
+    emitter = GaussianEmitter(np.zeros(action_dim * obs_dim), sigma, archive)
+    # opt = Optimizer(np.zeros(action_dim * obs_dim), sigma, archive, config=config)
+    opt = Optimizer(archive, [emitter], config=config)
 
     for _ in range(0, iterations - 1):
 
