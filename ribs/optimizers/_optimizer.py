@@ -20,9 +20,9 @@ class Optimizer:
 
     To use this class, first create an archive and list of emitters for your
     QD algorithm. Then, construct the Optimizer with these arguments. Finally,
-    repeatedly call :meth:`ask` method to collect solutions to analyze, and
-    return the objective values and behavior values of those solutions **in the
-    same order** using :meth:`tell`.
+    repeatedly call :meth:`ask` to collect solutions to analyze, and return the
+    objective values and behavior values of those solutions **in the same
+    order** using :meth:`tell`.
 
     Args:
         archive (ribs archive): An archive object, selected from
