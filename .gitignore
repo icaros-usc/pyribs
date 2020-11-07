@@ -108,9 +108,9 @@ ENV/
 *.pdf
 *.json
 
-# Editor and IDE settings
+# Editor, IDE, and OS settings
 .vscode/
 .*.swp
 *.vim
-
 .DS_Store
+.project

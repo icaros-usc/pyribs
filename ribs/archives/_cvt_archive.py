@@ -72,8 +72,8 @@ class CVTArchive(ArchiveBase):
     As we can see, archives with at least 10k bins seem to have faster insertion
     when using KDTree than when using brute force, so **we recommend setting**
     ``use_kd_tree`` **in your config only if you have at least 10k bins in
-    your** ``CVTArchive``. See `examples/performance/cvt_add.py
-    <https://github.com/icaros-usc/pyribs/tree/master/examples/performance/cvt_add.py>`_
+    your** ``CVTArchive``. See `benchmarks/cvt_add.py
+    <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
 
     Args:

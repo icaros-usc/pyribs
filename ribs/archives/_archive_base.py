@@ -129,3 +129,7 @@ class ArchiveBase:
             self._objective_values[index],
             self._behavior_values[index],
         )
+
+    def as_pandas(self):
+        """Converts the archive into a Pandas dataframe."""
+        raise NotImplementedError
