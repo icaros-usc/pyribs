@@ -49,6 +49,26 @@ def test_tell_inserts_solutions_into_archive(_optimizer_fixture):
     assert len(optimizer.archive.as_pandas()) == num_solutions
 
 
+def test_tell_inserts_solutions_with_multiple_emitters(_optimizer_fixture):
+    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    emitters = [
+        GaussianEmitter([0.0, 0.0], 1, archive, config={"batch_size": 1}),
+        GaussianEmitter([0.5, 0.5], 1, archive, config={"batch_size": 2}),
+        GaussianEmitter([-0.5, -0.5], 1, archive, config={"batch_size": 3}),
+    ]
+    optimizer = Optimizer(archive, emitters)
+
+    _ = optimizer.ask()
+
+    # The sum of all the emitters' batch sizes is 6.
+    optimizer.tell(
+        objective_values=[1.0] * 6,
+        behavior_values=[[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0],
+                         [0.0, 0.0], [0.0, 1.0]],
+    )
+    assert len(optimizer.archive.as_pandas()) == 6
+
+
 def test_tell_fails_when_ask_not_called(_optimizer_fixture):
     optimizer, _ = _optimizer_fixture
     with pytest.raises(RuntimeError):
