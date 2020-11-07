@@ -29,7 +29,7 @@ def main():
         objs = [sphere(s) for s in sols]
         bcs = [(s[0], s[1]) for s in sols]
 
-        opt.tell(sols, objs, bcs)
+        opt.tell(objs, bcs)
 
         if i % 1000 == 0:
             print('saving {}'.format(i))

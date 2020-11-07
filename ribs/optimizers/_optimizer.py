@@ -25,14 +25,25 @@ class Optimizer:
         self.last_batch = None
         self.emitters = emitters
 
+        self.asked = False
+        self.solutions = []
+
     def ask(self):
+        if self.asked:
+            raise RuntimeError("You have called ask() twice in a row.")
 
-        solutions = []
+        self.asked = True
+        self.solutions = []
         for emitter in self.emitters:
-            solutions.append(emitter.ask())
-        return np.concatenate(solutions)
+            self.solutions.append(emitter.ask())
+        self.solutions = np.concatenate(self.solutions)
+        return self.solutions
 
-    def tell(self, solutions, objective_values, behavior_values):
+    def tell(self, objective_values, behavior_values):
+        if not self.asked:
+            raise RuntimeError("You have called tell() without ask().")
+
+        self.asked = False
 
         # Convert user input into numpy arrays
         objective_values = np.array(objective_values)
@@ -41,6 +52,6 @@ class Optimizer:
         pos = 0
         for emitter in self.emitters:
             end = pos + emitter.batch_size
-            emitter.tell(solutions[pos:end], objective_values[pos:end],
+            emitter.tell(self.solutions[pos:end], objective_values[pos:end],
                          behavior_values[pos:end])
             pos = end
