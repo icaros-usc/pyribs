@@ -10,9 +10,10 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 install_requires = [
-    'numpy>=1.17.0',  # >=1.17.0 mainly because of default_rng.
+    'numpy>=1.17.0',  # >=1.17.0 mainly because of default_rng
     'pandas>=1.0.0',
     'scipy>=1.0.0',
+    'toml>=0.10.0',
 ]
 
 extras_require = {

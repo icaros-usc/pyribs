@@ -17,21 +17,18 @@ def sphere(sol):
 
 def main():
     """Initializes CVT, runs it with Sphere function, and plots results."""
-    archive = CVTArchive([(-1, 1), (-1, 1)], 1000, config={
-        "samples": 10_000,
-    })
-
+    archive = CVTArchive([(-1, 1), (-1, 1)], 1000, config={"samples": 10_000})
     emitters = [
         GaussianEmitter([0.0] * 10, 0.1, archive, config={"batch_size": 4})
     ]
-    opt = Optimizer([0.0] * 10, 0.1, archive, emitters)
+    opt = Optimizer(archive, emitters)
 
     for i in range(10**4):
         sols = opt.ask()
         objs = [sphere(s) for s in sols]
         bcs = [(s[0], s[1]) for s in sols]
 
-        opt.tell(sols, objs, bcs)
+        opt.tell(objs, bcs)
 
         if (i + 1) % 1000 == 0:
             print(f"Finished {i + 1} rounds")
