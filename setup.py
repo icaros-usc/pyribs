@@ -22,6 +22,12 @@ extras_require = {
         'matplotlib>=3.0.0',
         'seaborn>=0.11.0',
         'jupyterlab',
+        'gym~=0.17.0',
+        'fire>=0.3.0',
+
+        # Dask
+        'dask>=2.0.0',
+        'distributed>=2.0.0',
     ],
     'dev': [
         'pip==20.2.4',

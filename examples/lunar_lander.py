@@ -8,16 +8,14 @@ import time
 
 import fire
 import gym
-import numpy as np
-from dask_jobqueue import SLURMCluster
-
-from dask.distributed import Client, LocalCluster
-
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
+from dask.distributed import Client, LocalCluster
 
 from ribs.archives import GridArchive
 from ribs.optimizers import Optimizer
+
 
 def simulate(
     env_name: str,
@@ -55,7 +53,7 @@ def simulate(
             time.sleep(delay / 1000)
 
         # Deterministic. Here is the action. Multiply observation by policy. Model is the policy and obs is state
-        action = np.argmax(model @ obs)  
+        action = np.argmax(model @ obs)
         obs, reward, done, _ = env.step(action)
         total_reward += reward
         timesteps += 1
@@ -85,9 +83,11 @@ def train_model(
         "batch_size": 64,
     }
 
-
     archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)], config=config)
-    opt = Optimizer(np.zeros(action_dim * obs_dim), sigma, archive, config=config)
+    opt = Optimizer(np.zeros(action_dim * obs_dim),
+                    sigma,
+                    archive,
+                    config=config)
 
     for _ in range(0, iterations - 1):
 
@@ -96,7 +96,9 @@ def train_model(
         objs = list()
         bcs = list()
 
-        futures = client.map(lambda sol: simulate(env_name, np.reshape(sol, (action_dim, obs_dim)), seed), sols)
+        futures = client.map(
+            lambda sol: simulate(env_name, np.reshape(sol, (action_dim, obs_dim)
+                                                     ), seed), sols)
 
         results = client.gather(futures)
 
@@ -105,7 +107,6 @@ def train_model(
             bcs.append((timesteps, state[0]))
 
         opt.tell(sols, objs, bcs)
-
 
     df = archive.as_pandas()
 
