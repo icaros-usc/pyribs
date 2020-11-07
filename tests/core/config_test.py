@@ -25,7 +25,7 @@ def test_create_config_object():
 
 
 def test_save_and_reload_config(tmp_path):
-    filename = str(tmp_path / "config.json")
+    filename = str(tmp_path / "config.toml")
     optimizer_config = OptimizerConfig()
     archive_config = GridArchiveConfig(seed=42)
     emitter_configs = [GaussianEmitterConfig(seed=42, batch_size=32)]

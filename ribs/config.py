@@ -1,5 +1,5 @@
 """Functions for dealing with configs."""
-import json
+import toml
 
 __all__ = [
     "create_config",
@@ -38,7 +38,7 @@ def _single_config_data(config):
 
 
 def save_configs(optimizer_config, archive_config, emitter_configs, filename):
-    """Saves all configs to a JSON file.
+    """Saves all configs to a TOML file.
 
     Args:
         optimizer_config: Configuration object for an optimizer, such as
@@ -47,10 +47,10 @@ def save_configs(optimizer_config, archive_config, emitter_configs, filename):
             :class:`ribs.archives.GridArchiveConfig`.
         emitter_configs (list): List of configuration objects for emitters, such
             as :class:`ribs.emitters.GaussianEmitterConfig`.
-        filename (str): Path to save the JSON file.
+        filename (str): Path to save the TOML file.
     """
     with open(filename, "w") as file:
-        json.dump(
+        toml.dump(
             {
                 "optimizer":
                     _single_config_data(optimizer_config),
@@ -70,10 +70,10 @@ def _load_single_config(data, name_to_config_class):
 
 
 def load_configs(filename):
-    """Loads configs from a JSON file to reconstruct an optimizer.
+    """Loads configs from a TOML file to reconstruct an optimizer.
 
     Args:
-        filename (str): Path from which to load the JSON file.
+        filename (str): Path from which to load the TOML file.
     Returns:
         tuple: 3-element tuple containing:
 
@@ -99,7 +99,7 @@ def load_configs(filename):
     }
 
     with open(filename, "r") as file:
-        data = json.load(file)
+        data = toml.load(file)
         optimizer_config = _load_single_config(data["optimizer"],
                                                name_to_config_class)
         archive_config = _load_single_config(data["archive"],
