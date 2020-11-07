@@ -22,7 +22,7 @@ def main():
     emitters = [
         GaussianEmitter([0.0] * 10, 0.1, archive, config={"batch_size": 4})
     ]
-    opt = Optimizer([0.0] * 10, 0.1, archive, emitters)
+    opt = Optimizer(archive, emitters)
 
     for i in range(10**5):
         sols = opt.ask()

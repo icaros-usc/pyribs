@@ -2,7 +2,6 @@
 import numpy as np
 
 from ribs.config import create_config
-from ribs.emitters import GaussianEmitter
 
 
 class OptimizerConfig:
@@ -18,22 +17,13 @@ class OptimizerConfig:
 
 class Optimizer:
 
-    def __init__(self, x0, sigma0, archive, emitters=None, config=None):
+    def __init__(self, archive, emitters, config=None):
         self.config = create_config(config, OptimizerConfig)
 
         self.archive = archive
-        self.x0 = np.array(x0)
-        self.sigma0 = sigma0
         self.num_iters = 0
         self.last_batch = None
-
-        if emitters is None:
-            self.emitters = [
-                GaussianEmitter(self.x0, self.sigma0, self.archive)
-                for _ in range(1)
-            ]
-        else:
-            self.emitters = emitters
+        self.emitters = emitters
 
     def ask(self):
 
