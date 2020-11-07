@@ -1,10 +1,2 @@
-# Plots.
-*.png
-*.jpg
-*.pdf
-
-# Data.
-*.json
-
 # Dask
 dask-worker-space/
