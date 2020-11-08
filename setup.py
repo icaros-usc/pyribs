@@ -23,11 +23,13 @@ extras_require = {
         'seaborn>=0.11.0',
         'jupyterlab',
         'gym~=0.17.0',
+        'Box2D~=2.3.10',  # For envs such as Lunar Lander.
         'fire>=0.3.0',
 
         # Dask
         'dask>=2.0.0',
         'distributed>=2.0.0',
+        'bokeh',  # Dask dashboard.
     ],
     'dev': [
         'pip==20.2.4',
