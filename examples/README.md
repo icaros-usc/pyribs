@@ -11,7 +11,8 @@ with `pip install ribs[examples]` or `pip install -e .[examples]`.
 
 ## Manifest
 
-| File                | Description                                  |
-| ------------------- | -------------------------------------------- |
-| `run_sphere.py`     | The Sphere function with vanilla MAP-Elites. |
-| `run_sphere_cvt.py` | The Sphere function with CVT-MAP-Elites.     |
+| File                  | Description                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| `run_sphere.py`       | The Sphere function with vanilla MAP-Elites.                                              |
+| `run_sphere_cvt.py`   | The Sphere function with CVT-MAP-Elites.                                                  |
+| `lunar_lander_cvt.py` | Lunar Lander with CVT-MAP-Elites, using trajectories as BCs and Dask for parallelization. |

@@ -107,6 +107,7 @@ ENV/
 *.jpg
 *.pdf
 *.json
+*.pkl
 
 # Editor, IDE, and OS settings
 .vscode/
