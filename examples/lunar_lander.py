@@ -1,5 +1,7 @@
-"""Learn a linear model with CMA-ES in a discrete OpenAI Gym environment.
+"""Learn a linear model with MAP-Elites in a discrete OpenAI Gym environment.
+
 Uses Dask for parallelization.
+
 Usage:
     See README.md.
 """
@@ -88,7 +90,6 @@ def train_model(
     emitter = GaussianEmitter(np.zeros(action_dim * obs_dim), sigma, archive)
     # opt = Optimizer(np.zeros(action_dim * obs_dim), sigma, archive, config=config)
     opt = Optimizer(archive, [emitter], config=config)
-
 
     for _ in range(0, iterations - 1):
 
