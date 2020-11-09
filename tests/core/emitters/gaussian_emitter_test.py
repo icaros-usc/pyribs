@@ -1,4 +1,6 @@
 """Tests for the GaussianEmitter."""
+import unittest
+
 import numpy as np
 
 from ribs.archives import GridArchive
@@ -50,8 +52,5 @@ def test_tell_inserts_into_archive():
     archive_beh = archive_data.loc[:, ["behavior-0", "behavior-1"]].to_numpy()
     assert len(archive_beh) == 3
 
-    # Convert to set so that we can check that the behavior values in the
-    # archive are correct irrespective of order.
-    behavior_value_set = set(map(tuple, behavior_values))
-    archive_beh_set = set(map(tuple, archive_beh))
-    assert behavior_value_set == archive_beh_set
+    unittest.TestCase().assertCountEqual(behavior_values.tolist(),
+                                         archive_beh.tolist())
