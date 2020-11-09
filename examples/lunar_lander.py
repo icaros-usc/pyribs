@@ -16,6 +16,7 @@ import seaborn as sns
 from dask.distributed import Client, LocalCluster
 
 from ribs.archives import GridArchive
+from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
 
 
@@ -26,7 +27,7 @@ def simulate(
     render: bool = False,
     delay: int = 10,
 ):
-    """Runs the model in the env and returns the cumulative cost (negative reward).
+    """Runs the model in the env and returns the cumulative reward.
     Add the `seed` argument to initialize the environment from the given seed
     (this makes the environment the same between runs).
     The model is just a linear model from input to output with softmax, so it
@@ -49,20 +50,22 @@ def simulate(
 
     done = False
     while not done:
+        # If render is set to True, then a video will appear showing the Lunar Lander
+        # taking actions in the environment.
         if render:
             env.render()
-        if delay is not None:
-            time.sleep(delay / 1000)
+            if delay is not None:
+                time.sleep(delay / 1000)
 
         # Deterministic. Here is the action. Multiply observation by policy. Model is the policy and obs is state
-        action = np.argmax(model @ obs)
+        action = np.argmax(model @ obs)  
         obs, reward, done, _ = env.step(action)
         total_reward += reward
         timesteps += 1
 
     env.close()
 
-    return total_reward, obs, timesteps
+    return total_reward, obs[0], timesteps
 
 
 def train_model(
@@ -74,48 +77,59 @@ def train_model(
     iterations: int,
     env_name: str = "LunarLander-v2",
 ):
-    """Trains a model with CMA-ES and saves it."""
-    # Environment properties.
+    """Trains a model with MAP-Elites and saves it."""
+    # OpenAI Gym environment properties.
     env = gym.make(env_name)
     action_dim = env.action_space.n
     obs_dim = env.observation_space.shape[0]
-
-    config = {
-        "seed": seed,
-        "batch_size": 64,
-    }
-
-    archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)], config=config)
-
-    emitter = GaussianEmitter(np.zeros(action_dim * obs_dim), sigma, archive)
-    # opt = Optimizer(np.zeros(action_dim * obs_dim), sigma, archive, config=config)
-    opt = Optimizer(archive, [emitter], config=config)
+    
+    archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)],
+                          config={
+                              "seed": seed,
+                          })
+    emitter = GaussianEmitter(np.zeros(action_dim * obs_dim),
+                              sigma,
+                              archive,
+                              config={"batch_size": 64})
+    opt = Optimizer(archive, [emitter])
 
     for _ in range(0, iterations - 1):
-
-        sols = opt.ask()
+        
+        # Generating a batch of solutions
+        opt.ask()
 
         objs = list()
         bcs = list()
-
+        
+        # Here, we're running each of the solutions (i.e. policies) we generated above through the
+        # simulate() function. simulate() will return the objective value, timesteps to run to completion,
+        # and x-position of the lunar lander for each solution we pass in. 
         futures = client.map(
-            lambda sol: simulate(env_name, np.reshape(sol, (action_dim, obs_dim)
-                                                     ), seed), sols)
+            lambda sol: simulate(env_name, np.reshape(sol, (action_dim, obs_dim)), seed), opt._solutions)
 
         results = client.gather(futures)
-
-        for reward, state, timesteps in results:
+    
+        # Here we're just constructing a list of objective function evaluations (i.e. objs) and behavior
+        # descriptions (i.e. bcs) for each solution. These values were returned by our calls to simulation()
+        # above.
+        for reward, x_pos, timesteps in results:
             objs.append(reward)
-            bcs.append((timesteps, state[0]))
-
-        opt.tell(sols, objs, bcs)
+            bcs.append((timesteps, x_pos))
+        
+        # We have our Optimizer opt tell our Emitters the objective function evaluations and behavior
+        # descriptions of each solution, so that our Emitter emitter and GridArchive archive can decide 
+        # where and if to store each solution in our GridArchive archive.
+        opt.tell(objs, bcs)
 
     df = archive.as_pandas()
-
-    df.to_csv(model_filename)
+    
+    # Saving our archive to a file.
+    df.to_pickle(model_filename)
 
     df = archive.as_pandas()
     df = df.pivot('index-0', 'index-1', 'objective')
+    
+    # Creating a heatmap of all of our generated solutions.
     sns.heatmap(df)
     plt.savefig(plot_filename)
 
@@ -134,7 +148,7 @@ def map_elites(
     local_workers: int = 8,
     sigma: float = 10.0,
     plot_filename: str = "lunar_lander_plot.png",
-    model_filename: str = "lunar_lander_model.csv",
+    model_filename: str = "lunar_lander_model.pkl",
     run_eval: bool = False,
 ):
     """Uses CMA-ES to train an agent in an environment with discrete actions.
