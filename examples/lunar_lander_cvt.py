@@ -6,9 +6,9 @@ is computed as::
     argmax ( model @ obs )
 
 As this example uses CVT-MAP-Elites, we are able to use a very high-dimensional
-behavior space, so we use the space of trajectories sampled every 100 timesteps
-up to 1000 timesteps -- as each point in the trajectory is (x,y) and we include
-the starting point, our trajectories are 22-dimensional. If the episode lasts
+behavior space, namely, the space of trajectories sampled every 100 timesteps up
+to 1000 timesteps -- as each point in the trajectory is (x,y) and we include the
+starting point, our trajectories are 22-dimensional. If the episode lasts
 shorter than 1000 timesteps, the lander's last position is repeated.
 
 For bounds, each dimension is bounded to (-1,1), as those are the bounds on the
@@ -17,6 +17,8 @@ lunar lander's x and y positions.
 The CVT archive in this example uses 5000 bins, but the default parameters only
 filled up ~200 entries. More iterations are likely needed (much more than 1000),
 and some trajectories are physically impossible anyway.
+
+This example uses one Gaussian Emitter to generate solutions for evaluation.
 
 This script uses Dask for parallelization.
 
@@ -29,8 +31,11 @@ Usage:
 
     # For full options, run:
     python lunar_lander_cvt.py --help
-"""
 
+    # To evaluate 10 random solutions from the archive and save the videos to
+    # a directory called `lunar_lander_cvt_videos`, run:
+    python lunar_lander_cvt.py --run-eval
+"""
 import time
 
 import fire
@@ -44,7 +49,7 @@ from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
 
 
-def simulate(model, seed=None, render=False, delay=None):
+def simulate(model, seed=None, render=False, delay=None, video_env=None):
     """Runs the model in the env and returns reward and BCs.
 
     The model is just a linear model from observations to actions with an argmax
@@ -57,6 +62,9 @@ def simulate(model, seed=None, render=False, delay=None):
             between runs).
         render (bool): Whether to render the environment.
         delay (int): Milliseconds to wait between frames when `render` is True.
+        video_env (Env): This env should be wrapped with gym's Monitor wrapper
+            to record videos. If passed in, this env will be used instead of
+            creating a new Lunar Lander env.
     Returns:
         reward (float): Total reward of the agent.
         trajectory ((22,) array): The trajectory of the agent every 100
@@ -67,21 +75,23 @@ def simulate(model, seed=None, render=False, delay=None):
             episode terminates early), the last point in the trajectory is
             repeated until the trajectory is long enough.
     """
-    total_reward = 0.0
-    env = gym.make("LunarLander-v2")
+    if video_env is None:
+        env = gym.make("LunarLander-v2")
+    else:
+        env = video_env
+
+    # Deterministic environment with seed().
+    if seed is not None:
+        env.seed(seed)
 
     action_dim = env.action_space.n
     obs_dim = env.observation_space.shape[0]
     model = np.reshape(model, (action_dim, obs_dim))
 
-    # Deterministic environment with seed().
-    if seed is not None:
-        env.seed(seed)
-    obs = env.reset()
-
     timesteps = 0
+    total_reward = 0.0
+    obs = env.reset()
     trajectory = [obs[0], obs[1]]
-
     done = False
     while not done:
         if render:
@@ -97,15 +107,19 @@ def simulate(model, seed=None, render=False, delay=None):
         if timesteps % 100 == 0:
             trajectory.extend([obs[0], obs[1]])  # (x,y) coordinates.
 
-    env.close()
-
+    # Extend trajectory to full length.
     while len(trajectory) < 22:
         trajectory.extend(trajectory[-2:])
+
+    # Only close the env if it was not passed in.
+    if video_env is None:
+        env.close()
 
     return total_reward, np.array(trajectory, dtype=np.float32)
 
 
-def train_model(create_client, seed, sigma, archive_filename, iterations):
+def train_model(create_client, seed, sigma, batch_size, archive_filename,
+                iterations):
     """Trains models with CVT-MAP-Elites and saves results to a pickle file.
 
     Args:
@@ -113,6 +127,8 @@ def train_model(create_client, seed, sigma, archive_filename, iterations):
             called with no parameters.
         seed (int): Seed for environment.
         sigma (int): Standard deviation for the GaussianEmitter.
+        batch_size (int): Number of evaluations to run per iteration. Passed
+            into GaussianEmitter.
         archive_filename (str): Pickle file to save the archive to.
         iterations (int): Number of iterations to run CVT-MAP-Elites.
     """
@@ -133,7 +149,7 @@ def train_model(create_client, seed, sigma, archive_filename, iterations):
                               archive,
                               config={
                                   "seed": seed,
-                                  "batch_size": 32,
+                                  "batch_size": batch_size,
                               })
     opt = Optimizer(archive, [emitter])
 
@@ -175,31 +191,48 @@ def train_model(create_client, seed, sigma, archive_filename, iterations):
 
 
 def run_evaluation(archive_filename, seed):
-    """Runs simulations on 10 random archive solutions."""
+    """Simulates 10 random archive solutions.
+
+    Videos are saved to the `lunar_lander_cvt_videos` directory.
+    """
     df = pd.read_pickle(archive_filename)
     indices = np.random.permutation(len(df))[:10]
     indices.sort()
 
+    # Use a single env so that all the videos go to the same directory.
+    env = gym.wrappers.Monitor(
+        gym.make("LunarLander-v2"),
+        "lunar_lander_cvt_videos",
+        force=True,
+        # Default is to write the video for "cubic" episodes -- 0,1,8,etc (see
+        # https://github.com/openai/gym/blob/master/gym/wrappers/monitor.py#L54).
+        # This will ensure all the videos are written.
+        video_callable=lambda idx: True,
+    )
+
     for idx in indices:
         model = df.at[idx, "solution"]
+        reward = simulate(model, seed, True, 10, env)[0]
         print(f"=== Index {idx} ===\n"
               "Model:\n"
               f"{model}\n"
-              f"Reward: {simulate(model, seed, True, 10)[0]}")
+              f"Reward: {reward}")
+
+    env.close()
 
 
-def cvt_map_elites(
-    iterations: int = 1000,
-    seed: int = 42,
-    sigma: float = 10.0,
-    workers: int = 4,
-    archive_filename: str = "lunar_lander_cvt_archives.pkl",
-    run_eval: bool = False,
-):
+def cvt_map_elites(iterations: int = 1000,
+                   batch_size: int = 32,
+                   seed: int = 42,
+                   sigma: float = 1.0,
+                   workers: int = 4,
+                   archive_filename: str = "lunar_lander_cvt_archives.pkl",
+                   run_eval: bool = False):
     """Uses CVT-MAP-Elites to train an agent in Lunar Lander.
 
     Args:
         iterations: Number of iterations to run the algorithm.
+        batch_size: Number of evaluations to run per iteration.
         seed: Random seed for environments.
         sigma: Standard deviation for the Gaussian emitter.
         workers: Number of workers to use when running locally.
@@ -223,7 +256,8 @@ def cvt_map_elites(
         print(client.ncores())
         return client
 
-    train_model(create_client, seed, sigma, archive_filename, iterations)
+    train_model(create_client, seed, sigma, batch_size, archive_filename,
+                iterations)
 
 
 if __name__ == "__main__":
