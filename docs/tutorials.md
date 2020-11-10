@@ -3,6 +3,7 @@
 ```{toctree}
 :maxdepth: 1
 
+tutorials/lunar_lander
 tutorials/inverse_kinematics
 ```
 
