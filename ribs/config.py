@@ -88,12 +88,14 @@ def load_configs(filename):
     # pylint: disable = import-outside-toplevel, cyclic-import
     from ribs.archives._cvt_archive import CVTArchiveConfig
     from ribs.archives._grid_archive import GridArchiveConfig
+    from ribs.archives._sliding_boundary_archive import SlidingBoundaryArchive
     from ribs.emitters._gaussian_emitter import GaussianEmitterConfig
     from ribs.optimizers._optimizer import OptimizerConfig
 
     name_to_config_class = {
         "GridArchiveConfig": GridArchiveConfig,
         "CVTArchiveConfig": CVTArchiveConfig,
+        "SlidingBoundaryArchive": SlidingBoundaryArchive,
         "GaussianEmitterConfig": GaussianEmitterConfig,
         "OptimizerConfig": OptimizerConfig,
     }
