@@ -81,12 +81,12 @@ class SlidingBoundaryArchive(ArchiveBase):
     def __init__(self, dims, ranges, config=None):
         self.config = create_config(config, SlidingBoundaryArchiveConfig)
         self.dims = np.array(dims)
-        self.n_dims = len(self.dims)
+        n_dims = len(self.dims)
         ArchiveBase.__init__(
             self,
-            n_dims=self.n_dims,
+            n_dims=n_dims,
             objective_value_dim=self.dims,
-            behavior_value_dim=(*self.dims, self.n_dims),
+            behavior_value_dim=(*self.dims, n_dims),
             solution_dim=self.dims,
             seed=self.config.seed,
         )
@@ -99,7 +99,8 @@ class SlidingBoundaryArchive(ArchiveBase):
         # Sliding boundary specifics
         self.remap_frequency = self.config.remap_frequency
         self.boundaries = [
-            np.full(self.dims[i], None, dtype=float) for i in range(self.n_dims)
+            np.full(self.dims[i], None, dtype=float)
+            for i in range(self._n_dims)
         ]
         self.all_solutions = []
         self.all_behavior_values = []
@@ -118,8 +119,8 @@ class SlidingBoundaryArchive(ArchiveBase):
             while idx < self.dims[i] and \
                         self.boundaries[i][idx] < behavior_value:
                 idx += 1
-            index.append(idx)
-        return np.max([0, index-1])
+            index.append(np.max([0, idx - 1]))
+        return tuple(index)
 
     def add(self, solution, objective_value, behavior_values):
         """ Remap the archive or attempt to insert the solution into the archive
@@ -153,10 +154,10 @@ class SlidingBoundaryArchive(ArchiveBase):
         # sort all behavior values along the axis of each bc
         sorted_bc = np.sort(self.all_behavior_values, axis=0)
 
-        for i in range(self.n_dims):
+        for i in range(self._n_dims):
             for j in range(self.dims[i]):
                 sample_idx = int(j * len(self.all_solutions) / self.dims[i])
-                self.boundaries[i][j] = sorted_bc[i][sample_idx]
+                self.boundaries[i][j] = sorted_bc[sample_idx][i]
 
         # add all solutions to the new empty archive
         self._occupied_indices = []
@@ -166,4 +167,29 @@ class SlidingBoundaryArchive(ArchiveBase):
             ArchiveBase.add(self, solution, objective_value, behavior_value)
 
     def as_pandas(self):
-        pass
+        """Converts the archive into a Pandas dataframe.
+
+        Returns:
+            A dataframe where each row is an elite in the archive. The dataframe
+            has ``n_dims`` columns called ``index-{i}`` for the archive index,
+            ``n_dims`` columns called ``behavior-{i}`` for the behavior values,
+            1 column for the objective function value called ``objective``, and
+            1 column for solution objects called ``solution``.
+        """
+        column_titles = [
+            *[f"index-{i}" for i in range(self._n_dims)],
+            *[f"behavior-{i}" for i in range(self._n_dims)],
+            "objective",
+            "solution",
+        ]
+
+        rows = []
+        for index in self._occupied_indices:
+            row = [
+                *index,
+                *self._behavior_values[index],
+                self._objective_values[index],
+                self._solutions[index],
+            ]
+            rows.append(row)
+        return pd.DataFrame(rows, columns=column_titles)
