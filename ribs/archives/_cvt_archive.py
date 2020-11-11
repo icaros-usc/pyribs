@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from scipy.cluster.vq import kmeans
-from scipy.spatial import KDTree
+from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 
 from ribs.archives._archive_base import ArchiveBase
 from ribs.config import create_config
@@ -22,7 +22,7 @@ class CVTArchiveConfig:
             iterations goes below this threshold (see `here
             <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_) for
             more info.
-        use_kd_tree (bool): If True, use a KDTree for finding the closest
+        use_kd_tree (bool): If True, use a k-D tree for finding the closest
             centroid when inserting into the archive. This may result in a
             speedup for larger dimensions; refer to
             :class:`~ribs.archives.CVTArchive` for more info.
@@ -51,28 +51,28 @@ class CVTArchive(ArchiveBase):
     space and using k-means clustering to identify k centroids. When items are
     inserted into the archive, we identify their bin by identifying the closest
     centroid in behavior space (using Euclidean distance). For k-means
-    clustering, note that we use `scipy.cluster.vq
+    clustering, we use `scipy.cluster.vq
     <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_.
 
     Finding the closest centroid is done in O(bins) time (i.e. brute force) by
     default. If the config has ``use_kd_tree`` set, it can be done in roughly
-    O(log bins) time using `scipy.spatial.KDTree
-    <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.html>`_.
-    However, using KDTree actually lowers performance for small numbers of bins.
-    The following plot compares the runtime of brute force and KDTree when
+    O(log bins) time using `scipy.spatial.cKDTree
+    <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html>`_.
+    However, using this k-D tree lowers performance for small numbers of bins.
+    The following plot compares the runtime of brute force vs k-D tree when
     inserting 100k samples into a 2D archive with varying numbers of bins (we
     took the minimum over 5 runs for each data point, as recommended `here
     <https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat>`_). Note
-    the logarithmic x-axis. This plot was generated on a reasonably modern
+    the logarithmic scales. This plot was generated on a reasonably modern
     laptop.
 
     .. image:: _static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
 
-    As we can see, archives with at least 10k bins seem to have faster insertion
-    when using KDTree than when using brute force, so **we recommend setting**
-    ``use_kd_tree`` **in your config only if you have at least 10k bins in
-    your** ``CVTArchive``. See `benchmarks/cvt_add.py
+    As we can see, archives with more than 1k bins seem to have faster insertion
+    when using a k-D tree than when using brute force, so **we recommend setting**
+    ``use_kd_tree`` **in your config if you have at least 1k bins in your**
+    ``CVTArchive``. See `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
 
@@ -133,7 +133,7 @@ class CVTArchive(ArchiveBase):
         )[0]
 
         if self.config.use_kd_tree:
-            self._centroid_kd_tree = KDTree(self.centroids)
+            self._centroid_kd_tree = cKDTree(self.centroids)
 
     def _get_index(self, behavior_values):
         if self.config.use_kd_tree:

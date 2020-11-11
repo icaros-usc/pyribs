@@ -1,17 +1,17 @@
-"""Compare performance of adding to the CVTArchive with and without KDTree.
+"""Compare performance of adding to the CVTArchive with and without k-D tree.
 
-In CVTArchive, we use KDTree to identify the bin by finding the nearest centroid
-to a solution in behavior space. Though KDTree is theoretically more efficient
-than brute force, constant factors mean that brute force can be faster than
-KDTree for smaller numbers of centroids / bins. In this script, we want to
-increase the number of bins in the archive and see when KDTree becomes faster
-than brute force.
+In CVTArchive, we use a k-D tree to identify the bin by finding the nearest
+centroid to a solution in behavior space. Though a k-D tree is theoretically
+more efficient than brute force, constant factors mean that brute force can be
+faster than k-D tree for smaller numbers of centroids / bins. In this script, we
+want to increase the number of bins in the archive and see when the k-D tree
+becomes faster than brute force.
 
 In this experiment, we construct archives with 10, 50, 100, 500, 1k, 5k, 10k,
 50k, 100k bins in the behavior space of [(-1, 1), (-1, 1)] and 100k samples. In
 each archive, we then time how long it takes to add 100k random solutions
 sampled u.a.r. from the behavior space. We run each experiment with brute force
-and with the KD tree, 5 times each, and take the minimum runtime (see
+and with the k-D tree, 5 times each, and take the minimum runtime (see
 https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
 
 Usage:
@@ -25,8 +25,7 @@ If you wish to re-plot the results without re-running the benchmarks, you can
 modify plot_times and then run:
 
     import cvt_add  # The name of this file.
-    data = cvt_add.load_times()
-    cvt_add.plot_times(*data)
+    cvt_add.plot_times(*cvt_add.load_times())
 """
 import json
 import timeit
@@ -60,11 +59,13 @@ def plot_times(n_bins, brute_force_t, kd_tree_t, filename="cvt_add_plot.png"):
     """Plots the results to the given file."""
     fig, ax = plt.subplots(figsize=(4, 4))
     fig.tight_layout()
-    ax.set_title("Runtime to insert 100k entries into CVTArchive")
+    ax.set_title("Runtime to insert 100k 2D entries into CVTArchive")
     ax.set_xlabel("Archive bins")
     ax.set_ylabel("Time (s)")
+    ax.set_yscale("log")
     ax.semilogx(n_bins, brute_force_t, "-o", label="Brute Force", c="#304FFE")
-    ax.semilogx(n_bins, kd_tree_t, "-o", label="KD-Tree", c="#e62020")
+    ax.semilogx(n_bins, kd_tree_t, "-o", label="k-D Tree", c="#e62020")
+    ax.grid(True, which="major", linestyle="--", linewidth=1)
     ax.legend(loc="upper left")
     fig.savefig(filename, bbox_inches="tight", dpi=120)
 
@@ -99,7 +100,9 @@ def main():
     kd_tree_t = []
     for bins in n_bins:
         for use_kd_tree in (False, True):
-            print(f"--------------\nBins: {bins}\nUse KD tree: {use_kd_tree}")
+            print(f"--------------\n"
+                  f"Bins: {bins}\n"
+                  f"Method: {'k-D Tree' if use_kd_tree else 'Brute Force'}")
             setup_func = partial(setup, bins, use_kd_tree)
             res_t = min(
                 timeit.repeat(add_100k_entries, setup_func, repeat=5, number=1))
