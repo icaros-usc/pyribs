@@ -115,10 +115,7 @@ class SlidingBoundaryArchive(ArchiveBase):
 
         index = []
         for i, behavior_value in enumerate(behavior_values):
-            idx = 0
-            while idx < self.dims[i] and \
-                        self.boundaries[i][idx] < behavior_value:
-                idx += 1
+            idx = np.searchsorted(self.boundaries[i], behavior_value)
             index.append(np.max([0, idx - 1]))
         return tuple(index)
 
