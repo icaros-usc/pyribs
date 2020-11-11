@@ -33,7 +33,7 @@ class SlidingBoundaryArchive(ArchiveBase):
     characteristics
 
     This archive is the container described in the Hearthstone Deck Space paper:
-    https://arxiv.org/pdf/1904.10656.pdf. Same as the GridArchive, it can bes
+    https://arxiv.org/pdf/1904.10656.pdf. Same as the GridArchive, it can be
     visualized as an n-dimensional grid in the behavior space that is divided
     into a certain number of bins in each dimension. However, it places the
     boundaries at the percentage marks of the behavior characteristics along
@@ -122,8 +122,27 @@ class SlidingBoundaryArchive(ArchiveBase):
             index.append(np.max([0, idx - 1]))
         return tuple(index)
 
+    def _reset_archive(self):
+        """Reset the archive.
+
+        Note that we do not have to reset ``self.
+        behavior_values`` because it won't affect solution insertion
+        """
+        self._objective_values.fill(-np.inf)
+        self._solutions.fill(None)
+        self._occupied_indices.clear()
+
+
     def add(self, solution, objective_value, behavior_values):
-        """ Remap the archive or attempt to insert the solution into the archive
+        """ Attempt to insert the solution into the archive. Remap the archive
+        once every ``self.remap_frequency`` solutions are found.
+
+        Remap: change the boundaries of the archive to the percentage marks of
+        the behavior values stored in the archive. and re-add all of the
+        solutions.
+
+        Note: remapping will not just add solutions in the current archive, but
+        ALL of the solutions encountered.
 
         Args:
             solution (np.ndarray): Parameters for the solution.
@@ -139,11 +158,11 @@ class SlidingBoundaryArchive(ArchiveBase):
         self.all_objective_values.append(objective_value)
 
         if len(self.all_solutions) % self.remap_frequency == 1:
-            self.re_map()
+            self._re_map()
         else:
             ArchiveBase.add(self, solution, objective_value, behavior_values)
 
-    def re_map(self,):
+    def _re_map(self,):
         """Remap the archive so that the boundaries locate at the percentage
         marks of the solutions stored in the archive.
 
@@ -160,7 +179,7 @@ class SlidingBoundaryArchive(ArchiveBase):
                 self.boundaries[i][j] = sorted_bc[sample_idx][i]
 
         # add all solutions to the new empty archive
-        self._occupied_indices = []
+        self._reset_archive()
         for solution, objective_value, behavior_value in zip(
                 self.all_solutions, self.all_objective_values,
                 self.all_behavior_values):
