@@ -20,9 +20,8 @@
 import os
 import sys
 
-import sphinx_material
-
 import ribs
+import sphinx_material
 
 sys.path.insert(0, os.path.abspath('..'))
 DEV_MODE = os.environ.get("DOCS_MODE", "regular") == "dev"
@@ -216,7 +215,7 @@ texinfo_documents = [
 # -- Extension config -------------------------------------------------
 
 autodoc_default_options = {
-    "member-order": "alphabetical",
+    "member-order": "bysource",
     "autosummary": True,
     "inherited-members": True,
 }
