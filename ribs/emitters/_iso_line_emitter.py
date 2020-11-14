@@ -1,28 +1,8 @@
-"""Provides the IsoLineEmitter and corresponding IsoLineEmitterconfig."""
+"""Provides the IsoLineEmitter."""
 
 import numpy as np
 
-from ribs.config import create_config
 from ribs.emitters._emitter_base import EmitterBase
-
-
-class IsoLineEmitterConfig:
-    """Configuration for the IsoLineEmitter.
-
-    Args:
-        seed (float or int): Value to seed the random number generator. Set to
-            None to avoid seeding. Default: None
-        batch_size (int): Number of solutions to send back in the ask() method.
-            Default: 64
-    """
-
-    def __init__(
-        self,
-        seed=None,
-        batch_size=64,
-    ):
-        self.seed = seed
-        self.batch_size = batch_size
 
 
 class IsoLineEmitter(EmitterBase):
@@ -51,19 +31,16 @@ class IsoLineEmitter(EmitterBase):
             generating solutions.
         line_sigma (float): Scale factor for the line distribution used when
             generating solutions.
-        config (None or dict or IsoLineEmitterConfig): Configuration object. If
-            None, a default IsoLineEmitterConfig is constructed. A dict may
-            also be passed in, in which case its arguments will be passed into
-            IsoLineEmitterConfig.
+        seed (float or int): Value to seed the random number generator. Set to
+            None to avoid seeding.
+        batch_size (int): Number of solutions to send back in the ask() method.
     Attributes:
-        config (IsoLineEmitterConfig): Configuration object.
         x0 (np.ndarray): See args.
         iso_sigma (float): See args.
         line_sigma (float): See args.
         solution_dim (int): The (1D) dimension of solutions produced by this
             emitter.
         batch_size (int): Number of solutions to generate on each call to ask().
-            Passed in via ``config.batch_size``.
     """
 
     def __init__(self,
@@ -71,14 +48,13 @@ class IsoLineEmitter(EmitterBase):
                  archive,
                  iso_sigma=0.01,
                  line_sigma=0.2,
-                 config=None):
-        self.config = create_config(config, IsoLineEmitterConfig)
+                 batch_size=64,
+                 seed=None):
         self.x0 = np.array(x0)
         self.iso_sigma = iso_sigma
         self.line_sigma = line_sigma
 
-        EmitterBase.__init__(self, len(self.x0), self.config.batch_size,
-                             archive, self.config.seed)
+        EmitterBase.__init__(self, len(self.x0), batch_size, archive, seed)
 
     def ask(self):
         """Generates ``self.batch_size`` solutions.

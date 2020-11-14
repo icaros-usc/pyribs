@@ -21,7 +21,7 @@ def _archive_fixture():
 
 def test_ask_emits_correct_num_sols(_archive_fixture):
     archive, x0 = _archive_fixture
-    emitter = GaussianEmitter(x0, 5, archive, config={"batch_size": 32})
+    emitter = GaussianEmitter(x0, 5, archive, batch_size=32)
     solutions = emitter.ask()
     assert solutions.shape == (32, 4)
 
@@ -29,7 +29,7 @@ def test_ask_emits_correct_num_sols(_archive_fixture):
 def test_ask_emits_correct_num_sols_for_non_empty_archive(_archive_fixture):
     archive, x0 = _archive_fixture
     archive.add(x0, 10, np.array([0, 0]))
-    emitter = GaussianEmitter(x0 * 2, 10, archive, config={"batch_size": 32})
+    emitter = GaussianEmitter(x0 * 2, 10, archive, batch_size=32)
     solutions = emitter.ask()
     assert solutions.shape == (32, 4)
 
@@ -37,7 +37,7 @@ def test_ask_emits_correct_num_sols_for_non_empty_archive(_archive_fixture):
 def test_tell_inserts_into_archive(_archive_fixture):
     archive, x0 = _archive_fixture
     batch_size = 3
-    emitter = GaussianEmitter(x0, 5, archive, config={"batch_size": batch_size})
+    emitter = GaussianEmitter(x0, 5, archive, batch_size)
     solutions = emitter.ask()
     objective_values = np.full(batch_size, 1.)
     behavior_values = np.array([[-1, -1], [0, 0], [1, 1]])
