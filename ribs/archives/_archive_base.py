@@ -14,7 +14,8 @@ class ArchiveBase:
             value array.
         solution_dim (array-like): The dimensions to use for the solutions
             array.
-        seed (float or int): Seed for the random number generator.
+        seed (float or int): Seed for the random number generator. None
+            (default) means no seed.
     Attributes:
         _rng (np.random.Generator): Random number generator, used in particular
             for generating random elites.
@@ -30,8 +31,12 @@ class ArchiveBase:
             archive.
     """
 
-    def __init__(self, n_dims, objective_value_dim, behavior_value_dim,
-                 solution_dim, seed):
+    def __init__(self,
+                 n_dims,
+                 objective_value_dim,
+                 behavior_value_dim,
+                 solution_dim,
+                 seed=None):
         self._rng = np.random.default_rng(seed)
         self._n_dims = n_dims
 
