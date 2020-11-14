@@ -1,24 +1,8 @@
-"""Contains the GridArchive and corresponding GridArchiveConfig."""
+"""Contains the GridArchive."""
 import numpy as np
 import pandas as pd
 
 from ribs.archives._archive_base import ArchiveBase
-from ribs.config import create_config
-
-
-class GridArchiveConfig:
-    """Configuration for the GridArchive.
-
-    Args:
-        seed (float or int): Value to seed the random number generator. Set to
-            None to avoid any seeding. Default: None
-    """
-
-    def __init__(
-        self,
-        seed=None,
-    ):
-        self.seed = seed
 
 
 class GridArchive(ArchiveBase):
@@ -40,12 +24,9 @@ class GridArchive(ArchiveBase):
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``.
-        config (None or dict or GridArchiveConfig): Configuration object. If
-            None, a default GridArchiveConfig is constructed. A dict may also be
-            passed in, in which case its arguments will be passed into
-            GridArchiveConfig.
+        seed (float or int): Value to seed the random number generator. Set to
+            None to avoid any seeding.
     Attributes:
-        config (GridArchiveConfig): Configuration object.
         dims (np.ndarray): Number of bins in each dimension.
         lower_bounds (np.ndarray): Lower bound of each dimension.
         upper_bounds (np.ndarray): Upper bound of each dimension.
@@ -53,15 +34,14 @@ class GridArchive(ArchiveBase):
             lower_bounds``).
     """
 
-    def __init__(self, dims, ranges, config=None):
-        self.config = create_config(config, GridArchiveConfig)
+    def __init__(self, dims, ranges, seed=None):
         self.dims = np.array(dims)
         behavior_dim = len(self.dims)
         ArchiveBase.__init__(
             self,
             storage_dims=tuple(self.dims),
             behavior_dim=behavior_dim,
-            seed=self.config.seed,
+            seed=seed,
         )
 
         ranges = list(zip(*ranges))

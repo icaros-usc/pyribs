@@ -22,13 +22,13 @@ def _archive_fixture(use_kd_tree):
     archive = CVTArchive([(-1, 1), (-1, 1)],
                          4,
                          samples=samples,
-                         config={"use_kd_tree": use_kd_tree})
+                         use_kd_tree=use_kd_tree)
     archive.initialize(len(solution))
 
     archive_with_entry = CVTArchive([(-1, 1), (-1, 1)],
                                     4,
                                     samples=samples,
-                                    config={"use_kd_tree": use_kd_tree})
+                                    use_kd_tree=use_kd_tree)
     archive_with_entry.initialize(len(solution))
     behavior_values = np.array([1, 1])
     centroid = [0.5, 0.5]

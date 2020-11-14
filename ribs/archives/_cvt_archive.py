@@ -5,40 +5,6 @@ from scipy.cluster.vq import kmeans
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 
 from ribs.archives._archive_base import ArchiveBase
-from ribs.config import create_config
-
-
-class CVTArchiveConfig:
-    """Configuration for the CVTArchive.
-
-    Args:
-        seed (float or int): Value to seed the random number generator. Set to
-            None to avoid any seeding. Default: None
-        samples (int): Number of samples to generate before creating the
-            archive.  If ``samples`` is passed into ``CVTArchive``, this option
-            is ignored.
-        k_means_threshold (float): When finding the centroids at the beginning,
-            k-means will terminate when the difference in distortion between
-            iterations goes below this threshold (see `here
-            <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_) for
-            more info.
-        use_kd_tree (bool): If True, use a k-D tree for finding the closest
-            centroid when inserting into the archive. This may result in a
-            speedup for larger dimensions; refer to
-            :class:`~ribs.archives.CVTArchive` for more info.
-    """
-
-    def __init__(
-        self,
-        seed=None,
-        samples=100_000,
-        k_means_threshold=1e-6,
-        use_kd_tree=False,
-    ):
-        self.seed = seed
-        self.samples = samples
-        self.k_means_threshold = k_means_threshold
-        self.use_kd_tree = use_kd_tree
 
 
 class CVTArchive(ArchiveBase):
@@ -55,7 +21,7 @@ class CVTArchive(ArchiveBase):
     <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_.
 
     Finding the closest centroid is done in O(bins) time (i.e. brute force) by
-    default. If the config has ``use_kd_tree`` set, it can be done in roughly
+    default. If you set ``use_kd_tree``, it can be done in roughly
     O(log bins) time using `scipy.spatial.cKDTree
     <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html>`_.
     However, using this k-D tree lowers performance for small numbers of bins.
@@ -71,7 +37,7 @@ class CVTArchive(ArchiveBase):
 
     As we can see, archives with more than 1k bins seem to have faster insertion
     when using a k-D tree than when using brute force, so **we recommend
-    setting** ``use_kd_tree`` **in your config if you have at least 1k bins in
+    setting** ``use_kd_tree`` **if you have at least 1k bins in
     your** ``CVTArchive``. See `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
@@ -85,19 +51,24 @@ class CVTArchive(ArchiveBase):
             space.
         bins (int): The number of bins to use in the archive, equivalent to the
             number of areas in the CVT.
-        samples (array-like): A (num_samples, behavior_dim) array where
-            samples[i] is a sample to use when creating the CVT. These samples
-            may be passed in instead of generating the samples uniformly at
-            random (u.a.r.) -- this can be useful when, for instance, samples
-            generated u.a.r. in the behavior space are not physically possible,
-            such as in the case of trajectories represented by a series of
-            points.
-        config (None or dict or CVTArchiveConfig): Configuration object. If
-            None, a default CVTArchiveConfig is constructed. A dict may also be
-            passed in, in which case its arguments will be passed into
-            CVTArchiveConfig.
+        samples (int or array-like): If it is an int, this specifies the number
+            of samples to generate when creating the CVT. Otherwise, this must
+            be a (num_samples, behavior_dim) array where samples[i] is a sample
+            to use when creating the CVT. It can be useful to pass in custom
+            samples when there are restrictions on what samples in the behavior
+            space are possible.
+        k_means_threshold (float): When finding the centroids at the beginning,
+            k-means will terminate when the difference in distortion between
+            iterations goes below this threshold (see `here
+            <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_ for
+            more info).
+        use_kd_tree (bool): If True, use a k-D tree for finding the closest
+            centroid when inserting into the archive. This may result in a
+            speedup for larger dimensions; refer to
+            :class:`~ribs.archives.CVTArchive` for more info.
+        seed (float or int): Value to seed the random number generator. Set to
+            None to avoid any seeding.
     Attributes:
-        config (CVTArchiveConfig): Configuration object.
         lower_bounds (np.ndarray): Lower bound of each dimension.
         upper_bounds (np.ndarray): Upper bound of each dimension.
         samples: The samples used in creating the CVT. This attribute may be
@@ -106,13 +77,18 @@ class CVTArchive(ArchiveBase):
             :meth:`initialize` is called.
     """
 
-    def __init__(self, ranges, bins, samples=None, config=None):
-        self.config = create_config(config, CVTArchiveConfig)
+    def __init__(self,
+                 ranges,
+                 bins,
+                 samples=100_000,
+                 k_means_threshold=1e-6,
+                 use_kd_tree=False,
+                 seed=None):
         ArchiveBase.__init__(
             self,
             storage_dims=(bins,),
             behavior_dim=len(ranges),
-            seed=self.config.seed,
+            seed=seed,
         )
 
         ranges = list(zip(*ranges))
@@ -120,6 +96,8 @@ class CVTArchive(ArchiveBase):
         self.upper_bounds = np.array(ranges[1])
 
         self._bins = bins
+        self._k_means_threshold = k_means_threshold
+        self._use_kd_tree = use_kd_tree
         self.samples = samples
         self.centroids = None
         self._centroid_kd_tree = None
@@ -138,24 +116,24 @@ class CVTArchive(ArchiveBase):
         """
         ArchiveBase.initialize(self, solution_dim)
 
-        self.samples = (np.array(self.samples)
-                        if self.samples is not None else self._rng.uniform(
-                            self.lower_bounds,
-                            self.upper_bounds,
-                            size=(self.config.samples, self._behavior_dim),
-                        ))
+        self.samples = self._rng.uniform(
+            self.lower_bounds,
+            self.upper_bounds,
+            size=(self.samples, self._behavior_dim),
+        ) if isinstance(self.samples, int) else np.array(self.samples)
+
         self.centroids = kmeans(
             self.samples,
             self._bins,
             iter=1,
-            thresh=self.config.k_means_threshold,
+            thresh=self._k_means_threshold,
         )[0]
 
-        if self.config.use_kd_tree:
+        if self._use_kd_tree:
             self._centroid_kd_tree = cKDTree(self.centroids)
 
     def _get_index(self, behavior_values):
-        if self.config.use_kd_tree:
+        if self._use_kd_tree:
             return self._centroid_kd_tree.query(behavior_values)[1]
 
         # Default: calculate nearest neighbor with brute force.
