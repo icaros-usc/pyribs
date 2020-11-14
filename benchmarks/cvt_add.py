@@ -89,6 +89,7 @@ def main():
                                  "samples": n_vals,
                                  "use_kd_tree": use_kd_tree,
                              })
+        archive.initialize(solutions.shape[1])
 
     def add_100k_entries():
         nonlocal archive
