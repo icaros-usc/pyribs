@@ -24,15 +24,12 @@ def test_cvt_archive_heatmap():
     np.random.seed(seed)  # Make scipy's k-means also deterministic.
     rng = np.random.default_rng(seed)
 
-    archive = CVTArchive(
-        [(-1, 1), (-1, 1)],
-        100,
-        config={
-            "seed": seed,
-            "samples": 10_000,
-            "use_kd_tree": False,
-            "k_means_threshold": 1e-6,
-        })
+    archive = CVTArchive([(-1, 1), (-1, 1)],
+                         100,
+                         samples=10_000,
+                         use_kd_tree=False,
+                         k_means_threshold=1e-6,
+                         seed=seed)
     archive.initialize(solution_dim=2)
 
     # Add solutions.
