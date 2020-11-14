@@ -138,19 +138,12 @@ def train_model(create_client, seed, sigma, batch_size, archive_filename,
     env.close()
 
     print("Constructing CVTArchive -- may take a while...")
-    archive = CVTArchive([(-1., 1.)] * 22,
-                         5_000,
-                         config={
-                             "seed": seed,
-                             "samples": 100_000,
-                         })
+    archive = CVTArchive([(-1., 1.)] * 22, 5_000, samples=100_000, seed=seed)
     emitter = GaussianEmitter(np.zeros(action_dim * obs_dim),
                               sigma,
                               archive,
-                              config={
-                                  "seed": seed,
-                                  "batch_size": batch_size,
-                              })
+                              batch_size=batch_size,
+                              seed=seed)
     opt = Optimizer(archive, [emitter])
 
     # Since scipy's k-means uses multiple threads in CVTArchive, it throttles

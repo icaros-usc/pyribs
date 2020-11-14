@@ -18,10 +18,8 @@ def sphere(sol):
 
 def main():
     """Demo of MAP-Elites on the Sphere function."""
-    archive = GridArchive((100, 100), [(-4, 4), (-4, 4)], config={"seed": 42})
-    emitters = [
-        GaussianEmitter([0.0] * 10, 0.1, archive, config={"batch_size": 4})
-    ]
+    archive = GridArchive((100, 100), [(-4, 4), (-4, 4)], seed=42)
+    emitters = [GaussianEmitter([0.0] * 10, 0.1, archive, batch_size=4)]
     opt = Optimizer(archive, emitters)
 
     for i in range(10**5):
@@ -40,7 +38,6 @@ def main():
             #  ax = sns.heatmap(data)
             #  plt.savefig('images/arc-{:05d}'.format(i))
             #  plt.close()
-
 
     data = archive.as_pandas()
     print(data.head())
