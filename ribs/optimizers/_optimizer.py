@@ -24,11 +24,15 @@ class Optimizer:
     objective values and behavior values of those solutions **in the same
     order** using :meth:`tell`.
 
+    As all solutions go into the same archive, the  emitters you pass in must
+    emit solutions with the same dimension (that is, their ``solution_dim``
+    attribute must be the same).
+
     Args:
         archive (ribs.archives.ArchiveBase): An archive object, selected from
             :mod:`ribs.archives`.
-        emitters (list of ribs emitters): A list of emitter objects, each
-            selected from :mod:`ribs.emitters`.
+        emitters (list of ribs.archives.EmitterBase): A list of emitter objects,
+            such as :class:`ribs.emitters.GaussianEmitter`.
         config (None or dict or OptimizerConfig): Configuration object. If None,
             a default OptimizerConfig is constructed. A dict may also be passed
             in, in which case its arguments will be passed into OptimizerConfig.
@@ -36,14 +40,34 @@ class Optimizer:
         config (OptimizerConfig): Configuration object.
         archive (ribs.archives.ArchiveBase): See args.
         emitters (list of ribs emitters): See args.
+    Raises:
+        RuntimeError: The emitters passed in do not have the same solution
+            dimensions.
+        RuntimeError: There is no emitter passed in.
     """
 
     def __init__(self, archive, emitters, config=None):
         self.config = create_config(config, OptimizerConfig)
+
+        if len(emitters) == 0:
+            raise RuntimeError(
+                "You must pass in at least one emitter to the optimizer.")
+        self._solution_dim = emitters[0].solution_dim
+
+        for idx, emitter in enumerate(emitters[1:]):
+            if emitter.solution_dim != self._solution_dim:
+                raise RuntimeError(
+                    "All emitters must have the same solution dim, but "
+                    f"Emitter {idx} has dimension {emitter.solution_dim}, "
+                    f"while Emitter 0 has dimension {self._solution_dim}")
+
         self.archive = archive
         self.emitters = emitters
 
+        # Keeps track of whether the Optimizer should be receiving a call to
+        # ask() or tell().
         self._asked = False
+        # The last set of solutions returned by ask().
         self._solutions = []
 
     def ask(self):

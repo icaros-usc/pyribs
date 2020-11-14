@@ -20,6 +20,25 @@ def _optimizer_fixture():
     return Optimizer(archive, emitters), solution_dim
 
 
+def test_init_fails_with_no_emitters():
+    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    emitters = []
+    with pytest.raises(RuntimeError):
+        Optimizer(archive, emitters)
+
+
+def test_init_fails_with_mismatched_emitters():
+    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    emitters = [
+        # Emits 2D solutions.
+        GaussianEmitter([0.0, 0.0], 1, archive),
+        # Mismatch -- emits 3D solutions rather than 2D solutions.
+        GaussianEmitter([0.0, 0.0, 0.0], 1, archive),
+    ]
+    with pytest.raises(RuntimeError):
+        Optimizer(archive, emitters)
+
+
 def test_ask_returns_correct_solution_shape(_optimizer_fixture):
     optimizer, solution_dim = _optimizer_fixture
     solutions = optimizer.ask()
