@@ -14,9 +14,11 @@ class ArchiveBase:
             value array.
         solution_dim (array-like): The dimensions to use for the solutions
             array.
-        seed (float): Seed for the random number generator.
+        seed (float or int): Seed for the random number generator.
     Attributes:
-        _n_dims (int): See ``n_dims``.
+        _rng (np.random.Generator): Random number generator, used in particular
+            for generating random elites.
+        _n_dims (int): See ``n_dims`` arg.
         _objective_values (np.ndarray): Float array storing the objective values
             of each solution, shape is ``objective_value_dim``.
         _behavior_value_dim (np.ndarray): Float array storing the behavior
@@ -24,21 +26,18 @@ class ArchiveBase:
         _solutions (np.ndarray): Object array storing the solution. We use
             object because we do not now the shape of the solution in advance.
             Shape is ``solution_dim``.
-        _rng (np.random.Generator): Random number generator, used in particular
-            for generating random elites.
+        _occupied_indices (list): A list of indices that are occupied in the
+            archive.
     """
 
     def __init__(self, n_dims, objective_value_dim, behavior_value_dim,
                  solution_dim, seed):
-        """Initializes the components of the archive."""
         self._rng = np.random.default_rng(seed)
-
         self._n_dims = n_dims
 
         # Create components of the grid. We separate the components so that they
         # can each be efficiently represented as numpy arrays.
         self._objective_values = np.empty(objective_value_dim, dtype=float)
-        # Stores an array of behavior values at each index.
         self._behavior_values = np.empty(behavior_value_dim, dtype=float)
         self._solutions = np.full(solution_dim, None, dtype=object)
 

@@ -25,7 +25,7 @@ class Optimizer:
     order** using :meth:`tell`.
 
     Args:
-        archive (ribs archive): An archive object, selected from
+        archive (ribs.archives.ArchiveBase): An archive object, selected from
             :mod:`ribs.archives`.
         emitters (list of ribs emitters): A list of emitter objects, each
             selected from :mod:`ribs.emitters`.
@@ -34,7 +34,7 @@ class Optimizer:
             in, in which case its arguments will be passed into OptimizerConfig.
     Attributes:
         config (OptimizerConfig): Configuration object.
-        archive (ribs archive): See args.
+        archive (ribs.archives.ArchiveBase): See args.
         emitters (list of ribs emitters): See args.
     """
 
