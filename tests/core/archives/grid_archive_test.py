@@ -10,10 +10,13 @@ from ribs.archives import GridArchive
 @pytest.fixture
 def _archive_fixture():
     """Returns a simple 2D archive."""
+    solution = np.array([1, 2, 3])
+
     archive = GridArchive([10, 20], [(-1, 1), (-2, 2)])
+    archive.initialize(len(solution))
 
     archive_with_entry = GridArchive([10, 20], [(-1, 1), (-2, 2)])
-    solution = np.array([1, 2, 3])
+    archive_with_entry.initialize(len(solution))
     behavior_values = np.array([0, 0])
     indices = (5, 10)
     objective_value = 1.0
@@ -34,14 +37,8 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
     """Assert that the archive has one specific entry."""
     archive_data = archive.as_pandas()
     assert len(archive_data) == 1
-    assert (archive_data.iloc[0][:-1] == (list(indices) +
-                                          list(behavior_values) +
-                                          [objective_value])).all()
-
-    # Solution comparison separate since the solution is itself an array.
-    archive_sol = archive_data.iloc[0][-1]
-    assert archive_sol.shape == solution.shape
-    assert np.all(archive_sol == solution)
+    assert (archive_data.iloc[0] == (list(indices) + list(behavior_values) +
+                                     [objective_value] + list(solution))).all()
 
 
 def test_attributes_correctly_constructed(_archive_fixture):
@@ -152,9 +149,13 @@ def test_as_pandas(_archive_fixture):
         'behavior-0',
         'behavior-1',
         'objective',
-        'solution',
+        'solution-0',
+        'solution-1',
+        'solution-2',
     ])
-    assert (df.loc[0] == np.array(
-        [*indices, *behavior_values, objective_value, solution],
-        dtype=object,
-    )).all()
+    assert (df.loc[0] == np.array([
+        *indices,
+        *behavior_values,
+        objective_value,
+        *solution,
+    ])).all()

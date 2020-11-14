@@ -32,10 +32,10 @@ class GridArchive(ArchiveBase):
     that bin.
 
     Args:
-        dims (array-like): Number of bins in each dimension of the behavior
-            space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions
-            with 20, 30, and 40 bins. (The number of dimensions is implicitly
-            defined in the length of this argument).
+        dims (array-like of int): Number of bins in each dimension of the
+            behavior space, e.g. ``[20, 30, 40]`` indicates there should be 3
+            dimensions with 20, 30, and 40 bins. (The number of dimensions is
+            implicitly defined in the length of this argument).
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
@@ -56,13 +56,11 @@ class GridArchive(ArchiveBase):
     def __init__(self, dims, ranges, config=None):
         self.config = create_config(config, GridArchiveConfig)
         self.dims = np.array(dims)
-        n_dims = len(self.dims)
+        behavior_dim = len(self.dims)
         ArchiveBase.__init__(
             self,
-            n_dims=n_dims,
-            objective_value_dim=self.dims,
-            behavior_value_dim=(*self.dims, n_dims),
-            solution_dim=self.dims,
+            storage_dims=tuple(self.dims),
+            behavior_dim=behavior_dim,
             seed=self.config.seed,
         )
 
@@ -88,16 +86,17 @@ class GridArchive(ArchiveBase):
 
         Returns:
             A dataframe where each row is an elite in the archive. The dataframe
-            has ``n_dims`` columns called ``index-{i}`` for the archive index,
-            ``n_dims`` columns called ``behavior-{i}`` for the behavior values,
-            1 column for the objective function value called ``objective``, and
-            1 column for solution objects called ``solution``.
+            has ``behavior_dim`` columns called ``index-{i}`` for the archive
+            index, ``behavior_dim`` columns called ``behavior-{i}`` for the
+            behavior values, 1 column for the objective function value called
+            ``objective``, and ``solution_dim`` columns called ``solution-{i}``
+            for the solution values.
         """
         column_titles = [
-            *[f"index-{i}" for i in range(self._n_dims)],
-            *[f"behavior-{i}" for i in range(self._n_dims)],
+            *[f"index-{i}" for i in range(self._behavior_dim)],
+            *[f"behavior-{i}" for i in range(self._behavior_dim)],
             "objective",
-            "solution",
+            *[f"solution-{i}" for i in range(self._solution_dim)],
         ]
 
         rows = []
@@ -106,7 +105,7 @@ class GridArchive(ArchiveBase):
                 *index,
                 *self._behavior_values[index],
                 self._objective_values[index],
-                self._solutions[index],
+                *self._solutions[index],
             ]
             rows.append(row)
 

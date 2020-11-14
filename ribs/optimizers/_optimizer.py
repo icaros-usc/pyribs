@@ -62,6 +62,7 @@ class Optimizer:
                     f"while Emitter 0 has dimension {self._solution_dim}")
 
         self.archive = archive
+        self.archive.initialize(self._solution_dim)
         self.emitters = emitters
 
         # Keeps track of whether the Optimizer should be receiving a call to

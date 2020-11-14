@@ -70,9 +70,9 @@ class CVTArchive(ArchiveBase):
         :alt: Runtime to insert 100k entries into CVTArchive
 
     As we can see, archives with more than 1k bins seem to have faster insertion
-    when using a k-D tree than when using brute force, so **we recommend setting**
-    ``use_kd_tree`` **in your config if you have at least 1k bins in your**
-    ``CVTArchive``. See `benchmarks/cvt_add.py
+    when using a k-D tree than when using brute force, so **we recommend
+    setting** ``use_kd_tree`` **in your config if you have at least 1k bins in
+    your** ``CVTArchive``. See `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
 
@@ -85,12 +85,13 @@ class CVTArchive(ArchiveBase):
             space.
         bins (int): The number of bins to use in the archive, equivalent to the
             number of areas in the CVT.
-        samples (array-like): A (num_samples, n_dims) array where samples[i] is
-            a sample to use when creating the CVT. These samples may be passed
-            in instead of generating the samples uniformly at random (u.a.r.) --
-            this can be useful when, for instance, samples generated u.a.r. in
-            the behavior space are not physically possible, such as in the case
-            of trajectories represented by a series of points.
+        samples (array-like): A (num_samples, behavior_dim) array where
+            samples[i] is a sample to use when creating the CVT. These samples
+            may be passed in instead of generating the samples uniformly at
+            random (u.a.r.) -- this can be useful when, for instance, samples
+            generated u.a.r. in the behavior space are not physically possible,
+            such as in the case of trajectories represented by a series of
+            points.
         config (None or dict or CVTArchiveConfig): Configuration object. If
             None, a default CVTArchiveConfig is constructed. A dict may also be
             passed in, in which case its arguments will be passed into
@@ -99,19 +100,18 @@ class CVTArchive(ArchiveBase):
         config (CVTArchiveConfig): Configuration object.
         lower_bounds (np.ndarray): Lower bound of each dimension.
         upper_bounds (np.ndarray): Upper bound of each dimension.
-        samples: The samples used in creating the CVT.
-        centroids: The centroids used in the CVT.
+        samples: The samples used in creating the CVT. This attribute may be
+            None until :meth:`initialize is called.
+        centroids: The centroids used in the CVT. This attribute is none until
+            :meth:`initialize` is called.
     """
 
     def __init__(self, ranges, bins, samples=None, config=None):
         self.config = create_config(config, CVTArchiveConfig)
-        n_dims = len(ranges)
         ArchiveBase.__init__(
             self,
-            n_dims=n_dims,
-            objective_value_dim=bins,
-            behavior_value_dim=(bins, n_dims),
-            solution_dim=bins,
+            storage_dims=(bins,),
+            behavior_dim=len(ranges),
             seed=self.config.seed,
         )
 
@@ -119,15 +119,34 @@ class CVTArchive(ArchiveBase):
         self.lower_bounds = np.array(ranges[0])
         self.upper_bounds = np.array(ranges[1])
 
-        self.samples = (np.array(samples)
-                        if samples is not None else self._rng.uniform(
+        self._bins = bins
+        self.samples = samples
+        self.centroids = None
+        self._centroid_kd_tree = None
+
+    def initialize(self, solution_dim):
+        """Initializes the archive.
+
+        This method may take a while to run. In addition to allocating storage
+        space, it runs k-means to create an approximate CVT, and it creates a
+        k-D tree containing the centroids found by k-means.
+
+        Args:
+            solution_dim (int): The dimension of the solution space. The array
+                for storing solutions is created with shape
+                ``(*self._storage_dims, solution_dim)``.
+        """
+        ArchiveBase.initialize(self, solution_dim)
+
+        self.samples = (np.array(self.samples)
+                        if self.samples is not None else self._rng.uniform(
                             self.lower_bounds,
                             self.upper_bounds,
-                            size=(self.config.samples, self._n_dims),
+                            size=(self.config.samples, self._behavior_dim),
                         ))
         self.centroids = kmeans(
             self.samples,
-            bins,
+            self._bins,
             iter=1,
             thresh=self.config.k_means_threshold,
         )[0]
@@ -150,18 +169,19 @@ class CVTArchive(ArchiveBase):
         Returns:
             A dataframe where each row is an elite in the archive. The dataframe
             consists of 1 ``index`` column indicating the index of the centroid
-            in ``self.centroids``, ``n_dims`` columns called ``centroid-{i}``
-            for the coordinates of the centroid, ``n_dims`` columns called
-            ``behavior-{i}`` for the behavior values, 1 column for the objective
-            function value called ``objective``, and 1 column for solution
-            objects called ``solution``.
+            in ``self.centroids``, ``behavior_dim`` columns called
+            ``centroid-{i}`` for the coordinates of the centroid,
+            ``behavior_dim`` columns called ``behavior-{i}`` for the behavior
+            values, 1 column for the objective function value called
+            ``objective``, and ``solution_dim`` columns called ``solution-{i}``
+            for the solution values.
         """
         column_titles = [
             "index",
-            *[f"centroid-{i}" for i in range(self._n_dims)],
-            *[f"behavior-{i}" for i in range(self._n_dims)],
+            *[f"centroid-{i}" for i in range(self._behavior_dim)],
+            *[f"behavior-{i}" for i in range(self._behavior_dim)],
             "objective",
-            "solution",
+            *[f"solution-{i}" for i in range(self._solution_dim)],
         ]
 
         rows = []
@@ -171,7 +191,7 @@ class CVTArchive(ArchiveBase):
                 *self.centroids[index],
                 *self._behavior_values[index],
                 self._objective_values[index],
-                self._solutions[index],
+                *self._solutions[index],
             ]
             rows.append(row)
 

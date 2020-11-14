@@ -18,16 +18,18 @@ def _archive_fixture(use_kd_tree):
     matched to centroid (0.5, 0.5).
     """
     samples = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
+    solution = np.array([1, 2, 3])
     archive = CVTArchive([(-1, 1), (-1, 1)],
                          4,
                          samples=samples,
                          config={"use_kd_tree": use_kd_tree})
+    archive.initialize(len(solution))
 
     archive_with_entry = CVTArchive([(-1, 1), (-1, 1)],
                                     4,
                                     samples=samples,
                                     config={"use_kd_tree": use_kd_tree})
-    solution = np.array([1, 2, 3])
+    archive_with_entry.initialize(len(solution))
     behavior_values = np.array([1, 1])
     centroid = [0.5, 0.5]
     objective_value = 1.0
@@ -50,14 +52,10 @@ def _assert_archive_has_entry(archive, centroid, behavior_values,
     assert len(archive_data) == 1
 
     # Start at 1 to ignore the "index" column.
-    assert (archive_data.iloc[0][1:-1] == (list(centroid) +
-                                           list(behavior_values) +
-                                           [objective_value])).all()
-
-    # Solution comparison separate since the solution is itself an array.
-    archive_sol = archive_data.iloc[0][-1]
-    assert archive_sol.shape == solution.shape
-    assert np.all(archive_sol == solution)
+    assert (archive_data.iloc[0][1:] == (list(centroid) +
+                                         list(behavior_values) +
+                                         [objective_value] +
+                                         list(solution))).all()
 
 
 def test_attributes_correctly_constructed(_archive_fixture):
@@ -147,9 +145,13 @@ def test_as_pandas(_archive_fixture):
         'behavior-0',
         'behavior-1',
         'objective',
-        'solution',
+        'solution-0',
+        'solution-1',
+        'solution-2',
     ])
-    assert (df.loc[0][1:] == np.array(
-        [*centroid, *behavior_values, objective_value, solution],
-        dtype=object,
-    )).all()
+    assert (df.loc[0][1:] == np.array([
+        *centroid,
+        *behavior_values,
+        objective_value,
+        *solution,
+    ])).all()

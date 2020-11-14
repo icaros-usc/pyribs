@@ -7,48 +7,65 @@ class ArchiveBase:
     """Base class for archives; contains several useful methods.
 
     Args:
-        n_dims (int): Number of dimensions in the archive's behavior space.
-        objective_value_dim (array-like): The dimensions to use for the
-            objective value.
-        behavior_value_dim (array-like): The dimensions to use for the behavior
-            value array.
-        solution_dim (array-like): The dimensions to use for the solutions
-            array.
+        storage_dims (tuple of int): Primary dimensions of the archive storage.
+            This is used to create numpy arrays for items such as objective
+            values and behavior values.
+        behavior_dim (int): The dimension of the behavior space. The array for
+            storing behavior values is created with dimensions ``(*storage_dims,
+            behavior_value_dim)``.
         seed (float or int): Seed for the random number generator. None
             (default) means no seed.
     Attributes:
         _rng (np.random.Generator): Random number generator, used in particular
             for generating random elites.
-        _n_dims (int): See ``n_dims`` arg.
+        _storage_dims (tuple of int): See ``storage_dims`` arg.
+        _behavior_dim (int): See ``behavior_dim`` arg.
+        _solution_dim (int): Dimension of the solution space, passed in with
+            :meth:`initialize`.
+        _initialized (np.ndarray): Bool array storing whether each cell in the
+            archive has been initialized. This attribute is None until
+            :meth:`initialize` is called.
         _objective_values (np.ndarray): Float array storing the objective values
-            of each solution, shape is ``objective_value_dim``.
+            of each solution. This attribute is None until :meth:`initialize` is
+            called.
         _behavior_value_dim (np.ndarray): Float array storing the behavior
-            values of each solution, shape is ``behavior_value_dim``.
-        _solutions (np.ndarray): Object array storing the solution. We use
-            object because we do not now the shape of the solution in advance.
-            Shape is ``solution_dim``.
-        _occupied_indices (list): A list of indices that are occupied in the
-            archive.
+            values of each solution. This attribute is None until
+            :meth:`initialize` is called.
+        _solutions (np.ndarray): Float array storing the solutions themselves.
+            This attribute is None until :meth:`initialize` is called.
+        _occupied_indices (list of (int or tuple of int)): A list of indices
+            that are occupied in the archive.
     """
 
-    def __init__(self,
-                 n_dims,
-                 objective_value_dim,
-                 behavior_value_dim,
-                 solution_dim,
-                 seed=None):
+    def __init__(self, storage_dims, behavior_dim, seed=None):
         self._rng = np.random.default_rng(seed)
-        self._n_dims = n_dims
-
-        # Create components of the grid. We separate the components so that they
-        # can each be efficiently represented as numpy arrays.
-        self._objective_values = np.empty(objective_value_dim, dtype=float)
-        self._behavior_values = np.empty(behavior_value_dim, dtype=float)
-        self._solutions = np.full(solution_dim, None, dtype=object)
-
-        # Having a list of occupied indices allows us to efficiently choose
-        # random elites.
+        self._storage_dims = storage_dims
+        self._behavior_dim = behavior_dim
+        self._solution_dim = None
+        self._initialized = None
+        self._objective_values = None
+        self._behavior_values = None
+        self._solutions = None
         self._occupied_indices = []
+
+    def initialize(self, solution_dim):
+        """Initializes the archive by allocating storage space.
+
+        Child classes should call this method in their implementation if they
+        are overriding it.
+
+        Args:
+            solution_dim (int): The dimension of the solution space. The array
+                for storing solutions is created with shape
+                ``(*self._storage_dims, solution_dim)``.
+        """
+        self._solution_dim = solution_dim
+        self._initialized = np.zeros(self._storage_dims, dtype=bool)
+        self._objective_values = np.empty(self._storage_dims, dtype=float)
+        self._behavior_values = np.empty(
+            (*self._storage_dims, self._behavior_dim), dtype=float)
+        self._solutions = np.empty((*self._storage_dims, solution_dim),
+                                   dtype=object)
 
     def _get_index(self, behavior_values):
         """Returns archive indices for the given behavior values.
@@ -75,11 +92,12 @@ class ArchiveBase:
         """
         index = self._get_index(behavior_values)
 
-        if (self._solutions[index] is None or
-                self._objective_values[index] < objective_value):
+        initialized = self._initialized[index]
+        if (not initialized or self._objective_values[index] < objective_value):
             # Track this index if it has not been seen before -- important that
             # we do this before inserting the solution.
-            if self._solutions[index] is None:
+            if not initialized:
+                self._initialized[index] = True
                 self._occupied_indices.append(index)
 
             # Insert into the archive.
@@ -92,14 +110,14 @@ class ArchiveBase:
         return False
 
     def is_2d(self):
-        """Checks if the archive has 2D.
+        """Checks if the archive is 2D.
 
         This is useful when checking whether we can visualize the archive.
 
         Returns:
             bool: True if the archive is 2D, False otherwise.
         """
-        return self._n_dims == 2
+        return self._behavior_dim == 2
 
     def is_empty(self):
         """Checks if the archive has no elements in it.

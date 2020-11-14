@@ -33,6 +33,7 @@ def test_cvt_archive_heatmap():
             "use_kd_tree": False,
             "k_means_threshold": 1e-6,
         })
+    archive.initialize(solution_dim=2)
 
     # Add solutions.
     n_vals = 100_000
