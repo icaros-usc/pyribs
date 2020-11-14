@@ -1,111 +1,99 @@
 """Functions for dealing with configs."""
+import pathlib
+
 import toml
 
+import ribs.archives
+import ribs.emitters
+import ribs.optimizers
+
 __all__ = [
-    "create_config",
-    "save_configs",
-    "load_configs",
+    "create_optimizer",
 ]
 
+_ARCHIVE_TYPES = {
+    "GridArchive": ribs.archives.GridArchive,
+    "CVTArchive": ribs.archives.CVTArchive,
+}
 
-def create_config(config, config_class):
-    """Creates an instance of ``config_class`` given the user's ``config``.
+_EMITTER_TYPES = {
+    "GaussianEmitter": ribs.emitters.GaussianEmitter,
+    "IsoLineEmitter": ribs.emitters.IsoLineEmitter,
+}
 
-    - If ``config`` is None, a default instance of ``config_class`` is created.
-    - If ``config`` is a dict, the dict is passed into ``config_class`` as
-      keyword args.
-    - Otherwise, ``config`` is simply returned (we assume it is an instance of
-      ``config_class``).
+_OPTIMIZER_TYPES = {
+    "Optimizer": ribs.optimizers.Optimizer,
+}
 
-    Args:
-        config (None, dict, or config_class): User-provided configuration.
-    Returns:
-        An instance of ``config_class``, described as above.
-    """
-    if config is None:
-        return config_class()
-    if isinstance(config, dict):
-        return config_class(**config)
+
+def _remove_type_key(config):
+    """Returns a shallow copy of the config, with the "type" key removed."""
+    config = config.copy()
+    config.pop("type")
     return config
 
 
-def _single_config_data(config):
-    """Returns a dict with the data to save for a single config."""
-    return {
-        "type": config.__class__.__name__,
-        "data": config.__dict__,
-    }
+def create_optimizer(config):
+    """Creates an optimizer and its archive and emitters from a single config.
 
+    The config must be either a dict, or the name of a toml file (str or
+    pathlib.Path are okay). In any case, the config must be structured as
+    follows::
 
-def save_configs(optimizer_config, archive_config, emitter_configs, filename):
-    """Saves all configs to a TOML file.
-
-    Args:
-        optimizer_config: Configuration object for an optimizer, such as
-            :class:`ribs.optimizers.OptimizerConfig`.
-        archive_config: Configuration object for an archive, such as
-            :class:`ribs.archives.GridArchiveConfig`.
-        emitter_configs (list): List of configuration objects for emitters, such
-            as :class:`ribs.emitters.GaussianEmitterConfig`.
-        filename (str): Path to save the TOML file.
-    """
-    with open(filename, "w") as file:
-        toml.dump(
-            {
-                "optimizer":
-                    _single_config_data(optimizer_config),
-                "archive":
-                    _single_config_data(archive_config),
-                "emitters":
-                    [_single_config_data(config) for config in emitter_configs],
+        {
+            "archive": {
+                # This class must be under `ribs.archives`.
+                "type": "GridArchive",
+                # Args for the archive.
+                ...
             },
-            file,
-        )
-
-
-def _load_single_config(data, name_to_config_class):
-    """Creates one config from data returned by :meth:`_single_config_data`."""
-    config_class = name_to_config_class[data["type"]]
-    return config_class(**data["data"])
-
-
-def load_configs(filename):
-    """Loads configs from a TOML file to reconstruct an optimizer.
+            "emitters": [
+                # Each item in this list configures an emitter.
+                {
+                    # This class must be under `ribs.emitters`.
+                    "type": "GaussianEmitter",
+                    # Args for the emitter. Exclude the `archive` param, as we
+                    # will automatically add it for you.
+                    ...
+                }
+                # More emitters.
+                ...
+            ],
+            "optimizer": {
+                # This class must be under `ribs.optimizers`.
+                "type": "Optimizer",
+                # Args for the optimizer.
+                ...
+            },
+        }
 
     Args:
-        filename (str): Path from which to load the TOML file.
+        config (dict or str or pathlib.Path): Dict of configuration options
+            described as above, or the name of a toml file with the structure
+            shown above.
     Returns:
-        tuple: 3-element tuple containing:
-
-            **optimizer_config**: Configuration object for an optimizer.
-
-            **archive_config**: Configuration object for an archive.
-
-            **emitter_configs**: List of configuration objects for emitters.
+        ribs.optimizers.Optimizer: An optimizer created according to the
+        options specified in the config.
     """
-    # We cannot import these at top-level because all these modules import this
-    # one (config), so we would have a circular dependency.
-    # pylint: disable = import-outside-toplevel, cyclic-import
-    from ribs.archives._cvt_archive import CVTArchiveConfig
-    from ribs.archives._grid_archive import GridArchiveConfig
-    from ribs.emitters._gaussian_emitter import GaussianEmitterConfig
-    from ribs.optimizers._optimizer import OptimizerConfig
+    if isinstance(config, (str, pathlib.Path)):
+        with open(str(config), "r") as file:
+            config = toml.load(file)
 
-    name_to_config_class = {
-        "GridArchiveConfig": GridArchiveConfig,
-        "CVTArchiveConfig": CVTArchiveConfig,
-        "GaussianEmitterConfig": GaussianEmitterConfig,
-        "OptimizerConfig": OptimizerConfig,
-    }
+    archive_class = _ARCHIVE_TYPES[config["archive"]["type"]]
+    archive = archive_class(**_remove_type_key(config["archive"]))
 
-    with open(filename, "r") as file:
-        data = toml.load(file)
-        optimizer_config = _load_single_config(data["optimizer"],
-                                               name_to_config_class)
-        archive_config = _load_single_config(data["archive"],
-                                             name_to_config_class)
-        emitter_configs = [
-            _load_single_config(d, name_to_config_class)
-            for d in data["emitters"]
-        ]
-        return optimizer_config, archive_config, emitter_configs
+    emitters = []
+    for emitter_config in config["emitters"]:
+        emitter_class = _EMITTER_TYPES[emitter_config["type"]]
+        emitters.append(
+            emitter_class(
+                **_remove_type_key(emitter_config),
+                archive=archive,
+            ))
+
+    optimizer_class = _OPTIMIZER_TYPES[config["optimizer"]["type"]]
+    return optimizer_class(
+        archive=archive,
+        emitters=emitters,
+        **_remove_type_key(config["optimizer"]),
+    )
