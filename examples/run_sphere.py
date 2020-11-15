@@ -29,15 +29,8 @@ def main():
 
         opt.tell(objs, bcs)
 
-        if i % 1000 == 0:
-            print('saving {}'.format(i))
-
-            #  data = opt.archive.as_pandas()
-            #  data = data.pivot('index-0', 'index-1', 'objective')
-
-            #  ax = sns.heatmap(data)
-            #  plt.savefig('images/arc-{:05d}'.format(i))
-            #  plt.close()
+        if (i + 1) % 1000 == 0:
+            print(f"Finished {i + 1} rounds")
 
     data = archive.as_pandas()
     print(data.head())
