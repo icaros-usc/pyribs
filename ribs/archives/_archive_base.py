@@ -65,7 +65,7 @@ class ArchiveBase:
         self._behavior_values = np.empty(
             (*self._storage_dims, self._behavior_dim), dtype=float)
         self._solutions = np.empty((*self._storage_dims, solution_dim),
-                                   dtype=object)
+                                   dtype=float)
 
     def _get_index(self, behavior_values):
         """Returns archive indices for the given behavior values.
