@@ -1,4 +1,4 @@
-"""Functions for dealing with configs."""
+"""Functions for factory-style creation of ribs."""
 import pathlib
 
 import toml
@@ -8,7 +8,7 @@ import ribs.emitters
 import ribs.optimizers
 
 __all__ = [
-    "create_optimizer",
+    "from_config",
 ]
 
 _ARCHIVE_TYPES = {
@@ -33,7 +33,7 @@ def _remove_type_key(config):
     return config
 
 
-def create_optimizer(config):
+def from_config(config):
     """Creates an optimizer and its archive and emitters from a single config.
 
     The config must be either a dict, or the name of a toml file (str or

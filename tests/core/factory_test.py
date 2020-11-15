@@ -1,16 +1,16 @@
-"""Tests for ribs.config."""
+"""Tests for ribs.factory."""
 import numpy as np
 import pytest
 import toml
 
-import ribs.config
+import ribs.factory
 from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
 
 
 @pytest.mark.parametrize("use_toml", [False, True], ids=["dict", "toml"])
-def test_create_optimizer_from_dict(use_toml, tmp_path):
+def test_factory_from_config(use_toml, tmp_path):
     seed = 42
     batch_size = 4
 
@@ -46,9 +46,9 @@ def test_create_optimizer_from_dict(use_toml, tmp_path):
         config_path = tmp_path / "config.toml"
         with config_path.open("w") as file:
             toml.dump(config_dict, file)
-        created_optimizer = ribs.config.create_optimizer(config_path)
+        created_optimizer = ribs.factory.from_config(config_path)
     else:
-        created_optimizer = ribs.config.create_optimizer(config_dict)
+        created_optimizer = ribs.factory.from_config(config_dict)
 
     # Check types.
     assert isinstance(created_optimizer, Optimizer)
