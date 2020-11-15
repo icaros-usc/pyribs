@@ -9,21 +9,83 @@ import ribs.optimizers
 
 __all__ = [
     "from_config",
+    "register_archive",
+    "register_emitter",
+    "register_optimizer",
 ]
 
-_ARCHIVE_TYPES = {
-    "GridArchive": ribs.archives.GridArchive,
-    "CVTArchive": ribs.archives.CVTArchive,
-}
+#
+# Factory registration.
+#
 
-_EMITTER_TYPES = {
-    "GaussianEmitter": ribs.emitters.GaussianEmitter,
-    "IsoLineEmitter": ribs.emitters.IsoLineEmitter,
-}
+_ARCHIVE_TYPES = {}
 
-_OPTIMIZER_TYPES = {
-    "Optimizer": ribs.optimizers.Optimizer,
-}
+_EMITTER_TYPES = {}
+
+_OPTIMIZER_TYPES = {}
+
+
+def register_archive(name, archive_class):
+    """Registers a new archive with the ribs factory.
+
+    After registration, you can pass ``name`` in the
+    ``config["archive"]["type"]`` field when using :meth:`from_config`.
+
+    As an example, :class:`ribs.archives.GridArchive` is registered with::
+
+        register_archive("GridArchive", ribs.archives.GridArchive)
+
+    Args:
+        name (str): the name of the archive.
+        archive_class (type): The archive's class.
+    """
+    _ARCHIVE_TYPES[name] = archive_class
+
+
+def register_emitter(name, emitter_class):
+    """Registers a new emitter with the ribs factory.
+
+    After registration, you can pass ``name`` in the
+    ``config["emitters"][i]["type"]`` fields (where ``i`` is a list index) when
+    using :meth:`from_config`.
+
+    As an example, :class:`ribs.emitters.GaussianEmitter` is registered with::
+
+        register_emitter("GaussianEmitter", ribs.emitters.GaussianEmitter)
+
+    Args:
+        name (str): the name of the emitter.
+        emitter_class (type): The emitter's class.
+    """
+    _EMITTER_TYPES[name] = emitter_class
+
+
+def register_optimizer(name, optimizer_class):
+    """Registers a new optimizer with the ribs factory.
+
+    After registration, you can pass ``name`` in the
+    ``config["optimizer"]["type"]`` field when using :meth:`from_config`.
+
+    As an example, :class:`ribs.optimizers.Optimizer` is registered with::
+
+        register_optimizer("Optimizer", ribs.optimizers.Optimizer)
+
+    Args:
+        name (str): the name of the optimizer.
+        optimizer_class (type): The optimizer's class.
+    """
+    _OPTIMIZER_TYPES[name] = optimizer_class
+
+
+register_archive("GridArchive", ribs.archives.GridArchive)
+register_archive("CVTArchive", ribs.archives.CVTArchive)
+register_emitter("GaussianEmitter", ribs.emitters.GaussianEmitter)
+register_emitter("IsoLineEmitter", ribs.emitters.IsoLineEmitter)
+register_optimizer("Optimizer", ribs.optimizers.Optimizer)
+
+#
+# Factory creation.
+#
 
 
 def _remove_type_key(config):
@@ -42,7 +104,8 @@ def from_config(config):
 
         {
             "archive": {
-                # This class must be under `ribs.archives`.
+                # This class must be under `ribs.archives`, or it must have been
+                # registered with register_archive().
                 "type": "GridArchive",
                 # Args for the archive.
                 ...
@@ -50,7 +113,8 @@ def from_config(config):
             "emitters": [
                 # Each item in this list configures an emitter.
                 {
-                    # This class must be under `ribs.emitters`.
+                    # This class must be under `ribs.emitters`, or it must have
+                    # been registered with register_emitter().
                     "type": "GaussianEmitter",
                     # Args for the emitter. Exclude the `archive` param, as we
                     # will automatically add it for you.
@@ -60,7 +124,8 @@ def from_config(config):
                 ...
             ],
             "optimizer": {
-                # This class must be under `ribs.optimizers`.
+                # This class must be under `ribs.optimizers`, or it must have
+                # been registered with register_optimizer().
                 "type": "Optimizer",
                 # Args for the optimizer.
                 ...
