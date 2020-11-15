@@ -69,6 +69,12 @@ class GridArchive(ArchiveBase):
         self.upper_bounds = np.array(ranges[1])
         self.interval_size = self.upper_bounds - self.lower_bounds
 
+    @staticmethod
+    @jit(nopython=True)
+    def _get_index_numba(behavior_values, lower_bounds, interval_size, dims):
+        return ((behavior_values - lower_bounds) \
+                / interval_size) * dims
+
     def _get_index(self, behavior_values):
         # Adding epsilon to behavior values accounts for floating point
         # precision errors from transforming behavior values. Subtracting
@@ -77,8 +83,10 @@ class GridArchive(ArchiveBase):
         epsilon = 1e-9
         behavior_values = np.clip(behavior_values + epsilon, self.lower_bounds,
                                   self.upper_bounds - epsilon)
-        index = ((behavior_values - self.lower_bounds) \
-                / self.interval_size) * self.dims
+
+        index = GridArchive._get_index_numba(behavior_values, self.lower_bounds, 
+                                             self.interval_size, self.dims)
+
         return tuple(index.astype(int))
 
     def as_pandas(self):
