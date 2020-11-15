@@ -1,1 +1,0 @@
-docs/readme.rst
