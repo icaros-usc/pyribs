@@ -8,7 +8,6 @@
 :caption: Overview
 
 getting-started
-configuration
 tutorials
 ```
 
