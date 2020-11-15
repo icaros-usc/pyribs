@@ -19,7 +19,7 @@ tutorials
 ribs.archives
 ribs.emitters
 ribs.optimizers
-ribs.config
+ribs.factory
 ribs.visualize
 ```
 
