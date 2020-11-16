@@ -21,9 +21,12 @@ def _emitter_fixture(request, _archive_fixture):
     batch_size = 3
 
     if emitter_type == "GaussianEmitter":
-        emitter = GaussianEmitter(x0, 5, archive, config={"batch_size": 3})
+        emitter = GaussianEmitter(x0,
+                                  5,
+                                  archive,
+                                  config={"batch_size": batch_size})
     elif emitter_type == "IsoLineEmitter":
-        emitter = IsoLineEmitter(x0, archive, config={"batch_size": 3})
+        emitter = IsoLineEmitter(x0, archive, config={"batch_size": batch_size})
     else:
         raise NotImplementedError(f"Unknown emitter type {emitter_type}")
 
