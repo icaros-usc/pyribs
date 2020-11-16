@@ -1,7 +1,7 @@
 """Provides ArchiveBase."""
 
 import numpy as np
-from numba import jit
+import numba as nb
 
 
 class ArchiveBase:
@@ -77,7 +77,7 @@ class ArchiveBase:
         raise NotImplementedError
 
     @staticmethod
-    @jit(nopython=True)
+    @nb.jit(locals={"initialized": nb.types.b1}, nopython=True)
     def add_helper_numba(index, solution, objective_value, behavior_values, _initialized, _solutions, _objective_values, _behavior_values):
         
         initialized = _initialized[index]
