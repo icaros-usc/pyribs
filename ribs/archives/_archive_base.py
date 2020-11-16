@@ -1,6 +1,7 @@
 """Provides ArchiveBase."""
 
 import numpy as np
+from numba import jit
 
 
 class ArchiveBase:
@@ -75,6 +76,26 @@ class ArchiveBase:
         """
         raise NotImplementedError
 
+    @staticmethod
+    @jit(nopython=True)
+    def add_helper_numba(index, solution, objective_value, behavior_values, _initialized, _solutions, _objective_values, _behavior_values):
+        
+        initialized = _initialized[index]
+        if (not initialized or _objective_values[index] < objective_value):
+            # Track this index if it has not been seen before -- important that
+            # we do this before inserting the solution.
+            if not initialized:
+                _initialized[index] = True
+
+            # Insert into the archive.
+            _objective_values[index] = objective_value
+            _behavior_values[index] = behavior_values
+            _solutions[index] = solution
+
+            return True, initialized
+
+        return False, initialized
+
     def add(self, solution, objective_value, behavior_values):
         """Attempts to insert a new solution into the archive.
 
@@ -92,22 +113,12 @@ class ArchiveBase:
         """
         index = self._get_index(behavior_values)
 
-        initialized = self._initialized[index]
-        if (not initialized or self._objective_values[index] < objective_value):
-            # Track this index if it has not been seen before -- important that
-            # we do this before inserting the solution.
-            if not initialized:
-                self._initialized[index] = True
-                self._occupied_indices.append(index)
+        check, initialized = ArchiveBase.add_helper_numba(index, solution, objective_value, behavior_values, self._initialized, self._solutions, self._objective_values, self._behavior_values)
 
-            # Insert into the archive.
-            self._objective_values[index] = objective_value
-            self._behavior_values[index] = behavior_values
-            self._solutions[index] = solution
+        if check and not initialized:
+            self._occupied_indices.append(index)
 
-            return True
-
-        return False
+        return check
 
     def is_2d(self):
         """Checks if the archive is 2D.

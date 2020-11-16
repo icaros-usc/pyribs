@@ -2,6 +2,8 @@
 import numpy as np
 import pandas as pd
 
+from numba import jit
+
 from ribs.archives._archive_base import ArchiveBase
 from ribs.config import create_config
 
