@@ -77,24 +77,27 @@ class ArchiveBase:
         raise NotImplementedError
 
     @staticmethod
-    @nb.jit(locals={"initialized": nb.types.b1}, nopython=True)
-    def add_helper_numba(index, solution, objective_value, behavior_values, _initialized, _solutions, _objective_values, _behavior_values):
-        
-        initialized = _initialized[index]
-        if (not initialized or _objective_values[index] < objective_value):
+    @nb.jit(locals={"already_initialized": nb.types.b1}, nopython=True)
+    def __add_numba(new_index, new_solution, new_objective_value,
+                    new_behavior_values, initialized, solutions,
+                    objective_values, behavior_values):
+
+        already_initialized = initialized[new_index]
+        if (not already_initialized or
+                objective_values[new_index] < new_objective_value):
             # Track this index if it has not been seen before -- important that
             # we do this before inserting the solution.
-            if not initialized:
-                _initialized[index] = True
+            if not already_initialized:
+                initialized[new_index] = True
 
             # Insert into the archive.
-            _objective_values[index] = objective_value
-            _behavior_values[index] = behavior_values
-            _solutions[index] = solution
+            objective_values[new_index] = new_objective_value
+            behavior_values[new_index] = new_behavior_values
+            solutions[new_index] = new_solution
 
-            return True, initialized
+            return True, already_initialized
 
-        return False, initialized
+        return False, already_initialized
 
     def add(self, solution, objective_value, behavior_values):
         """Attempts to insert a new solution into the archive.
@@ -113,12 +116,15 @@ class ArchiveBase:
         """
         index = self._get_index(behavior_values)
 
-        check, initialized = ArchiveBase.add_helper_numba(index, solution, objective_value, behavior_values, self._initialized, self._solutions, self._objective_values, self._behavior_values)
+        was_inserted, initialized = ArchiveBase.__add_numba(
+            index, solution, objective_value, behavior_values,
+            self._initialized, self._solutions, self._objective_values,
+            self._behavior_values)
 
-        if check and not initialized:
+        if was_inserted and not initialized:
             self._occupied_indices.append(index)
 
-        return check
+        return was_inserted
 
     def is_2d(self):
         """Checks if the archive is 2D.

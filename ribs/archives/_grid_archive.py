@@ -7,6 +7,8 @@ from numba import jit
 from ribs.archives._archive_base import ArchiveBase
 from ribs.config import create_config
 
+_EPSILON = 1e-9
+
 
 class GridArchiveConfig:
     """Configuration for the GridArchive.
@@ -48,7 +50,7 @@ class GridArchive(ArchiveBase):
             GridArchiveConfig.
     Attributes:
         config (GridArchiveConfig): Configuration object.
-       a dims (np.ndarray): Number of bins in each dimension.
+        dims (np.ndarray): Number of bins in each dimension.
         lower_bounds (np.ndarray): Lower bound of each dimension.
         upper_bounds (np.ndarray): Upper bound of each dimension.
         interval_size (np.ndarray): The size of each dimension (``upper_bounds -
@@ -73,21 +75,23 @@ class GridArchive(ArchiveBase):
 
     @staticmethod
     @jit(nopython=True)
-    def _get_index_numba(behavior_values, upper_bounds, lower_bounds, interval_size, dims, epsilon):
-        behavior_values = np.minimum(np.maximum(behavior_values + epsilon, lower_bounds), upper_bounds - epsilon)
+    def _get_index_numba(behavior_values, upper_bounds, lower_bounds,
+                         interval_size, dims):
+        behavior_values = np.minimum(
+            np.maximum(behavior_values + _EPSILON, lower_bounds),
+            upper_bounds - _EPSILON)
 
-        return ((behavior_values - lower_bounds) \
-                / interval_size) * dims
+        return ((behavior_values - lower_bounds) / interval_size * dims)
 
     def _get_index(self, behavior_values):
         # Adding epsilon to behavior values accounts for floating point
         # precision errors from transforming behavior values. Subtracting
         # epsilon from upper bounds makes sure we do not have indices outside
         # the grid.
-        epsilon = 1e-9
 
-        index = GridArchive._get_index_numba(behavior_values, self.upper_bounds, self.lower_bounds, 
-                                             self.interval_size, self.dims, epsilon)
+        index = GridArchive._get_index_numba(behavior_values, self.upper_bounds,
+                                             self.lower_bounds,
+                                             self.interval_size, self.dims)
 
         return tuple(index.astype(int))
 
