@@ -1,4 +1,4 @@
-"""Useful utilities for all tests."""
+"""Useful utilities for all archive tests."""
 import numpy as np
 import pytest
 
