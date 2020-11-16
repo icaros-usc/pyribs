@@ -74,16 +74,6 @@ class GridArchive(ArchiveBase):
     @staticmethod
     @jit(nopython=True)
     def _get_index_numba(behavior_values, upper_bounds, lower_bounds, interval_size, dims, epsilon):
-        # behavior_values = behavior_values + epsilon
-
-        # min_values = np.full(np.shape(behavior_values), lower_bounds)
-
-        # max_values = np.full(np.shape(behavior_values), upper_bounds) 
-
-        # behavior_values = np.maximum(behavior_values, min_values)
-
-        # behavior_values = np.minimum(behavior_values, max_values)
-
         behavior_values = np.minimum(np.maximum(behavior_values + epsilon, lower_bounds), upper_bounds - epsilon)
 
         return ((behavior_values - lower_bounds) \
@@ -95,8 +85,6 @@ class GridArchive(ArchiveBase):
         # epsilon from upper bounds makes sure we do not have indices outside
         # the grid.
         epsilon = 1e-9
-        behavior_values = np.clip(behavior_values + epsilon, self.lower_bounds,
-                                  self.upper_bounds - epsilon)
 
         index = GridArchive._get_index_numba(behavior_values, self.upper_bounds, self.lower_bounds, 
                                              self.interval_size, self.dims, epsilon)
