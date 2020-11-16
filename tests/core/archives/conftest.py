@@ -13,10 +13,11 @@ def benchmark_data_100k():
     - 100k random objective values drawn from the standard normal distribution
     - 100k random behavior values in the range (-1,1) in each dim
     """
+    rng = np.random.default_rng(42)
     n_vals = int(1e5)
-    solutions = np.random.uniform(-1, 1, (n_vals, 10))
-    objective_values = np.random.randn(n_vals)
-    behavior_values = np.random.uniform(-1, 1, (n_vals, 2))
+    solutions = rng.uniform(-1, 1, (n_vals, 10))
+    objective_values = rng.standard_normal(n_vals)
+    behavior_values = rng.uniform(-1, 1, (n_vals, 2))
     return n_vals, solutions, objective_values, behavior_values
 
 
