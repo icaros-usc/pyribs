@@ -68,18 +68,18 @@ class IsoLineEmitter(EmitterBase):
             ``(self.batch_size, self.solution_dim)`` array -- contains
             ``batch_size`` new solutions to evaluate.
         """
+        iso_gaussian = self._rng.normal(scale=self.iso_sigma,
+                                        size=(self.batch_size,
+                                              self.solution_dim))
+
         if self._archive.is_empty():
-            return np.expand_dims(self.x0, axis=0) + self._rng.normal(
-                scale=self.iso_sigma, size=(self.batch_size, self.solution_dim))
+            return np.expand_dims(self.x0, axis=0) + iso_gaussian
 
         parents = [
             self._archive.get_random_elite()[0] for _ in range(self.batch_size)
         ]
         directions = [(self._archive.get_random_elite()[0] - parents[i])
                       for i in range(self.batch_size)]
-        iso_gaussian = self._rng.normal(scale=self.iso_sigma,
-                                        size=(self.batch_size,
-                                              self.solution_dim))
         line_gaussian = self._rng.normal(scale=self.line_sigma,
                                          size=(self.batch_size, 1))
         return parents + iso_gaussian + line_gaussian * directions

@@ -27,11 +27,11 @@ def benchmark_10k_additions(use_kd_tree, benchmark, benchmark_data_100k):
         archive.initialize(solutions.shape[1])
         return (archive,), {}
 
-    def add_100k(archive):
+    def add_10k(archive):
         for i in range(10_000):
             archive.add(solutions[i], objective_values[i], behavior_values[i])
 
-    benchmark.pedantic(add_100k, setup=setup, rounds=5, iterations=1)
+    benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
 
 
 def benchmark_get_100k_random_elites(use_kd_tree, benchmark,
