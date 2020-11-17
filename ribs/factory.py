@@ -9,6 +9,7 @@ import ribs.optimizers
 
 __all__ = [
     "from_config",
+    "UnknownEntityError",
     "register_archive",
     "register_emitter",
     "register_optimizer",
@@ -105,11 +106,28 @@ register_optimizer("Optimizer", ribs.optimizers.Optimizer)
 #
 
 
+class UnknownEntityError(Exception):
+    """Raised when an archive, emitter, or optimizer in a config is unknown."""
+
+
 def _remove_type_key(config):
     """Returns a shallow copy of the config, with the "type" key removed."""
     config = config.copy()
     config.pop("type")
     return config
+
+
+def _attempt_creation(entity_name, type_name, type_dict, provided_kwargs,
+                      additional_kwargs):
+    """Tries to create an archive, emitter, or optimizer (i.e. an "entity").
+
+    See ``from_config`` for example usage.
+    """
+    if type_name not in type_dict:
+        raise UnknownEntityError(
+            f"{entity_name.title()} '{type_name}' is not registered")
+    entity_type = type_dict[type_name]
+    return entity_type(**additional_kwargs, **_remove_type_key(provided_kwargs))
 
 
 def from_config(config):
@@ -156,26 +174,30 @@ def from_config(config):
     Returns:
         ribs.optimizers.Optimizer: An optimizer created according to the
         options specified in the config.
+    Raises:
+        UnknownEntityError: An archive, emitter, or optimizer  specified in the
+            config is not registered.
     """
     if isinstance(config, (str, pathlib.Path)):
         with open(str(config), "r") as file:
             config = toml.load(file)
 
-    archive_class = _ARCHIVE_TYPES[config["archive"]["type"]]
-    archive = archive_class(**_remove_type_key(config["archive"]))
+    archive = _attempt_creation("Archive", config["archive"]["type"],
+                                _ARCHIVE_TYPES, config["archive"], {})
 
     emitters = []
     for emitter_config in config["emitters"]:
-        emitter_class = _EMITTER_TYPES[emitter_config["type"]]
         emitters.append(
-            emitter_class(
-                **_remove_type_key(emitter_config),
-                archive=archive,
+            _attempt_creation(
+                "Emitter",
+                emitter_config["type"],
+                _EMITTER_TYPES,
+                emitter_config,
+                {"archive": archive},
             ))
 
-    optimizer_class = _OPTIMIZER_TYPES[config["optimizer"]["type"]]
-    return optimizer_class(
-        archive=archive,
-        emitters=emitters,
-        **_remove_type_key(config["optimizer"]),
-    )
+    return _attempt_creation("Optimizer", config["optimizer"]["type"],
+                             _OPTIMIZER_TYPES, config["optimizer"], {
+                                 "archive": archive,
+                                 "emitters": emitters
+                             })

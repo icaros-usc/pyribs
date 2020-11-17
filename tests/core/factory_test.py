@@ -8,6 +8,8 @@ from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
 
+# pylint: disable = invalid-name
+
 
 @pytest.mark.parametrize(
     "registration_func",
@@ -34,7 +36,7 @@ def test_registering_again_fails(registration_func):
 
 
 @pytest.mark.parametrize("use_toml", [False, True], ids=["dict", "toml"])
-def test_factory_from_config(use_toml, tmp_path):
+def test_from_config_with_valid_input(use_toml, tmp_path):
     seed = 42
     batch_size = 4
 
@@ -93,3 +95,35 @@ def test_factory_from_config(use_toml, tmp_path):
     created_optimizer.tell(objective_values, behavior_values)
     assert (optimizer.archive.as_pandas() ==
             created_optimizer.archive.as_pandas()).all(None)
+
+
+@pytest.mark.parametrize("entity_type", ["archive", "emitter", "optimizer"])
+def test_from_config_fails_on_unknown_entity(entity_type):
+    config_dict = {
+        "archive": {
+            "type": "GridArchive",
+            "dims": [64, 64],
+            "ranges": [(-1, 1), (-1, 1)],
+            "seed": 42,
+        },
+        "emitters": [{
+            "type": "GaussianEmitter",
+            "x0": [0.0, 0.0],
+            "sigma0": 0.1,
+            "batch_size": 32,
+            "seed": 42,
+        }],
+        "optimizer": {
+            "type": "Optimizer",
+        },
+    }
+
+    if entity_type == "archive":
+        config_dict["archive"]["type"] = "NonexistentArchive"
+    elif entity_type == "emitter":
+        config_dict["emitters"][0]["type"] = "NonexistentEmitter"
+    elif entity_type == "optimizer":
+        config_dict["optimizer"]["type"] = "NonexistentOptimizer"
+
+    with pytest.raises(ribs.factory.UnknownEntityError):
+        ribs.factory.from_config(config_dict)
