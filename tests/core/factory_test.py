@@ -9,6 +9,30 @@ from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
 
 
+@pytest.mark.parametrize(
+    "registration_func",
+    [
+        ribs.factory.register_archive,
+        ribs.factory.register_emitter,
+        ribs.factory.register_optimizer,
+    ],
+    ids=[
+        "archive",
+        "emitter",
+        "optimizer",
+    ],
+)
+def test_registering_again_fails(registration_func):
+
+    class NewClass:
+        """Arbitrary class for registration."""
+
+    with pytest.raises(ribs.factory.RegistrationError):
+        registration_func("NewClass", NewClass)
+        # The second registration should fail.
+        registration_func("NewClass", NewClass)
+
+
 @pytest.mark.parametrize("use_toml", [False, True], ids=["dict", "toml"])
 def test_factory_from_config(use_toml, tmp_path):
     seed = 42

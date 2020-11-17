@@ -12,6 +12,7 @@ __all__ = [
     "register_archive",
     "register_emitter",
     "register_optimizer",
+    "RegistrationError",
 ]
 
 #
@@ -23,6 +24,10 @@ _ARCHIVE_TYPES = {}
 _EMITTER_TYPES = {}
 
 _OPTIMIZER_TYPES = {}
+
+
+class RegistrationError(Exception):
+    """Raised when there is an issue with factory registration."""
 
 
 def register_archive(name, archive_class):
@@ -38,7 +43,11 @@ def register_archive(name, archive_class):
     Args:
         name (str): the name of the archive.
         archive_class (type): The archive's class.
+    Raises:
+        RegistrationError: The archive is already registered.
     """
+    if name in _ARCHIVE_TYPES:
+        raise RegistrationError(f"Archive '{name}' is already registered")
     _ARCHIVE_TYPES[name] = archive_class
 
 
@@ -56,7 +65,11 @@ def register_emitter(name, emitter_class):
     Args:
         name (str): the name of the emitter.
         emitter_class (type): The emitter's class.
+    Raises:
+        RegistrationError: The emitter is already registered.
     """
+    if name in _EMITTER_TYPES:
+        raise RegistrationError(f"Emitter '{name}' is already registered")
     _EMITTER_TYPES[name] = emitter_class
 
 
@@ -73,7 +86,11 @@ def register_optimizer(name, optimizer_class):
     Args:
         name (str): the name of the optimizer.
         optimizer_class (type): The optimizer's class.
+    Raises:
+        RegistrationError: The optimizer is already registered.
     """
+    if name in _OPTIMIZER_TYPES:
+        raise RegistrationError(f"Optimizer '{name}' is already registered")
     _OPTIMIZER_TYPES[name] = optimizer_class
 
 
