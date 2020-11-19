@@ -8,9 +8,9 @@ class EmitterBase(ABC):
     """Base class for emitters.
 
     Args:
-        solution_dim (int): The (1D) dimension of solutions produced by this
-            emitter.
-        batch_size (int): Number of solutions to generate on each call to ask().
+        solution_dim (int): The dimension of solutions produced by this emitter.
+        batch_size (int): Number of solutions to generate on each call to
+            :meth:`ask`.
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
@@ -19,15 +19,23 @@ class EmitterBase(ABC):
     Attributes:
         _rng (np.random.Generator): Random number generator.
         _archive (ribs.archives.ArchiveBase): See ``archive`` arg.
-        solution_dim (int): See args.
-        batch_size (int): See args.
     """
 
     def __init__(self, solution_dim, batch_size, archive, seed=None):
         self._rng = np.random.default_rng(seed)
         self._archive = archive
-        self.solution_dim = solution_dim
-        self.batch_size = batch_size
+        self._solution_dim = solution_dim
+        self._batch_size = batch_size
+
+    @property
+    def solution_dim(self):
+        """int: The dimension of solutions produced by this emitter."""
+        return self._solution_dim
+
+    @property
+    def batch_size(self):
+        """int: Number of solutions to generate on each call to :meth:`ask`."""
+        return self._batch_size
 
     @abstractmethod
     def ask(self):

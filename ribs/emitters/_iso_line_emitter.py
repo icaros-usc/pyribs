@@ -60,10 +60,6 @@ class IsoLineEmitter(EmitterBase):
         x0 (np.ndarray): See args.
         iso_sigma (float): See args.
         line_sigma (float): See args.
-        solution_dim (int): The (1D) dimension of solutions produced by this
-            emitter.
-        batch_size (int): Number of solutions to generate on each call to ask().
-            Passed in via ``config.batch_size``.
     """
 
     def __init__(self,
@@ -72,13 +68,36 @@ class IsoLineEmitter(EmitterBase):
                  iso_sigma=0.01,
                  line_sigma=0.2,
                  config=None):
-        self.config = create_config(config, IsoLineEmitterConfig)
-        self.x0 = np.array(x0)
-        self.iso_sigma = iso_sigma
-        self.line_sigma = line_sigma
+        self._config = create_config(config, IsoLineEmitterConfig)
+        self._x0 = np.array(x0)
+        self._iso_sigma = iso_sigma
+        self._line_sigma = line_sigma
 
-        EmitterBase.__init__(self, len(self.x0), self.config.batch_size,
-                             archive, self.config.seed)
+        EmitterBase.__init__(self, len(self._x0), self._config.batch_size,
+                             archive, self._config.seed)
+
+    @property
+    def config(self):
+        """IsoLineEmitter: Configuration object."""
+        return self._config
+
+    @property
+    def x0(self):
+        """np.ndarray: Center of the Gaussian distribution from which to sample
+        solutions when the archive is empty."""
+        return self._x0
+
+    @property
+    def iso_sigma(self):
+        """float: Scale factor for the isotropic distribution used when
+        generating solutions."""
+        return self._iso_sigma
+
+    @property
+    def line_sigma(self):
+        """float: Scale factor for the line distribution used when generating
+        solutions."""
+        return self._line_sigma
 
     def ask(self):
         """Generates ``self.batch_size`` solutions.
@@ -92,18 +111,18 @@ class IsoLineEmitter(EmitterBase):
             ``(self.batch_size, self.solution_dim)`` array -- contains
             ``batch_size`` new solutions to evaluate.
         """
-        iso_gaussian = self._rng.normal(scale=self.iso_sigma,
+        iso_gaussian = self._rng.normal(scale=self._iso_sigma,
                                         size=(self.batch_size,
                                               self.solution_dim))
 
         if self._archive.is_empty():
-            return np.expand_dims(self.x0, axis=0) + iso_gaussian
+            return np.expand_dims(self._x0, axis=0) + iso_gaussian
 
         parents = [
             self._archive.get_random_elite()[0] for _ in range(self.batch_size)
         ]
         directions = [(self._archive.get_random_elite()[0] - parents[i])
                       for i in range(self.batch_size)]
-        line_gaussian = self._rng.normal(scale=self.line_sigma,
+        line_gaussian = self._rng.normal(scale=self._line_sigma,
                                          size=(self.batch_size, 1))
         return parents + iso_gaussian + line_gaussian * directions
