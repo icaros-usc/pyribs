@@ -36,10 +36,6 @@ class Optimizer:
         config (None or dict or OptimizerConfig): Configuration object. If None,
             a default OptimizerConfig is constructed. A dict may also be passed
             in, in which case its arguments will be passed into OptimizerConfig.
-    Attributes:
-        config (OptimizerConfig): Configuration object.
-        archive (ribs.archives.ArchiveBase): See args.
-        emitters (list of ribs emitters): See args.
     Raises:
         RuntimeError: The emitters passed in do not have the same solution
             dimensions.
@@ -47,7 +43,7 @@ class Optimizer:
     """
 
     def __init__(self, archive, emitters, config=None):
-        self.config = create_config(config, OptimizerConfig)
+        self._config = create_config(config, OptimizerConfig)
 
         if len(emitters) == 0:
             raise RuntimeError(
@@ -61,15 +57,32 @@ class Optimizer:
                     f"Emitter {idx} has dimension {emitter.solution_dim}, "
                     f"while Emitter 0 has dimension {self._solution_dim}")
 
-        self.archive = archive
-        self.archive.initialize(self._solution_dim)
-        self.emitters = emitters
+        self._archive = archive
+        self._archive.initialize(self._solution_dim)
+        self._emitters = emitters
 
         # Keeps track of whether the Optimizer should be receiving a call to
         # ask() or tell().
         self._asked = False
         # The last set of solutions returned by ask().
         self._solutions = []
+
+    @property
+    def config(self):
+        """CVTArchiveConfig: Configuration object."""
+        return self._config
+
+    @property
+    def archive(self):
+        """ribs.archives.ArchiveBase: Archive for storing solutions found in
+        this optimizer."""
+        return self._archive
+
+    @property
+    def emitters(self):
+        """list of ribs.archives.EmitterBase: Emitters for generating solutions
+        in this optimizer."""
+        return self._emitters
 
     def ask(self):
         """Generates a batch of solutions by calling ask() on all emitters.
@@ -89,7 +102,7 @@ class Optimizer:
         self._asked = True
 
         self._solutions = []
-        for emitter in self.emitters:
+        for emitter in self._emitters:
             self._solutions.append(emitter.ask())
         self._solutions = np.concatenate(self._solutions, axis=0)
         return self._solutions
@@ -120,7 +133,7 @@ class Optimizer:
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
-        for emitter in self.emitters:
+        for emitter in self._emitters:
             end = pos + emitter.batch_size
             emitter.tell(self._solutions[pos:end], objective_values[pos:end],
                          behavior_values[pos:end])
