@@ -121,7 +121,7 @@ def cvt_archive_heatmap(archive,
                 "o",
                 c="gray",
                 ms=1)
-    ax.plot(archive.centroids[:, 0], archive.centroids[:, 1], "ko")
+    ax.plot(archive.centroids[:, 0], archive.centroids[:, 1], "ko", ms=3)
 
     # Save figure if necessary.
     if filename is not None:
