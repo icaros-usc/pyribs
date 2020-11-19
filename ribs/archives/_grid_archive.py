@@ -44,30 +44,49 @@ class GridArchive(ArchiveBase):
             None, a default GridArchiveConfig is constructed. A dict may also be
             passed in, in which case its arguments will be passed into
             GridArchiveConfig.
-    Attributes:
-        config (GridArchiveConfig): Configuration object.
-        dims (np.ndarray): Number of bins in each dimension.
-        lower_bounds (np.ndarray): Lower bound of each dimension.
-        upper_bounds (np.ndarray): Upper bound of each dimension.
-        interval_size (np.ndarray): The size of each dimension (``upper_bounds -
-            lower_bounds``).
     """
 
     def __init__(self, dims, ranges, config=None):
-        self.config = create_config(config, GridArchiveConfig)
-        self.dims = np.array(dims)
-        behavior_dim = len(self.dims)
+        self._config = create_config(config, GridArchiveConfig)
+        self._dims = np.array(dims)
+        behavior_dim = len(self._dims)
         ArchiveBase.__init__(
             self,
-            storage_dims=tuple(self.dims),
+            storage_dims=tuple(self._dims),
             behavior_dim=behavior_dim,
-            seed=self.config.seed,
+            seed=self._config.seed,
         )
 
         ranges = list(zip(*ranges))
-        self.lower_bounds = np.array(ranges[0])
-        self.upper_bounds = np.array(ranges[1])
-        self.interval_size = self.upper_bounds - self.lower_bounds
+        self._lower_bounds = np.array(ranges[0])
+        self._upper_bounds = np.array(ranges[1])
+        self._interval_size = self._upper_bounds - self._lower_bounds
+
+    @property
+    def config(self):
+        """GridArchiveConfig: Configuration object."""
+        return self._config
+
+    @property
+    def dims(self):
+        """(behavior_dim,) np.ndarray: Number of bins in each dimension."""
+        return self._dims
+
+    @property
+    def lower_bounds(self):
+        """(behavior_dim,) np.ndarray: Lower bound of each dimension."""
+        return self._lower_bounds
+
+    @property
+    def upper_bounds(self):
+        """(behavior_dim,) np.ndarray: Upper bound of each dimension."""
+        return self._upper_bounds
+
+    @property
+    def interval_size(self):
+        """(behavior_dim,) np.ndarray: The size of each dim (upper_bounds -
+        lower_bounds)."""
+        return self._interval_size
 
     def _get_index(self, behavior_values):
         # Adding epsilon to behavior values accounts for floating point
@@ -75,10 +94,10 @@ class GridArchive(ArchiveBase):
         # epsilon from upper bounds makes sure we do not have indices outside
         # the grid.
         epsilon = 1e-9
-        behavior_values = np.clip(behavior_values + epsilon, self.lower_bounds,
-                                  self.upper_bounds - epsilon)
-        index = ((behavior_values - self.lower_bounds) \
-                / self.interval_size) * self.dims
+        behavior_values = np.clip(behavior_values + epsilon, self._lower_bounds,
+                                  self._upper_bounds - epsilon)
+        index = ((behavior_values - self._lower_bounds) \
+                / self._interval_size) * self._dims
         return tuple(index.astype(int))
 
     def as_pandas(self):

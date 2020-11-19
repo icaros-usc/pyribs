@@ -96,33 +96,52 @@ class CVTArchive(ArchiveBase):
             None, a default CVTArchiveConfig is constructed. A dict may also be
             passed in, in which case its arguments will be passed into
             CVTArchiveConfig.
-    Attributes:
-        config (CVTArchiveConfig): Configuration object.
-        lower_bounds (np.ndarray): Lower bound of each dimension.
-        upper_bounds (np.ndarray): Upper bound of each dimension.
-        samples: The samples used in creating the CVT. This attribute may be
-            None until :meth:`initialize is called.
-        centroids: The centroids used in the CVT. This attribute is none until
-            :meth:`initialize` is called.
     """
 
     def __init__(self, ranges, bins, samples=None, config=None):
-        self.config = create_config(config, CVTArchiveConfig)
+        self._config = create_config(config, CVTArchiveConfig)
         ArchiveBase.__init__(
             self,
             storage_dims=(bins,),
             behavior_dim=len(ranges),
-            seed=self.config.seed,
+            seed=self._config.seed,
         )
 
         ranges = list(zip(*ranges))
-        self.lower_bounds = np.array(ranges[0])
-        self.upper_bounds = np.array(ranges[1])
+        self._lower_bounds = np.array(ranges[0])
+        self._upper_bounds = np.array(ranges[1])
 
         self._bins = bins
-        self.samples = samples
-        self.centroids = None
+        self._samples = samples
+        self._centroids = None
         self._centroid_kd_tree = None
+
+    @property
+    def config(self):
+        """CVTArchiveConfig: Configuration object."""
+        return self._config
+
+    @property
+    def lower_bounds(self):
+        """(behavior_dim,) np.ndarray: Lower bound of each dimension."""
+        return self._lower_bounds
+
+    @property
+    def upper_bounds(self):
+        """(behavior_dim,) np.ndarray: Upper bound of each dimension."""
+        return self._upper_bounds
+
+    @property
+    def samples(self):
+        """(num_samples, behavior_dim) np.ndarray: The samples used in creating
+        the CVT. May be None until :meth:`initialize` is called."""
+        return self._samples
+
+    @property
+    def centroids(self):
+        """(num_centroids, behavior_dim) np.ndarray: The centroids used in the
+        CVT. None until :meth:`initialize` is called."""
+        return self._centroids
 
     def initialize(self, solution_dim):
         """Initializes the archive.
@@ -138,28 +157,28 @@ class CVTArchive(ArchiveBase):
         """
         ArchiveBase.initialize(self, solution_dim)
 
-        self.samples = (np.array(self.samples)
-                        if self.samples is not None else self._rng.uniform(
-                            self.lower_bounds,
-                            self.upper_bounds,
-                            size=(self.config.samples, self._behavior_dim),
-                        ))
-        self.centroids = kmeans(
-            self.samples,
+        self._samples = (np.array(self._samples)
+                         if self._samples is not None else self._rng.uniform(
+                             self._lower_bounds,
+                             self._upper_bounds,
+                             size=(self._config.samples, self._behavior_dim),
+                         ))
+        self._centroids = kmeans(
+            self._samples,
             self._bins,
             iter=1,
-            thresh=self.config.k_means_threshold,
+            thresh=self._config.k_means_threshold,
         )[0]
 
-        if self.config.use_kd_tree:
-            self._centroid_kd_tree = cKDTree(self.centroids)
+        if self._config.use_kd_tree:
+            self._centroid_kd_tree = cKDTree(self._centroids)
 
     def _get_index(self, behavior_values):
-        if self.config.use_kd_tree:
+        if self._config.use_kd_tree:
             return self._centroid_kd_tree.query(behavior_values)[1]
 
         # Default: calculate nearest neighbor with brute force.
-        distances = np.expand_dims(behavior_values, axis=0) - self.centroids
+        distances = np.expand_dims(behavior_values, axis=0) - self._centroids
         distances = np.sum(np.square(distances), axis=1)
         return np.argmin(distances)
 
@@ -169,7 +188,7 @@ class CVTArchive(ArchiveBase):
         Returns:
             A dataframe where each row is an elite in the archive. The dataframe
             consists of 1 ``index`` column indicating the index of the centroid
-            in ``self.centroids``, ``behavior_dim`` columns called
+            in ``self._centroids``, ``behavior_dim`` columns called
             ``centroid-{i}`` for the coordinates of the centroid,
             ``behavior_dim`` columns called ``behavior-{i}`` for the behavior
             values, 1 column for the objective function value called
@@ -188,7 +207,7 @@ class CVTArchive(ArchiveBase):
         for index in self._occupied_indices:
             row = [
                 index,
-                *self.centroids[index],
+                *self._centroids[index],
                 *self._behavior_values[index],
                 self._objective_values[index],
                 *self._solutions[index],
