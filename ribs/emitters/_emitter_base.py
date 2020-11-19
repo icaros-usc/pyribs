@@ -1,9 +1,10 @@
 """Provides EmitterBase."""
+from abc import ABC, abstractmethod
 
 import numpy as np
 
 
-class EmitterBase:
+class EmitterBase(ABC):
     """Base class for emitters.
 
     Args:
@@ -28,9 +29,9 @@ class EmitterBase:
         self.solution_dim = solution_dim
         self.batch_size = batch_size
 
+    @abstractmethod
     def ask(self):
         """Generates ``self.batch_size`` solutions."""
-        raise NotImplementedError
 
     def tell(self, solutions, objective_values, behavior_values):
         """Gives the emitter results from evaluating several solutions.
