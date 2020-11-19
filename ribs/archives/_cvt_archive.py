@@ -68,13 +68,6 @@ class CVTArchive(ArchiveBase):
             :class:`~ribs.archives.CVTArchive` for more info.
         seed (float or int): Value to seed the random number generator. Set to
             None to avoid any seeding.
-    Attributes:
-        lower_bounds (np.ndarray): Lower bound of each dimension.
-        upper_bounds (np.ndarray): Upper bound of each dimension.
-        samples: The samples used in creating the CVT. This attribute may be
-            None until :meth:`initialize is called.
-        centroids: The centroids used in the CVT. This attribute is none until
-            :meth:`initialize` is called.
     """
 
     def __init__(self,
@@ -92,15 +85,37 @@ class CVTArchive(ArchiveBase):
         )
 
         ranges = list(zip(*ranges))
-        self.lower_bounds = np.array(ranges[0])
-        self.upper_bounds = np.array(ranges[1])
+        self._lower_bounds = np.array(ranges[0])
+        self._upper_bounds = np.array(ranges[1])
 
         self._bins = bins
         self._k_means_threshold = k_means_threshold
         self._use_kd_tree = use_kd_tree
-        self.samples = samples
-        self.centroids = None
+        self._samples = samples
+        self._centroids = None
         self._centroid_kd_tree = None
+
+    @property
+    def lower_bounds(self):
+        """(behavior_dim,) np.ndarray: Lower bound of each dimension."""
+        return self._lower_bounds
+
+    @property
+    def upper_bounds(self):
+        """(behavior_dim,) np.ndarray: Upper bound of each dimension."""
+        return self._upper_bounds
+
+    @property
+    def samples(self):
+        """(num_samples, behavior_dim) np.ndarray: The samples used in creating
+        the CVT. May be None until :meth:`initialize` is called."""
+        return self._samples
+
+    @property
+    def centroids(self):
+        """(num_centroids, behavior_dim) np.ndarray: The centroids used in the
+        CVT. None until :meth:`initialize` is called."""
+        return self._centroids
 
     def initialize(self, solution_dim):
         """Initializes the archive.
@@ -116,28 +131,28 @@ class CVTArchive(ArchiveBase):
         """
         ArchiveBase.initialize(self, solution_dim)
 
-        self.samples = self._rng.uniform(
-            self.lower_bounds,
-            self.upper_bounds,
-            size=(self.samples, self._behavior_dim),
-        ) if isinstance(self.samples, int) else np.array(self.samples)
+        self._samples = self._rng.uniform(
+            self._lower_bounds,
+            self._upper_bounds,
+            size=(self._samples, self._behavior_dim),
+        ) if isinstance(self._samples, int) else np.array(self._samples)
 
-        self.centroids = kmeans(
-            self.samples,
+        self._centroids = kmeans(
+            self._samples,
             self._bins,
             iter=1,
             thresh=self._k_means_threshold,
         )[0]
 
         if self._use_kd_tree:
-            self._centroid_kd_tree = cKDTree(self.centroids)
+            self._centroid_kd_tree = cKDTree(self._centroids)
 
     def _get_index(self, behavior_values):
         if self._use_kd_tree:
             return self._centroid_kd_tree.query(behavior_values)[1]
 
         # Default: calculate nearest neighbor with brute force.
-        distances = np.expand_dims(behavior_values, axis=0) - self.centroids
+        distances = np.expand_dims(behavior_values, axis=0) - self._centroids
         distances = np.sum(np.square(distances), axis=1)
         return np.argmin(distances)
 
@@ -147,7 +162,7 @@ class CVTArchive(ArchiveBase):
         Returns:
             A dataframe where each row is an elite in the archive. The dataframe
             consists of 1 ``index`` column indicating the index of the centroid
-            in ``self.centroids``, ``behavior_dim`` columns called
+            in ``self._centroids``, ``behavior_dim`` columns called
             ``centroid-{i}`` for the coordinates of the centroid,
             ``behavior_dim`` columns called ``behavior-{i}`` for the behavior
             values, 1 column for the objective function value called
@@ -166,7 +181,7 @@ class CVTArchive(ArchiveBase):
         for index in self._occupied_indices:
             row = [
                 index,
-                *self.centroids[index],
+                *self._centroids[index],
                 *self._behavior_values[index],
                 self._objective_values[index],
                 *self._solutions[index],
