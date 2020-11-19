@@ -18,7 +18,7 @@ def sphere(sol):
 
 def main():
     """Demo of MAP-Elites on the Sphere function."""
-    archive = GridArchive((100, 100), [(-4, 4), (-4, 4)], config={"seed": 42})
+    archive = GridArchive((100, 100), [(-4, 4), (-4, 4)])
     emitters = [
         GaussianEmitter([0.0] * 10, 0.1, archive, config={"batch_size": 4})
     ]
