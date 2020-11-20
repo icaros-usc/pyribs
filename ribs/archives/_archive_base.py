@@ -1,7 +1,7 @@
 """Provides ArchiveBase."""
 
-import numpy as np
 import numba as nb
+import numpy as np
 
 
 class ArchiveBase:
@@ -78,10 +78,20 @@ class ArchiveBase:
 
     @staticmethod
     @nb.jit(locals={"already_initialized": nb.types.b1}, nopython=True)
-    def __add_numba(new_index, new_solution, new_objective_value,
-                    new_behavior_values, initialized, solutions,
-                    objective_values, behavior_values):
+    def _add_numba(new_index, new_solution, new_objective_value,
+                   new_behavior_values, initialized, solutions,
+                   objective_values, behavior_values):
+        """Numba helper for inserting solutions into the archive.
 
+        See add() for usage.
+
+        Returns:
+            was_inserted (bool): Whether the new values were inserted into the
+                archive.
+            already_initialized (bool): Whether the index was initialized prior
+                to this call; i.e. this is True only if there was already an
+                item at the index.
+        """
         already_initialized = initialized[new_index]
         if (not already_initialized or
                 objective_values[new_index] < new_objective_value):
@@ -116,12 +126,12 @@ class ArchiveBase:
         """
         index = self._get_index(behavior_values)
 
-        was_inserted, initialized = ArchiveBase.__add_numba(
+        was_inserted, already_initialized = self._add_numba(
             index, solution, objective_value, behavior_values,
             self._initialized, self._solutions, self._objective_values,
             self._behavior_values)
 
-        if was_inserted and not initialized:
+        if was_inserted and not already_initialized:
             self._occupied_indices.append(index)
 
         return was_inserted
