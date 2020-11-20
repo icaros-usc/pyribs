@@ -1,10 +1,11 @@
 """Provides ArchiveBase."""
+from abc import ABC, abstractmethod
 
 import numba as nb
 import numpy as np
 
 
-class ArchiveBase:
+class ArchiveBase(ABC):
     """Base class for archives; contains several useful methods.
 
     Args:
@@ -68,13 +69,13 @@ class ArchiveBase:
         self._solutions = np.empty((*self._storage_dims, solution_dim),
                                    dtype=float)
 
+    @abstractmethod
     def _get_index(self, behavior_values):
         """Returns archive indices for the given behavior values.
 
         If the behavior values are outside the dimensions of the container, they
         are clipped.
         """
-        raise NotImplementedError
 
     @staticmethod
     @nb.jit(locals={"already_initialized": nb.types.b1}, nopython=True)
@@ -179,6 +180,6 @@ class ArchiveBase:
             self._behavior_values[index],
         )
 
+    @abstractmethod
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe."""
-        raise NotImplementedError

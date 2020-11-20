@@ -3,10 +3,10 @@
 
 from setuptools import find_packages, setup
 
-with open('README.rst') as readme_file:
+with open('README.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
+with open('HISTORY.md') as history_file:
     history = history_file.read()
 
 install_requires = [
@@ -81,6 +81,7 @@ setup(
     keywords='ribs',
     name='ribs',
     packages=find_packages(include=['ribs', 'ribs.*']),
+    python_requires=">=3.6.0",
     test_suite='tests',
     url='https://github.com/icaros-usc/ribs',
     version='0.0.0',

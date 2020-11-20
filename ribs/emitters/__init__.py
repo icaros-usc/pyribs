@@ -6,9 +6,9 @@ from ribs.emitters._iso_line_emitter import (IsoLineEmitter,
                                              IsoLineEmitterConfig)
 
 __all__ = [
+    "EmitterBase",
     "GaussianEmitter",
     "GaussianEmitterConfig",
     "IsoLineEmitter",
     "IsoLineEmitterConfig",
-    "EmitterBase",
 ]

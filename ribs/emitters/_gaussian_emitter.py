@@ -47,23 +47,32 @@ class GaussianEmitter(EmitterBase):
             None, a default GaussianEmitterConfig is constructed. A dict may
             also be passed in, in which case its arguments will be passed into
             GaussianEmitterConfig.
-    Attributes:
-        config (GaussianEmitterConfig): Configuration object.
-        x0 (np.ndarray): See args.
-        sigma0 (np.ndarray): See args.
-        solution_dim (int): The (1D) dimension of solutions produced by this
-            emitter.
-        batch_size (int): Number of solutions to generate on each call to ask().
-            Passed in via ``config.batch_size``.
     """
 
     def __init__(self, x0, sigma0, archive, config=None):
-        self.config = create_config(config, GaussianEmitterConfig)
-        self.x0 = np.array(x0)
-        self.sigma0 = np.array(sigma0)
+        self._config = create_config(config, GaussianEmitterConfig)
+        self._x0 = np.array(x0)
+        self._sigma0 = sigma0 if isinstance(sigma0, float) else np.array(sigma0)
 
-        EmitterBase.__init__(self, len(self.x0), self.config.batch_size,
-                             archive, self.config.seed)
+        EmitterBase.__init__(self, len(self._x0), self._config.batch_size,
+                             archive, self._config.seed)
+
+    @property
+    def config(self):
+        """GaussianEmitterConfig: Configuration object."""
+        return self._config
+
+    @property
+    def x0(self):
+        """np.ndarray: Center of the Gaussian distribution from which to sample
+        solutions when the archive is empty."""
+        return self._x0
+
+    @property
+    def sigma0(self):
+        """float or np.ndarray: Standard deviation of the (diagonal) Gaussian
+        distribution."""
+        return self._sigma0
 
     def ask(self):
         """Creates solutions by adding Gaussian noise to elites in the archive.
@@ -78,7 +87,7 @@ class GaussianEmitter(EmitterBase):
             ``batch_size`` new solutions to evaluate.
         """
         if self._archive.is_empty():
-            parents = np.expand_dims(self.x0, axis=0)
+            parents = np.expand_dims(self._x0, axis=0)
         else:
             parents = [
                 self._archive.get_random_elite()[0]
@@ -86,4 +95,4 @@ class GaussianEmitter(EmitterBase):
             ]
 
         return parents + self._rng.normal(
-            scale=self.sigma0, size=(self.batch_size, self.solution_dim))
+            scale=self._sigma0, size=(self.batch_size, self.solution_dim))

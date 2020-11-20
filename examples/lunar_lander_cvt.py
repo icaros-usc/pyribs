@@ -120,7 +120,7 @@ def simulate(model, seed=None, render=False, delay=None, video_env=None):
 
 def train_model(create_client, seed, sigma, batch_size, archive_filename,
                 iterations):
-    """Trains models with CVT-MAP-Elites and saves results to a pickle file.
+    """Trains models with CVT-MAP-Elites and saves results to a CSV file.
 
     Args:
         create_client (callable): Function which returns a Dask client when
@@ -129,7 +129,7 @@ def train_model(create_client, seed, sigma, batch_size, archive_filename,
         sigma (int): Standard deviation for the GaussianEmitter.
         batch_size (int): Number of evaluations to run per iteration. Passed
             into GaussianEmitter.
-        archive_filename (str): Pickle file to save the archive to.
+        archive_filename (str): CSV file to save the archive to.
         iterations (int): Number of iterations to run CVT-MAP-Elites.
     """
     env = gym.make("LunarLander-v2")
@@ -178,10 +178,10 @@ def train_model(create_client, seed, sigma, batch_size, archive_filename,
         if (itr + 1) % 10 == 0:
             print(f"Completed iteration {itr + 1} after "
                   f"{time.time() - start_time} s")
-            archive.as_pandas().to_pickle(archive_filename)
+            archive.as_pandas().to_csv(archive_filename)
 
     df = archive.as_pandas()
-    df.to_pickle(archive_filename)
+    df.to_csv(archive_filename)
     print("=== Done ===\n"
           f"Saved archive to {archive_filename}\n"
           f"Time: {time.time() - start_time}\n"
@@ -195,7 +195,7 @@ def run_evaluation(archive_filename, seed):
 
     Videos are saved to the `lunar_lander_cvt_videos` directory.
     """
-    df = pd.read_pickle(archive_filename)
+    df = pd.read_csv(archive_filename)
     indices = np.random.permutation(len(df))[:10]
     indices.sort()
 
@@ -211,7 +211,7 @@ def run_evaluation(archive_filename, seed):
     )
 
     for idx in indices:
-        model = df.at[idx, "solution"]
+        model = df.loc[idx, "solution-0":].to_numpy()
         reward = simulate(model, seed, True, 10, env)[0]
         print(f"=== Index {idx} ===\n"
               "Model:\n"
@@ -226,7 +226,7 @@ def cvt_map_elites(iterations: int = 1000,
                    seed: int = 42,
                    sigma: float = 1.0,
                    workers: int = 4,
-                   archive_filename: str = "lunar_lander_cvt_archives.pkl",
+                   archive_filename: str = "lunar_lander_cvt_archives.csv",
                    run_eval: bool = False):
     """Uses CVT-MAP-Elites to train an agent in Lunar Lander.
 
