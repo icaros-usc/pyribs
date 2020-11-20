@@ -9,7 +9,7 @@
 
 getting-started
 configuration
-tutorials
+usage
 ```
 
 ```{toctree}
