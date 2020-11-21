@@ -28,8 +28,8 @@ class CVTArchive(ArchiveBase):
     The following plot compares the runtime of brute force vs k-D tree when
     inserting 100k samples into a 2D archive with varying numbers of bins (we
     took the minimum over 5 runs for each data point, as recommended `here
-    <https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat>`_). Note
-    the logarithmic scales. This plot was generated on a reasonably modern
+    <https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat>`__).
+    Note the logarithmic scales. This plot was generated on a reasonably modern
     laptop.
 
     .. image:: _static/imgs/cvt_add_plot.png
@@ -60,7 +60,7 @@ class CVTArchive(ArchiveBase):
         k_means_threshold (float): When finding the centroids at the beginning,
             k-means will terminate when the difference in distortion between
             iterations goes below this threshold (see `here
-            <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_ for
+            <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`__ for
             more info).
         use_kd_tree (bool): If True, use a k-D tree for finding the closest
             centroid when inserting into the archive. This may result in a
