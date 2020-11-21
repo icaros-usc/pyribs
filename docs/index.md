@@ -1,19 +1,20 @@
 ```{include} readme.md
 ```
 
-## Contents
-
 ```{toctree}
 :maxdepth: 2
 :caption: Overview
+:hidden:
 
 getting-started
-usage
+tutorials
+examples
 ```
 
 ```{toctree}
 :maxdepth: 2
 :caption: API
+:hidden:
 
 ribs.archives
 ribs.emitters
@@ -25,6 +26,7 @@ ribs.visualize
 ```{toctree}
 :maxdepth: 2
 :caption: Reference
+:hidden:
 
 contributing
 history
@@ -32,6 +34,7 @@ history
 
 ```{toctree}
 :caption: Indices
+:hidden:
 
 genindex
 modindex

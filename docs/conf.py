@@ -117,7 +117,7 @@ html_title = "pyribs v" + ribs.__version__
 # material theme options (see theme.conf for more information)
 html_theme_options = {
     "nav_title": "pyribs",
-    "base_url": "https://ribs.readthedocs.io/",
+    "base_url": "https://ribs.readthedocs.io/en/latest/",
     "repo_url": "https://github.com/icaros-usc/pyribs/",
     "repo_name": "pyribs",
     "google_analytics_account": None,
@@ -129,7 +129,6 @@ html_theme_options = {
     "color_primary": "indigo",
     "color_accent": "light-blue",
     "touch_icon": "images/apple-icon-152x152.png",
-    #  "theme_color": "#2196f3",
     "master_doc": False,
     "nav_links": [{
         "href": "index",

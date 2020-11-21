@@ -178,8 +178,8 @@ Tutorials are created in Jupyter notebooks that are stored under
 
    [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googlecolab/colabtools/blob/master/notebooks/colab-github-demo.ipynb)
 
-1. Add an entry into the `Tutorials` table in `docs/usage.md`.
-1. Check that the tutorial shows up on the Usage page when you serve the docs.
+1. Add an entry into the table in `docs/tutorials.md`.
+1. Check that the tutorial shows up on the Tutorials page when you serve the docs.
 
 #### Adding an Example
 
@@ -204,8 +204,8 @@ their source is shown in the docs. To create an example:
    ```
    ````
 1. Add whatever other info you would like in the Markdown file.
-1. Add an entry into the `Examples` table in `docs/usage.md`.
-1. Check that the example shows up on the Usage page when you serve the docs.
+1. Add an entry into the table in `docs/examples.md`.
+1. Check that the example shows up on the Examples page when you serve the docs.
 
 ### Deploying
 
