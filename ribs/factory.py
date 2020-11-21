@@ -167,6 +167,27 @@ def from_config(config):
             },
         }
 
+    In TOML format, the config would look like this::
+
+        [archive]
+        type = "GridArchive"
+        ... # Other archive args.
+
+        [[emitters]]
+        type = "GaussianEmitter"
+        ... # Other emitter args.
+
+        [[emitters]]
+        ... # Another emitter
+
+        [optimizer]
+        type = "Optimizer"
+        ... # Other optimizer args.
+
+    .. note:: If you include any custom archives, emitters, or optimizers in
+        your config (whether toml or dict), you will need to register them
+        *before* running this method.
+
     Args:
         config (dict or str or pathlib.Path): Dict of configuration options
             described as above, or the name of a toml file with the structure
