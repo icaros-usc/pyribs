@@ -1,9 +1,12 @@
 """Contains the GridArchive and corresponding GridArchiveConfig."""
 import numpy as np
 import pandas as pd
+from numba import jit
 
 from ribs.archives._archive_base import ArchiveBase
 from ribs.config import create_config
+
+_EPSILON = 1e-9
 
 
 class GridArchiveConfig:
@@ -88,16 +91,29 @@ class GridArchive(ArchiveBase):
         lower_bounds)."""
         return self._interval_size
 
-    def _get_index(self, behavior_values):
+    @staticmethod
+    @jit(nopython=True)
+    def _get_index_numba(behavior_values, upper_bounds, lower_bounds,
+                         interval_size, dims):
+        """Numba helper for _get_index().
+
+        See _get_index() for usage.
+        """
         # Adding epsilon to behavior values accounts for floating point
         # precision errors from transforming behavior values. Subtracting
         # epsilon from upper bounds makes sure we do not have indices outside
         # the grid.
-        epsilon = 1e-9
-        behavior_values = np.clip(behavior_values + epsilon, self._lower_bounds,
-                                  self._upper_bounds - epsilon)
-        index = ((behavior_values - self._lower_bounds) \
-                / self._interval_size) * self._dims
+        behavior_values = np.minimum(
+            np.maximum(behavior_values + _EPSILON, lower_bounds),
+            upper_bounds - _EPSILON)
+
+        return (behavior_values - lower_bounds) / interval_size * dims
+
+    def _get_index(self, behavior_values):
+        index = GridArchive._get_index_numba(behavior_values,
+                                             self._upper_bounds,
+                                             self._lower_bounds,
+                                             self._interval_size, self._dims)
         return tuple(index.astype(int))
 
     def as_pandas(self):
