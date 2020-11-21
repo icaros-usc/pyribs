@@ -85,10 +85,8 @@ def main():
         nonlocal archive
         archive = CVTArchive([(-1, 1), (-1, 1)],
                              bins,
-                             config={
-                                 "samples": n_vals,
-                                 "use_kd_tree": use_kd_tree,
-                             })
+                             samples=n_vals,
+                             use_kd_tree=use_kd_tree)
         archive.initialize(solutions.shape[1])
 
     def add_100k_entries():

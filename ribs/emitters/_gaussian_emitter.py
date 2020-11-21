@@ -1,27 +1,7 @@
-"""Provides the GaussianEmitter and corresponding GaussianEmitterConfig."""
+"""Provides the GaussianEmitter."""
 import numpy as np
 
-from ribs.config import create_config
 from ribs.emitters._emitter_base import EmitterBase
-
-
-class GaussianEmitterConfig:
-    """Configuration for the GaussianEmitter.
-
-    Args:
-        seed (float or int): Value to seed the random number generator. Set to
-            None to avoid seeding. Default: None
-        batch_size (int): Number of solutions to send back in the ask() method.
-            Default: 64
-    """
-
-    def __init__(
-        self,
-        seed=None,
-        batch_size=64,
-    ):
-        self.seed = seed
-        self.batch_size = batch_size
 
 
 class GaussianEmitter(EmitterBase):
@@ -43,24 +23,16 @@ class GaussianEmitter(EmitterBase):
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        config (None or dict or GaussianEmitterConfig): Configuration object. If
-            None, a default GaussianEmitterConfig is constructed. A dict may
-            also be passed in, in which case its arguments will be passed into
-            GaussianEmitterConfig.
+        batch_size (int): Number of solutions to send back in the ask() method.
+        seed (float or int): Value to seed the random number generator. Set to
+            None to avoid seeding.
     """
 
-    def __init__(self, x0, sigma0, archive, config=None):
-        self._config = create_config(config, GaussianEmitterConfig)
+    def __init__(self, x0, sigma0, archive, batch_size=64, seed=None):
         self._x0 = np.array(x0)
         self._sigma0 = sigma0 if isinstance(sigma0, float) else np.array(sigma0)
 
-        EmitterBase.__init__(self, len(self._x0), self._config.batch_size,
-                             archive, self._config.seed)
-
-    @property
-    def config(self):
-        """GaussianEmitterConfig: Configuration object."""
-        return self._config
+        EmitterBase.__init__(self, len(self._x0), batch_size, archive, seed)
 
     @property
     def x0(self):

@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from ribs.archives import GridArchive, GridArchiveConfig
+from ribs.archives import GridArchive
 
 # pylint: disable = invalid-name
 
@@ -44,7 +44,6 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
 def test_attributes_correctly_constructed(_archive_fixture):
     archive, *_ = _archive_fixture
 
-    assert isinstance(archive.config, GridArchiveConfig)
     assert np.all(archive.dims == [10, 20])
     assert np.all(archive.lower_bounds == [-1, -2])
     assert np.all(archive.upper_bounds == [1, 2])

@@ -1,18 +1,5 @@
-"""Provides the Optimizer and corresponding OptimizerConfig."""
+"""Provides the Optimizer."""
 import numpy as np
-
-from ribs.config import create_config
-
-
-class OptimizerConfig:
-    """Configuration for the Optimizer.
-
-    Args:
-        (none yet)
-    """
-
-    def __init__(self):
-        pass
 
 
 class Optimizer:
@@ -33,18 +20,13 @@ class Optimizer:
             :mod:`ribs.archives`.
         emitters (list of ribs.archives.EmitterBase): A list of emitter objects,
             such as :class:`ribs.emitters.GaussianEmitter`.
-        config (None or dict or OptimizerConfig): Configuration object. If None,
-            a default OptimizerConfig is constructed. A dict may also be passed
-            in, in which case its arguments will be passed into OptimizerConfig.
     Raises:
         RuntimeError: The emitters passed in do not have the same solution
             dimensions.
         RuntimeError: There is no emitter passed in.
     """
 
-    def __init__(self, archive, emitters, config=None):
-        self._config = create_config(config, OptimizerConfig)
-
+    def __init__(self, archive, emitters):
         if len(emitters) == 0:
             raise RuntimeError(
                 "You must pass in at least one emitter to the optimizer.")
@@ -66,11 +48,6 @@ class Optimizer:
         self._asked = False
         # The last set of solutions returned by ask().
         self._solutions = []
-
-    @property
-    def config(self):
-        """CVTArchiveConfig: Configuration object."""
-        return self._config
 
     @property
     def archive(self):

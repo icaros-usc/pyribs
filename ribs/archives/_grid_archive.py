@@ -1,27 +1,11 @@
-"""Contains the GridArchive and corresponding GridArchiveConfig."""
+"""Contains the GridArchive."""
 import numpy as np
 import pandas as pd
 from numba import jit
 
 from ribs.archives._archive_base import ArchiveBase
-from ribs.config import create_config
 
 _EPSILON = 1e-9
-
-
-class GridArchiveConfig:
-    """Configuration for the GridArchive.
-
-    Args:
-        seed (float or int): Value to seed the random number generator. Set to
-            None to avoid any seeding. Default: None
-    """
-
-    def __init__(
-        self,
-        seed=None,
-    ):
-        self.seed = seed
 
 
 class GridArchive(ArchiveBase):
@@ -43,32 +27,24 @@ class GridArchive(ArchiveBase):
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``.
-        config (None or dict or GridArchiveConfig): Configuration object. If
-            None, a default GridArchiveConfig is constructed. A dict may also be
-            passed in, in which case its arguments will be passed into
-            GridArchiveConfig.
+        seed (float or int): Value to seed the random number generator. Set to
+            None to avoid any seeding.
     """
 
-    def __init__(self, dims, ranges, config=None):
-        self._config = create_config(config, GridArchiveConfig)
+    def __init__(self, dims, ranges, seed=None):
         self._dims = np.array(dims)
         behavior_dim = len(self._dims)
         ArchiveBase.__init__(
             self,
             storage_dims=tuple(self._dims),
             behavior_dim=behavior_dim,
-            seed=self._config.seed,
+            seed=seed,
         )
 
         ranges = list(zip(*ranges))
         self._lower_bounds = np.array(ranges[0])
         self._upper_bounds = np.array(ranges[1])
         self._interval_size = self._upper_bounds - self._lower_bounds
-
-    @property
-    def config(self):
-        """GridArchiveConfig: Configuration object."""
-        return self._config
 
     @property
     def dims(self):

@@ -8,17 +8,14 @@ from ribs.emitters import IsoLineEmitter
 
 def test_degenerate_gauss_emits_x0(_archive_fixture):
     archive, x0 = _archive_fixture
-    emitter = IsoLineEmitter(x0, archive, iso_sigma=0, config={"batch_size": 2})
+    emitter = IsoLineEmitter(x0, archive, iso_sigma=0, batch_size=2)
     solutions = emitter.ask()
     assert (solutions == np.expand_dims(x0, axis=0)).all()
 
 
 def test_degenerate_gauss_emits_parent(_archive_fixture):
     archive, x0 = _archive_fixture
-    emitter = IsoLineEmitter(x0,
-                             archive,
-                             iso_sigma=0,
-                             config={"batch_size": 100})
+    emitter = IsoLineEmitter(x0, archive, iso_sigma=0, batch_size=2)
     archive.add(x0, 1, np.array([0, 0]))
 
     solutions = emitter.ask()
@@ -28,10 +25,7 @@ def test_degenerate_gauss_emits_parent(_archive_fixture):
 
 def test_degenerate_gauss_emits_along_line(_archive_fixture):
     archive, x0 = _archive_fixture
-    emitter = IsoLineEmitter(x0,
-                             archive,
-                             iso_sigma=0,
-                             config={"batch_size": 100})
+    emitter = IsoLineEmitter(x0, archive, iso_sigma=0, batch_size=100)
     archive.add(np.array([0, 0, 0, 0]), 1, np.array([0, 0]))
     archive.add(np.array([10, 0, 0, 0]), 1, np.array([1, 1]))
 

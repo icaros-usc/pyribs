@@ -19,13 +19,13 @@ def sphere(sol):
 
 def main():
     """Inits CVT and IsoLine emitter, runs with Sphere, plots results."""
-    archive = CVTArchive([(-1, 1), (-1, 1)], 1000, config={"samples": 10_000})
+    archive = CVTArchive([(-1, 1), (-1, 1)], 1000, samples=10_000)
     emitters = [
         IsoLineEmitter([0.0] * 10,
                        archive,
                        iso_sigma=0.1,
                        line_sigma=0.2,
-                       config={"batch_size": 4})
+                       batch_size=4)
     ]
     opt = Optimizer(archive, emitters)
 

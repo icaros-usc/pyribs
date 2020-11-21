@@ -11,10 +11,8 @@ def benchmark_construction(use_kd_tree, benchmark):
     def construct():
         archive = CVTArchive([(-1, 1), (-1, 1)],
                              1000,
-                             config={
-                                 "samples": 10_000,
-                                 "use_kd_tree": use_kd_tree,
-                             })
+                             samples=10_000,
+                             use_kd_tree=use_kd_tree)
         archive.initialize(solution_dim=2)
 
 
@@ -24,10 +22,8 @@ def benchmark_10k_additions(use_kd_tree, benchmark, benchmark_data_100k):
     def setup():
         archive = CVTArchive([(-1, 1), (-1, 1)],
                              1000,
-                             config={
-                                 "samples": 10_000,
-                                 "use_kd_tree": use_kd_tree,
-                             })
+                             samples=10_000,
+                             use_kd_tree=use_kd_tree)
         archive.initialize(solutions.shape[1])
         return (archive,), {}
 
@@ -43,10 +39,8 @@ def benchmark_get_100k_random_elites(use_kd_tree, benchmark,
     n, solutions, objective_values, behavior_values = benchmark_data_100k
     archive = CVTArchive([(-1, 1), (-1, 1)],
                          1000,
-                         config={
-                             "samples": 10_000,
-                             "use_kd_tree": use_kd_tree,
-                         })
+                         samples=10_000,
+                         use_kd_tree=use_kd_tree)
     archive.initialize(solutions.shape[1])
     for i in range(n):
         archive.add(solutions[i], objective_values[i], behavior_values[i])

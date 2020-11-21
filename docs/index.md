@@ -8,7 +8,6 @@
 :caption: Overview
 
 getting-started
-configuration
 usage
 ```
 
@@ -19,7 +18,7 @@ usage
 ribs.archives
 ribs.emitters
 ribs.optimizers
-ribs.config
+ribs.factory
 ribs.visualize
 ```
 
