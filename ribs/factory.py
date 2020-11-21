@@ -3,16 +3,18 @@ import pathlib
 
 import toml
 
-import ribs.archives
-import ribs.emitters
-import ribs.optimizers
+from ribs.archives._cvt_archive import CVTArchive
+from ribs.archives._grid_archive import GridArchive
+from ribs.emitters._gaussian_emitter import GaussianEmitter
+from ribs.emitters._iso_line_emitter import IsoLineEmitter
+from ribs.optimizers._optimizer import Optimizer
 
 __all__ = [
     "from_config",
-    "UnknownEntityError",
     "register_archive",
     "register_emitter",
     "register_optimizer",
+    "UnknownEntityError",
     "RegistrationError",
 ]
 
@@ -95,11 +97,11 @@ def register_optimizer(name, optimizer_class):
     _OPTIMIZER_TYPES[name] = optimizer_class
 
 
-register_archive("GridArchive", ribs.archives.GridArchive)
-register_archive("CVTArchive", ribs.archives.CVTArchive)
-register_emitter("GaussianEmitter", ribs.emitters.GaussianEmitter)
-register_emitter("IsoLineEmitter", ribs.emitters.IsoLineEmitter)
-register_optimizer("Optimizer", ribs.optimizers.Optimizer)
+register_archive("GridArchive", GridArchive)
+register_archive("CVTArchive", CVTArchive)
+register_emitter("GaussianEmitter", GaussianEmitter)
+register_emitter("IsoLineEmitter", IsoLineEmitter)
+register_optimizer("Optimizer", Optimizer)
 
 #
 # Factory creation.
