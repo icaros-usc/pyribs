@@ -3,7 +3,7 @@
 
 ```{toctree}
 :maxdepth: 2
-:caption: Overview
+:caption: Usage
 :hidden:
 
 getting-started

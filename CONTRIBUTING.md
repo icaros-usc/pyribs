@@ -178,7 +178,7 @@ Tutorials are created in Jupyter notebooks that are stored under
 
    [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googlecolab/colabtools/blob/master/notebooks/colab-github-demo.ipynb)
 
-1. Add an entry into the table in `docs/tutorials.md`.
+1. Add an entry into the toctree and table in `docs/tutorials.md`.
 1. Check that the tutorial shows up on the Tutorials page when you serve the docs.
 
 #### Adding an Example
@@ -191,12 +191,12 @@ their source is shown in the docs. To create an example:
    your Python file -- if your example is `examples/foobar.py`, your Markdown
    file will be `docs/examples/foobar.md`.
 1. Add a title to your Markdown file, such as:
-   ```markdown
+   ```
    # My Awesome Example
    ```
 1. In the markdown file, include the following so that the source code of the
    example is displayed.
-   ````markdown
+   ````
    ```{eval-rst}
    .. literalinclude:: ../../examples/YOUR_EXAMPLE.py
        :language: python
@@ -204,7 +204,7 @@ their source is shown in the docs. To create an example:
    ```
    ````
 1. Add whatever other info you would like in the Markdown file.
-1. Add an entry into the table in `docs/examples.md`.
+1. Add an entry into the toctree and table in `docs/examples.md`.
 1. Check that the example shows up on the Examples page when you serve the docs.
 
 ### Deploying
