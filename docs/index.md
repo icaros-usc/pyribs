@@ -8,7 +8,7 @@
 :caption: Overview
 
 getting-started
-tutorials
+usage
 ```
 
 ```{toctree}

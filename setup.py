@@ -11,6 +11,7 @@ with open('HISTORY.md') as history_file:
 
 install_requires = [
     'numpy>=1.17.0',  # >=1.17.0 mainly because of default_rng
+    'numba>=0.45.1',  # Has support for numpy 1.17
     'pandas>=1.0.0',
     'scipy>=1.0.0',
     'toml>=0.10.0',
