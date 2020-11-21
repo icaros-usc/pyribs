@@ -34,7 +34,7 @@ pip install -e .[all]
 To test your installation, run
 
 ```bash
-python -c "import ribs; print(ribs.**version**)"
+python -c "import ribs; print(ribs.__version__)"
 ```
 
 This will import pyribs and print its current version.

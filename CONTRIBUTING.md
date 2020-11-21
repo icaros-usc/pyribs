@@ -200,6 +200,7 @@ their source is shown in the docs. To create an example:
    ```{eval-rst}
    .. literalinclude:: ../../examples/YOUR_EXAMPLE.py
        :language: python
+       :linenos:
    ```
    ````
 1. Add whatever other info you would like in the Markdown file.

@@ -1,10 +1,13 @@
 # Usage
 
-pyribs has _tutorials_, which contain detailed explanations of code in a Python
-notebook, as well as _examples_, which simply present code with (detailed)
-comments. Both can be run locally, but the tutorials may also be viewed on
-Colab. If you are running locally, make sure to install the `examples` extra
-with:
+The ribs usage guide is divided into two parts:
+
+- **Tutorials** contain detailed explanations of ribs usage in a Python
+  notebook. These may be run locally with Jupyter, as well as on Colab.
+- **Examples** assume more experience with ribs and provide commented source
+  code with fewer examples.
+
+If running any of these locally, make sure to install the `examples` extra with:
 
 ```bash
 pip install ribs[examples]
