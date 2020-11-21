@@ -44,8 +44,8 @@ class CVTArchiveConfig:
 class CVTArchive(ArchiveBase):
     """An archive that divides the space into a fixed number of bins.
 
-    This archive originates in the CVT-MAP-Elites paper
-    https://ieeexplore.ieee.org/document/8000667. It uses Centroidal Voronoi
+    This archive originates in the `CVT-MAP-Elites paper
+    <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
     Tesselation (CVT) to divide an n-dimensional behavior space into k bins. The
     CVT is created by sampling points uniformly from the n-dimensional behavior
     space and using k-means clustering to identify k centroids. When items are

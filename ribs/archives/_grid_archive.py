@@ -27,8 +27,8 @@ class GridArchiveConfig:
 class GridArchive(ArchiveBase):
     """An archive that divides each dimension into a fixed number of bins.
 
-    This archive is the container described in the original MAP-Elites paper:
-    https://arxiv.org/pdf/1504.04909.pdf. It can be visualized as an
+    This archive is the container described in the `original MAP-Elites paper
+    <https://arxiv.org/pdf/1504.04909.pdf>`_. It can be visualized as an
     n-dimensional grid in the behavior space that is divided into a certain
     number of bins in each dimension. Each bin contains an elite, i.e. a
     solution that `maximizes` the objective function for the behavior values in
