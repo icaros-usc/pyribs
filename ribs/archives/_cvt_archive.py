@@ -1,6 +1,7 @@
 """Contains the CVTArchive class."""
 import numpy as np
 import pandas as pd
+from numba import jit
 from scipy.cluster.vq import kmeans
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 
@@ -35,9 +36,9 @@ class CVTArchive(ArchiveBase):
     .. image:: _static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
 
-    As we can see, archives with more than 1k bins seem to have faster insertion
+    As we can see, archives with at least 5k bins seem to have faster insertion
     when using a k-D tree than when using brute force, so **we recommend
-    setting** ``use_kd_tree`` **if you have at least 1k bins in
+    setting** ``use_kd_tree`` **if you have at least 5k bins in
     your** ``CVTArchive``. See `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
@@ -147,14 +148,23 @@ class CVTArchive(ArchiveBase):
         if self._use_kd_tree:
             self._centroid_kd_tree = cKDTree(self._centroids)
 
+    @staticmethod
+    @jit(nopython=True)
+    def _brute_force_nn_numba(behavior_values, centroids):
+        """Calculates the nearest centroid to the given behavior values.
+
+        Technically, we calculate squared distance, but we only care about
+        finding the neighbor and not the distance itself.
+        """
+        distances = np.expand_dims(behavior_values, axis=0) - centroids
+        distances = np.sum(np.square(distances), axis=1)
+        return np.argmin(distances)
+
     def _get_index(self, behavior_values):
         if self._use_kd_tree:
             return self._centroid_kd_tree.query(behavior_values)[1]
 
-        # Default: calculate nearest neighbor with brute force.
-        distances = np.expand_dims(behavior_values, axis=0) - self._centroids
-        distances = np.sum(np.square(distances), axis=1)
-        return np.argmin(distances)
+        return self._brute_force_nn_numba(behavior_values, self._centroids)
 
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.

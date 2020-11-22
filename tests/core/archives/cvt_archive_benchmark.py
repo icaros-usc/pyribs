@@ -25,6 +25,10 @@ def benchmark_10k_additions(use_kd_tree, benchmark, benchmark_data_100k):
                              samples=10_000,
                              use_kd_tree=use_kd_tree)
         archive.initialize(solutions.shape[1])
+
+        # Let numba compile.
+        archive.add(solutions[0], objective_values[0], behavior_values[0])
+
         return (archive,), {}
 
     def add_10k(archive):
