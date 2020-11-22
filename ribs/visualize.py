@@ -51,7 +51,7 @@ def cvt_archive_heatmap(archive,
             intensity. If None, will default to matplotlib's "magma" colormap.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
             a new figure and axis will be created with ``plt.subplots()``.
-        figsize (tuple of (float, float)): Size of figure to create if ``ax`` is
+        figsize ((float, float) tuple): Size of figure to create if ``ax`` is
             not passed in.
         filename (str): File to save the figure to. Can be used even when
             passing in an axis. Leave as None to avoid saving any figure.
