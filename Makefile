@@ -59,8 +59,8 @@ test-extras: ## only test the extras of ribs
 	pytest tests/extras
 test-failed: ## run only tests that filed
 	pytest --last-failed
-test-only: ## run tests without benchmarks, as benchmarks take a while
-	pytest -c pytest_no_benchmark.ini tests
+test-only: ## run tests without benchmarks (which take a while) -- this cmd gives proper test coverage because it disables numba
+	NUMBA_DISABLE_JIT=1 pytest -c pytest_no_benchmark.ini tests
 test-all: ## run tests on every Python version with tox
 	tox
 
@@ -69,10 +69,6 @@ xtest: ## run tests distributed with 4 workers
 	pytest -n $(NUM_CPUS) tests
 xtest-only: ## run tests without benchmarks distributed over 4 workers
 	pytest -n $(NUM_CPUS) -c pytest_no_benchmark.ini tests
-ctest: ## run tests in loop-on-fail mode (see https://pypi.org/project/pytest-xdist/)
-	pytest --looponfail tests
-ctest-only: ## run tests without benchmarks in loop-on-fail mode
-	pytest --looponfail -c pytest_no_benchmark.ini tests
 
 docs: ## generate Sphinx HTML documentation, including API docs
 	$(MAKE) -C docs clean
