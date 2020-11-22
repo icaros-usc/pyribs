@@ -1,4 +1,6 @@
 """Tests for the CVTArhive."""
+import unittest
+
 import numpy as np
 import pytest
 
@@ -58,11 +60,15 @@ def _assert_archive_has_entry(archive, centroid, behavior_values,
                                          list(solution))).all()
 
 
-def test_attributes_correctly_constructed(_archive_fixture):
+def test_properties_are_correct(_archive_fixture):
     archive, *_ = _archive_fixture
 
     assert np.all(archive.lower_bounds == [-1, -1])
     assert np.all(archive.upper_bounds == [1, 1])
+
+    points = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
+    unittest.TestCase().assertCountEqual(archive.samples.tolist(), points)
+    unittest.TestCase().assertCountEqual(archive.centroids.tolist(), points)
 
 
 def test_add_to_archive(_archive_fixture):

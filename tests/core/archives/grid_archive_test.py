@@ -41,7 +41,7 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
                                      [objective_value] + list(solution))).all()
 
 
-def test_attributes_correctly_constructed(_archive_fixture):
+def test_properties_are_correct(_archive_fixture):
     archive, *_ = _archive_fixture
 
     assert np.all(archive.dims == [10, 20])

@@ -6,6 +6,15 @@ from ribs.emitters import GaussianEmitter
 # pylint: disable = invalid-name
 
 
+def test_properties_are_correct(_archive_fixture):
+    archive, x0 = _archive_fixture
+    sigma0 = 1
+    emitter = GaussianEmitter(x0, sigma0, archive, batch_size=2)
+
+    assert (emitter.x0 == x0).all()
+    assert emitter.sigma0 == sigma0
+
+
 def test_degenerate_gauss_emits_x0(_archive_fixture):
     archive, x0 = _archive_fixture
     emitter = GaussianEmitter(x0, 0, archive, batch_size=2)

@@ -6,6 +6,17 @@ from ribs.emitters import IsoLineEmitter
 # pylint: disable = invalid-name
 
 
+def test_properties_are_correct(_archive_fixture):
+    archive, x0 = _archive_fixture
+    iso_sigma = 1
+    line_sigma = 2
+    emitter = IsoLineEmitter(x0, archive, iso_sigma, line_sigma, batch_size=2)
+
+    assert (emitter.x0 == x0).all()
+    assert emitter.iso_sigma == iso_sigma
+    assert emitter.line_sigma == line_sigma
+
+
 def test_degenerate_gauss_emits_x0(_archive_fixture):
     archive, x0 = _archive_fixture
     emitter = IsoLineEmitter(x0, archive, iso_sigma=0, batch_size=2)
