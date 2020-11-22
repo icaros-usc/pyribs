@@ -195,8 +195,8 @@ def from_config(config):
             described as above, or the name of a toml file with the structure
             shown above.
     Returns:
-        ribs.optimizers.Optimizer: An optimizer created according to the
-        options specified in the config.
+        ribs optimizer: An optimizer created according to the options specified
+        in the config.
     Raises:
         UnknownEntityError: An archive, emitter, or optimizer  specified in the
             config is not registered.
