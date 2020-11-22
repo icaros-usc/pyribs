@@ -11,7 +11,12 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 __all__ = [
     "cvt_archive_heatmap",
+    "DimensionalityError",
 ]
+
+
+class DimensionalityError(Exception):
+    """Indicates an archive has the wrong dimensionality for a visualization."""
 
 
 def _get_pt_to_obj(cvt_archive):
@@ -50,11 +55,18 @@ def cvt_archive_heatmap(archive,
             not passed in.
         filename (str): File to save the figure to. Can be used even when
             passing in an axis. Leave as None to avoid saving any figure.
+    Returns:
+        tuple: 2-element tuple containing:
+
+            **fig** (*matplotlib figure*): Figure containing the heatmap and
+            its colorbar.
+
+            **ax** (*matplotlib axes*): Axis with the heatmap.
     Raises:
-        RuntimeError: The archive is not 2D.
+        DimensionalityError: The archive is not 2D.
     """
     if not archive.is_2d():
-        raise RuntimeError("Cannot plot heatmap for non-2D archive.")
+        raise DimensionalityError("Cannot plot heatmap for non-2D archive.")
 
     # Try getting the colormap early in case it fails.
     if colormap is None:
