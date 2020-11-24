@@ -21,7 +21,7 @@ import pytest
 from matplotlib.testing.decorators import image_comparison
 
 from ribs.archives import CVTArchive
-from ribs.visualize import DimensionalityError, cvt_archive_heatmap
+from ribs.visualize import cvt_archive_heatmap
 
 # pylint: disable = invalid-name
 
@@ -72,7 +72,7 @@ def test_cvt_archive_heatmap_fails_on_non_2d():
                          k_means_threshold=1e-6)
     archive.initialize(solution_dim=3)
 
-    with pytest.raises(DimensionalityError):
+    with pytest.raises(ValueError):
         cvt_archive_heatmap(archive)
 
 

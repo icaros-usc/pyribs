@@ -21,20 +21,20 @@ class Optimizer:
         emitters (list of ribs.archives.EmitterBase): A list of emitter objects,
             such as :class:`ribs.emitters.GaussianEmitter`.
     Raises:
-        RuntimeError: The emitters passed in do not have the same solution
+        ValueError: The emitters passed in do not have the same solution
             dimensions.
-        RuntimeError: There is no emitter passed in.
+        ValueError: There is no emitter passed in.
     """
 
     def __init__(self, archive, emitters):
         if len(emitters) == 0:
-            raise RuntimeError(
+            raise ValueError(
                 "You must pass in at least one emitter to the optimizer.")
         self._solution_dim = emitters[0].solution_dim
 
         for idx, emitter in enumerate(emitters[1:]):
             if emitter.solution_dim != self._solution_dim:
-                raise RuntimeError(
+                raise ValueError(
                     "All emitters must have the same solution dim, but "
                     f"Emitter {idx} has dimension {emitter.solution_dim}, "
                     f"while Emitter 0 has dimension {self._solution_dim}")

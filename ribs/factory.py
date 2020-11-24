@@ -14,7 +14,6 @@ __all__ = [
     "register_archive",
     "register_emitter",
     "register_optimizer",
-    "UnknownEntityError",
     "RegistrationError",
 ]
 
@@ -108,10 +107,6 @@ register_optimizer("Optimizer", Optimizer)
 #
 
 
-class UnknownEntityError(Exception):
-    """Raised when an archive, emitter, or optimizer in a config is unknown."""
-
-
 def _remove_type_key(config):
     """Returns a shallow copy of the config, with the "type" key removed."""
     config = config.copy()
@@ -126,8 +121,7 @@ def _attempt_creation(entity_name, type_name, type_dict, provided_kwargs,
     See ``from_config`` for example usage.
     """
     if type_name not in type_dict:
-        raise UnknownEntityError(
-            f"{entity_name.title()} '{type_name}' is not registered")
+        raise KeyError(f"{entity_name.title()} '{type_name}' is not registered")
     entity_type = type_dict[type_name]
     return entity_type(**additional_kwargs, **_remove_type_key(provided_kwargs))
 
@@ -198,8 +192,8 @@ def from_config(config):
         ribs optimizer: An optimizer created according to the options specified
         in the config.
     Raises:
-        UnknownEntityError: An archive, emitter, or optimizer  specified in the
-            config is not registered.
+        KeyError: An archive, emitter, or optimizer specified in the config is
+            not registered.
     """
     if isinstance(config, (str, pathlib.Path)):
         with open(str(config), "r") as file:

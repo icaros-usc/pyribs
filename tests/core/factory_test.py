@@ -125,5 +125,5 @@ def test_from_config_fails_on_unknown_entity(entity_type):
     elif entity_type == "optimizer":
         config_dict["optimizer"]["type"] = "NonexistentOptimizer"
 
-    with pytest.raises(ribs.factory.UnknownEntityError):
+    with pytest.raises(KeyError):
         ribs.factory.from_config(config_dict)

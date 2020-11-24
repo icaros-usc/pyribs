@@ -21,7 +21,7 @@ def _optimizer_fixture():
 def test_init_fails_with_no_emitters():
     archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
     emitters = []
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         Optimizer(archive, emitters)
 
 
@@ -33,7 +33,7 @@ def test_init_fails_with_mismatched_emitters():
         # Mismatch -- emits 3D solutions rather than 2D solutions.
         GaussianEmitter([0.0, 0.0, 0.0], 1, archive),
     ]
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         Optimizer(archive, emitters)
 
 
