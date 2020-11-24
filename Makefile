@@ -49,7 +49,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint: ## check style with pylint
-	pylint ribs tests
+	pylint ribs tests examples benchmarks
 
 test: ## run tests with the default Python
 	pytest tests
