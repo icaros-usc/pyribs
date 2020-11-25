@@ -1,6 +1,10 @@
 """Useful utilities for all archive tests."""
+from collections import namedtuple
+
 import numpy as np
 import pytest
+
+from ribs.archives import CVTArchive, GridArchive
 
 
 @pytest.fixture
@@ -25,3 +29,86 @@ def benchmark_data_100k():
 def use_kd_tree(request):
     """Whether to use the KD Tree in CVTArchive."""
     return request.param
+
+
+#
+# Helpers for generating archive data.
+#
+
+ArchiveFixtureData = namedtuple(
+    "ArchiveFixtureData",
+    [
+        "archive",  # An empty archive with 2D behavior space.
+        "archive_with_entry",  # 2D behavior space with one entry.
+        "solution",  # A solution.
+        "objective_value",  # Float objective value.
+        "behavior_values",  # 2D behavior values for the solution.
+        "grid_indices",  # Intended indices for GridArchive.
+        "centroid",  # Intended centroid coordinates for CVTArchive.
+    ],
+)
+
+ARCHIVE_NAMES = [
+    "GridArchive",
+    "CVTArchive-brute_force",
+    "CVTArchive-kd_tree",
+]
+
+
+def get_archive_data(name):
+    """Returns ArchiveFixtureData to use for testing each archive.
+
+    The archives vary, but there will always be an empty 2D archive, as well as
+    a 2D archive with a single solution added to it. This solution will have a
+    value of [1, 2, 3], its objective value will be 1.0, and its behavior values
+    will be [0.25, 0.25].
+
+    The name is the name of an archive to create. It should come from
+    ARCHIVE_NAMES.
+    """
+    # Characteristics of a single solution to insert into archive_with_entry.
+    solution = np.array([1, 2, 3])
+    objective_value = 1.0
+    behavior_values = np.array([0.25, 0.25])
+    grid_indices = None
+    centroid = None
+
+    if name == "GridArchive":
+        # Grid archive with 10 bins and range (-1, 1) in first dim, and 20 bins
+        # and range (-2, 2) in second dim.
+        archive = GridArchive([10, 20], [(-1, 1), (-2, 2)])
+        archive.initialize(len(solution))
+
+        archive_with_entry = GridArchive([10, 20], [(-1, 1), (-2, 2)])
+        archive_with_entry.initialize(len(solution))
+        grid_indices = (6, 11)
+    elif name.startswith("CVTArchive-"):
+        # CVT archive with bounds (-1,1) and (-1,1), and 4 centroids at (0.5,
+        # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The entry in
+        # archive_with_entry should match with centroid (0.5, 0.5).
+        kd_tree = name == "CVTArchive-kd_tree"
+        samples = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
+        centroid = [0.5, 0.5]
+
+        archive = CVTArchive([(-1, 1), (-1, 1)],
+                             4,
+                             samples=samples,
+                             use_kd_tree=kd_tree)
+        archive.initialize(len(solution))
+
+        archive_with_entry = CVTArchive([(-1, 1), (-1, 1)],
+                                        4,
+                                        samples=samples,
+                                        use_kd_tree=kd_tree)
+        archive_with_entry.initialize(len(solution))
+
+    archive_with_entry.add(solution, objective_value, behavior_values)
+    return ArchiveFixtureData(
+        archive,
+        archive_with_entry,
+        solution,
+        objective_value,
+        behavior_values,
+        grid_indices,
+        centroid,
+    )

@@ -4,47 +4,16 @@ import unittest
 import numpy as np
 import pytest
 
-from ribs.archives import CVTArchive
+from .conftest import get_archive_data
 
 # pylint: disable = invalid-name
 
 
 @pytest.fixture
-def _archive_fixture(use_kd_tree):
-    """Returns a simple 2D archive.
-
-    The archive has bounds (-1,1) and (-1,1), and should have 4 centroids at
-    (0.5, 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5).
-
-    archive_with_entry has an entry with coordinates (1, 1), so it should be
-    matched to centroid (0.5, 0.5).
-    """
-    samples = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
-    solution = np.array([1, 2, 3])
-    archive = CVTArchive([(-1, 1), (-1, 1)],
-                         4,
-                         samples=samples,
-                         use_kd_tree=use_kd_tree)
-    archive.initialize(len(solution))
-
-    archive_with_entry = CVTArchive([(-1, 1), (-1, 1)],
-                                    4,
-                                    samples=samples,
-                                    use_kd_tree=use_kd_tree)
-    archive_with_entry.initialize(len(solution))
-    behavior_values = np.array([1, 1])
-    centroid = [0.5, 0.5]
-    objective_value = 1.0
-    archive_with_entry.add(solution, objective_value, behavior_values)
-
-    return (
-        archive,
-        archive_with_entry,
-        behavior_values,
-        solution,
-        objective_value,
-        centroid,
-    )
+def _cvt_data(use_kd_tree):
+    """Data for CVT Archive tests."""
+    return (get_archive_data("CVTArchive-kd_tree")
+            if use_kd_tree else get_archive_data("CVTArchive-brute_force"))
 
 
 def _assert_archive_has_entry(archive, centroid, behavior_values,
@@ -60,90 +29,51 @@ def _assert_archive_has_entry(archive, centroid, behavior_values,
                                          list(solution))).all()
 
 
-def test_properties_are_correct(_archive_fixture):
-    archive, *_ = _archive_fixture
-
-    assert np.all(archive.lower_bounds == [-1, -1])
-    assert np.all(archive.upper_bounds == [1, 1])
+def test_properties_are_correct(_cvt_data):
+    assert np.all(_cvt_data.archive.lower_bounds == [-1, -1])
+    assert np.all(_cvt_data.archive.upper_bounds == [1, 1])
 
     points = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
-    unittest.TestCase().assertCountEqual(archive.samples.tolist(), points)
-    unittest.TestCase().assertCountEqual(archive.centroids.tolist(), points)
+    unittest.TestCase().assertCountEqual(_cvt_data.archive.samples.tolist(),
+                                         points)
+    unittest.TestCase().assertCountEqual(_cvt_data.archive.centroids.tolist(),
+                                         points)
 
 
-def test_add_to_archive(_archive_fixture):
-    (_, archive_with_entry, behavior_values, solution, objective_value,
-     centroid) = _archive_fixture
-
-    _assert_archive_has_entry(archive_with_entry, centroid, behavior_values,
-                              objective_value, solution)
+def test_add_to_archive(_cvt_data):
+    _assert_archive_has_entry(_cvt_data.archive_with_entry, _cvt_data.centroid,
+                              _cvt_data.behavior_values,
+                              _cvt_data.objective_value, _cvt_data.solution)
 
 
-def test_add_and_overwrite(_archive_fixture):
+def test_add_and_overwrite(_cvt_data):
     """Test adding a new entry with a higher objective value."""
-    (_, archive_with_entry, behavior_values, solution, objective_value,
-     centroid) = _archive_fixture
+    arbitrary_sol = _cvt_data.solution + 1
+    high_objective_value = _cvt_data.objective_value + 1.0
 
-    new_solution = solution - 1
-    new_objective_value = objective_value + 1.0
+    assert _cvt_data.archive_with_entry.add(arbitrary_sol, high_objective_value,
+                                            _cvt_data.behavior_values)
 
-    assert archive_with_entry.add(new_solution, new_objective_value,
-                                  behavior_values)
-
-    _assert_archive_has_entry(archive_with_entry, centroid, behavior_values,
-                              new_objective_value, new_solution)
+    _assert_archive_has_entry(_cvt_data.archive_with_entry, _cvt_data.centroid,
+                              _cvt_data.behavior_values, high_objective_value,
+                              arbitrary_sol)
 
 
-def test_add_without_overwrite(_archive_fixture):
+def test_add_without_overwrite(_cvt_data):
     """Test adding a new entry with a lower objective value."""
-    (_, archive_with_entry, behavior_values, solution, objective_value,
-     centroid) = _archive_fixture
+    arbitrary_sol = _cvt_data.solution + 1
+    low_objective_value = _cvt_data.objective_value - 1.0
 
-    new_solution = solution + 1
-    new_objective_value = objective_value - 1.0
+    assert not _cvt_data.archive_with_entry.add(
+        arbitrary_sol, low_objective_value, _cvt_data.behavior_values)
 
-    assert not archive_with_entry.add(new_solution, new_objective_value,
-                                      behavior_values)
-
-    _assert_archive_has_entry(archive_with_entry, centroid, behavior_values,
-                              objective_value, solution)
+    _assert_archive_has_entry(_cvt_data.archive_with_entry, _cvt_data.centroid,
+                              _cvt_data.behavior_values,
+                              _cvt_data.objective_value, _cvt_data.solution)
 
 
-def test_archive_is_2d(_archive_fixture):
-    archive, *_ = _archive_fixture
-    assert archive.is_2d()
-
-
-def test_new_archive_is_empty(_archive_fixture):
-    (archive, *_) = _archive_fixture
-    assert archive.is_empty()
-
-
-def test_archive_with_entry_is_not_empty(_archive_fixture):
-    (_, archive_with_entry, *_) = _archive_fixture
-    assert not archive_with_entry.is_empty()
-
-
-def test_random_elite_gets_single_elite(_archive_fixture):
-    (_, archive_with_entry, behavior_values, solution, objective_value,
-     _) = _archive_fixture
-    retrieved = archive_with_entry.get_random_elite()
-    assert np.all(retrieved[0] == solution)
-    assert retrieved[1] == objective_value
-    assert np.all(retrieved[2] == behavior_values)
-
-
-def test_random_elite_fails_when_empty(_archive_fixture):
-    (archive, *_) = _archive_fixture
-    with pytest.raises(IndexError):
-        archive.get_random_elite()
-
-
-def test_as_pandas(_archive_fixture):
-    (_, archive_with_entry, behavior_values, solution, objective_value,
-     centroid) = _archive_fixture
-
-    df = archive_with_entry.as_pandas()
+def test_as_pandas(_cvt_data):
+    df = _cvt_data.archive_with_entry.as_pandas()
     assert np.all(df.columns == [
         'index',
         'centroid-0',
@@ -156,8 +86,8 @@ def test_as_pandas(_archive_fixture):
         'solution-2',
     ])
     assert (df.loc[0][1:] == np.array([
-        *centroid,
-        *behavior_values,
-        objective_value,
-        *solution,
+        *_cvt_data.centroid,
+        *_cvt_data.behavior_values,
+        _cvt_data.objective_value,
+        *_cvt_data.solution,
     ])).all()

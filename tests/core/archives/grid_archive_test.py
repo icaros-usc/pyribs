@@ -2,147 +2,91 @@
 import numpy as np
 import pytest
 
-from ribs.archives import GridArchive
+from .conftest import get_archive_data
 
 # pylint: disable = invalid-name
 
 
 @pytest.fixture
-def _archive_fixture():
-    """Returns a simple 2D archive."""
-    solution = np.array([1, 2, 3])
-
-    archive = GridArchive([10, 20], [(-1, 1), (-2, 2)])
-    archive.initialize(len(solution))
-
-    archive_with_entry = GridArchive([10, 20], [(-1, 1), (-2, 2)])
-    archive_with_entry.initialize(len(solution))
-    behavior_values = np.array([0, 0])
-    indices = (5, 10)
-    objective_value = 1.0
-    archive_with_entry.add(solution, objective_value, behavior_values)
-
-    return (
-        archive,
-        archive_with_entry,
-        behavior_values,
-        indices,
-        solution,
-        objective_value,
-    )
+def _grid_data():
+    """Data for grid archive tests."""
+    return get_archive_data("GridArchive")
 
 
 def _assert_archive_has_entry(archive, indices, behavior_values,
                               objective_value, solution):
     """Assert that the archive has one specific entry."""
-    archive_data = archive.as_pandas()
-    assert len(archive_data) == 1
-    assert (archive_data.iloc[0] == (list(indices) + list(behavior_values) +
-                                     [objective_value] + list(solution))).all()
+    archive_df = archive.as_pandas()
+    assert len(archive_df) == 1
+    assert (archive_df.iloc[0] == (list(indices) + list(behavior_values) +
+                                   [objective_value] + list(solution))).all()
 
 
-def test_properties_are_correct(_archive_fixture):
-    archive, *_ = _archive_fixture
-
-    assert np.all(archive.dims == [10, 20])
-    assert np.all(archive.lower_bounds == [-1, -2])
-    assert np.all(archive.upper_bounds == [1, 2])
-    assert np.all(archive.interval_size == [2, 4])
+def test_properties_are_correct(_grid_data):
+    assert np.all(_grid_data.archive.dims == [10, 20])
+    assert np.all(_grid_data.archive.lower_bounds == [-1, -2])
+    assert np.all(_grid_data.archive.upper_bounds == [1, 2])
+    assert np.all(_grid_data.archive.interval_size == [2, 4])
 
 
-def test_add_to_archive(_archive_fixture):
-    (_, archive_with_entry, behavior_values, indices, solution,
-     objective_value) = _archive_fixture
+def test_add_to_archive(_grid_data):
+    _assert_archive_has_entry(_grid_data.archive_with_entry,
+                              _grid_data.grid_indices,
+                              _grid_data.behavior_values,
+                              _grid_data.objective_value, _grid_data.solution)
 
-    _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
-                              objective_value, solution)
 
-
-def test_add_with_low_behavior_val(_archive_fixture):
-    archive, *_, solution, objective_value = _archive_fixture
+def test_add_with_low_behavior_val(_grid_data):
     behavior_values = np.array([-2, -3])
     indices = (0, 0)
-    archive.add(solution, objective_value, behavior_values)
+    _grid_data.archive.add(_grid_data.solution, _grid_data.objective_value,
+                           behavior_values)
 
-    _assert_archive_has_entry(archive, indices, behavior_values,
-                              objective_value, solution)
+    _assert_archive_has_entry(_grid_data.archive, indices, behavior_values,
+                              _grid_data.objective_value, _grid_data.solution)
 
 
-def test_add_with_high_behavior_val(_archive_fixture):
-    archive, *_, solution, objective_value = _archive_fixture
+def test_add_with_high_behavior_val(_grid_data):
     behavior_values = np.array([2, 3])
     indices = (9, 19)
-    archive.add(solution, objective_value, behavior_values)
+    _grid_data.archive.add(_grid_data.solution, _grid_data.objective_value,
+                           behavior_values)
 
-    _assert_archive_has_entry(archive, indices, behavior_values,
-                              objective_value, solution)
+    _assert_archive_has_entry(_grid_data.archive, indices, behavior_values,
+                              _grid_data.objective_value, _grid_data.solution)
 
 
-def test_add_and_overwrite(_archive_fixture):
+def test_add_and_overwrite(_grid_data):
     """Test adding a new entry with a higher objective value."""
-    (_, archive_with_entry, behavior_values, indices, solution,
-     objective_value) = _archive_fixture
+    arbitrary_sol = _grid_data.solution + 1
+    high_objective_value = _grid_data.objective_value + 1.0
 
-    new_solution = solution - 1
-    new_objective_value = objective_value + 1.0
+    assert _grid_data.archive_with_entry.add(arbitrary_sol,
+                                             high_objective_value,
+                                             _grid_data.behavior_values)
 
-    assert archive_with_entry.add(new_solution, new_objective_value,
-                                  behavior_values)
+    _assert_archive_has_entry(_grid_data.archive_with_entry,
+                              _grid_data.grid_indices,
+                              _grid_data.behavior_values, high_objective_value,
+                              arbitrary_sol)
 
-    _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
-                              new_objective_value, new_solution)
 
-
-def test_add_without_overwrite(_archive_fixture):
+def test_add_without_overwrite(_grid_data):
     """Test adding a new entry with a lower objective value."""
-    (_, archive_with_entry, behavior_values, indices, solution,
-     objective_value) = _archive_fixture
+    arbitrary_sol = _grid_data.solution + 1
+    low_objective_value = _grid_data.objective_value - 1.0
 
-    new_solution = solution + 1
-    new_objective_value = objective_value - 1.0
+    assert not _grid_data.archive_with_entry.add(
+        arbitrary_sol, low_objective_value, _grid_data.behavior_values)
 
-    assert not archive_with_entry.add(new_solution, new_objective_value,
-                                      behavior_values)
-
-    _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
-                              objective_value, solution)
-
-
-def test_archive_is_2d(_archive_fixture):
-    archive, *_ = _archive_fixture
-    assert archive.is_2d()
+    _assert_archive_has_entry(_grid_data.archive_with_entry,
+                              _grid_data.grid_indices,
+                              _grid_data.behavior_values,
+                              _grid_data.objective_value, _grid_data.solution)
 
 
-def test_new_archive_is_empty(_archive_fixture):
-    (archive, *_) = _archive_fixture
-    assert archive.is_empty()
-
-
-def test_archive_with_entry_is_not_empty(_archive_fixture):
-    (_, archive_with_entry, *_) = _archive_fixture
-    assert not archive_with_entry.is_empty()
-
-
-def test_random_elite_gets_single_elite(_archive_fixture):
-    (_, archive_with_entry, behavior_values, _, solution,
-     objective_value) = _archive_fixture
-    retrieved = archive_with_entry.get_random_elite()
-    assert np.all(retrieved[0] == solution)
-    assert retrieved[1] == objective_value
-    assert np.all(retrieved[2] == behavior_values)
-
-
-def test_random_elite_fails_when_empty(_archive_fixture):
-    (archive, *_) = _archive_fixture
-    with pytest.raises(IndexError):
-        archive.get_random_elite()
-
-
-def test_as_pandas(_archive_fixture):
-    (_, archive_with_entry, behavior_values, indices, solution,
-     objective_value) = _archive_fixture
-
-    df = archive_with_entry.as_pandas()
+def test_as_pandas(_grid_data):
+    df = _grid_data.archive_with_entry.as_pandas()
     assert np.all(df.columns == [
         'index-0',
         'index-1',
@@ -154,8 +98,8 @@ def test_as_pandas(_archive_fixture):
         'solution-2',
     ])
     assert (df.loc[0] == np.array([
-        *indices,
-        *behavior_values,
-        objective_value,
-        *solution,
+        *_grid_data.grid_indices,
+        *_grid_data.behavior_values,
+        _grid_data.objective_value,
+        *_grid_data.solution,
     ])).all()
