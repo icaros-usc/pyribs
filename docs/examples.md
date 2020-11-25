@@ -16,6 +16,6 @@ pip install ribs[examples]
 
 Below is the list of examples.
 
-| Name                        | Archive                             | Emitter                                 | Optimizer                           |
-| --------------------------  | ----------------------------------- | --------------------------------------- | ----------------------------------- |
-| {doc}`examples/run_sphere`  | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GaussianEmitter` | {class}`~ribs.optimizers.Optimizer` |
+| Name                       | Archive   | Emitter   | Optimizer                           |
+| -------------------------- | --------- | --------- | ----------------------------------- |
+| {doc}`examples/run_sphere` | (several) | (several) | {class}`~ribs.optimizers.Optimizer` |
