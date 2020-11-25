@@ -23,14 +23,14 @@ extras_require = {
         'matplotlib>=3.0.0',
         'seaborn>=0.11.0',
         'jupyterlab',
-        'gym~=0.17.0',
+        'gym~=0.17.0',  # Strict since different gym may give different results.
         'Box2D~=2.3.10',  # For envs such as Lunar Lander.
         'fire>=0.3.0',
 
         # Dask
         'dask>=2.0.0',
         'distributed>=2.0.0',
-        'bokeh',  # Dask dashboard.
+        'bokeh>=2.0.0',  # Dask dashboard.
     ],
     'dev': [
         'pip==20.2.4',
