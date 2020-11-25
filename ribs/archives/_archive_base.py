@@ -5,6 +5,43 @@ import numba as nb
 import numpy as np
 
 
+class RandomBuffer:
+    """An internal class that stores a buffer of random numbers.
+
+    Generating random indices in get_random_elite() takes a lot of time if done
+    individually. As such, this class generates a ton of random numbers at once
+    and slowly dispenses them. Since the calls in get_random_elite() vary in
+    their range, this class does not store random integers; it stores random
+    floats in the range [0,1) that can be multiplied to get a number in the
+    range [0, x).
+
+    Args:
+        seed (float or int): Seed for the random number generator. None
+            (default) means no seed.
+        buf_size (int): How many random floats to store at once in the buffer.
+    """
+
+    def __init__(self, seed=None, buf_size=10):
+        assert buf_size > 0, "buf_size must be at least 1"
+
+        self._rng = np.random.default_rng(seed)
+        self._buf_size = buf_size
+        self._buffer = self._rng.random(buf_size)
+        self._buf_idx = 0
+
+    def get(self, max_val):
+        """Returns a random int in the range [0, max_val)."""
+        val = int(self._buffer[self._buf_idx] * max_val)
+        self._buf_idx += 1
+
+        # Reset the buffer if necessary.
+        if self._buf_idx >= self._buf_size:
+            self._buf_idx = 0
+            self._buffer = self._rng.random(self._buf_size)
+
+        return val
+
+
 class ArchiveBase(ABC):
     """Base class for archives; contains several useful methods.
 
@@ -40,6 +77,7 @@ class ArchiveBase(ABC):
     """
 
     def __init__(self, storage_dims, behavior_dim, seed=None):
+        # Intended to be accessed by child classes.
         self._rng = np.random.default_rng(seed)
         self._storage_dims = storage_dims
         self._behavior_dim = behavior_dim
@@ -49,6 +87,11 @@ class ArchiveBase(ABC):
         self._behavior_values = None
         self._solutions = None
         self._occupied_indices = []
+
+        # Not intended to be accessed by children (and thus not mentioned in the
+        # docstring).
+        self._rand_buf = None
+        self._seed = seed
 
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
@@ -61,6 +104,7 @@ class ArchiveBase(ABC):
                 for storing solutions is created with shape
                 ``(*self._storage_dims, solution_dim)``.
         """
+        self._rand_buf = RandomBuffer(self._seed)
         self._solution_dim = solution_dim
         self._initialized = np.zeros(self._storage_dims, dtype=bool)
         self._objective_values = np.empty(self._storage_dims, dtype=float)
@@ -172,7 +216,7 @@ class ArchiveBase(ABC):
         if self.is_empty():
             raise IndexError("No elements in archive.")
 
-        random_idx = self._rng.integers(len(self._occupied_indices))
+        random_idx = self._rand_buf.get(len(self._occupied_indices))
         index = self._occupied_indices[random_idx]
         return (
             self._solutions[index],
