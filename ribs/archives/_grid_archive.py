@@ -83,14 +83,15 @@ class GridArchive(ArchiveBase):
             np.maximum(behavior_values + _EPSILON, lower_bounds),
             upper_bounds - _EPSILON)
 
-        return (behavior_values - lower_bounds) / interval_size * dims
+        index = (behavior_values - lower_bounds) / interval_size * dims
+        return index.astype(np.int32)
 
     def _get_index(self, behavior_values):
         index = GridArchive._get_index_numba(behavior_values,
                                              self._upper_bounds,
                                              self._lower_bounds,
                                              self._interval_size, self._dims)
-        return tuple(index.astype(int))
+        return tuple(index)
 
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.
