@@ -72,6 +72,9 @@ xtest: ## run tests distributed with 4 workers
 xtest-only: ## run tests without benchmarks distributed over 4 workers
 	pytest -n $(NUM_CPUS) -c pytest_no_benchmark.ini tests
 
+examples-test: ## test examples are working
+	bash tests/examples.sh
+
 docs: ## generate Sphinx HTML documentation, including API docs
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
