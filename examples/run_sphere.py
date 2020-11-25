@@ -18,21 +18,25 @@ The supported algorithms are:
 - `line_cvt_map_elites`: CVTArchive with IsoLineEmitter
 
 All algorithms are run for 100,000 iterations with a batch size of 25 in the
-emitters. Outputs are saved in a directory named `run_sphere_output`. The
+emitters. Outputs are saved in a directory, `run_sphere_output` by default. The
 archive is saved as a CSV named `{algorithm}_{dim}_archive.csv`, while the
 heatmap is saved as a PNG named `{algorithm}_{dim}_heatmap.png`.
 
 Usage:
-    # Where ALGORITHM is chosen from above, and DIM is the dimensionality of the
-    # Sphere function.
-    python run_benchmark.py ALGORITHM DIM
+    # Where ALGORITHM is chosen from above, DIM is the dimensionality of the
+    # Sphere function, ITRS is the number of iterations to run, and OUTDIR is
+    # the directory to save outputs. By default, DIMS is 20, ITRS is 100,000,
+    # and OUTDIR is `run_sphere_output`.
+    python run_sphere.py ALGORITHM DIM ITRS OUTDIR
 Example:
-    python run_benchmark.py map_elites 20
+    python run_sphere.py map_elites 20
+Help:
+    python run_sphere.py --help
 """
-import sys
 import time
 from pathlib import Path
 
+import fire
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -78,31 +82,32 @@ def sphere(sol):
     return objs, bcs
 
 
-def save_and_display_outputs(archive, algorithm, dim):
-    """Creates a logging directory and saves the archive and its heatmap.
+def save_and_display_outputs(archive, algorithm, dim, outdir):
+    """Creates an output directory and saves the archive and its heatmap.
 
     Args:
         archive: The archive to save.
         algorithm (str): Name of the algorithm.
         dim (int): Dimensionality of solutions.
+        outdir (str): Directory to save output.
     """
     name = f"{algorithm}_{dim}"
 
-    # Create logging directory.
-    logdir = Path("./run_sphere_output")
-    if not logdir.is_dir():
-        logdir.mkdir()
+    # Create directory.
+    outdir = Path(outdir)
+    if not outdir.is_dir():
+        outdir.mkdir()
 
     # Save archive as CSV.
     data = archive.as_pandas()
-    data.to_csv(str(logdir / f"{name}_archive.csv"))
+    data.to_csv(str(outdir / f"{name}_archive.csv"))
 
     # Display some outputs.
     print("===== Sample Outputs =====")
     print(data.head())
 
     # Generate heatmaps.
-    heatmap_path = str(logdir / f"{name}_heatmap.png")
+    heatmap_path = str(outdir / f"{name}_heatmap.png")
     if algorithm in ["map_elites", "line_map_elites"]:
         heatmap_data = data.pivot('index-0', 'index-1', 'objective')
         sns.heatmap(heatmap_data, cmap="magma")
@@ -111,12 +116,14 @@ def save_and_display_outputs(archive, algorithm, dim):
         cvt_archive_heatmap(archive, filename=heatmap_path, figsize=(16, 12))
 
 
-def run_sphere(algorithm, dim):
-    """Demo of MAP-Elites on the Sphere function.
+def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
+    """Demo on the Sphere function.
 
     Args:
         algorithm (str): Name of the algorithm.
         dim (int): Dimensionality of solutions.
+        itrs (int): Iterations to run.
+        outdir (str): Directory to save output.
     """
     max_bound = dim * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
@@ -156,20 +163,17 @@ def run_sphere(algorithm, dim):
 
     # Run the algorithm.
     start_time = time.time()
-    for i in range(100_000):
+    for i in range(itrs):
         sols = opt.ask()
         objs, bcs = sphere(sols)
 
         opt.tell(objs, bcs)
 
         if (i + 1) % 1000 == 0:
-            print(f"Finished {i + 1} rounds after {time.time() - start_time} s")
+            print(f"Finished {i + 1} itrs after {time.time() - start_time} s")
 
-    save_and_display_outputs(archive, algorithm, dim)
+    save_and_display_outputs(archive, algorithm, dim, outdir)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print("Usage: python run_benchmark.py ALGORITHM DIM")
-        sys.exit(1)
-    run_sphere(sys.argv[1], int(sys.argv[2]))
+    fire.Fire(run_sphere)
