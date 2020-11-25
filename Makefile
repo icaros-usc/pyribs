@@ -59,7 +59,9 @@ test-extras: ## only test the extras of ribs
 	pytest tests/extras
 test-failed: ## run only tests that filed
 	pytest --last-failed
-test-only: ## run tests without benchmarks (which take a while) -- this cmd gives proper test coverage because it disables numba
+test-only: ## run tests without benchmarks (which take a while)
+	pytest -c pytest_no_benchmark.ini tests
+test-coverage: ## get better test coverage by running without numba on
 	NUMBA_DISABLE_JIT=1 pytest -c pytest_no_benchmark.ini tests
 test-all: ## run tests on every Python version with tox
 	tox
