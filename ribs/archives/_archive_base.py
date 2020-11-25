@@ -9,11 +9,10 @@ class RandomBuffer:
     """An internal class that stores a buffer of random numbers.
 
     Generating random indices in get_random_elite() takes a lot of time if done
-    individually. As such, this class generates a ton of random numbers at once
-    and slowly dispenses them. Since the calls in get_random_elite() vary in
-    their range, this class does not store random integers; it stores random
-    floats in the range [0,1) that can be multiplied to get a number in the
-    range [0, x).
+    individually. As such, this class generates many random numbers at once and
+    slowly dispenses them. Since the calls in get_random_elite() vary in their
+    range, this class does not store random integers; it stores random floats in
+    the range [0,1) that can be multiplied to get a number in the range [0, x).
 
     Args:
         seed (float or int): Seed for the random number generator. None
