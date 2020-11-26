@@ -3,13 +3,16 @@
 This directory contains examples for using pyribs. The `tutorials` directory
 contains Jupyter notebooks with detailed explanations; these are also included
 in the documentation on the
-[Tutorials](https://ribs.readthedocs.io/en/latest/tutorials.html) page.
+[Tutorials](https://ribs.readthedocs.io/en/latest/tutorials.html) page. To run
+these locally, make sure to have
+[Jupyter Lab](https://jupyterlab.readthedocs.io/en/stable/getting_started/installation.html)
+installed. Each notebook contains cell magic that installs the dependencies it
+needs for execution.
 
 The rest of this directory contains Python files with comments on usage and some
 explanations. These are intended for slightly more experienced users. For
 descriptions of these examples, see the
 [Examples](https://ribs.readthedocs.io/en/latest/examples.html) page in the
-documentation.
-
-To run these examples locally, you will need to install some additional
-dependencies with `pip install ribs[examples]` or `pip install -e .[examples]`.
+documentation. To run these other examples locally, you will need to install
+some additional dependencies with `pip install ribs[examples]` or
+`pip install -e .[examples]`.

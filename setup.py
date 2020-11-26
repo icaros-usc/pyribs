@@ -19,10 +19,11 @@ install_requires = [
 
 extras_require = {
     'all': ['matplotlib>=3.0.0',],
+    # Dependencies for examples (NOT tutorials -- tutorial notebooks should
+    # install deps with cell magic and only depend on ribs and ribs[all]).
     'examples': [
         'matplotlib>=3.0.0',
         'seaborn>=0.11.0',
-        'jupyterlab',
         'gym~=0.17.0',  # Strict since different gym may give different results.
         'Box2D~=2.3.10',  # For envs such as Lunar Lander.
         'fire>=0.3.0',

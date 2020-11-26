@@ -165,6 +165,8 @@ Tutorials are created in Jupyter notebooks that are stored under
 `examples/tutorials` in the repo. To create a tutorial:
 
 1. Write the notebook and save it under `examples/tutorials`.
+1. If your notebook depends on packages outside of `ribs` and `ribs[all]`, add
+   cell magic to install these packages, such as `%pip install foobar`.
 1. Add an "Open in Colab badge" by putting the following Markdown somewhere near
    the beginning of your notebook:
 
@@ -187,6 +189,8 @@ Examples are created in Python files stored under `examples` in the repo, but
 their source is shown in the docs. To create an example:
 
 1. Write the Python file and save it under `examples`.
+1. Add any dependencies needed to run your example into the `examples` extra in
+   `setup.py` (under `extras_require`).
 1. Add a Markdown file in the `docs/examples` directory with the same name as
    your Python file -- if your example is `examples/foobar.py`, your Markdown
    file will be `docs/examples/foobar.md`.
