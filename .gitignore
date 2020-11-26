@@ -111,6 +111,7 @@ ENV/
 *.pkl
 *.mp4
 *.csv
+MNIST/
 
 # Editor, IDE, and OS settings
 .vscode/
