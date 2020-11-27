@@ -18,9 +18,9 @@ the behavior space. ribs follows the Rapid Illumination of Behavior Spaces
 framework introduced in [Fontaine 2020](https://arxiv.org/abs/1912.02400). Under
 this framework, ribs divides a QD algorithm into three components:
 
-- The **archive** stores solutions found by the algorithm so far.
-- **Emitters** take the archive as input and decide how to generate new
-  solutions.
+- The **Archive** stores solutions found by the algorithm so far.
+- **Emitters** (one or more) take the archive as input and decide how to
+  generate new solutions.
 - An **Optimizer** joins the algorithm together. The optimizer repeatedly
   generates solutions from the archive using the emitters, and adds the
   evaluated solutions back into the archive.
