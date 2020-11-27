@@ -7,6 +7,74 @@
 A _bare-bones_ quality diversity optimization library. The algorithms
 implemented here enable _Rapid Illumination of Behavior Spaces (RIBS)_.
 
+## Overview
+
+Quality-Diversity (QD) algorithms are a subset of evolutionary algorithms that
+seek to discover multiple high-performing solutions to a problem. These
+solutions are characterized by properties known as behavior characteristics
+(BCs). After a single run, a QD algorithm outputs an archive with the solutions
+it has found. Each solution is the highest-performing one in a certain region of
+the behavior space. ribs follows the Rapid Illumination of Behavior Spaces
+framework introduced in [Fontaine 2020](https://arxiv.org/abs/1912.02400). Under
+this framework, ribs divides a QD algorithm into three components:
+
+- The **archive** stores solutions found by the algorithm so far.
+- **Emitters** take the archive as input and decide how to generate new
+  solutions.
+- An **Optimizer** joins the algorithm together. The optimizer repeatedly
+  generates solutions from the archive using the emitters, and adds the
+  evaluated solutions back into the archive.
+
+## Usage Example
+
+ribs uses an ask-tell interface similar to that of
+[pycma](https://pypi.org/project/cma/). The following example shows how to run
+the RIBS version of MAP-Elites. Specifically, we create:
+
+- A 2D **GridArchive** with 20 bins and a range of (-1, 1) in each dimension.
+- A **GaussianEmitter**, which in this case starts by drawing examples from a
+  Gaussian distribution centered at **0** with standard deviation 0.1. After the
+  first iteration, this emitter selects random solutions in the archive and adds
+  Gaussian noise to it with standard deviation 0.1.
+- An **Optimizer** that combines the archive and emitter together.
+
+After creating the components, we then run on the negative 10-D Sphere function
+for 1000 iterations. To keep our BCs simple, we use the first two entries of
+each 10D solution vector as our BCs.
+
+```python
+import numpy as np
+from ribs.archives import GridArchive
+from ribs.emitters import GaussianEmitter
+from ribs.optimizers import Optimizer
+
+archive = GridArchive([20, 20], [(-1, 1), (-1, 1)])
+emitters = [GaussianEmitter([0.0] * 10, 0.1, archive)]
+optimizer = Optimizer(archive, emitters)
+
+for itr in range(1000):
+    solutions = optimizer.ask()
+
+    objectives = -np.sum(np.square(solutions), axis=1)
+    bcs = solutions[:,:2]
+
+    optimizer.tell(objectives, bcs)
+```
+
+To visualize this archive, we can then use Seaborn's `heatmap` like so:
+
+```python
+import seaborn as sns
+
+data = archive.as_pandas().pivot('index-0', 'index-1', 'objective')
+sns.heatmap(data)
+```
+
+![Sphere heatmap](sphere_heatmap.png)
+
+For more information, please refer to the
+[documentation](https://ribs.readthedocs.io/).
+
 ## Installation
 
 pyribs supports Python 3.6 and greater. Earlier versions may work but are not
@@ -25,29 +93,32 @@ tools like `ribs.visualize`, run
 pip install ribs[all]
 ```
 
-To install a development version, clone this repo, cd into it, and run
+To install a version from source, clone this repo, cd into it, and run
 
 ```bash
 pip install -e .[all]
 ```
 
-To test your installation, run
+To test your installation, import it and print the version with:
 
 ```bash
 python -c "import ribs; print(ribs.__version__)"
 ```
 
-This will import pyribs and print its current version.
-
-## Features
-
-- TODO
+You should see a version number like `0.2.0` in the output.
 
 ## Documentation
 
 See here for the documentation: <https://ribs.readthedocs.io>
 
-To serve the documentation locally, clone the repo and run
+To serve the documentation locally, clone the repo and install the development
+requirements with
+
+```bash
+pip install -e .[dev]
+```
+
+Then run
 
 ```bash
 make servedocs
