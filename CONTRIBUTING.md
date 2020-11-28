@@ -167,19 +167,6 @@ Tutorials are created in Jupyter notebooks that are stored under
 1. Write the notebook and save it under `examples/tutorials`.
 1. If your notebook depends on packages outside of `ribs` and `ribs[all]`, add
    cell magic to install these packages, such as `%pip install foobar`.
-1. Add an "Open in Colab badge" by putting the following Markdown somewhere near
-   the beginning of your notebook:
-
-   ```bash
-   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/icaros-usc/pyribs/blob/master/examples/tutorials/NOTEBOOK.ipynb)
-   ```
-
-   Make sure to replace `NOTEBOOK` with the name of your notebook, of course.
-   The badge should look like this when rendered (clicking on this specific
-   badge will take you to more information about Colab and GitHub):
-
-   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googlecolab/colabtools/blob/master/notebooks/colab-github-demo.ipynb)
-
 1. Add an entry into the toctree and table in `docs/tutorials.md`.
 1. Check that the tutorial shows up on the Tutorials page when you serve the docs.
 
