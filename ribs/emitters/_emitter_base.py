@@ -7,6 +7,13 @@ import numpy as np
 class EmitterBase(ABC):
     """Base class for emitters.
 
+    Every emitter has an :meth:`ask` method that generates a batch of solutions,
+    and a :meth:`tell` method that inserts solutions into the emitter's archive.
+    Users are only required to override :meth:`ask`.
+
+    .. note:: Members beginning with an underscore are only intended to be
+        accessed by child classes.
+
     Args:
         solution_dim (int): The dimension of solutions produced by this emitter.
         batch_size (int): Number of solutions to generate on each call to
