@@ -168,14 +168,18 @@ Tutorials are created in Jupyter notebooks that are stored under
 1. If your notebook depends on packages outside of `ribs` and `ribs[all]`, add
    cell magic to install these packages, such as `%pip install foobar`.
 1. Add an entry into the toctree and table in `docs/tutorials.md`.
-1. Check that the tutorial shows up on the Tutorials page when you serve the docs.
+1. Check that the tutorial shows up on the Tutorials page when you serve the
+   docs.
 
 #### Adding an Example
 
-Examples are created in Python files stored under `examples` in the repo, but
+Examples are created in Python scripts stored under `examples` in the repo, but
 their source is shown in the docs. To create an example:
 
-1. Write the Python file and save it under `examples`.
+1. Write the Python script and save it under `examples`.
+1. Add a shell command to `tests/examples.sh` that calls your script with
+   parameters that will make it run as quickly as possible. In the future, this
+   will help us ensure that your script has basic correctness.
 1. Add any dependencies needed to run your example into the `examples` extra in
    `setup.py` (under `extras_require`).
 1. Add a Markdown file in the `docs/examples` directory with the same name as
