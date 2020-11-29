@@ -22,9 +22,11 @@ class SlidingBoundaryArchiveConfig:
         self,
         seed=None,
         remap_frequency=100,
+        buffer_size=1000,
     ):
         self.seed = seed
         self.remap_frequency = remap_frequency
+        self.buffer_size = buffer_size
 
 
 class SlidingBoundaryArchive(ArchiveBase):
@@ -102,6 +104,8 @@ class SlidingBoundaryArchive(ArchiveBase):
             np.full(self.dims[i], None, dtype=float)
             for i in range(self._n_dims)
         ]
+
+        # create buffers
         self.all_solutions = []
         self.all_behavior_values = []
         self.all_objective_values = []
