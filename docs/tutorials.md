@@ -6,6 +6,7 @@
 tutorials/lunar_lander
 tutorials/arm_repertoire
 tutorials/fooling_mnist
+tutorials/training_mnist
 ```
 
 Tutorials contain detailed explanations of ribs usage in a Python notebook.
@@ -22,3 +23,4 @@ Below is the list of tutorials, sorted _roughly_ in order of difficulty.
 | {doc}`tutorials/lunar_lander`   | {class}`~ribs.archives.GridArchive` |                                        | {class}`~ribs.optimizers.Optimizer` |
 | {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.IsoLineEmitter` | {class}`~ribs.optimizers.Optimizer` |
 | {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` |                                        | {class}`~ribs.optimizers.Optimizer` |
+| {doc}`tutorials/training_mnist` | {class}`~ribs.archives.GridArchive` |                                        |                                     |
