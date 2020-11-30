@@ -181,6 +181,13 @@ class SlidingBoundaryArchive(ArchiveBase):
         return self._remap_frequency
 
     @property
+    def boundaries(self):
+        """list of np.ndarray: The dynamic boundaries of each dimension of the
+        behavior space. The number of boundaries is determined by ``dims``.
+        """
+        return self._boundaries
+
+    @property
     def buffer(self):
         """IndividualBuffer: Buffer of solutions, behavior values, and
         objective values of the archive.
