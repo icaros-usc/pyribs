@@ -15,6 +15,7 @@ install_requires = [
     'pandas>=1.0.0',
     'scipy>=1.0.0',
     'toml>=0.10.0',
+    'sortedcontainers>=2.3.0',
 ]
 
 extras_require = {
