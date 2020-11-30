@@ -40,7 +40,7 @@ class EmitterBase(ABC):
     @abstractmethod
     def ask(self):
         """Generates ``self.batch_size`` solutions."""
-
+    
     def tell(self, solutions, objective_values, behavior_values):
         """Gives the emitter results from evaluating several solutions.
 
