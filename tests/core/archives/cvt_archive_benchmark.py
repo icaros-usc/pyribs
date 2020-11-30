@@ -9,12 +9,11 @@ def benchmark_construction(use_kd_tree, benchmark):
 
     @benchmark
     def construct():
-        CVTArchive([(-1, 1), (-1, 1)],
-                   1000,
-                   config={
-                       "samples": 10_000,
-                       "use_kd_tree": use_kd_tree,
-                   })
+        archive = CVTArchive([(-1, 1), (-1, 1)],
+                             1000,
+                             samples=10_000,
+                             use_kd_tree=use_kd_tree)
+        archive.initialize(solution_dim=2)
 
 
 def benchmark_10k_additions(use_kd_tree, benchmark, benchmark_data_100k):
@@ -23,17 +22,20 @@ def benchmark_10k_additions(use_kd_tree, benchmark, benchmark_data_100k):
     def setup():
         archive = CVTArchive([(-1, 1), (-1, 1)],
                              1000,
-                             config={
-                                 "samples": 10_000,
-                                 "use_kd_tree": use_kd_tree,
-                             })
+                             samples=10_000,
+                             use_kd_tree=use_kd_tree)
+        archive.initialize(solutions.shape[1])
+
+        # Let numba compile.
+        archive.add(solutions[0], objective_values[0], behavior_values[0])
+
         return (archive,), {}
 
-    def add_100k(archive):
+    def add_10k(archive):
         for i in range(10_000):
             archive.add(solutions[i], objective_values[i], behavior_values[i])
 
-    benchmark.pedantic(add_100k, setup=setup, rounds=5, iterations=1)
+    benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
 
 
 def benchmark_get_100k_random_elites(use_kd_tree, benchmark,
@@ -41,10 +43,9 @@ def benchmark_get_100k_random_elites(use_kd_tree, benchmark,
     n, solutions, objective_values, behavior_values = benchmark_data_100k
     archive = CVTArchive([(-1, 1), (-1, 1)],
                          1000,
-                         config={
-                             "samples": 10_000,
-                             "use_kd_tree": use_kd_tree,
-                         })
+                         samples=10_000,
+                         use_kd_tree=use_kd_tree)
+    archive.initialize(solutions.shape[1])
     for i in range(n):
         archive.add(solutions[i], objective_values[i], behavior_values[i])
 

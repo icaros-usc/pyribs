@@ -3,14 +3,15 @@
 
 from setuptools import find_packages, setup
 
-with open('README.rst') as readme_file:
+with open('README.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
+with open('HISTORY.md') as history_file:
     history = history_file.read()
 
 install_requires = [
     'numpy>=1.17.0',  # >=1.17.0 mainly because of default_rng
+    'numba>=0.45.1',  # Has support for numpy 1.17
     'pandas>=1.0.0',
     'scipy>=1.0.0',
     'toml>=0.10.0',
@@ -18,18 +19,19 @@ install_requires = [
 
 extras_require = {
     'all': ['matplotlib>=3.0.0',],
+    # Dependencies for examples (NOT tutorials -- tutorial notebooks should
+    # install deps with cell magic and only depend on ribs and ribs[all]).
     'examples': [
         'matplotlib>=3.0.0',
         'seaborn>=0.11.0',
-        'jupyterlab',
-        'gym~=0.17.0',
+        'gym~=0.17.0',  # Strict since different gym may give different results.
         'Box2D~=2.3.10',  # For envs such as Lunar Lander.
         'fire>=0.3.0',
 
         # Dask
         'dask>=2.0.0',
         'distributed>=2.0.0',
-        'bokeh',  # Dask dashboard.
+        'bokeh>=2.0.0',  # Dask dashboard.
     ],
     'dev': [
         'pip==20.2.4',
@@ -80,6 +82,7 @@ setup(
     keywords='ribs',
     name='ribs',
     packages=find_packages(include=['ribs', 'ribs.*']),
+    python_requires=">=3.6.0",
     test_suite='tests',
     url='https://github.com/icaros-usc/ribs',
     version='0.0.0',

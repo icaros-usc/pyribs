@@ -14,10 +14,27 @@ def _optimizer_fixture():
     """Returns an Optimizer with GridArchive and one GaussianEmitter."""
     solution_dim = 2
     archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
-    emitters = [
-        GaussianEmitter([0.0, 0.0], 1, archive, config={"batch_size": 4})
-    ]
+    emitters = [GaussianEmitter([0.0, 0.0], 1, archive, batch_size=4)]
     return Optimizer(archive, emitters), solution_dim
+
+
+def test_init_fails_with_no_emitters():
+    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    emitters = []
+    with pytest.raises(ValueError):
+        Optimizer(archive, emitters)
+
+
+def test_init_fails_with_mismatched_emitters():
+    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    emitters = [
+        # Emits 2D solutions.
+        GaussianEmitter([0.0, 0.0], 1, archive),
+        # Mismatch -- emits 3D solutions rather than 2D solutions.
+        GaussianEmitter([0.0, 0.0, 0.0], 1, archive),
+    ]
+    with pytest.raises(ValueError):
+        Optimizer(archive, emitters)
 
 
 def test_ask_returns_correct_solution_shape(_optimizer_fixture):
@@ -52,9 +69,9 @@ def test_tell_inserts_solutions_into_archive(_optimizer_fixture):
 def test_tell_inserts_solutions_with_multiple_emitters(_optimizer_fixture):
     archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
     emitters = [
-        GaussianEmitter([0.0, 0.0], 1, archive, config={"batch_size": 1}),
-        GaussianEmitter([0.5, 0.5], 1, archive, config={"batch_size": 2}),
-        GaussianEmitter([-0.5, -0.5], 1, archive, config={"batch_size": 3}),
+        GaussianEmitter([0.0, 0.0], 1, archive, batch_size=1),
+        GaussianEmitter([0.5, 0.5], 1, archive, batch_size=2),
+        GaussianEmitter([-0.5, -0.5], 1, archive, batch_size=3),
     ]
     optimizer = Optimizer(archive, emitters)
 

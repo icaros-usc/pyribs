@@ -4,11 +4,11 @@ __author__ = """ICAROS Lab"""
 __email__ = 'tjanaka@usc.edu'
 __version__ = '0.0.0'
 
-from ribs import archives, config, emitters, optimizers
+from ribs import archives, emitters, factory, optimizers
 
 __all__ = [
     "archives",
     "emitters",
     "optimizers",
-    "config",
+    "factory",
 ]

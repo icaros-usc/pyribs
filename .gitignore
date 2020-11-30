@@ -104,11 +104,14 @@ ENV/
 
 # Data
 *.png
+!tests/extras/baseline_images/visualize_test/*.png
 *.jpg
 *.pdf
 *.json
 *.pkl
 *.mp4
+*.csv
+MNIST/
 
 # Editor, IDE, and OS settings
 .vscode/

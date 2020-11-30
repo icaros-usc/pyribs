@@ -11,20 +11,23 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
+#
+# pylint: skip-file
+# isort: skip-file
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory is
 # relative to the documentation root, use os.path.abspath to make it
 # absolute, like shown here.
-#
 import os
 import sys
+
+sys.path.insert(0, os.path.abspath('..'))
 
 import sphinx_material
 
 import ribs
 
-sys.path.insert(0, os.path.abspath('..'))
 DEV_MODE = os.environ.get("DOCS_MODE", "regular") == "dev"
 
 # -- General configuration ---------------------------------------------
@@ -45,7 +48,7 @@ extensions = [
     'autodocsumm',
     'sphinx_material',
     'sphinx_copybutton',
-    'myst_nb',  # Covers both Markdown and Jupyter notebooks.
+    'myst_nb',  # Covers both Markdown files and Jupyter notebooks.
 ]
 
 # Napoleon
@@ -102,11 +105,7 @@ todo_include_todos = False
 # -- Options for HTML output -------------------------------------------
 
 html_show_sourcelink = True
-html_sidebars = {
-    "**": [
-        "logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"
-    ]
-}
+html_sidebars = {"**": ["globaltoc.html", "localtoc.html"]}
 
 html_theme_path = sphinx_material.html_theme_path()
 html_context = sphinx_material.get_html_context()
@@ -118,8 +117,8 @@ html_title = "pyribs v" + ribs.__version__
 # material theme options (see theme.conf for more information)
 html_theme_options = {
     "nav_title": "pyribs",
-    "base_url": "https://ribs.readthedocs.io",
-    "repo_url": "https://github.com/icaros-usc/pyribs",
+    "base_url": "https://ribs.readthedocs.io/en/latest/",
+    "repo_url": "https://github.com/icaros-usc/pyribs/",
     "repo_name": "pyribs",
     "google_analytics_account": None,
     "html_minify": not DEV_MODE,
@@ -130,7 +129,6 @@ html_theme_options = {
     "color_primary": "indigo",
     "color_accent": "light-blue",
     "touch_icon": "images/apple-icon-152x152.png",
-    #  "theme_color": "#2196f3",
     "master_doc": False,
     "nav_links": [{
         "href": "index",

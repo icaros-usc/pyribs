@@ -58,7 +58,7 @@ def simulate(
                 time.sleep(delay / 1000)
 
         # Deterministic. Here is the action. Multiply observation by policy. Model is the policy and obs is state
-        action = np.argmax(model @ obs)  
+        action = np.argmax(model @ obs)
         obs, reward, done, _ = env.step(action)
         total_reward += reward
         timesteps += 1
@@ -82,53 +82,51 @@ def train_model(
     env = gym.make(env_name)
     action_dim = env.action_space.n
     obs_dim = env.observation_space.shape[0]
-    
-    archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)],
-                          config={
-                              "seed": seed,
-                          })
+
+    archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)], seed=seed)
     emitter = GaussianEmitter(np.zeros(action_dim * obs_dim),
                               sigma,
                               archive,
-                              config={"batch_size": 64})
+                              batch_size=64)
     opt = Optimizer(archive, [emitter])
 
     for _ in range(0, iterations - 1):
-        
+
         # Generating a batch of solutions
         opt.ask()
 
         objs = list()
         bcs = list()
-        
+
         # Here, we're running each of the solutions (i.e. policies) we generated above through the
         # simulate() function. simulate() will return the objective value, timesteps to run to completion,
-        # and x-position of the lunar lander for each solution we pass in. 
+        # and x-position of the lunar lander for each solution we pass in.
         futures = client.map(
-            lambda sol: simulate(env_name, np.reshape(sol, (action_dim, obs_dim)), seed), opt._solutions)
+            lambda sol: simulate(env_name, np.reshape(sol, (action_dim, obs_dim)
+                                                     ), seed), opt._solutions)
 
         results = client.gather(futures)
-    
+
         # Here we're just constructing a list of objective function evaluations (i.e. objs) and behavior
         # descriptions (i.e. bcs) for each solution. These values were returned by our calls to simulation()
         # above.
         for reward, x_pos, timesteps in results:
             objs.append(reward)
             bcs.append((timesteps, x_pos))
-        
+
         # We have our Optimizer opt tell our Emitters the objective function evaluations and behavior
-        # descriptions of each solution, so that our Emitter emitter and GridArchive archive can decide 
+        # descriptions of each solution, so that our Emitter emitter and GridArchive archive can decide
         # where and if to store each solution in our GridArchive archive.
         opt.tell(objs, bcs)
 
     df = archive.as_pandas()
-    
+
     # Saving our archive to a file.
     df.to_pickle(model_filename)
 
     df = archive.as_pandas()
     df = df.pivot('index-0', 'index-1', 'objective')
-    
+
     # Creating a heatmap of all of our generated solutions.
     sns.heatmap(df)
     plt.savefig(plot_filename)

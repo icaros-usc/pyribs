@@ -1,18 +1,18 @@
 # Examples
 
-This directory contains examples for using pyribs. For the most part, these are
-Python files with comments on usage and some explanations. For more detailed
-explanations of pyribs, the `tutorials` directory contains Jupyter notebooks
-with full explanations of pyribs; these are also included in the documentation
-at <https://ribs.readthedocs.io/tutorials.html>.
+This directory contains examples for using pyribs. The `tutorials` directory
+contains Jupyter notebooks with detailed explanations; these are also included
+in the documentation on the
+[Tutorials](https://ribs.readthedocs.io/en/latest/tutorials.html) page. To run
+these locally, make sure to have
+[Jupyter Lab](https://jupyterlab.readthedocs.io/en/stable/getting_started/installation.html)
+installed. Each notebook contains cell magic that installs the dependencies it
+needs for execution.
 
-To run these examples, you will need to install some additional dependencies
-with `pip install ribs[examples]` or `pip install -e .[examples]`.
-
-## Manifest
-
-| File                  | Description                                                                               |
-| --------------------- | ----------------------------------------------------------------------------------------- |
-| `run_sphere.py`       | The Sphere function with vanilla MAP-Elites.                                              |
-| `run_sphere_cvt.py`   | The Sphere function with CVT-MAP-Elites.                                                  |
-| `lunar_lander_cvt.py` | Lunar Lander with CVT-MAP-Elites, using trajectories as BCs and Dask for parallelization. |
+The rest of this directory contains Python files with comments on usage and some
+explanations. These are intended for slightly more experienced users. For
+descriptions of these examples, see the
+[Examples](https://ribs.readthedocs.io/en/latest/examples.html) page in the
+documentation. To run these other examples locally, you will need to install
+some additional dependencies with `pip install ribs[examples]` or
+`pip install -e .[examples]`.

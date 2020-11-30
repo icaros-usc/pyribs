@@ -1,29 +1,10 @@
-"""Provides the GaussianEmitter and corresponding GaussianEmitterConfig."""
+"""Provides the GaussianEmitter."""
 import numpy as np
 
-from ribs.config import create_config
+from ribs.emitters._emitter_base import EmitterBase
 
 
-class GaussianEmitterConfig:
-    """Configuration for the GaussianEmitter.
-
-    Args:
-        seed (float or int): Value to seed the random number generator. Set to
-            None to avoid seeding. Default: None
-        batch_size (int): Number of solutions to send back in the ask() method.
-            Default: 64
-    """
-
-    def __init__(
-        self,
-        seed=None,
-        batch_size=64,
-    ):
-        self.seed = seed
-        self.batch_size = batch_size
-
-
-class GaussianEmitter:
+class GaussianEmitter(EmitterBase):
     """Emits solutions by adding Gaussian noise to existing archive solutions.
 
     If the archive is empty, calls to ask() will generate solutions from a
@@ -37,35 +18,98 @@ class GaussianEmitter:
             sample solutions when the archive is empty.
         sigma0 (float or array-like): Standard deviation of the Gaussian
             distribution, both when the archive is empty and afterwards. Note we
-            assume the Gaussian is diagonal, so this argument can only be 1D if
-            it is an array.
-        archive (ribs archive): An archive to use when creating and inserting
-            solutions. For instance, this can be
+            assume the Gaussian is diagonal, so if this argument is an array, it
+            must be 1D.
+        archive (ribs.archives.ArchiveBase): An archive to use when creating and
+            inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        config (None or dict or GaussianEmitterConfig): Configuration object. If
-            None, a default GaussianEmitterConfig is constructed. A dict may
-            also be passed in, in which case its arguments will be passed into
-            GaussianEmitterConfig.
-    Attributes:
-        config (GaussianEmitterConfig): Configuration object.
-        x0 (np.ndarray): See args.
-        sigma0 (np.ndarray): See args.
-        archive (ribs archive): See args.
-        batch_size (int): Number of solutions to generate on each call to ask().
-            Passed in via ``config.batch_size``.
+        bounds (None or tuple or array-like): Bounds of the solution space.
+            Solutions are clipped to these bounds. Passing None indicates there
+            are no bounds (i.e. bounds are set to +/-inf). A two-element tuple
+            of ``(lower_bound, upper_bound)`` specifies bounds that apply to all
+            dims. ``lower_bound`` or ``upper_bound`` may be None to indicate
+            there is no bound.
+
+            Finally, you can pass an array-like (but not a tuple) of elements
+            that specify the bounds for each dim. Each element in this iterable
+            can be None to indicate no bound, or a tuple of ``(lower_bound,
+            upper_bound)`` as described above.
+        batch_size (int): Number of solutions to send back in the ask() method.
+        seed (float or int): Value to seed the random number generator. Set to
+            None to avoid seeding.
+    Raises:
+        ValueError: There is an error in the bounds configuration.
     """
 
-    def __init__(self, x0, sigma0, archive, config=None):
-        self.config = create_config(config, GaussianEmitterConfig)
-        self._rng = np.random.default_rng(self.config.seed)
+    def __init__(self,
+                 x0,
+                 sigma0,
+                 archive,
+                 bounds=None,
+                 batch_size=64,
+                 seed=None):
+        self._x0 = np.array(x0)
+        self._sigma0 = sigma0 if isinstance(sigma0, float) else np.array(sigma0)
+        (self._lower_bounds,
+         self._upper_bounds) = self._process_bounds(bounds, len(self._x0))
+        EmitterBase.__init__(self, len(self._x0), batch_size, archive, seed)
 
-        self.x0 = np.array(x0)
-        self.sigma0 = np.array(sigma0)
-        self.archive = archive
-        self.batch_size = self.config.batch_size
+    @staticmethod
+    def _process_bounds(bounds, solution_dim):
+        """Processes the input bounds.
+
+        Returns:
+            tuple: Either two integers for the lower and upper bounds, or two
+                arrays containing all the lower bounds and all the upper bounds.
+        Raises:
+            ValueError: There is an error in the bounds configuration.
+        """
+        if bounds is None:
+            return -np.inf, np.inf
+        if isinstance(bounds, tuple):
+            if len(bounds) != 2:
+                raise ValueError("If it is a tuple, bounds must be length 2")
+            return (-np.inf if bounds[0] is None else bounds[0],
+                    np.inf if bounds[1] is None else bounds[1])
+
+        if len(bounds) != solution_dim:
+            raise ValueError("If it is an array-like, bounds must have the "
+                             "same length as x0")
+        lower_bounds = np.full(solution_dim, -np.inf)
+        upper_bounds = np.full(solution_dim, np.inf)
+        for idx, bnd in enumerate(bounds):
+            if bnd is None:
+                continue  # Bounds already default to -inf and inf.
+            if len(bnd) != 2:
+                raise ValueError("All entries of bounds must be length 2")
+            lower_bounds[idx] = -np.inf if bnd[0] is None else bnd[0]
+            upper_bounds[idx] = np.inf if bnd[1] is None else bnd[1]
+        return lower_bounds, upper_bounds
+
+    @property
+    def x0(self):
+        """np.ndarray: Center of the Gaussian distribution from which to sample
+        solutions when the archive is empty."""
+        return self._x0
+
+    @property
+    def sigma0(self):
+        """float or np.ndarray: Standard deviation of the (diagonal) Gaussian
+        distribution."""
+        return self._sigma0
+
+    @property
+    def lower_bounds(self):
+        """float or np.ndarray: Lower bounds of the solution space."""
+        return self._lower_bounds
+
+    @property
+    def upper_bounds(self):
+        """float or np.ndarray: Upper bounds of the solution space."""
+        return self._upper_bounds
 
     def ask(self):
-        """Generates ``self.batch_size`` solutions.
+        """Creates solutions by adding Gaussian noise to elites in the archive.
 
         If the archive is empty, solutions are drawn from a (diagonal) Gaussian
         distribution centered at ``self.x0``. Otherwise, each solution is drawn
@@ -73,32 +117,17 @@ class GaussianEmitter:
         the standard deviation is ``self.sigma0``.
 
         Returns:
-            ``(self.batch_size, len(self.x0))`` array -- contains ``batch_size``
-            new solutions to evaluate.
+            ``(self.batch_size, self.solution_dim)`` array -- contains
+            ``batch_size`` new solutions to evaluate.
         """
-        if self.archive.is_empty():
-            parents = np.expand_dims(self.x0, axis=0)
+        if self._archive.is_empty():
+            parents = np.expand_dims(self._x0, axis=0)
         else:
             parents = [
-                self.archive.get_random_elite()[0]
+                self._archive.get_random_elite()[0]
                 for _ in range(self.batch_size)
             ]
 
-        return parents + self._rng.normal(scale=self.sigma0,
-                                          size=(self.batch_size, len(self.x0)))
-
-    def tell(self, solutions, objective_values, behavior_values):
-        """Gives the emitter results from evaluating several solutions.
-
-        These solutions are then inserted into the archive.
-
-        Args:
-            solutions (np.ndarray): Array of solutions generated by this
-                emitter's :meth:`ask()` method.
-            objective_values (np.ndarray): 1D array containing the objective
-                function value of each solution.
-            behavior_values (np.ndarray): ``(n, <behavior space dimension>)``
-                array with the behavior space coordinates of each solution.
-        """
-        for sol, obj, beh in zip(solutions, objective_values, behavior_values):
-            self.archive.add(sol, obj, beh)
+        noise = self._rng.normal(scale=self._sigma0,
+                                 size=(self.batch_size, self.solution_dim))
+        return np.clip(parents + noise, self._lower_bounds, self._upper_bounds)
