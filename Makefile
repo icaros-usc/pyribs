@@ -15,7 +15,7 @@ BROWSER := python -c "$$BROWSER_PYSCRIPT"
 
 help:
 	@echo "\033[0;1mCommands\033[0m"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[34;1m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[.a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[34;1m%-30s\033[0m %s\n", $$1, $$2}'
 
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
