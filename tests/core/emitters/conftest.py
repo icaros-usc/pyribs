@@ -4,8 +4,7 @@ import pytest
 from numba import jit
 
 from ribs.archives import GridArchive
-#from ribs.archives import FakeArchive
-
+from ribs.archives._archive_base import ArchiveBase
 
 @pytest.fixture
 def _archive_fixture():
@@ -14,11 +13,6 @@ def _archive_fixture():
 	x0 = np.array([1, 2, 3, 4])
 	archive.initialize(len(x0))
 	return archive, x0
-
-
-from ribs.archives._archive_base import ArchiveBase
-
-_EPSILON = 1e-9
 
 class FakeArchive(ArchiveBase):
 

@@ -133,7 +133,6 @@ class GaussianEmitter(EmitterBase):
             ``batch_size`` new solutions to evaluate.
         """
         if self._archive.is_empty():
-            #parents = np.expand_dims(self._x0, axis=0)
             parents = self._ask_expand_dims_helper(x0=self._x0)
         else:
             parents = [
@@ -143,6 +142,5 @@ class GaussianEmitter(EmitterBase):
 
         noise = self._rng.normal(scale=self._sigma0,
                                  size=(self.batch_size, self.solution_dim))
-        #return np.clip(parents + noise, self._lower_bounds, self._upper_bounds)
         return self._ask_clip_helper(np.array(parents), noise, self._lower_bounds,
                                      self._upper_bounds)
