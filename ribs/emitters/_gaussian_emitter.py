@@ -1,5 +1,6 @@
 """Provides the GaussianEmitter."""
 import numpy as np
+from numba import jit
 
 from ribs.emitters._emitter_base import EmitterBase
 
@@ -108,6 +109,17 @@ class GaussianEmitter(EmitterBase):
         """float or np.ndarray: Upper bounds of the solution space."""
         return self._upper_bounds
 
+    @staticmethod
+    @jit(nopython=True)
+    def _ask_expand_dims_helper(x0):
+        return np.expand_dims(x0, axis=0)
+
+    @staticmethod
+    @jit(nopython=True)
+    def _ask_clip_helper(parents, noise, lower_bounds, upper_bounds):
+        return np.minimum(np.maximum(parents + noise, lower_bounds),
+                          upper_bounds)
+
     def ask(self):
         """Creates solutions by adding Gaussian noise to elites in the archive.
 
@@ -121,7 +133,8 @@ class GaussianEmitter(EmitterBase):
             ``batch_size`` new solutions to evaluate.
         """
         if self._archive.is_empty():
-            parents = np.expand_dims(self._x0, axis=0)
+            #parents = np.expand_dims(self._x0, axis=0)
+            parents = self._ask_expand_dims_helper(x0=self._x0)
         else:
             parents = [
                 self._archive.get_random_elite()[0]
@@ -130,4 +143,6 @@ class GaussianEmitter(EmitterBase):
 
         noise = self._rng.normal(scale=self._sigma0,
                                  size=(self.batch_size, self.solution_dim))
-        return np.clip(parents + noise, self._lower_bounds, self._upper_bounds)
+        #return np.clip(parents + noise, self._lower_bounds, self._upper_bounds)
+        return self._ask_clip_helper(np.array(parents), noise, self._lower_bounds,
+                                     self._upper_bounds)
