@@ -42,15 +42,46 @@ class RandomBuffer:
 
 
 class ArchiveBase(ABC):
-    """Base class for archives; contains several useful methods.
+    """Base class for archives.
+
+    This class assumes that all archives will use a fixed-size container with
+    cells that hold 1) information about whether the cell is initialized (bool),
+    2) a solution (1D array), 3) objective function evaluation of the solution
+    (float), and 4) behavior space coordinates of the solution (1D array). In
+    this class, this is implemented with 4 separate numpy arrays with common
+    dimensions. Using the `storage_dims` and `behavior_dim` arguments in
+    :meth:`__init__` and the ``solution_dim`` argument in ``initialize``, these
+    arrays are as follows:
+
+    - ``_initialized`` (shape ``(*storage_dims)``)
+    - ``_solutions`` (shape ``(*storage_dims, solution_dim)``)
+    - ``_objective_values`` (shape ``(*storage_dims)``)
+    - ``_behavior_values`` (shape ``(*storage_dims, behavior_dim)``)
+
+    All of these arrays are accessed by a common index. If we have index ``i``,
+    we can access its solution at ``_solutions[i]``, its behavior values at
+    ``_behavior_values[i]``, etc.
+
+    Thus, child classes must override the following methods:
+
+    - :meth:`__init__`: child classes must invoke this class's :meth:`__init__`
+      with the appropriate arguments
+    - :meth:`_get_index`: this method returns an index into those arrays given
+      the behavior values of a solution
+    - :meth:`initialize`: since this method sets up the arrays described, child
+      classes should invoke this in their own implementation -- however, child
+      classes may not need to override this method at all
+    - :meth:`as_pandas`: necessary for converting the archive into a Pandas
+      DataFrame
+
+    .. note:: Members beginning with an underscore are only intended to be
+        accessed by child classes.
 
     Args:
         storage_dims (tuple of int): Primary dimensions of the archive storage.
             This is used to create numpy arrays for items such as objective
             values and behavior values.
-        behavior_dim (int): The dimension of the behavior space. The array for
-            storing behavior values is created with dimensions ``(*storage_dims,
-            behavior_value_dim)``.
+        behavior_dim (int): The dimension of the behavior space.
         seed (float or int): Seed for the random number generator. None
             (default) means no seed.
     Attributes:
@@ -63,14 +94,14 @@ class ArchiveBase(ABC):
         _initialized (np.ndarray): Bool array storing whether each cell in the
             archive has been initialized. This attribute is None until
             :meth:`initialize` is called.
+        _solutions (np.ndarray): Float array storing the solutions themselves.
+            This attribute is None until :meth:`initialize` is called.
         _objective_values (np.ndarray): Float array storing the objective values
             of each solution. This attribute is None until :meth:`initialize` is
             called.
         _behavior_value_dim (np.ndarray): Float array storing the behavior
             values of each solution. This attribute is None until
             :meth:`initialize` is called.
-        _solutions (np.ndarray): Float array storing the solutions themselves.
-            This attribute is None until :meth:`initialize` is called.
         _occupied_indices (list of (int or tuple of int)): A list of indices
             that are occupied in the archive.
     """
@@ -99,9 +130,7 @@ class ArchiveBase(ABC):
         are overriding it.
 
         Args:
-            solution_dim (int): The dimension of the solution space. The array
-                for storing solutions is created with shape
-                ``(*self._storage_dims, solution_dim)``.
+            solution_dim (int): The dimension of the solution space.
         """
         self._rand_buf = RandomBuffer(self._seed)
         self._solution_dim = solution_dim
@@ -118,6 +147,8 @@ class ArchiveBase(ABC):
 
         If the behavior values are outside the dimensions of the container, they
         are clipped.
+
+        :meta public:
         """
 
     @staticmethod

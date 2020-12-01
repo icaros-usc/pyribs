@@ -129,7 +129,7 @@ class CVTArchive(ArchiveBase):
         """Initializes the archive.
 
         This method may take a while to run. In addition to allocating storage
-        space, it runs k-means to create an approximate CVT, and it creates a
+        space, it runs k-means to create an approximate CVT, and it may create a
         k-D tree containing the centroids found by k-means.
 
         Args:
