@@ -6,6 +6,7 @@ from ribs.emitters import GaussianEmitter
 
 # pylint: disable = invalid-name, unused-variable
 
+
 def benchmark_ask_tell_100k(benchmark, _fake_archive_fixture):
     archive, x0 = _fake_archive_fixture
     sigma0 = 1

@@ -142,5 +142,5 @@ class GaussianEmitter(EmitterBase):
 
         noise = self._rng.normal(scale=self._sigma0,
                                  size=(self.batch_size, self.solution_dim))
-        return self._ask_clip_helper(np.array(parents), noise, self._lower_bounds,
-                                     self._upper_bounds)
+        return self._ask_clip_helper(np.array(parents), noise,
+                                     self._lower_bounds, self._upper_bounds)
