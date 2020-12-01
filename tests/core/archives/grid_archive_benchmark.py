@@ -4,6 +4,7 @@ from ribs.archives import GridArchive
 
 # pylint: disable = invalid-name, unused-variable
 
+
 def benchmark_add_100k(benchmark, benchmark_data_100k):
     n, solutions, objective_values, behavior_values = benchmark_data_100k
 
