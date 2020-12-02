@@ -2,7 +2,6 @@
 SlidingBoundaryArchiveConfig."""
 
 from collections import deque
-from queue import Queue
 import numpy as np
 import pandas as pd
 from sortedcontainers import SortedList
@@ -27,9 +26,12 @@ class IndividualBuffer():
         self._iter_idx = 0
 
     def __iter__(self):
+        """Return self as the iterator."""
         return self
 
     def __next__(self):
+        """Return the next solution, objective values, and behavior values
+        from the buffer."""
         if self._iter_idx >= self.size:
             self._iter_idx = 0
             raise StopIteration()
@@ -58,8 +60,6 @@ class IndividualBuffer():
         for i, bc in enumerate(behavior_values):
             self._bc_list[i].add(bc)
 
-        print(self._bc_list)
-
     def full(self):
         """Whether buffer is full."""
         return len(self._solutions_q) == self._buffer_capacity and \
@@ -80,6 +80,7 @@ class IndividualBuffer():
     def capacity(self):
         """Capacity of the buffer."""
         return self._buffer_capacity
+
 
 class SlidingBoundaryArchive(ArchiveBase):
     """An archive that divides each dimension into a fixed number of bins with

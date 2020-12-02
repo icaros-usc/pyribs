@@ -17,7 +17,6 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
                               objective_value, solution, num_sol):
     """Assert that the archive has one specific entry."""
     archive_data = archive.as_pandas()
-    print(archive_data.iloc[0])
     assert len(archive_data) == 1
     assert (archive_data.iloc[0] == (list(indices) + list(behavior_values) +
                                      [objective_value] + list(solution))).all()
