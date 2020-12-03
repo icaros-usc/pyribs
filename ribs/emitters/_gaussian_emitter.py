@@ -111,11 +111,6 @@ class GaussianEmitter(EmitterBase):
 
     @staticmethod
     @jit(nopython=True)
-    def _ask_expand_dims_helper(x0):
-        return np.expand_dims(x0, axis=0)
-
-    @staticmethod
-    @jit(nopython=True)
     def _ask_clip_helper(parents, noise, lower_bounds, upper_bounds):
         return np.minimum(np.maximum(parents + noise, lower_bounds),
                           upper_bounds)
@@ -133,7 +128,7 @@ class GaussianEmitter(EmitterBase):
             ``batch_size`` new solutions to evaluate.
         """
         if self._archive.is_empty():
-            parents = self._ask_expand_dims_helper(x0=self._x0)
+            parents = np.expand_dims(self._x0, axis=0)
         else:
             parents = [
                 self._archive.get_random_elite()[0]
