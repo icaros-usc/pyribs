@@ -3,8 +3,8 @@ import numpy as np
 import pytest
 from numba import jit
 
-from ribs.archives import GridArchive
-from ribs.archives._archive_base import ArchiveBase
+from ribs.archives import ArchiveBase, GridArchive
+
 
 @pytest.fixture
 def _archive_fixture():
