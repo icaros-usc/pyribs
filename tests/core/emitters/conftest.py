@@ -45,7 +45,7 @@ class FakeArchive(ArchiveBase):
 
 
 @pytest.fixture
-def _fake_archive_fixture():
+def fake_archive_fixture():
     archive = FakeArchive([10, 10])
     x0 = np.array([1, 2, 3, 4])
     archive.initialize(len(x0))

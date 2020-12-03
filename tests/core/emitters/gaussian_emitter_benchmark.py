@@ -7,8 +7,8 @@ from ribs.emitters import GaussianEmitter
 # pylint: disable = invalid-name, unused-variable
 
 
-def benchmark_ask_tell_100k(benchmark, _fake_archive_fixture):
-    archive, x0 = _fake_archive_fixture
+def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
+    archive, x0 = fake_archive_fixture
     sigma0 = 1
     batch_size = 2
     emitter = GaussianEmitter(x0, sigma0, archive, batch_size=batch_size)
