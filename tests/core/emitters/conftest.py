@@ -15,6 +15,13 @@ def archive_fixture():
     return archive, x0
 
 class FakeArchive(ArchiveBase):
+    """Bare-bones archive solely for emitter benchmarking.
+
+    Because this archive is used in emitter benchmarking, we want to
+    spend as little time in this archive as possible. Thus, the archive
+    functions are optimized for speed and not for any meaningful 
+    functionality. That's why this is a "fake" archive.
+    """
 
     def __init__(self, dims):
         self._dims = np.array(dims)
