@@ -69,6 +69,12 @@ class GaussianEmitter(EmitterBase):
         distribution."""
         return self._sigma0
 
+    @staticmethod
+    @jit(nopython=True)
+    def _ask_clip_helper(parents, noise, lower_bounds, upper_bounds):
+        return np.minimum(np.maximum(parents + noise, lower_bounds),
+                          upper_bounds)
+
     def ask(self):
         """Creates solutions by adding Gaussian noise to elites in the archive.
 
