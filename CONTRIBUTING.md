@@ -204,13 +204,36 @@ their source is shown in the docs. To create an example:
 
 ### Deploying
 
-A reminder for the maintainers on how to deploy. Make sure all your changes are
-committed (including an entry in HISTORY.rst). Then run:
+Our deployment process is based on the process described in
+[Trunk-based development](https://trunkbaseddevelopment.com/branch-for-release/).
 
-```bash
-bump2version patch # possible: major / minor / patch
-git push
-git push --tags
-```
+#### Minor Release
 
-GitHub Actions will then deploy to PyPI if tests pass.
+Minor versions of ribs are released from a branch off of master.
+
+1. Create a PR into master where you:
+   1. Update the version with
+      ```bash
+      bump2version minor
+      ```
+   1. Add all necessary info on the version to `HISTORY.md`.
+1. Once this PR is merged, create a branch off of it called
+   `releases/<version>`, e.g. `releases/0.2.0`.
+1. GitHub Actions should now automatically test and deploy this branch. Check
+   that it shows up on PyPI.
+
+#### Patch Release
+
+Patch releases (e.g. `0.2.1`) are released from their corresponding minor
+branch.
+
+1. Checkout the relevant minor branch, and cherry-pick any necessary bug fixes
+   from master branch.
+1. Create a PR into master where you update `HISTORY.md` with info about the
+   release. Once this PR is merged, cherry-pick it onto the minor branch.
+1. On the minor branch, update the version with:
+   ```bash
+   bump2version patch
+   ```
+1. Push the minor branch updates. GitHub Actions should now automatically test
+   and deploy the branch. Check that it shows up on PyPI.
