@@ -7,7 +7,7 @@ from ribs.archives import ArchiveBase, GridArchive
 
 
 @pytest.fixture
-def _archive_fixture():
+def archive_fixture():
     """Provides a simple archive and initial solution."""
     archive = GridArchive([10, 10], [(-1, 1), (-1, 1)])
     x0 = np.array([1, 2, 3, 4])

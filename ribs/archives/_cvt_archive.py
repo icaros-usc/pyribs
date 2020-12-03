@@ -9,7 +9,7 @@ from ribs.archives._archive_base import ArchiveBase
 
 
 class CVTArchive(ArchiveBase):
-    """An archive that divides the space into a fixed number of bins.
+    """Divides the entire behavior space into a fixed number of bins.
 
     This archive originates in the `CVT-MAP-Elites paper
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi

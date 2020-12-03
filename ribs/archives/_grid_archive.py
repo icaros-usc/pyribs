@@ -9,7 +9,7 @@ _EPSILON = 1e-9
 
 
 class GridArchive(ArchiveBase):
-    """An archive that divides each dimension into a fixed number of bins.
+    """Divides each dimension of behavior space into a fixed number of bins.
 
     This archive is the container described in the `original MAP-Elites paper
     <https://arxiv.org/pdf/1504.04909.pdf>`_. It can be visualized as an

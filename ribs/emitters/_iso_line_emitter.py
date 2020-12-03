@@ -31,6 +31,13 @@ class IsoLineEmitter(EmitterBase):
             generating solutions.
         line_sigma (float): Scale factor for the line distribution used when
             generating solutions.
+        bounds (None or array-like): Bounds of the solution space. Solutions are
+            clipped to these bounds. Pass None to indicate there are no bounds.
+
+            Pass an array-like to specify the bounds for each dim. Each element
+            in this array-like can be None to indicate no bound, or a tuple of
+            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
+            ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to send back in the ask() method.
         seed (float or int): Value to seed the random number generator. Set to
             None to avoid seeding.
@@ -41,13 +48,21 @@ class IsoLineEmitter(EmitterBase):
                  archive,
                  iso_sigma=0.01,
                  line_sigma=0.2,
+                 bounds=None,
                  batch_size=64,
                  seed=None):
         self._x0 = np.array(x0)
         self._iso_sigma = iso_sigma
         self._line_sigma = line_sigma
 
-        EmitterBase.__init__(self, len(self._x0), batch_size, archive, seed)
+        EmitterBase.__init__(
+            self,
+            len(self._x0),
+            bounds,
+            batch_size,
+            archive,
+            seed,
+        )
 
     @property
     def x0(self):
@@ -84,13 +99,16 @@ class IsoLineEmitter(EmitterBase):
                                               self.solution_dim))
 
         if self._archive.is_empty():
-            return np.expand_dims(self._x0, axis=0) + iso_gaussian
+            solutions = np.expand_dims(self._x0, axis=0) + iso_gaussian
+        else:
+            parents = [
+                self._archive.get_random_elite()[0]
+                for _ in range(self.batch_size)
+            ]
+            directions = [(self._archive.get_random_elite()[0] - parents[i])
+                          for i in range(self.batch_size)]
+            line_gaussian = self._rng.normal(scale=self._line_sigma,
+                                             size=(self.batch_size, 1))
+            solutions = parents + iso_gaussian + line_gaussian * directions
 
-        parents = [
-            self._archive.get_random_elite()[0] for _ in range(self.batch_size)
-        ]
-        directions = [(self._archive.get_random_elite()[0] - parents[i])
-                      for i in range(self.batch_size)]
-        line_gaussian = self._rng.normal(scale=self._line_sigma,
-                                         size=(self.batch_size, 1))
-        return parents + iso_gaussian + line_gaussian * directions
+        return np.clip(solutions, self.lower_bounds, self.upper_bounds)
