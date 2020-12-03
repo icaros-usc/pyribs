@@ -35,7 +35,7 @@ extras_require = {
         'bokeh>=2.0.0',  # Dask dashboard.
     ],
     'dev': [
-        'pip==20.2.4',
+        'pip>=20.3',
         'pylint',
         'yapf',
 
