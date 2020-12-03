@@ -10,14 +10,14 @@ from ribs.emitters import GaussianEmitter, IsoLineEmitter
 
 
 @pytest.fixture(params=["GaussianEmitter", "IsoLineEmitter"])
-def _emitter_fixture(request, _archive_fixture):
+def _emitter_fixture(request, archive_fixture):
     """Creates an archive, emitter, and initial solution.
 
     Returns:
         Tuple of (archive, emitter, batch_size, x0).
     """
     emitter_type = request.param
-    archive, x0 = _archive_fixture
+    archive, x0 = archive_fixture
     batch_size = 3
 
     if emitter_type == "GaussianEmitter":
@@ -72,8 +72,8 @@ def test_tell_inserts_into_archive(_emitter_fixture):
 #
 
 
-def test_array_bound_correct(_archive_fixture):
-    archive, x0 = _archive_fixture
+def test_array_bound_correct(archive_fixture):
+    archive, x0 = archive_fixture
     bounds = []
     for i in range(len(x0) - 1):
         bounds.append((-i, i))
@@ -87,15 +87,15 @@ def test_array_bound_correct(_archive_fixture):
     assert (emitter.upper_bounds == upper_bounds).all()
 
 
-def test_long_array_bound_fails(_archive_fixture):
-    archive, x0 = _archive_fixture
+def test_long_array_bound_fails(archive_fixture):
+    archive, x0 = archive_fixture
     bounds = [(-1, 1)] * (len(x0) + 1)  # More bounds than solution dims.
     with pytest.raises(ValueError):
         GaussianEmitter(x0, 1, archive, bounds=bounds)
 
 
-def test_array_bound_bad_entry_fails(_archive_fixture):
-    archive, x0 = _archive_fixture
+def test_array_bound_bad_entry_fails(archive_fixture):
+    archive, x0 = archive_fixture
     bounds = [(-1, 1)] * len(x0)
     bounds[0] = (-1, 0, 1)  # Invalid entry.
     with pytest.raises(ValueError):
