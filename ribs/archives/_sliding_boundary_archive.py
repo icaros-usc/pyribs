@@ -137,6 +137,7 @@ class SlidingBoundaryArchive(ArchiveBase):
 
         # Create buffer.
         self._buffer = IndividualBuffer(buffer_capacity, self._behavior_dim)
+        self._buffer_capacity = buffer_capacity
 
         # Total number of solutions encountered.
         self._total_num_sol = 0
@@ -171,18 +172,17 @@ class SlidingBoundaryArchive(ArchiveBase):
         return self._remap_frequency
 
     @property
+    def buffer_capacity(self):
+        """int: Maximum capacity of the buffer."""
+        return self._buffer_capacity
+
+    @property
     def boundaries(self):
         """list of np.ndarray: The dynamic boundaries of each dimension of the
         behavior space. The number of boundaries is determined by ``dims``.
         """
         return self._boundaries
 
-    @property
-    def buffer(self):
-        """IndividualBuffer: Buffer of solutions, behavior values, and
-        objective values of the archive.
-        """
-        return self._buffer
 
     def _get_index(self, behavior_values):
         """Index is determined based on sliding boundaries."""
@@ -229,11 +229,11 @@ class SlidingBoundaryArchive(ArchiveBase):
         self._total_num_sol += 1
 
         if self._total_num_sol % self._remap_frequency == 1:
-            status = self._re_map()
+            inserted = self._re_map()
         else:
-            status = ArchiveBase.add(self, solution, objective_value,
+            inserted = ArchiveBase.add(self, solution, objective_value,
                                      behavior_values)
-        return status
+        return inserted
 
     def _re_map(self):
         """Remap the archive.
@@ -242,6 +242,9 @@ class SlidingBoundaryArchive(ArchiveBase):
         solutions stored in the archive.
 
         Re-add all of the solutions in the buffer.
+
+        Return:
+            bool: True if the last item in the buffer is successfully inserted.
         """
 
         # Sort all behavior values along the axis of each bc.
@@ -254,10 +257,11 @@ class SlidingBoundaryArchive(ArchiveBase):
 
         # Add all solutions to the new empty archive.
         self._reset_archive()
+        inserted = False
         for solution, objective_value, behavior_value in self._buffer:
-            ArchiveBase.add(self, solution, objective_value, behavior_value)
-
-        return True
+            inserted = ArchiveBase.add(self, solution, objective_value,
+                                       behavior_value)
+        return inserted
 
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.

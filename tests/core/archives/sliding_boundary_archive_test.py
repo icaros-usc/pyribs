@@ -14,15 +14,12 @@ def _sliding_boundary_data():
 
 
 def _assert_archive_has_entry(archive, indices, behavior_values,
-                              objective_value, solution, num_sol):
+                              objective_value, solution):
     """Assert that the archive has one specific entry."""
     archive_data = archive.as_pandas()
     assert len(archive_data) == 1
     assert (archive_data.iloc[0] == (list(indices) + list(behavior_values) +
                                      [objective_value] + list(solution))).all()
-
-    # Check size of buffer.
-    assert archive.buffer.size == num_sol
 
 
 def test_attributes_correctly_constructed(_sliding_boundary_data):
@@ -45,17 +42,17 @@ def test_add_to_archive_with_remap(_sliding_boundary_data):
 
     # The first remap has been done while adding the first solution.
     _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
-                              objective_value, solution, 1)
+                              objective_value, solution)
 
 def test_add_to_archive_with_full_buffer(_sliding_boundary_data):
     (archive, _, solution, objective_value, behavior_values, indices,
      _) = _sliding_boundary_data
 
-    for _ in range(archive.buffer.capacity + 1):
+    for _ in range(archive.buffer_capacity + 1):
         archive.add(solution, objective_value, behavior_values)
 
     _assert_archive_has_entry(archive, indices, behavior_values,
-                              objective_value, solution, archive.buffer.size)
+                              objective_value, solution)
 
 
 def test_add_to_archive_without_remap(_sliding_boundary_data):
@@ -67,7 +64,7 @@ def test_add_to_archive_without_remap(_sliding_boundary_data):
     archive_with_entry.add(solution, objective_value, behavior_values)
 
     _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
-                              objective_value, solution, 2)
+                              objective_value, solution)
 
 
 def test_as_pandas(_sliding_boundary_data):
