@@ -17,8 +17,8 @@ def benchmark_ask_tell_100k(benchmark, _fake_archive_fixture):
     behavior_values = np.array([[-1, -1], [0, 0], [1, 1]])
 
     # Let numba compile.
-    _ = emitter.ask()
-    emitter.tell(_, objective_values, behavior_values)
+    temp_sol = emitter.ask()
+    emitter.tell(temp_sol, objective_values, behavior_values)
 
     @benchmark
     def ask_and_tell():
