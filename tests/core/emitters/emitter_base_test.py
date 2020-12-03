@@ -30,6 +30,11 @@ def _emitter_fixture(request, _archive_fixture):
     return archive, emitter, batch_size, x0
 
 
+#
+# ask()
+#
+
+
 def test_ask_emits_correct_num_sols(_emitter_fixture):
     _, emitter, batch_size, x0 = _emitter_fixture
     solutions = emitter.ask()
@@ -41,6 +46,11 @@ def test_ask_emits_correct_num_sols_for_non_empty_archive(_emitter_fixture):
     archive.add(x0, 1, np.array([0, 0]))
     solutions = emitter.ask()
     assert solutions.shape == (batch_size, len(x0))
+
+
+#
+# tell()
+#
 
 
 def test_tell_inserts_into_archive(_emitter_fixture):
@@ -55,3 +65,38 @@ def test_tell_inserts_into_archive(_emitter_fixture):
     archive_beh = archive_data.loc[:, ["behavior-0", "behavior-1"]].to_numpy()
     unittest.TestCase().assertCountEqual(behavior_values.tolist(),
                                          archive_beh.tolist())
+
+
+#
+# Bounds handling (only uses GaussianEmitter).
+#
+
+
+def test_array_bound_correct(_archive_fixture):
+    archive, x0 = _archive_fixture
+    bounds = []
+    for i in range(len(x0) - 1):
+        bounds.append((-i, i))
+    bounds.append(None)
+    emitter = GaussianEmitter(x0, 1, archive, bounds=bounds)
+
+    lower_bounds = np.concatenate((-np.arange(len(x0) - 1), [-np.inf]))
+    upper_bounds = np.concatenate((np.arange(len(x0) - 1), [np.inf]))
+
+    assert (emitter.lower_bounds == lower_bounds).all()
+    assert (emitter.upper_bounds == upper_bounds).all()
+
+
+def test_long_array_bound_fails(_archive_fixture):
+    archive, x0 = _archive_fixture
+    bounds = [(-1, 1)] * (len(x0) + 1)  # More bounds than solution dims.
+    with pytest.raises(ValueError):
+        GaussianEmitter(x0, 1, archive, bounds=bounds)
+
+
+def test_array_bound_bad_entry_fails(_archive_fixture):
+    archive, x0 = _archive_fixture
+    bounds = [(-1, 1)] * len(x0)
+    bounds[0] = (-1, 0, 1)  # Invalid entry.
+    with pytest.raises(ValueError):
+        GaussianEmitter(x0, 1, archive, bounds=bounds)

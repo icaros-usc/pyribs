@@ -17,6 +17,28 @@ def test_properties_are_correct(_archive_fixture):
     assert emitter.line_sigma == line_sigma
 
 
+def test_upper_bounds_enforced(_archive_fixture):
+    archive, _ = _archive_fixture
+    emitter = IsoLineEmitter([2, 2],
+                             archive,
+                             iso_sigma=0,
+                             line_sigma=0,
+                             bounds=[(-1, 1)] * 2)
+    sols = emitter.ask()
+    assert np.all(sols <= 1)
+
+
+def test_lower_bounds_enforced(_archive_fixture):
+    archive, _ = _archive_fixture
+    emitter = IsoLineEmitter([-2, -2],
+                             archive,
+                             iso_sigma=0,
+                             line_sigma=0,
+                             bounds=[(-1, 1)] * 2)
+    sols = emitter.ask()
+    assert np.all(sols >= -1)
+
+
 def test_degenerate_gauss_emits_x0(_archive_fixture):
     archive, x0 = _archive_fixture
     emitter = IsoLineEmitter(x0, archive, iso_sigma=0, batch_size=2)
