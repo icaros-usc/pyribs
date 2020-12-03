@@ -13,8 +13,10 @@ def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     batch_size = 2
     emitter = GaussianEmitter(x0, sigma0, archive, batch_size=batch_size)
 
-    objective_values = np.full(batch_size, 1.)
-    behavior_values = np.array([[-1, -1], [0, 0], [1, 1]])
+    np.random.seed(0)
+
+    objective_values = np.random.rand(batch_size)
+    behavior_values = np.random.rand(3, 2)
 
     # Let numba compile.
     temp_sol = emitter.ask()
@@ -24,4 +26,6 @@ def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     def ask_and_tell():
         for i in range(int(1e5)):
             solutions = emitter.ask()
+            objective_values = np.random.rand(batch_size)
+            behavior_values = np.random.rand(3, 2)
             emitter.tell(solutions, objective_values, behavior_values)
