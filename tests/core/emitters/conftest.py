@@ -54,5 +54,6 @@ class FakeArchive(ArchiveBase):
 def _fake_archive_fixture():
     archive = FakeArchive([10, 10], [(-1, 1), (-1, 1)])
     x0 = np.array([1, 2, 3, 4])
+    archive.initialize(len(x0))
     return archive, x0
 
