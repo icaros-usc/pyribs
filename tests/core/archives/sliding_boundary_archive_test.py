@@ -31,9 +31,7 @@ def test_attributes_correctly_constructed(_sliding_boundary_data):
     assert np.all(archive.interval_size == [2, 4])
 
     # Check the shape of boundaries.
-    assert len(archive.boundaries) == 2
-    assert len(archive.boundaries[0]) == 10
-    assert len(archive.boundaries[1]) == 20
+    assert archive.boundaries.shape == (2, 20)
 
 
 def test_add_to_archive_with_remap(_sliding_boundary_data):
@@ -43,6 +41,7 @@ def test_add_to_archive_with_remap(_sliding_boundary_data):
     # The first remap has been done while adding the first solution.
     _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
                               objective_value, solution)
+
 
 def test_add_to_archive_with_full_buffer(_sliding_boundary_data):
     (archive, _, solution, objective_value, behavior_values, indices,

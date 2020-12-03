@@ -2,6 +2,7 @@
 
 from collections import deque
 import numpy as np
+import numba as nb
 import pandas as pd
 from sortedcontainers import SortedList
 
@@ -60,7 +61,7 @@ class IndividualBuffer:
     @property
     def sorted_behavior_values(self):
         """list of SortedList: Sorted behaviors of each dimension"""
-        return self._bc_lists
+        return np.array(self._bc_lists, dtype=np.float)
 
     @property
     def size(self):
@@ -130,10 +131,9 @@ class SlidingBoundaryArchive(ArchiveBase):
 
         # Sliding boundary specifics.
         self._remap_frequency = remap_frequency
-        self._boundaries = [
-            np.full(self._dims[i], None, dtype=float)
-            for i in range(self._behavior_dim)
-        ]
+        self._boundaries = np.full((self._behavior_dim, np.max(self._dims)),
+                                   np.inf,
+                                   dtype=float)
 
         # Create buffer.
         self._buffer = IndividualBuffer(buffer_capacity, self._behavior_dim)
@@ -178,22 +178,36 @@ class SlidingBoundaryArchive(ArchiveBase):
 
     @property
     def boundaries(self):
-        """list of np.ndarray: The dynamic boundaries of each dimension of the
-        behavior space. The number of boundaries is determined by ``dims``.
+        """(behavior_dim, max_bin_size), np.ndarray: The dynamic boundaries of
+        each dimension of the behavior space.
+
+        The number of boundaries is determined by ``dims``.
         """
         return self._boundaries
 
+    @staticmethod
+    @nb.jit(nopython=True)
+    def _get_index_numba(behavior_values, upper_bounds, lower_bounds,
+                         boundaries):
+        """Numba helper for _get_index().
+
+        See _get_index() for usage.
+        """
+        behavior_values = np.minimum(
+            np.maximum(behavior_values + _EPSILON, lower_bounds),
+            upper_bounds - _EPSILON)
+        index = []
+        for i, behavior_value in enumerate(behavior_values):
+            idx = np.searchsorted(boundaries[i], behavior_value)
+            index.append(max(0, idx - 1))
+        return index
 
     def _get_index(self, behavior_values):
         """Index is determined based on sliding boundaries."""
-        behavior_values = np.clip(behavior_values + _EPSILON,
-                                  self._lower_bounds,
-                                  self._upper_bounds - _EPSILON)
-
-        index = []
-        for i, behavior_value in enumerate(behavior_values):
-            idx = np.searchsorted(self._boundaries[i], behavior_value)
-            index.append(max(0, idx - 1))
+        index = SlidingBoundaryArchive._get_index_numba(behavior_values,
+                                                        self.upper_bounds,
+                                                        self.lower_bounds,
+                                                        self._boundaries)
         return tuple(index)
 
     def _reset_archive(self):
@@ -232,8 +246,21 @@ class SlidingBoundaryArchive(ArchiveBase):
             inserted = self._re_map()
         else:
             inserted = ArchiveBase.add(self, solution, objective_value,
-                                     behavior_values)
+                                       behavior_values)
         return inserted
+
+    @staticmethod
+    @nb.jit(nopython=True)
+    def _re_map_numba_helper(sorted_bc, buffer_size, boundaries, behavior_dim,
+                             dims):
+        """Numba helper for _re_map().
+
+        See _re_map() for usage.
+        """
+        for i in range(behavior_dim):
+            for j in range(dims[i]):
+                sample_idx = int(j * buffer_size / dims[i])
+                boundaries[i][j] = sorted_bc[i][sample_idx]
 
     def _re_map(self):
         """Remap the archive.
@@ -250,10 +277,12 @@ class SlidingBoundaryArchive(ArchiveBase):
         # Sort all behavior values along the axis of each bc.
         sorted_bc = self._buffer.sorted_behavior_values
 
-        for i in range(self._behavior_dim):
-            for j in range(self._dims[i]):
-                sample_idx = int(j * self._buffer.size / self._dims[i])
-                self._boundaries[i][j] = sorted_bc[i][sample_idx]
+        # Calculate new boundaries.
+        SlidingBoundaryArchive._re_map_numba_helper(sorted_bc,
+                                                    self._buffer.size,
+                                                    self._boundaries,
+                                                    self._behavior_dim,
+                                                    self.dims)
 
         # Add all solutions to the new empty archive.
         self._reset_archive()
