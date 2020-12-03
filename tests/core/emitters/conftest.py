@@ -27,7 +27,7 @@ class FakeArchive(ArchiveBase):
 
     def get_random_elite(self):
         return (
-            self._solutions[0],
+            self._solutions[(0,) * self._behavior_dim],
             self._objective_values[0],
             self._behavior_values[0],
         )
