@@ -10,7 +10,7 @@ from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._grid_archive import GridArchive
 
 __all__ = [
-    "ArchiveBase",
-    "CVTArchive",
     "GridArchive",
+    "CVTArchive",
+    "ArchiveBase",
 ]
