@@ -16,20 +16,14 @@ def archive_fixture():
 
 class FakeArchive(ArchiveBase):
 
-    def __init__(self, dims, ranges, seed=None):
+    def __init__(self, dims):
         self._dims = np.array(dims)
         behavior_dim = len(self._dims)
         ArchiveBase.__init__(
             self,
             storage_dims=tuple(self._dims),
             behavior_dim=behavior_dim,
-            seed=seed,
         )
-
-        ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0])
-        self._upper_bounds = np.array(ranges[1])
-        self._interval_size = self._upper_bounds - self._lower_bounds
 
     def get_random_elite(self):
         return (
@@ -52,7 +46,7 @@ class FakeArchive(ArchiveBase):
 
 @pytest.fixture
 def _fake_archive_fixture():
-    archive = FakeArchive([10, 10], [(-1, 1), (-1, 1)])
+    archive = FakeArchive([10, 10])
     x0 = np.array([1, 2, 3, 4])
     archive.initialize(len(x0))
     return archive, x0
