@@ -20,9 +20,7 @@ class IndividualBuffer:
 
     def __init__(self, buffer_capacity, behavior_dim):
         self._buffer_capacity = buffer_capacity
-        self._solutions_q = deque()
-        self._objectives_q = deque()
-        self._behaviors_q = deque()
+        self._inds_dq = deque()
         self._bc_lists = [SortedList() for _ in range(behavior_dim)]
         self._iter_idx = 0
 
@@ -36,9 +34,7 @@ class IndividualBuffer:
         if self._iter_idx >= self.size:
             self._iter_idx = 0
             raise StopIteration
-        result = (self._solutions_q[self._iter_idx],
-                  self._objectives_q[self._iter_idx],
-                  self._behaviors_q[self._iter_idx])
+        result = self._inds_dq[self._iter_idx]
         self._iter_idx += 1
         return result
 
@@ -46,16 +42,12 @@ class IndividualBuffer:
         """Put a new element. Pop the oldest if it is full."""
         if self.full():
             # Remove item from the deque.
-            self._solutions_q.popleft()
-            self._objectives_q.popleft()
-            bc_deleted = self._behaviors_q.popleft()
+            _, _, bc_deleted = self._inds_dq.popleft()
             # Remove bc from sorted lists.
             for i, bc in enumerate(bc_deleted):
                 self._bc_lists[i].remove(bc)
 
-        self._solutions_q.append(solution)
-        self._objectives_q.append(objective_value)
-        self._behaviors_q.append(behavior_values)
+        self._inds_dq.append((solution, objective_value, behavior_values))
 
         # Add bc to sorted lists.
         for i, bc in enumerate(behavior_values):
@@ -63,9 +55,7 @@ class IndividualBuffer:
 
     def full(self):
         """Whether buffer is full."""
-        return len(self._solutions_q) == self._buffer_capacity and \
-               len(self._objectives_q) == self._buffer_capacity and \
-               len(self._behaviors_q) == self._buffer_capacity
+        return len(self._inds_dq) == self._buffer_capacity
 
     @property
     def sorted_behavior_values(self):
@@ -75,7 +65,7 @@ class IndividualBuffer:
     @property
     def size(self):
         """Number of solutions stored in the buffer"""
-        return len(self._solutions_q)
+        return len(self._inds_dq)
 
     @property
     def capacity(self):
