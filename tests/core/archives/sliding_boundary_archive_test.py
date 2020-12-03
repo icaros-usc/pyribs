@@ -8,7 +8,7 @@ from .conftest import get_archive_data
 
 
 @pytest.fixture
-def _grid_data():
+def _sliding_boundary_data():
     """Data for sliding boundary archive tests."""
     return get_archive_data("SlidingBoundaryArchive")
 
@@ -25,8 +25,8 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
     assert archive.buffer.size == num_sol
 
 
-def test_attributes_correctly_constructed(_grid_data):
-    archive, *_ = _grid_data
+def test_attributes_correctly_constructed(_sliding_boundary_data):
+    archive, *_ = _sliding_boundary_data
 
     assert np.all(archive.dims == [10, 20])
     assert np.all(archive.lower_bounds == [-1, -2])
@@ -39,17 +39,17 @@ def test_attributes_correctly_constructed(_grid_data):
     assert len(archive.boundaries[1]) == 20
 
 
-def test_add_to_archive_with_remap(_grid_data):
+def test_add_to_archive_with_remap(_sliding_boundary_data):
     (_, archive_with_entry, solution, objective_value, behavior_values, indices,
-     _) = _grid_data
+     _) = _sliding_boundary_data
 
     # The first remap has been done while adding the first solution.
     _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
                               objective_value, solution, 1)
 
-def test_add_to_archive_with_full_buffer(_grid_data):
+def test_add_to_archive_with_full_buffer(_sliding_boundary_data):
     (archive, _, solution, objective_value, behavior_values, indices,
-     _) = _grid_data
+     _) = _sliding_boundary_data
 
     for _ in range(archive.buffer.capacity + 1):
         archive.add(solution, objective_value, behavior_values)
@@ -58,8 +58,8 @@ def test_add_to_archive_with_full_buffer(_grid_data):
                               objective_value, solution, archive.buffer.size)
 
 
-def test_add_to_archive_without_remap(_grid_data):
-    _, archive_with_entry, *_, = _grid_data
+def test_add_to_archive_without_remap(_sliding_boundary_data):
+    _, archive_with_entry, *_, = _sliding_boundary_data
     behavior_values = np.array([0.25, 0.25])
     solution = np.array([3, 4, 5])
     objective_value = 2
@@ -70,45 +70,9 @@ def test_add_to_archive_without_remap(_grid_data):
                               objective_value, solution, 2)
 
 
-def test_archive_is_2d(_grid_data):
-    archive, *_ = _grid_data
-    assert archive.is_2d()
-
-
-def test_new_archive_is_empty(_grid_data):
-    (archive, *_) = _grid_data
-    assert archive.is_empty()
-
-
-def test_archive_with_entry_is_not_empty(_grid_data):
-    (_, archive_with_entry, *_) = _grid_data
-    assert not archive_with_entry.is_empty()
-
-
-def test_random_elite_gets_single_elite(_grid_data):
-    (
-        _,
-        archive_with_entry,
-        solution,
-        objective_value,
-        behavior_values,
-        *_,
-    ) = _grid_data
-    retrieved = archive_with_entry.get_random_elite()
-    assert np.all(retrieved[0] == solution)
-    assert retrieved[1] == objective_value
-    assert np.all(retrieved[2] == behavior_values)
-
-
-def test_random_elite_fails_when_empty(_grid_data):
-    (archive, *_) = _grid_data
-    with pytest.raises(IndexError):
-        archive.get_random_elite()
-
-
-def test_as_pandas(_grid_data):
+def test_as_pandas(_sliding_boundary_data):
     (_, archive_with_entry, solution, objective_value, behavior_values, indices,
-     _) = _grid_data
+     _) = _sliding_boundary_data
 
     df = archive_with_entry.as_pandas()
     assert np.all(df.columns == [
