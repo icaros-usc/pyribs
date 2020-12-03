@@ -21,7 +21,7 @@ def benchmark_ask_tell_100k(benchmark, _fake_archive_fixture):
     emitter.tell(_, objective_values, behavior_values)
 
     @benchmark
-    def ask_an_tell():
+    def ask_and_tell():
         for i in range(int(1e5)):
             solutions = emitter.ask()
             emitter.tell(solutions, objective_values, behavior_values)
