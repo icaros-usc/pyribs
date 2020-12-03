@@ -21,7 +21,7 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
     assert (archive_data.iloc[0] == (list(indices) + list(behavior_values) +
                                      [objective_value] + list(solution))).all()
 
-    # check size of buffer
+    # Check size of buffer.
     assert archive.buffer.size == num_sol
 
 
@@ -33,7 +33,7 @@ def test_attributes_correctly_constructed(_grid_data):
     assert np.all(archive.upper_bounds == [1, 2])
     assert np.all(archive.interval_size == [2, 4])
 
-    # check the shape of boundaries
+    # Check the shape of boundaries.
     assert len(archive.boundaries) == 2
     assert len(archive.boundaries[0]) == 10
     assert len(archive.boundaries[1]) == 20
@@ -43,7 +43,7 @@ def test_add_to_archive_with_remap(_grid_data):
     (_, archive_with_entry, solution, objective_value, behavior_values, indices,
      _) = _grid_data
 
-    # the first remap has done while adding the first solution
+    # The first remap has been done while adding the first solution.
     _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
                               objective_value, solution, 1)
 

@@ -101,15 +101,19 @@ def get_archive_data(name):
                                         samples=samples,
                                         use_kd_tree=kd_tree)
         archive_with_entry.initialize(len(solution))
-
     elif name == "SlidingBoundaryArchive":
         # Sliding boundary archive with 10 bins and range (-1, 1) in first dim,
         # and 20 bins and range (-2, 2) in second dim.
-        archive = SlidingBoundaryArchive([10, 20], [(-1, 1,), (-2, 2)])
+        archive = SlidingBoundaryArchive([10, 20],
+                                         [(-1, 1,), (-2, 2)],
+                                         remap_frequency=100,
+                                         buffer_capacity=1000)
         archive.initialize(len(solution))
 
-        archive_with_entry = SlidingBoundaryArchive(
-            [10, 20], [(-1, 1), (-2, 2)])
+        archive_with_entry = SlidingBoundaryArchive([10, 20],
+                                                    [(-1, 1,), (-2, 2)],
+                                                    remap_frequency=100,
+                                                    buffer_capacity=1000)
         archive_with_entry.initialize(len(solution))
         grid_indices = (9, 19)
 

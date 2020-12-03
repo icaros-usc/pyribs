@@ -1,5 +1,4 @@
-"""Contains the SlidingBoundaryArchive and corresponding
-SlidingBoundaryArchiveConfig."""
+"""Contains the SlidingBoundaryArchive."""
 
 from collections import deque
 import numpy as np
@@ -11,10 +10,12 @@ from ribs.archives._archive_base import ArchiveBase
 _EPSILON = 1e-9
 
 
-class IndividualBuffer():
-    """ A buffer that stores the buffered solutions, objectives, and sorted
-    behavior values of each dimension. It pops the oldest element if it is
-    full while putting new elements.
+class IndividualBuffer:
+    """ An internal class that stores relevant data to re-add after remapping.
+
+    It buffers solutions, objective values, and sorted behavior values of each
+    dimension. It will pop the oldest element if it is full while putting new
+    elements.
     """
 
     def __init__(self, buffer_capacity, behavior_dim):
@@ -22,7 +23,7 @@ class IndividualBuffer():
         self._solutions_q = deque()
         self._objectives_q = deque()
         self._behaviors_q = deque()
-        self._bc_list = [SortedList() for _ in range(behavior_dim)]
+        self._bc_lists = [SortedList() for _ in range(behavior_dim)]
         self._iter_idx = 0
 
     def __iter__(self):
@@ -30,11 +31,11 @@ class IndividualBuffer():
         return self
 
     def __next__(self):
-        """Return the next solution, objective values, and behavior values
+        """Return the next solution, objective value, and behavior values
         from the buffer."""
         if self._iter_idx >= self.size:
             self._iter_idx = 0
-            raise StopIteration()
+            raise StopIteration
         result = (self._solutions_q[self._iter_idx],
                   self._objectives_q[self._iter_idx],
                   self._behaviors_q[self._iter_idx])
@@ -44,21 +45,21 @@ class IndividualBuffer():
     def add(self, solution, objective_value, behavior_values):
         """Put a new element. Pop the oldest if it is full."""
         if self.full():
-            # remove from queue
+            # Remove item from the deque.
             self._solutions_q.popleft()
             self._objectives_q.popleft()
             bc_deleted = self._behaviors_q.popleft()
-            # remove bc from sorted lists
+            # Remove bc from sorted lists.
             for i, bc in enumerate(bc_deleted):
-                self._bc_list[i].remove(bc)
+                self._bc_lists[i].remove(bc)
 
         self._solutions_q.append(solution)
         self._objectives_q.append(objective_value)
         self._behaviors_q.append(behavior_values)
 
-        # add bc to sorted lists
+        # Add bc to sorted lists.
         for i, bc in enumerate(behavior_values):
-            self._bc_list[i].add(bc)
+            self._bc_lists[i].add(bc)
 
     def full(self):
         """Whether buffer is full."""
@@ -69,7 +70,7 @@ class IndividualBuffer():
     @property
     def sorted_behavior_values(self):
         """list of SortedList: Sorted behaviors of each dimension"""
-        return self._bc_list
+        return self._bc_lists
 
     @property
     def size(self):
@@ -83,22 +84,20 @@ class IndividualBuffer():
 
 
 class SlidingBoundaryArchive(ArchiveBase):
-    """An archive that divides each dimension into a fixed number of bins with
-    sliding boundaries that are placed at percentage marks of the behavior
-    characteristics
+    """An archive with a fixed number of sliding boundaries on each dimension.
 
     This archive is the container described in the `Hearthstone Deck Space
-    paper <https://arxiv.org/pdf/1904.10656.pdf>`_. Same as the GridArchive, it
-    can be visualized as an n-dimensional grid in the behavior space that is
-    divided into a certain number of bins in each dimension. However, it places
-    the boundaries at the percentage marks of the behavior characteristics along
-    each dimension. At a certain frequency, the archive will remap the boundary
-    in accordance with all of the solutions stored in the buffer (Note: not
-    only those already in the archive, but ALL of the solutions stored in the
-    buffer).
+    paper <https://arxiv.org/pdf/1904.10656.pdf>`_. Same as the :class:`~ribs.
+    archives.GridArchive`, it can be visualized as an n-dimensional grid in the
+    behavior space that is divided into a certain number of bins in each
+    dimension. However, it places the boundaries at the percentage marks of
+    the behavior characteristics along each dimension. At a certain frequency,
+    the archive will remap the boundary in accordance with all of the solutions
+    stored in the buffer (Note: not only those already in the archive, but ALL
+    of the solutions stored in the buffer).
 
     This archive attempts to enable the distribution of the space illuminated
-    by the archive to more accurately matches the true distribution if the
+    by the archive to more accurately match the true distribution if the
     behavior characteristics are not uniformly distributed.
 
     Args:
@@ -111,13 +110,12 @@ class SlidingBoundaryArchive(ArchiveBase):
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``.
         seed (float or int): Value to seed the random number generator. Set to
-            None to avoid any seeding. Default: None
+            None to avoid any seeding.
         remap_frequency (int): Frequency of remapping. Archive will remap once
             after ``remap_frequency`` number of solutions has been found.
-            Default: 100
         buffer_capacity (int): Number of solutions to keep in the buffer.
             Solutions in the buffer will be reinserted into the archive after
-            remapping. Default: 1000
+            remapping.
     """
 
     def __init__(self,
@@ -127,12 +125,11 @@ class SlidingBoundaryArchive(ArchiveBase):
                  remap_frequency=100,
                  buffer_capacity=1000):
         self._dims = np.array(dims)
-        self._behavior_dim = len(self._dims)
 
         ArchiveBase.__init__(
             self,
             storage_dims=tuple(self._dims),
-            behavior_dim=self._behavior_dim,
+            behavior_dim=len(self._dims),
             seed=seed,
         )
 
@@ -141,16 +138,18 @@ class SlidingBoundaryArchive(ArchiveBase):
         self._upper_bounds = np.array(ranges[1])
         self._interval_size = self._upper_bounds - self._lower_bounds
 
-        # Sliding boundary specifics
+        # Sliding boundary specifics.
         self._remap_frequency = remap_frequency
         self._boundaries = [
             np.full(self._dims[i], None, dtype=float)
             for i in range(self._behavior_dim)
         ]
 
-        # create buffer
+        # Create buffer.
         self._buffer = IndividualBuffer(buffer_capacity, self._behavior_dim)
-        self._total_num_sol = 0  # total number of solutions encountered
+
+        # Total number of solutions encountered.
+        self._total_num_sol = 0
 
     @property
     def dims(self):
@@ -196,8 +195,7 @@ class SlidingBoundaryArchive(ArchiveBase):
         return self._buffer
 
     def _get_index(self, behavior_values):
-        """Index is determined based on sliding boundaries
-        """
+        """Index is determined based on sliding boundaries."""
         behavior_values = np.clip(behavior_values + _EPSILON,
                                   self._lower_bounds,
                                   self._upper_bounds - _EPSILON)
@@ -205,7 +203,7 @@ class SlidingBoundaryArchive(ArchiveBase):
         index = []
         for i, behavior_value in enumerate(behavior_values):
             idx = np.searchsorted(self._boundaries[i], behavior_value)
-            index.append(np.max([0, idx - 1]))
+            index.append(max(0, idx - 1))
         return tuple(index)
 
     def _reset_archive(self):
@@ -214,21 +212,19 @@ class SlidingBoundaryArchive(ArchiveBase):
         Note that we do not have to reset ``self.
         behavior_values`` because it won't affect solution insertion
         """
-        self._objective_values.fill(-np.inf)
-        self._solutions.fill(0)
         self._occupied_indices.clear()
         self._initialized.fill(False)
 
     def add(self, solution, objective_value, behavior_values):
-        """ Attempt to insert the solution into the archive. Remap the archive
-        once every ``self._remap_frequency`` solutions are found.
+        """ Attempt to insert the solution into the archive.
 
-        Remap: change the boundaries of the archive to the percentage marks of
-        the behavior values stored in the archive. and re-add all of the
-        solutions stored in the buffer.
+        It will remap the archive once every ``self._remap_frequency``
+        solutions are found by changing the boundaries of the archive to
+        the percentage marks of the behavior values stored in the buffer and
+        re-add all of the solutions stored in the buffer.
 
-        Note: remapping will not just add solutions in the current archive, but
-        ALL of the solutions stored in the buffer.
+        .. note:: Remapping will not just add solutions in the current archive,
+            but **ALL** of the solutions stored in the buffer.
 
         Args:
             solution (np.ndarray): Parameters for the solution.
@@ -243,18 +239,22 @@ class SlidingBoundaryArchive(ArchiveBase):
         self._total_num_sol += 1
 
         if self._total_num_sol % self._remap_frequency == 1:
-            self._re_map()
+            status = self._re_map()
         else:
-            ArchiveBase.add(self, solution, objective_value, behavior_values)
+            status = ArchiveBase.add(self, solution, objective_value,
+                                     behavior_values)
+        return status
 
-    def _re_map(self,):
-        """Remap the archive so that the boundaries locate at the percentage
-        marks of the solutions stored in the archive.
+    def _re_map(self):
+        """Remap the archive.
+
+        The boundaries will be relocated at the percentage marks of the
+        solutions stored in the archive.
 
         Re-add all of the solutions in the buffer.
         """
 
-        # sort all behavior values along the axis of each bc
+        # Sort all behavior values along the axis of each bc.
         sorted_bc = self._buffer.sorted_behavior_values
 
         for i in range(self._behavior_dim):
@@ -262,10 +262,12 @@ class SlidingBoundaryArchive(ArchiveBase):
                 sample_idx = int(j * self._buffer.size / self._dims[i])
                 self._boundaries[i][j] = sorted_bc[i][sample_idx]
 
-        # add all solutions to the new empty archive
+        # Add all solutions to the new empty archive.
         self._reset_archive()
         for solution, objective_value, behavior_value in self._buffer:
             ArchiveBase.add(self, solution, objective_value, behavior_value)
+
+        return True
 
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.
