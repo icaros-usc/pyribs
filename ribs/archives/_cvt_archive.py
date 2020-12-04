@@ -9,7 +9,7 @@ from ribs.archives._archive_base import ArchiveBase
 
 
 class CVTArchive(ArchiveBase):
-    """An archive that divides the space into a fixed number of bins.
+    """Divides the entire behavior space into a fixed number of bins.
 
     This archive originates in the `CVT-MAP-Elites paper
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
@@ -168,6 +168,10 @@ class CVTArchive(ArchiveBase):
         return np.argmin(distances)
 
     def _get_index(self, behavior_values):
+        """Finds the centroid index using either the k-D tree or brute force.
+
+        :meta private:
+        """
         if self._use_kd_tree:
             return self._centroid_kd_tree.query(behavior_values)[1]
 

@@ -51,7 +51,7 @@ extras_require = {
         'sphinx-material==0.0.32',
         'sphinx-autobuild==2020.9.1',
         'sphinx-copybutton==0.3.1',
-        'autodocsumm==0.2.1',
+        'autodocsumm==0.2.2',
         'myst-nb==0.10.1',
 
         # Distribution

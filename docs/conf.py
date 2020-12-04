@@ -214,7 +214,7 @@ texinfo_documents = [
 # -- Extension config -------------------------------------------------
 
 autodoc_default_options = {
-    "member-order": "alphabetical",
+    "member-order": "bysource",
     "autosummary": True,
     "inherited-members": True,
 }

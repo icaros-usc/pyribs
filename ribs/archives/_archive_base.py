@@ -145,9 +145,6 @@ class ArchiveBase(ABC):
     def _get_index(self, behavior_values):
         """Returns archive indices for the given behavior values.
 
-        If the behavior values are outside the dimensions of the container, they
-        are clipped.
-
         :meta public:
         """
 

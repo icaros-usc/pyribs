@@ -15,3 +15,8 @@ dd {
   border-left: 8px solid hsla(0, 0%, 92.5%, 0.5);
   padding-left: 15px;
 }
+
+/* Makes the link icons show up next to items in the API reference. */
+a.headerlink {
+  opacity: 1 !important;
+}
