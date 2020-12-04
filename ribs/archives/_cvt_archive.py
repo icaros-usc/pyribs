@@ -168,6 +168,10 @@ class CVTArchive(ArchiveBase):
         return np.argmin(distances)
 
     def _get_index(self, behavior_values):
+        """Finds the centroid index using either the k-D tree or brute force.
+
+        :meta private:
+        """
         if self._use_kd_tree:
             return self._centroid_kd_tree.query(behavior_values)[1]
 

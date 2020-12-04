@@ -87,6 +87,10 @@ class GridArchive(ArchiveBase):
         return index.astype(np.int32)
 
     def _get_index(self, behavior_values):
+        """Retrieves grid indices. Clips behavior values to behavior bounds.
+
+        :meta private:
+        """
         index = GridArchive._get_index_numba(behavior_values,
                                              self._upper_bounds,
                                              self._lower_bounds,
