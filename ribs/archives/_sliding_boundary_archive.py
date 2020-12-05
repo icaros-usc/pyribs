@@ -84,8 +84,7 @@ class SlidingBoundaryArchive(ArchiveBase):
     dimension. However, it places the boundaries at the percentage marks of
     the behavior characteristics along each dimension. At a certain frequency,
     the archive will remap the boundary in accordance with all of the solutions
-    stored in the buffer (Note: not only those already in the archive, but ALL
-    of the solutions stored in the buffer).
+    stored in the buffer.
 
     This archive attempts to enable the distribution of the space illuminated
     by the archive to more accurately match the true distribution if the
@@ -137,7 +136,6 @@ class SlidingBoundaryArchive(ArchiveBase):
 
         # Create buffer.
         self._buffer = IndividualBuffer(buffer_capacity, self._behavior_dim)
-        self._buffer_capacity = buffer_capacity
 
         # Total number of solutions encountered.
         self._total_num_sol = 0
@@ -174,12 +172,12 @@ class SlidingBoundaryArchive(ArchiveBase):
     @property
     def buffer_capacity(self):
         """int: Maximum capacity of the buffer."""
-        return self._buffer_capacity
+        return self._buffer.capacity
 
     @property
     def boundaries(self):
         """(behavior_dim, max_bin_size), np.ndarray: The dynamic boundaries of
-        each dimension of the behavior space.
+        each dimension.
 
         The number of boundaries is determined by ``dims``. e.g. if ``dims`` is
         ``[20, 30, 40]``, the size of ``boundaries`` is ``[3, 40]``. To access
@@ -218,8 +216,8 @@ class SlidingBoundaryArchive(ArchiveBase):
     def _reset_archive(self):
         """Reset the archive.
 
-        Note that we do not have to reset ``self.
-        behavior_values`` because it won't affect solution insertion
+        Only ``self._occupied_indices`` and ``self._initialized`` are resetted
+        because others does not matter.
         """
         self._occupied_indices.clear()
         self._initialized.fill(False)

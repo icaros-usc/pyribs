@@ -32,6 +32,8 @@ def test_attributes_correctly_constructed(_sliding_boundary_data):
 
     # Check the shape of boundaries.
     assert archive.boundaries.shape == (2, 20)
+    assert archive.remap_frequency == 100
+    assert archive.buffer_capacity == 1000
 
 
 def test_add_to_archive_with_remap(_sliding_boundary_data):
