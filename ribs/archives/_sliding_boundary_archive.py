@@ -177,7 +177,7 @@ class SlidingBoundaryArchive(ArchiveBase):
 
     @property
     def boundaries(self):
-        """ list of np.ndarray: The dynamic boundaries of each dimension.
+        """list of np.ndarray: The dynamic boundaries of each dimension.
 
         The number of boundaries is determined by ``dims``. e.g. if ``dims`` is
         ``[20, 30, 40]``, the ``boundaries`` is ``[b1, b2, b3]`` where ``b1``,
