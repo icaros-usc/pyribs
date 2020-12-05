@@ -181,7 +181,9 @@ class SlidingBoundaryArchive(ArchiveBase):
         """(behavior_dim, max_bin_size), np.ndarray: The dynamic boundaries of
         each dimension of the behavior space.
 
-        The number of boundaries is determined by ``dims``.
+        The number of boundaries is determined by ``dims``. e.g. if ``dims`` is
+        ``[20, 30, 40]``, the size of ``boundaries`` is ``[3, 40]``. To access
+        the j-th boundary of the i-th dimension, use ``boundaries[i][j]``.
         """
         return self._boundaries
 
@@ -203,7 +205,10 @@ class SlidingBoundaryArchive(ArchiveBase):
         return index
 
     def _get_index(self, behavior_values):
-        """Index is determined based on sliding boundaries."""
+        """Index is determined based on sliding boundaries.
+
+        :meta private:
+        """
         index = SlidingBoundaryArchive._get_index_numba(behavior_values,
                                                         self.upper_bounds,
                                                         self.lower_bounds,
