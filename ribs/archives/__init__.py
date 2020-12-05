@@ -11,8 +11,8 @@ from ribs.archives._grid_archive import GridArchive
 from ribs.archives._sliding_boundary_archive import SlidingBoundaryArchive
 
 __all__ = [
-    "ArchiveBase",
-    "CVTArchive",
     "GridArchive",
+    "CVTArchive",
     "SlidingBoundaryArchive",
+    "ArchiveBase",
 ]

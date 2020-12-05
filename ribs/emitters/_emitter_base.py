@@ -16,6 +16,16 @@ class EmitterBase(ABC):
 
     Args:
         solution_dim (int): The dimension of solutions produced by this emitter.
+        bounds (None or array-like): Bounds of the solution space. Each emitter
+            decides how to handle these bounds (if at all). Unbounded upper
+            bounds are set to +inf, and unbounded lower bounds are set to -inf.
+
+            Pass None to indicate there are no bounds.
+
+            Pass an array-like to specify the bounds for each dim. Each element
+            in this array-like can be None to indicate no bound, or a tuple of
+            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
+            ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to generate on each call to
             :meth:`ask`.
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -28,16 +38,56 @@ class EmitterBase(ABC):
         _archive (ribs.archives.ArchiveBase): See ``archive`` arg.
     """
 
-    def __init__(self, solution_dim, batch_size, archive, seed=None):
+    def __init__(self, solution_dim, bounds, batch_size, archive, seed=None):
         self._rng = np.random.default_rng(seed)
         self._archive = archive
         self._solution_dim = solution_dim
+        (self._lower_bounds,
+         self._upper_bounds) = self._process_bounds(bounds, self._solution_dim)
         self._batch_size = batch_size
+
+    @staticmethod
+    def _process_bounds(bounds, solution_dim):
+        """Processes the input bounds.
+
+        Returns:
+            tuple: Either two integers for the lower and upper bounds, or two
+                arrays containing all the lower bounds and all the upper bounds.
+        Raises:
+            ValueError: There is an error in the bounds configuration.
+        """
+        if bounds is None:
+            return -np.inf, np.inf
+
+        # Handle array-like bounds.
+        if len(bounds) != solution_dim:
+            raise ValueError("If it is an array-like, bounds must have the "
+                             "same length as x0")
+        lower_bounds = np.full(solution_dim, -np.inf)
+        upper_bounds = np.full(solution_dim, np.inf)
+        for idx, bnd in enumerate(bounds):
+            if bnd is None:
+                continue  # Bounds already default to -inf and inf.
+            if len(bnd) != 2:
+                raise ValueError("All entries of bounds must be length 2")
+            lower_bounds[idx] = -np.inf if bnd[0] is None else bnd[0]
+            upper_bounds[idx] = np.inf if bnd[1] is None else bnd[1]
+        return lower_bounds, upper_bounds
 
     @property
     def solution_dim(self):
         """int: The dimension of solutions produced by this emitter."""
         return self._solution_dim
+
+    @property
+    def lower_bounds(self):
+        """float or np.ndarray: Lower bounds of the solution space."""
+        return self._lower_bounds
+
+    @property
+    def upper_bounds(self):
+        """float or np.ndarray: Upper bounds of the solution space."""
+        return self._upper_bounds
 
     @property
     def batch_size(self):
