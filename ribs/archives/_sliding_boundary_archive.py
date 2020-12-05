@@ -56,11 +56,12 @@ class IndividualBuffer:
 
     def full(self):
         """Whether buffer is full."""
-        return len(self._inds_dq) == self._buffer_capacity
+        return len(self._inds_dq) >= self._buffer_capacity
 
     @property
     def sorted_behavior_values(self):
-        """list of SortedList: Sorted behaviors of each dimension"""
+        """(behavior_dim, self.size) np.ndarray: Sorted behaviors of each
+        dimension"""
         return np.array(self._bc_lists, dtype=np.float)
 
     @property
@@ -87,7 +88,7 @@ class SlidingBoundaryArchive(ArchiveBase):
     stored in the buffer.
 
     This archive attempts to enable the distribution of the space illuminated
-    by the archive to more accurately match the true distribution if the
+    by the archive to more accurately match the true distribution of the
     behavior characteristics are not uniformly distributed.
 
     Args:
@@ -176,19 +177,20 @@ class SlidingBoundaryArchive(ArchiveBase):
 
     @property
     def boundaries(self):
-        """(behavior_dim, max_bin_size), np.ndarray: The dynamic boundaries of
-        each dimension.
+        """ list of np.ndarray: The dynamic boundaries of each dimension.
 
         The number of boundaries is determined by ``dims``. e.g. if ``dims`` is
-        ``[20, 30, 40]``, the size of ``boundaries`` is ``[3, 40]``. To access
-        the j-th boundary of the i-th dimension, use ``boundaries[i][j]``.
+        ``[20, 30, 40]``, the ``boundaries`` is ``[b1, b2, b3]`` where ``b1``,
+        ``b2``, and ``b3`` are arrays of size 20, 30, and 40 respectively. To
+        access the j-th boundary of the i-th dimension, use ``boundaries[i][j]
+        ``.
         """
-        return self._boundaries
+        return [bound[:dim] for bound, dim in zip(self._boundaries, self._dims)]
 
     @staticmethod
     @nb.jit(nopython=True)
     def _get_index_numba(behavior_values, upper_bounds, lower_bounds,
-                         boundaries):
+                         boundaries, dims):
         """Numba helper for _get_index().
 
         See _get_index() for usage.
@@ -198,7 +200,7 @@ class SlidingBoundaryArchive(ArchiveBase):
             upper_bounds - _EPSILON)
         index = []
         for i, behavior_value in enumerate(behavior_values):
-            idx = np.searchsorted(boundaries[i], behavior_value)
+            idx = np.searchsorted(boundaries[i][:dims[i]], behavior_value)
             index.append(max(0, idx - 1))
         return index
 
@@ -210,14 +212,15 @@ class SlidingBoundaryArchive(ArchiveBase):
         index = SlidingBoundaryArchive._get_index_numba(behavior_values,
                                                         self.upper_bounds,
                                                         self.lower_bounds,
-                                                        self._boundaries)
+                                                        self._boundaries,
+                                                        self._dims)
         return tuple(index)
 
     def _reset_archive(self):
         """Reset the archive.
 
-        Only ``self._occupied_indices`` and ``self._initialized`` are resetted
-        because others does not matter.
+        Only ``self._occupied_indices`` and ``self._initialized`` are reset
+        because other members do not matter.
         """
         self._occupied_indices.clear()
         self._initialized.fill(False)

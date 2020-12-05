@@ -31,7 +31,8 @@ def test_attributes_correctly_constructed(_sliding_boundary_data):
     assert np.all(archive.interval_size == [2, 4])
 
     # Check the shape of boundaries.
-    assert archive.boundaries.shape == (2, 20)
+    assert len(archive.boundaries[0]) == 10
+    assert len(archive.boundaries[1]) == 20
     assert archive.remap_frequency == 100
     assert archive.buffer_capacity == 1000
 
