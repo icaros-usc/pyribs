@@ -5,6 +5,22 @@ import numba as nb
 import numpy as np
 
 
+def require_init(method):
+    """Decorator for archive methods that forces the archive to be initialized.
+
+    If the archive is not initialized (according to the ``is_initialized``
+    property), a RuntimeError is raised.
+    """
+
+    def method_wrapper(self, *args, **kwargs):
+        if not self.is_initialized:
+            raise RuntimeError("Archive has not been initialized. "
+                               "Please call initialize().")
+        return method(self, *args, **kwargs)
+
+    return method_wrapper
+
+
 class RandomBuffer:
     """An internal class that stores a buffer of random numbers.
 
@@ -103,7 +119,8 @@ class ArchiveBase(ABC):
             values of each solution. This attribute is None until
             :meth:`initialize` is called.
         _occupied_indices (list of (int or tuple of int)): A list of indices
-            that are occupied in the archive.
+            that are occupied in the archive. This attribute is None until
+            :meth:`initialize` is called.
     """
 
     def __init__(self, storage_dims, behavior_dim, seed=None):
@@ -116,12 +133,19 @@ class ArchiveBase(ABC):
         self._objective_values = None
         self._behavior_values = None
         self._solutions = None
-        self._occupied_indices = []
+        self._occupied_indices = None
 
         # Not intended to be accessed by children (and thus not mentioned in the
         # docstring).
         self._rand_buf = None
         self._seed = seed
+        self._is_initialized = False
+
+    @property
+    def is_initialized(self):
+        """Whether the archive has been initialized by a call to
+        :meth:initialize"""
+        return self._is_initialized
 
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
@@ -131,7 +155,13 @@ class ArchiveBase(ABC):
 
         Args:
             solution_dim (int): The dimension of the solution space.
+        Raises:
+            RuntimeError: The archive is already initialized.
         """
+        if self._is_initialized:
+            raise RuntimeError("Cannot re-initialize an archive")
+        self._is_initialized = True
+
         self._rand_buf = RandomBuffer(self._seed)
         self._solution_dim = solution_dim
         self._initialized = np.zeros(self._storage_dims, dtype=bool)
@@ -140,6 +170,7 @@ class ArchiveBase(ABC):
             (*self._storage_dims, self._behavior_dim), dtype=float)
         self._solutions = np.empty((*self._storage_dims, solution_dim),
                                    dtype=float)
+        self._occupied_indices = []
 
     @abstractmethod
     def _get_index(self, behavior_values):
@@ -181,6 +212,7 @@ class ArchiveBase(ABC):
 
         return False, already_initialized
 
+    @require_init
     def add(self, solution, objective_value, behavior_values):
         """Attempts to insert a new solution into the archive.
 
@@ -226,6 +258,7 @@ class ArchiveBase(ABC):
         """
         return not self._occupied_indices
 
+    @require_init
     def get_random_elite(self):
         """Select an elite uniformly at random from one of the archive's bins.
 

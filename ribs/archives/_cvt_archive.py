@@ -5,7 +5,7 @@ from numba import jit
 from scipy.cluster.vq import kmeans
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 
-from ribs.archives._archive_base import ArchiveBase
+from ribs.archives._archive_base import ArchiveBase, require_init
 
 
 class CVTArchive(ArchiveBase):
@@ -177,6 +177,7 @@ class CVTArchive(ArchiveBase):
 
         return self._brute_force_nn_numba(behavior_values, self._centroids)
 
+    @require_init
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.
 

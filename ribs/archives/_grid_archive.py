@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from numba import jit
 
-from ribs.archives._archive_base import ArchiveBase
+from ribs.archives._archive_base import ArchiveBase, require_init
 
 _EPSILON = 1e-9
 
@@ -97,6 +97,7 @@ class GridArchive(ArchiveBase):
                                              self._interval_size, self._dims)
         return tuple(index)
 
+    @require_init
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.
 

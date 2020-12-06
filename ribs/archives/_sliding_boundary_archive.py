@@ -1,12 +1,13 @@
 """Contains the SlidingBoundaryArchive."""
 
 from collections import deque
-import numpy as np
+
 import numba as nb
+import numpy as np
 import pandas as pd
 from sortedcontainers import SortedList
 
-from ribs.archives._archive_base import ArchiveBase
+from ribs.archives._archive_base import ArchiveBase, require_init
 
 _EPSILON = 1e-9
 
@@ -225,6 +226,7 @@ class SlidingBoundaryArchive(ArchiveBase):
         self._occupied_indices.clear()
         self._initialized.fill(False)
 
+    @require_init
     def add(self, solution, objective_value, behavior_values):
         """ Attempt to insert the solution into the archive.
 
@@ -298,6 +300,7 @@ class SlidingBoundaryArchive(ArchiveBase):
                                        behavior_value)
         return inserted
 
+    @require_init
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.
 
