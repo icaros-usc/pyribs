@@ -181,10 +181,10 @@ class SlidingBoundaryArchive(ArchiveBase):
         """list of np.ndarray: The dynamic boundaries of each dimension.
 
         The number of boundaries is determined by ``dims``. e.g. if ``dims`` is
-        ``[20, 30, 40]``, the ``boundaries`` is ``[b1, b2, b3]`` where ``b1``,
+        ``[20, 30, 40]``, ``boundaries`` is ``[b1, b2, b3]`` where ``b1``,
         ``b2``, and ``b3`` are arrays of size 20, 30, and 40 respectively. To
-        access the j-th boundary of the i-th dimension, use ``boundaries[i][j]
-        ``.
+        access the j-th boundary of the i-th dimension, use
+        ``boundaries[i][j]``.
         """
         return [bound[:dim] for bound, dim in zip(self._boundaries, self._dims)]
 
