@@ -15,6 +15,7 @@ tests/extras/baseline_images/visualize_test. For instance, for
 Assuming your output is what you expected (and assuming you have made your code
 deterministic), the test should now pass when you re-run it.
 """
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -81,6 +82,7 @@ def test_cvt_archive_heatmap_fails_on_non_2d():
                   extensions=["png"])
 def test_cvt_archive_heatmap(_cvt_archive_fixture):
     archive = _cvt_archive_fixture
+    plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(archive)
 
 
@@ -93,10 +95,39 @@ def test_cvt_archive_heatmap_with_custom_axis(_cvt_archive_fixture):
     cvt_archive_heatmap(archive, ax=ax)
 
 
+@image_comparison(baseline_images=["cvt_archive_heatmap_with_coolwarm_cmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_cvt_archive_heatmap_with_coolwarm_cmap(_cvt_archive_fixture):
+    archive = _cvt_archive_fixture
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(archive, cmap=matplotlib.cm.get_cmap("coolwarm"))
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_with_listed_cmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_cvt_archive_heatmap_with_listed_cmap(_cvt_archive_fixture):
+    archive = _cvt_archive_fixture
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_samples"],
                   remove_text=False,
                   extensions=["png"])
 def test_cvt_archive_heatmap_with_samples(_cvt_archive_fixture):
     archive = _cvt_archive_fixture
-    _, ax = plt.subplots(figsize=(8, 6))
-    cvt_archive_heatmap(archive, ax=ax, plot_samples=True)
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(archive, plot_samples=True)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_with_limits"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_cvt_archive_heatmap_with_limits(_cvt_archive_fixture):
+    archive = _cvt_archive_fixture
+    plt.figure(figsize=(8, 6))
+    # Negative sphere function in the _cvt_archive_fixture should have range
+    # (-2, 0). These limits should give us a very uniform-looking archive.
+    cvt_archive_heatmap(archive, vmin=-1.0, vmax=-0.5)

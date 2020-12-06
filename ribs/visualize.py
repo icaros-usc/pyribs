@@ -4,6 +4,7 @@ Note that this module only works when you install ``ribs[all]``. As such, we do
 not import it when you run ``import ribs``, and you will need to explicitly use
 ``import ribs.visualize``.
 """
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable
@@ -12,6 +13,15 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 __all__ = [
     "cvt_archive_heatmap",
 ]
+
+
+def _retrieve_cmap(cmap):
+    """Retrieves colormap from matplotlib."""
+    if isinstance(cmap, str):
+        return matplotlib.cm.get_cmap(cmap)
+    if isinstance(cmap, list):
+        return matplotlib.colors.ListedColormap(cmap)
+    return cmap
 
 
 def _get_pt_to_obj(cvt_archive):
@@ -28,35 +38,44 @@ def _get_pt_to_obj(cvt_archive):
 
 
 def cvt_archive_heatmap(archive,
+                        plot_centroids=True,
                         plot_samples=False,
                         ax=None,
-                        figsize=(8, 6),
-                        filename=None,
-                        colormap=None):
+                        cmap="magma",
+                        square=True,
+                        ms=1,
+                        lw=0.5,
+                        vmin=None,
+                        vmax=None):
     """Plots heatmap of a 2D :class:`ribs.archives.CVTArchive`.
 
     Essentially, we create a Voronoi diagram and shade in each cell with a
     color corresponding to the value of that cell's elite.
 
+    When you create a figure for plotting this heatmap, we recommend having an
+    aspect ratio of 4:3. Depending on how many bins you have in your archive,
+    you may need to tune the values of ``ms`` and ``lw``. If there are too many
+    bins, the Voronoi diagram and centroid markers will make the entire image
+    appear black. In that case, you can turn off the centroids with
+    ``plot_centroids=False`` and even remove the lines completely with
+    ``lw=0.0``.
+
     Args:
         archive (CVTArchive): A 2D CVTArchive.
         plot_samples (bool): Whether to plot the samples used when generating
             the clusters.
-        colormap (matplotlib.colors.Colormap): A colormap to use when plotting
-            intensity. If None, will default to matplotlib's "magma" colormap.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
-            a new figure and axis will be created with ``plt.subplots()``.
-        figsize ((float, float) tuple): Size of figure to create if ``ax`` is
-            not passed in.
-        filename (str): File to save the figure to. Can be used even when
-            passing in an axis. Leave as None to avoid saving any figure.
-    Returns:
-        tuple: 2-element tuple containing:
-
-            **fig** (*matplotlib figure*): Figure containing the heatmap and
-            its colorbar.
-
-            **ax** (*matplotlib axes*): Axis with the heatmap.
+            the current axis will be used.
+        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
+            plotting intensity. Either the name of a colormap, a list of RGB or
+            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
+        square (bool): If True, set the axes aspect raio to be "equal".
+        ms (float): Marker size for both centroids and samples.
+        lw (float): Line width when plotting the voronoi diagram.
+        vmin (float): Minimum objective value to use in the plot. If None, the
+            minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If None, the
+            maximum objective value in the archive is used.
     Raises:
         ValueError: The archive is not 2D.
     """
@@ -64,15 +83,13 @@ def cvt_archive_heatmap(archive,
         raise ValueError("Cannot plot heatmap for non-2D archive.")
 
     # Try getting the colormap early in case it fails.
-    if colormap is None:
-        colormap = plt.get_cmap("magma")
+    cmap = _retrieve_cmap(cmap)
 
     # Retrieve and initialize the axis.
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
-    else:
-        fig = ax.get_figure()
-    ax.set_aspect("equal")
+        ax = plt.gca()
+    if square:
+        ax.set_aspect("equal")
     ax.set_xlim(archive.lower_bounds[0], archive.upper_bounds[0])
     ax.set_ylim(archive.lower_bounds[1], archive.upper_bounds[1])
 
@@ -103,6 +120,12 @@ def cvt_archive_heatmap(archive,
             max_obj = max(max_obj, obj)
             region_obj[region_idx] = obj
 
+    # Override objective value range.
+    if vmin is not None:
+        min_obj = vmin
+    if vmax is not None:
+        max_obj = vmax
+
     # Shade the regions.
     for region, objective in zip(vor.regions, region_obj):
         # This check is O(n), but n is typically small, and creating
@@ -111,15 +134,16 @@ def cvt_archive_heatmap(archive,
             if objective is None:
                 color = "white"
             else:
-                normalized_obj = (objective - min_obj) / (max_obj - min_obj)
-                color = colormap(normalized_obj)
+                normalized_obj = np.clip(
+                    (objective - min_obj) / (max_obj - min_obj), 0.0, 1.0)
+                color = cmap(normalized_obj)
             polygon = [vor.vertices[i] for i in region]
-            ax.fill(*zip(*polygon), color=color, ec="k", lw=0.5)
+            ax.fill(*zip(*polygon), color=color, ec="k", lw=lw)
 
     # Create a colorbar.
-    mappable = ScalarMappable(cmap=colormap)
+    mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(min_obj, max_obj)
-    fig.colorbar(mappable, ax=ax, pad=0.1)
+    ax.figure.colorbar(mappable, ax=ax, pad=0.1)
 
     # Plot the sample points and centroids.
     if plot_samples:
@@ -127,11 +151,6 @@ def cvt_archive_heatmap(archive,
                 archive.samples[:, 1],
                 "o",
                 c="gray",
-                ms=1)
-    ax.plot(archive.centroids[:, 0], archive.centroids[:, 1], "ko", ms=1)
-
-    # Save figure if necessary.
-    if filename is not None:
-        fig.savefig(filename)
-
-    return fig, ax
+                ms=ms)
+    if plot_centroids:
+        ax.plot(archive.centroids[:, 0], archive.centroids[:, 1], "ko", ms=ms)
