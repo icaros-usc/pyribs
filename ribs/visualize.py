@@ -10,6 +10,9 @@ import numpy as np
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
+# Matplotlib functions tend to have a ton of args.
+# pylint: disable = too-many-arguments
+
 __all__ = [
     "cvt_archive_heatmap",
 ]
@@ -28,7 +31,7 @@ def _get_pt_to_obj(cvt_archive):
     """Creates a dict from point index to objective value from a CVTArchive."""
 
     # Hopefully as_pandas() is okay in terms of efficiency since there are only
-    # 7 columns (1 index, 2 centroid, 2 behavior, 1 objective, 1 solution).
+    # 5 columns (1 index, 2 behavior, 1 objective, 1 solution).
     data = cvt_archive.as_pandas()
 
     pt_to_obj = {}
@@ -41,8 +44,9 @@ def cvt_archive_heatmap(archive,
                         ax=None,
                         plot_centroids=True,
                         plot_samples=False,
+                        transpose_bcs=False,
                         cmap="magma",
-                        square=True,
+                        square=False,
                         ms=1,
                         lw=0.5,
                         vmin=None,
@@ -52,13 +56,11 @@ def cvt_archive_heatmap(archive,
     Essentially, we create a Voronoi diagram and shade in each cell with a
     color corresponding to the value of that cell's elite.
 
-    When you create a figure for plotting this heatmap, we recommend having an
-    aspect ratio of 4:3. Depending on how many bins you have in your archive,
-    you may need to tune the values of ``ms`` and ``lw``. If there are too many
-    bins, the Voronoi diagram and centroid markers will make the entire image
-    appear black. In that case, you can turn off the centroids with
-    ``plot_centroids=False`` and even remove the lines completely with
-    ``lw=0.0``.
+    Depending on how many bins you have in your archive, you may need to tune
+    the values of ``ms`` and ``lw``. If there are too many bins, the Voronoi
+    diagram and centroid markers will make the entire image appear black. In
+    that case, you can turn off the centroids with ``plot_centroids=False`` and
+    even remove the lines completely with ``lw=0.0``.
 
     Examples:
 
@@ -92,6 +94,9 @@ def cvt_archive_heatmap(archive,
         plot_centroids (bool): Whether to plot the cluster centroids.
         plot_samples (bool): Whether to plot the samples used when generating
             the clusters.
+        transpose_bcs (bool): By default, the first BC in the archive will
+            appear along the x-axis, and the second will be along the y-axis. To
+            switch this (i.e. to transpose the axes), set this to True.
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
@@ -111,32 +116,42 @@ def cvt_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
 
+    # Retrieve data from archive.
+    lower_bounds = archive.lower_bounds
+    upper_bounds = archive.upper_bounds
+    centroids = archive.centroids
+    samples = archive.samples
+    if transpose_bcs:
+        lower_bounds = np.flip(lower_bounds)
+        upper_bounds = np.flip(upper_bounds)
+        centroids = np.flip(centroids, axis=1)
+        samples = np.flip(samples, axis=1)
+
     # Retrieve and initialize the axis.
-    if ax is None:
-        ax = plt.gca()
+    ax = plt.gca() if ax is None else ax
+    ax.set_xlim(lower_bounds[0], upper_bounds[0])
+    ax.set_ylim(lower_bounds[1], upper_bounds[1])
     if square:
         ax.set_aspect("equal")
-    ax.set_xlim(archive.lower_bounds[0], archive.upper_bounds[0])
-    ax.set_ylim(archive.lower_bounds[1], archive.upper_bounds[1])
 
     # Add faraway points so that the edge regions of the Voronoi diagram are
     # filled in. Refer to
     # https://stackoverflow.com/questions/20515554/colorize-voronoi-diagram
     # for more info.
-    interval = archive.upper_bounds - archive.lower_bounds
+    interval = upper_bounds - lower_bounds
     scale = 1000
     faraway_pts = [
-        archive.upper_bounds + interval * scale,  # Far upper right.
-        archive.upper_bounds + interval * [-1, 1] * scale,  # Far upper left.
-        archive.lower_bounds + interval * [-1, -1] * scale,  # Far bottom left.
-        archive.lower_bounds + interval * [1, -1] * scale,  # Far bottom right.
+        upper_bounds + interval * scale,  # Far upper right.
+        upper_bounds + interval * [-1, 1] * scale,  # Far upper left.
+        lower_bounds + interval * [-1, -1] * scale,  # Far bottom left.
+        lower_bounds + interval * [1, -1] * scale,  # Far bottom right.
     ]
-    vor = Voronoi(np.append(archive.centroids, faraway_pts, axis=0))
+    vor = Voronoi(np.append(centroids, faraway_pts, axis=0))
 
     # Calculate objective value for each region. `vor.point_region` contains
     # the region index of each point.
     region_obj = [None] * len(vor.regions)
-    min_obj, max_obj = np.inf, np.NINF
+    min_obj, max_obj = np.inf, -np.inf
     pt_to_obj = _get_pt_to_obj(archive)
     for pt_idx, region_idx in enumerate(
             vor.point_region[:-4]):  # Exclude faraway_pts.
@@ -171,10 +186,6 @@ def cvt_archive_heatmap(archive,
 
     # Plot the sample points and centroids.
     if plot_samples:
-        ax.plot(archive.samples[:, 0],
-                archive.samples[:, 1],
-                "o",
-                c="gray",
-                ms=ms)
+        ax.plot(samples[:, 0], samples[:, 1], "o", c="gray", ms=ms)
     if plot_centroids:
-        ax.plot(archive.centroids[:, 0], archive.centroids[:, 1], "ko", ms=ms)
+        ax.plot(centroids[:, 0], centroids[:, 1], "ko", ms=ms)

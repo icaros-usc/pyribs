@@ -40,8 +40,8 @@ def _clean_matplotlib():
 
 
 @pytest.fixture(scope="module")  # Only run once to save time.
-def _cvt_archive_fixture():
-    """A deterministically created CVTArchive."""
+def _cvt_archive():
+    """Deterministically created CVTArchive."""
     seed = 42
     np.random.seed(seed)  # Make scipy's k-means deterministic.
     archive = CVTArchive([(-1, 1), (-1, 1)],
@@ -53,15 +53,39 @@ def _cvt_archive_fixture():
     archive.initialize(solution_dim=2)
 
     # Add solutions.
-    n_vals = 100_000
-    for _ in range(n_vals):
-        solution = np.random.uniform(-1, 1, 2)
-        archive.add(
-            solution=solution,
-            # Objective is the negative sphere function.
-            objective_value=-np.sum(np.square(solution)),
-            behavior_values=solution,
-        )
+    for x in np.linspace(-1, 1, 100):
+        for y in np.linspace(-1, 1, 100):
+            archive.add(
+                solution=np.array([x, y]),
+                # Objective is the negative sphere function.
+                objective_value=-(x**2 + y**2),
+                behavior_values=np.array([x, y]),
+            )
+    return archive
+
+
+@pytest.fixture(scope="module")  # Only run once to save time.
+def _long_cvt_archive():
+    """Same as above, but the behavior space is longer in one direction."""
+    seed = 42
+    np.random.seed(seed)  # Make scipy's k-means deterministic.
+    archive = CVTArchive([(-2, 2), (-1, 1)],
+                         100,
+                         samples=1000,
+                         use_kd_tree=False,
+                         k_means_threshold=1e-6,
+                         seed=seed)
+    archive.initialize(solution_dim=2)
+
+    # Add solutions.
+    for x in np.linspace(-2, 2, 100):
+        for y in np.linspace(-1, 1, 100):
+            archive.add(
+                solution=np.array([x, y]),
+                # Objective is the negative sphere function.
+                objective_value=-(x**2 + y**2),
+                behavior_values=np.array([x, y]),
+            )
     return archive
 
 
@@ -80,54 +104,72 @@ def test_cvt_archive_heatmap_fails_on_non_2d():
 @image_comparison(baseline_images=["cvt_archive_heatmap"],
                   remove_text=False,
                   extensions=["png"])
-def test_cvt_archive_heatmap(_cvt_archive_fixture):
-    archive = _cvt_archive_fixture
+def test_cvt_archive_heatmap(_cvt_archive):
     plt.figure(figsize=(8, 6))
-    cvt_archive_heatmap(archive)
+    cvt_archive_heatmap(_cvt_archive)
 
 
 @image_comparison(baseline_images=["cvt_archive_heatmap"],
                   remove_text=False,
                   extensions=["png"])
-def test_cvt_archive_heatmap_with_custom_axis(_cvt_archive_fixture):
-    archive = _cvt_archive_fixture
+def test_cvt_archive_heatmap_with_custom_axis(_cvt_archive):
     _, ax = plt.subplots(figsize=(8, 6))
-    cvt_archive_heatmap(archive, ax=ax)
+    cvt_archive_heatmap(_cvt_archive, ax=ax)
 
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_coolwarm_cmap"],
                   remove_text=False,
                   extensions=["png"])
-def test_cvt_archive_heatmap_with_coolwarm_cmap(_cvt_archive_fixture):
-    archive = _cvt_archive_fixture
+def test_cvt_archive_heatmap_with_coolwarm_cmap(_cvt_archive):
     plt.figure(figsize=(8, 6))
-    cvt_archive_heatmap(archive, cmap=matplotlib.cm.get_cmap("coolwarm"))
+    cvt_archive_heatmap(_cvt_archive, cmap=matplotlib.cm.get_cmap("coolwarm"))
 
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_listed_cmap"],
                   remove_text=False,
                   extensions=["png"])
-def test_cvt_archive_heatmap_with_listed_cmap(_cvt_archive_fixture):
-    archive = _cvt_archive_fixture
+def test_cvt_archive_heatmap_with_listed_cmap(_cvt_archive):
     plt.figure(figsize=(8, 6))
-    cvt_archive_heatmap(archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    cvt_archive_heatmap(_cvt_archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_samples"],
                   remove_text=False,
                   extensions=["png"])
-def test_cvt_archive_heatmap_with_samples(_cvt_archive_fixture):
-    archive = _cvt_archive_fixture
+def test_cvt_archive_heatmap_with_samples(_cvt_archive):
     plt.figure(figsize=(8, 6))
-    cvt_archive_heatmap(archive, plot_samples=True)
+    cvt_archive_heatmap(_cvt_archive, plot_samples=True)
 
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_limits"],
                   remove_text=False,
                   extensions=["png"])
-def test_cvt_archive_heatmap_with_limits(_cvt_archive_fixture):
-    archive = _cvt_archive_fixture
+def test_cvt_archive_heatmap_with_limits(_cvt_archive):
     plt.figure(figsize=(8, 6))
-    # Negative sphere function in the _cvt_archive_fixture should have range
+    # Negative sphere function in the _cvt_archive should have range
     # (-2, 0). These limits should give us a very uniform-looking archive.
-    cvt_archive_heatmap(archive, vmin=-1.0, vmax=-0.5)
+    cvt_archive_heatmap(_cvt_archive, vmin=-1.0, vmax=-0.5)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_long"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_cvt_archive_heatmap_long(_long_cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(_long_cvt_archive)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_transpose"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_cvt_archive_heatmap_transpose(_long_cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(_long_cvt_archive, transpose_bcs=True)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_transpose_square"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_cvt_archive_heatmap_transpose_square(_long_cvt_archive):
+    plt.figure(figsize=(4, 6))
+    cvt_archive_heatmap(_long_cvt_archive, transpose_bcs=True, square=True)
