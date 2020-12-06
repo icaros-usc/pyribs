@@ -98,7 +98,7 @@ class IsoLineEmitter(EmitterBase):
                                         size=(self.batch_size,
                                               self.solution_dim))
 
-        if self._archive.is_empty():
+        if self._archive.empty:
             solutions = np.expand_dims(self._x0, axis=0) + iso_gaussian
         else:
             parents = [

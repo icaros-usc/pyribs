@@ -66,15 +66,15 @@ def test_archive_cannot_reinit(_archive_data):
 
 
 def test_archive_is_2d(_archive_data):
-    assert _archive_data.archive.is_2d()
+    assert _archive_data.archive.is_2d
 
 
 def test_new_archive_is_empty(_archive_data):
-    assert _archive_data.archive.is_empty()
+    assert _archive_data.archive.empty
 
 
 def test_archive_with_entry_is_not_empty(_archive_data):
-    assert not _archive_data.archive_with_entry.is_empty()
+    assert not _archive_data.archive_with_entry.empty
 
 
 def test_random_elite_gets_single_elite(_archive_data):

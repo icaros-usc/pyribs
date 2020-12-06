@@ -220,11 +220,11 @@ class SlidingBoundaryArchive(ArchiveBase):
     def _reset_archive(self):
         """Reset the archive.
 
-        Only ``self._occupied_indices`` and ``self._initialized`` are reset
+        Only ``self._occupied_indices`` and ``self._occupied`` are reset
         because other members do not matter.
         """
         self._occupied_indices.clear()
-        self._initialized.fill(False)
+        self._occupied.fill(False)
 
     @require_init
     def add(self, solution, objective_value, behavior_values):

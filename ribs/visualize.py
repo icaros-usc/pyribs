@@ -60,7 +60,7 @@ def cvt_archive_heatmap(archive,
     Raises:
         ValueError: The archive is not 2D.
     """
-    if not archive.is_2d():
+    if not archive.is_2d:
         raise ValueError("Cannot plot heatmap for non-2D archive.")
 
     # Try getting the colormap early in case it fails.

@@ -10,10 +10,10 @@ from decorator import decorator
 def require_init(method, self, *args, **kwargs):
     """Decorator for archive methods that forces the archive to be initialized.
 
-    If the archive is not initialized (according to the ``is_initialized``
+    If the archive is not initialized (according to the ``initialized``
     property), a RuntimeError is raised.
     """
-    if not self.is_initialized:
+    if not self.initialized:
         raise RuntimeError("Archive has not been initialized. "
                            "Please call initialize().")
     return method(self, *args, **kwargs)
@@ -59,7 +59,7 @@ class ArchiveBase(ABC):
     """Base class for archives.
 
     This class assumes that all archives will use a fixed-size container with
-    cells that hold 1) information about whether the cell is initialized (bool),
+    cells that hold 1) information about whether the cell is occupied (bool),
     2) a solution (1D array), 3) objective function evaluation of the solution
     (float), and 4) behavior space coordinates of the solution (1D array). In
     this class, this is implemented with 4 separate numpy arrays with common
@@ -67,7 +67,7 @@ class ArchiveBase(ABC):
     :meth:`__init__` and the ``solution_dim`` argument in ``initialize``, these
     arrays are as follows:
 
-    - ``_initialized`` (shape ``(*storage_dims)``)
+    - ``_occupied`` (shape ``(*storage_dims)``)
     - ``_solutions`` (shape ``(*storage_dims, solution_dim)``)
     - ``_objective_values`` (shape ``(*storage_dims)``)
     - ``_behavior_values`` (shape ``(*storage_dims, behavior_dim)``)
@@ -105,9 +105,9 @@ class ArchiveBase(ABC):
         _behavior_dim (int): See ``behavior_dim`` arg.
         _solution_dim (int): Dimension of the solution space, passed in with
             :meth:`initialize`.
-        _initialized (np.ndarray): Bool array storing whether each cell in the
-            archive has been initialized. This attribute is None until
-            :meth:`initialize` is called.
+        _occupied (np.ndarray): Bool array storing whether each cell in the
+            archive is occupied. This attribute is None until :meth:`initialize`
+            is called.
         _solutions (np.ndarray): Float array storing the solutions themselves.
             This attribute is None until :meth:`initialize` is called.
         _objective_values (np.ndarray): Float array storing the objective values
@@ -127,7 +127,7 @@ class ArchiveBase(ABC):
         self._storage_dims = storage_dims
         self._behavior_dim = behavior_dim
         self._solution_dim = None
-        self._initialized = None
+        self._occupied = None
         self._objective_values = None
         self._behavior_values = None
         self._solutions = None
@@ -137,13 +137,24 @@ class ArchiveBase(ABC):
         # docstring).
         self._rand_buf = None
         self._seed = seed
-        self._is_initialized = False
+        self._initialized = False
 
     @property
-    def is_initialized(self):
+    def initialized(self):
         """Whether the archive has been initialized by a call to
-        :meth:initialize"""
-        return self._is_initialized
+        :meth:`initialize`"""
+        return self._initialized
+
+    @property
+    def is_2d(self):
+        """bool: Whether the archive behavior space is 2d. (Useful when checking
+        whether one can visualize the archive.)"""
+        return self._behavior_dim == 2
+
+    @property
+    def empty(self):
+        """bool: Whether the archive is empty."""
+        return not self._occupied_indices
 
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
@@ -156,13 +167,13 @@ class ArchiveBase(ABC):
         Raises:
             RuntimeError: The archive is already initialized.
         """
-        if self._is_initialized:
+        if self._initialized:
             raise RuntimeError("Cannot re-initialize an archive")
-        self._is_initialized = True
+        self._initialized = True
 
         self._rand_buf = RandomBuffer(self._seed)
         self._solution_dim = solution_dim
-        self._initialized = np.zeros(self._storage_dims, dtype=bool)
+        self._occupied = np.zeros(self._storage_dims, dtype=bool)
         self._objective_values = np.empty(self._storage_dims, dtype=float)
         self._behavior_values = np.empty(
             (*self._storage_dims, self._behavior_dim), dtype=float)
@@ -178,10 +189,10 @@ class ArchiveBase(ABC):
         """
 
     @staticmethod
-    @nb.jit(locals={"already_initialized": nb.types.b1}, nopython=True)
+    @nb.jit(locals={"already_occupied": nb.types.b1}, nopython=True)
     def _add_numba(new_index, new_solution, new_objective_value,
-                   new_behavior_values, initialized, solutions,
-                   objective_values, behavior_values):
+                   new_behavior_values, occupied, solutions, objective_values,
+                   behavior_values):
         """Numba helper for inserting solutions into the archive.
 
         See add() for usage.
@@ -189,26 +200,26 @@ class ArchiveBase(ABC):
         Returns:
             was_inserted (bool): Whether the new values were inserted into the
                 archive.
-            already_initialized (bool): Whether the index was initialized prior
+            already_occupied (bool): Whether the index was occupied prior
                 to this call; i.e. this is True only if there was already an
                 item at the index.
         """
-        already_initialized = initialized[new_index]
-        if (not already_initialized or
+        already_occupied = occupied[new_index]
+        if (not already_occupied or
                 objective_values[new_index] < new_objective_value):
             # Track this index if it has not been seen before -- important that
             # we do this before inserting the solution.
-            if not already_initialized:
-                initialized[new_index] = True
+            if not already_occupied:
+                occupied[new_index] = True
 
             # Insert into the archive.
             objective_values[new_index] = new_objective_value
             behavior_values[new_index] = new_behavior_values
             solutions[new_index] = new_solution
 
-            return True, already_initialized
+            return True, already_occupied
 
-        return False, already_initialized
+        return False, already_occupied
 
     @require_init
     def add(self, solution, objective_value, behavior_values):
@@ -228,33 +239,14 @@ class ArchiveBase(ABC):
         """
         index = self._get_index(behavior_values)
 
-        was_inserted, already_initialized = self._add_numba(
-            index, solution, objective_value, behavior_values,
-            self._initialized, self._solutions, self._objective_values,
-            self._behavior_values)
+        was_inserted, already_occupied = self._add_numba(
+            index, solution, objective_value, behavior_values, self._occupied,
+            self._solutions, self._objective_values, self._behavior_values)
 
-        if was_inserted and not already_initialized:
+        if was_inserted and not already_occupied:
             self._occupied_indices.append(index)
 
         return was_inserted
-
-    def is_2d(self):
-        """Checks if the archive is 2D.
-
-        This is useful when checking whether we can visualize the archive.
-
-        Returns:
-            bool: True if the archive is 2D, False otherwise.
-        """
-        return self._behavior_dim == 2
-
-    def is_empty(self):
-        """Checks if the archive has no elements in it.
-
-        Returns:
-            bool: True if the archive is empty, False otherwise.
-        """
-        return not self._occupied_indices
 
     @require_init
     def get_random_elite(self):
@@ -271,7 +263,7 @@ class ArchiveBase(ABC):
         Raises:
             IndexError: The archive is empty.
         """
-        if self.is_empty():
+        if self.empty:
             raise IndexError("No elements in archive.")
 
         random_idx = self._rand_buf.get(len(self._occupied_indices))
