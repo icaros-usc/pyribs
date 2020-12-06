@@ -184,15 +184,12 @@ class CVTArchive(ArchiveBase):
             A dataframe where each row is an elite in the archive. The dataframe
             consists of 1 ``index`` column indicating the index of the centroid
             in ``self._centroids``, ``behavior_dim`` columns called
-            ``centroid-{i}`` for the coordinates of the centroid,
-            ``behavior_dim`` columns called ``behavior-{i}`` for the behavior
-            values, 1 column for the objective function value called
-            ``objective``, and ``solution_dim`` columns called ``solution-{i}``
-            for the solution values.
+            ``behavior-{i}`` for the behavior values, 1 column for the objective
+            function value called ``objective``, and ``solution_dim`` columns
+            called ``solution-{i}`` for the solution values.
         """
         column_titles = [
             "index",
-            *[f"centroid-{i}" for i in range(self._behavior_dim)],
             *[f"behavior-{i}" for i in range(self._behavior_dim)],
             "objective",
             *[f"solution-{i}" for i in range(self._solution_dim)],
@@ -202,7 +199,6 @@ class CVTArchive(ArchiveBase):
         for index in self._occupied_indices:
             row = [
                 index,
-                *self._centroids[index],
                 *self._behavior_values[index],
                 self._objective_values[index],
                 *self._solutions[index],
