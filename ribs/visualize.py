@@ -38,9 +38,9 @@ def _get_pt_to_obj(cvt_archive):
 
 
 def cvt_archive_heatmap(archive,
+                        ax=None,
                         plot_centroids=True,
                         plot_samples=False,
-                        ax=None,
                         cmap="magma",
                         square=True,
                         ms=1,
@@ -60,12 +60,38 @@ def cvt_archive_heatmap(archive,
     ``plot_centroids=False`` and even remove the lines completely with
     ``lw=0.0``.
 
+    Examples:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import numpy as np
+            >>> import matplotlib.pyplot as plt
+            >>> from ribs.archives import CVTArchive
+            >>> from ribs.visualize import cvt_archive_heatmap
+            >>> # Populate the archive with the negative sphere function.
+            >>> archive = CVTArchive([(-1, 1), (-1, 1)], 100)
+            >>> archive.initialize(solution_dim=2)
+            >>> for x in np.linspace(-1, 1, 100):
+            ...     for y in np.linspace(-1, 1, 100):
+            ...         archive.add(solution=np.array([x,y]),
+            ...                     objective_value=-(x**2 + y**2),
+            ...                     behavior_values=np.array([x,y]))
+            >>> # Plot a heatmap of the archive.
+            >>> plt.figure(figsize=(8, 6))
+            >>> cvt_archive_heatmap(archive)
+            >>> plt.title("Negative sphere function")
+            >>> plt.xlabel("x coords")
+            >>> plt.ylabel("y coords")
+            >>> plt.show()
+
     Args:
         archive (CVTArchive): A 2D CVTArchive.
-        plot_samples (bool): Whether to plot the samples used when generating
-            the clusters.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
             the current axis will be used.
+        plot_centroids (bool): Whether to plot the cluster centroids.
+        plot_samples (bool): Whether to plot the samples used when generating
+            the clusters.
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
@@ -121,10 +147,8 @@ def cvt_archive_heatmap(archive,
             region_obj[region_idx] = obj
 
     # Override objective value range.
-    if vmin is not None:
-        min_obj = vmin
-    if vmax is not None:
-        max_obj = vmax
+    min_obj = min_obj if vmin is None else vmin
+    max_obj = max_obj if vmax is None else vmax
 
     # Shade the regions.
     for region, objective in zip(vor.regions, region_obj):

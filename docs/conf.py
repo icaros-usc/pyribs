@@ -49,6 +49,7 @@ extensions = [
     'sphinx_material',
     'sphinx_copybutton',
     'myst_nb',  # Covers both Markdown files and Jupyter notebooks.
+    'matplotlib.sphinxext.plot_directive',
 ]
 
 # Napoleon
@@ -218,3 +219,9 @@ autodoc_default_options = {
     "autosummary": True,
     "inherited-members": True,
 }
+
+# Matplotlib plot directive.
+plot_include_source = True
+plot_formats = [("png", 90)]
+plot_html_show_formats = False
+plot_html_show_source_link = False
