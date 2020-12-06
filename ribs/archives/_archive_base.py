@@ -3,22 +3,20 @@ from abc import ABC, abstractmethod
 
 import numba as nb
 import numpy as np
+from decorator import decorator
 
 
-def require_init(method):
+@decorator
+def require_init(method, self, *args, **kwargs):
     """Decorator for archive methods that forces the archive to be initialized.
 
     If the archive is not initialized (according to the ``is_initialized``
     property), a RuntimeError is raised.
     """
-
-    def method_wrapper(self, *args, **kwargs):
-        if not self.is_initialized:
-            raise RuntimeError("Archive has not been initialized. "
-                               "Please call initialize().")
-        return method(self, *args, **kwargs)
-
-    return method_wrapper
+    if not self.is_initialized:
+        raise RuntimeError("Archive has not been initialized. "
+                           "Please call initialize().")
+    return method(self, *args, **kwargs)
 
 
 class RandomBuffer:
