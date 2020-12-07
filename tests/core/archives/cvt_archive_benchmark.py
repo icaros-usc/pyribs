@@ -1,4 +1,6 @@
 """Benchmarks for the CVTArhive."""
+import numpy as np
+
 from ribs.archives import CVTArchive
 
 # pylint: disable = invalid-name, unused-variable
@@ -53,3 +55,24 @@ def benchmark_get_100k_random_elites(use_kd_tree, benchmark,
     def get_elites():
         for i in range(n):
             sol, obj, beh = archive.get_random_elite()
+
+
+def benchmark_as_pandas(benchmark):
+    bins = 1000
+    archive = CVTArchive([(-1, 1), (-1, 1)],
+                         bins,
+                         use_kd_tree=True,
+                         samples=10_000)
+    archive.initialize(10)
+
+    for x in np.linspace(-1, 1, 100):
+        for y in np.linspace(-1, 1, 100):
+            sol = np.random.random(10)
+            sol[0] = x
+            sol[1] = y
+            archive.add(sol, 1.0, np.array([x, y]))
+
+    # Archive should be full.
+    assert len(archive.as_pandas()) == bins
+
+    benchmark(archive.as_pandas)

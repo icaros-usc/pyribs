@@ -189,21 +189,16 @@ class CVTArchive(ArchiveBase):
             function value called ``objective``, and ``solution_dim`` columns
             called ``solution-{i}`` for the solution values.
         """
-        column_titles = [
-            "index",
-            *[f"behavior-{i}" for i in range(self._behavior_dim)],
-            "objective",
-            *[f"solution-{i}" for i in range(self._solution_dim)],
-        ]
+        data = {"index": self._occupied_indices}
 
-        rows = []
-        for index in self._occupied_indices:
-            row = [
-                index,
-                *self._behavior_values[index],
-                self._objective_values[index],
-                *self._solutions[index],
-            ]
-            rows.append(row)
+        behavior_values = self._behavior_values[self._occupied_indices]
+        for i in range(self._behavior_dim):
+            data[f"behavior-{i}"] = behavior_values[:, i]
 
-        return pd.DataFrame(rows, columns=column_titles)
+        data["objective"] = self._objective_values[self._occupied_indices]
+
+        solutions = self._solutions[self._occupied_indices]
+        for i in range(self._solution_dim):
+            data[f"solution-{i}"] = solutions[:, i]
+
+        return pd.DataFrame(data)
