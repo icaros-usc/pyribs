@@ -109,21 +109,20 @@ class GridArchive(ArchiveBase):
             ``objective``, and ``solution_dim`` columns called ``solution-{i}``
             for the solution values.
         """
-        column_titles = [
-            *[f"index-{i}" for i in range(self._behavior_dim)],
-            *[f"behavior-{i}" for i in range(self._behavior_dim)],
-            "objective",
-            *[f"solution-{i}" for i in range(self._solution_dim)],
-        ]
+        indices = tuple(map(list, zip(*self._occupied_indices)))
+        data = {}
 
-        rows = []
-        for index in self._occupied_indices:
-            row = [
-                *index,
-                *self._behavior_values[index],
-                self._objective_values[index],
-                *self._solutions[index],
-            ]
-            rows.append(row)
+        for i in range(self._behavior_dim):
+            data[f"index-{i}"] = indices[i]
 
-        return pd.DataFrame(rows, columns=column_titles)
+        behavior_values = self._behavior_values[indices]
+        for i in range(self._behavior_dim):
+            data[f"behavior-{i}"] = behavior_values[:, i]
+
+        data["objective"] = self._objective_values[indices]
+
+        solutions = self._solutions[indices]
+        for i in range(self._solution_dim):
+            data[f"solution-{i}"] = solutions[:, i]
+
+        return pd.DataFrame(data)

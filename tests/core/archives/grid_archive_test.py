@@ -97,6 +97,8 @@ def test_as_pandas(_grid_data):
         'solution-1',
         'solution-2',
     ])
+    assert (df.dtypes == [int, int, float, float, float, float, float,
+                          float]).all()
     assert (df.loc[0] == np.array([
         *_grid_data.grid_indices,
         *_grid_data.behavior_values,
