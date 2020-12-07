@@ -1,4 +1,5 @@
 """Benchmarks for the GridArchive."""
+import numpy as np
 
 from ribs.archives import GridArchive
 
@@ -35,3 +36,21 @@ def benchmark_get_100k_random_elites(benchmark, benchmark_data_100k):
     def get_elites():
         for i in range(n):
             sol, obj, beh = archive.get_random_elite()
+
+
+def benchmark_as_pandas(benchmark):
+    dim = 256
+    archive = GridArchive((dim, dim), [(-1, 1), (-1, 1)])
+    archive.initialize(10)
+
+    for x in np.linspace(-1, 1, dim):
+        for y in np.linspace(-1, 1, dim):
+            sol = np.random.random(10)
+            sol[0] = x
+            sol[1] = y
+            archive.add(sol, 1.0, np.array([x, y]))
+
+    # Archive should be full.
+    assert len(archive.as_pandas()) == dim * dim
+
+    benchmark(archive.as_pandas)
