@@ -214,8 +214,10 @@ texinfo_documents = [
 
 # -- Extension config -------------------------------------------------
 
+# Can be overridden by :member-order:
+autodoc_member_order = "groupwise"
+
 autodoc_default_options = {
-    "member-order": "groupwise",
     "autosummary": True,
     "inherited-members": True,
 }
