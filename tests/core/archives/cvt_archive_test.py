@@ -23,14 +23,12 @@ def _assert_archive_has_entry(archive, centroid, behavior_values,
     assert len(archive_data) == 1
 
     # Check that the centroid is correct.
-    # TODO: shouldn't have to cast
-    index = int(archive_data.iloc[0][0])
+    index = archive_data.loc[0, "index"]
     assert (archive.centroids[index] == centroid).all()
 
-    # Start at 1 to ignore the "index" column.
-    assert (archive_data.iloc[0][1:] == (list(behavior_values) +
-                                         [objective_value] +
-                                         list(solution))).all()
+    assert (archive_data.loc[0, "behavior-0":] == (list(behavior_values) +
+                                                   [objective_value] +
+                                                   list(solution))).all()
 
 
 def test_properties_are_correct(_cvt_data):
@@ -87,12 +85,21 @@ def test_as_pandas(_cvt_data):
         'solution-1',
         'solution-2',
     ])
+    assert (df.dtypes == [
+        int,
+        float,
+        float,
+        float,
+        float,
+        float,
+        float,
+    ]).all()
 
-    index = int(df.iloc[0][0])
+    index = df.loc[0, "index"]
     assert (_cvt_data.archive_with_entry.centroids[index] == _cvt_data.centroid
            ).all()
 
-    assert (df.iloc[0][1:] == np.array([
+    assert (df.loc[0, "behavior-0":] == np.array([
         *_cvt_data.behavior_values,
         _cvt_data.objective_value,
         *_cvt_data.solution,
