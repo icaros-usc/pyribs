@@ -74,8 +74,16 @@ class CVTArchive(ArchiveBase):
             centroid when inserting into the archive. This may result in a
             speedup for larger dimensions; refer to
             :class:`~ribs.archives.CVTArchive` for more info.
+        custom_centroids (array-like): If passed in, this (bins, behavior_dim)
+            array will be used as the centroids of the CVT instead of generating
+            new ones. In this case, ``samples`` will be ignored, and
+            ``archive.samples`` will be None. This can be useful when one wishes
+            to use the same CVT across experiments for fair comparison.
         seed (float or int): Value to seed the random number generator. Set to
             None to avoid any seeding.
+    Raises:
+        ValueError: The ``samples`` array or the ``custom_centroids`` array is
+            of the wrong dimensionality.
     """
 
     def __init__(self,
@@ -84,6 +92,7 @@ class CVTArchive(ArchiveBase):
                  samples=100_000,
                  k_means_threshold=1e-6,
                  use_kd_tree=False,
+                 custom_centroids=None,
                  seed=None):
         ArchiveBase.__init__(
             self,
@@ -99,9 +108,25 @@ class CVTArchive(ArchiveBase):
         self._bins = bins
         self._k_means_threshold = k_means_threshold
         self._use_kd_tree = use_kd_tree
-        self._samples = samples
-        self._centroids = None
         self._centroid_kd_tree = None
+
+        if custom_centroids is None:
+            if not isinstance(samples, int):
+                samples = np.array(samples)
+                if samples.shape[1] != self._behavior_dim:
+                    raise ValueError(
+                        f"Samples has shape {samples.shape} but must be of "
+                        f"shape (n_samples, {self._behavior_dim})")
+            self._samples = samples
+            self._centroids = None
+        else:
+            custom_centroids = np.array(custom_centroids)
+            if custom_centroids.shape != (bins, self._behavior_dim):
+                raise ValueError(
+                    f"custom_centroids has shape {custom_centroids.shape} but "
+                    f"must be of shape ({bins}, {self._behavior_dim})")
+            self._centroids = custom_centroids
+            self._samples = None
 
     @property
     def lower_bounds(self):
@@ -130,7 +155,8 @@ class CVTArchive(ArchiveBase):
 
         This method may take a while to run. In addition to allocating storage
         space, it runs k-means to create an approximate CVT, and it may create a
-        k-D tree containing the centroids found by k-means.
+        k-D tree containing the centroids found by k-means. This does not apply
+        if ``custom_centroids`` were passed in during construction, however.
 
         Args:
             solution_dim (int): The dimension of the solution space. The array
@@ -139,18 +165,19 @@ class CVTArchive(ArchiveBase):
         """
         ArchiveBase.initialize(self, solution_dim)
 
-        self._samples = self._rng.uniform(
-            self._lower_bounds,
-            self._upper_bounds,
-            size=(self._samples, self._behavior_dim),
-        ) if isinstance(self._samples, int) else np.array(self._samples)
+        if self._centroids is None:
+            self._samples = self._rng.uniform(
+                self._lower_bounds,
+                self._upper_bounds,
+                size=(self._samples, self._behavior_dim),
+            ) if isinstance(self._samples, int) else self._samples
 
-        self._centroids = kmeans(
-            self._samples,
-            self._bins,
-            iter=1,
-            thresh=self._k_means_threshold,
-        )[0]
+            self._centroids = kmeans(
+                self._samples,
+                self._bins,
+                iter=1,
+                thresh=self._k_means_threshold,
+            )[0]
 
         if self._use_kd_tree:
             self._centroid_kd_tree = cKDTree(self._centroids)

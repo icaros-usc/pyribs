@@ -4,6 +4,8 @@ import unittest
 import numpy as np
 import pytest
 
+from ribs.archives import CVTArchive
+
 from .conftest import get_archive_data
 
 # pylint: disable = invalid-name
@@ -31,6 +33,15 @@ def _assert_archive_has_entry(archive, centroid, behavior_values,
                                                    list(solution))).all()
 
 
+def test_samples_bad_shape(use_kd_tree):
+    # The behavior space is 2D but samples are 3D.
+    with pytest.raises(ValueError):
+        CVTArchive([(-1, 1), (-1, 1)],
+                   10,
+                   samples=[[-1, -1, -1], [1, 1, 1]],
+                   use_kd_tree=use_kd_tree)
+
+
 def test_properties_are_correct(_cvt_data):
     assert np.all(_cvt_data.archive.lower_bounds == [-1, -1])
     assert np.all(_cvt_data.archive.upper_bounds == [1, 1])
@@ -40,6 +51,27 @@ def test_properties_are_correct(_cvt_data):
                                          points)
     unittest.TestCase().assertCountEqual(_cvt_data.archive.centroids.tolist(),
                                          points)
+
+
+def test_custom_centroids(use_kd_tree):
+    centroids = np.array([[-0.25, -0.25], [0.25, 0.25]])
+    archive = CVTArchive([(-1, 1), (-1, 1)],
+                         bins=centroids.shape[0],
+                         custom_centroids=centroids,
+                         use_kd_tree=use_kd_tree)
+    archive.initialize(solution_dim=3)
+    assert archive.samples is None
+    assert (archive.centroids == centroids).all()
+
+
+def test_custom_centroids_bad_shape(use_kd_tree):
+    with pytest.raises(ValueError):
+        # The centroids array should be of shape (10, 2) instead of just (1, 2),
+        # hence a ValueError will be raised.
+        CVTArchive([(-1, 1), (-1, 1)],
+                   bins=10,
+                   custom_centroids=[[0.0, 0.0]],
+                   use_kd_tree=use_kd_tree)
 
 
 def test_add_to_archive(_cvt_data):
