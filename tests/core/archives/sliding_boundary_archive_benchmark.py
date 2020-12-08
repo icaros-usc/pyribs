@@ -6,9 +6,8 @@ from ribs.archives import SlidingBoundaryArchive
 # pylint: disable = invalid-name, unused-variable
 
 
-def benchmark_add_10k(benchmark, benchmark_data_100k):
-    _, solutions, objective_values, behavior_values = benchmark_data_100k
-    n = int(1e4)
+def benchmark_add_10k(benchmark, benchmark_data_10k):
+    n, solutions, objective_values, behavior_values = benchmark_data_10k
 
     def setup():
         archive = SlidingBoundaryArchive([10, 20], [(-1, 1), (-2, 2)],
@@ -28,9 +27,8 @@ def benchmark_add_10k(benchmark, benchmark_data_100k):
     benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
 
 
-def benchmark_get_10k_random_elites(benchmark, benchmark_data_100k):
-    _, solutions, objective_values, behavior_values = benchmark_data_100k
-    n = int(1e4)
+def benchmark_get_10k_random_elites(benchmark, benchmark_data_10k):
+    n, solutions, objective_values, behavior_values = benchmark_data_10k
     archive = SlidingBoundaryArchive([10, 20], [(-1, 1), (-2, 2)],
                                      remap_frequency=100,
                                      buffer_capacity=1000)

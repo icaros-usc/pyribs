@@ -6,11 +6,11 @@ from ribs.archives import CVTArchive
 # pylint: disable = invalid-name, unused-variable
 
 
-def benchmark_construction(use_kd_tree, benchmark):
+def benchmark_init(use_kd_tree, benchmark):
     """Construction includes k-means clustering and building a kd-tree."""
 
     @benchmark
-    def construct():
+    def init():
         archive = CVTArchive([(-1, 1), (-1, 1)],
                              1000,
                              samples=10_000,
@@ -18,8 +18,8 @@ def benchmark_construction(use_kd_tree, benchmark):
         archive.initialize(solution_dim=2)
 
 
-def benchmark_10k_additions(use_kd_tree, benchmark, benchmark_data_100k):
-    n, solutions, objective_values, behavior_values = benchmark_data_100k
+def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
+    n, solutions, objective_values, behavior_values = benchmark_data_10k
 
     def setup():
         archive = CVTArchive([(-1, 1), (-1, 1)],
@@ -34,15 +34,14 @@ def benchmark_10k_additions(use_kd_tree, benchmark, benchmark_data_100k):
         return (archive,), {}
 
     def add_10k(archive):
-        for i in range(10_000):
+        for i in range(n):
             archive.add(solutions[i], objective_values[i], behavior_values[i])
 
     benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
 
 
-def benchmark_get_100k_random_elites(use_kd_tree, benchmark,
-                                     benchmark_data_100k):
-    n, solutions, objective_values, behavior_values = benchmark_data_100k
+def benchmark_get_10k_random_elites(use_kd_tree, benchmark, benchmark_data_10k):
+    n, solutions, objective_values, behavior_values = benchmark_data_10k
     archive = CVTArchive([(-1, 1), (-1, 1)],
                          1000,
                          samples=10_000,
@@ -65,12 +64,11 @@ def benchmark_as_pandas_2000_items(benchmark):
                          samples=10_000)
     archive.initialize(10)
 
-    for x in np.linspace(-1, 1, 200):
-        for y in np.linspace(-1, 1, 200):
-            sol = np.random.random(10)
-            sol[0] = x
-            sol[1] = y
-            archive.add(sol, 1.0, np.array([x, y]))
+    for x, y in archive.centroids:
+        sol = np.random.random(10)
+        sol[0] = x
+        sol[1] = y
+        archive.add(sol, 1.0, np.array([x, y]))
 
     # Archive should be full.
     assert len(archive.as_pandas()) == bins
