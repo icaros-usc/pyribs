@@ -249,8 +249,38 @@ class ArchiveBase(ABC):
         return was_inserted
 
     @require_init
+    def elite_with_behavior(self, behavior_values):
+        """Gets the elite with behavior vals in the same bin as those specified.
+
+        For instance, in the case of CVTArchive, this method would find the bin
+        with the centroid closest to the behavior values. Then, it would return
+        the elite in that bin if it existed.
+
+        Returns;
+            tuple: 3-element tuple for the elite if it is found:
+
+                **solution** (*np.ndarray*): Parameters for the solution.
+
+                **objective_value** (*float*): Objective function evaluation.
+
+                **behavior_values** (*np.ndarray*): Actual behavior space
+                coordinates of the elite (may not be exactly the same as those
+                specified).
+
+            If there is no elite in the bin, a tuple of (None, None, None) is
+            returned (thus, something like
+            ``sol, obj, beh = archive.elite_with_behavior(...)`` will still
+            work).
+        """
+        index = self._get_index(behavior_values)
+        if self._occupied[index]:
+            return (self._solutions[index], self._objective_values[index],
+                    self._behavior_values[index])
+        return (None, None, None)
+
+    @require_init
     def get_random_elite(self):
-        """Select an elite uniformly at random from one of the archive's bins.
+        """Selects an elite uniformly at random from one of the archive's bins.
 
         Returns:
             tuple: 3-element tuple containing:

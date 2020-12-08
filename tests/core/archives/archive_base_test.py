@@ -77,10 +77,23 @@ def test_archive_with_entry_is_not_empty(_archive_data):
     assert not _archive_data.archive_with_entry.empty
 
 
+def test_elite_with_behavior_gets_correct_elite(_archive_data):
+    retrieved = _archive_data.archive_with_entry.elite_with_behavior(
+        _archive_data.behavior_values)
+    assert (retrieved[0] == _archive_data.solution).all()
+    assert retrieved[1] == _archive_data.objective_value
+    assert (retrieved[2] == _archive_data.behavior_values).all()
+
+
+def test_elite_with_behavior_returns_none(_archive_data):
+    retrieved = _archive_data.archive.elite_with_behavior(
+        _archive_data.behavior_values)
+    assert (retrieved[0] is None and retrieved[1] is None and
+            retrieved[2] is None)
+
+
 def test_random_elite_gets_single_elite(_archive_data):
     retrieved = _archive_data.archive_with_entry.get_random_elite()
-    print(retrieved)
-    print(_archive_data.solution)
     assert np.all(retrieved[0] == _archive_data.solution)
     assert retrieved[1] == _archive_data.objective_value
     assert np.all(retrieved[2] == _archive_data.behavior_values)
