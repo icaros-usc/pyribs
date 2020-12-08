@@ -57,16 +57,16 @@ def benchmark_get_100k_random_elites(use_kd_tree, benchmark,
             sol, obj, beh = archive.get_random_elite()
 
 
-def benchmark_as_pandas(benchmark):
-    bins = 1000
+def benchmark_as_pandas_2000_items(benchmark):
+    bins = 2000
     archive = CVTArchive([(-1, 1), (-1, 1)],
                          bins,
                          use_kd_tree=True,
                          samples=10_000)
     archive.initialize(10)
 
-    for x in np.linspace(-1, 1, 100):
-        for y in np.linspace(-1, 1, 100):
+    for x in np.linspace(-1, 1, 200):
+        for y in np.linspace(-1, 1, 200):
             sol = np.random.random(10)
             sol[0] = x
             sol[1] = y

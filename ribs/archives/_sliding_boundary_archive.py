@@ -306,25 +306,26 @@ class SlidingBoundaryArchive(ArchiveBase):
 
         Returns:
             A dataframe where each row is an elite in the archive. The dataframe
-            has ``n_dims`` columns called ``index-{i}`` for the archive index,
-            ``n_dims`` columns called ``behavior-{i}`` for the behavior values,
-            1 column for the objective function value called ``objective``, and
-            1 column for solution objects called ``solution``.
+            has ``behavior_dim`` columns called ``index-{i}`` for the archive
+            index, ``behavior_dim`` columns called ``behavior-{i}`` for the
+            behavior values, 1 column for the objective function value called
+            ``objective``, and ``solution_dim`` columns called ``solution-{i}``
+            for the solution values.
         """
-        column_titles = [
-            *[f"index-{i}" for i in range(self._behavior_dim)],
-            *[f"behavior-{i}" for i in range(self._behavior_dim)],
-            "objective",
-            *[f"solution-{i}" for i in range(self._solution_dim)],
-        ]
+        indices = tuple(map(list, zip(*self._occupied_indices)))
+        data = {}
 
-        rows = []
-        for index in self._occupied_indices:
-            row = [
-                *index,
-                *self._behavior_values[index],
-                self._objective_values[index],
-                *self._solutions[index],
-            ]
-            rows.append(row)
-        return pd.DataFrame(rows, columns=column_titles)
+        for i in range(self._behavior_dim):
+            data[f"index-{i}"] = indices[i]
+
+        behavior_values = self._behavior_values[indices]
+        for i in range(self._behavior_dim):
+            data[f"behavior-{i}"] = behavior_values[:, i]
+
+        data["objective"] = self._objective_values[indices]
+
+        solutions = self._solutions[indices]
+        for i in range(self._solution_dim):
+            data[f"solution-{i}"] = solutions[:, i]
+
+        return pd.DataFrame(data)

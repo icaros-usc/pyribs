@@ -84,6 +84,16 @@ def test_as_pandas(_sliding_boundary_data):
         'solution-1',
         'solution-2',
     ])
+    assert (df.dtypes == [
+        int,
+        int,
+        float,
+        float,
+        float,
+        float,
+        float,
+        float,
+    ]).all()
     assert (df.loc[0] == np.array(
         [*indices, *behavior_values, objective_value, *solution],
         dtype=object,

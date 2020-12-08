@@ -38,8 +38,8 @@ def benchmark_get_100k_random_elites(benchmark, benchmark_data_100k):
             sol, obj, beh = archive.get_random_elite()
 
 
-def benchmark_as_pandas(benchmark):
-    dim = 256
+def benchmark_as_pandas_2025_items(benchmark):
+    dim = 45
     archive = GridArchive((dim, dim), [(-1, 1), (-1, 1)])
     archive.initialize(10)
 
