@@ -20,7 +20,9 @@ class FakeArchive(ArchiveBase):
     Because this archive is used in emitter benchmarking, we want to
     spend as little time in this archive as possible. Thus, the archive
     functions are optimized for speed and not for any meaningful 
-    functionality. That's why this is a "fake" archive.
+    functionality. That's why this is a "fake" archive. 
+
+    Note that the _get_index() method may not ever actually be called.
     """
 
     def __init__(self, dims):
@@ -42,7 +44,6 @@ class FakeArchive(ArchiveBase):
     def add(self, solution, objective_value, behavior_values):
         return True
 
-    # may not ever be called, actually
     @jit(nopython=True)
     def _get_index(self, behavior_values):
         return np.full_like(behavior_values, 0)
