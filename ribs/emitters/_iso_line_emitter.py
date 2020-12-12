@@ -91,8 +91,7 @@ class IsoLineEmitter(EmitterBase):
     @staticmethod
     @jit(nopython=True)
     def _ask_clip_helper(solutions, lower_bounds, upper_bounds):
-        return np.minimum(np.maximum(solutions, lower_bounds),
-                          upper_bounds)
+        return np.minimum(np.maximum(solutions, lower_bounds), upper_bounds)
 
     def ask(self):
         """Generates ``self.batch_size`` solutions.
@@ -121,6 +120,8 @@ class IsoLineEmitter(EmitterBase):
                           for i in range(self.batch_size)]
             line_gaussian = self._rng.normal(scale=self._line_sigma,
                                              size=(self.batch_size, 1))
-            solutions = self._ask_solutions_numba(parents, iso_gaussian, line_gaussian, directions)
+            solutions = self._ask_solutions_numba(parents, iso_gaussian,
+                                                  line_gaussian, directions)
 
-        return self._ask_clip_helper(solutions, self.lower_bounds, self.upper_bounds)
+        return self._ask_clip_helper(solutions, self.lower_bounds,
+                                     self.upper_bounds)

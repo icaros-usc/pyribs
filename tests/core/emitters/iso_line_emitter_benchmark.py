@@ -9,7 +9,6 @@ from ribs.emitters import IsoLineEmitter
 
 def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     archive, x0 = fake_archive_fixture
-    #sigma0 = 1
     batch_size = 2
     emitter = IsoLineEmitter(x0, archive, batch_size=batch_size)
 
