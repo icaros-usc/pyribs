@@ -87,7 +87,7 @@ class GaussianEmitter(EmitterBase):
             ``(self.batch_size, self.solution_dim)`` array -- contains
             ``batch_size`` new solutions to evaluate.
         """
-        if self._archive.is_empty():
+        if self._archive.empty:
             parents = np.expand_dims(self._x0, axis=0)
         else:
             parents = [

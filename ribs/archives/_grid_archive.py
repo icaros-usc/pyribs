@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from numba import jit
 
-from ribs.archives._archive_base import ArchiveBase
+from ribs.archives._archive_base import ArchiveBase, require_init
 
 _EPSILON = 1e-9
 
@@ -87,12 +87,17 @@ class GridArchive(ArchiveBase):
         return index.astype(np.int32)
 
     def _get_index(self, behavior_values):
+        """Retrieves grid indices. Clips behavior values to behavior bounds.
+
+        :meta private:
+        """
         index = GridArchive._get_index_numba(behavior_values,
                                              self._upper_bounds,
                                              self._lower_bounds,
                                              self._interval_size, self._dims)
         return tuple(index)
 
+    @require_init
     def as_pandas(self):
         """Converts the archive into a Pandas dataframe.
 
@@ -104,21 +109,20 @@ class GridArchive(ArchiveBase):
             ``objective``, and ``solution_dim`` columns called ``solution-{i}``
             for the solution values.
         """
-        column_titles = [
-            *[f"index-{i}" for i in range(self._behavior_dim)],
-            *[f"behavior-{i}" for i in range(self._behavior_dim)],
-            "objective",
-            *[f"solution-{i}" for i in range(self._solution_dim)],
-        ]
+        indices = tuple(map(list, zip(*self._occupied_indices)))
+        data = {}
 
-        rows = []
-        for index in self._occupied_indices:
-            row = [
-                *index,
-                *self._behavior_values[index],
-                self._objective_values[index],
-                *self._solutions[index],
-            ]
-            rows.append(row)
+        for i in range(self._behavior_dim):
+            data[f"index-{i}"] = indices[i]
 
-        return pd.DataFrame(rows, columns=column_titles)
+        behavior_values = self._behavior_values[indices]
+        for i in range(self._behavior_dim):
+            data[f"behavior-{i}"] = behavior_values[:, i]
+
+        data["objective"] = self._objective_values[indices]
+
+        solutions = self._solutions[indices]
+        for i in range(self._solution_dim):
+            data[f"solution-{i}"] = solutions[:, i]
+
+        return pd.DataFrame(data)

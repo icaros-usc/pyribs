@@ -113,7 +113,9 @@ def save_and_display_outputs(archive, algorithm, dim, outdir):
         sns.heatmap(heatmap_data, cmap="magma")
         plt.savefig(heatmap_path)
     elif algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
-        cvt_archive_heatmap(archive, filename=heatmap_path, figsize=(16, 12))
+        plt.figure(figsize=(16, 12))
+        cvt_archive_heatmap(archive)
+        plt.savefig(heatmap_path)
 
 
 def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):

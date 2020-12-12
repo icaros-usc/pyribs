@@ -4,21 +4,21 @@ from collections import namedtuple
 import numpy as np
 import pytest
 
-from ribs.archives import CVTArchive, GridArchive
+from ribs.archives import CVTArchive, GridArchive, SlidingBoundaryArchive
 
 
 @pytest.fixture
-def benchmark_data_100k():
+def benchmark_data_10k():
     """Provides a set of standardized benchmark data.
 
     Includes:
-    - The number of values (100k)
-    - 100k random solutions in the range (-1,1) in each dim
-    - 100k random objective values drawn from the standard normal distribution
-    - 100k random behavior values in the range (-1,1) in each dim
+    - The number of values (10k)
+    - 10k random solutions in the range (-1,1) in each dim
+    - 10k random objective values drawn from the standard normal distribution
+    - 10k random behavior values in the range (-1,1) in each dim
     """
     rng = np.random.default_rng(42)
-    n_vals = int(1e5)
+    n_vals = 10_000
     solutions = rng.uniform(-1, 1, (n_vals, 10))
     objective_values = rng.standard_normal(n_vals)
     behavior_values = rng.uniform(-1, 1, (n_vals, 2))
@@ -101,6 +101,20 @@ def get_archive_data(name):
                                         samples=samples,
                                         use_kd_tree=kd_tree)
         archive_with_entry.initialize(len(solution))
+    elif name == "SlidingBoundaryArchive":
+        # Sliding boundary archive with 10 bins and range (-1, 1) in first dim,
+        # and 20 bins and range (-2, 2) in second dim.
+        archive = SlidingBoundaryArchive([10, 20], [(-1, 1), (-2, 2)],
+                                         remap_frequency=100,
+                                         buffer_capacity=1000)
+        archive.initialize(len(solution))
+
+        archive_with_entry = SlidingBoundaryArchive([10, 20], [(-1, 1),
+                                                               (-2, 2)],
+                                                    remap_frequency=100,
+                                                    buffer_capacity=1000)
+        archive_with_entry.initialize(len(solution))
+        grid_indices = (9, 19)
 
     archive_with_entry.add(solution, objective_value, behavior_values)
     return ArchiveFixtureData(
