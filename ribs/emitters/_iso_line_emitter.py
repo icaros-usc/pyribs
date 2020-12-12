@@ -1,6 +1,7 @@
 """Provides the IsoLineEmitter."""
 
 import numpy as np
+from numba import jit
 
 from ribs.emitters._emitter_base import EmitterBase
 
@@ -82,6 +83,28 @@ class IsoLineEmitter(EmitterBase):
         solutions."""
         return self._line_sigma
 
+    @staticmethod
+    @jit(nopython=True)
+    def _ask_solutions_numba(parents, iso_gaussian, line_gaussian, directions):
+        return parents + iso_gaussian + line_gaussian * directions
+
+    @staticmethod
+    @jit(nopython=True)
+    def _ask_clip_helper(solutions, lower_bounds, upper_bounds):
+        return np.minimum(np.maximum(solutions, lower_bounds),
+                          upper_bounds)
+
+    # @staticmethod
+    # @jit(nopython=True)
+    # def _ask_normal_helper(rng, iso_sigma, batch_size, solution_dim):
+    #     iso_gaussian = np.zeros((batch_size, solution_dim))
+
+    #     for i in range(batch_size):
+    #         for j in range(solution_dim):
+    #             iso_gaussian[i][j] = rng.normal(scale=iso_sigma)
+
+    #     return iso_gaussian
+
     def ask(self):
         """Generates ``self.batch_size`` solutions.
 
@@ -98,6 +121,8 @@ class IsoLineEmitter(EmitterBase):
                                         size=(self.batch_size,
                                               self.solution_dim))
 
+        # iso_gaussian = self._ask_normal_helper(self._rng, self._iso_sigma, self.batch_size, self.solution_dim)
+
         if self._archive.is_empty():
             solutions = np.expand_dims(self._x0, axis=0) + iso_gaussian
         else:
@@ -109,6 +134,8 @@ class IsoLineEmitter(EmitterBase):
                           for i in range(self.batch_size)]
             line_gaussian = self._rng.normal(scale=self._line_sigma,
                                              size=(self.batch_size, 1))
-            solutions = parents + iso_gaussian + line_gaussian * directions
+            #solutions = parents + iso_gaussian + line_gaussian * directions
+            solutions = self._ask_solutions_numba(parents, iso_gaussian, line_gaussian, directions)
 
-        return np.clip(solutions, self.lower_bounds, self.upper_bounds)
+        #return np.clip(solutions, self.lower_bounds, self.upper_bounds)
+        return self._ask_clip_helper(solutions, self.lower_bounds, self.upper_bounds)
