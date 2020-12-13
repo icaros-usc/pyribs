@@ -112,7 +112,7 @@ class CVTArchive(ArchiveBase):
 
         if custom_centroids is None:
             if not isinstance(samples, int):
-                samples = np.array(samples)
+                samples = np.asarray(samples)
                 if samples.shape[1] != self._behavior_dim:
                     raise ValueError(
                         f"Samples has shape {samples.shape} but must be of "
@@ -120,7 +120,7 @@ class CVTArchive(ArchiveBase):
             self._samples = samples
             self._centroids = None
         else:
-            custom_centroids = np.array(custom_centroids)
+            custom_centroids = np.asarray(custom_centroids)
             if custom_centroids.shape != (bins, self._behavior_dim):
                 raise ValueError(
                     f"custom_centroids has shape {custom_centroids.shape} but "

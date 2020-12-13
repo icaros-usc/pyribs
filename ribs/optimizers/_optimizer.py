@@ -105,8 +105,8 @@ class Optimizer:
             raise RuntimeError("You have called tell() without ask().")
         self._asked = False
 
-        objective_values = np.array(objective_values)
-        behavior_values = np.array(behavior_values)
+        objective_values = np.asarray(objective_values)
+        behavior_values = np.asarray(behavior_values)
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
