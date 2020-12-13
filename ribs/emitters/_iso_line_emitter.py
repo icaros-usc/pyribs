@@ -120,8 +120,10 @@ class IsoLineEmitter(EmitterBase):
                           for i in range(self.batch_size)]
             line_gaussian = self._rng.normal(scale=self._line_sigma,
                                              size=(self.batch_size, 1))
-            solutions = self._ask_solutions_numba(parents, iso_gaussian,
-                                                  line_gaussian, directions)
+
+            solutions = self._ask_solutions_numba(np.asarray(parents),
+                                                  iso_gaussian, line_gaussian,
+                                                  np.asarray(directions))
 
         return self._ask_clip_helper(solutions, self.lower_bounds,
                                      self.upper_bounds)
