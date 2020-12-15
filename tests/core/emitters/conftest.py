@@ -15,7 +15,7 @@ def archive_fixture():
     archive.initialize(len(x0))
     return archive, x0
 
-  
+
 class FakeArchive(ArchiveBase):
     """Bare-bones archive solely for emitter benchmarking.
 
