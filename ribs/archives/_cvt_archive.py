@@ -139,12 +139,14 @@ class CVTArchive(ArchiveBase):
         return self._upper_bounds
 
     @property
+    @require_init
     def samples(self):
         """(num_samples, behavior_dim) np.ndarray: The samples used in creating
         the CVT. May be None until :meth:`initialize` is called."""
         return self._samples
 
     @property
+    @require_init
     def centroids(self):
         """(num_centroids, behavior_dim) np.ndarray: The centroids used in the
         CVT. None until :meth:`initialize` is called."""
