@@ -8,18 +8,19 @@ want to increase the number of bins in the archive and see when the k-D tree
 becomes faster than brute force.
 
 In this experiment, we construct archives with 10, 50, 100, 500, 1k, 5k, 10k,
-50k, 100k bins in the behavior space of [(-1, 1), (-1, 1)] and 100k samples. In
-each archive, we then time how long it takes to add 100k random solutions
-sampled u.a.r. from the behavior space. We run each experiment with brute force
-and with the k-D tree, 5 times each, and take the minimum runtime (see
-https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
+100k bins in the behavior space of [(-1, 1), (-1, 1)] and 100k samples (except
+for 10k bins, where we use 200k samples so that the CVT generation does not drop
+a cluster). In each archive, we then time how long it takes to add 100k random
+solutions sampled u.a.r. from the behavior space. We run each experiment with
+brute force and with the k-D tree, 5 times each, and take the minimum runtime
+(see https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
 
 Usage:
     python cvt_add.py
 
-This script will run for a while (~2 hours) and produce two outputs. The first
-is cvt_add_times.json, which holds the raw times. The second is
-cvt_add_plot.png, which is a plot of the times with respect to number of bins.
+This script will run for a while (~30 min) and produce two outputs. The first is
+cvt_add_times.json, which holds the raw times. The second is cvt_add_plot.png,
+which is a plot of the times with respect to number of bins.
 
 If you wish to re-plot the results without re-running the benchmarks, you can
 modify plot_times and then run:
@@ -73,7 +74,7 @@ def plot_times(n_bins, brute_force_t, kd_tree_t, filename="cvt_add_plot.png"):
 def main():
     """Creates archives, times insertion into them, and plots results."""
     archive = None
-    n_bins = [10, 50, 100, 500, 1_000, 5_000, 10_000, 50_000, 100_000]
+    n_bins = [10, 50, 100, 500, 1_000, 5_000, 10_000, 100_000]
 
     # Pre-made solutions to insert.
     n_vals = 100_000
@@ -81,11 +82,25 @@ def main():
     objective_values = np.random.randn(n_vals)
     behavior_values = np.random.uniform(-1, 1, (n_vals, 2))
 
+    # Set up these archives so we can use the same centroids across all
+    # experiments for a certain number of bins (and also save time).
+    ref_archives = {
+        bins: CVTArchive(
+            [(-1, 1), (-1, 1)],
+            bins,
+            # Use 200k bins to avoid dropping clusters.
+            samples=n_vals if bins != 10_000 else 200_000,
+            use_kd_tree=False) for bins in n_bins
+    }
+    for bins, archive in ref_archives.items():
+        print(f"Setting up archive with {bins} bins")
+        archive.initialize(solutions.shape[1])
+
     def setup(bins, use_kd_tree):
         nonlocal archive
         archive = CVTArchive([(-1, 1), (-1, 1)],
                              bins,
-                             samples=n_vals,
+                             custom_centroids=ref_archives[bins].centroids,
                              use_kd_tree=use_kd_tree)
         archive.initialize(solutions.shape[1])
 
