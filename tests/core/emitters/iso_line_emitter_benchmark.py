@@ -11,6 +11,7 @@ def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     archive, x0 = fake_archive_fixture
     batch_size = 32
     emitter = IsoLineEmitter(x0, archive, batch_size=batch_size)
+    n = 100_000
 
     np.random.seed(0)
 
@@ -21,12 +22,12 @@ def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     temp_sol = emitter.ask()
     emitter.tell(temp_sol, objective_values, behavior_values)
 
-    obj_vals = np.random.rand(int(1e5), batch_size)
-    behavior_vals = np.random.rand(int(1e5), 3, batch_size)
+    obj_vals = np.random.rand(n, batch_size)
+    behavior_vals = np.random.rand(n, 3, batch_size)
 
     @benchmark
     def ask_and_tell():
-        for i in range(int(1e5)):
+        for i in range(n):
             solutions = emitter.ask()
             objective_values = obj_vals[i]
             behavior_values = behavior_vals[i]
