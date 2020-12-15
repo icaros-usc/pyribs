@@ -72,6 +72,7 @@ class GaussianEmitter(EmitterBase):
     @staticmethod
     @jit(nopython=True)
     def _ask_clip_helper(parents, noise, lower_bounds, upper_bounds):
+        """Numba equivalent of np.clip."""
         return np.minimum(np.maximum(parents + noise, lower_bounds),
                           upper_bounds)
 
@@ -98,5 +99,5 @@ class GaussianEmitter(EmitterBase):
         noise = self._rng.normal(scale=self._sigma0,
                                  size=(self.batch_size, self.solution_dim))
 
-        return self._ask_clip_helper(np.array(parents), noise,
+        return self._ask_clip_helper(np.asarray(parents), noise,
                                      self._lower_bounds, self._upper_bounds)
