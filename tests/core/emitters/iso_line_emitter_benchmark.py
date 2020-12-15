@@ -9,20 +9,20 @@ from ribs.emitters import IsoLineEmitter
 
 def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     archive, x0 = fake_archive_fixture
-    batch_size = 2
+    batch_size = 32
     emitter = IsoLineEmitter(x0, archive, batch_size=batch_size)
 
     np.random.seed(0)
 
     objective_values = np.random.rand(batch_size)
-    behavior_values = np.random.rand(3, 2)
+    behavior_values = np.random.rand(3, batch_size)
 
     # Let numba compile.
     temp_sol = emitter.ask()
     emitter.tell(temp_sol, objective_values, behavior_values)
 
     obj_vals = np.random.rand(int(1e5), batch_size)
-    behavior_vals = np.random.rand(int(1e5), 3, 2)
+    behavior_vals = np.random.rand(int(1e5), 3, batch_size)
 
     @benchmark
     def ask_and_tell():
