@@ -13,7 +13,7 @@ def benchmark_init(use_kd_tree, benchmark):
     def init():
         archive = CVTArchive([(-1, 1), (-1, 1)],
                              1000,
-                             samples=10_000,
+                             samples=20_000,
                              use_kd_tree=use_kd_tree)
         archive.initialize(solution_dim=2)
 
@@ -24,7 +24,7 @@ def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
     def setup():
         archive = CVTArchive([(-1, 1), (-1, 1)],
                              1000,
-                             samples=10_000,
+                             samples=20_000,
                              use_kd_tree=use_kd_tree)
         archive.initialize(solutions.shape[1])
 
@@ -44,7 +44,7 @@ def benchmark_get_10k_random_elites(use_kd_tree, benchmark, benchmark_data_10k):
     n, solutions, objective_values, behavior_values = benchmark_data_10k
     archive = CVTArchive([(-1, 1), (-1, 1)],
                          1000,
-                         samples=10_000,
+                         samples=20_000,
                          use_kd_tree=use_kd_tree)
     archive.initialize(solutions.shape[1])
     for i in range(n):
@@ -61,7 +61,7 @@ def benchmark_as_pandas_2000_items(benchmark):
     archive = CVTArchive([(-1, 1), (-1, 1)],
                          bins,
                          use_kd_tree=True,
-                         samples=10_000)
+                         samples=50_000)
     archive.initialize(10)
 
     for x, y in archive.centroids:

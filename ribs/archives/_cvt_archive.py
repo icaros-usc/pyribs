@@ -65,6 +65,14 @@ class CVTArchive(ArchiveBase):
             to use when creating the CVT. It can be useful to pass in custom
             samples when there are restrictions on what samples in the behavior
             space are possible.
+
+            .. note:: If there are too few samples, k-means clustering may
+                "drop" centroids because it finds centroids that do not have any
+                point assigned to them. This means that there will not be
+                enough centroids / bins in the CVT. :meth:`initialize` will
+                raise an error if this is the case. In short, make sure to
+                provide enough samples. From experience, a good setting seems to
+                be ``samples = 20 * bins``.
         k_means_threshold (float): When finding the centroids at the beginning,
             k-means will terminate when the difference in distortion between
             iterations goes below this threshold (see `here
@@ -158,12 +166,17 @@ class CVTArchive(ArchiveBase):
         This method may take a while to run. In addition to allocating storage
         space, it runs k-means to create an approximate CVT, and it may create a
         k-D tree containing the centroids found by k-means. This does not apply
-        if ``custom_centroids`` were passed in during construction, however.
+        if ``custom_centroids`` were passed in during construction.
 
         Args:
             solution_dim (int): The dimension of the solution space. The array
                 for storing solutions is created with shape
                 ``(*self._storage_dims, solution_dim)``.
+        Raises:
+            RuntimeError: The number of centroids returned by k-means clustering
+                was fewer than the number of bins specified during construction.
+                This is most likely caused by having too few samples and too
+                many bins.
         """
         ArchiveBase.initialize(self, solution_dim)
 
@@ -180,6 +193,13 @@ class CVTArchive(ArchiveBase):
                 iter=1,
                 thresh=self._k_means_threshold,
             )[0]
+
+            if self._centroids.shape[0] != self._bins:
+                raise RuntimeError(
+                    "While generating the CVT, k-means clustering found "
+                    f"{self._centroids.shape[0]} centroids, but this archive "
+                    f"needs {self._bins} bins. This most likely happened "
+                    "because there are too few samples and/or too many bins.")
 
         if self._use_kd_tree:
             self._centroid_kd_tree = cKDTree(self._centroids)
