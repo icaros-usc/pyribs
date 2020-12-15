@@ -32,8 +32,8 @@ class GaussianEmitter(EmitterBase):
             ``(lower_bound, upper_bound)``, where ``lower_bound`` or
             ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to send back in the ask() method.
-        seed (float or int): Value to seed the random number generator. Set to
-            None to avoid seeding.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid seeding.
     Raises:
         ValueError: There is an error in the bounds configuration.
     """

@@ -31,8 +31,8 @@ class EmitterBase(ABC):
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        seed (float or int): Seed for the random number generator. None
-            (default) means no seed.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid seeding.
     Attributes:
         _rng (np.random.Generator): Random number generator.
         _archive (ribs.archives.ArchiveBase): See ``archive`` arg.

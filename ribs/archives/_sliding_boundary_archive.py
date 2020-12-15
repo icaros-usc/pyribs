@@ -101,8 +101,8 @@ class SlidingBoundaryArchive(ArchiveBase):
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``.
-        seed (float or int): Value to seed the random number generator. Set to
-            None to avoid any seeding.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid seeding.
         remap_frequency (int): Frequency of remapping. Archive will remap once
             after ``remap_frequency`` number of solutions has been found.
         buffer_capacity (int): Number of solutions to keep in the buffer.

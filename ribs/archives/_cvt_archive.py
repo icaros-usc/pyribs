@@ -43,13 +43,6 @@ class CVTArchive(ArchiveBase):
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
 
-    .. note:: If you are attempting to use CVTArchive deterministically, you
-        will also need to seed numpy's global random number generator with::
-
-            np.random.seed(seed)
-
-        This will ensure that scipy's k-means clustering runs deterministically.
-
     Args:
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
@@ -87,8 +80,16 @@ class CVTArchive(ArchiveBase):
             new ones. In this case, ``samples`` will be ignored, and
             ``archive.samples`` will be None. This can be useful when one wishes
             to use the same CVT across experiments for fair comparison.
-        seed (float or int): Value to seed the random number generator. Set to
-            None to avoid any seeding.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid seeding.
+
+            .. note:: If you are attempting to use CVTArchive deterministically,
+                you will also need to seed numpy's global random number
+                generator with::
+
+                    np.random.seed(seed)
+
+                This will ensure scipy's kmeans runs deterministically.
     Raises:
         ValueError: The ``samples`` array or the ``custom_centroids`` array is
             of the wrong dimensionality.

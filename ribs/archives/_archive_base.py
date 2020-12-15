@@ -29,8 +29,8 @@ class RandomBuffer:
     the range [0,1) that can be multiplied to get a number in the range [0, x).
 
     Args:
-        seed (float or int): Seed for the random number generator. None
-            (default) means no seed.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid seeding.
         buf_size (int): How many random floats to store at once in the buffer.
     """
 
@@ -96,8 +96,8 @@ class ArchiveBase(ABC):
             This is used to create numpy arrays for items such as objective
             values and behavior values.
         behavior_dim (int): The dimension of the behavior space.
-        seed (float or int): Seed for the random number generator. None
-            (default) means no seed.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid seeding.
     Attributes:
         _rng (np.random.Generator): Random number generator, used in particular
             for generating random elites.

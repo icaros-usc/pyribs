@@ -27,8 +27,8 @@ class GridArchive(ArchiveBase):
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``.
-        seed (float or int): Value to seed the random number generator. Set to
-            None to avoid any seeding.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid seeding.
     """
 
     def __init__(self, dims, ranges, seed=None):
