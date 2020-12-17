@@ -17,14 +17,14 @@ def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     np.random.seed(0)
 
     objective_values = np.random.rand(batch_size)
-    behavior_values = np.random.rand(3, batch_size)
+    behavior_values = np.random.rand(batch_size, 2)
 
     # Let numba compile.
     temp_sol = emitter.ask()
     emitter.tell(temp_sol, objective_values, behavior_values)
 
     obj_vals = np.random.rand(n, batch_size)
-    behavior_vals = np.random.rand(n, 3, batch_size)
+    behavior_vals = np.random.rand(n, batch_size, 2)
 
     @benchmark
     def ask_and_tell():
