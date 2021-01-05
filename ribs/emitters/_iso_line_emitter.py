@@ -86,11 +86,13 @@ class IsoLineEmitter(EmitterBase):
     @staticmethod
     @jit(nopython=True)
     def _ask_solutions_numba(parents, iso_gaussian, line_gaussian, directions):
+        """Numba helper for calculating solutions."""
         return parents + iso_gaussian + line_gaussian * directions
 
     @staticmethod
     @jit(nopython=True)
     def _ask_clip_helper(solutions, lower_bounds, upper_bounds):
+        """Numba version of clip."""
         return np.minimum(np.maximum(solutions, lower_bounds), upper_bounds)
 
     def ask(self):
