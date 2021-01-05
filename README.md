@@ -9,14 +9,15 @@ implemented here enable _Rapid Illumination of Behavior Spaces (RIBS)_.
 
 ## Overview
 
-Quality-Diversity (QD) algorithms are a subset of evolutionary algorithms that
-seek to discover multiple high-performing solutions to a problem. These
-solutions are characterized by properties known as behavior characteristics
-(BCs). After a single run, a QD algorithm outputs an archive with the solutions
-it has found. Each solution is the highest-performing one in a certain region of
-the behavior space. ribs follows the Rapid Illumination of Behavior Spaces
-framework introduced in [Fontaine 2020](https://arxiv.org/abs/1912.02400). Under
-this framework, ribs divides a QD algorithm into three components:
+Unlike traditional optimizers which seek to find a single high-performing
+solution to a problem, Quality-Diversity (QD) algorithms seek to discover
+multiple high-performing solutions. These solutions are characterized by
+properties known as behavior characteristics (BCs). After a single run, a QD
+algorithm outputs an archive with the solutions it has found. Each solution is
+the highest-performing one in a certain region of the behavior space. pyribs
+follows the Rapid Illumination of Behavior Spaces framework introduced in
+[Fontaine 2020](https://arxiv.org/abs/1912.02400). Under this framework, pyribs
+divides a QD algorithm into three components:
 
 - The **Archive** stores solutions found by the algorithm so far.
 - **Emitters** (one or more) take the archive and decide how to generate new
@@ -27,7 +28,7 @@ this framework, ribs divides a QD algorithm into three components:
 
 ## Usage Example
 
-ribs uses an ask-tell interface similar to that of
+pyribs uses an ask-tell interface similar to that of
 [pycma](https://pypi.org/project/cma/). The following example shows how to run
 the RIBS version of MAP-Elites. Specifically, we create:
 
@@ -86,7 +87,7 @@ To install from PyPI, run
 pip install ribs
 ```
 
-This command only installs dependencies for the core of ribs. To be able to use
+This command only installs dependencies for the core of pyribs. To be able to use
 tools like `ribs.visualize`, run
 
 ```bash
