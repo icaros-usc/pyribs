@@ -2,8 +2,8 @@
 import numpy as np
 import pandas as pd
 from numba import jit
-from scipy.cluster.vq import kmeans
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
+from sklearn.cluster import k_means
 
 from ribs.archives._archive_base import ArchiveBase, require_init
 
@@ -18,30 +18,35 @@ class CVTArchive(ArchiveBase):
     space and using k-means clustering to identify k centroids. When items are
     inserted into the archive, we identify their bin by identifying the closest
     centroid in behavior space (using Euclidean distance). For k-means
-    clustering, we use `scipy.cluster.vq
-    <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`_.
+    clustering, we use :func:`sklearn.cluster.k_means`.
 
     Finding the closest centroid is done in O(bins) time (i.e. brute force) by
-    default. If you set ``use_kd_tree``, it can be done in roughly
-    O(log bins) time using `scipy.spatial.cKDTree
-    <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html>`_.
-    However, using this k-D tree lowers performance for small numbers of bins.
-    The following plot compares the runtime of brute force vs k-D tree when
-    inserting 100k samples into a 2D archive with varying numbers of bins (we
-    took the minimum over 5 runs for each data point, as recommended `here
-    <https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat>`__).
-    Note the logarithmic scales. This plot was generated on a reasonably modern
-    laptop.
+    default. If you set ``use_kd_tree`` to True, it can be done in roughly O(log
+    bins) time using :class:`scipy.spatial.cKDTree`. However, using the k-D
+    tree lowers performance for small numbers of bins. The following plot
+    compares the runtime of brute force vs k-D tree when inserting 100k samples
+    into a 2D archive with varying numbers of bins (we took the minimum over 5
+    runs for each data point, as recommended in the docs for
+    :meth:`timeit.Timer.repeat`. Note the logarithmic scales. This plot was
+    generated on a reasonably modern laptop.
 
     .. image:: _static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
 
-    As we can see, archives with at least 5k bins seem to have faster insertion
-    when using a k-D tree than when using brute force, so **we recommend
-    setting** ``use_kd_tree`` **if you have at least 5k bins in
-    your** ``CVTArchive``. See `benchmarks/cvt_add.py
+    Archives with at least 5k bins seem to have faster insertion when using a
+    k-D tree than when using brute force, so **we recommend setting**
+    ``use_kd_tree`` **if you have at least 5k bins in your** ``CVTArchive``. See
+    `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
+
+    Finally, if you are running multiple experiments, you may want to use the
+    same centroids across each experiment. Doing so can keep experiments
+    consistent and reduce execution time. To do this, you can construct your own
+    centroids and pass them in via the ``custom_centroids`` argument.
+    Alternatively, you can access the centroids created in the first archive
+    with :attr:`centroids` and pass them into ``custom_centroids`` when
+    constructing archives for subsequent experiments.
 
     Args:
         ranges (array-like of (float, float)): Upper and lower bound of each
@@ -51,45 +56,28 @@ class CVTArchive(ArchiveBase):
             length of this array defines the dimensionality of the behavior
             space.
         bins (int): The number of bins to use in the archive, equivalent to the
-            number of areas in the CVT.
+            number of centroids/areas in the CVT.
         samples (int or array-like): If it is an int, this specifies the number
             of samples to generate when creating the CVT. Otherwise, this must
             be a (num_samples, behavior_dim) array where samples[i] is a sample
             to use when creating the CVT. It can be useful to pass in custom
             samples when there are restrictions on what samples in the behavior
-            space are possible.
-
-            .. note:: If there are too few samples, k-means clustering may
-                "drop" centroids because it finds centroids that do not have any
-                point assigned to them. This means that there will not be
-                enough centroids / bins in the CVT. :meth:`initialize` will
-                raise an error if this is the case. In short, make sure to
-                provide enough samples. From experience, a good setting seems to
-                be ``samples = 20 * bins``.
-        k_means_threshold (float): When finding the centroids at the beginning,
-            k-means will terminate when the difference in distortion between
-            iterations goes below this threshold (see `here
-            <https://docs.scipy.org/doc/scipy/reference/cluster.vq.html>`__ for
-            more info).
-        use_kd_tree (bool): If True, use a k-D tree for finding the closest
-            centroid when inserting into the archive. This may result in a
-            speedup for larger dimensions; refer to
-            :class:`~ribs.archives.CVTArchive` for more info.
+            space are (physically) possible.
+        seed (int): Value to seed the random number generator as well as
+            :func:`~sklearn.cluster.k_means`. Set to None to avoid seeding.
         custom_centroids (array-like): If passed in, this (bins, behavior_dim)
             array will be used as the centroids of the CVT instead of generating
             new ones. In this case, ``samples`` will be ignored, and
             ``archive.samples`` will be None. This can be useful when one wishes
             to use the same CVT across experiments for fair comparison.
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid seeding.
-
-            .. note:: If you are attempting to use CVTArchive deterministically,
-                you will also need to seed numpy's global random number
-                generator with::
-
-                    np.random.seed(seed)
-
-                This will ensure scipy's kmeans runs deterministically.
+        k_means_kwargs (dict): kwargs for :func:`~sklearn.cluster.k_means`. By
+            default, we pass in `n_init=1`, `init="random"`, `algorithm="full"`,
+            and `random_state=seed`.
+        use_kd_tree (bool): If True, use a k-D tree for finding the closest
+            centroid when inserting into the archive. This may result in a
+            speedup for larger dimensions.
+        ckdtree_kwargs (dict): kwargs for :class:`~scipy.spatial.cKDTree`. By
+            default, we do not pass in any kwargs.
     Raises:
         ValueError: The ``samples`` array or the ``custom_centroids`` array is
             of the wrong dimensionality.
@@ -99,10 +87,11 @@ class CVTArchive(ArchiveBase):
                  ranges,
                  bins,
                  samples=100_000,
-                 k_means_threshold=1e-6,
-                 use_kd_tree=False,
+                 seed=None,
                  custom_centroids=None,
-                 seed=None):
+                 k_means_kwargs=None,
+                 use_kd_tree=False,
+                 ckdtree_kwargs=None):
         ArchiveBase.__init__(
             self,
             storage_dims=(bins,),
@@ -115,12 +104,32 @@ class CVTArchive(ArchiveBase):
         self._upper_bounds = np.array(ranges[1])
 
         self._bins = bins
-        self._k_means_threshold = k_means_threshold
+
+        # Apply default args for k-means. Users can easily override these,
+        # particularly if they want higher quality clusters.
+        self._k_means_kwargs = ({} if k_means_kwargs is None else
+                                k_means_kwargs.copy())
+        if "n_init" not in self._k_means_kwargs:
+            # Only run one iter to be fast.
+            self._k_means_kwargs["n_init"] = 1
+        if "init" not in self._k_means_kwargs:
+            # The default, "k-means++", takes very long to init.
+            self._k_means_kwargs["init"] = "random"
+        if "algorithm" not in self._k_means_kwargs:
+            # The default, "auto"/"elkan", allocates a huge array.
+            self._k_means_kwargs["algorithm"] = "full"
+        if "random_state" not in self._k_means_kwargs:
+            self._k_means_kwargs["random_state"] = seed
+
         self._use_kd_tree = use_kd_tree
         self._centroid_kd_tree = None
+        self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
+                                ckdtree_kwargs.copy())
 
         if custom_centroids is None:
             if not isinstance(samples, int):
+                # Validate shape of custom samples. These are ignored when
+                # `custom_centroids` is provided.
                 samples = np.asarray(samples)
                 if samples.shape[1] != self._behavior_dim:
                     raise ValueError(
@@ -129,6 +138,7 @@ class CVTArchive(ArchiveBase):
             self._samples = samples
             self._centroids = None
         else:
+            # Validate shape of `custom_centroids` when they are provided.
             custom_centroids = np.asarray(custom_centroids)
             if custom_centroids.shape != (bins, self._behavior_dim):
                 raise ValueError(
@@ -162,18 +172,18 @@ class CVTArchive(ArchiveBase):
         return self._centroids
 
     def initialize(self, solution_dim):
-        """Initializes the archive.
+        """Initializes the archive storage space and centroids.
 
         This method may take a while to run. In addition to allocating storage
-        space, it runs k-means to create an approximate CVT, and it may create a
-        k-D tree containing the centroids found by k-means. This does not apply
-        if ``custom_centroids`` were passed in during construction.
+        space, it runs :func:`~sklearn.cluster.k_means` to create an approximate
+        CVT, and it constructs a :class:`~scipy.spatial.cKDTree` object
+        containing the centroids found by k-means. k-means is not run if
+        ``custom_centroids`` was passed in during construction.
 
         Args:
-            solution_dim (int): The dimension of the solution space. The array
-                for storing solutions is created with shape
-                ``(*self._storage_dims, solution_dim)``.
+            solution_dim (int): The dimension of the solution space.
         Raises:
+            RuntimeError: The archive is already initialized.
             RuntimeError: The number of centroids returned by k-means clustering
                 was fewer than the number of bins specified during construction.
                 This is most likely caused by having too few samples and too
@@ -188,14 +198,10 @@ class CVTArchive(ArchiveBase):
                 size=(self._samples, self._behavior_dim),
             ) if isinstance(self._samples, int) else self._samples
 
-            self._centroids = kmeans(
-                self._samples,
-                self._bins,
-                iter=1,
-                thresh=self._k_means_threshold,
-            )[0]
+            self._centroids = k_means(self._samples, self._bins,
+                                      **self._k_means_kwargs)[0]
 
-            if self._centroids.shape[0] != self._bins:
+            if self._centroids.shape[0] < self._bins:
                 raise RuntimeError(
                     "While generating the CVT, k-means clustering found "
                     f"{self._centroids.shape[0]} centroids, but this archive "
@@ -203,13 +209,13 @@ class CVTArchive(ArchiveBase):
                     "because there are too few samples and/or too many bins.")
 
         if self._use_kd_tree:
-            self._centroid_kd_tree = cKDTree(self._centroids)
+            self._centroid_kd_tree = cKDTree(self._centroids,
+                                             **self._ckdtree_kwargs)
 
     @staticmethod
     @jit(nopython=True)
     def _brute_force_nn_numba(behavior_values, centroids):
         """Calculates the nearest centroid to the given behavior values.
-
         Technically, we calculate squared distance, but we only care about
         finding the neighbor and not the distance itself.
         """

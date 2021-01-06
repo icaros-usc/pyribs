@@ -225,8 +225,8 @@ class ArchiveBase(ABC):
     def add(self, solution, objective_value, behavior_values):
         """Attempts to insert a new solution into the archive.
 
-        The solution is only inserted if it has a higher objective_value than
-        the solution previously in the corresponding bin.
+        The solution is only inserted if it has a higher ``objective_value``
+        than the solution previously in the corresponding bin.
 
         Args:
             solution (np.ndarray): Parameters for the solution.

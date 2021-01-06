@@ -10,12 +10,13 @@ with open("HISTORY.md") as history_file:
     history = history_file.read()
 
 install_requires = [
-    "numpy>=1.17.0",  # >=1.17.0 mainly because of default_rng
-    "numba>=0.45.1",  # Has support for numpy 1.17
+    "numpy>=1.17.0",  # >=1.17.0 that is when default_rng becomes available.
+    "numba>=0.45.1",  # Has support for numpy 1.17.
     "pandas>=1.0.0",
-    "scipy>=1.0.0",
     "toml>=0.10.0",
-    "sortedcontainers>=2.0.0",
+    "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
+    "scikit-learn>=0.20",  # Primarily used in CVTArchive.
+    "scipy>=1.0.0",  # Primarily used in CVTArchive.
     "decorator>=4.0.0",
 ]
 
@@ -27,7 +28,7 @@ extras_require = {
         "matplotlib>=3.0.0",
         "seaborn>=0.11.0",
         "gym~=0.17.0",  # Strict since different gym may give different results.
-        "Box2D~=2.3.10",  # For envs such as Lunar Lander.
+        "Box2D~=2.3.10",  # Used in envs such as Lunar Lander.
         "fire>=0.3.0",
 
         # Dask

@@ -53,16 +53,6 @@ def test_properties_are_correct(_cvt_data):
                                          points)
 
 
-def test_construct_with_too_many_bins():
-    with pytest.raises(RuntimeError):
-        # Having a very low samples to bins ratio can result in centroids being
-        # dropped, but even then, the odds of this happening are somewhat low,
-        # so we do a few retries.
-        for _ in range(10):
-            archive = CVTArchive([(-1, 1), (-1, 1)], bins=5000, samples=7500)
-            archive.initialize(2)
-
-
 def test_custom_centroids(use_kd_tree):
     centroids = np.array([[-0.25, -0.25], [0.25, 0.25]])
     archive = CVTArchive([(-1, 1), (-1, 1)],

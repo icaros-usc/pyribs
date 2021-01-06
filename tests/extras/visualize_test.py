@@ -42,14 +42,11 @@ def _clean_matplotlib():
 @pytest.fixture(scope="module")  # Only run once to save time.
 def _cvt_archive():
     """Deterministically created CVTArchive."""
-    seed = 42
-    np.random.seed(seed)  # Make scipy's k-means deterministic.
     archive = CVTArchive([(-1, 1), (-1, 1)],
                          100,
                          samples=1000,
-                         use_kd_tree=False,
-                         k_means_threshold=1e-6,
-                         seed=seed)
+                         use_kd_tree=True,
+                         seed=42)
     archive.initialize(solution_dim=2)
 
     # Add solutions.
@@ -67,14 +64,11 @@ def _cvt_archive():
 @pytest.fixture(scope="module")  # Only run once to save time.
 def _long_cvt_archive():
     """Same as above, but the behavior space is longer in one direction."""
-    seed = 42
-    np.random.seed(seed)  # Make scipy's k-means deterministic.
     archive = CVTArchive([(-2, 2), (-1, 1)],
                          100,
                          samples=1000,
-                         use_kd_tree=False,
-                         k_means_threshold=1e-6,
-                         seed=seed)
+                         use_kd_tree=True,
+                         seed=42)
     archive.initialize(solution_dim=2)
 
     # Add solutions.
@@ -92,9 +86,8 @@ def _long_cvt_archive():
 def test_cvt_archive_heatmap_fails_on_non_2d():
     archive = CVTArchive([(-1, 1), (-1, 1), (-1, 1)],
                          100,
-                         samples=100,
-                         use_kd_tree=False,
-                         k_means_threshold=1e-6)
+                         use_kd_tree=True,
+                         samples=100)
     archive.initialize(solution_dim=3)
 
     with pytest.raises(ValueError):
