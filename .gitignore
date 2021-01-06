@@ -105,6 +105,7 @@ ENV/
 # Data
 *.png
 !tests/extras/baseline_images/visualize_test/*.png
+!docs/_static/imgs/*.png
 *.jpg
 *.pdf
 *.json
