@@ -110,6 +110,8 @@ def cvt_archive_heatmap(archive,
     Raises:
         ValueError: The archive is not 2D.
     """
+    # pylint: disable = too-many-locals
+
     if not archive.is_2d:
         raise ValueError("Cannot plot heatmap for non-2D archive.")
 
