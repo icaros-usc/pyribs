@@ -12,7 +12,7 @@ from .conftest import get_archive_data
 
 
 @pytest.fixture
-def _cvt_data(use_kd_tree):
+def _data(use_kd_tree):
     """Data for CVT Archive tests."""
     return (get_archive_data("CVTArchive-kd_tree")
             if use_kd_tree else get_archive_data("CVTArchive-brute_force"))
@@ -42,14 +42,13 @@ def test_samples_bad_shape(use_kd_tree):
                    use_kd_tree=use_kd_tree)
 
 
-def test_properties_are_correct(_cvt_data):
-    assert np.all(_cvt_data.archive.lower_bounds == [-1, -1])
-    assert np.all(_cvt_data.archive.upper_bounds == [1, 1])
+def test_properties_are_correct(_data):
+    assert np.all(_data.archive.lower_bounds == [-1, -1])
+    assert np.all(_data.archive.upper_bounds == [1, 1])
 
     points = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
-    unittest.TestCase().assertCountEqual(_cvt_data.archive.samples.tolist(),
-                                         points)
-    unittest.TestCase().assertCountEqual(_cvt_data.archive.centroids.tolist(),
+    unittest.TestCase().assertCountEqual(_data.archive.samples.tolist(), points)
+    unittest.TestCase().assertCountEqual(_data.archive.centroids.tolist(),
                                          points)
 
 
@@ -74,44 +73,44 @@ def test_custom_centroids_bad_shape(use_kd_tree):
                    use_kd_tree=use_kd_tree)
 
 
-def test_add_to_archive(_cvt_data):
-    _assert_archive_has_entry(_cvt_data.archive_with_entry, _cvt_data.centroid,
-                              _cvt_data.behavior_values,
-                              _cvt_data.objective_value, _cvt_data.solution)
+def test_add_to_archive(_data):
+    _assert_archive_has_entry(_data.archive_with_entry, _data.centroid,
+                              _data.behavior_values, _data.objective_value,
+                              _data.solution)
 
 
-def test_add_and_overwrite(_cvt_data):
+def test_add_and_overwrite(_data):
     """Test adding a new entry with a higher objective value."""
-    arbitrary_sol = _cvt_data.solution + 1
-    high_objective_value = _cvt_data.objective_value + 1.0
+    arbitrary_sol = _data.solution + 1
+    high_objective_value = _data.objective_value + 1.0
 
-    assert _cvt_data.archive_with_entry.add(arbitrary_sol, high_objective_value,
-                                            _cvt_data.behavior_values)
+    assert _data.archive_with_entry.add(arbitrary_sol, high_objective_value,
+                                        _data.behavior_values)
 
-    _assert_archive_has_entry(_cvt_data.archive_with_entry, _cvt_data.centroid,
-                              _cvt_data.behavior_values, high_objective_value,
+    _assert_archive_has_entry(_data.archive_with_entry, _data.centroid,
+                              _data.behavior_values, high_objective_value,
                               arbitrary_sol)
 
 
-def test_add_without_overwrite(_cvt_data):
+def test_add_without_overwrite(_data):
     """Test adding a new entry with a lower objective value."""
-    arbitrary_sol = _cvt_data.solution + 1
-    low_objective_value = _cvt_data.objective_value - 1.0
+    arbitrary_sol = _data.solution + 1
+    low_objective_value = _data.objective_value - 1.0
 
-    assert not _cvt_data.archive_with_entry.add(
-        arbitrary_sol, low_objective_value, _cvt_data.behavior_values)
+    assert not _data.archive_with_entry.add(arbitrary_sol, low_objective_value,
+                                            _data.behavior_values)
 
-    _assert_archive_has_entry(_cvt_data.archive_with_entry, _cvt_data.centroid,
-                              _cvt_data.behavior_values,
-                              _cvt_data.objective_value, _cvt_data.solution)
+    _assert_archive_has_entry(_data.archive_with_entry, _data.centroid,
+                              _data.behavior_values, _data.objective_value,
+                              _data.solution)
 
 
 @pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
-def test_as_pandas(_cvt_data, with_entry):
+def test_as_pandas(_data, with_entry):
     if with_entry:
-        df = _cvt_data.archive_with_entry.as_pandas()
+        df = _data.archive_with_entry.as_pandas()
     else:
-        df = _cvt_data.archive.as_pandas()
+        df = _data.archive.as_pandas()
 
     assert np.all(df.columns == [
         'index',
@@ -134,11 +133,11 @@ def test_as_pandas(_cvt_data, with_entry):
 
     if with_entry:
         index = df.loc[0, "index"]
-        assert (_cvt_data.archive_with_entry.centroids[index] ==
-                _cvt_data.centroid).all()
+        assert (
+            _data.archive_with_entry.centroids[index] == _data.centroid).all()
 
         assert (df.loc[0, "behavior-0":] == np.array([
-            *_cvt_data.behavior_values,
-            _cvt_data.objective_value,
-            *_cvt_data.solution,
+            *_data.behavior_values,
+            _data.objective_value,
+            *_data.solution,
         ])).all()

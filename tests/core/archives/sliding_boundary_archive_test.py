@@ -8,7 +8,7 @@ from .conftest import get_archive_data
 
 
 @pytest.fixture
-def _sliding_boundary_data():
+def _data():
     """Data for sliding boundary archive tests."""
     return get_archive_data("SlidingBoundaryArchive")
 
@@ -22,62 +22,53 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
                                      [objective_value] + list(solution))).all()
 
 
-def test_attributes_correctly_constructed(_sliding_boundary_data):
-    archive, *_ = _sliding_boundary_data
-
-    assert np.all(archive.dims == [10, 20])
-    assert np.all(archive.lower_bounds == [-1, -2])
-    assert np.all(archive.upper_bounds == [1, 2])
-    assert np.all(archive.interval_size == [2, 4])
+def test_attributes_correctly_constructed(_data):
+    assert np.all(_data.archive.dims == [10, 20])
+    assert np.all(_data.archive.lower_bounds == [-1, -2])
+    assert np.all(_data.archive.upper_bounds == [1, 2])
+    assert np.all(_data.archive.interval_size == [2, 4])
 
     # Check the shape of boundaries.
-    assert len(archive.boundaries[0]) == 10
-    assert len(archive.boundaries[1]) == 20
-    assert archive.remap_frequency == 100
-    assert archive.buffer_capacity == 1000
+    assert len(_data.archive.boundaries[0]) == 10
+    assert len(_data.archive.boundaries[1]) == 20
+    assert _data.archive.remap_frequency == 100
+    assert _data.archive.buffer_capacity == 1000
 
 
-def test_add_to_archive_with_remap(_sliding_boundary_data):
-    (_, archive_with_entry, solution, objective_value, behavior_values, indices,
-     _) = _sliding_boundary_data
-
+def test_add_to_archive_with_remap(_data):
     # The first remap has been done while adding the first solution.
-    _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
-                              objective_value, solution)
+    _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,
+                              _data.behavior_values, _data.objective_value,
+                              _data.solution)
 
 
-def test_add_to_archive_with_full_buffer(_sliding_boundary_data):
-    (archive, _, solution, objective_value, behavior_values, indices,
-     _) = _sliding_boundary_data
+def test_add_to_archive_with_full_buffer(_data):
+    for _ in range(_data.archive.buffer_capacity + 1):
+        _data.archive.add(_data.solution, _data.objective_value,
+                          _data.behavior_values)
 
-    for _ in range(archive.buffer_capacity + 1):
-        archive.add(solution, objective_value, behavior_values)
-
-    _assert_archive_has_entry(archive, indices, behavior_values,
-                              objective_value, solution)
+    _assert_archive_has_entry(_data.archive, _data.grid_indices,
+                              _data.behavior_values, _data.objective_value,
+                              _data.solution)
 
 
-def test_add_to_archive_without_remap(_sliding_boundary_data):
-    _, archive_with_entry, *_, = _sliding_boundary_data
+def test_add_to_archive_without_remap(_data):
     behavior_values = np.array([0.25, 0.25])
     solution = np.array([3, 4, 5])
     objective_value = 2
     indices = (9, 19)
-    archive_with_entry.add(solution, objective_value, behavior_values)
+    _data.archive_with_entry.add(solution, objective_value, behavior_values)
 
-    _assert_archive_has_entry(archive_with_entry, indices, behavior_values,
-                              objective_value, solution)
+    _assert_archive_has_entry(_data.archive_with_entry, indices,
+                              behavior_values, objective_value, solution)
 
 
 @pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
-def test_as_pandas(_sliding_boundary_data, with_entry):
-    (archive, archive_with_entry, solution, objective_value, behavior_values,
-     indices, _) = _sliding_boundary_data
-
+def test_as_pandas(_data, with_entry):
     if with_entry:
-        df = archive_with_entry.as_pandas()
+        df = _data.archive_with_entry.as_pandas()
     else:
-        df = archive.as_pandas()
+        df = _data.archive.as_pandas()
 
     assert np.all(df.columns == [
         'index-0',
@@ -102,6 +93,11 @@ def test_as_pandas(_sliding_boundary_data, with_entry):
 
     if with_entry:
         assert (df.loc[0] == np.array(
-            [*indices, *behavior_values, objective_value, *solution],
+            [
+                *_data.grid_indices,
+                *_data.behavior_values,
+                _data.objective_value,
+                *_data.solution,
+            ],
             dtype=object,
         )).all()
