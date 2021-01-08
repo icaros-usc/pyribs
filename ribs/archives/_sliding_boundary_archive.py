@@ -4,7 +4,6 @@ from collections import deque
 
 import numba as nb
 import numpy as np
-import pandas as pd
 from sortedcontainers import SortedList
 
 from ribs.archives._archive_base import ArchiveBase, require_init
@@ -13,7 +12,7 @@ _EPSILON = 1e-9
 
 
 class IndividualBuffer:
-    """ An internal class that stores relevant data to re-add after remapping.
+    """An internal class that stores relevant data to re-add after remapping.
 
     It buffers solutions, objective values, and sorted behavior values of each
     dimension. It will pop the oldest element if it is full while putting new
@@ -31,8 +30,8 @@ class IndividualBuffer:
         return self
 
     def __next__(self):
-        """Return the next solution, objective value, and behavior values
-        from the buffer."""
+        """Return the next solution, objective value, and behavior values from
+        the buffer."""
         if self._iter_idx >= self.size:
             self._iter_idx = 0
             raise StopIteration
@@ -41,7 +40,10 @@ class IndividualBuffer:
         return result
 
     def add(self, solution, objective_value, behavior_values):
-        """Put a new element. Pop the oldest if it is full."""
+        """Put a new element.
+
+        Pop the oldest if it is full.
+        """
         if self.full():
             # Remove item from the deque.
             _, _, bc_deleted = self._inds_dq.popleft()
@@ -62,12 +64,12 @@ class IndividualBuffer:
     @property
     def sorted_behavior_values(self):
         """(behavior_dim, self.size) np.ndarray: Sorted behaviors of each
-        dimension"""
+        dimension."""
         return np.array(self._bc_lists, dtype=np.float)
 
     @property
     def size(self):
-        """Number of solutions stored in the buffer"""
+        """Number of solutions stored in the buffer."""
         return len(self._inds_dq)
 
     @property
@@ -160,8 +162,7 @@ class SlidingBoundaryArchive(ArchiveBase):
     @property
     def interval_size(self):
         """(behavior_dim,) np.ndarray: The size of each dim (upper_bounds -
-        lower_bounds).
-        """
+        lower_bounds)."""
         return self._interval_size
 
     @property
@@ -220,15 +221,15 @@ class SlidingBoundaryArchive(ArchiveBase):
     def _reset_archive(self):
         """Reset the archive.
 
-        Only ``self._occupied_indices`` and ``self._occupied`` are reset
-        because other members do not matter.
+        Only ``self._occupied_indices`` and ``self._occupied`` are reset because
+        other members do not matter.
         """
         self._occupied_indices.clear()
         self._occupied.fill(False)
 
     @require_init
     def add(self, solution, objective_value, behavior_values):
-        """ Attempt to insert the solution into the archive.
+        """Attempt to insert the solution into the archive.
 
         It will remap the archive once every ``self._remap_frequency``
         solutions are found by changing the boundaries of the archive to
@@ -301,9 +302,11 @@ class SlidingBoundaryArchive(ArchiveBase):
         return inserted
 
     @require_init
-    def as_pandas(self):
+    def as_pandas(self, include_solutions=True):
         """Converts the archive into a Pandas dataframe.
 
+        Args:
+            include_solutions (bool): Whether to include solution columns.
         Returns:
             A dataframe where each row is an elite in the archive. The dataframe
             has ``behavior_dim`` columns called ``index-{i}`` for the archive
@@ -312,20 +315,4 @@ class SlidingBoundaryArchive(ArchiveBase):
             ``objective``, and ``solution_dim`` columns called ``solution-{i}``
             for the solution values.
         """
-        indices = tuple(map(list, zip(*self._occupied_indices)))
-        data = {}
-
-        for i in range(self._behavior_dim):
-            data[f"index-{i}"] = indices[i]
-
-        behavior_values = self._behavior_values[indices]
-        for i in range(self._behavior_dim):
-            data[f"behavior-{i}"] = behavior_values[:, i]
-
-        data["objective"] = self._objective_values[indices]
-
-        solutions = self._solutions[indices]
-        for i in range(self._solution_dim):
-            data[f"solution-{i}"] = solutions[:, i]
-
-        return pd.DataFrame(data)
+        return ArchiveBase.as_pandas(self, include_solutions)

@@ -106,8 +106,13 @@ def test_add_without_overwrite(_cvt_data):
                               _cvt_data.objective_value, _cvt_data.solution)
 
 
-def test_as_pandas(_cvt_data):
-    df = _cvt_data.archive_with_entry.as_pandas()
+@pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
+def test_as_pandas(_cvt_data, with_entry):
+    if with_entry:
+        df = _cvt_data.archive_with_entry.as_pandas()
+    else:
+        df = _cvt_data.archive.as_pandas()
+
     assert np.all(df.columns == [
         'index',
         'behavior-0',
@@ -127,12 +132,13 @@ def test_as_pandas(_cvt_data):
         float,
     ]).all()
 
-    index = df.loc[0, "index"]
-    assert (_cvt_data.archive_with_entry.centroids[index] == _cvt_data.centroid
-           ).all()
+    if with_entry:
+        index = df.loc[0, "index"]
+        assert (_cvt_data.archive_with_entry.centroids[index] ==
+                _cvt_data.centroid).all()
 
-    assert (df.loc[0, "behavior-0":] == np.array([
-        *_cvt_data.behavior_values,
-        _cvt_data.objective_value,
-        *_cvt_data.solution,
-    ])).all()
+        assert (df.loc[0, "behavior-0":] == np.array([
+            *_cvt_data.behavior_values,
+            _cvt_data.objective_value,
+            *_cvt_data.solution,
+        ])).all()

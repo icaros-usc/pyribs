@@ -1,6 +1,5 @@
 """Contains the CVTArchive class."""
 import numpy as np
-import pandas as pd
 from numba import jit
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from sklearn.cluster import k_means
@@ -161,14 +160,20 @@ class CVTArchive(ArchiveBase):
     @require_init
     def samples(self):
         """(num_samples, behavior_dim) np.ndarray: The samples used in creating
-        the CVT. May be None until :meth:`initialize` is called."""
+        the CVT.
+
+        May be None until :meth:`initialize` is called.
+        """
         return self._samples
 
     @property
     @require_init
     def centroids(self):
         """(num_centroids, behavior_dim) np.ndarray: The centroids used in the
-        CVT. None until :meth:`initialize` is called."""
+        CVT.
+
+        None until :meth:`initialize` is called.
+        """
         return self._centroids
 
     def initialize(self, solution_dim):
@@ -216,6 +221,7 @@ class CVTArchive(ArchiveBase):
     @jit(nopython=True)
     def _brute_force_nn_numba(behavior_values, centroids):
         """Calculates the nearest centroid to the given behavior values.
+
         Technically, we calculate squared distance, but we only care about
         finding the neighbor and not the distance itself.
         """
@@ -234,9 +240,11 @@ class CVTArchive(ArchiveBase):
         return self._brute_force_nn_numba(behavior_values, self._centroids)
 
     @require_init
-    def as_pandas(self):
+    def as_pandas(self, include_solutions=True):
         """Converts the archive into a Pandas dataframe.
 
+        Args:
+            include_solutions (bool): Whether to include solution columns.
         Returns:
             A dataframe where each row is an elite in the archive. The dataframe
             consists of 1 ``index`` column indicating the index of the centroid
@@ -245,16 +253,6 @@ class CVTArchive(ArchiveBase):
             function value called ``objective``, and ``solution_dim`` columns
             called ``solution-{i}`` for the solution values.
         """
-        data = {"index": self._occupied_indices}
-
-        behavior_values = self._behavior_values[self._occupied_indices]
-        for i in range(self._behavior_dim):
-            data[f"behavior-{i}"] = behavior_values[:, i]
-
-        data["objective"] = self._objective_values[self._occupied_indices]
-
-        solutions = self._solutions[self._occupied_indices]
-        for i in range(self._solution_dim):
-            data[f"solution-{i}"] = solutions[:, i]
-
-        return pd.DataFrame(data)
+        df = ArchiveBase.as_pandas(self, include_solutions)
+        df.rename(columns={"index-0": "index"}, inplace=True)
+        return df

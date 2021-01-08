@@ -69,11 +69,16 @@ def test_add_to_archive_without_remap(_sliding_boundary_data):
                               objective_value, solution)
 
 
-def test_as_pandas(_sliding_boundary_data):
-    (_, archive_with_entry, solution, objective_value, behavior_values, indices,
-     _) = _sliding_boundary_data
+@pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
+def test_as_pandas(_sliding_boundary_data, with_entry):
+    (archive, archive_with_entry, solution, objective_value, behavior_values,
+     indices, _) = _sliding_boundary_data
 
-    df = archive_with_entry.as_pandas()
+    if with_entry:
+        df = archive_with_entry.as_pandas()
+    else:
+        df = archive.as_pandas()
+
     assert np.all(df.columns == [
         'index-0',
         'index-1',
@@ -94,7 +99,9 @@ def test_as_pandas(_sliding_boundary_data):
         float,
         float,
     ]).all()
-    assert (df.loc[0] == np.array(
-        [*indices, *behavior_values, objective_value, *solution],
-        dtype=object,
-    )).all()
+
+    if with_entry:
+        assert (df.loc[0] == np.array(
+            [*indices, *behavior_values, objective_value, *solution],
+            dtype=object,
+        )).all()

@@ -1,8 +1,10 @@
 """Provides ArchiveBase."""
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 
 import numba as nb
 import numpy as np
+import pandas as pd
 from decorator import decorator
 
 
@@ -304,6 +306,58 @@ class ArchiveBase(ABC):
             self._behavior_values[index],
         )
 
-    @abstractmethod
-    def as_pandas(self):
-        """Converts the archive into a Pandas dataframe."""
+    def as_pandas(self, include_solutions=True):
+        """Converts the archive into a Pandas dataframe.
+
+        This base class implementation will create a dataframe consisting of:
+
+        - ``len(self._storage_dims)`` columns for the index, named
+          ``index-0, index-1, ...``
+        - ``self._behavior_dim`` columns for the behavior characteristics, named
+          ``behavior-0, behavior-1, ...``
+        - 1 column for the objective values, named ``objective``
+        - ``self._solution_dim`` columns for the solution vectors, named
+          ``solution-0, solution-1, ...``
+
+        In short, the dataframe will look like this:
+
+        +---------+-----------+------+-------------+-------------+------+------------+-------------+-------------+-----+
+        | index-0 |  index-1  | ...  | behavior-0  | behavior-1  | ...  | objective  | solution-0  | solution-1  | ... |
+        +=========+===========+======+=============+=============+======+============+=============+=============+=====+
+        | ...     |           | ...  |             | ...         |      | ...        |             | ...         |     |
+        +---------+-----------+------+-------------+-------------+------+------------+-------------+-------------+-----+
+
+        Args:
+            include_solutions (bool): Whether to include solution columns.
+        Returns:
+            pandas.DataFrame: See above.
+        """ # pylint: disable = line-too-long
+        data = OrderedDict()
+
+        index_dim = len(self._storage_dims)
+        if self.empty:
+            index_columns = ([],) * index_dim
+        else:
+            if index_dim == 1 and isinstance(self._occupied_indices[0], int):
+                # Some archives (i.e. CVTArchive) have a 1D index and use ints
+                # instead of 1D tuples.
+                index_columns = (self._occupied_indices,)
+            else:
+                index_columns = tuple(map(list, zip(*self._occupied_indices)))
+        for i in range(index_dim):
+            data[f"index-{i}"] = np.asarray(index_columns[i], dtype=int)
+
+        behavior_values = self._behavior_values[index_columns]
+        for i in range(self._behavior_dim):
+            data[f"behavior-{i}"] = np.asarray(behavior_values[:, i],
+                                               dtype=float)
+
+        data["objective"] = np.asarray(self._objective_values[index_columns],
+                                       dtype=float)
+
+        if include_solutions:
+            solutions = self._solutions[index_columns]
+            for i in range(self._solution_dim):
+                data[f"solution-{i}"] = np.asarray(solutions[:, i], dtype=float)
+
+        return pd.DataFrame(data)

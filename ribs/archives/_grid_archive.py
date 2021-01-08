@@ -1,6 +1,5 @@
 """Contains the GridArchive."""
 import numpy as np
-import pandas as pd
 from numba import jit
 
 from ribs.archives._archive_base import ArchiveBase, require_init
@@ -98,9 +97,11 @@ class GridArchive(ArchiveBase):
         return tuple(index)
 
     @require_init
-    def as_pandas(self):
+    def as_pandas(self, include_solutions=True):
         """Converts the archive into a Pandas dataframe.
 
+        Args:
+            include_solutions (bool): Whether to include solution columns.
         Returns:
             A dataframe where each row is an elite in the archive. The dataframe
             has ``behavior_dim`` columns called ``index-{i}`` for the archive
@@ -109,20 +110,4 @@ class GridArchive(ArchiveBase):
             ``objective``, and ``solution_dim`` columns called ``solution-{i}``
             for the solution values.
         """
-        indices = tuple(map(list, zip(*self._occupied_indices)))
-        data = {}
-
-        for i in range(self._behavior_dim):
-            data[f"index-{i}"] = indices[i]
-
-        behavior_values = self._behavior_values[indices]
-        for i in range(self._behavior_dim):
-            data[f"behavior-{i}"] = behavior_values[:, i]
-
-        data["objective"] = self._objective_values[indices]
-
-        solutions = self._solutions[indices]
-        for i in range(self._solution_dim):
-            data[f"solution-{i}"] = solutions[:, i]
-
-        return pd.DataFrame(data)
+        return ArchiveBase.as_pandas(self, include_solutions)

@@ -85,8 +85,13 @@ def test_add_without_overwrite(_grid_data):
                               _grid_data.objective_value, _grid_data.solution)
 
 
-def test_as_pandas(_grid_data):
-    df = _grid_data.archive_with_entry.as_pandas()
+@pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
+def test_as_pandas(_grid_data, with_entry):
+    if with_entry:
+        df = _grid_data.archive_with_entry.as_pandas()
+    else:
+        df = _grid_data.archive.as_pandas()
+
     assert np.all(df.columns == [
         'index-0',
         'index-1',
@@ -107,9 +112,11 @@ def test_as_pandas(_grid_data):
         float,
         float,
     ]).all()
-    assert (df.loc[0] == np.array([
-        *_grid_data.grid_indices,
-        *_grid_data.behavior_values,
-        _grid_data.objective_value,
-        *_grid_data.solution,
-    ])).all()
+
+    if with_entry:
+        assert (df.loc[0] == np.array([
+            *_grid_data.grid_indices,
+            *_grid_data.behavior_values,
+            _grid_data.objective_value,
+            *_grid_data.solution,
+        ])).all()
