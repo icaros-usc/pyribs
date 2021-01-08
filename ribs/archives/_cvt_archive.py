@@ -148,19 +148,19 @@ class CVTArchive(ArchiveBase):
 
     @property
     def lower_bounds(self):
-        """(behavior_dim,) np.ndarray: Lower bound of each dimension."""
+        """(behavior_dim,) numpy.ndarray: Lower bound of each dimension."""
         return self._lower_bounds
 
     @property
     def upper_bounds(self):
-        """(behavior_dim,) np.ndarray: Upper bound of each dimension."""
+        """(behavior_dim,) numpy.ndarray: Upper bound of each dimension."""
         return self._upper_bounds
 
     @property
     @require_init
     def samples(self):
-        """(num_samples, behavior_dim) np.ndarray: The samples used in creating
-        the CVT.
+        """(num_samples, behavior_dim) numpy.ndarray: The samples used in
+        creating the CVT.
 
         May be None until :meth:`initialize` is called.
         """
@@ -169,8 +169,8 @@ class CVTArchive(ArchiveBase):
     @property
     @require_init
     def centroids(self):
-        """(num_centroids, behavior_dim) np.ndarray: The centroids used in the
-        CVT.
+        """(num_centroids, behavior_dim) numpy.ndarray: The centroids used in
+        the CVT.
 
         None until :meth:`initialize` is called.
         """
@@ -246,12 +246,13 @@ class CVTArchive(ArchiveBase):
         Args:
             include_solutions (bool): Whether to include solution columns.
         Returns:
-            A dataframe where each row is an elite in the archive. The dataframe
-            consists of 1 ``index`` column indicating the index of the centroid
-            in ``self._centroids``, ``behavior_dim`` columns called
-            ``behavior-{i}`` for the behavior values, 1 column for the objective
-            function value called ``objective``, and ``solution_dim`` columns
-            called ``solution-{i}`` for the solution values.
+            pandas.DataFrame: A dataframe where each row is an elite in the
+            archive. The dataframe consists of 1 ``index`` column indicating the
+            index of the centroid in ``self._centroids``, ``behavior_dim``
+            columns called ``behavior-{i}`` for the behavior values, 1 column
+            for the objective function value called ``objective``, and
+            ``solution_dim`` columns called ``solution-{i}`` for the solution
+            values.
         """
         df = ArchiveBase.as_pandas(self, include_solutions)
         df.rename(columns={"index-0": "index"}, inplace=True)

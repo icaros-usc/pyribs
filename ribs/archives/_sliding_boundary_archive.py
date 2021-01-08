@@ -63,7 +63,7 @@ class IndividualBuffer:
 
     @property
     def sorted_behavior_values(self):
-        """(behavior_dim, self.size) np.ndarray: Sorted behaviors of each
+        """(behavior_dim, self.size) numpy.ndarray: Sorted behaviors of each
         dimension."""
         return np.array(self._bc_lists, dtype=np.float)
 
@@ -146,22 +146,22 @@ class SlidingBoundaryArchive(ArchiveBase):
 
     @property
     def dims(self):
-        """(behavior_dim,) np.ndarray: Number of bins in each dimension."""
+        """(behavior_dim,) numpy.ndarray: Number of bins in each dimension."""
         return self._dims
 
     @property
     def lower_bounds(self):
-        """(behavior_dim,) np.ndarray: Lower bound of each dimension."""
+        """(behavior_dim,) numpy.ndarray: Lower bound of each dimension."""
         return self._lower_bounds
 
     @property
     def upper_bounds(self):
-        """(behavior_dim,) np.ndarray: Upper bound of each dimension."""
+        """(behavior_dim,) numpy.ndarray: Upper bound of each dimension."""
         return self._upper_bounds
 
     @property
     def interval_size(self):
-        """(behavior_dim,) np.ndarray: The size of each dim (upper_bounds -
+        """(behavior_dim,) numpy.ndarray: The size of each dim (upper_bounds -
         lower_bounds)."""
         return self._interval_size
 
@@ -179,7 +179,7 @@ class SlidingBoundaryArchive(ArchiveBase):
 
     @property
     def boundaries(self):
-        """list of np.ndarray: The dynamic boundaries of each dimension.
+        """list of numpy.ndarray: The dynamic boundaries of each dimension.
 
         The number of boundaries is determined by ``dims``. e.g. if ``dims`` is
         ``[20, 30, 40]``, ``boundaries`` is ``[b1, b2, b3]`` where ``b1``,
@@ -240,11 +240,11 @@ class SlidingBoundaryArchive(ArchiveBase):
             but **ALL** of the solutions stored in the buffer.
 
         Args:
-            solution (np.ndarray): Parameters for the solution.
+            solution (numpy.ndarray): Parameters for the solution.
             objective_value (float): Objective function evaluation of this
                 solution.
-            behavior_values (np.ndarray): Coordinates in behavior space of this
-                solution.
+            behavior_values (numpy.ndarray): Coordinates in behavior space of
+                this solution.
         Returns:
             bool: Whether the value was inserted into the archive.
         """
@@ -279,7 +279,7 @@ class SlidingBoundaryArchive(ArchiveBase):
 
         Re-add all of the solutions in the buffer.
 
-        Return:
+        Returns:
             bool: True if the last item in the buffer is successfully inserted.
         """
 
@@ -308,11 +308,11 @@ class SlidingBoundaryArchive(ArchiveBase):
         Args:
             include_solutions (bool): Whether to include solution columns.
         Returns:
-            A dataframe where each row is an elite in the archive. The dataframe
-            has ``behavior_dim`` columns called ``index-{i}`` for the archive
-            index, ``behavior_dim`` columns called ``behavior-{i}`` for the
-            behavior values, 1 column for the objective function value called
-            ``objective``, and ``solution_dim`` columns called ``solution-{i}``
-            for the solution values.
+            pandas.DataFrame: A dataframe where each row is an elite in the
+            archive. The dataframe has ``behavior_dim`` columns called
+            ``index-{i}`` for the archive index, ``behavior_dim`` columns called
+            ``behavior-{i}`` for the behavior values, 1 column for the objective
+            function value called ``objective``, and ``solution_dim`` columns
+            called ``solution-{i}`` for the solution values.
         """
         return ArchiveBase.as_pandas(self, include_solutions)

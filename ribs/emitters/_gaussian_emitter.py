@@ -59,13 +59,13 @@ class GaussianEmitter(EmitterBase):
 
     @property
     def x0(self):
-        """np.ndarray: Center of the Gaussian distribution from which to sample
-        solutions when the archive is empty."""
+        """numpy.ndarray: Center of the Gaussian distribution from which to
+        sample solutions when the archive is empty."""
         return self._x0
 
     @property
     def sigma0(self):
-        """float or np.ndarray: Standard deviation of the (diagonal) Gaussian
+        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
         distribution."""
         return self._sigma0
 

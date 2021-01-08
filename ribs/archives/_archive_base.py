@@ -101,21 +101,22 @@ class ArchiveBase(ABC):
         seed (int): Value to seed the random number generator. Set to None to
             avoid seeding.
     Attributes:
-        _rng (np.random.Generator): Random number generator, used in particular
-            for generating random elites.
+        _rng (numpy.random.Generator): Random number generator, used in
+            particular for generating random elites.
         _storage_dims (tuple of int): See ``storage_dims`` arg.
         _behavior_dim (int): See ``behavior_dim`` arg.
         _solution_dim (int): Dimension of the solution space, passed in with
             :meth:`initialize`.
-        _occupied (np.ndarray): Bool array storing whether each cell in the
+        _occupied (numpy.ndarray): Bool array storing whether each cell in the
             archive is occupied. This attribute is None until :meth:`initialize`
             is called.
-        _solutions (np.ndarray): Float array storing the solutions themselves.
-            This attribute is None until :meth:`initialize` is called.
-        _objective_values (np.ndarray): Float array storing the objective values
-            of each solution. This attribute is None until :meth:`initialize` is
+        _solutions (numpy.ndarray): Float array storing the solutions
+            themselves. This attribute is None until :meth:`initialize` is
             called.
-        _behavior_value_dim (np.ndarray): Float array storing the behavior
+        _objective_values (numpy.ndarray): Float array storing the objective
+            values of each solution. This attribute is None until
+            :meth:`initialize` is called.
+        _behavior_value_dim (numpy.ndarray): Float array storing the behavior
             values of each solution. This attribute is None until
             :meth:`initialize` is called.
         _occupied_indices (list of (int or tuple of int)): A list of indices
@@ -231,11 +232,11 @@ class ArchiveBase(ABC):
         than the solution previously in the corresponding bin.
 
         Args:
-            solution (np.ndarray): Parameters for the solution.
+            solution (numpy.ndarray): Parameters for the solution.
             objective_value (float): Objective function evaluation of this
                 solution.
-            behavior_values (np.ndarray): Coordinates in behavior space of this
-                solution.
+            behavior_values (numpy.ndarray): Coordinates in behavior space of
+                this solution.
         Returns:
             bool: Whether the value was inserted into the archive.
         """
@@ -258,14 +259,14 @@ class ArchiveBase(ABC):
         with the centroid closest to the behavior values. Then, it would return
         the elite in that bin if it existed.
 
-        Returns;
+        Returns:
             tuple: 3-element tuple for the elite if it is found:
 
-                **solution** (*np.ndarray*): Parameters for the solution.
+                **solution** (*numpy.ndarray*): Parameters for the solution.
 
                 **objective_value** (*float*): Objective function evaluation.
 
-                **behavior_values** (*np.ndarray*): Actual behavior space
+                **behavior_values** (*numpy.ndarray*): Actual behavior space
                 coordinates of the elite (may not be exactly the same as those
                 specified).
 
@@ -287,11 +288,12 @@ class ArchiveBase(ABC):
         Returns:
             tuple: 3-element tuple containing:
 
-                **solution** (*np.ndarray*): Parameters for the solution.
+                **solution** (*numpy.ndarray*): Parameters for the solution.
 
                 **objective_value** (*float*): Objective function evaluation.
 
-                **behavior_values** (*np.ndarray*): Behavior space coordinates.
+                **behavior_values** (*numpy.ndarray*): Behavior space
+                coordinates.
         Raises:
             IndexError: The archive is empty.
         """

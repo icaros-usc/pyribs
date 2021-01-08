@@ -47,22 +47,22 @@ class GridArchive(ArchiveBase):
 
     @property
     def dims(self):
-        """(behavior_dim,) np.ndarray: Number of bins in each dimension."""
+        """(behavior_dim,) numpy.ndarray: Number of bins in each dimension."""
         return self._dims
 
     @property
     def lower_bounds(self):
-        """(behavior_dim,) np.ndarray: Lower bound of each dimension."""
+        """(behavior_dim,) numpy.ndarray: Lower bound of each dimension."""
         return self._lower_bounds
 
     @property
     def upper_bounds(self):
-        """(behavior_dim,) np.ndarray: Upper bound of each dimension."""
+        """(behavior_dim,) numpy.ndarray: Upper bound of each dimension."""
         return self._upper_bounds
 
     @property
     def interval_size(self):
-        """(behavior_dim,) np.ndarray: The size of each dim (upper_bounds -
+        """(behavior_dim,) numpy.ndarray: The size of each dim (upper_bounds -
         lower_bounds)."""
         return self._interval_size
 
@@ -103,11 +103,11 @@ class GridArchive(ArchiveBase):
         Args:
             include_solutions (bool): Whether to include solution columns.
         Returns:
-            A dataframe where each row is an elite in the archive. The dataframe
-            has ``behavior_dim`` columns called ``index-{i}`` for the archive
-            index, ``behavior_dim`` columns called ``behavior-{i}`` for the
-            behavior values, 1 column for the objective function value called
-            ``objective``, and ``solution_dim`` columns called ``solution-{i}``
-            for the solution values.
+            pandas.DataFrame: A dataframe where each row is an elite in the
+            archive. The dataframe has ``behavior_dim`` columns called
+            ``index-{i}`` for the archive index, ``behavior_dim`` columns called
+            ``behavior-{i}`` for the behavior values, 1 column for the objective
+            function value called ``objective``, and ``solution_dim`` columns
+            called ``solution-{i}`` for the solution values.
         """
         return ArchiveBase.as_pandas(self, include_solutions)

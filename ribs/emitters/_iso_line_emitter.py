@@ -67,8 +67,8 @@ class IsoLineEmitter(EmitterBase):
 
     @property
     def x0(self):
-        """np.ndarray: Center of the Gaussian distribution from which to sample
-        solutions when the archive is empty."""
+        """numpy.ndarray: Center of the Gaussian distribution from which to
+        sample solutions when the archive is empty."""
         return self._x0
 
     @property
