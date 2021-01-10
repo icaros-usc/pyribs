@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 from decorator import decorator
 
+from ribs.archives._add_status import AddStatus
+
 
 @decorator
 def require_init(method, self, *args, **kwargs):
@@ -238,18 +240,32 @@ class ArchiveBase(ABC):
             behavior_values (numpy.ndarray): Coordinates in behavior space of
                 this solution.
         Returns:
-            bool: Whether the value was inserted into the archive.
+            tuple: 2-element tuple describing the result of the add operation.
+            These outputs are particularly useful for algorithms such as CMA-ME.
+
+                **status** (:class:`AddStatus`): See :class:`AddStatus`.
+
+                **value** (:class:`float`): The meaning of this value depends on
+                the value of ``status``:
+
+                - ``NOT_ADDED`` -> the objective value passed in
+                - ``IMPROVE_EXISTING`` -> the ``improvement``, i.e. objective
+                  value of solution passed in minus objective value of solution
+                  previously in the archive
+                - ``NEW`` -> the objective value passed in
         """
         index = self._get_index(behavior_values)
-
+        old_objective = self._objective_values[index]
         was_inserted, already_occupied = self._add_numba(
             index, solution, objective_value, behavior_values, self._occupied,
             self._solutions, self._objective_values, self._behavior_values)
 
         if was_inserted and not already_occupied:
             self._occupied_indices.append(index)
-
-        return was_inserted
+            return (AddStatus.NEW, objective_value)
+        if was_inserted and already_occupied:
+            return (AddStatus.IMPROVE_EXISTING, objective_value - old_objective)
+        return (AddStatus.NOT_ADDED, objective_value)
 
     @require_init
     def elite_with_behavior(self, behavior_values):
@@ -262,13 +278,15 @@ class ArchiveBase(ABC):
         Returns:
             tuple: 3-element tuple for the elite if it is found:
 
-                **solution** (*numpy.ndarray*): Parameters for the solution.
+                **solution** (:class:`numpy.ndarray`): Parameters for the
+                solution.
 
-                **objective_value** (*float*): Objective function evaluation.
+                **objective_value** (:class:`float`): Objective function
+                evaluation.
 
-                **behavior_values** (*numpy.ndarray*): Actual behavior space
-                coordinates of the elite (may not be exactly the same as those
-                specified).
+                **behavior_values** (:class:`numpy.ndarray`): Actual behavior
+                space coordinates of the elite (may not be exactly the same as
+                those specified).
 
             If there is no elite in the bin, a tuple of (None, None, None) is
             returned (thus, something like
@@ -288,11 +306,13 @@ class ArchiveBase(ABC):
         Returns:
             tuple: 3-element tuple containing:
 
-                **solution** (*numpy.ndarray*): Parameters for the solution.
+                **solution** (:class:`numpy.ndarray`): Parameters for the
+                solution.
 
-                **objective_value** (*float*): Objective function evaluation.
+                **objective_value** (:class:`float`): Objective function
+                evaluation.
 
-                **behavior_values** (*numpy.ndarray*): Behavior space
+                **behavior_values** (:class:`numpy.ndarray`): Behavior space
                 coordinates.
         Raises:
             IndexError: The archive is empty.
@@ -340,7 +360,8 @@ class ArchiveBase(ABC):
         if self.empty:
             index_columns = ([],) * index_dim
         else:
-            if index_dim == 1 and isinstance(self._occupied_indices[0], int):
+            if index_dim == 1 and isinstance(self._occupied_indices[0],
+                                             (int, np.integer)):
                 # Some archives (i.e. CVTArchive) have a 1D index and use ints
                 # instead of 1D tuples.
                 index_columns = (self._occupied_indices,)
@@ -361,5 +382,4 @@ class ArchiveBase(ABC):
             solutions = self._solutions[index_columns]
             for i in range(self._solution_dim):
                 data[f"solution-{i}"] = np.asarray(solutions[:, i], dtype=float)
-
         return pd.DataFrame(data)

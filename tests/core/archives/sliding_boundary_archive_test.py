@@ -2,6 +2,8 @@
 import numpy as np
 import pytest
 
+from ribs.archives import AddStatus
+
 from .conftest import get_archive_data
 
 # pylint: disable = invalid-name
@@ -53,14 +55,15 @@ def test_add_to_archive_with_full_buffer(_data):
 
 
 def test_add_to_archive_without_remap(_data):
-    behavior_values = np.array([0.25, 0.25])
     solution = np.array([3, 4, 5])
-    objective_value = 2
-    indices = (9, 19)
-    _data.archive_with_entry.add(solution, objective_value, behavior_values)
-
-    _assert_archive_has_entry(_data.archive_with_entry, indices,
-                              behavior_values, objective_value, solution)
+    high_objective_value = _data.objective_value + 1.0
+    status, value = _data.archive_with_entry.add(solution, high_objective_value,
+                                                 _data.behavior_values)
+    assert status == AddStatus.IMPROVE_EXISTING
+    assert np.isclose(value, high_objective_value - _data.objective_value)
+    _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,
+                              _data.behavior_values, high_objective_value,
+                              solution)
 
 
 @pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])

@@ -229,34 +229,32 @@ class SlidingBoundaryArchive(ArchiveBase):
 
     @require_init
     def add(self, solution, objective_value, behavior_values):
-        """Attempt to insert the solution into the archive.
+        """Attempts to insert a new solution into the archive.
 
-        It will remap the archive once every ``self._remap_frequency``
-        solutions are found by changing the boundaries of the archive to
-        the percentage marks of the behavior values stored in the buffer and
-        re-add all of the solutions stored in the buffer.
+        This method will remap the archive once every ``self._remap_frequency``
+        solutions are found by changing the boundaries of the archive to the
+        percentage marks of the behavior values stored in the buffer and re-add
+        all of the solutions stored in the buffer.
 
         .. note:: Remapping will not just add solutions in the current archive,
             but **ALL** of the solutions stored in the buffer.
 
         Args:
-            solution (numpy.ndarray): Parameters for the solution.
-            objective_value (float): Objective function evaluation of this
-                solution.
-            behavior_values (numpy.ndarray): Coordinates in behavior space of
-                this solution.
+            solution (numpy.ndarray): See :meth:`ArchiveBase.add`
+            objective_value (float): See :meth:`ArchiveBase.add`
+            behavior_values (numpy.ndarray): See :meth:`ArchiveBase.add`
         Returns:
-            bool: Whether the value was inserted into the archive.
+            See :meth:`ArchiveBase.add`
         """
         self._buffer.add(solution, objective_value, behavior_values)
         self._total_num_sol += 1
 
         if self._total_num_sol % self._remap_frequency == 1:
-            inserted = self._re_map()
+            status, value = self._re_map()
         else:
-            inserted = ArchiveBase.add(self, solution, objective_value,
-                                       behavior_values)
-        return inserted
+            status, value = ArchiveBase.add(self, solution, objective_value,
+                                            behavior_values)
+        return status, value
 
     @staticmethod
     @nb.jit(nopython=True)
@@ -272,15 +270,16 @@ class SlidingBoundaryArchive(ArchiveBase):
                 boundaries[i][j] = sorted_bc[i][sample_idx]
 
     def _re_map(self):
-        """Remap the archive.
+        """Remaps the archive.
 
         The boundaries will be relocated at the percentage marks of the
         solutions stored in the archive.
 
-        Re-add all of the solutions in the buffer.
+        Also re-adds all of the solutions in the buffer.
 
         Returns:
-            bool: True if the last item in the buffer is successfully inserted.
+            tuple: The result of calling :meth:`ArchiveBase.add` on the last
+            item in the buffer.
         """
 
         # Sort all behavior values along the axis of each bc.
@@ -295,11 +294,11 @@ class SlidingBoundaryArchive(ArchiveBase):
 
         # Add all solutions to the new empty archive.
         self._reset_archive()
-        inserted = False
+        status, value = None, None
         for solution, objective_value, behavior_value in self._buffer:
-            inserted = ArchiveBase.add(self, solution, objective_value,
-                                       behavior_value)
-        return inserted
+            status, value = ArchiveBase.add(self, solution, objective_value,
+                                            behavior_value)
+        return status, value
 
     @require_init
     def as_pandas(self, include_solutions=True):
