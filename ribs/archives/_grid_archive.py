@@ -28,10 +28,9 @@ class GridArchive(ArchiveBase):
             the second dimension should have bounds ``(-2, 2)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid seeding.
-        dtype (str or numpy.dtype): Data type of the solutions, objective
-            values, and behavior values. All floating point types should work,
-            though we only test ``"f"`` / :class:`np.float32` and
-            ``"d"`` / :class:`np.float64`.
+        dtype (str or data-type): Data type of the solutions, objective values,
+            and behavior values. We only support ``"f"`` / :class:`np.float32`
+            and ``"d"`` / :class:`np.float64`.
     """
 
     def __init__(self, dims, ranges, seed=None, dtype=np.float64):
@@ -46,8 +45,8 @@ class GridArchive(ArchiveBase):
         )
 
         ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0], dtype=dtype)
-        self._upper_bounds = np.array(ranges[1], dtype=dtype)
+        self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
+        self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
         self._interval_size = self._upper_bounds - self._lower_bounds
 
     @property

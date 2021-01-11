@@ -58,10 +58,9 @@ class CVTArchive(ArchiveBase):
             number of centroids/areas in the CVT.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid seeding.
-        dtype (str or numpy.dtype): Data type of the solutions, objective
-            values, and behavior values. All floating point types should work,
-            though we only test ``"f"`` / :class:`np.float32` and
-            ``"d"`` / :class:`np.float64`.
+        dtype (str or data-type): Data type of the solutions, objective values,
+            and behavior values. We only support ``"f"`` / :class:`np.float32`
+            and ``"d"`` / :class:`np.float64`.
         samples (int or array-like): If it is an int, this specifies the number
             of samples to generate when creating the CVT. Otherwise, this must
             be a (num_samples, behavior_dim) array where samples[i] is a sample
@@ -105,8 +104,8 @@ class CVTArchive(ArchiveBase):
         )
 
         ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0], dtype=dtype)
-        self._upper_bounds = np.array(ranges[1], dtype=dtype)
+        self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
+        self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
 
         self._bins = bins
 
@@ -135,7 +134,7 @@ class CVTArchive(ArchiveBase):
             if not isinstance(samples, int):
                 # Validate shape of custom samples. These are ignored when
                 # `custom_centroids` is provided.
-                samples = np.asarray(samples, dtype=dtype)
+                samples = np.asarray(samples, dtype=self.dtype)
                 if samples.shape[1] != self._behavior_dim:
                     raise ValueError(
                         f"Samples has shape {samples.shape} but must be of "
@@ -144,7 +143,7 @@ class CVTArchive(ArchiveBase):
             self._centroids = None
         else:
             # Validate shape of `custom_centroids` when they are provided.
-            custom_centroids = np.asarray(custom_centroids, dtype=dtype)
+            custom_centroids = np.asarray(custom_centroids, dtype=self.dtype)
             if custom_centroids.shape != (bins, self._behavior_dim):
                 raise ValueError(
                     f"custom_centroids has shape {custom_centroids.shape} but "

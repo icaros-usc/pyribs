@@ -48,6 +48,26 @@ def test_method_fails_without_init():
 
 
 #
+# Test the dtypes of all classes, as some classes use the dtype in their
+# constructor.
+#
+
+
+@pytest.mark.parametrize("name", ARCHIVE_NAMES)
+@pytest.mark.parametrize("dtype", [("f", np.float32), ("d", np.float64)],
+                         ids=["f", "d"])
+def test_str_dtype_float(name, dtype):
+    str_dtype, np_dtype = dtype
+    data = get_archive_data(name, str_dtype)
+    assert data.archive.dtype == np_dtype
+
+
+def test_invalid_dtype():
+    with pytest.raises(ValueError):
+        GridArchive([20, 20], [(-1, 1)] * 2, dtype=np.int32)
+
+
+#
 # ArchiveBase tests -- should work for all archive classes.
 #
 

@@ -100,10 +100,9 @@ class ArchiveBase(ABC):
         behavior_dim (int): The dimension of the behavior space.
         seed (int): Value to seed the random number generator. Set to None to
             avoid seeding.
-        dtype (str or numpy.dtype): Data type of the solutions, objective
-            values, and behavior values. All floating point types should work,
-            though we only test ``"f"`` / :class:`np.float32` and
-            ``"d"`` / :class:`np.float64`.
+        dtype (str or data-type): Data type of the solutions, objective values,
+            and behavior values. We only support ``"f"`` / :class:`np.float32`
+            and ``"d"`` / :class:`np.float64`.
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
@@ -145,7 +144,29 @@ class ArchiveBase(ABC):
         self._rand_buf = None
         self._seed = seed
         self._initialized = False
-        self._dtype = np.dtype(dtype)
+
+        self._dtype = self._parse_dtype(dtype)
+
+    @staticmethod
+    def _parse_dtype(dtype):
+        """Parses the dtype passed into the constructor.
+
+        Returns:
+            np.float32 or np.float64
+        Raises:
+            ValueError: There is an error in the bounds configuration.
+        """
+        # First convert str dtype's to np.dtype.
+        if isinstance(dtype, str):
+            dtype = np.dtype(dtype)
+
+        # np.dtype is not np.float32 or np.float64, but it compares equal.
+        if dtype == np.float32:
+            return np.float32
+        if dtype == np.float64:
+            return np.float64
+
+        raise ValueError("Unsupported dtype. Must be np.float32 or np.float64")
 
     @property
     def initialized(self):
@@ -279,7 +300,7 @@ class ArchiveBase(ABC):
         else:
             status = AddStatus.NOT_ADDED
             value = objective_value
-        return status, self.dtype(value)  # pylint: disable = not-callable
+        return status, self.dtype(value)
 
     @require_init
     def elite_with_behavior(self, behavior_values):
