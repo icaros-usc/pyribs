@@ -2,4 +2,6 @@ ribs.visualize
 ===============
 
 .. automodule:: ribs.visualize
-  :members:
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:

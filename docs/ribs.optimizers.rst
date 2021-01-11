@@ -2,4 +2,6 @@ ribs.optimizers
 ===============
 
 .. automodule:: ribs.optimizers
-  :members:
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:

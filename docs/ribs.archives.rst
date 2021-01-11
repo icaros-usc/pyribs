@@ -2,4 +2,6 @@ ribs.archives
 =============
 
 .. automodule:: ribs.archives
-  :members:
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:

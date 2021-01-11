@@ -2,4 +2,6 @@ ribs.emitters
 =============
 
 .. automodule:: ribs.emitters
-  :members:
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:

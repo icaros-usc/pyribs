@@ -1,4 +1,14 @@
-"""Functions for factory-style creation of ribs."""
+"""Functions for factory-style creation of ribs.
+
+.. autosummary::
+    :toctree:
+
+    ribs.factory.from_config
+    ribs.factory.register_archive
+    ribs.factory.register_emitter
+    ribs.factory.register_optimizer
+    ribs.factory.RegistrationError
+"""
 import pathlib
 
 import toml

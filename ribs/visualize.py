@@ -3,6 +3,11 @@
 Note that this module only works when you install ``ribs[all]``. As such, we do
 not import it when you run ``import ribs``, and you will need to explicitly use
 ``import ribs.visualize``.
+
+.. autosummary::
+    :toctree:
+
+    ribs.visualize.cvt_archive_heatmap
 """
 import matplotlib
 import matplotlib.pyplot as plt

@@ -214,12 +214,13 @@ texinfo_documents = [
 
 # -- Extension config -------------------------------------------------
 
-# Autodoc
+# Autodoc and autosummary
 autodoc_member_order = "groupwise"  # Can be overridden by :member-order:
 autodoc_default_options = {
     "autosummary": True,
     "inherited-members": True,
 }
+autosummary_generate = True
 
 # Matplotlib plot directive.
 plot_include_source = True
