@@ -45,8 +45,9 @@ class GaussianEmitter(EmitterBase):
                  bounds=None,
                  batch_size=64,
                  seed=None):
-        self._x0 = np.array(x0)
-        self._sigma0 = sigma0 if isinstance(sigma0, float) else np.array(sigma0)
+        self._x0 = np.array(x0, dtype=archive.dtype)
+        self._sigma0 = archive.dtype(sigma0) if isinstance(
+            sigma0, (float, np.floating)) else np.array(sigma0)
 
         EmitterBase.__init__(
             self,
@@ -96,8 +97,10 @@ class GaussianEmitter(EmitterBase):
                 for _ in range(self.batch_size)
             ]
 
-        noise = self._rng.normal(scale=self._sigma0,
-                                 size=(self.batch_size, self.solution_dim))
+        noise = self._rng.normal(
+            scale=self._sigma0,
+            size=(self.batch_size, self.solution_dim),
+        ).astype(self._archive.dtype)
 
         return self._ask_clip_helper(np.asarray(parents), noise,
                                      self._lower_bounds, self._upper_bounds)

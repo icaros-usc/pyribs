@@ -43,11 +43,12 @@ class EmitterBase(ABC):
         self._archive = archive
         self._solution_dim = solution_dim
         (self._lower_bounds,
-         self._upper_bounds) = self._process_bounds(bounds, self._solution_dim)
+         self._upper_bounds) = self._process_bounds(bounds, self._solution_dim,
+                                                    archive.dtype)
         self._batch_size = batch_size
 
     @staticmethod
-    def _process_bounds(bounds, solution_dim):
+    def _process_bounds(bounds, solution_dim, dtype):
         """Processes the input bounds.
 
         Returns:
@@ -63,8 +64,8 @@ class EmitterBase(ABC):
         if len(bounds) != solution_dim:
             raise ValueError("If it is an array-like, bounds must have the "
                              "same length as x0")
-        lower_bounds = np.full(solution_dim, -np.inf)
-        upper_bounds = np.full(solution_dim, np.inf)
+        lower_bounds = np.full(solution_dim, -np.inf, dtype=dtype)
+        upper_bounds = np.full(solution_dim, np.inf, dtype=dtype)
         for idx, bnd in enumerate(bounds):
             if bnd is None:
                 continue  # Bounds already default to -inf and inf.

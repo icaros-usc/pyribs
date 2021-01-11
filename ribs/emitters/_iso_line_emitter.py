@@ -52,9 +52,9 @@ class IsoLineEmitter(EmitterBase):
                  bounds=None,
                  batch_size=64,
                  seed=None):
-        self._x0 = np.array(x0)
-        self._iso_sigma = iso_sigma
-        self._line_sigma = line_sigma
+        self._x0 = np.array(x0, dtype=archive.dtype)
+        self._iso_sigma = archive.dtype(iso_sigma)
+        self._line_sigma = archive.dtype(line_sigma)
 
         EmitterBase.__init__(
             self,
@@ -107,9 +107,10 @@ class IsoLineEmitter(EmitterBase):
             ``(self.batch_size, self.solution_dim)`` array -- contains
             ``batch_size`` new solutions to evaluate.
         """
-        iso_gaussian = self._rng.normal(scale=self._iso_sigma,
-                                        size=(self.batch_size,
-                                              self.solution_dim))
+        iso_gaussian = self._rng.normal(
+            scale=self._iso_sigma,
+            size=(self.batch_size, self.solution_dim),
+        ).astype(self._archive.dtype)
 
         if self._archive.empty:
             solutions = np.expand_dims(self._x0, axis=0) + iso_gaussian
@@ -120,8 +121,10 @@ class IsoLineEmitter(EmitterBase):
             ]
             directions = [(self._archive.get_random_elite()[0] - parents[i])
                           for i in range(self.batch_size)]
-            line_gaussian = self._rng.normal(scale=self._line_sigma,
-                                             size=(self.batch_size, 1))
+            line_gaussian = self._rng.normal(
+                scale=self._line_sigma,
+                size=(self.batch_size, 1),
+            ).astype(self._archive.dtype)
 
             solutions = self._ask_solutions_numba(np.asarray(parents),
                                                   iso_gaussian, line_gaussian,
