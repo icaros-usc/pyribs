@@ -55,7 +55,7 @@ ARCHIVE_NAMES = [
 ]
 
 
-def get_archive_data(name):
+def get_archive_data(name, dtype=np.float64):
     """Returns ArchiveFixtureData to use for testing each archive.
 
     The archives vary, but there will always be an empty 2D archive, as well as
@@ -76,10 +76,11 @@ def get_archive_data(name):
     if name == "GridArchive":
         # Grid archive with 10 bins and range (-1, 1) in first dim, and 20 bins
         # and range (-2, 2) in second dim.
-        archive = GridArchive([10, 20], [(-1, 1), (-2, 2)])
+        archive = GridArchive([10, 20], [(-1, 1), (-2, 2)], dtype=dtype)
         archive.initialize(len(solution))
 
-        archive_with_entry = GridArchive([10, 20], [(-1, 1), (-2, 2)])
+        archive_with_entry = GridArchive([10, 20], [(-1, 1), (-2, 2)],
+                                         dtype=dtype)
         archive_with_entry.initialize(len(solution))
         grid_indices = (6, 11)
     elif name.startswith("CVTArchive-"):
@@ -93,26 +94,30 @@ def get_archive_data(name):
         archive = CVTArchive([(-1, 1), (-1, 1)],
                              4,
                              samples=samples,
-                             use_kd_tree=kd_tree)
+                             use_kd_tree=kd_tree,
+                             dtype=dtype)
         archive.initialize(len(solution))
 
         archive_with_entry = CVTArchive([(-1, 1), (-1, 1)],
                                         4,
                                         samples=samples,
-                                        use_kd_tree=kd_tree)
+                                        use_kd_tree=kd_tree,
+                                        dtype=dtype)
         archive_with_entry.initialize(len(solution))
     elif name == "SlidingBoundaryArchive":
         # Sliding boundary archive with 10 bins and range (-1, 1) in first dim,
         # and 20 bins and range (-2, 2) in second dim.
         archive = SlidingBoundaryArchive([10, 20], [(-1, 1), (-2, 2)],
                                          remap_frequency=100,
-                                         buffer_capacity=1000)
+                                         buffer_capacity=1000,
+                                         dtype=dtype)
         archive.initialize(len(solution))
 
         archive_with_entry = SlidingBoundaryArchive([10, 20], [(-1, 1),
                                                                (-2, 2)],
                                                     remap_frequency=100,
-                                                    buffer_capacity=1000)
+                                                    buffer_capacity=1000,
+                                                    dtype=dtype)
         archive_with_entry.initialize(len(solution))
         grid_indices = (9, 19)
 

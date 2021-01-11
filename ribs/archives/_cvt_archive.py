@@ -56,14 +56,17 @@ class CVTArchive(ArchiveBase):
             space.
         bins (int): The number of bins to use in the archive, equivalent to the
             number of centroids/areas in the CVT.
+        seed (int): Value to seed the random number generator as well as
+            :func:`~sklearn.cluster.k_means`. Set to None to avoid seeding.
+        dtype (data-type): Data type of the solutions, objective values, and
+            behavior values. All floating point types should work, though we
+            only test :class:`np.float32` and :class:`np.float64`.
         samples (int or array-like): If it is an int, this specifies the number
             of samples to generate when creating the CVT. Otherwise, this must
             be a (num_samples, behavior_dim) array where samples[i] is a sample
             to use when creating the CVT. It can be useful to pass in custom
             samples when there are restrictions on what samples in the behavior
             space are (physically) possible.
-        seed (int): Value to seed the random number generator as well as
-            :func:`~sklearn.cluster.k_means`. Set to None to avoid seeding.
         custom_centroids (array-like): If passed in, this (bins, behavior_dim)
             array will be used as the centroids of the CVT instead of generating
             new ones. In this case, ``samples`` will be ignored, and
@@ -85,8 +88,9 @@ class CVTArchive(ArchiveBase):
     def __init__(self,
                  ranges,
                  bins,
-                 samples=100_000,
                  seed=None,
+                 dtype=np.float64,
+                 samples=100_000,
                  custom_centroids=None,
                  k_means_kwargs=None,
                  use_kd_tree=False,
@@ -96,11 +100,12 @@ class CVTArchive(ArchiveBase):
             storage_dims=(bins,),
             behavior_dim=len(ranges),
             seed=seed,
+            dtype=dtype,
         )
 
         ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0])
-        self._upper_bounds = np.array(ranges[1])
+        self._lower_bounds = np.array(ranges[0], dtype=dtype)
+        self._upper_bounds = np.array(ranges[1], dtype=dtype)
 
         self._bins = bins
 
@@ -129,7 +134,7 @@ class CVTArchive(ArchiveBase):
             if not isinstance(samples, int):
                 # Validate shape of custom samples. These are ignored when
                 # `custom_centroids` is provided.
-                samples = np.asarray(samples)
+                samples = np.asarray(samples, dtype=dtype)
                 if samples.shape[1] != self._behavior_dim:
                     raise ValueError(
                         f"Samples has shape {samples.shape} but must be of "
@@ -138,7 +143,7 @@ class CVTArchive(ArchiveBase):
             self._centroids = None
         else:
             # Validate shape of `custom_centroids` when they are provided.
-            custom_centroids = np.asarray(custom_centroids)
+            custom_centroids = np.asarray(custom_centroids, dtype=dtype)
             if custom_centroids.shape != (bins, self._behavior_dim):
                 raise ValueError(
                     f"custom_centroids has shape {custom_centroids.shape} but "
@@ -201,7 +206,8 @@ class CVTArchive(ArchiveBase):
                 self._lower_bounds,
                 self._upper_bounds,
                 size=(self._samples, self._behavior_dim),
-            ) if isinstance(self._samples, int) else self._samples
+            ).astype(self.dtype) if isinstance(self._samples,
+                                               int) else self._samples
 
             self._centroids = k_means(self._samples, self._bins,
                                       **self._k_means_kwargs)[0]

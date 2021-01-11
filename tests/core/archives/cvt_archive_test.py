@@ -116,26 +116,29 @@ def test_add_without_overwrite(_data):
 @pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
 @pytest.mark.parametrize("include_solutions", [True, False],
                          ids=["solutions", "no_solutions"])
-def test_as_pandas(_data, with_entry, include_solutions):
+@pytest.mark.parametrize("dtype", [np.float64, np.float32],
+                         ids=["float64", "float32"])
+def test_as_pandas(use_kd_tree, with_entry, include_solutions, dtype):
+    data = (get_archive_data("CVTArchive-kd_tree", dtype) if use_kd_tree else
+            get_archive_data("CVTArchive-brute_force", dtype))
     if with_entry:
-        df = _data.archive_with_entry.as_pandas(include_solutions)
+        df = data.archive_with_entry.as_pandas(include_solutions)
     else:
-        df = _data.archive.as_pandas(include_solutions)
+        df = data.archive.as_pandas(include_solutions)
 
     expected_columns = ['index', 'behavior-0', 'behavior-1', 'objective']
-    expected_dtypes = [int, float, float, float]
+    expected_dtypes = [int, dtype, dtype, dtype]
     if include_solutions:
         expected_columns += ['solution-0', 'solution-1', 'solution-2']
-        expected_dtypes += [float, float, float]
+        expected_dtypes += [dtype, dtype, dtype]
     assert (df.columns == expected_columns).all()
     assert (df.dtypes == expected_dtypes).all()
 
     if with_entry:
         index = df.loc[0, "index"]
-        assert (
-            _data.archive_with_entry.centroids[index] == _data.centroid).all()
+        assert (data.archive_with_entry.centroids[index] == data.centroid).all()
 
-        expected_data = [*_data.behavior_values, _data.objective_value]
+        expected_data = [*data.behavior_values, data.objective_value]
         if include_solutions:
-            expected_data += list(_data.solution)
+            expected_data += list(data.solution)
         assert (df.loc[0, "behavior-0":] == expected_data).all()

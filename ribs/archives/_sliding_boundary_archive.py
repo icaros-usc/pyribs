@@ -105,6 +105,9 @@ class SlidingBoundaryArchive(ArchiveBase):
             the second dimension should have bounds ``(-2, 2)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid seeding.
+        dtype (data-type): Data type of the solutions, objective values, and
+            behavior values. All floating point types should work, though we
+            only test :class:`np.float32` and :class:`np.float64`.
         remap_frequency (int): Frequency of remapping. Archive will remap once
             after ``remap_frequency`` number of solutions has been found.
         buffer_capacity (int): Number of solutions to keep in the buffer.
@@ -116,6 +119,7 @@ class SlidingBoundaryArchive(ArchiveBase):
                  dims,
                  ranges,
                  seed=None,
+                 dtype=np.float64,
                  remap_frequency=100,
                  buffer_capacity=1000):
         self._dims = np.array(dims)
@@ -125,18 +129,19 @@ class SlidingBoundaryArchive(ArchiveBase):
             storage_dims=tuple(self._dims),
             behavior_dim=len(self._dims),
             seed=seed,
+            dtype=dtype,
         )
 
         ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0])
-        self._upper_bounds = np.array(ranges[1])
+        self._lower_bounds = np.array(ranges[0], dtype=dtype)
+        self._upper_bounds = np.array(ranges[1], dtype=dtype)
         self._interval_size = self._upper_bounds - self._lower_bounds
 
         # Sliding boundary specifics.
         self._remap_frequency = remap_frequency
         self._boundaries = np.full((self._behavior_dim, np.max(self._dims)),
                                    np.inf,
-                                   dtype=float)
+                                   dtype=dtype)
 
         # Create buffer.
         self._buffer = IndividualBuffer(buffer_capacity, self._behavior_dim)

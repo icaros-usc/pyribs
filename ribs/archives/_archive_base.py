@@ -89,10 +89,8 @@ class ArchiveBase(ABC):
     - :meth:`initialize`: since this method sets up the arrays described, child
       classes should invoke this in their own implementation -- however, child
       classes may not need to override this method at all
-    - :meth:`as_pandas`: necessary for converting the archive into a Pandas
-      DataFrame
 
-    .. note:: Members beginning with an underscore are only intended to be
+    .. note:: Attributes beginning with an underscore are only intended to be
         accessed by child classes.
 
     Args:
@@ -102,6 +100,9 @@ class ArchiveBase(ABC):
         behavior_dim (int): The dimension of the behavior space.
         seed (int): Value to seed the random number generator. Set to None to
             avoid seeding.
+        dtype (data-type): Data type of the solutions, objective values, and
+            behavior values. All floating point types should work, though we
+            only test :class:`np.float32` and :class:`np.float64`.
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
@@ -126,7 +127,7 @@ class ArchiveBase(ABC):
             :meth:`initialize` is called.
     """
 
-    def __init__(self, storage_dims, behavior_dim, seed=None):
+    def __init__(self, storage_dims, behavior_dim, seed=None, dtype=np.float64):
         # Intended to be accessed by child classes.
         self._rng = np.random.default_rng(seed)
         self._storage_dims = storage_dims
@@ -143,6 +144,7 @@ class ArchiveBase(ABC):
         self._rand_buf = None
         self._seed = seed
         self._initialized = False
+        self._dtype = dtype
 
     @property
     def initialized(self):
@@ -160,6 +162,12 @@ class ArchiveBase(ABC):
     def empty(self):
         """bool: Whether the archive is empty."""
         return not self._occupied_indices
+
+    @property
+    def dtype(self):
+        """data-type: The dtype of the solutions, objective values, and behavior
+        values."""
+        return self._dtype
 
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
@@ -179,11 +187,11 @@ class ArchiveBase(ABC):
         self._rand_buf = RandomBuffer(self._seed)
         self._solution_dim = solution_dim
         self._occupied = np.zeros(self._storage_dims, dtype=bool)
-        self._objective_values = np.empty(self._storage_dims, dtype=float)
+        self._objective_values = np.empty(self._storage_dims, dtype=self.dtype)
         self._behavior_values = np.empty(
-            (*self._storage_dims, self._behavior_dim), dtype=float)
+            (*self._storage_dims, self._behavior_dim), dtype=self.dtype)
         self._solutions = np.empty((*self._storage_dims, solution_dim),
-                                   dtype=float)
+                                   dtype=self.dtype)
         self._occupied_indices = []
 
     @abstractmethod
@@ -245,7 +253,7 @@ class ArchiveBase(ABC):
 
                 **status** (:class:`AddStatus`): See :class:`AddStatus`.
 
-                **value** (:class:`float`): The meaning of this value depends on
+                **value** (``self.dtype``): The meaning of this value depends on
                 the value of ``status``:
 
                 - ``NOT_ADDED`` -> the objective value passed in
@@ -262,10 +270,15 @@ class ArchiveBase(ABC):
 
         if was_inserted and not already_occupied:
             self._occupied_indices.append(index)
-            return (AddStatus.NEW, objective_value)
-        if was_inserted and already_occupied:
-            return (AddStatus.IMPROVE_EXISTING, objective_value - old_objective)
-        return (AddStatus.NOT_ADDED, objective_value)
+            status = AddStatus.NEW
+            value = objective_value
+        elif was_inserted and already_occupied:
+            status = AddStatus.IMPROVE_EXISTING
+            value = objective_value - old_objective
+        else:
+            status = AddStatus.NOT_ADDED
+            value = objective_value
+        return status, self.dtype(value)
 
     @require_init
     def elite_with_behavior(self, behavior_values):
@@ -281,7 +294,7 @@ class ArchiveBase(ABC):
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
 
-                **objective_value** (:class:`float`): Objective function
+                **objective_value** (``self.dtype``): Objective function
                 evaluation.
 
                 **behavior_values** (:class:`numpy.ndarray`): Actual behavior
@@ -309,7 +322,7 @@ class ArchiveBase(ABC):
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
 
-                **objective_value** (:class:`float`): Objective function
+                **objective_value** (``self.dtype``): Objective function
                 evaluation.
 
                 **behavior_values** (:class:`numpy.ndarray`): Behavior space
@@ -373,13 +386,14 @@ class ArchiveBase(ABC):
         behavior_values = self._behavior_values[index_columns]
         for i in range(self._behavior_dim):
             data[f"behavior-{i}"] = np.asarray(behavior_values[:, i],
-                                               dtype=float)
+                                               dtype=self.dtype)
 
         data["objective"] = np.asarray(self._objective_values[index_columns],
-                                       dtype=float)
+                                       dtype=self.dtype)
 
         if include_solutions:
             solutions = self._solutions[index_columns]
             for i in range(self._solution_dim):
-                data[f"solution-{i}"] = np.asarray(solutions[:, i], dtype=float)
+                data[f"solution-{i}"] = np.asarray(solutions[:, i],
+                                                   dtype=self.dtype)
         return pd.DataFrame(data)
