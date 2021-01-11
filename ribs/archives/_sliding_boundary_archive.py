@@ -105,9 +105,10 @@ class SlidingBoundaryArchive(ArchiveBase):
             the second dimension should have bounds ``(-2, 2)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid seeding.
-        dtype (data-type): Data type of the solutions, objective values, and
-            behavior values. All floating point types should work, though we
-            only test :class:`np.float32` and :class:`np.float64`.
+        dtype (str or numpy.dtype): Data type of the solutions, objective
+            values, and behavior values. All floating point types should work,
+            though we only test ``"f"`` / :class:`np.float32` and
+            ``"d"`` / :class:`np.float64`.
         remap_frequency (int): Frequency of remapping. Archive will remap once
             after ``remap_frequency`` number of solutions has been found.
         buffer_capacity (int): Number of solutions to keep in the buffer.

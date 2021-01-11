@@ -100,9 +100,10 @@ class ArchiveBase(ABC):
         behavior_dim (int): The dimension of the behavior space.
         seed (int): Value to seed the random number generator. Set to None to
             avoid seeding.
-        dtype (data-type): Data type of the solutions, objective values, and
-            behavior values. All floating point types should work, though we
-            only test :class:`np.float32` and :class:`np.float64`.
+        dtype (str or numpy.dtype): Data type of the solutions, objective
+            values, and behavior values. All floating point types should work,
+            though we only test ``"f"`` / :class:`np.float32` and
+            ``"d"`` / :class:`np.float64`.
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
@@ -144,7 +145,7 @@ class ArchiveBase(ABC):
         self._rand_buf = None
         self._seed = seed
         self._initialized = False
-        self._dtype = dtype
+        self._dtype = np.dtype(dtype)
 
     @property
     def initialized(self):
@@ -278,7 +279,7 @@ class ArchiveBase(ABC):
         else:
             status = AddStatus.NOT_ADDED
             value = objective_value
-        return status, self.dtype(value)
+        return status, self.dtype(value)  # pylint: disable = not-callable
 
     @require_init
     def elite_with_behavior(self, behavior_values):
