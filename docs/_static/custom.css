@@ -1,0 +1,27 @@
+/* Styles the left border of input cells in rendered Jupyter notebooks (they are
+ * green by default, which does not match the theme). */
+div.cell div.cell_input {
+  border-left-color: #3f51b5 !important;
+}
+
+/* Increases the visibility of classes, methods, etc. in API definitions. */
+dt {
+  font-weight: bold;
+}
+
+/* Adds a border so that it is easier to see where classes and subsections begin
+ * and end. */
+dd {
+  border-left: 8px solid hsla(0, 0%, 92.5%, 0.5);
+  padding-left: 15px;
+}
+
+/* Makes the link icons show up next to items in the API reference. */
+a.headerlink {
+  opacity: 1 !important;
+}
+
+/* Adds a line above the API listings. */
+.longtable tr:first-child {
+  border-top: 1px solid !important;
+}
