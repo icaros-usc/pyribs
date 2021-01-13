@@ -3,8 +3,9 @@
 The sphere function in this example is adopted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to
 the range [-5.12, 5.12], and the optimum is moved from [0,..] to [0.4 * 5.12 =
-2.048,..]. Furthermore, the objective values are normalized to the range [0,100]
-where 100 is the maximum and corresponds to 0 on the original sphere function.
+2.048,..]. Furthermore, the objective values are normalized to the range [0,
+100] where 100 is the maximum and corresponds to 0 on the original sphere
+function.
 
 There are two BCs in this example. The first is the sum of the first n/2 clipped
 values of the solution, and the second is the sum of the last n/2 clipped values
@@ -18,7 +19,7 @@ The supported algorithms are:
 - `line_cvt_map_elites`: CVTArchive with IsoLineEmitter
 
 All algorithms are run for 100,000 iterations with a batch size of 25 in the
-emitters. Outputs are saved in a directory, `run_sphere_output` by default. The
+emitters. Outputs are saved in the directory `run_sphere_output` by default. The
 archive is saved as a CSV named `{algorithm}_{dim}_archive.csv`, while the
 heatmap is saved as a PNG named `{algorithm}_{dim}_heatmap.png`.
 
@@ -48,7 +49,7 @@ from ribs.visualize import cvt_archive_heatmap
 
 
 def sphere(sol):
-    """Sphere function evaluation and BCs for a single solution.
+    """Sphere function evaluation and BCs for a batch of solutions.
 
     Args:
         sol (np.ndarray): (batch_size, dim) array of solutions
@@ -127,7 +128,7 @@ def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
         itrs (int): Iterations to run.
         outdir (str): Directory to save output.
     """
-    max_bound = dim * 5.12
+    max_bound = dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     initial_sol = np.zeros(dim)
 
