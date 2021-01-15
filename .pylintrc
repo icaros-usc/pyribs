@@ -5,7 +5,7 @@
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
-# init-hook=
+#init-hook=
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
@@ -99,7 +99,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 [BASIC]
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_
+good-names=i,j,k,ex,Run,_,logger
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
@@ -116,22 +116,22 @@ include-naming-hint=no
 property-classes=abc.abstractproperty
 
 # Regular expression matching correct variable names
-variable-rgx=[a-z_][a-z0-9_]{1,30}$
+variable-rgx=[a-z_][a-z0-9_]{0,30}$
 
 # Naming hint for variable names
-variable-name-hint=[a-z_][a-z0-9_]{1,30}$
+variable-name-hint=[a-z_][a-z0-9_]{0,30}$
 
 # Regular expression matching correct class attribute names
-class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{1,30}|(__.*__))$
+class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{0,30}|(__.*__))$
 
 # Naming hint for class attribute names
-class-attribute-name-hint=([A-Za-z_][A-Za-z0-9_]{1,30}|(__.*__))$
+class-attribute-name-hint=([A-Za-z_][A-Za-z0-9_]{0,30}|(__.*__))$
 
 # Regular expression matching correct argument names
-argument-rgx=[a-z_][a-z0-9_]{1,30}$
+argument-rgx=[a-z_][a-z0-9_]{0,30}$
 
 # Naming hint for argument names
-argument-name-hint=[a-z_][a-z0-9_]{1,30}$
+argument-name-hint=[a-z_][a-z0-9_]{0,30}$
 
 # Regular expression matching correct module names
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
@@ -152,22 +152,22 @@ inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$
 inlinevar-name-hint=[A-Za-z_][A-Za-z0-9_]*$
 
 # Regular expression matching correct method names
-method-rgx=[a-z_][a-z0-9_]{1,30}$
+method-rgx=[a-z_][a-z0-9_]{0,30}$
 
 # Naming hint for method names
-method-name-hint=[a-z_][a-z0-9_]{1,30}$
+method-name-hint=[a-z_][a-z0-9_]{0,30}$
 
 # Regular expression matching correct function names
-function-rgx=[a-z_][a-z0-9_]{1,30}$
+function-rgx=[a-z_][a-z0-9_]{0,30}$
 
 # Naming hint for function names
-function-name-hint=[a-z_][a-z0-9_]{1,30}$
+function-name-hint=[a-z_][a-z0-9_]{0,30}$
 
 # Regular expression matching correct attribute names
-attr-rgx=[a-z_][a-z0-9_]{1,30}$
+attr-rgx=[a-z_][a-z0-9_]{0,30}$
 
 # Naming hint for attribute names
-attr-name-hint=[a-z_][a-z0-9_]{1,30}$
+attr-name-hint=[a-z_][a-z0-9_]{0,30}$
 
 # Regular expression matching correct class names
 class-rgx=[A-Z_][a-zA-Z0-9]+$
@@ -287,7 +287,7 @@ ignored-classes=optparse.Values,thread._local,_thread._local,matplotlib.cm,tenso
 # List of members which are set dynamically and missed by pylint inference
 # system, and so shouldn't trigger E1101 when accessed. Python regular
 # expressions are accepted.
-generated-members=set_shape,np.float32
+generated-members=set_shape,np.float32,torch.*
 
 # List of decorators that produce context managers, such as
 # contextlib.contextmanager. Add to this list to register other decorators that
