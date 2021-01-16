@@ -22,11 +22,10 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
-
+import ribs
 import sphinx_material
 
-import ribs
+sys.path.insert(0, os.path.abspath(".."))
 
 DEV_MODE = os.environ.get("DOCS_MODE", "regular") == "dev"
 
@@ -45,7 +44,6 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.mathjax",
     "sphinx.ext.intersphinx",
-    "autodocsumm",
     "sphinx_material",
     "sphinx_copybutton",
     "myst_nb",  # Covers both Markdown files and Jupyter notebooks.
@@ -217,7 +215,6 @@ texinfo_documents = [
 # Autodoc and autosummary
 autodoc_member_order = "groupwise"  # Can be overridden by :member-order:
 autodoc_default_options = {
-    "autosummary": True,
     "inherited-members": True,
 }
 autosummary_generate = True
