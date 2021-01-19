@@ -18,7 +18,6 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
-# pylint: disable = invalid-name
 
 __all__ = [
     "cvt_archive_heatmap",
@@ -40,7 +39,7 @@ def _get_pt_to_obj(cvt_archive):
 
     # Hopefully as_pandas() is okay in terms of efficiency since there are only
     # 5 columns (1 index, 2 behavior, 1 objective, 1 solution).
-    data = cvt_archive.as_pandas()
+    data = cvt_archive.as_pandas(include_solutions=False)
 
     pt_to_obj = {}
     for _, row in data.iterrows():
@@ -201,22 +200,21 @@ def cvt_archive_heatmap(archive,
         ax.plot(centroids[:, 0], centroids[:, 1], "ko", ms=ms)
 
 
-def sliding_boundary_archive_heatmap(
-    archive,
-    ax=None,
-    transpose_bcs=False,
-    cmap="magma",
-    square=False,
-    ms=None,
-    boundary_lw=0,
-    vmin=None,
-    vmax=None,
-):
+def sliding_boundary_archive_heatmap(archive,
+                                     ax=None,
+                                     transpose_bcs=False,
+                                     cmap="magma",
+                                     square=False,
+                                     ms=None,
+                                     boundary_lw=0,
+                                     vmin=None,
+                                     vmax=None):
     """Plots heatmap of a 2D :class:`ribs.archives.SlidingBoundaryArchive`.
 
     Since the boundaries of :class:`ribs.archives.SlidingBoundaryArchive` is
     dynamic, we plot the heatmap as a scatter plot, in which each marker is a
-    solution and its color represents the fitness value. You can optionallydraw the boundaries by setting the ``boundary_lw`` to a non-negative value.
+    solution and its color represents the fitness value. You can optionally draw
+    the boundaries by setting the ``boundary_lw`` to a non-negative value.
 
     Examples:
         .. plot::
@@ -227,26 +225,26 @@ def sliding_boundary_archive_heatmap(
             >>> from ribs.archives import SlidingBoundaryArchive
             >>> from ribs.visualize import sliding_boundary_archive_heatmap
             >>> archive = SlidingBoundaryArchive([10, 20],
-            >>>                                  [(-1, 1), (-1, 1)],
-            >>>                                  seed=42)
+            ...                                  [(-1, 1), (-1, 1)],
+            ...                                  seed=42)
             >>> archive.initialize(solution_dim=2)
             >>> # Populate the archive with the negative sphere function.
             >>> rng = np.random.default_rng(10)
             >>> for _ in range(1000):
-            >>>     x, y = rng.uniform((-1, -1), (1, 1))
-            >>>     archive.add(
-            >>>         solution=rng.random(2),
-            >>>         objective_value=-(x**2 + y**2),
-            >>>         behavior_values=np.array([x, y]),
-            >>>     )
+            ...     x, y = rng.uniform((-1, -1), (1, 1))
+            ...     archive.add(
+            ...         solution=rng.random(2),
+            ...         objective_value=-(x**2 + y**2),
+            ...         behavior_values=np.array([x, y]),
+            ...     )
             >>> # Plot a heatmap of the archive.
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
             >>> fig.suptitle("Negative sphere function")
-            >>> sliding_boundary_archive_heatmap(archive, ax=ax2,)
             >>> sliding_boundary_archive_heatmap(archive, ax=ax1,
-            >>>                                  boundary_lw=0.5)
-            >>> ax1.set_title("with boundaries")
-            >>> ax2.set_title("without boundaries")
+            ...                                  boundary_lw=0.5)
+            >>> sliding_boundary_archive_heatmap(archive, ax=ax2)
+            >>> ax1.set_title("With boundaries")
+            >>> ax2.set_title("Without boundaries")
             >>> ax1.set(xlabel='x coords', ylabel='y coords')
             >>> ax2.set(xlabel='x coords', ylabel='y coords')
             >>> plt.show()
@@ -269,8 +267,8 @@ def sliding_boundary_archive_heatmap(
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
-        Raises:
-            ValueError: The archive is not 2D.
+    Raises:
+        ValueError: The archive is not 2D.
     """
     if not archive.is_2d:
         raise ValueError("Cannot plot heatmap for non-2D archive.")
@@ -279,7 +277,7 @@ def sliding_boundary_archive_heatmap(
     cmap = _retrieve_cmap(cmap)
 
     # Retrieve data from archive.
-    archive_data = archive.as_pandas()
+    archive_data = archive.as_pandas(include_solutions=False)
     x = archive_data['behavior-0'].to_list()
     y = archive_data['behavior-1'].to_list()
     x_boundary = archive.boundaries[0]
@@ -289,10 +287,12 @@ def sliding_boundary_archive_heatmap(
     objective_values = archive_data['objective'].to_list()
 
     if transpose_bcs:
-        y = archive_data['behavior-0'].to_list()
-        x = archive_data['behavior-1'].to_list()
-        y_boundary = archive.boundaries[0]
-        x_boundary = archive.boundaries[1]
+        # Since we are plotting for 2D archive, directly swapping behavior
+        # values on x and y axis, and their boundaries can make the transposed
+        # plot. Also, please note that lower_bounds and upper_bounds are arrays
+        # of length 2.
+        x, y = y, x
+        x_boundary, y_boundary = y_boundary, x_boundary
         lower_bounds = np.flip(lower_bounds)
         upper_bounds = np.flip(upper_bounds)
 
@@ -305,7 +305,15 @@ def sliding_boundary_archive_heatmap(
         ax.set_aspect("equal")
 
     # Create the plot.
-    ax.scatter(x, y, s=ms, c=objective_values, cmap=cmap)
+    min_obj = np.min(objective_values) if vmin is None else vmin
+    max_obj = np.max(objective_values) if vmax is None else vmax
+    t = ax.scatter(x,
+                   y,
+                   s=ms,
+                   c=objective_values,
+                   cmap=cmap,
+                   vmin=min_obj,
+                   vmax=max_obj)
     ax.vlines(x_boundary,
               lower_bounds[0],
               upper_bounds[0],
@@ -318,9 +326,4 @@ def sliding_boundary_archive_heatmap(
               linewidth=boundary_lw)
 
     # Create the colorbar.
-    min_obj = np.min(objective_values) if vmin is None else vmin
-    max_obj = np.max(objective_values) if vmax is None else vmax
-
-    mappable = ScalarMappable(cmap=cmap)
-    mappable.set_clim(min_obj, max_obj)
-    ax.figure.colorbar(mappable, ax=ax, pad=0.1)
+    ax.figure.colorbar(t, ax=ax, pad=0.1)
