@@ -153,7 +153,6 @@ def test_sliding_boundary_long_transpose(_long_sliding_boundary_archive):
                                      transpose_bcs=True)
 
 
-
 @image_comparison(baseline_images=["sliding_boundary_heatmap_with_listed_cmap"],
                   remove_text=False,
                   extensions=["png"])
@@ -168,15 +167,19 @@ def test_sliding_boundary_heatmap_with_listed_cmap(_sliding_boundary_archive):
                   extensions=["png"])
 def test_sliding_boundary_heatmap_with_limits(_sliding_boundary_archive):
     plt.figure(figsize=(8, 6))
-    sliding_boundary_archive_heatmap(_sliding_boundary_archive, vmin=-1.0, vmax=-0.5)
+    sliding_boundary_archive_heatmap(_sliding_boundary_archive,
+                                     vmin=-1.0,
+                                     vmax=-0.5)
 
 
-@image_comparison(baseline_images=["sliding_boundary_heatmap_with_coolwarm_cmap"],
-                  remove_text=False,
-                  extensions=["png"])
+@image_comparison(
+    baseline_images=["sliding_boundary_heatmap_with_coolwarm_cmap"],
+    remove_text=False,
+    extensions=["png"])
 def test_sliding_boundary_heatmap_with_coolwarm_cmap(_sliding_boundary_archive):
     plt.figure(figsize=(8, 6))
-    sliding_boundary_archive_heatmap(_sliding_boundary_archive, cmap=matplotlib.cm.get_cmap("coolwarm"))
+    sliding_boundary_archive_heatmap(_sliding_boundary_archive,
+                                     cmap=matplotlib.cm.get_cmap("coolwarm"))
 
 
 def test_cvt_archive_heatmap_fails_on_non_2d():

@@ -8,6 +8,7 @@ not import it when you run ``import ribs``, and you will need to explicitly use
     :toctree:
 
     ribs.visualize.cvt_archive_heatmap
+    ribs.visualize.sliding_boundary_archive_heatmap
 """
 import matplotlib
 import matplotlib.pyplot as plt
@@ -17,9 +18,11 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
+# pylint: disable = invalid-name
 
 __all__ = [
     "cvt_archive_heatmap",
+    "sliding_boundary_archive_heatmap",
 ]
 
 
@@ -198,15 +201,54 @@ def cvt_archive_heatmap(archive,
         ax.plot(centroids[:, 0], centroids[:, 1], "ko", ms=ms)
 
 
-def sliding_boundary_archive_heatmap(archive,
-                                     ax=None,
-                                     transpose_bcs=False,
-                                     cmap="magma",
-                                     square=False,
-                                     vmin=None,
-                                     vmax=None):
-    """Args:
-        archive (CVTArchive): A 2D CVTArchive.
+def sliding_boundary_archive_heatmap(
+    archive,
+    ax=None,
+    transpose_bcs=False,
+    cmap="magma",
+    square=False,
+    ms=None,
+    vmin=None,
+    vmax=None,
+):
+    """Plots heatmap of a 2D :class:`ribs.archives.SlidingBoundaryArchive`.
+
+    Since the boundaries of :class:`ribs.archives.SlidingBoundaryArchive` is
+    dynamic, we plot the heatmap as a scatter plot, in which each marker is a
+    solution and its color represents the fitness value.
+
+    Examples:
+        .. plot::
+            :context: close-figs
+
+            >>> import numpy as np
+            >>> import matplotlib.pyplot as plt
+            >>> from ribs.archives import SlidingBoundaryArchive
+            >>> from ribs.visualize import sliding_boundary_archive_heatmap
+            >>> archive = SlidingBoundaryArchive([10, 20],
+            >>>                                  [(-1, 1), (-1, 1)],
+            >>>                                  seed=42)
+            >>> archive.initialize(solution_dim=2)
+            >>> # Populate the archive with the negative sphere function.
+            >>> rng = np.random.default_rng(10)
+            >>> for _ in range(1000):
+            >>>     x, y = rng.uniform((-1, -1), (1, 1))
+            >>>     archive.add(
+            >>>         solution=rng.random(2),
+            >>>         objective_value=-(x**2 + y**2),
+            >>>         behavior_values=np.array([x, y]),
+            >>>     )
+            >>> # Plot a heatmap of the archive.
+            >>> plt.figure(figsize=(8, 6))
+            >>> sliding_boundary_archive_heatmap(archive)
+            >>> plt.title("Negative sphere function")
+            >>> plt.xlabel("x coords")
+            >>> plt.ylabel("y coords")
+            >>> plt.show()
+
+
+    Args:
+        archive (SlidingBoundaryArchive): A 2D SlidingBoundaryArchive.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
             the current axis will be used.
         transpose_bcs (bool): By default, the first BC in the archive will
@@ -253,7 +295,7 @@ def sliding_boundary_archive_heatmap(archive,
         ax.set_aspect("equal")
 
     # Create the plot.
-    ax.scatter(x, y, c=objective_values, cmap=cmap)
+    ax.scatter(x, y, s=ms, c=objective_values, cmap=cmap)
 
     # Create the colorbar.
     min_obj = np.min(objective_values) if vmin is None else vmin
