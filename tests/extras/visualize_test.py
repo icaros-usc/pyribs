@@ -127,6 +127,14 @@ def test_sliding_boundary_archive(_sliding_boundary_archive):
     sliding_boundary_archive_heatmap(_sliding_boundary_archive)
 
 
+@image_comparison(baseline_images=["sliding_boundary_heatmap_with_boundaries"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_sliding_boundary_archive_with_boundary_plot(_sliding_boundary_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundary_archive_heatmap(_sliding_boundary_archive, boundary_lw=0.5)
+
+
 @image_comparison(baseline_images=["sliding_boundary_heatmap_long"],
                   remove_text=False,
                   extensions=["png"])
