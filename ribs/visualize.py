@@ -196,3 +196,69 @@ def cvt_archive_heatmap(archive,
         ax.plot(samples[:, 0], samples[:, 1], "o", c="gray", ms=ms)
     if plot_centroids:
         ax.plot(centroids[:, 0], centroids[:, 1], "ko", ms=ms)
+
+
+def sliding_boundary_archive_heatmap(archive,
+                                     ax=None,
+                                     transpose_bcs=False,
+                                     cmap="magma",
+                                     square=False,
+                                     vmin=None,
+                                     vmax=None):
+    """Args:
+        archive (CVTArchive): A 2D CVTArchive.
+        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
+            the current axis will be used.
+        transpose_bcs (bool): By default, the first BC in the archive will
+            appear along the x-axis, and the second will be along the y-axis. To
+            switch this (i.e. to transpose the axes), set this to True.
+        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
+            plotting intensity. Either the name of a colormap, a list of RGB or
+            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
+        square (bool): If True, set the axes aspect raio to be "equal".
+        ms (float): Marker size for the solutions.
+        vmin (float): Minimum objective value to use in the plot. If None, the
+            minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If None, the
+            maximum objective value in the archive is used.
+        Raises:
+            ValueError: The archive is not 2D.
+    """
+    if not archive.is_2d:
+        raise ValueError("Cannot plot heatmap for non-2D archive.")
+
+    # Try getting the colormap early in case it fails.
+    cmap = _retrieve_cmap(cmap)
+
+    # Retrieve data from archive.
+    archive_data = archive.as_pandas()
+    x = archive_data['behavior-0'].to_list()
+    y = archive_data['behavior-1'].to_list()
+    lower_bounds = archive.lower_bounds
+    upper_bounds = archive.upper_bounds
+    objective_values = archive_data['objective'].to_list()
+
+    if transpose_bcs:
+        y = archive_data['behavior-0'].to_list()
+        x = archive_data['behavior-1'].to_list()
+        lower_bounds = np.flip(lower_bounds)
+        upper_bounds = np.flip(upper_bounds)
+
+    # Initialize the axis.
+    ax = plt.gca() if ax is None else ax
+    ax.set_xlim(lower_bounds[0], upper_bounds[0])
+    ax.set_ylim(lower_bounds[1], upper_bounds[1])
+
+    if square:
+        ax.set_aspect("equal")
+
+    # Create the plot.
+    ax.scatter(x, y, c=objective_values, cmap=cmap)
+
+    # Create the colorbar.
+    min_obj = np.min(objective_values) if vmin is None else vmin
+    max_obj = np.max(objective_values) if vmax is None else vmax
+
+    mappable = ScalarMappable(cmap=cmap)
+    mappable.set_clim(min_obj, max_obj)
+    ax.figure.colorbar(mappable, ax=ax, pad=0.1)
