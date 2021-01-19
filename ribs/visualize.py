@@ -208,6 +208,7 @@ def sliding_boundary_archive_heatmap(
     cmap="magma",
     square=False,
     ms=None,
+    boundary_lw=0,
     vmin=None,
     vmax=None,
 ):
@@ -215,7 +216,7 @@ def sliding_boundary_archive_heatmap(
 
     Since the boundaries of :class:`ribs.archives.SlidingBoundaryArchive` is
     dynamic, we plot the heatmap as a scatter plot, in which each marker is a
-    solution and its color represents the fitness value.
+    solution and its color represents the fitness value. You can optionallydraw the boundaries by setting the ``boundary_lw`` to a non-negative value.
 
     Examples:
         .. plot::
@@ -239,11 +240,15 @@ def sliding_boundary_archive_heatmap(
             >>>         behavior_values=np.array([x, y]),
             >>>     )
             >>> # Plot a heatmap of the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> sliding_boundary_archive_heatmap(archive)
-            >>> plt.title("Negative sphere function")
-            >>> plt.xlabel("x coords")
-            >>> plt.ylabel("y coords")
+            >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
+            >>> fig.suptitle("Negative sphere function")
+            >>> sliding_boundary_archive_heatmap(archive, ax=ax2,)
+            >>> sliding_boundary_archive_heatmap(archive, ax=ax1,
+            >>>                                  boundary_lw=0.5)
+            >>> ax1.set_title("with boundaries")
+            >>> ax2.set_title("without boundaries")
+            >>> ax1.set(xlabel='x coords', ylabel='y coords')
+            >>> ax2.set(xlabel='x coords', ylabel='y coords')
             >>> plt.show()
 
 
@@ -259,6 +264,7 @@ def sliding_boundary_archive_heatmap(
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
         square (bool): If True, set the axes aspect raio to be "equal".
         ms (float): Marker size for the solutions.
+        boundary_lw (float): Line width when plotting the boundaries.
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
@@ -276,6 +282,8 @@ def sliding_boundary_archive_heatmap(
     archive_data = archive.as_pandas()
     x = archive_data['behavior-0'].to_list()
     y = archive_data['behavior-1'].to_list()
+    x_boundary = archive.boundaries[0]
+    y_boundary = archive.boundaries[1]
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
     objective_values = archive_data['objective'].to_list()
@@ -283,6 +291,8 @@ def sliding_boundary_archive_heatmap(
     if transpose_bcs:
         y = archive_data['behavior-0'].to_list()
         x = archive_data['behavior-1'].to_list()
+        y_boundary = archive.boundaries[0]
+        x_boundary = archive.boundaries[1]
         lower_bounds = np.flip(lower_bounds)
         upper_bounds = np.flip(upper_bounds)
 
@@ -296,6 +306,16 @@ def sliding_boundary_archive_heatmap(
 
     # Create the plot.
     ax.scatter(x, y, s=ms, c=objective_values, cmap=cmap)
+    ax.vlines(x_boundary,
+              lower_bounds[0],
+              upper_bounds[0],
+              color='k',
+              linewidth=boundary_lw)
+    ax.hlines(y_boundary,
+              lower_bounds[1],
+              upper_bounds[1],
+              color='k',
+              linewidth=boundary_lw)
 
     # Create the colorbar.
     min_obj = np.min(objective_values) if vmin is None else vmin
