@@ -43,7 +43,7 @@ import numpy as np
 import seaborn as sns
 
 from ribs.archives import CVTArchive, GridArchive
-from ribs.emitters import GaussianEmitter, IsoLineEmitter
+from ribs.emitters import GaussianEmitter, ImprovementEmitter, IsoLineEmitter
 from ribs.optimizers import Optimizer
 from ribs.visualize import cvt_archive_heatmap
 
@@ -160,6 +160,10 @@ def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
                            line_sigma=0.2,
                            batch_size=25)
         ]
+        opt = Optimizer(archive, emitters)
+    elif algorithm == "cma_me":
+        archive = GridArchive((500, 500), bounds)
+        emitters = [ImprovementEmitter(initial_sol, 0.5, archive)]
         opt = Optimizer(archive, emitters)
     else:
         raise ValueError(f"Algorithm `{algorithm}` is not recognized")

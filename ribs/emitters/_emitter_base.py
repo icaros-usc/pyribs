@@ -52,7 +52,7 @@ class EmitterBase(ABC):
         """Processes the input bounds.
 
         Returns:
-            tuple: Either two integers for the lower and upper bounds, or two
+            tuple: Either two scalars for the lower and upper bounds, or two
                 arrays containing all the lower bounds and all the upper bounds.
         Raises:
             ValueError: There is an error in the bounds configuration.
