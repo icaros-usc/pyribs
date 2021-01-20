@@ -214,7 +214,7 @@ def sliding_boundary_archive_heatmap(archive,
     Since the boundaries of :class:`ribs.archives.SlidingBoundaryArchive` is
     dynamic, we plot the heatmap as a scatter plot, in which each marker is a
     solution and its color represents the fitness value. You can optionally draw
-    the boundaries by setting the ``boundary_lw`` to a non-negative value.
+    the boundaries by setting the ``boundary_lw`` to a positive value.
 
     Examples:
         .. plot::
@@ -305,15 +305,15 @@ def sliding_boundary_archive_heatmap(archive,
         ax.set_aspect("equal")
 
     # Create the plot.
-    min_obj = np.min(objective_values) if vmin is None else vmin
-    max_obj = np.max(objective_values) if vmax is None else vmax
+    vmin = np.min(objective_values) if vmin is None else vmin
+    vmax = np.max(objective_values) if vmax is None else vmax
     t = ax.scatter(x,
                    y,
                    s=ms,
                    c=objective_values,
                    cmap=cmap,
-                   vmin=min_obj,
-                   vmax=max_obj)
+                   vmin=vmin,
+                   vmax=vmax)
     ax.vlines(x_boundary,
               lower_bounds[0],
               upper_bounds[0],
