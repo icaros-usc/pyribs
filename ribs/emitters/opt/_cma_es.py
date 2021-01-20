@@ -1,15 +1,23 @@
 """TODO."""
+import numba as nb
 import numpy as np
 
 
 class DecompMatrix:
+    """Maintains a covariance matrix and its eigendecomposition.
+
+    Args:
+        dimension (int): Size of the (square) covariance matrix.
+        dtype (str or data-type): Data type of the matrix, typically np.float32
+            or np.float64.
+    """
 
     def __init__(self, dimension, dtype):
         self.C = np.eye(dimension, dtype=dtype)
         self.eigenbasis = np.eye(dimension, dtype=dtype)
         self.eigenvalues = np.ones((dimension,), dtype=dtype)
         self.condition_number = 1
-        self.invsqrt = np.eye(dimension, dtype=dtype)
+        self.invsqrt = np.eye(dimension, dtype=dtype)  # C^(-1/2)
 
     def update_eigensystem(self):
         # Force symmetry.
@@ -21,7 +29,7 @@ class DecompMatrix:
         self.condition_number = (np.max(self.eigenvalues) /
                                  np.min(self.eigenvalues))
 
-        #  # TODO: test that this is the same as below.
+        #  # TODO: test that this is the same as below. -> Done, seems correct.
         #  for i in range(len(self.C)):
         #      for j in range(i + 1):
         #          self.invsqrt[i, j] = self.invsqrt[j, i] = sum(
@@ -35,11 +43,11 @@ class DecompMatrix:
 class CMAEvolutionStrategy:
     """TODO."""
 
-    def __init__(self, sigma0, batch_size, solution_dim):
+    def __init__(self, sigma0, batch_size, solution_dim, dtype):
         self.batch_size = batch_size
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
-        self.dtype = np.float32  # TODO
+        self.dtype = dtype
 
         # Strategy-specific params -> initialized in reset().
         self.individuals_evaluated = None
@@ -50,7 +58,7 @@ class CMAEvolutionStrategy:
         self.C = None
 
     def reset(self, x0):
-        """Reset the optimizer to start at x0.
+        """Resets the optimizer to start at x0.
 
         Args:
             x0 (np.ndarray): Initial mean.
@@ -67,10 +75,17 @@ class CMAEvolutionStrategy:
         self.C = DecompMatrix(self.solution_dim, self.dtype)
 
     def check_stop(self, ranking_values):
-        """Check if the optimization should stop.
+        """Checks if the optimization should stop and be reset.
 
         Tolerances come from CMA-ES.
+
+        Args:
+            TODO
+        Returns:
+            TODO
         """
+        # TODO
+
         # No parents.
         if len(ranking_values) == 0:
             return True
@@ -78,7 +93,7 @@ class CMAEvolutionStrategy:
         if self.C.condition_number > 1e14:
             return True
 
-        # Area of distribution.
+        # Area of distribution too small.
         area = self.sigma * np.sqrt(max(self.C.eigenvalues))
         if area < 1e-11:
             return True
@@ -92,7 +107,17 @@ class CMAEvolutionStrategy:
         return False
 
     def ask(self, lower_bounds, upper_bounds):
-        """TODO."""
+        """Samples new solutions from the Gaussian distribution.
+
+        Args:
+            lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
+                indicating lower bounds of the solution space. Scalars specify
+                the same bound for the entire space, while arrays specify a
+                bound for each dimension. Pass -np.inf in the array or scalar to
+                indicated unbounded space.
+            upper_bounds (float or np.ndarray): Same as above, but for upper
+                bounds (and pass np.inf instead of -np.inf).
+        """
         self.C.update_eigensystem()
         solutions = np.empty((self.batch_size, self.solution_dim),
                              dtype=self.dtype)
@@ -113,9 +138,11 @@ class CMAEvolutionStrategy:
         return np.asarray(solutions)
 
     def tell(self, solutions, num_parents):
-        """TODO.
+        """Passes the solutions back to the optimizer.
 
-        solutions -> (batch_size, solution_dim)
+        Args:
+            solutions (np.ndarray): TODO
+            num_parents (int): TODO
         """
         self.individuals_evaluated += len(solutions)
 

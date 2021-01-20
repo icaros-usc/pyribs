@@ -38,7 +38,8 @@ class ImprovementEmitter(EmitterBase):
         self._num_parents = ((batch_size + 1) //
                              2 if selection_rule == "mu" else None)
 
-        self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim)
+        self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
+                                        self._archive.dtype)
         self.opt.reset(self._x0)
 
     @property
