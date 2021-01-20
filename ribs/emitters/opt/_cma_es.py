@@ -4,12 +4,12 @@ import numpy as np
 
 class DecompMatrix:
 
-    def __init__(self, dimension):
-        self.C = np.eye(dimension, dtype=np.float_)
-        self.eigenbasis = np.eye(dimension, dtype=np.float_)
-        self.eigenvalues = np.ones((dimension,), dtype=np.float_)
+    def __init__(self, dimension, dtype):
+        self.C = np.eye(dimension, dtype=dtype)
+        self.eigenbasis = np.eye(dimension, dtype=dtype)
+        self.eigenvalues = np.ones((dimension,), dtype=dtype)
         self.condition_number = 1
-        self.invsqrt = np.eye(dimension, dtype=np.float_)
+        self.invsqrt = np.eye(dimension, dtype=dtype)
 
     def update_eigensystem(self):
         # Force symmetry.
@@ -58,14 +58,14 @@ class CMAEvolutionStrategy:
         """
         self.individuals_evaluated = 0
         self.sigma = self.sigma0
-        self.mean = np.array(x0)
+        self.mean = np.array(x0, self.dtype)
 
         # Setup evolution path variables.
         self.pc = np.zeros(self.solution_dim, dtype=self.dtype)
         self.ps = np.zeros(self.solution_dim, dtype=self.dtype)
 
         # Setup the covariance matrix.
-        self.C = DecompMatrix(self.solution_dim)
+        self.C = DecompMatrix(self.solution_dim, self.dtype)
 
     def check_stop(self, ranking_values):
         """Check if the optimization should stop.
