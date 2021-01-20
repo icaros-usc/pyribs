@@ -167,7 +167,8 @@ def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
     elif algorithm == "cma_me":
         archive = GridArchive((500, 500), bounds)
         emitters = [
-            ImprovementEmitter(initial_sol, 0.5, archive, batch_size=25)
+            ImprovementEmitter(initial_sol, 0.5, archive, batch_size=37)
+            for _ in range(15)
         ]
         opt = Optimizer(archive, emitters)
     else:
@@ -181,10 +182,10 @@ def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
 
         opt.tell(objs, bcs)
 
-        if (i + 1) % 1000 == 0:
+        if (i + 1) % 100 == 0:
             print(f"Finished {i + 1} itrs after {time.time() - start_time} s")
 
-        if (i + 1) % 10_000 == 0:
+        if (i + 1) % 100 == 0:
             save_and_display_outputs(archive, algorithm, dim, outdir, i + 1)
 
     save_and_display_outputs(archive, algorithm, dim, outdir)
