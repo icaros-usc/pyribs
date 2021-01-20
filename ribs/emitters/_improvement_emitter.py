@@ -42,6 +42,7 @@ class ImprovementEmitter(EmitterBase):
                              2 if selection_rule == "mu" else None)
 
         self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim)
+        self.opt.reset(self._x0)
 
     @property
     def x0(self):
@@ -81,7 +82,7 @@ class ImprovementEmitter(EmitterBase):
 
         self.opt.tell(solutions[indices], num_parents)
 
-        # Update archive
-        # Handle restart
-        # Rank solutions
-        # Pass ranking to cma_es
+        # Check for reset.
+        if self.opt.check_stop(ranking_values=[d[1] for d in deltas]):
+            new_x0 = self._archive.get_random_elite()[0]
+            self.opt.reset(new_x0)

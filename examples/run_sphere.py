@@ -83,7 +83,7 @@ def sphere(sol):
     return objs, bcs
 
 
-def save_and_display_outputs(archive, algorithm, dim, outdir):
+def save_and_display_outputs(archive, algorithm, dim, outdir, itr=None):
     """Creates an output directory and saves the archive and its heatmap.
 
     Args:
@@ -99,24 +99,27 @@ def save_and_display_outputs(archive, algorithm, dim, outdir):
     if not outdir.is_dir():
         outdir.mkdir()
 
+    itr_str = f"_{itr}" if itr is not None else ""
+
     # Save archive as CSV.
     data = archive.as_pandas()
-    data.to_csv(str(outdir / f"{name}_archive.csv"))
+    data.to_csv(str(outdir / f"{name}_archive{itr_str}.csv"))
 
     # Display some outputs.
     print("===== Sample Outputs =====")
     print(data.head())
 
     # Generate heatmaps.
-    heatmap_path = str(outdir / f"{name}_heatmap.png")
-    if algorithm in ["map_elites", "line_map_elites"]:
+    heatmap_path = str(outdir / f"{name}_heatmap{itr_str}.png")
+    if algorithm in ["map_elites", "line_map_elites", "cma_me"]:
         heatmap_data = data.pivot('index-0', 'index-1', 'objective')
-        sns.heatmap(heatmap_data, cmap="magma")
+        sns.heatmap(heatmap_data, cmap="magma", vmin=0, vmax=100)
         plt.savefig(heatmap_path)
     elif algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
         plt.figure(figsize=(16, 12))
-        cvt_archive_heatmap(archive)
+        cvt_archive_heatmap(archive, vmin=0, vmax=100)
         plt.savefig(heatmap_path)
+    plt.clf()
 
 
 def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
@@ -163,7 +166,9 @@ def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
         opt = Optimizer(archive, emitters)
     elif algorithm == "cma_me":
         archive = GridArchive((500, 500), bounds)
-        emitters = [ImprovementEmitter(initial_sol, 0.5, archive)]
+        emitters = [
+            ImprovementEmitter(initial_sol, 0.5, archive, batch_size=25)
+        ]
         opt = Optimizer(archive, emitters)
     else:
         raise ValueError(f"Algorithm `{algorithm}` is not recognized")
@@ -178,6 +183,9 @@ def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
 
         if (i + 1) % 1000 == 0:
             print(f"Finished {i + 1} itrs after {time.time() - start_time} s")
+
+        if (i + 1) % 10_000 == 0:
+            save_and_display_outputs(archive, algorithm, dim, outdir, i + 1)
 
     save_and_display_outputs(archive, algorithm, dim, outdir)
 
