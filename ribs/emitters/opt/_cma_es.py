@@ -12,9 +12,8 @@ class DecompMatrix:
         self.invsqrt = np.eye(dimension, dtype=np.float_)
 
     def update_eigensystem(self):
-        for i in range(len(self.C)):
-            for j in range(i):
-                self.C[i, j] = self.C[j, i]
+        # Force symmetry.
+        self.C = (self.C + self.C.T) / 2.0
 
         self.eigenvalues, self.eigenbasis = np.linalg.eigh(self.C)
         self.eigenvalues = np.real(self.eigenvalues)
@@ -23,16 +22,14 @@ class DecompMatrix:
                                  np.min(self.eigenvalues))
 
         # TODO: test that this is the same as below.
-        for i in range(len(self.C)):
-            for j in range(i + 1):
-                self.invsqrt[i, j] = self.invsqrt[j, i] = sum(
-                    self.eigenbasis[i, k] * self.eigenbasis[j, k] /
-                    self.eigenvalues[k]**0.5 for k in range(len(self.C)))
+        #  for i in range(len(self.C)):
+        #      for j in range(i + 1):
+        #          self.invsqrt[i, j] = self.invsqrt[j, i] = sum(
+        #              self.eigenbasis[i, k] * self.eigenbasis[j, k] /
+        #              self.eigenvalues[k]**0.5 for k in range(len(self.C)))
 
-        #  self.invsqrt = (self.eigenbasis *
-        #                  (1 / np.sqrt(self.eigenvalues))) @ self.eigenbasis.T
-        #  # Force symmetry.
-        #  self.invsqrt = np.tril(self.invsqrt) + np.triu(self.invsqrt, 1)
+        self.invsqrt = (self.eigenbasis *
+                        (1 / np.sqrt(self.eigenvalues))) @ self.eigenbasis.T
 
 
 class CMAEvolutionStrategy:
@@ -96,6 +93,7 @@ class CMAEvolutionStrategy:
 
     def ask(self, lower_bounds, upper_bounds):
         """TODO."""
+        self.C.update_eigensystem()
         solutions = np.empty((self.batch_size, self.solution_dim),
                              dtype=self.dtype)
         transform_mat = self.C.eigenbasis * np.sqrt(self.C.eigenvalues)
@@ -175,8 +173,6 @@ class CMAEvolutionStrategy:
         for k, w in enumerate(weights):
             dv = parents[k] - old_mean
             self.C.C += w * cmu * np.outer(dv, dv) / (self.sigma**2)
-
-        self.C.update_eigensystem()
 
         # Update sigma.
         cn, sum_square_ps = cs / damps, np.sum(np.square(self.ps))
