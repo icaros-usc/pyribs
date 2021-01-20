@@ -21,8 +21,8 @@ import numpy as np
 import pytest
 from matplotlib.testing.decorators import image_comparison
 
-from ribs.archives import CVTArchive
-from ribs.visualize import cvt_archive_heatmap
+from ribs.archives import CVTArchive, SlidingBoundaryArchive
+from ribs.visualize import cvt_archive_heatmap, sliding_boundary_archive_heatmap
 
 # pylint: disable = invalid-name
 
@@ -166,3 +166,110 @@ def test_cvt_archive_heatmap_transpose(_long_cvt_archive):
 def test_cvt_archive_heatmap_transpose_square(_long_cvt_archive):
     plt.figure(figsize=(4, 6))
     cvt_archive_heatmap(_long_cvt_archive, transpose_bcs=True, square=True)
+
+
+@pytest.fixture(scope="module")  # Only run once to save time.
+def _sliding_boundary_archive():
+    """Deterministically created SlidingBoundaryArchive."""
+
+    archive = SlidingBoundaryArchive([10, 20], [(-1, 1), (-1, 1)], seed=42)
+    archive.initialize(solution_dim=2)
+
+    rng = np.random.default_rng(10)
+    for _ in range(1000):
+        x, y = rng.uniform((-1, -1), (1, 1))
+        archive.add(
+            solution=rng.random(2),
+            objective_value=-(x**2 + y**2),
+            behavior_values=np.array([x, y]),
+        )
+    return archive
+
+
+@pytest.fixture(scope="module")  # Only run once to save time.
+def _long_sliding_boundary_archive():
+    """Same as above, but the behavior space is longer in one direction."""
+
+    archive = SlidingBoundaryArchive([10, 20], [(-2, 2), (-1, 1)], seed=42)
+    archive.initialize(solution_dim=2)
+
+    rng = np.random.default_rng(10)
+    for _ in range(1000):
+        x, y = rng.uniform((-2, -1), (2, 1))
+        archive.add(
+            solution=rng.random(2),
+            objective_value=-(x**2 + y**2),
+            behavior_values=np.array([x, y]),
+        )
+    return archive
+
+
+@image_comparison(baseline_images=["sliding_boundary_heatmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_sliding_boundary_archive(_sliding_boundary_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundary_archive_heatmap(_sliding_boundary_archive)
+
+
+@image_comparison(baseline_images=["sliding_boundary_heatmap_with_boundaries"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_sliding_boundary_archive_with_boundary_plot(_sliding_boundary_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundary_archive_heatmap(_sliding_boundary_archive, boundary_lw=0.5)
+
+
+@image_comparison(baseline_images=["sliding_boundary_heatmap_long"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_sliding_boundary_long(_long_sliding_boundary_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundary_archive_heatmap(_long_sliding_boundary_archive)
+
+
+@image_comparison(baseline_images=["sliding_boundary_heatmap_long_square"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_sliding_boundary_long_square(_long_sliding_boundary_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundary_archive_heatmap(_long_sliding_boundary_archive,
+                                     square=True)
+
+
+@image_comparison(baseline_images=["sliding_boundary_heatmap_long_transpose"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_sliding_boundary_long_transpose(_long_sliding_boundary_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundary_archive_heatmap(_long_sliding_boundary_archive,
+                                     transpose_bcs=True)
+
+
+@image_comparison(baseline_images=["sliding_boundary_heatmap_with_listed_cmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_sliding_boundary_heatmap_with_listed_cmap(_sliding_boundary_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundary_archive_heatmap(_sliding_boundary_archive,
+                                     cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+
+@image_comparison(baseline_images=["sliding_boundary_heatmap_with_limits"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_sliding_boundary_heatmap_with_limits(_sliding_boundary_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundary_archive_heatmap(_sliding_boundary_archive,
+                                     vmin=-1.0,
+                                     vmax=-0.5)
+
+
+@image_comparison(
+    baseline_images=["sliding_boundary_heatmap_with_coolwarm_cmap"],
+    remove_text=False,
+    extensions=["png"])
+def test_sliding_boundary_heatmap_with_coolwarm_cmap(_sliding_boundary_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundary_archive_heatmap(_sliding_boundary_archive,
+                                     cmap=matplotlib.cm.get_cmap("coolwarm"))
