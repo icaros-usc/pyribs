@@ -122,6 +122,7 @@ def save_and_display_outputs(archive, algorithm, dim, outdir, itr=None):
     plt.clf()
 
 
+# TODO: hard code the itrs for 2.5M evaluations
 def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
     """Demo on the Sphere function.
 
@@ -182,11 +183,15 @@ def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
 
         opt.tell(objs, bcs)
 
+        # TODO: make these less frequent.
         if (i + 1) % 100 == 0:
             print(f"Finished {i + 1} itrs after {time.time() - start_time} s")
 
         if (i + 1) % 100 == 0:
             save_and_display_outputs(archive, algorithm, dim, outdir, i + 1)
+            if algorithm == "cma_me":
+                print("Restarts:", [e.restarts for e in emitters
+                                   ])  # pylint: disable = no-member
 
     save_and_display_outputs(archive, algorithm, dim, outdir)
 

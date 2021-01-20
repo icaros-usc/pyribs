@@ -21,16 +21,15 @@ class DecompMatrix:
         self.condition_number = (np.max(self.eigenvalues) /
                                  np.min(self.eigenvalues))
 
-        # TODO: test that this is the same as below.
-        for i in range(len(self.C)):
-            for j in range(i + 1):
-                self.invsqrt[i, j] = self.invsqrt[j, i] = sum(
-                    self.eigenbasis[i, k] * self.eigenbasis[j, k] /
-                    self.eigenvalues[k]**0.5 for k in range(len(self.C)))
+        #  # TODO: test that this is the same as below.
+        #  for i in range(len(self.C)):
+        #      for j in range(i + 1):
+        #          self.invsqrt[i, j] = self.invsqrt[j, i] = sum(
+        #              self.eigenbasis[i, k] * self.eigenbasis[j, k] /
+        #              self.eigenvalues[k]**0.5 for k in range(len(self.C)))
 
-
-#          self.invsqrt = (self.eigenbasis *
-#                          (1 / np.sqrt(self.eigenvalues))) @ self.eigenbasis.T
+        self.invsqrt = (self.eigenbasis *
+                        (1 / np.sqrt(self.eigenvalues))) @ self.eigenbasis.T
 
 
 class CMAEvolutionStrategy:
