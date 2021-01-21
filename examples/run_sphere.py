@@ -43,7 +43,8 @@ import numpy as np
 import seaborn as sns
 
 from ribs.archives import CVTArchive, GridArchive
-from ribs.emitters import GaussianEmitter, ImprovementEmitter, IsoLineEmitter
+from ribs.emitters import (GaussianEmitter, ImprovementEmitter, IsoLineEmitter,
+                           OptimizingEmitter, RandomDirectionEmitter)
 from ribs.optimizers import Optimizer
 from ribs.visualize import cvt_archive_heatmap
 
@@ -111,7 +112,15 @@ def save_and_display_outputs(archive, algorithm, dim, outdir, itr=None):
 
     # Generate heatmaps.
     heatmap_path = str(outdir / f"{name}_heatmap{itr_str}.png")
-    if algorithm in ["map_elites", "line_map_elites", "cma_me"]:
+    if algorithm in [
+            "map_elites",
+            "line_map_elites",
+            "cma_me_imp",
+            "cma_me_rd",
+            "cma_me_opt",
+            "cma_me_rd_test",
+            "cma_me_rd_mu",
+    ]:
         heatmap_data = data.pivot('index-0', 'index-1', 'objective')
         sns.heatmap(heatmap_data, cmap="magma", vmin=0, vmax=100)
         plt.savefig(heatmap_path)
@@ -165,10 +174,41 @@ def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
                            batch_size=25)
         ]
         opt = Optimizer(archive, emitters)
-    elif algorithm == "cma_me":
+    elif algorithm == "cma_me_imp":
         archive = GridArchive((500, 500), bounds)
         emitters = [
             ImprovementEmitter(initial_sol, 0.5, archive, batch_size=37)
+            for _ in range(15)
+        ]
+        opt = Optimizer(archive, emitters)
+    elif algorithm == "cma_me_rd":
+        archive = GridArchive((500, 500), bounds)
+        emitters = [
+            RandomDirectionEmitter(initial_sol, 0.5, archive, batch_size=37)
+            for _ in range(15)
+        ]
+        opt = Optimizer(archive, emitters)
+    elif algorithm == "cma_me_rd_mu":
+        archive = GridArchive((500, 500), bounds)
+        emitters = [
+            RandomDirectionEmitter(initial_sol,
+                                   0.5,
+                                   archive,
+                                   batch_size=37,
+                                   selection_rule="mu") for _ in range(15)
+        ]
+        opt = Optimizer(archive, emitters)
+    elif algorithm == "cma_me_rd_test":
+        archive = GridArchive((500, 500), bounds)
+        emitters = [
+            RandomDirectionEmitter(initial_sol, 0.5, archive, batch_size=37)
+            for _ in range(1)
+        ]
+        opt = Optimizer(archive, emitters)
+    elif algorithm == "cma_me_opt":
+        archive = GridArchive((500, 500), bounds)
+        emitters = [
+            OptimizingEmitter(initial_sol, 0.5, archive, batch_size=37)
             for _ in range(15)
         ]
         opt = Optimizer(archive, emitters)
@@ -189,7 +229,7 @@ def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
 
         if (i + 1) % 100 == 0:
             save_and_display_outputs(archive, algorithm, dim, outdir, i + 1)
-            if algorithm == "cma_me":
+            if algorithm.startswith("cma_me"):
                 print("Restarts:", [e.restarts for e in emitters
                                    ])  # pylint: disable = no-member
 

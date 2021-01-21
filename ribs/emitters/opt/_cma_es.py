@@ -1,5 +1,4 @@
 """TODO."""
-import numba as nb
 import numpy as np
 
 
@@ -18,8 +17,12 @@ class DecompMatrix:
         self.eigenvalues = np.ones((dimension,), dtype=dtype)
         self.condition_number = 1
         self.invsqrt = np.eye(dimension, dtype=dtype)  # C^(-1/2)
+        self.updated_eval = 0
 
-    def update_eigensystem(self):
+    def update_eigensystem(self, current_eval, lazy_gap_evals):
+        #  if current_eval <= self.updated_eval + lazy_gap_evals:
+        #      return
+
         # Force symmetry.
         self.C = np.maximum(self.C, self.C.T)
 
@@ -29,15 +32,12 @@ class DecompMatrix:
         self.condition_number = (np.max(self.eigenvalues) /
                                  np.min(self.eigenvalues))
 
-        #  # TODO: test that this is the same as below. -> Done, seems correct.
-        #  for i in range(len(self.C)):
-        #      for j in range(i + 1):
-        #          self.invsqrt[i, j] = self.invsqrt[j, i] = sum(
-        #              self.eigenbasis[i, k] * self.eigenbasis[j, k] /
-        #              self.eigenvalues[k]**0.5 for k in range(len(self.C)))
-
         self.invsqrt = (self.eigenbasis *
                         (1 / np.sqrt(self.eigenvalues))) @ self.eigenbasis.T
+        # Force symmetry.
+        self.invsqrt = np.maximum(self.invsqrt, self.invsqrt.T)
+
+        self.updated_eval = current_eval
 
 
 class CMAEvolutionStrategy:
@@ -49,8 +49,13 @@ class CMAEvolutionStrategy:
         self.solution_dim = solution_dim
         self.dtype = dtype
 
+        num_parents = batch_size // 2
+        weights, mueff, cc, cs, c1, cmu = self._calc_strat_params(num_parents)
+        self.lazy_gap_evals = (0.5 * self.solution_dim * self.batch_size *
+                               (c1 + cmu)**-1 / self.solution_dim**2)
+
         # Strategy-specific params -> initialized in reset().
-        self.individuals_evaluated = None
+        self.current_eval = None
         self.mean = None
         self.sigma = None
         self.pc = None
@@ -63,7 +68,7 @@ class CMAEvolutionStrategy:
         Args:
             x0 (np.ndarray): Initial mean.
         """
-        self.individuals_evaluated = 0
+        self.current_eval = 0
         self.sigma = self.sigma0
         self.mean = np.array(x0, self.dtype)
 
@@ -84,12 +89,6 @@ class CMAEvolutionStrategy:
         Returns:
             TODO
         """
-        # TODO
-
-        # No parents.
-        if len(ranking_values) == 0:
-            return True
-
         if self.C.condition_number > 1e14:
             return True
 
@@ -118,7 +117,7 @@ class CMAEvolutionStrategy:
             upper_bounds (float or np.ndarray): Same as above, but for upper
                 bounds (and pass np.inf instead of -np.inf).
         """
-        self.C.update_eigensystem()
+        self.C.update_eigensystem(self.current_eval, self.lazy_gap_evals)
         solutions = np.empty((self.batch_size, self.solution_dim),
                              dtype=self.dtype)
         transform_mat = self.C.eigenbasis * np.sqrt(self.C.eigenvalues)
@@ -137,20 +136,7 @@ class CMAEvolutionStrategy:
 
         return np.asarray(solutions)
 
-    def tell(self, solutions, num_parents):
-        """Passes the solutions back to the optimizer.
-
-        Args:
-            solutions (np.ndarray): TODO
-            num_parents (int): TODO
-        """
-        self.individuals_evaluated += len(solutions)
-
-        if num_parents == 0:
-            return
-
-        parents = solutions[:num_parents]
-
+    def _calc_strat_params(self, num_parents):
         # Create fresh weights for the number of parents found.
         weights = (np.log(num_parents + 0.5) -
                    np.log(np.arange(1, num_parents + 1)))
@@ -167,6 +153,24 @@ class CMAEvolutionStrategy:
             1 - c1,
             2 * (mueff - 2 + 1 / mueff) / ((self.solution_dim + 2)**2 + mueff),
         )
+        return weights, mueff, cc, cs, c1, cmu
+
+    def tell(self, solutions, num_parents):
+        """Passes the solutions back to the optimizer.
+
+        Args:
+            solutions (np.ndarray): TODO
+            num_parents (int): TODO
+        """
+        self.current_eval += len(solutions)
+
+        if num_parents == 0:
+            return
+
+        parents = solutions[:num_parents]
+
+        weights, mueff, cc, cs, c1, cmu = self._calc_strat_params(num_parents)
+
         damps = (1 + 2 * max(
             0,
             np.sqrt((mueff - 1) / (self.solution_dim + 1)) - 1,
@@ -184,8 +188,7 @@ class CMAEvolutionStrategy:
         self.ps = ((1 - cs) * self.ps +
                    (np.sqrt(cs * (2 - cs) * mueff) / self.sigma) * z)
         left = (np.sum(np.square(self.ps)) / self.solution_dim /
-                (1 -
-                 (1 - cs)**(2 * self.individuals_evaluated / self.batch_size)))
+                (1 - (1 - cs)**(2 * self.current_eval / self.batch_size)))
         right = 2 + 4. / (self.solution_dim + 1)
         hsig = 1 if left < right else 0
 

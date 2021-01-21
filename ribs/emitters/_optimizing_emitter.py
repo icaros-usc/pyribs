@@ -1,10 +1,10 @@
-"""Provides the ImprovementEmitter."""
+"""Provides the OptimizingEmitter."""
 from ribs.archives import AddStatus
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import CMAEvolutionStrategy
 
 
-class ImprovementEmitter(EmitterBase):
+class OptimizingEmitter(EmitterBase):
     """CMA-ME improvement emitter.
 
     Args:
@@ -17,8 +17,8 @@ class ImprovementEmitter(EmitterBase):
                  x0,
                  sigma0,
                  archive,
-                 selection_rule="filter",
-                 restart_rule="no_improvement",
+                 selection_rule="mu",
+                 restart_rule="basic",
                  bounds=None,
                  batch_size=64,
                  seed=None):
@@ -80,13 +80,19 @@ class ImprovementEmitter(EmitterBase):
         new_sols = 0
         for i, (sol, obj, beh) in enumerate(
                 zip(solutions, objective_values, behavior_values)):
-            status, value = self._archive.add(sol, obj, beh)
-            ranking_data.append((status, value, i))
+            status, _ = self._archive.add(sol, obj, beh)
+            ranking_data.append((status, obj, i))
             if status in (AddStatus.NEW, AddStatus.IMPROVE_EXISTING):
                 new_sols += 1
-        # New solutions sort ahead of improved ones, which sort ahead of ones
-        # that were not added.
-        ranking_data.sort(reverse=True)
+
+        if self._selection_rule == "filter":
+            # Sort by whether the solution was added into the archive, followed
+            # by objective value.
+            key = lambda x: (bool(x[0]), x[1])
+        elif self._selection_rule == "mu":
+            # Sort only by objective value.
+            key = lambda x: x[1]
+        ranking_data.sort(reverse=True, key=key)
         indices = [d[2] for d in ranking_data]
 
         num_parents = (new_sols if self._selection_rule == "filter" else
@@ -95,7 +101,7 @@ class ImprovementEmitter(EmitterBase):
         self.opt.tell(solutions[indices], num_parents)
 
         # Check for reset.
-        if (self.opt.check_stop([value for status, value, i in ranking_data]) or
+        if (self.opt.check_stop([obj for status, obj, i in ranking_data]) or
                 self._check_restart(new_sols)):
             new_x0 = self._archive.get_random_elite()[0]
             self.opt.reset(new_x0)
