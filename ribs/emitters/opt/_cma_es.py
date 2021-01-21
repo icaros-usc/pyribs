@@ -20,6 +20,7 @@ class DecompMatrix:
         self.updated_eval = 0
 
     def update_eigensystem(self, current_eval, lazy_gap_evals):
+        # TODO: uncomment this
         #  if current_eval <= self.updated_eval + lazy_gap_evals:
         #      return
 
@@ -41,13 +42,25 @@ class DecompMatrix:
 
 
 class CMAEvolutionStrategy:
-    """TODO."""
+    """TODO.
 
-    def __init__(self, sigma0, batch_size, solution_dim, dtype):
-        self.batch_size = batch_size
+    Args:
+        batch_size (int): If None, we calculate a default batch size based on
+            solution_dim.
+        weight_rule (str): "truncation" (positive weights only) or "active"
+            (include negative weights)
+    """
+
+    def __init__(self, sigma0, batch_size, solution_dim, weight_rule, dtype):
+        self.batch_size = (4 + int(3 * np.log(solution_dim))
+                           if batch_size is None else batch_size)
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
+
+        if weight_rule not in ["truncation", "active"]:
+            raise ValueError(f"Invalid weight_rule {weight_rule}")
+        self.weight_rule = weight_rule
 
         num_parents = batch_size // 2
         weights, mueff, cc, cs, c1, cmu = self._calc_strat_params(num_parents)
@@ -138,13 +151,16 @@ class CMAEvolutionStrategy:
 
     def _calc_strat_params(self, num_parents):
         # Create fresh weights for the number of parents found.
-        weights = (np.log(num_parents + 0.5) -
-                   np.log(np.arange(1, num_parents + 1)))
-        total_weights = np.sum(weights)
-        weights = weights / total_weights
+        if self.weight_rule == "truncation":
+            weights = (np.log(num_parents + 0.5) -
+                       np.log(np.arange(1, num_parents + 1)))
+            total_weights = np.sum(weights)
+            weights = weights / total_weights
+            mueff = np.sum(weights)**2 / np.sum(weights**2)
+        elif self.weight_rule == "active":
+            weights = None
 
         # Dynamically update these strategy-specific parameters.
-        mueff = np.sum(weights)**2 / np.sum(weights**2)
         cc = ((4 + mueff / self.solution_dim) /
               (self.solution_dim + 4 + 2 * mueff / self.solution_dim))
         cs = (mueff + 2) / (self.solution_dim + mueff + 5)

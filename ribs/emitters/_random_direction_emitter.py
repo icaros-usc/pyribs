@@ -22,7 +22,7 @@ class RandomDirectionEmitter(EmitterBase):
                  selection_rule="filter",
                  restart_rule="no_improvement",
                  bounds=None,
-                 batch_size=64,
+                 batch_size=None,
                  seed=None):
         self._x0 = x0
         self._sigma0 = sigma0
@@ -43,12 +43,11 @@ class RandomDirectionEmitter(EmitterBase):
             raise ValueError(f"Invalid restart_rule {restart_rule}")
         self._restart_rule = restart_rule
 
-        self._num_parents = (batch_size //
-                             2 if selection_rule == "mu" else None)
-
         self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
                                         self._archive.dtype)
         self.opt.reset(self._x0)
+        self._num_parents = (self.opt.batch_size //
+                             2 if selection_rule == "mu" else None)
         self._target_behavior_dir = self._generate_random_direction()
 
         # TODO: remove this

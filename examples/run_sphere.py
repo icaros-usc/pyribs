@@ -120,6 +120,7 @@ def save_and_display_outputs(archive, algorithm, dim, outdir, itr=None):
             "cma_me_opt",
             "cma_me_rd_test",
             "cma_me_rd_mu",
+            "cma_me_imp_mu",
     ]:
         heatmap_data = data.pivot('index-0', 'index-1', 'objective')
         sns.heatmap(heatmap_data, cmap="magma", vmin=0, vmax=100)
@@ -179,6 +180,16 @@ def run_sphere(algorithm, dim=20, itrs=100_000, outdir="run_sphere_output"):
         emitters = [
             ImprovementEmitter(initial_sol, 0.5, archive, batch_size=37)
             for _ in range(15)
+        ]
+        opt = Optimizer(archive, emitters)
+    elif algorithm == "cma_me_imp_mu":
+        archive = GridArchive((500, 500), bounds)
+        emitters = [
+            ImprovementEmitter(initial_sol,
+                               0.5,
+                               archive,
+                               batch_size=37,
+                               selection_rule="mu") for _ in range(15)
         ]
         opt = Optimizer(archive, emitters)
     elif algorithm == "cma_me_rd":
