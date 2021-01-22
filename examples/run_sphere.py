@@ -29,18 +29,14 @@ saved in the directory `run_sphere_output` by default. The archive is saved as a
 CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are
 saved as `{algorithm}_{dim}_heatmap_{iteration}.png`.
 
-Usage:
-    # Where ALGORITHM is chosen from above, DIM is the dimensionality of the
-    # Sphere function, ITRS is the number of iterations to run, OUTDIR is the
-    # directory to save outputs, and LOG_FREQ is the number of iterations to
-    # wait before printing metrics and saving the heatmap, By default, DIMS is
-    # 20, ITRS is 4500, LOG_FREQ is 250, and OUTDIR is `run_sphere_output`.
-    python run_sphere.py ALGORITHM DIM ITRS OUTDIR LOG_FREQ
+Usage (see run_sphere function for all args):
+    python run_sphere.py ALGORITHM DIM
 Example:
     python run_sphere.py map_elites 20
 
-    # To make numpy run single-threaded, set OPENBLAS_NUM_THREADS=1 like so:
-    OPENBLAS_NUM_THREADS=1 python run_sphere.py map_elites 20
+    # To make numpy and sklearn run single-threaded, set env variables for BLAS
+    # and OpenMP:
+    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python run_sphere.py map_elites 20
 Help:
     python run_sphere.py --help
 """
@@ -94,12 +90,13 @@ def sphere(sol):
     return objs, bcs
 
 
-def create_optimizer(algorithm, dim):
+def create_optimizer(algorithm, dim, seed):
     """Creates an optimizer based on the algorithm name.
 
     Args:
         algorithm (str): Name of the algorithm passed into run_sphere.
         dim (int): Dimensionality of the sphere function.
+        seed (int): Main seed or the various components.
     Returns:
         Optimizer: A ribs Optimizer for running the algorithm.
     """
@@ -109,96 +106,76 @@ def create_optimizer(algorithm, dim):
     batch_size = 37
     num_emitters = 15
 
-    if algorithm == "map_elites":
-        archive = GridArchive((500, 500), bounds)
+    # Create archive.
+    if algorithm in [
+            "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
+            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt"
+    ]:
+        archive = GridArchive((500, 500), bounds, seed=seed)
+    elif algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
+        archive = CVTArchive(bounds, 10_000, samples=100_000, use_kd_tree=True)
+    else:
+        raise ValueError(f"Algorithm `{algorithm}` is not recognized")
+
+    # Create emitters. Each emitter needs a different seed, so that they do not
+    # all do the same thing.
+    emitter_seeds = [None] * num_emitters if seed is None else list(
+        range(seed, seed + num_emitters))
+    if algorithm in ["map_elites", "cvt_map_elites"]:
         emitters = [
-            GaussianEmitter(initial_sol, 0.5, archive, batch_size=batch_size)
-            for _ in range(num_emitters)
+            GaussianEmitter(initial_sol,
+                            0.5,
+                            archive,
+                            batch_size=batch_size,
+                            seed=s) for s in emitter_seeds
         ]
-        optimizer = Optimizer(archive, emitters)
-    elif algorithm == "line_map_elites":
-        archive = GridArchive((500, 500), bounds)
+    elif algorithm == ["line_map_elites", "line_cvt_map_elites"]:
         emitters = [
             IsoLineEmitter(initial_sol,
                            archive,
                            iso_sigma=0.1,
                            line_sigma=0.2,
-                           batch_size=batch_size) for _ in range(num_emitters)
+                           batch_size=batch_size,
+                           seed=s) for s in emitter_seeds
         ]
-        optimizer = Optimizer(archive, emitters)
-    elif algorithm == "cvt_map_elites":
-        archive = CVTArchive(bounds, 10_000, samples=100_000, use_kd_tree=True)
-        emitters = [
-            GaussianEmitter(initial_sol, 0.5, archive, batch_size=batch_size)
-            for _ in range(num_emitters)
-        ]
-        optimizer = Optimizer(archive, emitters)
-    elif algorithm == "line_cvt_map_elites":
-        archive = CVTArchive(bounds, 10_000, samples=100_000, use_kd_tree=True)
-        emitters = [
-            IsoLineEmitter(initial_sol,
-                           archive,
-                           iso_sigma=0.1,
-                           line_sigma=0.2,
-                           batch_size=batch_size) for _ in range(num_emitters)
-        ]
-        optimizer = Optimizer(archive, emitters)
-    elif algorithm == "cma_me_imp":
-        archive = GridArchive((500, 500), bounds)
-        emitters = [
-            ImprovementEmitter(initial_sol, 0.5, archive, batch_size=batch_size)
-            for _ in range(num_emitters)
-        ]
-        optimizer = Optimizer(archive, emitters)
-    elif algorithm == "cma_me_imp_mu":
-        archive = GridArchive((500, 500), bounds)
+    elif algorithm in ["cma_me_imp", "cma_me_imp_mu"]:
+        selection_rule = "filter" if algorithm == "cma_me_imp" else "mu"
         emitters = [
             ImprovementEmitter(initial_sol,
                                0.5,
                                archive,
                                batch_size=batch_size,
-                               selection_rule="mu") for _ in range(num_emitters)
+                               selection_rule=selection_rule,
+                               seed=s) for s in emitter_seeds
         ]
-        optimizer = Optimizer(archive, emitters)
-    elif algorithm == "cma_me_rd":
-        archive = GridArchive((500, 500), bounds)
-        emitters = [
-            RandomDirectionEmitter(initial_sol,
-                                   0.5,
-                                   archive,
-                                   batch_size=batch_size)
-            for _ in range(num_emitters)
-        ]
-        optimizer = Optimizer(archive, emitters)
-    elif algorithm == "cma_me_rd_mu":
-        archive = GridArchive((500, 500), bounds)
+    elif algorithm in ["cma_me_rd", "cma_me_rd_mu"]:
+        selection_rule = "filter" if algorithm == "cma_me_rd" else "mu"
         emitters = [
             RandomDirectionEmitter(initial_sol,
                                    0.5,
                                    archive,
                                    batch_size=batch_size,
-                                   selection_rule="mu")
-            for _ in range(num_emitters)
+                                   selection_rule=selection_rule,
+                                   seed=s) for s in emitter_seeds
         ]
-        optimizer = Optimizer(archive, emitters)
     elif algorithm == "cma_me_opt":
-        archive = GridArchive((500, 500), bounds)
         emitters = [
-            OptimizingEmitter(initial_sol, 0.5, archive, batch_size=batch_size)
-            for _ in range(num_emitters)
+            OptimizingEmitter(initial_sol,
+                              0.5,
+                              archive,
+                              batch_size=batch_size,
+                              seed=s) for s in emitter_seeds
         ]
-        optimizer = Optimizer(archive, emitters)
-    else:
-        raise ValueError(f"Algorithm `{algorithm}` is not recognized")
 
-    return optimizer
+    return Optimizer(archive, emitters)
 
 
 def run_sphere(algorithm,
                dim=20,
                itrs=4500,
                outdir="run_sphere_output",
-               log_freq=250):
+               log_freq=250,
+               seed=None):
     """Demo on the Sphere function.
 
     Args:
@@ -208,12 +185,13 @@ def run_sphere(algorithm,
         outdir (str): Directory to save output.
         log_freq (int): Number of iterations to wait before printing metrics and
             saving heatmap.
+        seed (int): Seed for the algorithm. By default, there is no seed.
     """
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
 
-    optimizer = create_optimizer(algorithm, dim)
+    optimizer = create_optimizer(algorithm, dim, seed)
     archive = optimizer.archive
     metrics = {
         "QD Score": {
@@ -250,7 +228,7 @@ def run_sphere(algorithm,
                 metrics["Archive Coverage"]["y"].append(
                     len(data) / total_cells * 100)
                 print(f"Iteration {itr} | Archive Coverage: "
-                      f"{metrics['Archive Coverage']['y'][-1]:.3f} "
+                      f"{metrics['Archive Coverage']['y'][-1]:.3f}% "
                       f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
                 # Generate heatmap.
@@ -270,6 +248,7 @@ def run_sphere(algorithm,
                     plt.savefig(heatmap_path)
                 plt.clf()
 
+    # TODO: save metrics JSON
     # Plot metrics.
     for metric in metrics:
         plt.plot(metrics[metric]["x"], metrics[metric]["y"])
