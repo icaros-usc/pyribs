@@ -27,7 +27,8 @@ All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations. Outputs are
 saved in the directory `run_sphere_output` by default. The archive is saved as a
 CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are
-saved as `{algorithm}_{dim}_heatmap_{iteration}.png`.
+saved as `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about the run are
+also saved in `{algorithm}_{dim}_metrics.json`.
 
 Usage (see run_sphere function for all args):
     python run_sphere.py ALGORITHM DIM
@@ -40,6 +41,8 @@ Example:
 Help:
     python run_sphere.py --help
 """
+import json
+import time
 from pathlib import Path
 
 import fire
@@ -204,11 +207,14 @@ def run_sphere(algorithm,
         },
     }
 
+    non_logging_time = 0.0
     with alive_bar(itrs) as progress:
         for itr in range(1, itrs + 1):
+            itr_start = time.time()
             sols = optimizer.ask()
             objs, bcs = sphere(sols)
             optimizer.tell(objs, bcs)
+            non_logging_time += time.time() - itr_start
             progress()
 
             # Logging and output.
@@ -248,8 +254,8 @@ def run_sphere(algorithm,
                     plt.savefig(heatmap_path)
                 plt.clf()
 
-    # TODO: save metrics JSON
     # Plot metrics.
+    print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")
     for metric in metrics:
         plt.plot(metrics[metric]["x"], metrics[metric]["y"])
         plt.title(metric)
@@ -257,6 +263,8 @@ def run_sphere(algorithm,
         plt.savefig(
             str(outdir / f"{name}_{metric.lower().replace(' ', '_')}.png"))
         plt.clf()
+    with (outdir / f"{name}_metrics.json").open("w") as file:
+        json.dump(metrics, file, indent=2)
 
 
 if __name__ == '__main__':
