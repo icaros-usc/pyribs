@@ -1,4 +1,8 @@
-"""Implementation of CMA-ES that can be used across various emitters."""
+"""Implementation of CMA-ES that can be used across various emitters.
+
+Adapted from Nikolaus Hansen's pycma:
+https://github.com/CMA-ES/pycma/blob/master/cma/purecma.py
+"""
 import numba as nb
 import numpy as np
 
@@ -64,13 +68,26 @@ class DecompMatrix:
 
 
 class CMAEvolutionStrategy:
-    """TODO.
+    """CMA-ES optimizer for use with emitters.
+
+    The basic usage is:
+    - Initialize the optimizer and reset it.
+    - Repeatedly:
+      - Request new solutions with ask()
+      - Rank the solutions in the emitter (better solutions come first) and pass
+        them back with tell().
+      - Use check_stop() to see if the optimizer has reached a stopping
+        condition, and if so, call reset().
 
     Args:
-        batch_size (int): If None, we calculate a default batch size based on
-            solution_dim.
-        weight_rule (str): "truncation" (positive weights only) or "active"
-            (include negative weights)
+        sigma0 (float): Initial step size.
+        batch_size (int): Number of solutions to evaluate at a time. If None, we
+            calculate a default batch size based on solution_dim.
+        solution_dim (int): Size of the solution space.
+        weight_rule (str): Method for generating weights. Either "truncation"
+            (positive weights only) or "active" (include negative weights).
+        seed (int): Seed for the random number generator.
+        dtype (str or data-type): Data type of solutions.
     """
 
     def __init__(self, sigma0, batch_size, solution_dim, weight_rule, seed,
@@ -85,6 +102,7 @@ class CMAEvolutionStrategy:
             raise ValueError(f"Invalid weight_rule {weight_rule}")
         self.weight_rule = weight_rule
 
+        # Calculate gap between covariance matrix updates.
         num_parents = batch_size // 2
         *_, c1, cmu = self._calc_strat_params(self.solution_dim, num_parents,
                                               self.weight_rule)
@@ -124,9 +142,11 @@ class CMAEvolutionStrategy:
         Tolerances come from CMA-ES.
 
         Args:
-            TODO
+            ranking_values (np.ndarray): Array of objective values of the
+                solutions, sorted in the same order that the solutions were
+                sorted when passed to tell().
         Returns:
-            TODO
+            True if any of the stopping conditions are satisfied.
         """
         if self.cov.condition_number > 1e14:
             return True
@@ -241,8 +261,11 @@ class CMAEvolutionStrategy:
         and maintain.
 
         Args:
-            solutions (np.ndarray): TODO
-            num_parents (int): TODO
+            solutions (np.ndarray): Array of ranked solutions. The user should
+                have determined some way to rank the solutions, such as by
+                objective value. It is important that _all_ of the solutions
+                initially given in ask() are returned here.
+            num_parents (int): Number of best solutions to select.
         """
         self.current_eval += len(solutions)
 
@@ -258,8 +281,6 @@ class CMAEvolutionStrategy:
             0,
             np.sqrt((mueff - 1) / (self.solution_dim + 1)) - 1,
         ) + cs)
-        # chiN = self.solution_dim**0.5 * (1 - 1 /(4 * self.solution_dim) + 1. /
-        #                                   (21 * self.solution_dim**2))
 
         # Recombination of the new mean.
         old_mean = self.mean
