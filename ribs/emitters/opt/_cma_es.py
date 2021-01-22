@@ -86,7 +86,8 @@ class CMAEvolutionStrategy:
         self.weight_rule = weight_rule
 
         num_parents = batch_size // 2
-        *_, c1, cmu = self._calc_strat_params(num_parents)
+        *_, c1, cmu = self._calc_strat_params(self.solution_dim, num_parents,
+                                              self.weight_rule)
         self.lazy_gap_evals = (0.5 * self.solution_dim * self.batch_size *
                                (c1 + cmu)**-1 / self.solution_dim**2)
 
@@ -185,44 +186,59 @@ class CMAEvolutionStrategy:
 
         return np.asarray(solutions)
 
-    def _calc_strat_params(self, num_parents):
+    @staticmethod
+    @nb.jit(nopython=True)
+    def _calc_strat_params(solution_dim, num_parents, weight_rule):
+        """Calculates weights, mueff, and learning rates for CMA-ES."""
         # Create fresh weights for the number of parents found.
-        if self.weight_rule == "truncation":
+        if weight_rule == "truncation":
             weights = (np.log(num_parents + 0.5) -
                        np.log(np.arange(1, num_parents + 1)))
             total_weights = np.sum(weights)
             weights = weights / total_weights
             mueff = np.sum(weights)**2 / np.sum(weights**2)
-        elif self.weight_rule == "active":
+        elif weight_rule == "active":
             weights = None
 
         # Dynamically update these strategy-specific parameters.
-        cc = ((4 + mueff / self.solution_dim) /
-              (self.solution_dim + 4 + 2 * mueff / self.solution_dim))
-        cs = (mueff + 2) / (self.solution_dim + mueff + 5)
-        c1 = 2 / ((self.solution_dim + 1.3)**2 + mueff)
+        cc = ((4 + mueff / solution_dim) /
+              (solution_dim + 4 + 2 * mueff / solution_dim))
+        cs = (mueff + 2) / (solution_dim + mueff + 5)
+        c1 = 2 / ((solution_dim + 1.3)**2 + mueff)
         cmu = min(
             1 - c1,
-            2 * (mueff - 2 + 1 / mueff) / ((self.solution_dim + 2)**2 + mueff),
+            2 * (mueff - 2 + 1 / mueff) / ((solution_dim + 2)**2 + mueff),
         )
         return weights, mueff, cc, cs, c1, cmu
 
     @staticmethod
     @nb.jit(nopython=True)
-    def _calc_cov_update(c1, cmu, pc, weights, parents, old_mean, sigma):
-        """Numba helper for calculating the covariance matrix update."""
-        # Rank-one update.
-        update = c1 * np.outer(pc, pc)
+    def _calc_mean(parents, weights):
+        """Numba helper for calculating the new mean."""
+        return np.sum(parents * np.expand_dims(weights, axis=1), axis=0)
 
-        # Rank-mu update.
-        for k, w in enumerate(weights):
-            dv = parents[k] - old_mean
-            update += w * cmu * np.outer(dv, dv) / (sigma**2)
+    @staticmethod
+    @nb.jit(nopython=True)
+    def _calc_weighted_ys(parents, old_mean, weights):
+        """Calculates y's for use in rank-mu update."""
+        ys = parents - np.expand_dims(old_mean, axis=0)
+        return ys * np.expand_dims(weights, axis=1), ys
 
-        return update
+    @staticmethod
+    @nb.jit(nopython=True)
+    def _calc_cov_update(cov, c1a, cmu, c1, pc, sigma, rank_mu_update):
+        """Calculates covariance matrix update."""
+        rank_one_update = c1 * np.outer(pc, pc)
+        return (cov * (1 - c1a - cmu) + rank_one_update * c1 +
+                rank_mu_update * cmu / (sigma**2))
 
     def tell(self, solutions, num_parents):
         """Passes the solutions back to the optimizer.
+
+        Note that while we use numba to optimize certain parts of this function
+        (in particular the covariance update), we are more cautious about other
+        parts because the code that uses numba is significantly harder to read
+        and maintain.
 
         Args:
             solutions (np.ndarray): TODO
@@ -235,18 +251,19 @@ class CMAEvolutionStrategy:
 
         parents = solutions[:num_parents]
 
-        weights, mueff, cc, cs, c1, cmu = self._calc_strat_params(num_parents)
+        weights, mueff, cc, cs, c1, cmu = self._calc_strat_params(
+            self.solution_dim, num_parents, self.weight_rule)
 
         damps = (1 + 2 * max(
             0,
             np.sqrt((mueff - 1) / (self.solution_dim + 1)) - 1,
         ) + cs)
-        chiN = self.solution_dim**0.5 * (1 - 1 / (4 * self.solution_dim) + 1. /
-                                         (21 * self.solution_dim**2))
+        # chiN = self.solution_dim**0.5 * (1 - 1 /(4 * self.solution_dim) + 1. /
+        #                                   (21 * self.solution_dim**2))
 
         # Recombination of the new mean.
         old_mean = self.mean
-        self.mean = np.sum(parents * weights[:, None], axis=0)
+        self.mean = self._calc_mean(parents, weights)
 
         # Update the evolution path.
         y = self.mean - old_mean
@@ -261,11 +278,16 @@ class CMAEvolutionStrategy:
         self.pc = ((1 - cc) * self.pc + hsig * np.sqrt(cc *
                                                        (2 - cc) * mueff) * y)
 
-        # Adapt the covariance matrix
+        # Adapt the covariance matrix.
+        weighted_ys, ys = self._calc_weighted_ys(parents, old_mean, weights)
+        # Equivalent to calculating the outer product of each ys[i] with itself
+        # and taking a weighted sum of the outer products. Unfortunately, numba
+        # does not support einsum.
+        rank_mu_update = np.einsum("ki,kj", weighted_ys, ys)
         c1a = c1 * (1 - (1 - hsig**2) * cc * (2 - cc))
-        self.cov.cov *= (1 - c1a - cmu)
-        self.cov.cov += self._calc_cov_update(c1, cmu, self.pc, weights,
-                                              parents, old_mean, self.sigma)
+        self.cov.cov = self._calc_cov_update(self.cov.cov, c1a, cmu, c1,
+                                             self.pc, self.sigma,
+                                             rank_mu_update)
 
         # Update sigma.
         cn, sum_square_ps = cs / damps, np.sum(np.square(self.ps))
