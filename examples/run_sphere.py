@@ -30,6 +30,13 @@ CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are
 saved as `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about the run are
 also saved in `{algorithm}_{dim}_metrics.json`.
 
+To generate a video of the heatmap from the heatmap images, you can use a tool
+like ffmpeg. For example, the following will generate a 6FPS video showing the
+heatmap for cma_me_imp with 20 dims.
+
+    ffmpeg -r 6 -i "run_sphere_output/cma_me_imp_20_heatmap_%*.png \
+        run_sphere_output/cma_me_imp_20_heatmap_video.mp4
+
 Usage (see run_sphere function for all args):
     python run_sphere.py ALGORITHM DIM
 Example:
