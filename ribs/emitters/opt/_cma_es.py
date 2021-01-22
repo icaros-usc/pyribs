@@ -13,7 +13,7 @@ class DecompMatrix:
     """
 
     def __init__(self, dimension, dtype):
-        self.C = np.eye(dimension, dtype=dtype)
+        self.cov = np.eye(dimension, dtype=dtype)
         self.eigenbasis = np.eye(dimension, dtype=dtype)
         self.eigenvalues = np.ones((dimension,), dtype=dtype)
         self.condition_number = 1
@@ -43,8 +43,8 @@ class DecompMatrix:
         if current_eval <= self.updated_eval + lazy_gap_evals:
             return
 
-        (self.C, self.eigenvalues, self.eigenbasis, self.condition_number,
-         self.invsqrt) = self._update_eigensystem_numba(self.C)
+        (self.cov, self.eigenvalues, self.eigenbasis, self.condition_number,
+         self.invsqrt) = self._update_eigensystem_numba(self.cov)
 
         self.updated_eval = current_eval
 
@@ -72,7 +72,7 @@ class CMAEvolutionStrategy:
         self.weight_rule = weight_rule
 
         num_parents = batch_size // 2
-        weights, mueff, cc, cs, c1, cmu = self._calc_strat_params(num_parents)
+        *_, c1, cmu = self._calc_strat_params(num_parents)
         self.lazy_gap_evals = (0.5 * self.solution_dim * self.batch_size *
                                (c1 + cmu)**-1 / self.solution_dim**2)
 
@@ -82,7 +82,7 @@ class CMAEvolutionStrategy:
         self.sigma = None
         self.pc = None
         self.ps = None
-        self.C = None
+        self.cov = None
 
         self._rng = np.random.default_rng(seed)
 
@@ -101,7 +101,7 @@ class CMAEvolutionStrategy:
         self.ps = np.zeros(self.solution_dim, dtype=self.dtype)
 
         # Setup the covariance matrix.
-        self.C = DecompMatrix(self.solution_dim, self.dtype)
+        self.cov = DecompMatrix(self.solution_dim, self.dtype)
 
     def check_stop(self, ranking_values):
         """Checks if the optimization should stop and be reset.
@@ -113,11 +113,11 @@ class CMAEvolutionStrategy:
         Returns:
             TODO
         """
-        if self.C.condition_number > 1e14:
+        if self.cov.condition_number > 1e14:
             return True
 
         # Area of distribution too small.
-        area = self.sigma * np.sqrt(max(self.C.eigenvalues))
+        area = self.sigma * np.sqrt(max(self.cov.eigenvalues))
         if area < 1e-11:
             return True
 
@@ -141,10 +141,10 @@ class CMAEvolutionStrategy:
             upper_bounds (float or np.ndarray): Same as above, but for upper
                 bounds (and pass np.inf instead of -np.inf).
         """
-        self.C.update_eigensystem(self.current_eval, self.lazy_gap_evals)
+        self.cov.update_eigensystem(self.current_eval, self.lazy_gap_evals)
         solutions = np.empty((self.batch_size, self.solution_dim),
                              dtype=self.dtype)
-        transform_mat = self.C.eigenbasis * np.sqrt(self.C.eigenvalues)
+        transform_mat = self.cov.eigenbasis * np.sqrt(self.cov.eigenvalues)
 
         for i in range(self.batch_size):
             # Resampling method for bound constraints -> break when solutions
@@ -211,7 +211,7 @@ class CMAEvolutionStrategy:
 
         # Update the evolution path.
         y = self.mean - old_mean
-        z = np.matmul(self.C.invsqrt, y)
+        z = np.matmul(self.cov.invsqrt, y)
         self.ps = ((1 - cs) * self.ps +
                    (np.sqrt(cs * (2 - cs) * mueff) / self.sigma) * z)
         left = (np.sum(np.square(self.ps)) / self.solution_dim /
@@ -224,12 +224,12 @@ class CMAEvolutionStrategy:
 
         # Adapt the covariance matrix
         c1a = c1 * (1 - (1 - hsig**2) * cc * (2 - cc))
-        self.C.C *= (1 - c1a - cmu)
-        self.C.C += c1 * np.outer(self.pc, self.pc)
+        self.cov.cov *= (1 - c1a - cmu)
+        self.cov.cov += c1 * np.outer(self.pc, self.pc)
         # TODO: batch this calculation.
         for k, w in enumerate(weights):
             dv = parents[k] - old_mean
-            self.C.C += w * cmu * np.outer(dv, dv) / (self.sigma**2)
+            self.cov.cov += w * cmu * np.outer(dv, dv) / (self.sigma**2)
 
         # Update sigma.
         cn, sum_square_ps = cs / damps, np.sum(np.square(self.ps))
