@@ -20,9 +20,8 @@ class DecompMatrix:
         self.updated_eval = 0
 
     def update_eigensystem(self, current_eval, lazy_gap_evals):
-        # TODO: uncomment this
-        #  if current_eval <= self.updated_eval + lazy_gap_evals:
-        #      return
+        if current_eval <= self.updated_eval + lazy_gap_evals:
+            return
 
         # Force symmetry.
         self.C = np.maximum(self.C, self.C.T)

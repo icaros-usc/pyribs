@@ -21,6 +21,7 @@ class RandomDirectionEmitter(EmitterBase):
                  archive,
                  selection_rule="filter",
                  restart_rule="no_improvement",
+                 weight_rule="truncation",
                  bounds=None,
                  batch_size=None,
                  seed=None):
@@ -44,7 +45,7 @@ class RandomDirectionEmitter(EmitterBase):
         self._restart_rule = restart_rule
 
         self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
-                                        self._archive.dtype)
+                                        weight_rule, self._archive.dtype)
         self.opt.reset(self._x0)
         self._num_parents = (self.opt.batch_size //
                              2 if selection_rule == "mu" else None)
