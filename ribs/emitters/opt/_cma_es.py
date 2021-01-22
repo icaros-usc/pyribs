@@ -169,10 +169,13 @@ class CMAEvolutionStrategy:
     def _transform_and_check_sol(unscaled_params, transform_mat, mean,
                                  lower_bounds, upper_bounds):
         """Numba helper for transforming parameters to the solution space."""
-        solution = transform_mat @ unscaled_params + mean
-        in_bounds = np.all(
-            np.logical_and(solution >= lower_bounds, solution <= upper_bounds))
-        return solution, in_bounds
+        solutions = ((transform_mat @ unscaled_params.T).T +
+                     np.expand_dims(mean, axis=0))
+        out_of_bounds = np.logical_or(
+            solutions < np.expand_dims(lower_bounds, axis=0),
+            solutions > np.expand_dims(upper_bounds, axis=0),
+        )
+        return solutions, out_of_bounds
 
     def ask(self, lower_bounds, upper_bounds):
         """Samples new solutions from the Gaussian distribution.
@@ -191,18 +194,22 @@ class CMAEvolutionStrategy:
                              dtype=self.dtype)
         transform_mat = self.cov.eigenbasis * np.sqrt(self.cov.eigenvalues)
 
-        for i in range(self.batch_size):
-            # Resampling method for bound constraints -> break when solutions
-            # are within bounds.
-            while True:
-                unscaled_params = self._rng.normal(0.0, self.sigma,
-                                                   self.solution_dim)
-                sol, in_bounds = self._transform_and_check_sol(
-                    unscaled_params, transform_mat, self.mean, lower_bounds,
-                    upper_bounds)
-                if in_bounds:
-                    solutions[i] = sol
-                    break
+        # Resampling method for bound constraints -> sample new solutions until
+        # all solutions are within bounds.
+        remaining_indices = np.arange(self.batch_size)
+        while len(remaining_indices) > 0:
+            unscaled_params = self._rng.normal(
+                0.0, self.sigma, (len(remaining_indices), self.solution_dim))
+            new_solutions, out_of_bounds = self._transform_and_check_sol(
+                unscaled_params, transform_mat, self.mean, lower_bounds,
+                upper_bounds)
+            solutions[remaining_indices] = new_solutions
+
+            # Find indices in remaining_indices that are still out of bounds
+            # (out_of_bounds indicates whether each entry in each solution is
+            # out of bounds).
+            out_of_bounds_indices = np.where(np.any(out_of_bounds, axis=1))[0]
+            remaining_indices = remaining_indices[out_of_bounds_indices]
 
         return np.asarray(solutions)
 
