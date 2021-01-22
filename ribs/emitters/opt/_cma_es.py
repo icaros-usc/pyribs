@@ -1,4 +1,5 @@
 """TODO."""
+import numba as nb
 import numpy as np
 
 
@@ -19,23 +20,31 @@ class DecompMatrix:
         self.invsqrt = np.eye(dimension, dtype=dtype)  # C^(-1/2)
         self.updated_eval = 0
 
+    @staticmethod
+    @nb.jit(nopython=True)
+    def _update_eigensystem_numba(cov):
+        """Numba helper for update_eigensystem."""
+        # Force symmetry.
+        cov = np.maximum(cov, cov.T)
+
+        eigenvalues, eigenbasis = np.linalg.eigh(cov)
+        eigenvalues = eigenvalues.real
+        eigenbasis = eigenbasis.real
+        condition_number = (np.max(eigenvalues) / np.min(eigenvalues))
+
+        invsqrt = (eigenbasis * (1 / np.sqrt(eigenvalues))) @ eigenbasis.T
+
+        # Force symmetry.
+        invsqrt = np.maximum(invsqrt, invsqrt.T)
+
+        return cov, eigenvalues, eigenbasis, condition_number, invsqrt
+
     def update_eigensystem(self, current_eval, lazy_gap_evals):
         if current_eval <= self.updated_eval + lazy_gap_evals:
             return
 
-        # Force symmetry.
-        self.C = np.maximum(self.C, self.C.T)
-
-        self.eigenvalues, self.eigenbasis = np.linalg.eigh(self.C)
-        self.eigenvalues = np.real(self.eigenvalues)
-        self.eigenbasis = np.real(self.eigenbasis)
-        self.condition_number = (np.max(self.eigenvalues) /
-                                 np.min(self.eigenvalues))
-
-        self.invsqrt = (self.eigenbasis *
-                        (1 / np.sqrt(self.eigenvalues))) @ self.eigenbasis.T
-        # Force symmetry.
-        self.invsqrt = np.maximum(self.invsqrt, self.invsqrt.T)
+        (self.C, self.eigenvalues, self.eigenbasis, self.condition_number,
+         self.invsqrt) = self._update_eigensystem_numba(self.C)
 
         self.updated_eval = current_eval
 
@@ -50,7 +59,8 @@ class CMAEvolutionStrategy:
             (include negative weights)
     """
 
-    def __init__(self, sigma0, batch_size, solution_dim, weight_rule, dtype):
+    def __init__(self, sigma0, batch_size, solution_dim, weight_rule, seed,
+                 dtype):
         self.batch_size = (4 + int(3 * np.log(solution_dim))
                            if batch_size is None else batch_size)
         self.sigma0 = sigma0
@@ -73,6 +83,8 @@ class CMAEvolutionStrategy:
         self.pc = None
         self.ps = None
         self.C = None
+
+        self._rng = np.random.default_rng(seed)
 
     def reset(self, x0):
         """Resets the optimizer to start at x0.
@@ -138,7 +150,7 @@ class CMAEvolutionStrategy:
             # Resampling method for bound constraints -> break when solutions
             # are within bounds.
             while True:
-                solutions[i] = (transform_mat @ np.random.normal(
+                solutions[i] = (transform_mat @ self._rng.normal(
                     0.0, self.sigma, self.solution_dim) + self.mean)
 
                 if np.all(

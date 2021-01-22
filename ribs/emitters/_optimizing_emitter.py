@@ -42,8 +42,10 @@ class OptimizingEmitter(EmitterBase):
             raise ValueError(f"Invalid restart_rule {restart_rule}")
         self._restart_rule = restart_rule
 
+        opt_seed = None if seed is None else self._rng.integers(10_000)
         self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
-                                        weight_rule, self._archive.dtype)
+                                        weight_rule, opt_seed,
+                                        self._archive.dtype)
         self.opt.reset(self._x0)
         self._num_parents = (self.opt.batch_size //
                              2 if selection_rule == "mu" else None)
