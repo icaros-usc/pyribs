@@ -6,7 +6,7 @@ labels: bug
 assignees:
 ---
 
-- Pick Me version:
+- pyribs version:
 - Python version:
 - Operating System:
 
