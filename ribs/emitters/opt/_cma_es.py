@@ -1,10 +1,18 @@
-"""TODO."""
+"""Implementation of CMA-ES that can be used across various emitters."""
 import numba as nb
 import numpy as np
 
 
 class DecompMatrix:
     """Maintains a covariance matrix and its eigendecomposition.
+
+    CMA-ES requires the inverse square root of the covariance matrix in order to
+    sample new solutions from a multivariate normal distribution. However,
+    calculating the inverse square root is an O(n^3) operation because an
+    eigendecomposition is involved. (n is the dimensionality of the search
+    space). To amortize the operation to O(n^2) and avoid recomputing, this
+    class maintains the inverse square root and waits several evals before
+    recomputing the inverse square root.
 
     Args:
         dimension (int): Size of the (square) covariance matrix.
@@ -18,33 +26,39 @@ class DecompMatrix:
         self.eigenvalues = np.ones((dimension,), dtype=dtype)
         self.condition_number = 1
         self.invsqrt = np.eye(dimension, dtype=dtype)  # C^(-1/2)
+
+        # The last evaluation on which the eigensystem was updated.
         self.updated_eval = 0
 
-    @staticmethod
-    @nb.jit(nopython=True)
-    def _update_eigensystem_numba(cov):
-        """Numba helper for update_eigensystem."""
-        # Force symmetry.
-        cov = np.maximum(cov, cov.T)
-
-        eigenvalues, eigenbasis = np.linalg.eigh(cov)
-        eigenvalues = eigenvalues.real
-        eigenbasis = eigenbasis.real
-        condition_number = (np.max(eigenvalues) / np.min(eigenvalues))
-
-        invsqrt = (eigenbasis * (1 / np.sqrt(eigenvalues))) @ eigenbasis.T
-
-        # Force symmetry.
-        invsqrt = np.maximum(invsqrt, invsqrt.T)
-
-        return cov, eigenvalues, eigenbasis, condition_number, invsqrt
-
     def update_eigensystem(self, current_eval, lazy_gap_evals):
+        """Updates the covariance matrix if lazy_gap_evals have passed.
+
+        We have attempted to use numba in this method, but since np.linalg.eigh
+        is the bottleneck, and it is already implemented in BLAS or LAPACK,
+        numba does not help much (and actually slows things down a bit).
+
+        Args:
+            current_eval (int): The number of solutions the optimizer has
+                evaluated so far.
+            lazy_gap_evals (int): The number of evaluations to wait between
+                covariance matrix updates.
+        """
         if current_eval <= self.updated_eval + lazy_gap_evals:
             return
 
-        (self.cov, self.eigenvalues, self.eigenbasis, self.condition_number,
-         self.invsqrt) = self._update_eigensystem_numba(self.cov)
+        # Force symmetry.
+        self.cov = np.maximum(self.cov, self.cov.T)
+
+        self.eigenvalues, self.eigenbasis = np.linalg.eigh(self.cov)
+        self.eigenvalues = self.eigenvalues.real
+        self.eigenbasis = self.eigenbasis.real
+        self.condition_number = (np.max(self.eigenvalues) /
+                                 np.min(self.eigenvalues))
+        self.invsqrt = (self.eigenbasis *
+                        (1 / np.sqrt(self.eigenvalues))) @ self.eigenbasis.T
+
+        # Force symmetry.
+        self.invsqrt = np.maximum(self.invsqrt, self.invsqrt.T)
 
         self.updated_eval = current_eval
 
@@ -129,6 +143,16 @@ class CMAEvolutionStrategy:
 
         return False
 
+    @staticmethod
+    @nb.jit(nopython=True)
+    def _transform_and_check_sol(unscaled_params, transform_mat, mean,
+                                 lower_bounds, upper_bounds):
+        """Numba helper for transforming parameters to the solution space."""
+        solution = transform_mat @ unscaled_params + mean
+        in_bounds = np.all(
+            np.logical_and(solution >= lower_bounds, solution <= upper_bounds))
+        return solution, in_bounds
+
     def ask(self, lower_bounds, upper_bounds):
         """Samples new solutions from the Gaussian distribution.
 
@@ -150,12 +174,13 @@ class CMAEvolutionStrategy:
             # Resampling method for bound constraints -> break when solutions
             # are within bounds.
             while True:
-                solutions[i] = (transform_mat @ self._rng.normal(
-                    0.0, self.sigma, self.solution_dim) + self.mean)
-
-                if np.all(
-                        np.logical_and(solutions[i] >= lower_bounds,
-                                       solutions[i] <= upper_bounds)):
+                unscaled_params = self._rng.normal(0.0, self.sigma,
+                                                   self.solution_dim)
+                sol, in_bounds = self._transform_and_check_sol(
+                    unscaled_params, transform_mat, self.mean, lower_bounds,
+                    upper_bounds)
+                if in_bounds:
+                    solutions[i] = sol
                     break
 
         return np.asarray(solutions)
@@ -181,6 +206,20 @@ class CMAEvolutionStrategy:
             2 * (mueff - 2 + 1 / mueff) / ((self.solution_dim + 2)**2 + mueff),
         )
         return weights, mueff, cc, cs, c1, cmu
+
+    @staticmethod
+    @nb.jit(nopython=True)
+    def _calc_cov_update(c1, cmu, pc, weights, parents, old_mean, sigma):
+        """Numba helper for calculating the covariance matrix update."""
+        # Rank-one update.
+        update = c1 * np.outer(pc, pc)
+
+        # Rank-mu update.
+        for k, w in enumerate(weights):
+            dv = parents[k] - old_mean
+            update += w * cmu * np.outer(dv, dv) / (sigma**2)
+
+        return update
 
     def tell(self, solutions, num_parents):
         """Passes the solutions back to the optimizer.
@@ -225,11 +264,8 @@ class CMAEvolutionStrategy:
         # Adapt the covariance matrix
         c1a = c1 * (1 - (1 - hsig**2) * cc * (2 - cc))
         self.cov.cov *= (1 - c1a - cmu)
-        self.cov.cov += c1 * np.outer(self.pc, self.pc)
-        # TODO: batch this calculation.
-        for k, w in enumerate(weights):
-            dv = parents[k] - old_mean
-            self.cov.cov += w * cmu * np.outer(dv, dv) / (self.sigma**2)
+        self.cov.cov += self._calc_cov_update(c1, cmu, self.pc, weights,
+                                              parents, old_mean, self.sigma)
 
         # Update sigma.
         cn, sum_square_ps = cs / damps, np.sum(np.square(self.ps))
