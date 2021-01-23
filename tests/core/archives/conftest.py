@@ -45,6 +45,7 @@ ArchiveFixtureData = namedtuple(
         "behavior_values",  # 2D behavior values for the solution.
         "grid_indices",  # Intended indices for GridArchive.
         "centroid",  # Intended centroid coordinates for CVTArchive.
+        "bins",  # Total number of bins in the archive.
     ],
 )
 
@@ -76,6 +77,7 @@ def get_archive_data(name, dtype=np.float64):
     if name == "GridArchive":
         # Grid archive with 10 bins and range (-1, 1) in first dim, and 20 bins
         # and range (-2, 2) in second dim.
+        bins = 10 * 20
         archive = GridArchive([10, 20], [(-1, 1), (-2, 2)], dtype=dtype)
         archive.initialize(len(solution))
 
@@ -87,6 +89,7 @@ def get_archive_data(name, dtype=np.float64):
         # CVT archive with bounds (-1,1) and (-1,1), and 4 centroids at (0.5,
         # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The entry in
         # archive_with_entry should match with centroid (0.5, 0.5).
+        bins = 4
         kd_tree = name == "CVTArchive-kd_tree"
         samples = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
         centroid = [0.5, 0.5]
@@ -107,6 +110,7 @@ def get_archive_data(name, dtype=np.float64):
     elif name == "SlidingBoundaryArchive":
         # Sliding boundary archive with 10 bins and range (-1, 1) in first dim,
         # and 20 bins and range (-2, 2) in second dim.
+        bins = 10 * 20
         archive = SlidingBoundaryArchive([10, 20], [(-1, 1), (-2, 2)],
                                          remap_frequency=100,
                                          buffer_capacity=1000,
@@ -130,4 +134,5 @@ def get_archive_data(name, dtype=np.float64):
         behavior_values,
         grid_indices,
         centroid,
+        bins,
     )
