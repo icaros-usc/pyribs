@@ -71,7 +71,7 @@ data = archive.as_pandas().pivot('index-0', 'index-1', 'objective')
 sns.heatmap(data)
 ```
 
-![Sphere heatmap](sphere_heatmap.png)
+![Sphere heatmap](readme_assets/sphere_heatmap.png)
 
 For more information, please refer to the
 [documentation](https://ribs.readthedocs.io/).
