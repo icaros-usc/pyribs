@@ -4,10 +4,14 @@ import unittest
 import numpy as np
 import pytest
 
-from ribs.emitters import GaussianEmitter, IsoLineEmitter
+from ribs.emitters import (GaussianEmitter, ImprovementEmitter, IsoLineEmitter,
+                           OptimizingEmitter, RandomDirectionEmitter)
 
 
-@pytest.fixture(params=["GaussianEmitter", "IsoLineEmitter"])
+@pytest.fixture(params=[
+    "GaussianEmitter", "IsoLineEmitter", "ImprovementEmitter",
+    "RandomDirectionEmitter", "OptimizingEmitter"
+])
 def _emitter_fixture(request, archive_fixture):
     """Creates an archive, emitter, and initial solution.
 
@@ -22,6 +26,12 @@ def _emitter_fixture(request, archive_fixture):
         emitter = GaussianEmitter(archive, x0, 5, batch_size=batch_size)
     elif emitter_type == "IsoLineEmitter":
         emitter = IsoLineEmitter(archive, x0, batch_size=batch_size)
+    elif emitter_type == "ImprovementEmitter":
+        emitter = ImprovementEmitter(archive, x0, 5, batch_size=batch_size)
+    elif emitter_type == "RandomDirectionEmitter":
+        emitter = RandomDirectionEmitter(archive, x0, 5, batch_size=batch_size)
+    elif emitter_type == "OptimizingEmitter":
+        emitter = OptimizingEmitter(archive, x0, 5, batch_size=batch_size)
     else:
         raise NotImplementedError(f"Unknown emitter type {emitter_type}")
 
