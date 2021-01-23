@@ -40,9 +40,8 @@ def test_from_config_with_valid_input(use_toml, tmp_path):
 
     archive = GridArchive([64, 64], [(-1, 1), (-1, 1)], seed=seed)
     emitters = [
-        GaussianEmitter([0.0, 0.0],
+        GaussianEmitter(archive, [0.0, 0.0],
                         0.1,
-                        archive,
                         batch_size=batch_size,
                         seed=seed)
     ]
