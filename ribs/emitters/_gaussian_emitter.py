@@ -15,15 +15,15 @@ class GaussianEmitter(EmitterBase):
     solution with standard deviation ``sigma0``.
 
     Args:
+        archive (ribs.archives.ArchiveBase): An archive to use when creating and
+            inserting solutions. For instance, this can be
+            :class:`ribs.archives.GridArchive`.
         x0 (array-like): Center of the Gaussian distribution from which to
             sample solutions when the archive is empty.
         sigma0 (float or array-like): Standard deviation of the Gaussian
             distribution, both when the archive is empty and afterwards. Note we
             assume the Gaussian is diagonal, so if this argument is an array, it
             must be 1D.
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
-            :class:`ribs.archives.GridArchive`.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
 
@@ -39,9 +39,9 @@ class GaussianEmitter(EmitterBase):
     """
 
     def __init__(self,
+                 archive,
                  x0,
                  sigma0,
-                 archive,
                  bounds=None,
                  batch_size=64,
                  seed=None):
@@ -51,10 +51,10 @@ class GaussianEmitter(EmitterBase):
 
         EmitterBase.__init__(
             self,
+            archive,
             len(self._x0),
             bounds,
             batch_size,
-            archive,
             seed,
         )
 

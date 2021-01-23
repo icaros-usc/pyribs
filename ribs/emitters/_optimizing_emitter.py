@@ -59,10 +59,10 @@ class OptimizingEmitter(EmitterBase):
         self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
+            archive,
             len(self._x0),
             bounds,
             batch_size,
-            archive,
             seed,
         )
 

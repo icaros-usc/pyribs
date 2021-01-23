@@ -21,7 +21,7 @@ def _emitter_fixture(request, archive_fixture):
     batch_size = 3
 
     if emitter_type == "GaussianEmitter":
-        emitter = GaussianEmitter(x0, 5, archive, batch_size=batch_size)
+        emitter = GaussianEmitter(archive, x0, 5, batch_size=batch_size)
     elif emitter_type == "IsoLineEmitter":
         emitter = IsoLineEmitter(x0, archive, batch_size=batch_size)
     else:
@@ -78,7 +78,7 @@ def test_array_bound_correct(archive_fixture):
     for i in range(len(x0) - 1):
         bounds.append((-i, i))
     bounds.append(None)
-    emitter = GaussianEmitter(x0, 1, archive, bounds=bounds)
+    emitter = GaussianEmitter(archive, x0, 1, bounds=bounds)
 
     lower_bounds = np.concatenate((-np.arange(len(x0) - 1), [-np.inf]))
     upper_bounds = np.concatenate((np.arange(len(x0) - 1), [np.inf]))
@@ -91,7 +91,7 @@ def test_long_array_bound_fails(archive_fixture):
     archive, x0 = archive_fixture
     bounds = [(-1, 1)] * (len(x0) + 1)  # More bounds than solution dims.
     with pytest.raises(ValueError):
-        GaussianEmitter(x0, 1, archive, bounds=bounds)
+        GaussianEmitter(archive, x0, 1, bounds=bounds)
 
 
 def test_array_bound_bad_entry_fails(archive_fixture):
@@ -99,4 +99,4 @@ def test_array_bound_bad_entry_fails(archive_fixture):
     bounds = [(-1, 1)] * len(x0)
     bounds[0] = (-1, 0, 1)  # Invalid entry.
     with pytest.raises(ValueError):
-        GaussianEmitter(x0, 1, archive, bounds=bounds)
+        GaussianEmitter(archive, x0, 1, bounds=bounds)
