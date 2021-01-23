@@ -8,6 +8,7 @@ not import it when you run ``import ribs``, and you will need to explicitly use
     :toctree:
 
     ribs.visualize.cvt_archive_heatmap
+    ribs.visualize.sliding_boundary_archive_heatmap
 """
 import matplotlib
 import matplotlib.pyplot as plt
@@ -20,6 +21,7 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 __all__ = [
     "cvt_archive_heatmap",
+    "sliding_boundary_archive_heatmap",
 ]
 
 
@@ -37,7 +39,7 @@ def _get_pt_to_obj(cvt_archive):
 
     # Hopefully as_pandas() is okay in terms of efficiency since there are only
     # 5 columns (1 index, 2 behavior, 1 objective, 1 solution).
-    data = cvt_archive.as_pandas()
+    data = cvt_archive.as_pandas(include_solutions=False)
 
     pt_to_obj = {}
     for _, row in data.iterrows():
@@ -117,7 +119,7 @@ def cvt_archive_heatmap(archive,
     """
     # pylint: disable = too-many-locals
 
-    if not archive.is_2d:
+    if archive.behavior_dim != 2:
         raise ValueError("Cannot plot heatmap for non-2D archive.")
 
     # Try getting the colormap early in case it fails.
@@ -196,3 +198,132 @@ def cvt_archive_heatmap(archive,
         ax.plot(samples[:, 0], samples[:, 1], "o", c="gray", ms=ms)
     if plot_centroids:
         ax.plot(centroids[:, 0], centroids[:, 1], "ko", ms=ms)
+
+
+def sliding_boundary_archive_heatmap(archive,
+                                     ax=None,
+                                     transpose_bcs=False,
+                                     cmap="magma",
+                                     square=False,
+                                     ms=None,
+                                     boundary_lw=0,
+                                     vmin=None,
+                                     vmax=None):
+    """Plots heatmap of a 2D :class:`ribs.archives.SlidingBoundaryArchive`.
+
+    Since the boundaries of :class:`ribs.archives.SlidingBoundaryArchive` is
+    dynamic, we plot the heatmap as a scatter plot, in which each marker is a
+    solution and its color represents the fitness value. You can optionally draw
+    the boundaries by setting the ``boundary_lw`` to a positive value.
+
+    Examples:
+        .. plot::
+            :context: close-figs
+
+            >>> import numpy as np
+            >>> import matplotlib.pyplot as plt
+            >>> from ribs.archives import SlidingBoundaryArchive
+            >>> from ribs.visualize import sliding_boundary_archive_heatmap
+            >>> archive = SlidingBoundaryArchive([10, 20],
+            ...                                  [(-1, 1), (-1, 1)],
+            ...                                  seed=42)
+            >>> archive.initialize(solution_dim=2)
+            >>> # Populate the archive with the negative sphere function.
+            >>> rng = np.random.default_rng(10)
+            >>> for _ in range(1000):
+            ...     x, y = rng.uniform((-1, -1), (1, 1))
+            ...     archive.add(
+            ...         solution=rng.random(2),
+            ...         objective_value=-(x**2 + y**2),
+            ...         behavior_values=np.array([x, y]),
+            ...     )
+            >>> # Plot a heatmap of the archive.
+            >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
+            >>> fig.suptitle("Negative sphere function")
+            >>> sliding_boundary_archive_heatmap(archive, ax=ax1,
+            ...                                  boundary_lw=0.5)
+            >>> sliding_boundary_archive_heatmap(archive, ax=ax2)
+            >>> ax1.set_title("With boundaries")
+            >>> ax2.set_title("Without boundaries")
+            >>> ax1.set(xlabel='x coords', ylabel='y coords')
+            >>> ax2.set(xlabel='x coords', ylabel='y coords')
+            >>> plt.show()
+
+
+    Args:
+        archive (SlidingBoundaryArchive): A 2D SlidingBoundaryArchive.
+        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
+            the current axis will be used.
+        transpose_bcs (bool): By default, the first BC in the archive will
+            appear along the x-axis, and the second will be along the y-axis. To
+            switch this (i.e. to transpose the axes), set this to True.
+        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
+            plotting intensity. Either the name of a colormap, a list of RGB or
+            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
+        square (bool): If True, set the axes aspect raio to be "equal".
+        ms (float): Marker size for the solutions.
+        boundary_lw (float): Line width when plotting the boundaries.
+        vmin (float): Minimum objective value to use in the plot. If None, the
+            minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If None, the
+            maximum objective value in the archive is used.
+    Raises:
+        ValueError: The archive is not 2D.
+    """
+    if archive.behavior_dim != 2:
+        raise ValueError("Cannot plot heatmap for non-2D archive.")
+
+    # Try getting the colormap early in case it fails.
+    cmap = _retrieve_cmap(cmap)
+
+    # Retrieve data from archive.
+    archive_data = archive.as_pandas(include_solutions=False)
+    x = archive_data['behavior-0'].to_list()
+    y = archive_data['behavior-1'].to_list()
+    x_boundary = archive.boundaries[0]
+    y_boundary = archive.boundaries[1]
+    lower_bounds = archive.lower_bounds
+    upper_bounds = archive.upper_bounds
+    objective_values = archive_data['objective'].to_list()
+
+    if transpose_bcs:
+        # Since we are plotting for 2D archive, directly swapping behavior
+        # values on x and y axis, and their boundaries can make the transposed
+        # plot. Also, please note that lower_bounds and upper_bounds are arrays
+        # of length 2.
+        x, y = y, x
+        x_boundary, y_boundary = y_boundary, x_boundary
+        lower_bounds = np.flip(lower_bounds)
+        upper_bounds = np.flip(upper_bounds)
+
+    # Initialize the axis.
+    ax = plt.gca() if ax is None else ax
+    ax.set_xlim(lower_bounds[0], upper_bounds[0])
+    ax.set_ylim(lower_bounds[1], upper_bounds[1])
+
+    if square:
+        ax.set_aspect("equal")
+
+    # Create the plot.
+    vmin = np.min(objective_values) if vmin is None else vmin
+    vmax = np.max(objective_values) if vmax is None else vmax
+    t = ax.scatter(x,
+                   y,
+                   s=ms,
+                   c=objective_values,
+                   cmap=cmap,
+                   vmin=vmin,
+                   vmax=vmax)
+    ax.vlines(x_boundary,
+              lower_bounds[0],
+              upper_bounds[0],
+              color='k',
+              linewidth=boundary_lw)
+    ax.hlines(y_boundary,
+              lower_bounds[1],
+              upper_bounds[1],
+              color='k',
+              linewidth=boundary_lw)
+
+    # Create the colorbar.
+    ax.figure.colorbar(t, ax=ax, pad=0.1)

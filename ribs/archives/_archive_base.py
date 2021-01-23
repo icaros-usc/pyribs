@@ -144,6 +144,7 @@ class ArchiveBase(ABC):
         self._rand_buf = None
         self._seed = seed
         self._initialized = False
+        self._bins = np.product(self._storage_dims)
 
         self._dtype = self._parse_dtype(dtype)
 
@@ -175,15 +176,25 @@ class ArchiveBase(ABC):
         return self._initialized
 
     @property
-    def is_2d(self):
-        """bool: Whether the archive behavior space is 2d. (Useful when checking
-        whether one can visualize the archive.)"""
-        return self._behavior_dim == 2
-
-    @property
     def empty(self):
         """bool: Whether the archive is empty."""
         return not self._occupied_indices
+
+    @property
+    def bins(self):
+        """int: Total number of bins in the archive."""
+        return self._bins
+
+    @property
+    def behavior_dim(self):
+        """int: Dimensionality of the behavior space."""
+        return self._behavior_dim
+
+    @property
+    @require_init
+    def solution_dim(self):
+        """int: Dimensionality of the solutions in the archive."""
+        return self._solution_dim
 
     @property
     def dtype(self):
