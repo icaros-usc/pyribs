@@ -36,15 +36,21 @@ def test_random_buffer_not_repeating():
 
 
 #
-# Tests for the require_init decorator. Just need to make sure it works on one
-# method, as it is too much to test on all.
+# Tests for the require_init decorator. Just need to make sure it works on a few
+# methods, as it is too much to test on all.
 #
 
 
-def test_method_fails_without_init():
+def test_add_requires_init():
     archive = GridArchive([20, 20], [(-1, 1)] * 2)
     with pytest.raises(RuntimeError):
         archive.add(np.array([1, 2, 3]), 1.0, np.array([1.0, 1.0]))
+
+
+def test_solution_dim_requires_init(_archive_data):
+    archive = GridArchive([20, 20], [(-1, 1)] * 2)
+    with pytest.raises(RuntimeError):
+        _ = archive.solution_dim
 
 
 #
@@ -85,16 +91,21 @@ def test_archive_cannot_reinit(_archive_data):
         _archive_data.archive.initialize(len(_archive_data.solution))
 
 
-def test_archive_is_2d(_archive_data):
-    assert _archive_data.archive.is_2d
-
-
 def test_new_archive_is_empty(_archive_data):
     assert _archive_data.archive.empty
 
 
 def test_archive_with_entry_is_not_empty(_archive_data):
     assert not _archive_data.archive_with_entry.empty
+
+
+def test_behavior_dim_correct(_archive_data):
+    assert _archive_data.archive.behavior_dim == len(
+        _archive_data.behavior_values)
+
+
+def test_solution_dim_correct(_archive_data):
+    assert _archive_data.archive.solution_dim == len(_archive_data.solution)
 
 
 def test_elite_with_behavior_gets_correct_elite(_archive_data):

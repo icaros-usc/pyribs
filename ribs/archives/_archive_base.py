@@ -175,12 +175,6 @@ class ArchiveBase(ABC):
         return self._initialized
 
     @property
-    def is_2d(self):
-        """bool: Whether the archive behavior space is 2d. (Useful when checking
-        whether one can visualize the archive.)"""
-        return self._behavior_dim == 2
-
-    @property
     def empty(self):
         """bool: Whether the archive is empty."""
         return not self._occupied_indices
@@ -190,6 +184,17 @@ class ArchiveBase(ABC):
         """data-type: The dtype of the solutions, objective values, and behavior
         values."""
         return self._dtype
+
+    @property
+    def behavior_dim(self):
+        """int: Dimensionality of the behavior space."""
+        return self._behavior_dim
+
+    @property
+    @require_init
+    def solution_dim(self):
+        """int: Dimensionality of the solutions in the archive."""
+        return self._solution_dim
 
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
