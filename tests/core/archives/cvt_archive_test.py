@@ -28,7 +28,7 @@ def _assert_archive_has_entry(archive, centroid, behavior_values,
     index = archive_data.loc[0, "index"]
     assert (archive.centroids[index] == centroid).all()
 
-    assert (archive_data.loc[0, "behavior-0":] == (list(behavior_values) +
+    assert (archive_data.loc[0, "behavior_0":] == (list(behavior_values) +
                                                    [objective_value] +
                                                    list(solution))).all()
 
@@ -126,10 +126,10 @@ def test_as_pandas(use_kd_tree, with_entry, include_solutions, dtype):
     else:
         df = data.archive.as_pandas(include_solutions)
 
-    expected_columns = ['index', 'behavior-0', 'behavior-1', 'objective']
+    expected_columns = ['index', 'behavior_0', 'behavior_1', 'objective']
     expected_dtypes = [int, dtype, dtype, dtype]
     if include_solutions:
-        expected_columns += ['solution-0', 'solution-1', 'solution-2']
+        expected_columns += ['solution_0', 'solution_1', 'solution_2']
         expected_dtypes += [dtype, dtype, dtype]
     assert (df.columns == expected_columns).all()
     assert (df.dtypes == expected_dtypes).all()
@@ -141,4 +141,4 @@ def test_as_pandas(use_kd_tree, with_entry, include_solutions, dtype):
         expected_data = [*data.behavior_values, data.objective_value]
         if include_solutions:
             expected_data += list(data.solution)
-        assert (df.loc[0, "behavior-0":] == expected_data).all()
+        assert (df.loc[0, "behavior_0":] == expected_data).all()

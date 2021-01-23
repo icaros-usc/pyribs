@@ -278,8 +278,8 @@ def sliding_boundary_archive_heatmap(archive,
 
     # Retrieve data from archive.
     archive_data = archive.as_pandas(include_solutions=False)
-    x = archive_data['behavior-0'].to_list()
-    y = archive_data['behavior-1'].to_list()
+    x = archive_data['behavior_0'].to_list()
+    y = archive_data['behavior_1'].to_list()
     x_boundary = archive.boundaries[0]
     y_boundary = archive.boundaries[1]
     lower_bounds = archive.lower_bounds
