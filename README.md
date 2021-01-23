@@ -50,7 +50,7 @@ from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
 
 archive = GridArchive([20, 20], [(-1, 1), (-1, 1)])
-emitters = [GaussianEmitter([0.0] * 10, 0.1, archive)]
+emitters = [GaussianEmitter(archive, [0.0] * 10, 0.1)]
 optimizer = Optimizer(archive, emitters)
 
 for itr in range(1000):
