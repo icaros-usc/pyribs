@@ -86,9 +86,9 @@ def train_model(
     obs_dim = env.observation_space.shape[0]
 
     archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)], seed=seed)
-    emitter = GaussianEmitter(np.zeros(action_dim * obs_dim),
+    emitter = GaussianEmitter(archive,
+                              np.zeros(action_dim * obs_dim),
                               sigma,
-                              archive,
                               batch_size=64)
     opt = Optimizer(archive, [emitter])
 
@@ -196,5 +196,7 @@ def map_elites(
     print(client.ncores())
 
     train_model(client, seed, sigma, model_filename, plot_filename, 10)
+
+
 if __name__ == "__main__":
     fire.Fire(map_elites)
