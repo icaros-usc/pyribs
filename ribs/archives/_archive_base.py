@@ -144,6 +144,7 @@ class ArchiveBase(ABC):
         self._rand_buf = None
         self._seed = seed
         self._initialized = False
+        self._bins = np.product(self._storage_dims)
 
         self._dtype = self._parse_dtype(dtype)
 
@@ -180,10 +181,9 @@ class ArchiveBase(ABC):
         return not self._occupied_indices
 
     @property
-    def dtype(self):
-        """data-type: The dtype of the solutions, objective values, and behavior
-        values."""
-        return self._dtype
+    def bins(self):
+        """int: Total number of bins in the archive."""
+        return self._bins
 
     @property
     def behavior_dim(self):
@@ -195,6 +195,12 @@ class ArchiveBase(ABC):
     def solution_dim(self):
         """int: Dimensionality of the solutions in the archive."""
         return self._solution_dim
+
+    @property
+    def dtype(self):
+        """data-type: The dtype of the solutions, objective values, and behavior
+        values."""
+        return self._dtype
 
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
