@@ -37,6 +37,46 @@ def test_attributes_correctly_constructed(_data):
     assert _data.archive.buffer_capacity == 1000
 
 
+def test_add_to_archive(_data):
+    status, value = _data.archive.add(_data.solution, _data.objective_value,
+                                      _data.behavior_values)
+    assert status == AddStatus.NEW
+    assert np.isclose(value, _data.objective_value)
+    _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,
+                              _data.behavior_values, _data.objective_value,
+                              _data.solution)
+
+
+def test_add_and_overwrite(_data):
+    """Test adding a new entry with a higher objective value."""
+    arbitrary_sol = _data.solution + 1
+    high_objective_value = _data.objective_value + 1.0
+
+    status, value = _data.archive_with_entry.add(arbitrary_sol,
+                                                 high_objective_value,
+                                                 _data.behavior_values)
+    assert status == AddStatus.IMPROVE_EXISTING
+    assert np.isclose(value, high_objective_value - _data.objective_value)
+    _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,
+                              _data.behavior_values, high_objective_value,
+                              arbitrary_sol)
+
+
+def test_add_without_overwrite(_data):
+    """Test adding a new entry with a lower objective value."""
+    arbitrary_sol = _data.solution + 1
+    low_objective_value = _data.objective_value - 1.0
+
+    status, value = _data.archive_with_entry.add(arbitrary_sol,
+                                                 low_objective_value,
+                                                 _data.behavior_values)
+    assert status == AddStatus.NOT_ADDED
+    assert np.isclose(value, low_objective_value - _data.objective_value)
+    _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,
+                              _data.behavior_values, _data.objective_value,
+                              _data.solution)
+
+
 def test_add_to_archive_with_remap(_data):
     # The first remap has been done while adding the first solution.
     _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,

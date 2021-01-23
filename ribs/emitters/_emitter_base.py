@@ -52,20 +52,21 @@ class EmitterBase(ABC):
         """Processes the input bounds.
 
         Returns:
-            tuple: Either two integers for the lower and upper bounds, or two
-                arrays containing all the lower bounds and all the upper bounds.
+            tuple: Two arrays containing all the lower bounds and all the upper
+                bounds.
         Raises:
             ValueError: There is an error in the bounds configuration.
         """
+        lower_bounds = np.full(solution_dim, -np.inf, dtype=dtype)
+        upper_bounds = np.full(solution_dim, np.inf, dtype=dtype)
+
         if bounds is None:
-            return -np.inf, np.inf
+            return lower_bounds, upper_bounds
 
         # Handle array-like bounds.
         if len(bounds) != solution_dim:
             raise ValueError("If it is an array-like, bounds must have the "
                              "same length as x0")
-        lower_bounds = np.full(solution_dim, -np.inf, dtype=dtype)
-        upper_bounds = np.full(solution_dim, np.inf, dtype=dtype)
         for idx, bnd in enumerate(bounds):
             if bnd is None:
                 continue  # Bounds already default to -inf and inf.
@@ -82,12 +83,12 @@ class EmitterBase(ABC):
 
     @property
     def lower_bounds(self):
-        """float or numpy.ndarray: Lower bounds of the solution space."""
+        """numpy.ndarray: Lower bound of each dim of the solution space."""
         return self._lower_bounds
 
     @property
     def upper_bounds(self):
-        """float or numpy.ndarray: Upper bounds of the solution space."""
+        """numpy.ndarray: Upper bound of each dim of the solution space."""
         return self._upper_bounds
 
     @property

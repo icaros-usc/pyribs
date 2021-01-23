@@ -289,8 +289,12 @@ class ArchiveBase(ABC):
                 **value** (``self.dtype``): The meaning of this value depends on
                 the value of ``status``:
 
-                - ``NOT_ADDED`` -> the objective value passed in
-                - ``IMPROVE_EXISTING`` -> the ``improvement``, i.e. objective
+                - ``NOT_ADDED`` -> the "negative improvement," i.e. objective
+                  value of solution passed in minus objective value of the
+                  solution still in the archive (this value is negative because
+                  the solution did not have a high enough objective value to be
+                  added to the archive)
+                - ``IMPROVE_EXISTING`` -> the "improvement," i.e. objective
                   value of solution passed in minus objective value of solution
                   previously in the archive
                 - ``NEW`` -> the objective value passed in
@@ -310,7 +314,7 @@ class ArchiveBase(ABC):
             value = objective_value - old_objective
         else:
             status = AddStatus.NOT_ADDED
-            value = objective_value
+            value = objective_value - old_objective
         return status, self.dtype(value)
 
     @require_init

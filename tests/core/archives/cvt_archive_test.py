@@ -107,7 +107,7 @@ def test_add_without_overwrite(_data):
                                                  low_objective_value,
                                                  _data.behavior_values)
     assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective_value)
+    assert np.isclose(value, low_objective_value - _data.objective_value)
     _assert_archive_has_entry(_data.archive_with_entry, _data.centroid,
                               _data.behavior_values, _data.objective_value,
                               _data.solution)
