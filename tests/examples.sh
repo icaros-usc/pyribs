@@ -29,6 +29,7 @@ python examples/run_sphere.py cma_me_imp_mu 20 250 "${SPHERE_OUTPUT}"
 python examples/run_sphere.py cma_me_rd 20 250 "${SPHERE_OUTPUT}"
 python examples/run_sphere.py cma_me_rd_mu 20 250 "${SPHERE_OUTPUT}"
 python examples/run_sphere.py cma_me_opt 20 250 "${SPHERE_OUTPUT}"
+python examples/run_sphere.py cma_me_mixed 20 250 "${SPHERE_OUTPUT}"
 
 # Cleanup.
 rm -rf $TMPDIR

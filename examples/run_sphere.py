@@ -22,6 +22,8 @@ The supported algorithms are:
 - `cma_me_rd`: GridArchive with RandomDirectionEmitter
 - `cma_me_rd_mu`: GridArchive with RandomDirectionEmitter with mu selection rule
 - `cma_me_opt`: GridArchive with OptimizingEmitter
+- `cma_me_mixed`: GridArchive, and half (7) of the emitter are
+  RandomDirectionEmitter and half (8) are ImprovementEmitter
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations. Outputs are
@@ -119,7 +121,7 @@ def create_optimizer(algorithm, dim, seed):
     # Create archive.
     if algorithm in [
             "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt"
+            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
     ]:
         archive = GridArchive((500, 500), bounds, seed=seed)
     elif algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
@@ -133,16 +135,16 @@ def create_optimizer(algorithm, dim, seed):
         range(seed, seed + num_emitters))
     if algorithm in ["map_elites", "cvt_map_elites"]:
         emitters = [
-            GaussianEmitter(initial_sol,
+            GaussianEmitter(archive,
+                            initial_sol,
                             0.5,
-                            archive,
                             batch_size=batch_size,
                             seed=s) for s in emitter_seeds
         ]
     elif algorithm == ["line_map_elites", "line_cvt_map_elites"]:
         emitters = [
-            IsoLineEmitter(initial_sol,
-                           archive,
+            IsoLineEmitter(archive,
+                           initial_sol,
                            iso_sigma=0.1,
                            line_sigma=0.2,
                            batch_size=batch_size,
@@ -151,9 +153,9 @@ def create_optimizer(algorithm, dim, seed):
     elif algorithm in ["cma_me_imp", "cma_me_imp_mu"]:
         selection_rule = "filter" if algorithm == "cma_me_imp" else "mu"
         emitters = [
-            ImprovementEmitter(initial_sol,
+            ImprovementEmitter(archive,
+                               initial_sol,
                                0.5,
-                               archive,
                                batch_size=batch_size,
                                selection_rule=selection_rule,
                                seed=s) for s in emitter_seeds
@@ -161,20 +163,30 @@ def create_optimizer(algorithm, dim, seed):
     elif algorithm in ["cma_me_rd", "cma_me_rd_mu"]:
         selection_rule = "filter" if algorithm == "cma_me_rd" else "mu"
         emitters = [
-            RandomDirectionEmitter(initial_sol,
+            RandomDirectionEmitter(archive,
+                                   initial_sol,
                                    0.5,
-                                   archive,
                                    batch_size=batch_size,
                                    selection_rule=selection_rule,
                                    seed=s) for s in emitter_seeds
         ]
     elif algorithm == "cma_me_opt":
         emitters = [
-            OptimizingEmitter(initial_sol,
+            OptimizingEmitter(archive,
+                              initial_sol,
                               0.5,
-                              archive,
                               batch_size=batch_size,
                               seed=s) for s in emitter_seeds
+        ]
+    elif algorithm == "cma_me_mixed":
+        emitters = [
+            RandomDirectionEmitter(
+                archive, initial_sol, 0.5, batch_size=batch_size, seed=s)
+            for s in emitter_seeds[:7]
+        ] + [
+            ImprovementEmitter(
+                archive, initial_sol, 0.5, batch_size=batch_size, seed=s)
+            for s in emitter_seeds[7:]
         ]
 
     return Optimizer(archive, emitters)
