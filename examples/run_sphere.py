@@ -141,7 +141,7 @@ def create_optimizer(algorithm, dim, seed):
                             batch_size=batch_size,
                             seed=s) for s in emitter_seeds
         ]
-    elif algorithm == ["line_map_elites", "line_cvt_map_elites"]:
+    elif algorithm in ["line_map_elites", "line_cvt_map_elites"]:
         emitters = [
             IsoLineEmitter(archive,
                            initial_sol,
