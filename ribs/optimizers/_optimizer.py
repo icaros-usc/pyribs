@@ -81,9 +81,9 @@ class Optimizer:
 
         self._solutions = []
 
-        # Limit OpenBLAS and OpenMP to single thread. This is typically faster
-        # than multithreading because our data is too small.
-        with threadpool_limits(limits=1):
+        # Limit OpenBLAS to single thread. This is typically faster than
+        # multithreading because our data is too small.
+        with threadpool_limits(limits=1, user_api="blas"):
             for emitter in self._emitters:
                 self._solutions.append(emitter.ask())
 
@@ -114,9 +114,9 @@ class Optimizer:
         objective_values = np.asarray(objective_values)
         behavior_values = np.asarray(behavior_values)
 
-        # Limit OpenBLAS and OpenMP to single thread. This is typically faster
-        # than multithreading because our data is too small.
-        with threadpool_limits(limits=1):
+        # Limit OpenBLAS to single thread. This is typically faster than
+        # multithreading because our data is too small.
+        with threadpool_limits(limits=1, user_api="blas"):
             # Keep track of pos because emitters may have different batch sizes.
             pos = 0
             for emitter in self._emitters:
