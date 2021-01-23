@@ -3,7 +3,7 @@ import numpy as np
 
 from ribs.archives import CVTArchive
 
-# pylint: disable = invalid-name, unused-variable
+# pylint: disable = unused-variable
 
 
 def benchmark_init(use_kd_tree, benchmark):

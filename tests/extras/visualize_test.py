@@ -25,8 +25,6 @@ from ribs.archives import CVTArchive, SlidingBoundaryArchive
 from ribs.visualize import (cvt_archive_heatmap,
                             sliding_boundary_archive_heatmap)
 
-# pylint: disable = invalid-name
-
 
 @pytest.fixture(autouse=True)
 def _clean_matplotlib():

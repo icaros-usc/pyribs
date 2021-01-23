@@ -15,11 +15,11 @@ class RandomDirectionEmitter(EmitterBase):
     randomly chosen elite in the archive and pursue a new random direction.
 
     Args:
-        x0 (np.ndarray): Initial solution.
-        sigma0 (float): Initial step size.
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
+        x0 (np.ndarray): Initial solution.
+        sigma0 (float): Initial step size.
         selection_rule ("mu" or "filter"): Method for selecting solutions in
             CMA-ES. With "mu" selection, the first half of the solutions will be
             selected, while in "filter", any solutions that were added to the
@@ -49,9 +49,9 @@ class RandomDirectionEmitter(EmitterBase):
     """
 
     def __init__(self,
+                 archive,
                  x0,
                  sigma0,
-                 archive,
                  selection_rule="filter",
                  restart_rule="no_improvement",
                  weight_rule="truncation",
@@ -62,10 +62,10 @@ class RandomDirectionEmitter(EmitterBase):
         self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
+            archive,
             len(self._x0),
             bounds,
             batch_size,
-            archive,
             seed,
         )
 
