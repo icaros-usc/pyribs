@@ -3,8 +3,6 @@ import numpy as np
 
 from ribs.emitters import GaussianEmitter
 
-# pylint: disable = invalid-name
-
 
 def test_properties_are_correct(archive_fixture):
     archive, x0 = archive_fixture

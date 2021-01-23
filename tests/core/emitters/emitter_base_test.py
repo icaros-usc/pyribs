@@ -6,8 +6,6 @@ import pytest
 
 from ribs.emitters import GaussianEmitter, IsoLineEmitter
 
-# pylint: disable = invalid-name
-
 
 @pytest.fixture(params=["GaussianEmitter", "IsoLineEmitter"])
 def _emitter_fixture(request, archive_fixture):
@@ -23,7 +21,7 @@ def _emitter_fixture(request, archive_fixture):
     if emitter_type == "GaussianEmitter":
         emitter = GaussianEmitter(archive, x0, 5, batch_size=batch_size)
     elif emitter_type == "IsoLineEmitter":
-        emitter = IsoLineEmitter(x0, archive, batch_size=batch_size)
+        emitter = IsoLineEmitter(archive, x0, batch_size=batch_size)
     else:
         raise NotImplementedError(f"Unknown emitter type {emitter_type}")
 
@@ -41,7 +39,7 @@ def test_ask_emits_correct_num_sols(_emitter_fixture):
     assert solutions.shape == (batch_size, len(x0))
 
 
-def test_ask_emits_correct_num_sols_for_non_empty_archive(_emitter_fixture):
+def test_ask_emits_correct_num_sols_on_nonempty_archive(_emitter_fixture):
     archive, emitter, batch_size, x0 = _emitter_fixture
     archive.add(x0, 1, np.array([0, 0]))
     solutions = emitter.ask()

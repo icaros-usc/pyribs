@@ -4,13 +4,13 @@ import numpy as np
 
 from ribs.emitters import IsoLineEmitter
 
-# pylint: disable = invalid-name, unused-variable
+# pylint: disable = unused-variable
 
 
 def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     archive, x0 = fake_archive_fixture
     batch_size = 32
-    emitter = IsoLineEmitter(x0, archive, batch_size=batch_size)
+    emitter = IsoLineEmitter(archive, x0, batch_size=batch_size)
     n = 100_000
 
     np.random.seed(0)

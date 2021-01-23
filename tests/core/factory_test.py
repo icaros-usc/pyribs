@@ -8,8 +8,6 @@ from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
 
-# pylint: disable = invalid-name
-
 
 @pytest.mark.parametrize(
     "registration_func",

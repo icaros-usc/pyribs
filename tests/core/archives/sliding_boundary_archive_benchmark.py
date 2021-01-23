@@ -3,7 +3,7 @@ import numpy as np
 
 from ribs.archives import SlidingBoundaryArchive
 
-# pylint: disable = invalid-name, unused-variable
+# pylint: disable = unused-variable
 
 
 def benchmark_add_10k(benchmark, benchmark_data_10k):

@@ -7,8 +7,6 @@ from ribs.archives._archive_base import RandomBuffer
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
-# pylint: disable = invalid-name
-
 #
 # RandomBuffer tests -- note this is an internal class.
 #

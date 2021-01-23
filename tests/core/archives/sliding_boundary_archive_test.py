@@ -6,8 +6,6 @@ from ribs.archives import AddStatus
 
 from .conftest import get_archive_data
 
-# pylint: disable = invalid-name
-
 
 @pytest.fixture
 def _data():

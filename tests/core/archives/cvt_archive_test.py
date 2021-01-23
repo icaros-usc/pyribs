@@ -8,8 +8,6 @@ from ribs.archives import AddStatus, CVTArchive
 
 from .conftest import get_archive_data
 
-# pylint: disable = invalid-name
-
 
 @pytest.fixture
 def _data(use_kd_tree):
