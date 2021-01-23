@@ -1,18 +1,51 @@
 """Provides the RandomDirectionEmitter."""
 import numpy as np
 
-from ribs.archives import AddStatus
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import CMAEvolutionStrategy
 
 
 class RandomDirectionEmitter(EmitterBase):
-    """CMA-ME random direction emitter.
+    """Repeatedly pursues solutions along random directions in behavior space.
+
+    This emitter originates in the `CMA-ME paper
+    <https://arxiv.org/abs/1912.02400>`_. Initially, it will start at ``x0`` and
+    use CMA-ES to search for solutions along a randomly chosen direction. Once
+    CMA-ES restarts (see ``restart_rule``), the emitter will start from a
+    randomly chosen elite in the archive and pursue a new random direction.
 
     Args:
-        selection_rule: "mu" or "filter"
+        x0 (np.ndarray): Initial solution.
+        sigma0 (float): Initial step size.
+        archive (ribs.archives.ArchiveBase): An archive to use when creating and
+            inserting solutions. For instance, this can be
+            :class:`ribs.archives.GridArchive`.
+        selection_rule ("mu" or "filter"): Method for selecting solutions in
+            CMA-ES. With "mu" selection, the first half of the solutions will be
+            selected, while in "filter", any solutions that were added to the
+            archive will be selected.
+        restart_rule ("no_improvement" or "basic"): Method to use when checking
+            for restart. With "basic", only the default CMA-ES convergence rules
+            will be used, while with "no_improvement", the emitter will also
+            restart when none of the proposed solutions were added to the
+            archive.
+        weight_rule ("truncation" or "active"): Method for generating weights in
+            CMA-ES. Either "truncation" (positive weights only) or "active"
+            (include negative weights).
+        bounds (None or array-like): Bounds of the solution space. Solutions are
+            clipped to these bounds. Pass None to indicate there are no bounds.
+
+            Pass an array-like to specify the bounds for each dim. Each element
+            in this array-like can be None to indicate no bound, or a tuple of
+            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
+            ``upper_bound`` may be None to indicate no bound.
+        batch_size (int): Number of solutions to send back in the ask() method.
+            If not passed in, a batch size will automatically be calculated.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid seeding.
     Raises:
-        ValueError: If the selection_rule is invalid.
+        ValueError: If any of ``selection_rule``, ``restart_rule``, or
+            ``weight_rule`` is invalid.
     """
 
     def __init__(self,
@@ -52,61 +85,88 @@ class RandomDirectionEmitter(EmitterBase):
         self._num_parents = (self.opt.batch_size //
                              2 if selection_rule == "mu" else None)
         self._target_behavior_dir = self._generate_random_direction()
-
-        # TODO: remove this
-        self.restarts = 0
+        self._restarts = 0  # Currently not exposed publicly.
 
     @property
     def x0(self):
-        """numpy.ndarray: Center of the Gaussian distribution from which to
-        sample solutions when the archive is empty."""
-        # TODO
+        """numpy.ndarray: Initial solution for the optimizer."""
         return self._x0
 
     @property
     def sigma0(self):
-        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
-        distribution."""
-        # TODO
+        """float: Initial step size for the CMA-ES optimizer."""
         return self._sigma0
 
     def ask(self):
-        """TODO."""
+        """Samples new solutions from a multivariate Gaussian.
+
+        The multivariate Gaussian is parameterized by the CMA-ES optimizer.
+
+        Returns:
+            ``(self.batch_size, self.solution_dim)`` array -- contains
+            ``batch_size`` new solutions to evaluate.
+        """
         return self.opt.ask(self.lower_bounds, self.upper_bounds)
 
     def _generate_random_direction(self):
-        """TODO."""
-        # Note: Behavior space should always be bounded.
-        # TODO: move upper bounds and lower bounds to ArchiveBase?
+        """Generates a new random direction in the behavior space.
+
+        The direction is sampled from a standard Gaussian -- since the standard
+        Gaussian is isotropic, there is equal probability for any direction. The
+        direction is then scaled to the behavior space bounds.
+        """
         ranges = self._archive.upper_bounds - self._archive.lower_bounds
         behavior_dim = len(ranges)
         unscaled_dir = self._rng.standard_normal(behavior_dim)
         return unscaled_dir * ranges
 
     def _check_restart(self, num_parents):
+        """Emitter-side checks for restarting the optimizer.
+
+        The optimizer also has its own checks.
+        """
         if self._restart_rule == "no_improvement":
-            # TODO: remove
-            #  if num_parents == 0:
-            #      print("Check restart: num_parents:", num_parents)
             return num_parents == 0
         return False
 
     def tell(self, solutions, objective_values, behavior_values):
-        """TODO."""
+        """Gives the emitter results from evaluating solutions.
+
+        As we insert solutions into the archive, we record the solutions'
+        projection onto the random direction in behavior space, as well as
+        whether the solution was added to the archive. When using "filter"
+        selection, we rank the solutions first by whether they were added, and
+        second by the projection, and when using "mu" selection, we rank solely
+        by projection. We then pass the ranked solutions to the underlying
+        CMA-ES optimizer to update the search parameters.
+
+        Args:
+            solutions (numpy.ndarray): Array of solutions generated by this
+                emitter's :meth:`ask()` method.
+            objective_values (numpy.ndarray): 1D array containing the objective
+                function value of each solution.
+            behavior_values (numpy.ndarray): ``(n, <behavior space dimension>)``
+                array with the behavior space coordinates of each solution.
+        """
+        # Tuples of (solution was added, projection onto random direction,
+        # index).
         ranking_data = []
         new_sols = 0
+
+        # Add solutions to the archive.
         for i, (sol, obj, beh) in enumerate(
                 zip(solutions, objective_values, behavior_values)):
             status, _ = self._archive.add(sol, obj, beh)
+            added = bool(status)
             projection = np.dot(beh, self._target_behavior_dir)
-            ranking_data.append((status, projection, i))
-            if status in (AddStatus.NEW, AddStatus.IMPROVE_EXISTING):
+            ranking_data.append((added, projection, i))
+            if added:
                 new_sols += 1
 
         if self._selection_rule == "filter":
             # Sort by whether the solution was added into the archive, followed
             # by projection.
-            key = lambda x: (bool(x[0]), x[1])
+            key = lambda x: (x[0], x[1])
         elif self._selection_rule == "mu":
             # Sort only by projection.
             key = lambda x: x[1]
@@ -125,4 +185,4 @@ class RandomDirectionEmitter(EmitterBase):
             new_x0 = self._archive.get_random_elite()[0]
             self.opt.reset(new_x0)
             self._target_behavior_dir = self._generate_random_direction()
-            self.restarts += 1
+            self._restarts += 1

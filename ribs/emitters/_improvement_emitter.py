@@ -7,10 +7,45 @@ from ribs.emitters.opt import CMAEvolutionStrategy
 class ImprovementEmitter(EmitterBase):
     """CMA-ME improvement emitter.
 
+    This emitter originates in the `CMA-ME paper
+    <https://arxiv.org/abs/1912.02400>`_. Initially, it will start at ``x0`` and
+    use CMA-ES to search for solutions that improve the archive, i.e. solutions
+    that add new entries to the archive or improve existing entries. Once
+    CMA-ES restarts (see ``restart_rule``), the emitter will start from a
+    randomly chosen elite in the archive and continue searching for solutions
+    that improve the archive.
+
     Args:
-        selection_rule: "mu" or "filter"
+        x0 (np.ndarray): Initial solution.
+        sigma0 (float): Initial step size.
+        archive (ribs.archives.ArchiveBase): An archive to use when creating and
+            inserting solutions. For instance, this can be
+            :class:`ribs.archives.GridArchive`.
+        selection_rule ("mu" or "filter"): Method for selecting solutions in
+            CMA-ES. With "mu" selection, the first half of the solutions will be
+            selected, while in "filter", any solutions that were added to the
+            archive will be selected.
+        restart_rule ("no_improvement" or "basic"): Method to use when checking
+            for restart. With "basic", only the default CMA-ES convergence rules
+            will be used, while with "no_improvement", the emitter will restart
+            when none of the proposed solutions were added to the archive.
+        weight_rule ("truncation" or "active"): Method for generating weights in
+            CMA-ES. Either "truncation" (positive weights only) or "active"
+            (include negative weights).
+        bounds (None or array-like): Bounds of the solution space. Solutions are
+            clipped to these bounds. Pass None to indicate there are no bounds.
+
+            Pass an array-like to specify the bounds for each dim. Each element
+            in this array-like can be None to indicate no bound, or a tuple of
+            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
+            ``upper_bound`` may be None to indicate no bound.
+        batch_size (int): Number of solutions to send back in the ask() method.
+            If not passed in, a batch size will automatically be calculated.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid seeding.
     Raises:
-        ValueError: If the selection_rule is invalid.
+        ValueError: If any of ``selection_rule``, ``restart_rule``, or
+            ``weight_rule`` is invalid.
     """
 
     def __init__(self,
@@ -49,35 +84,58 @@ class ImprovementEmitter(EmitterBase):
         self.opt.reset(self._x0)
         self._num_parents = (self.opt.batch_size //
                              2 if selection_rule == "mu" else None)
-
-        # TODO: remove this
-        self.restarts = 0
+        self._restarts = 0  # Currently not exposed publicly.
 
     @property
     def x0(self):
-        """numpy.ndarray: Center of the Gaussian distribution from which to
-        sample solutions when the archive is empty."""
-        # TODO
+        """numpy.ndarray: Initial solution for the optimizer."""
         return self._x0
 
     @property
     def sigma0(self):
-        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
-        distribution."""
-        # TODO
+        """float: Initial step size for the CMA-ES optimizer."""
         return self._sigma0
 
     def ask(self):
-        """TODO."""
+        """Samples new solutions from a multivariate Gaussian.
+
+        The multivariate Gaussian is parameterized by the CMA-ES optimizer.
+
+        Returns:
+            ``(self.batch_size, self.solution_dim)`` array -- contains
+            ``batch_size`` new solutions to evaluate.
+        """
         return self.opt.ask(self.lower_bounds, self.upper_bounds)
 
     def _check_restart(self, num_parents):
+        """Emitter-side checks for restarting the optimizer.
+
+        The optimizer also has its own checks.
+        """
         if self._restart_rule == "no_improvement":
             return num_parents == 0
         return False
 
     def tell(self, solutions, objective_values, behavior_values):
-        """TODO."""
+        """Gives the emitter results from evaluating solutions.
+
+        As solutions are inserted into the archive, we record their "improvement
+        value" -- conveniently, this is the ``value`` returned by
+        :meth:`ribs.archives.ArchiveBase.add`. We then rank the solutions
+        according to their add status (new solutions rank in front of
+        solutions that improved existing entries in the archive, which rank
+        ahead of solutions that were not added), followed by their improvement
+        value.  We then pass the ranked solutions to the underlying CMA-ES
+        optimizer to update the search parameters.
+
+        Args:
+            solutions (numpy.ndarray): Array of solutions generated by this
+                emitter's :meth:`ask()` method.
+            objective_values (numpy.ndarray): 1D array containing the objective
+                function value of each solution.
+            behavior_values (numpy.ndarray): ``(n, <behavior space dimension>)``
+                array with the behavior space coordinates of each solution.
+        """
         ranking_data = []
         new_sols = 0
         for i, (sol, obj, beh) in enumerate(
@@ -101,4 +159,4 @@ class ImprovementEmitter(EmitterBase):
                 self._check_restart(new_sols)):
             new_x0 = self._archive.get_random_elite()[0]
             self.opt.reset(new_x0)
-            self.restarts += 1
+            self._restarts += 1
