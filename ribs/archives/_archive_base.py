@@ -384,17 +384,17 @@ class ArchiveBase(ABC):
         This base class implementation will create a dataframe consisting of:
 
         - ``len(self._storage_dims)`` columns for the index, named
-          ``index-0, index-1, ...``
+          ``index_0, index_1, ...``
         - ``self._behavior_dim`` columns for the behavior characteristics, named
-          ``behavior-0, behavior-1, ...``
+          ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``
         - ``self._solution_dim`` columns for the solution vectors, named
-          ``solution-0, solution-1, ...``
+          ``solution_0, solution_1, ...``
 
         In short, the dataframe will look like this:
 
         +---------+-----------+------+-------------+-------------+------+------------+-------------+-------------+-----+
-        | index-0 |  index-1  | ...  | behavior-0  | behavior-1  | ...  | objective  | solution-0  | solution-1  | ... |
+        | index_0 |  index_1  | ...  | behavior_0  | behavior_1  | ...  | objective  | solution_0  | solution_1  | ... |
         +=========+===========+======+=============+=============+======+============+=============+=============+=====+
         | ...     |           | ...  |             | ...         |      | ...        |             | ...         |     |
         +---------+-----------+------+-------------+-------------+------+------------+-------------+-------------+-----+
@@ -418,11 +418,11 @@ class ArchiveBase(ABC):
             else:
                 index_columns = tuple(map(list, zip(*self._occupied_indices)))
         for i in range(index_dim):
-            data[f"index-{i}"] = np.asarray(index_columns[i], dtype=int)
+            data[f"index_{i}"] = np.asarray(index_columns[i], dtype=int)
 
         behavior_values = self._behavior_values[index_columns]
         for i in range(self._behavior_dim):
-            data[f"behavior-{i}"] = np.asarray(behavior_values[:, i],
+            data[f"behavior_{i}"] = np.asarray(behavior_values[:, i],
                                                dtype=self.dtype)
 
         data["objective"] = np.asarray(self._objective_values[index_columns],
@@ -431,6 +431,6 @@ class ArchiveBase(ABC):
         if include_solutions:
             solutions = self._solutions[index_columns]
             for i in range(self._solution_dim):
-                data[f"solution-{i}"] = np.asarray(solutions[:, i],
+                data[f"solution_{i}"] = np.asarray(solutions[:, i],
                                                    dtype=self.dtype)
         return pd.DataFrame(data)

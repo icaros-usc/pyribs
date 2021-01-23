@@ -247,12 +247,9 @@ def run_sphere(algorithm,
                 # Generate heatmap.
                 heatmap_path = str(outdir / f"{name}_heatmap_{itr:05d}.png")
                 if isinstance(archive, GridArchive):
-                    # TODO: Replace _1 and _2 when as_pandas() is fixed (see
-                    # https://github.com/icaros-usc/pyribs/issues/44)
                     heatmap_data = np.full(archive.dims, np.nan)
                     for row in data.itertuples():
-                        # pylint: disable = protected-access
-                        heatmap_data[row._1, row._2] = row.objective
+                        heatmap_data[row.index_0, row.index_1] = row.objective
                     sns.heatmap(heatmap_data, cmap="magma", vmin=0, vmax=100)
                     plt.savefig(heatmap_path)
                 elif isinstance(archive, CVTArchive):

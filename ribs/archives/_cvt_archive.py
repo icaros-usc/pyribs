@@ -255,11 +255,11 @@ class CVTArchive(ArchiveBase):
             pandas.DataFrame: A dataframe where each row is an elite in the
             archive. The dataframe consists of 1 ``index`` column indicating the
             index of the centroid in ``self._centroids``, ``behavior_dim``
-            columns called ``behavior-{i}`` for the behavior values, 1 column
+            columns called ``behavior_{i}`` for the behavior values, 1 column
             for the objective function value called ``objective``, and
-            ``solution_dim`` columns called ``solution-{i}`` for the solution
+            ``solution_dim`` columns called ``solution_{i}`` for the solution
             values.
         """
         df = ArchiveBase.as_pandas(self, include_solutions)
-        df.rename(columns={"index-0": "index"}, inplace=True)
+        df.rename(columns={"index_0": "index"}, inplace=True)
         return df

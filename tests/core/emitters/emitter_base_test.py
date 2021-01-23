@@ -62,7 +62,7 @@ def test_tell_inserts_into_archive(_emitter_fixture):
 
     # Check that the archive contains the behavior values inserted above.
     archive_data = archive.as_pandas()
-    archive_beh = archive_data.loc[:, ["behavior-0", "behavior-1"]].to_numpy()
+    archive_beh = archive_data.loc[:, ["behavior_0", "behavior_1"]].to_numpy()
     unittest.TestCase().assertCountEqual(behavior_values.tolist(),
                                          archive_beh.tolist())
 
