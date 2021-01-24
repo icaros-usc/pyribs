@@ -18,9 +18,9 @@ needs for execution.
 
 Below is the list of tutorials, sorted _roughly_ in order of difficulty.
 
-| Name                            | Archive                             | Emitter                                | Optimizer                           |
-| ------------------------------- | ----------------------------------- | -------------------------------------- | ----------------------------------- |
-| {doc}`tutorials/lunar_lander`   | {class}`~ribs.archives.GridArchive` |                                        | {class}`~ribs.optimizers.Optimizer` |
-| {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.IsoLineEmitter` | {class}`~ribs.optimizers.Optimizer` |
-| {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` |                                        | {class}`~ribs.optimizers.Optimizer` |
-| {doc}`tutorials/training_mnist` | {class}`~ribs.archives.GridArchive` |                                        |                                     |
+| Name                            | Archive                             | Emitter                                    | Optimizer                           |
+| ------------------------------- | ----------------------------------- | ------------------------------------------ | ----------------------------------- |
+| {doc}`tutorials/lunar_lander`   | {class}`~ribs.archives.GridArchive` |                                            | {class}`~ribs.optimizers.Optimizer` |
+| {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
+| {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` |                                            | {class}`~ribs.optimizers.Optimizer` |
+| {doc}`tutorials/training_mnist` | {class}`~ribs.archives.GridArchive` |                                            |                                     |
