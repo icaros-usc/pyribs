@@ -29,7 +29,7 @@ class CVTArchive(ArchiveBase):
     :meth:`timeit.Timer.repeat`. Note the logarithmic scales. This plot was
     generated on a reasonably modern laptop.
 
-    .. image:: _static/imgs/cvt_add_plot.png
+    .. image:: ../_static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
 
     Archives with at least 5k bins seem to have faster insertion when using a

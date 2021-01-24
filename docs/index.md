@@ -16,11 +16,11 @@ examples
 :caption: API
 :hidden:
 
-ribs.archives
-ribs.emitters
-ribs.optimizers
-ribs.factory
-ribs.visualize
+api/ribs.archives
+api/ribs.emitters
+api/ribs.optimizers
+api/ribs.factory
+api/ribs.visualize
 ```
 
 ```{toctree}
@@ -30,12 +30,5 @@ ribs.visualize
 
 contributing
 history
-```
-
-```{toctree}
-:caption: Indices
-:hidden:
-
 genindex
-modindex
 ```
