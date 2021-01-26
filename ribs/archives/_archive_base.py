@@ -321,10 +321,8 @@ class ArchiveBase(ABC):
     def elite_with_behavior(self, behavior_values):
         """Gets the elite with behavior vals in the same bin as those specified.
 
-        For instance, in the case of CVTArchive, this method would find the bin
-        with the centroid closest to the behavior values. Then, it would return
-        the elite in that bin if it existed.
-
+        Args:
+            behavior_values (array-like): Coordinates in behavior space.
         Returns:
             tuple: 3-element tuple for the elite if it is found:
 
@@ -343,7 +341,7 @@ class ArchiveBase(ABC):
             ``sol, obj, beh = archive.elite_with_behavior(...)`` will still
             work).
         """
-        index = self._get_index(behavior_values)
+        index = self._get_index(np.asarray(behavior_values))
         if self._occupied[index]:
             return (self._solutions[index], self._objective_values[index],
                     self._behavior_values[index])

@@ -22,8 +22,9 @@
 import os
 import sys
 
-import ribs
 import sphinx_material
+
+import ribs
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -104,7 +105,7 @@ todo_include_todos = False
 # -- Options for HTML output -------------------------------------------
 
 html_show_sourcelink = True
-html_sidebars = {"**": ["globaltoc.html", "localtoc.html"]}
+html_sidebars = {"**": ["globaltoc.html", "localtoc.html", "searchbox.html"]}
 
 html_theme_path = sphinx_material.html_theme_path()
 html_context = sphinx_material.get_html_context()

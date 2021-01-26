@@ -1,4 +1,4 @@
-"""Top-level package for ribs."""
+"""A bare-bones quality diversity optimization library."""
 
 __author__ = """ICAROS Lab"""
 __email__ = 'tjanaka@usc.edu'
