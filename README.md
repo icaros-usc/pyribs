@@ -137,6 +137,7 @@ This project was completed in the [ICAROS Lab](http://icaros.usc.edu) at USC.
 - [Matt Fontaine](https://github.com/tehqin)
 - [Yulun Zhang](https://github.com/lunjohnzhang)
 - [Sam Sommerer](https://github.com/sam-som-usc)
+- Nikitas Klapsis
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 
 ## License
