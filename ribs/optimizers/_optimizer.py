@@ -1,5 +1,6 @@
 """Provides the Optimizer."""
 import numpy as np
+from threadpoolctl import threadpool_limits
 
 
 class Optimizer:
@@ -79,8 +80,13 @@ class Optimizer:
         self._asked = True
 
         self._solutions = []
-        for emitter in self._emitters:
-            self._solutions.append(emitter.ask())
+
+        # Limit OpenBLAS to single thread. This is typically faster than
+        # multithreading because our data is too small.
+        with threadpool_limits(limits=1, user_api="blas"):
+            for emitter in self._emitters:
+                self._solutions.append(emitter.ask())
+
         self._solutions = np.concatenate(self._solutions, axis=0)
         return self._solutions
 
@@ -108,10 +114,14 @@ class Optimizer:
         objective_values = np.asarray(objective_values)
         behavior_values = np.asarray(behavior_values)
 
-        # Keep track of pos because emitters may have different batch sizes.
-        pos = 0
-        for emitter in self._emitters:
-            end = pos + emitter.batch_size
-            emitter.tell(self._solutions[pos:end], objective_values[pos:end],
-                         behavior_values[pos:end])
-            pos = end
+        # Limit OpenBLAS to single thread. This is typically faster than
+        # multithreading because our data is too small.
+        with threadpool_limits(limits=1, user_api="blas"):
+            # Keep track of pos because emitters may have different batch sizes.
+            pos = 0
+            for emitter in self._emitters:
+                end = pos + emitter.batch_size
+                emitter.tell(self._solutions[pos:end],
+                             objective_values[pos:end],
+                             behavior_values[pos:end])
+                pos = end
