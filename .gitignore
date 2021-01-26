@@ -105,9 +105,10 @@ ENV/
 .mypy_cache/
 
 # Data
+!tests/extras/baseline_images/visualize_test/*
+!docs/_static/*
+!examples/tutorials/_static/*
 *.png
-!tests/extras/baseline_images/visualize_test/*.png
-!docs/_static/imgs/*.png
 *.jpg
 *.pdf
 *.json
@@ -116,6 +117,7 @@ ENV/
 *.gif
 *.csv
 MNIST/
+dask-worker-space/
 
 # Editor, IDE, and OS settings
 .vscode/
