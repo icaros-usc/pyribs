@@ -105,9 +105,6 @@ ENV/
 .mypy_cache/
 
 # Data
-!tests/extras/baseline_images/visualize_test/*
-!docs/_static/*
-!examples/tutorials/_static/*
 *.png
 *.jpg
 *.pdf
@@ -118,6 +115,9 @@ ENV/
 *.csv
 MNIST/
 dask-worker-space/
+!tests/extras/baseline_images/visualize_test/*
+!docs/_static/**/*
+!examples/tutorials/_static/**/*
 
 # Editor, IDE, and OS settings
 .vscode/

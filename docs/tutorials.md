@@ -6,7 +6,6 @@
 tutorials/lunar_lander
 tutorials/arm_repertoire
 tutorials/fooling_mnist
-tutorials/training_mnist
 ```
 
 Tutorials contain detailed explanations of ribs usage in a Python notebook.

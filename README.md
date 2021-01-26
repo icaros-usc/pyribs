@@ -135,9 +135,9 @@ This project was completed in the [ICAROS Lab](http://icaros.usc.edu) at USC.
 
 - [Bryon Tjanaka](https://btjanaka.net)
 - [Matt Fontaine](https://github.com/tehqin)
+- [Yulun Zhang](https://github.com/lunjohnzhang)
 - [Sam Sommerer](https://github.com/sam-som-usc)
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
-- [Yulun Zhang](https://github.com/lunjohnzhang)
 
 ## License
 

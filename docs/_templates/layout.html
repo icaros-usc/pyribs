@@ -1,0 +1,19 @@
+{# Modified page layout. Refer to https://bashtage.github.io/sphinx-material/customization.html#customizing-the-layout. #}
+{% extends '!layout.html' %}
+
+{%- block extrahead %}
+{# Adds custom things to the head HTML tag. #}
+
+{# First call parent block #}
+{{ super() }}
+
+<link rel="canonical" href="{{ theme_base_url + pagename }}">
+
+{# Open Graph #}
+<meta property="og:title" content="{{ title }}" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="{{ theme_base_url + pagename }}" />
+<meta property="og:image" content="{{ theme_base_url + '_static/imgs/open_graph.png' }}" />
+<meta property="og:description" content="{{ description }}" />
+
+{%- endblock %}
