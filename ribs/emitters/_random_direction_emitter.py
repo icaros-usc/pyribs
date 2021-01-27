@@ -85,6 +85,7 @@ class RandomDirectionEmitter(EmitterBase):
         self._num_parents = (self.opt.batch_size //
                              2 if selection_rule == "mu" else None)
         self._target_behavior_dir = self._generate_random_direction()
+        self._batch_size = self.opt.batch_size
         self._restarts = 0  # Currently not exposed publicly.
 
     @property
