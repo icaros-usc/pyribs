@@ -29,9 +29,16 @@ def test_properties_are_correct(_data):
     assert np.all(_data.archive.interval_size == [2, 4])
 
 
-def test_add_to_archive(_data):
-    status, value = _data.archive.add(_data.solution, _data.objective_value,
-                                      _data.behavior_values)
+@pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
+def test_add_to_archive(_data, use_list):
+    if use_list:
+        status, value = _data.archive.add(list(_data.solution),
+                                          _data.objective_value,
+                                          list(_data.behavior_values))
+    else:
+        status, value = _data.archive.add(_data.solution, _data.objective_value,
+                                          _data.behavior_values)
+
     assert status == AddStatus.NEW
     assert np.isclose(value, _data.objective_value)
     _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,

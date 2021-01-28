@@ -275,11 +275,11 @@ class ArchiveBase(ABC):
         than the solution previously in the corresponding bin.
 
         Args:
-            solution (numpy.ndarray): Parameters for the solution.
+            solution (array-like): Parameters for the solution.
             objective_value (float): Objective function evaluation of this
                 solution.
-            behavior_values (numpy.ndarray): Coordinates in behavior space of
-                this solution.
+            behavior_values (array-like): Coordinates in behavior space of this
+                solution.
         Returns:
             tuple: 2-element tuple describing the result of the add operation.
             These outputs are particularly useful for algorithms such as CMA-ME.
@@ -299,6 +299,9 @@ class ArchiveBase(ABC):
                   previously in the archive
                 - ``NEW`` -> the objective value passed in
         """
+        solution = np.asarray(solution)
+        behavior_values = np.asarray(behavior_values)
+
         index = self._get_index(behavior_values)
         old_objective = self._objective_values[index]
         was_inserted, already_occupied = self._add_numba(
