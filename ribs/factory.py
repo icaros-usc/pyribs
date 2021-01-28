@@ -15,8 +15,12 @@ import toml
 
 from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._grid_archive import GridArchive
+from ribs.archives._sliding_boundary_archive import SlidingBoundaryArchive
 from ribs.emitters._gaussian_emitter import GaussianEmitter
+from ribs.emitters._improvement_emitter import ImprovementEmitter
 from ribs.emitters._iso_line_emitter import IsoLineEmitter
+from ribs.emitters._optimizing_emitter import OptimizingEmitter
+from ribs.emitters._random_direction_emitter import RandomDirectionEmitter
 from ribs.optimizers._optimizer import Optimizer
 
 __all__ = [
@@ -45,8 +49,8 @@ class RegistrationError(Exception):
 def register_archive(name, archive_class):
     """Registers a new archive with the ribs factory.
 
-    After registration, you can pass ``name`` in the
-    ``config["archive"]["type"]`` field when using :meth:`from_config`.
+    After registration, pass ``name`` in the ``config["archive"]["type"]`` field
+    when using :meth:`from_config`.
 
     As an example, :class:`ribs.archives.GridArchive` is registered with::
 
@@ -66,9 +70,8 @@ def register_archive(name, archive_class):
 def register_emitter(name, emitter_class):
     """Registers a new emitter with the ribs factory.
 
-    After registration, you can pass ``name`` in the
-    ``config["emitters"][i]["type"]`` fields (where ``i`` is a list index) when
-    using :meth:`from_config`.
+    After registration, pass ``name`` in the ``config["emitters"][i]["type"]``
+    fields (where ``i`` is a list index) when using :meth:`from_config`.
 
     As an example, :class:`ribs.emitters.GaussianEmitter` is registered with::
 
@@ -88,8 +91,8 @@ def register_emitter(name, emitter_class):
 def register_optimizer(name, optimizer_class):
     """Registers a new optimizer with the ribs factory.
 
-    After registration, you can pass ``name`` in the
-    ``config["optimizer"]["type"]`` field when using :meth:`from_config`.
+    After registration, pass ``name`` in the ``config["optimizer"]["type"]``
+    field when using :meth:`from_config`.
 
     As an example, :class:`ribs.optimizers.Optimizer` is registered with::
 
@@ -106,10 +109,14 @@ def register_optimizer(name, optimizer_class):
     _OPTIMIZER_TYPES[name] = optimizer_class
 
 
-register_archive("GridArchive", GridArchive)
 register_archive("CVTArchive", CVTArchive)
+register_archive("GridArchive", GridArchive)
+register_archive("SlidingBoundaryArchive", SlidingBoundaryArchive)
 register_emitter("GaussianEmitter", GaussianEmitter)
+register_emitter("ImprovementEmitter", ImprovementEmitter)
 register_emitter("IsoLineEmitter", IsoLineEmitter)
+register_emitter("OptimizingEmitter", OptimizingEmitter)
+register_emitter("RandomDirectionEmitter", RandomDirectionEmitter)
 register_optimizer("Optimizer", Optimizer)
 
 #
@@ -157,8 +164,8 @@ def from_config(config):
                     # This class must be under `ribs.emitters`, or it must have
                     # been registered with register_emitter().
                     "type": "GaussianEmitter",
-                    # Args for the emitter. Exclude the `archive` param, as we
-                    # will automatically add it for you.
+                    # Args for the emitter. Exclude the `archive` param, as it
+                    # is automatically added.
                     ...
                 }
                 # More emitters.
@@ -190,9 +197,8 @@ def from_config(config):
         type = "Optimizer"
         ... # Other optimizer args.
 
-    .. note:: If you include any custom archives, emitters, or optimizers in
-        your config (whether toml or dict), you will need to register them
-        *before* running this method.
+    .. note:: If the config has custom archives, emitters, or optimizers,
+        register them with the appropriate method *before* running this method.
 
     Args:
         config (dict or str or pathlib.Path): Dict of configuration options

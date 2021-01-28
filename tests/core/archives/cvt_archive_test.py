@@ -34,8 +34,7 @@ def _assert_archive_has_entry(archive, centroid, behavior_values,
 def test_samples_bad_shape(use_kd_tree):
     # The behavior space is 2D but samples are 3D.
     with pytest.raises(ValueError):
-        CVTArchive([(-1, 1), (-1, 1)],
-                   10,
+        CVTArchive(10, [(-1, 1), (-1, 1)],
                    samples=[[-1, -1, -1], [1, 1, 1]],
                    use_kd_tree=use_kd_tree)
 
@@ -52,8 +51,7 @@ def test_properties_are_correct(_data):
 
 def test_custom_centroids(use_kd_tree):
     centroids = np.array([[-0.25, -0.25], [0.25, 0.25]])
-    archive = CVTArchive([(-1, 1), (-1, 1)],
-                         bins=centroids.shape[0],
+    archive = CVTArchive(centroids.shape[0], [(-1, 1), (-1, 1)],
                          custom_centroids=centroids,
                          use_kd_tree=use_kd_tree)
     archive.initialize(solution_dim=3)
@@ -65,15 +63,21 @@ def test_custom_centroids_bad_shape(use_kd_tree):
     with pytest.raises(ValueError):
         # The centroids array should be of shape (10, 2) instead of just (1, 2),
         # hence a ValueError will be raised.
-        CVTArchive([(-1, 1), (-1, 1)],
-                   bins=10,
+        CVTArchive(10, [(-1, 1), (-1, 1)],
                    custom_centroids=[[0.0, 0.0]],
                    use_kd_tree=use_kd_tree)
 
 
-def test_add_to_archive(_data):
-    status, value = _data.archive.add(_data.solution, _data.objective_value,
-                                      _data.behavior_values)
+@pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
+def test_add_to_archive(_data, use_list):
+    if use_list:
+        status, value = _data.archive.add(list(_data.solution),
+                                          _data.objective_value,
+                                          list(_data.behavior_values))
+    else:
+        status, value = _data.archive.add(_data.solution, _data.objective_value,
+                                          _data.behavior_values)
+
     assert status == AddStatus.NEW
     assert np.isclose(value, _data.objective_value)
     _assert_archive_has_entry(_data.archive_with_entry, _data.centroid,

@@ -20,42 +20,42 @@ class CVTArchive(ArchiveBase):
     clustering, we use :func:`sklearn.cluster.k_means`.
 
     Finding the closest centroid is done in O(bins) time (i.e. brute force) by
-    default. If you set ``use_kd_tree`` to True, it can be done in roughly O(log
-    bins) time using :class:`scipy.spatial.cKDTree`. However, using the k-D
-    tree lowers performance for small numbers of bins. The following plot
-    compares the runtime of brute force vs k-D tree when inserting 100k samples
-    into a 2D archive with varying numbers of bins (we took the minimum over 5
-    runs for each data point, as recommended in the docs for
-    :meth:`timeit.Timer.repeat`. Note the logarithmic scales. This plot was
-    generated on a reasonably modern laptop.
+    default. If ``use_kd_tree`` is True, it can be done in roughly O(log bins)
+    time using :class:`scipy.spatial.cKDTree`. However, using the k-D tree
+    lowers performance for small numbers of bins. The following plot compares
+    the runtime of brute force vs k-D tree when inserting 100k samples into a 2D
+    archive with varying numbers of bins (we took the minimum over 5 runs for
+    each data point, as recommended in the docs for :meth:`timeit.Timer.repeat`.
+    Note the logarithmic scales. This plot was generated on a reasonably modern
+    laptop.
 
     .. image:: ../_static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
 
     Archives with at least 5k bins seem to have faster insertion when using a
     k-D tree than when using brute force, so **we recommend setting**
-    ``use_kd_tree`` **if you have at least 5k bins in your** ``CVTArchive``. See
+    ``use_kd_tree`` **if the** ``CVTArchive`` **has at least 5k bins**. See
     `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
 
-    Finally, if you are running multiple experiments, you may want to use the
+    Finally, if running multiple experiments, it may be beneficial to use the
     same centroids across each experiment. Doing so can keep experiments
-    consistent and reduce execution time. To do this, you can construct your own
-    centroids and pass them in via the ``custom_centroids`` argument.
-    Alternatively, you can access the centroids created in the first archive
-    with :attr:`centroids` and pass them into ``custom_centroids`` when
-    constructing archives for subsequent experiments.
+    consistent and reduce execution time. To do this, either 1) construct custom
+    centroids centroids and pass them in via the ``custom_centroids`` argument,
+    or 2) access the centroids created in the first archive with
+    :attr:`centroids` and pass them into ``custom_centroids`` when constructing
+    archives for subsequent experiments.
 
     Args:
+        bins (int): The number of bins to use in the archive, equivalent to the
+            number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``. Note that the
             length of this array defines the dimensionality of the behavior
             space.
-        bins (int): The number of bins to use in the archive, equivalent to the
-            number of centroids/areas in the CVT.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid seeding.
         dtype (str or data-type): Data type of the solutions, objective values,
@@ -86,8 +86,8 @@ class CVTArchive(ArchiveBase):
     """
 
     def __init__(self,
-                 ranges,
                  bins,
+                 ranges,
                  seed=None,
                  dtype=np.float64,
                  samples=100_000,

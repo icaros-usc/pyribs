@@ -22,8 +22,8 @@ This script will run for a while (~30 min) and produce two outputs. The first is
 cvt_add_times.json, which holds the raw times. The second is cvt_add_plot.png,
 which is a plot of the times with respect to number of bins.
 
-If you wish to re-plot the results without re-running the benchmarks, you can
-modify plot_times and then run:
+To re-plot the results without re-running the benchmarks, modify plot_times and
+run:
 
     import cvt_add  # The name of this file.
     cvt_add.plot_times(*cvt_add.load_times())
@@ -86,8 +86,8 @@ def main():
     # experiments for a certain number of bins (and also save time).
     ref_archives = {
         bins: CVTArchive(
-            [(-1, 1), (-1, 1)],
             bins,
+            [(-1, 1), (-1, 1)],
             # Use 200k bins to avoid dropping clusters.
             samples=n_vals if bins != 10_000 else 200_000,
             use_kd_tree=False) for bins in n_bins
@@ -98,8 +98,7 @@ def main():
 
     def setup(bins, use_kd_tree):
         nonlocal archive
-        archive = CVTArchive([(-1, 1), (-1, 1)],
-                             bins,
+        archive = CVTArchive(bins, [(-1, 1), (-1, 1)],
                              custom_centroids=ref_archives[bins].centroids,
                              use_kd_tree=use_kd_tree)
         archive.initialize(solutions.shape[1])
