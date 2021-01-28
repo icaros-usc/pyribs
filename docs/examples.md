@@ -3,7 +3,7 @@
 ```{toctree}
 :hidden:
 
-examples/run_sphere
+examples/sphere
 ```
 
 Examples assume some experience with ribs and provide commented source code with
@@ -18,4 +18,4 @@ Below is the list of examples.
 
 | Name                       | Archive   | Emitter   | Optimizer                           |
 | -------------------------- | --------- | --------- | ----------------------------------- |
-| {doc}`examples/run_sphere` | (several) | (several) | {class}`~ribs.optimizers.Optimizer` |
+| {doc}`examples/sphere` | (several) | (several) | {class}`~ribs.optimizers.Optimizer` |
