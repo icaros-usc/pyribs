@@ -228,9 +228,10 @@ plot_html_show_source_link = False
 
 # Intersphinx
 intersphinx_mapping = {
-    "python": ('https://docs.python.org/3', None),
+    "matplotlib": ("https://matplotlib.org", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
+    "python": ("https://docs.python.org/3", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
     "sklearn": ("https://scikit-learn.org/stable", None),
-    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
 }
