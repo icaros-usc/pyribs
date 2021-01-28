@@ -22,8 +22,8 @@ This script will run for a while (~30 min) and produce two outputs. The first is
 cvt_add_times.json, which holds the raw times. The second is cvt_add_plot.png,
 which is a plot of the times with respect to number of bins.
 
-If you wish to re-plot the results without re-running the benchmarks, you can
-modify plot_times and then run:
+To re-plot the results without re-running the benchmarks, modify plot_times and
+run:
 
     import cvt_add  # The name of this file.
     cvt_add.plot_times(*cvt_add.load_times())

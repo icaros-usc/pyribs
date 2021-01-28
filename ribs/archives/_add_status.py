@@ -16,15 +16,15 @@ class AddStatus(IntEnum):
 
     Example:
 
-        You can check the status of an add operation as follows::
+        Check the status of an add operation as follows::
 
             from ribs.archives import AddStatus
             status, _ = archive.add(solution, objective_value, behavior_values)
             if status == AddStatus.NEW:
                 # Do something if the solution made a new entry in the archive.
 
-        The status can also act like a bool if you only need to know whether the
-        solution was added to the archive::
+        To check whether the solution was added to the archive, the status can
+        act like a bool::
 
             from ribs.archives import AddStatus
             status, _ = archive.add(solution, objective_value, behavior_values)

@@ -1,19 +1,17 @@
 """Tests for ribs.visualize.
 
-If you are validating the image output from matplotlib, first read these
-instructions:
+For image comparison tests, read these instructions:
 https://matplotlib.org/3.3.1/devel/testing.html#writing-an-image-comparison-test.
-Essentially, after running your new test for the first time (and assuming you
-are running in the root directory of this repo), you will need to copy the image
-output from result_images/visualize_test to
+Essentially, after running a new test for the first time in the _root_ directory
+of this repo, copy the image output from result_images/visualize_test to
 tests/extras/baseline_images/visualize_test. For instance, for
-``test_cvt_archive_heatmap_with_samples``, you will need to run::
+``test_cvt_archive_heatmap_with_samples``, run::
 
     cp result_images/visualize_test/cvt_archive_heatmap_with_samples.png \
         tests/extras/baseline_images/visualize_test/
 
-Assuming your output is what you expected (and assuming you have made your code
-deterministic), the test should now pass when you re-run it.
+Assuming the output is as expected (and assuming the code is deterministic), the
+test should now pass when it is re-run.
 """
 import matplotlib
 import matplotlib.pyplot as plt
