@@ -1,8 +1,16 @@
 """Miscellaneous visualization tools.
 
-Note that this module only works when you install ``ribs[all]``. As such, we do
-not import it when you run ``import ribs``, and you will need to explicitly use
-``import ribs.visualize``.
+These functions are similar to matplotlib functions like
+:func:`~matplotlib.pyplot.scatter` and :func:`~matplotlib.pyplot.pcolormesh`.
+When you call them, they will default to creating plots on the current axis, and
+after plotting, you can continue to modify the axis with functions like
+:func:`~matplotlib.pyplot.xlabel` and :func:`~matplotlib.pyplot.title`.
+Furthermore, if you are using maplotlib's object-oriented API, you can pass the
+`ax` parameter to these functions.
+
+.. note:: This module only works when you install ``ribs[all]``. As such, we do
+    not import it when you run ``import ribs``, and you will need to explicitly
+    use ``import ribs.visualize``
 
 .. autosummary::
     :toctree:
