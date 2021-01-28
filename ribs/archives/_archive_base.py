@@ -299,6 +299,9 @@ class ArchiveBase(ABC):
                   previously in the archive
                 - ``NEW`` -> the objective value passed in
         """
+        solution = np.asarray(solution)
+        behavior_values = np.asarray(behavior_values)
+
         index = self._get_index(behavior_values)
         old_objective = self._objective_values[index]
         was_inserted, already_occupied = self._add_numba(
