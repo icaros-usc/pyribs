@@ -203,7 +203,7 @@ def cvt_archive_heatmap(archive,
             >>> from ribs.archives import CVTArchive
             >>> from ribs.visualize import cvt_archive_heatmap
             >>> # Populate the archive with the negative sphere function.
-            >>> archive = CVTArchive([(-1, 1), (-1, 1)], 100)
+            >>> archive = CVTArchive(100, [(-1, 1), (-1, 1)])
             >>> archive.initialize(solution_dim=2)
             >>> for x in np.linspace(-1, 1, 100):
             ...     for y in np.linspace(-1, 1, 100):

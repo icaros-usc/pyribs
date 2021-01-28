@@ -96,8 +96,7 @@ def _long_grid_archive():
 @pytest.fixture(scope="module")
 def _cvt_archive():
     """Deterministically created CVTArchive."""
-    archive = CVTArchive([(-1, 1), (-1, 1)],
-                         100,
+    archive = CVTArchive(100, [(-1, 1), (-1, 1)],
                          samples=1000,
                          use_kd_tree=True,
                          seed=42)
@@ -109,8 +108,7 @@ def _cvt_archive():
 @pytest.fixture(scope="module")
 def _long_cvt_archive():
     """Same as above, but the behavior space is longer in one direction."""
-    archive = CVTArchive([(-2, 2), (-1, 1)],
-                         100,
+    archive = CVTArchive(100, [(-2, 2), (-1, 1)],
                          samples=1000,
                          use_kd_tree=True,
                          seed=42)
@@ -148,7 +146,7 @@ def _long_sliding_boundary_archive():
 def test_heatmap_fails_on_non_2d(archive_type):
     archive = {
         "grid": lambda: GridArchive([20, 20, 20], [(-1, 1)] * 3),
-        "cvt": lambda: CVTArchive([(-1, 1)] * 3, 100, samples=100),
+        "cvt": lambda: CVTArchive(100, [(-1, 1)] * 3, samples=100),
         "sliding": lambda: SlidingBoundaryArchive([20, 20, 20], [(-1, 1)] * 3),
     }[archive_type]()
     archive.initialize(solution_dim=2)  # Arbitrary.

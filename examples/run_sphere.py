@@ -125,7 +125,7 @@ def create_optimizer(algorithm, dim, seed):
     ]:
         archive = GridArchive((500, 500), bounds, seed=seed)
     elif algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
-        archive = CVTArchive(bounds, 10_000, samples=100_000, use_kd_tree=True)
+        archive = CVTArchive(10_000, bounds, samples=100_000, use_kd_tree=True)
     else:
         raise ValueError(f"Algorithm `{algorithm}` is not recognized")
 

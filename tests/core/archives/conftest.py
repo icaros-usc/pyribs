@@ -94,15 +94,13 @@ def get_archive_data(name, dtype=np.float64):
         samples = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
         centroid = [0.5, 0.5]
 
-        archive = CVTArchive([(-1, 1), (-1, 1)],
-                             4,
+        archive = CVTArchive(4, [(-1, 1), (-1, 1)],
                              samples=samples,
                              use_kd_tree=kd_tree,
                              dtype=dtype)
         archive.initialize(len(solution))
 
-        archive_with_entry = CVTArchive([(-1, 1), (-1, 1)],
-                                        4,
+        archive_with_entry = CVTArchive(4, [(-1, 1), (-1, 1)],
                                         samples=samples,
                                         use_kd_tree=kd_tree,
                                         dtype=dtype)
