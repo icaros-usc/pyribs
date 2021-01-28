@@ -2,15 +2,15 @@
 
 These functions are similar to matplotlib functions like
 :func:`~matplotlib.pyplot.scatter` and :func:`~matplotlib.pyplot.pcolormesh`.
-When you call them, they will default to creating plots on the current axis, and
-after plotting, you can continue to modify the axis with functions like
-:func:`~matplotlib.pyplot.xlabel` and :func:`~matplotlib.pyplot.title`.
-Furthermore, if you are using maplotlib's object-oriented API, you can pass the
-`ax` parameter to these functions.
+When called, these functions default to creating plots on the current axis.
+After plotting, functions like :func:`~matplotlib.pyplot.xlabel` and
+:func:`~matplotlib.pyplot.title` may be used to further modify the axis.
+Alternatively, if using maplotlib's object-oriented API, pass the `ax` parameter
+to these functions.
 
-.. note:: This module only works when you install ``ribs[all]``. As such, we do
-    not import it when you run ``import ribs``, and you will need to explicitly
-    use ``import ribs.visualize``
+.. note:: This module only works with ``ribs[all]`` installed. As such, it is
+    not imported with ``import ribs``, and it must be explicitly imported with
+    ``import ribs.visualize``.
 
 .. autosummary::
     :toctree:
@@ -62,15 +62,16 @@ def grid_archive_heatmap(archive,
                          vmin=None,
                          vmax=None,
                          pcm_kwargs=None):
-    """Plots heatmap of a 2D :class:`ribs.archives.GridArchive`.
+    """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D behavior
+    space.
 
     Essentially, we create a grid of cells and shade each cell with a color
     corresponding to the objective value of that cell's elite. This method uses
     :func:`~matplotlib.pyplot.pcolormesh` to generate the grid. For further
-    customization, you can pass extra kwargs to
-    :func:`~matplotlib.pyplot.pcolormesh` through the ``pcm_kwargs`` parameter;
-    for instance, to see black boundaries of width 0.1, you can pass in
-    ``pcm_kwargs={"edgecolor": "black", "linewidth": 0.1}``.
+    customization, pass extra kwargs to :func:`~matplotlib.pyplot.pcolormesh`
+    through the ``pcm_kwargs`` parameter. For instance, to create black
+    boundaries of width 0.1, pass in ``pcm_kwargs={"edgecolor": "black",
+    "linewidth": 0.1}``.
 
     Examples:
         .. plot::
@@ -138,9 +139,8 @@ def grid_archive_heatmap(archive,
     objective_values = archive_data["objective"]
 
     if transpose_bcs:
-        # Since we are plotting for 2D archive, directly swapping behavior
-        # values on x and y axis, and their boundaries can make the transposed
-        # plot. Note that lower_bounds and upper_bounds are arrays of length 2.
+        # Since the archive is 2D, transpose by swapping the x and y boundaries
+        # and by flipping the bounds (the bounds are arrays of length 2).
         x_bounds, y_bounds = y_bounds, x_bounds
         lower_bounds = np.flip(lower_bounds)
         upper_bounds = np.flip(upper_bounds)
@@ -181,16 +181,17 @@ def cvt_archive_heatmap(archive,
                         lw=0.5,
                         vmin=None,
                         vmax=None):
-    """Plots heatmap of a 2D :class:`ribs.archives.CVTArchive`.
+    """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 2D behavior
+    space.
 
     Essentially, we create a Voronoi diagram and shade in each cell with a
     color corresponding to the objective value of that cell's elite.
 
-    Depending on how many bins you have in your archive, you may need to tune
-    the values of ``ms`` and ``lw``. If there are too many bins, the Voronoi
-    diagram and centroid markers will make the entire image appear black. In
-    that case, you can turn off the centroids with ``plot_centroids=False`` and
-    even remove the lines completely with ``lw=0``.
+    Depending on how many bins are in the archive, ``ms`` and ``lw`` may need to
+    be tuned. If there are too many bins, the Voronoi diagram and centroid
+    markers will make the entire image appear black. In that case, try turning
+    off the centroids with ``plot_centroids=False`` or even removing the lines
+    completely with ``lw=0``.
 
     Examples:
 
@@ -332,12 +333,13 @@ def sliding_boundary_archive_heatmap(archive,
                                      boundary_lw=0,
                                      vmin=None,
                                      vmax=None):
-    """Plots heatmap of a 2D :class:`ribs.archives.SlidingBoundaryArchive`.
+    """Plots heatmap of a :class:`~ribs.archives.SlidingBoundaryArchive` with 2D
+    behavior space.
 
     Since the boundaries of :class:`ribs.archives.SlidingBoundaryArchive` are
     dynamic, we plot the heatmap as a scatter plot, in which each marker is a
-    solution and its color represents the objective value. You can optionally
-    draw the boundaries by setting the ``boundary_lw`` to a positive value.
+    solution and its color represents the objective value. Boundaries can
+    optionally be drawn by setting ``boundary_lw`` to a positive value.
 
     Examples:
         .. plot::
@@ -411,9 +413,9 @@ def sliding_boundary_archive_heatmap(archive,
     objective_values = archive_data["objective"]
 
     if transpose_bcs:
-        # Since we are plotting for 2D archive, directly swapping behavior
-        # values on x and y axis, and their boundaries can make the transposed
-        # plot. Note that lower_bounds and upper_bounds are arrays of length 2.
+        # Since the archive is 2D, transpose by swapping the x and y behavior
+        # values and boundaries and by flipping the bounds (the bounds are
+        # arrays of length 2).
         x, y = y, x
         x_boundary, y_boundary = y_boundary, x_boundary
         lower_bounds = np.flip(lower_bounds)
