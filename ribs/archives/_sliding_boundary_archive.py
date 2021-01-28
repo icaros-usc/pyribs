@@ -245,9 +245,9 @@ class SlidingBoundaryArchive(ArchiveBase):
             but **ALL** of the solutions stored in the buffer.
 
         Args:
-            solution (numpy.ndarray): See :meth:`ArchiveBase.add`
+            solution (array-like): See :meth:`ArchiveBase.add`
             objective_value (float): See :meth:`ArchiveBase.add`
-            behavior_values (numpy.ndarray): See :meth:`ArchiveBase.add`
+            behavior_values (array-like): See :meth:`ArchiveBase.add`
         Returns:
             See :meth:`ArchiveBase.add`
         """

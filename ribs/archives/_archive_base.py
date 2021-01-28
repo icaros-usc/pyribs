@@ -275,11 +275,11 @@ class ArchiveBase(ABC):
         than the solution previously in the corresponding bin.
 
         Args:
-            solution (numpy.ndarray): Parameters for the solution.
+            solution (array-like): Parameters for the solution.
             objective_value (float): Objective function evaluation of this
                 solution.
-            behavior_values (numpy.ndarray): Coordinates in behavior space of
-                this solution.
+            behavior_values (array-like): Coordinates in behavior space of this
+                solution.
         Returns:
             tuple: 2-element tuple describing the result of the add operation.
             These outputs are particularly useful for algorithms such as CMA-ME.
