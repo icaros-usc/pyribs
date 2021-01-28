@@ -48,14 +48,14 @@ class CVTArchive(ArchiveBase):
     archives for subsequent experiments.
 
     Args:
+        bins (int): The number of bins to use in the archive, equivalent to the
+            number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
             the second dimension should have bounds ``(-2, 2)``. Note that the
             length of this array defines the dimensionality of the behavior
             space.
-        bins (int): The number of bins to use in the archive, equivalent to the
-            number of centroids/areas in the CVT.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid seeding.
         dtype (str or data-type): Data type of the solutions, objective values,
@@ -86,8 +86,8 @@ class CVTArchive(ArchiveBase):
     """
 
     def __init__(self,
-                 ranges,
                  bins,
+                 ranges,
                  seed=None,
                  dtype=np.float64,
                  samples=100_000,
