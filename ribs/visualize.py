@@ -70,7 +70,7 @@ def grid_archive_heatmap(archive,
     customization, you can pass extra kwargs to
     :func:`~matplotlib.pyplot.pcolormesh` through the ``pcm_kwargs`` parameter;
     for instance, to see black boundaries of width 0.1, you can pass in
-    ``{"edgecolor": "black", "linewidth": 0.1}``.
+    ``pcm_kwargs={"edgecolor": "black", "linewidth": 0.1}``.
 
     Examples:
         .. plot::
@@ -80,30 +80,20 @@ def grid_archive_heatmap(archive,
             >>> import matplotlib.pyplot as plt
             >>> from ribs.archives import GridArchive
             >>> from ribs.visualize import grid_archive_heatmap
-            >>> archive = GridArchive([20, 20],
-            ...                       [(-1, 1), (-1, 1)],
-            ...                       seed=42)
-            >>> archive.initialize(solution_dim=2)
             >>> # Populate the archive with the negative sphere function.
-            >>> rng = np.random.default_rng(10)
-            >>> for _ in range(1000):
-            ...     x, y = rng.uniform((-1, -1), (1, 1))
-            ...     archive.add(
-            ...         solution=rng.random(2),
-            ...         objective_value=-(x**2 + y**2),
-            ...         behavior_values=np.array([x, y]),
-            ...     )
-            >>> # Plot heatmaps of the archive.
-            >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
-            >>> fig.suptitle("Negative sphere function")
-            >>> grid_archive_heatmap(archive, ax=ax1,
-            ...                      pcm_kwargs={"edgecolor": 0.5,
-            ...                                  "linewidth": 0.1})
-            >>> grid_archive_heatmap(archive, ax=ax2)
-            >>> ax1.set_title("With boundaries")
-            >>> ax2.set_title("Without boundaries")
-            >>> ax1.set(xlabel='x coords', ylabel='y coords')
-            >>> ax2.set(xlabel='x coords', ylabel='y coords')
+            >>> archive = GridArchive([20, 20], [(-1, 1), (-1, 1)])
+            >>> archive.initialize(solution_dim=2)
+            >>> for x in np.linspace(-1, 1, 100):
+            ...     for y in np.linspace(-1, 1, 100):
+            ...         archive.add(solution=np.array([x,y]),
+            ...                     objective_value=-(x**2 + y**2),
+            ...                     behavior_values=np.array([x,y]))
+            >>> # Plot a heatmap of the archive.
+            >>> plt.figure(figsize=(8, 6))
+            >>> grid_archive_heatmap(archive)
+            >>> plt.title("Negative sphere function")
+            >>> plt.xlabel("x coords")
+            >>> plt.ylabel("y coords")
             >>> plt.show()
 
 
@@ -366,7 +356,7 @@ def sliding_boundary_archive_heatmap(archive,
             >>> for _ in range(1000):
             ...     x, y = rng.uniform((-1, -1), (1, 1))
             ...     archive.add(
-            ...         solution=rng.random(2),
+            ...         solution=np.array([x,y]),
             ...         objective_value=-(x**2 + y**2),
             ...         behavior_values=np.array([x, y]),
             ...     )
