@@ -8,11 +8,14 @@ from ribs.emitters._emitter_base import EmitterBase
 class GaussianEmitter(EmitterBase):
     """Emits solutions by adding Gaussian noise to existing archive solutions.
 
-    If the archive is empty, calls to ask() will generate solutions from a
+    If the archive is empty, calls to :meth:`ask` will generate solutions from a
     user-specified Gaussian distribution with mean ``x0`` and standard deviation
     ``sigma0``. Otherwise, this emitter selects solutions from the archive and
     generates solutions from a Gaussian distribution centered around each
     solution with standard deviation ``sigma0``.
+
+    This is the classic variation operator presented in `MAP-Elites
+    <https://arxiv.org/pdf/1504.04909.pdf>`_.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -31,9 +34,9 @@ class GaussianEmitter(EmitterBase):
             in this array-like can be None to indicate no bound, or a tuple of
             ``(lower_bound, upper_bound)``, where ``lower_bound`` or
             ``upper_bound`` may be None to indicate no bound.
-        batch_size (int): Number of solutions to send back in the ask() method.
+        batch_size (int): Number of solutions to send back in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to
-            avoid seeding.
+            avoid a fixed seed.
     Raises:
         ValueError: There is an error in the bounds configuration.
     """

@@ -8,7 +8,8 @@ from ribs.archives._archive_base import ArchiveBase, require_init
 
 
 class CVTArchive(ArchiveBase):
-    """Divides the entire behavior space into a fixed number of bins.
+    """An archive that divides the entire behavior space into a fixed number of
+    bins.
 
     This archive originates in the `CVT-MAP-Elites paper
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
@@ -57,7 +58,7 @@ class CVTArchive(ArchiveBase):
             length of this array defines the dimensionality of the behavior
             space.
         seed (int): Value to seed the random number generator as well as
-            :func:`~sklearn.cluster.k_means`. Set to None to avoid seeding.
+            :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
             and behavior values. We only support ``"f"`` / :class:`np.float32`
             and ``"d"`` / :class:`np.float64`.

@@ -32,7 +32,7 @@ class EmitterBase(ABC):
         batch_size (int): Number of solutions to generate on each call to
             :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to
-            avoid seeding.
+            avoid a fixed seed.
     Attributes:
         _rng (numpy.random.Generator): Random number generator.
         _archive (ribs.archives.ArchiveBase): See ``archive`` arg.

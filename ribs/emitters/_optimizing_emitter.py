@@ -6,7 +6,7 @@ from ribs.emitters.opt import CMAEvolutionStrategy
 
 
 class OptimizingEmitter(EmitterBase):
-    """CMA-ME optimizing emitter.
+    """Adapts a covariance matrix towards the objective.
 
     This emitter originates in the `CMA-ME paper
     <https://arxiv.org/abs/1912.02400>`_. Initially, it will start at ``x0`` and
@@ -38,10 +38,10 @@ class OptimizingEmitter(EmitterBase):
             in this array-like can be None to indicate no bound, or a tuple of
             ``(lower_bound, upper_bound)``, where ``lower_bound`` or
             ``upper_bound`` may be None to indicate no bound.
-        batch_size (int): Number of solutions to send back in the ask() method.
+        batch_size (int): Number of solutions to send back in :meth:`ask`.
             If not passed in, a batch size will automatically be calculated.
         seed (int): Value to seed the random number generator. Set to None to
-            avoid seeding.
+            avoid a fixed seed.
     Raises:
         ValueError: If any of ``selection_rule``, ``restart_rule``, or
             ``weight_rule`` is invalid.
