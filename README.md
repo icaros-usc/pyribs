@@ -45,8 +45,8 @@ the RIBS version of MAP-Elites. Specifically, we create:
 - An **Optimizer** that combines the archive and emitter together.
 
 After creating the components, we then run on the negative 10-D Sphere function
-for 1000 iterations. To keep our BCs simple, we use the first two entries of
-each 10D solution vector as our BCs.
+for 1000 iterations. For simplicity, the BCs are the first two entries of each
+10D solution vector.
 
 ```python
 import numpy as np
