@@ -4,7 +4,8 @@
 | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: |
 | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Automated Testing](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Automated+Testing") | [ribs.readthedocs.io](https://ribs.readthedocs.io) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=latest&style=flat-square)](https://readthedocs.org/projects/ribs/) |
 
-A _bare-bones_ quality diversity optimization library. The pyribs library is the official implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME)
+A _bare-bones_ quality diversity optimization library. The pyribs library is the
+official implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME)
 algorithm and implements the _Rapid Illumination of Behavior Spaces (RIBS)_
 redesign of MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
@@ -23,11 +24,11 @@ representative of a region in behavior space.
 While many QD libraries exist, this particular library aims to be the QD analog
 to the [pycma](https://pypi.org/project/cma/) library (a single objective
 optimization library). In contrast to other QD libraries, this library is
-"bare-bones" meaning pyribs (like [pycma](https://pypi.org/project/cma/)) focuses solely on optimizing fixed dimensional
-continuous domains. Focusing solely on this one commonly-occurring problem
-allows us to optimize the library for performance as well as simplicity of use.
-For applications of QD on discrete domains, we recommend using
-[qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
+"bare-bones" meaning pyribs (like [pycma](https://pypi.org/project/cma/))
+focuses solely on optimizing fixed dimensional continuous domains. Focusing
+solely on this one commonly-occurring problem allows us to optimize the library
+for performance as well as simplicity of use. For applications of QD on discrete
+domains, we recommend using [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
 [sferes](https://github.com/sferes2/sferes2).
 
 A user of pyribs selects three components that meet the needs of their
@@ -99,8 +100,8 @@ For more information, refer to the [documentation](https://docs.pyribs.org/).
 
 ## Installation
 
-The pyribs library supports Python 3.6 and greater. Earlier Python versions may work but are not
-officially supported.
+The pyribs library supports Python 3.6 and greater. Earlier Python versions may
+work but are not officially supported.
 
 To install from PyPI, run
 
@@ -108,7 +109,8 @@ To install from PyPI, run
 pip install ribs
 ```
 
-This command only installs dependencies for the core of pyribs. To install support tools like `ribs.visualize`, run
+This command only installs dependencies for the core of pyribs. To install
+support tools like `ribs.visualize`, run
 
 ```bash
 pip install ribs[all]
