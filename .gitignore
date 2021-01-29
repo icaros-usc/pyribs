@@ -118,6 +118,7 @@ dask-worker-space/
 !tests/extras/baseline_images/visualize_test/*
 !docs/_static/**/*
 !examples/tutorials/_static/**/*
+!readme_assets/*
 
 # Editor, IDE, and OS settings
 .vscode/

@@ -1,4 +1,6 @@
 """Provides the OptimizingEmitter."""
+import numpy as np
+
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import CMAEvolutionStrategy
 
@@ -55,7 +57,7 @@ class OptimizingEmitter(EmitterBase):
                  bounds=None,
                  batch_size=None,
                  seed=None):
-        self._x0 = x0
+        self._x0 = np.array(x0, dtype=archive.dtype)
         self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
