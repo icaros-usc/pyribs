@@ -37,7 +37,7 @@ A user of pyribs selects three components that meet their specific application n
 
 - An **Archive** saves the best representatives generated within behavior space. 
 - **Emitters** control how new candidate solutions are generated and effect if the algorithm prioritizes quality or diversity.
-- An **Optimizer** joins the **Archive** and **Emitters** together. The **Optimizer** provides an iterface for requesting new candidate solutions and telling the algorithm how solutions performed.
+- An **Optimizer** joins the **Archive** and **Emitters** together and acts as a scheduling algorithm for emitters. The **Optimizer** provides an iterface for requesting new candidate solutions and telling the algorithm how solutions performed.
 
 ## Usage Example
 
