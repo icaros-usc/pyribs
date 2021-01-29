@@ -6,7 +6,7 @@
 
 A _bare-bones_ quality diversity optimization library. The pyribs library is the
 official implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME)
-algorithm and implements the _Rapid Illumination of Behavior Spaces (RIBS)_
+algorithm and implements the _Rapid Illumination of Behavior Space (RIBS)_
 redesign of MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
 
