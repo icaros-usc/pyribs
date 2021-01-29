@@ -161,6 +161,8 @@ This project is developed and maintained by the
 - Nikitas Klapsis
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 
+We thank [Amy K. Hoover](http://amykhoover.com/) and [Julian Togelius](http://julian.togelius.com/) for their contributions deriving the CMA-ME algorithm.
+
 ## License
 
 The pyribs library is released under the
