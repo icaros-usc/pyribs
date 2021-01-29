@@ -31,8 +31,8 @@ well as simplicity of use. For applications of QD on discrete domains, we
 recommend using [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
 [sferes](https://github.com/sferes2/sferes2).
 
-A user of pyribs selects three components that meet their specific application
-needs:
+A user of pyribs selects three components that meet the needs of their
+application:
 
 - An **Archive** saves the best representatives generated within behavior space.
 - **Emitters** control how new candidate solutions are generated and effect if
