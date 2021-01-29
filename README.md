@@ -63,11 +63,11 @@ for 1000 iterations. For simplicity, the BCs are the first two entries of each
 import numpy as np
 
 from ribs.archives import GridArchive
-from ribs.emitters import GaussianEmitter
+from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
 
 archive = GridArchive([20, 20], [(-1, 1), (-1, 1)])
-emitters = [GaussianEmitter(archive, [0.0] * 10, 0.1)]
+emitters = [ImprovementEmitter(archive, [0.0] * 10, 0.1)]
 optimizer = Optimizer(archive, emitters)
 
 for itr in range(1000):
@@ -150,7 +150,8 @@ preview will also reload.
 
 ## Contributors
 
-This project was completed in the [ICAROS Lab](http://icaros.usc.edu) at USC.
+This project is developed and maintained by the
+[ICAROS Lab](http://icaros.usc.edu) at USC.
 
 - [Bryon Tjanaka](https://btjanaka.net)
 - [Matt Fontaine](https://github.com/tehqin)

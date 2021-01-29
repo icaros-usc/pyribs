@@ -58,7 +58,7 @@ class RandomDirectionEmitter(EmitterBase):
                  bounds=None,
                  batch_size=None,
                  seed=None):
-        self._x0 = x0
+        self._x0 = np.array(x0, dtype=archive.dtype)
         self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
