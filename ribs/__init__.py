@@ -2,7 +2,7 @@
 
 __author__ = """ICAROS Lab"""
 __email__ = "tjanaka@usc.edu"
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 from ribs import archives, emitters, factory, optimizers
 

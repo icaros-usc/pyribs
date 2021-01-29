@@ -95,6 +95,6 @@ setup(
     python_requires=">=3.6,<3.9",
     test_suite="tests",
     url="https://github.com/icaros-usc/ribs",
-    version="0.1.1",
+    version="0.2.0",
     zip_safe=False,
 )
