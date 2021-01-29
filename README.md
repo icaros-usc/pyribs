@@ -4,8 +4,7 @@
 | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: |
 | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Automated Testing](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Automated+Testing") | [ribs.readthedocs.io](https://ribs.readthedocs.io) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=latest&style=flat-square)](https://readthedocs.org/projects/ribs/) |
 
-A _bare-bones_ quality diversity optimization library. The pyribs library is the official
-reference implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME)
+A _bare-bones_ quality diversity optimization library. The pyribs library is the official implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME)
 algorithm and implements the _Rapid Illumination of Behavior Spaces (RIBS)_
 redesign of MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
