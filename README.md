@@ -61,7 +61,8 @@ interface (which pyribs adopted). First, the user must `ask` the optimizer for
 new candidate solutions. After evaluating the solution, they `tell` the
 optimizer the objective value and behavior characteristics (BCs) of each
 candidate solution. The algorithm then populates the archive and makes decisions
-on where to sample solutions next. Our toy example uses the first two parameters of the search space as BCs.
+on where to sample solutions next. Our toy example uses the first two parameters
+of the search space as BCs.
 
 ```python
 import numpy as np
@@ -116,12 +117,6 @@ support tools like `ribs.visualize`, run
 pip install ribs[all]
 ```
 
-To install a version from source, clone this repo, cd into it, and run
-
-```bash
-pip install -e .[all]
-```
-
 To test your installation, import it and print the version with:
 
 ```bash
@@ -129,6 +124,26 @@ python -c "import ribs; print(ribs.__version__)"
 ```
 
 You should see a version number like `0.2.0` in the output.
+
+### From Source
+
+To install a version from source, clone the repo
+
+```bash
+git clone https://github.com/icaros-usc/pyribs
+```
+
+Then `cd` into it
+
+```bash
+cd pyribs
+```
+
+And run
+
+```bash
+pip install -e .[all]
+```
 
 ## Documentation
 
@@ -153,8 +168,8 @@ preview will also reload.
 
 ## Contributors
 
-This project is developed and maintained by the
-[ICAROS Lab](http://icaros.usc.edu) at USC.
+pyribs is developed and maintained by the [ICAROS Lab](http://icaros.usc.edu) at
+USC.
 
 - [Bryon Tjanaka](https://btjanaka.net)
 - [Matt Fontaine](https://github.com/tehqin)
@@ -174,7 +189,7 @@ The pyribs library is released under the
 
 ## Credits
 
-This package was initially created with
+pyribs was initially created with
 [Cookiecutter](https://github.com/audreyr/cookiecutter) and the
 [audreyr/cookiecutter-pypackage](https://github.com/audreyr/cookiecutter-pypackage)
 project template.
