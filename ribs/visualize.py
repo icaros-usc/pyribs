@@ -1,12 +1,21 @@
 """Miscellaneous visualization tools.
 
-Note that this module only works when you install ``ribs[all]``. As such, we do
-not import it when you run ``import ribs``, and you will need to explicitly use
-``import ribs.visualize``.
+These functions are similar to matplotlib functions like
+:func:`~matplotlib.pyplot.scatter` and :func:`~matplotlib.pyplot.pcolormesh`.
+When called, these functions default to creating plots on the current axis.
+After plotting, functions like :func:`~matplotlib.pyplot.xlabel` and
+:func:`~matplotlib.pyplot.title` may be used to further modify the axis.
+Alternatively, if using maplotlib's object-oriented API, pass the `ax` parameter
+to these functions.
+
+.. note:: This module only works with ``ribs[all]`` installed. As such, it is
+    not imported with ``import ribs``, and it must be explicitly imported with
+    ``import ribs.visualize``.
 
 .. autosummary::
     :toctree:
 
+    ribs.visualize.grid_archive_heatmap
     ribs.visualize.cvt_archive_heatmap
     ribs.visualize.sliding_boundary_archive_heatmap
 """
@@ -20,6 +29,7 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 # pylint: disable = too-many-arguments
 
 __all__ = [
+    "grid_archive_heatmap",
     "cvt_archive_heatmap",
     "sliding_boundary_archive_heatmap",
 ]
@@ -35,16 +45,129 @@ def _retrieve_cmap(cmap):
 
 
 def _get_pt_to_obj(cvt_archive):
-    """Creates a dict from point index to objective value from a CVTArchive."""
-
-    # Hopefully as_pandas() is okay in terms of efficiency since there are only
-    # 5 columns (1 index, 2 behavior, 1 objective, 1 solution).
+    """Creates a dict from centroid index to objective value in a CVTArchive."""
     data = cvt_archive.as_pandas(include_solutions=False)
-
     pt_to_obj = {}
-    for _, row in data.iterrows():
-        pt_to_obj[row["index"]] = row["objective"]
+    for row in data.itertuples():
+        # row.index is the centroid index. The dataframe index is row.Index.
+        pt_to_obj[row.index] = row.objective
     return pt_to_obj
+
+
+def grid_archive_heatmap(archive,
+                         ax=None,
+                         transpose_bcs=False,
+                         cmap="magma",
+                         square=False,
+                         vmin=None,
+                         vmax=None,
+                         pcm_kwargs=None):
+    """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D behavior
+    space.
+
+    Essentially, we create a grid of cells and shade each cell with a color
+    corresponding to the objective value of that cell's elite. This method uses
+    :func:`~matplotlib.pyplot.pcolormesh` to generate the grid. For further
+    customization, pass extra kwargs to :func:`~matplotlib.pyplot.pcolormesh`
+    through the ``pcm_kwargs`` parameter. For instance, to create black
+    boundaries of width 0.1, pass in ``pcm_kwargs={"edgecolor": "black",
+    "linewidth": 0.1}``.
+
+    Examples:
+        .. plot::
+            :context: close-figs
+
+            >>> import numpy as np
+            >>> import matplotlib.pyplot as plt
+            >>> from ribs.archives import GridArchive
+            >>> from ribs.visualize import grid_archive_heatmap
+            >>> # Populate the archive with the negative sphere function.
+            >>> archive = GridArchive([20, 20], [(-1, 1), (-1, 1)])
+            >>> archive.initialize(solution_dim=2)
+            >>> for x in np.linspace(-1, 1, 100):
+            ...     for y in np.linspace(-1, 1, 100):
+            ...         archive.add(solution=np.array([x,y]),
+            ...                     objective_value=-(x**2 + y**2),
+            ...                     behavior_values=np.array([x,y]))
+            >>> # Plot a heatmap of the archive.
+            >>> plt.figure(figsize=(8, 6))
+            >>> grid_archive_heatmap(archive)
+            >>> plt.title("Negative sphere function")
+            >>> plt.xlabel("x coords")
+            >>> plt.ylabel("y coords")
+            >>> plt.show()
+
+
+    Args:
+        archive (GridArchive): A 2D GridArchive.
+        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
+            the current axis will be used.
+        transpose_bcs (bool): By default, the first BC in the archive will
+            appear along the x-axis, and the second will be along the y-axis. To
+            switch this (i.e. to transpose the axes), set this to True.
+        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
+            plotting intensity. Either the name of a colormap, a list of RGB or
+            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
+        square (bool): If True, set the axes aspect ratio to be "equal".
+        vmin (float): Minimum objective value to use in the plot. If None, the
+            minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If None, the
+            maximum objective value in the archive is used.
+        pcm_kwargs (dict): Additional kwargs to pass to
+            :func:`~matplotlib.pyplot.pcolormesh`.
+    Raises:
+        ValueError: The archive is not 2D.
+    """
+    if archive.behavior_dim != 2:
+        raise ValueError("Cannot plot heatmap for non-2D archive.")
+
+    # Try getting the colormap early in case it fails.
+    cmap = _retrieve_cmap(cmap)
+
+    # Retrieve data from archive.
+    lower_bounds = archive.lower_bounds
+    upper_bounds = archive.upper_bounds
+    x_dim, y_dim = archive.dims
+    x_bounds = np.linspace(lower_bounds[0], upper_bounds[0], x_dim + 1)
+    y_bounds = np.linspace(lower_bounds[1], upper_bounds[1], y_dim + 1)
+
+    # Color for each cell in the heatmap.
+    archive_data = archive.as_pandas(include_solutions=False)
+    colors = np.full((y_dim, x_dim), np.nan)
+    for row in archive_data.itertuples():
+        colors[row.index_1, row.index_0] = row.objective
+    objective_values = archive_data["objective"]
+
+    if transpose_bcs:
+        # Since the archive is 2D, transpose by swapping the x and y boundaries
+        # and by flipping the bounds (the bounds are arrays of length 2).
+        x_bounds, y_bounds = y_bounds, x_bounds
+        lower_bounds = np.flip(lower_bounds)
+        upper_bounds = np.flip(upper_bounds)
+        colors = colors.T
+
+    # Initialize the axis.
+    ax = plt.gca() if ax is None else ax
+    ax.set_xlim(lower_bounds[0], upper_bounds[0])
+    ax.set_ylim(lower_bounds[1], upper_bounds[1])
+
+    if square:
+        ax.set_aspect("equal")
+
+    # Create the plot.
+    pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
+    vmin = np.min(objective_values) if vmin is None else vmin
+    vmax = np.max(objective_values) if vmax is None else vmax
+    t = ax.pcolormesh(x_bounds,
+                      y_bounds,
+                      colors,
+                      cmap=cmap,
+                      vmin=vmin,
+                      vmax=vmax,
+                      **pcm_kwargs)
+
+    # Create the colorbar.
+    ax.figure.colorbar(t, ax=ax, pad=0.1)
 
 
 def cvt_archive_heatmap(archive,
@@ -58,16 +181,17 @@ def cvt_archive_heatmap(archive,
                         lw=0.5,
                         vmin=None,
                         vmax=None):
-    """Plots heatmap of a 2D :class:`ribs.archives.CVTArchive`.
+    """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 2D behavior
+    space.
 
     Essentially, we create a Voronoi diagram and shade in each cell with a
-    color corresponding to the value of that cell's elite.
+    color corresponding to the objective value of that cell's elite.
 
-    Depending on how many bins you have in your archive, you may need to tune
-    the values of ``ms`` and ``lw``. If there are too many bins, the Voronoi
-    diagram and centroid markers will make the entire image appear black. In
-    that case, you can turn off the centroids with ``plot_centroids=False`` and
-    even remove the lines completely with ``lw=0.0``.
+    Depending on how many bins are in the archive, ``ms`` and ``lw`` may need to
+    be tuned. If there are too many bins, the Voronoi diagram and centroid
+    markers will make the entire image appear black. In that case, try turning
+    off the centroids with ``plot_centroids=False`` or even removing the lines
+    completely with ``lw=0``.
 
     Examples:
 
@@ -79,7 +203,7 @@ def cvt_archive_heatmap(archive,
             >>> from ribs.archives import CVTArchive
             >>> from ribs.visualize import cvt_archive_heatmap
             >>> # Populate the archive with the negative sphere function.
-            >>> archive = CVTArchive([(-1, 1), (-1, 1)], 100)
+            >>> archive = CVTArchive(100, [(-1, 1), (-1, 1)])
             >>> archive.initialize(solution_dim=2)
             >>> for x in np.linspace(-1, 1, 100):
             ...     for y in np.linspace(-1, 1, 100):
@@ -107,7 +231,7 @@ def cvt_archive_heatmap(archive,
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        square (bool): If True, set the axes aspect raio to be "equal".
+        square (bool): If True, set the axes aspect ratio to be "equal".
         ms (float): Marker size for both centroids and samples.
         lw (float): Line width when plotting the voronoi diagram.
         vmin (float): Minimum objective value to use in the plot. If None, the
@@ -209,12 +333,13 @@ def sliding_boundary_archive_heatmap(archive,
                                      boundary_lw=0,
                                      vmin=None,
                                      vmax=None):
-    """Plots heatmap of a 2D :class:`ribs.archives.SlidingBoundaryArchive`.
+    """Plots heatmap of a :class:`~ribs.archives.SlidingBoundaryArchive` with 2D
+    behavior space.
 
-    Since the boundaries of :class:`ribs.archives.SlidingBoundaryArchive` is
+    Since the boundaries of :class:`ribs.archives.SlidingBoundaryArchive` are
     dynamic, we plot the heatmap as a scatter plot, in which each marker is a
-    solution and its color represents the fitness value. You can optionally draw
-    the boundaries by setting the ``boundary_lw`` to a positive value.
+    solution and its color represents the objective value. Boundaries can
+    optionally be drawn by setting ``boundary_lw`` to a positive value.
 
     Examples:
         .. plot::
@@ -233,11 +358,11 @@ def sliding_boundary_archive_heatmap(archive,
             >>> for _ in range(1000):
             ...     x, y = rng.uniform((-1, -1), (1, 1))
             ...     archive.add(
-            ...         solution=rng.random(2),
+            ...         solution=np.array([x,y]),
             ...         objective_value=-(x**2 + y**2),
             ...         behavior_values=np.array([x, y]),
             ...     )
-            >>> # Plot a heatmap of the archive.
+            >>> # Plot heatmaps of the archive.
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
             >>> fig.suptitle("Negative sphere function")
             >>> sliding_boundary_archive_heatmap(archive, ax=ax1,
@@ -260,9 +385,10 @@ def sliding_boundary_archive_heatmap(archive,
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        square (bool): If True, set the axes aspect raio to be "equal".
+        square (bool): If True, set the axes aspect ratio to be "equal".
         ms (float): Marker size for the solutions.
-        boundary_lw (float): Line width when plotting the boundaries.
+        boundary_lw (float): Line width when plotting the boundaries. Set to 0
+            to have no boundaries.
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
@@ -278,19 +404,18 @@ def sliding_boundary_archive_heatmap(archive,
 
     # Retrieve data from archive.
     archive_data = archive.as_pandas(include_solutions=False)
-    x = archive_data['behavior-0'].to_list()
-    y = archive_data['behavior-1'].to_list()
+    x = archive_data["behavior_0"]
+    y = archive_data["behavior_1"]
     x_boundary = archive.boundaries[0]
     y_boundary = archive.boundaries[1]
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
-    objective_values = archive_data['objective'].to_list()
+    objective_values = archive_data["objective"]
 
     if transpose_bcs:
-        # Since we are plotting for 2D archive, directly swapping behavior
-        # values on x and y axis, and their boundaries can make the transposed
-        # plot. Also, please note that lower_bounds and upper_bounds are arrays
-        # of length 2.
+        # Since the archive is 2D, transpose by swapping the x and y behavior
+        # values and boundaries and by flipping the bounds (the bounds are
+        # arrays of length 2).
         x, y = y, x
         x_boundary, y_boundary = y_boundary, x_boundary
         lower_bounds = np.flip(lower_bounds)
@@ -314,16 +439,17 @@ def sliding_boundary_archive_heatmap(archive,
                    cmap=cmap,
                    vmin=vmin,
                    vmax=vmax)
-    ax.vlines(x_boundary,
-              lower_bounds[0],
-              upper_bounds[0],
-              color='k',
-              linewidth=boundary_lw)
-    ax.hlines(y_boundary,
-              lower_bounds[1],
-              upper_bounds[1],
-              color='k',
-              linewidth=boundary_lw)
+    if boundary_lw > 0.0:
+        ax.vlines(x_boundary,
+                  lower_bounds[0],
+                  upper_bounds[0],
+                  color='k',
+                  linewidth=boundary_lw)
+        ax.hlines(y_boundary,
+                  lower_bounds[1],
+                  upper_bounds[1],
+                  color='k',
+                  linewidth=boundary_lw)
 
     # Create the colorbar.
     ax.figure.colorbar(t, ax=ax, pad=0.1)

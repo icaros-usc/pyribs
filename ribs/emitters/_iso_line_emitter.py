@@ -23,11 +23,11 @@ class IsoLineEmitter(EmitterBase):
     https://arxiv.org/abs/1804.03906
 
     Args:
-        x0 (array-like): Center of the Gaussian distribution from which to
-            sample solutions when the archive is empty.
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
+        x0 (array-like): Center of the Gaussian distribution from which to
+            sample solutions when the archive is empty.
         iso_sigma (float): Scale factor for the isotropic distribution used when
             generating solutions.
         line_sigma (float): Scale factor for the line distribution used when
@@ -45,8 +45,8 @@ class IsoLineEmitter(EmitterBase):
     """
 
     def __init__(self,
-                 x0,
                  archive,
+                 x0,
                  iso_sigma=0.01,
                  line_sigma=0.2,
                  bounds=None,
@@ -58,10 +58,10 @@ class IsoLineEmitter(EmitterBase):
 
         EmitterBase.__init__(
             self,
+            archive,
             len(self._x0),
             bounds,
             batch_size,
-            archive,
             seed,
         )
 

@@ -13,11 +13,11 @@ class OptimizingEmitter(EmitterBase):
     archive and begin optimizing from there.
 
     Args:
-        x0 (np.ndarray): Initial solution.
-        sigma0 (float): Initial step size.
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
+        x0 (np.ndarray): Initial solution.
+        sigma0 (float): Initial step size.
         selection_rule ("mu" or "filter"): Method for selecting solutions in
             CMA-ES. With "mu" selection, the first half of the solutions will be
             selected, while in "filter", any solutions that were added to the
@@ -46,9 +46,9 @@ class OptimizingEmitter(EmitterBase):
     """
 
     def __init__(self,
+                 archive,
                  x0,
                  sigma0,
-                 archive,
                  selection_rule="mu",
                  restart_rule="basic",
                  weight_rule="truncation",
@@ -59,10 +59,10 @@ class OptimizingEmitter(EmitterBase):
         self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
+            archive,
             len(self._x0),
             bounds,
             batch_size,
-            archive,
             seed,
         )
 
@@ -81,6 +81,7 @@ class OptimizingEmitter(EmitterBase):
         self.opt.reset(self._x0)
         self._num_parents = (self.opt.batch_size //
                              2 if selection_rule == "mu" else None)
+        self._batch_size = self.opt.batch_size
         self._restarts = 0  # Currently not exposed publicly.
 
     @property

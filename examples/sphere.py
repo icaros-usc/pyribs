@@ -22,31 +22,33 @@ The supported algorithms are:
 - `cma_me_rd`: GridArchive with RandomDirectionEmitter
 - `cma_me_rd_mu`: GridArchive with RandomDirectionEmitter with mu selection rule
 - `cma_me_opt`: GridArchive with OptimizingEmitter
+- `cma_me_mixed`: GridArchive, and half (7) of the emitter are
+  RandomDirectionEmitter and half (8) are ImprovementEmitter
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations. Outputs are
-saved in the directory `run_sphere_output` by default. The archive is saved as a
+saved in the directory `sphere_output` by default. The archive is saved as a
 CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are
 saved as `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about the run are
 also saved in `{algorithm}_{dim}_metrics.json`.
 
-To generate a video of the heatmap from the heatmap images, you can use a tool
-like ffmpeg. For example, the following will generate a 6FPS video showing the
+To generate a video of the heatmap from the heatmap images, use a tool like
+ffmpeg. For example, the following will generate a 6FPS video showing the
 heatmap for cma_me_imp with 20 dims.
 
-    ffmpeg -r 6 -i "run_sphere_output/cma_me_imp_20_heatmap_%*.png \
-        run_sphere_output/cma_me_imp_20_heatmap_video.mp4
+    ffmpeg -r 6 -i "sphere_output/cma_me_imp_20_heatmap_%*.png \
+        sphere_output/cma_me_imp_20_heatmap_video.mp4
 
-Usage (see run_sphere function for all args):
-    python run_sphere.py ALGORITHM DIM
+Usage (see sphere function for all args):
+    python sphere.py ALGORITHM DIM
 Example:
-    python run_sphere.py map_elites 20
+    python sphere.py map_elites 20
 
     # To make numpy and sklearn run single-threaded, set env variables for BLAS
     # and OpenMP:
-    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python run_sphere.py map_elites 20
+    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere.py map_elites 20
 Help:
-    python run_sphere.py --help
+    python sphere.py --help
 """
 import json
 import time
@@ -104,7 +106,7 @@ def create_optimizer(algorithm, dim, seed):
     """Creates an optimizer based on the algorithm name.
 
     Args:
-        algorithm (str): Name of the algorithm passed into run_sphere.
+        algorithm (str): Name of the algorithm passed into sphere_main.
         dim (int): Dimensionality of the sphere function.
         seed (int): Main seed or the various components.
     Returns:
@@ -119,11 +121,11 @@ def create_optimizer(algorithm, dim, seed):
     # Create archive.
     if algorithm in [
             "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt"
+            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
     ]:
         archive = GridArchive((500, 500), bounds, seed=seed)
     elif algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
-        archive = CVTArchive(bounds, 10_000, samples=100_000, use_kd_tree=True)
+        archive = CVTArchive(10_000, bounds, samples=100_000, use_kd_tree=True)
     else:
         raise ValueError(f"Algorithm `{algorithm}` is not recognized")
 
@@ -133,16 +135,16 @@ def create_optimizer(algorithm, dim, seed):
         range(seed, seed + num_emitters))
     if algorithm in ["map_elites", "cvt_map_elites"]:
         emitters = [
-            GaussianEmitter(initial_sol,
+            GaussianEmitter(archive,
+                            initial_sol,
                             0.5,
-                            archive,
                             batch_size=batch_size,
                             seed=s) for s in emitter_seeds
         ]
-    elif algorithm == ["line_map_elites", "line_cvt_map_elites"]:
+    elif algorithm in ["line_map_elites", "line_cvt_map_elites"]:
         emitters = [
-            IsoLineEmitter(initial_sol,
-                           archive,
+            IsoLineEmitter(archive,
+                           initial_sol,
                            iso_sigma=0.1,
                            line_sigma=0.2,
                            batch_size=batch_size,
@@ -151,9 +153,9 @@ def create_optimizer(algorithm, dim, seed):
     elif algorithm in ["cma_me_imp", "cma_me_imp_mu"]:
         selection_rule = "filter" if algorithm == "cma_me_imp" else "mu"
         emitters = [
-            ImprovementEmitter(initial_sol,
+            ImprovementEmitter(archive,
+                               initial_sol,
                                0.5,
-                               archive,
                                batch_size=batch_size,
                                selection_rule=selection_rule,
                                seed=s) for s in emitter_seeds
@@ -161,31 +163,41 @@ def create_optimizer(algorithm, dim, seed):
     elif algorithm in ["cma_me_rd", "cma_me_rd_mu"]:
         selection_rule = "filter" if algorithm == "cma_me_rd" else "mu"
         emitters = [
-            RandomDirectionEmitter(initial_sol,
+            RandomDirectionEmitter(archive,
+                                   initial_sol,
                                    0.5,
-                                   archive,
                                    batch_size=batch_size,
                                    selection_rule=selection_rule,
                                    seed=s) for s in emitter_seeds
         ]
     elif algorithm == "cma_me_opt":
         emitters = [
-            OptimizingEmitter(initial_sol,
+            OptimizingEmitter(archive,
+                              initial_sol,
                               0.5,
-                              archive,
                               batch_size=batch_size,
                               seed=s) for s in emitter_seeds
+        ]
+    elif algorithm == "cma_me_mixed":
+        emitters = [
+            RandomDirectionEmitter(
+                archive, initial_sol, 0.5, batch_size=batch_size, seed=s)
+            for s in emitter_seeds[:7]
+        ] + [
+            ImprovementEmitter(
+                archive, initial_sol, 0.5, batch_size=batch_size, seed=s)
+            for s in emitter_seeds[7:]
         ]
 
     return Optimizer(archive, emitters)
 
 
-def run_sphere(algorithm,
-               dim=20,
-               itrs=4500,
-               outdir="run_sphere_output",
-               log_freq=250,
-               seed=None):
+def sphere_main(algorithm,
+                dim=20,
+                itrs=4500,
+                outdir="sphere_output",
+                log_freq=250,
+                seed=None):
     """Demo on the Sphere function.
 
     Args:
@@ -247,12 +259,9 @@ def run_sphere(algorithm,
                 # Generate heatmap.
                 heatmap_path = str(outdir / f"{name}_heatmap_{itr:05d}.png")
                 if isinstance(archive, GridArchive):
-                    # TODO: Replace _1 and _2 when as_pandas() is fixed (see
-                    # https://github.com/icaros-usc/pyribs/issues/44)
                     heatmap_data = np.full(archive.dims, np.nan)
                     for row in data.itertuples():
-                        # pylint: disable = protected-access
-                        heatmap_data[row._1, row._2] = row.objective
+                        heatmap_data[row.index_0, row.index_1] = row.objective
                     sns.heatmap(heatmap_data, cmap="magma", vmin=0, vmax=100)
                     plt.savefig(heatmap_path)
                 elif isinstance(archive, CVTArchive):
@@ -275,4 +284,4 @@ def run_sphere(algorithm,
 
 
 if __name__ == '__main__':
-    fire.Fire(run_sphere)
+    fire.Fire(sphere_main)

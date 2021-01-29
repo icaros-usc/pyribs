@@ -22,8 +22,9 @@
 import os
 import sys
 
-import ribs
 import sphinx_material
+
+import ribs
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -104,7 +105,7 @@ todo_include_todos = False
 # -- Options for HTML output -------------------------------------------
 
 html_show_sourcelink = True
-html_sidebars = {"**": ["globaltoc.html", "localtoc.html"]}
+html_sidebars = {"**": ["globaltoc.html", "localtoc.html", "searchbox.html"]}
 
 html_theme_path = sphinx_material.html_theme_path()
 html_context = sphinx_material.get_html_context()
@@ -227,9 +228,10 @@ plot_html_show_source_link = False
 
 # Intersphinx
 intersphinx_mapping = {
-    "python": ('https://docs.python.org/3', None),
+    "matplotlib": ("https://matplotlib.org", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
+    "python": ("https://docs.python.org/3", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
     "sklearn": ("https://scikit-learn.org/stable", None),
-    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
 }

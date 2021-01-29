@@ -1,19 +1,20 @@
 """Provides the Optimizer."""
 import numpy as np
+from threadpoolctl import threadpool_limits
 
 
 class Optimizer:
     """A basic class that composes an archive with multiple emitters.
 
-    To use this class, first create an archive and list of emitters for your
+    To use this class, first create an archive and list of emitters for the
     QD algorithm. Then, construct the Optimizer with these arguments. Finally,
     repeatedly call :meth:`ask` to collect solutions to analyze, and return the
     objective values and behavior values of those solutions **in the same
     order** using :meth:`tell`.
 
-    As all solutions go into the same archive, the  emitters you pass in must
-    emit solutions with the same dimension (that is, their ``solution_dim``
-    attribute must be the same).
+    As all solutions go into the same archive, the  emitters passed in must emit
+    solutions with the same dimension (that is, their ``solution_dim`` attribute
+    must be the same).
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive object, selected from
@@ -28,8 +29,7 @@ class Optimizer:
 
     def __init__(self, archive, emitters):
         if len(emitters) == 0:
-            raise ValueError(
-                "You must pass in at least one emitter to the optimizer.")
+            raise ValueError("Pass in at least one emitter to the optimizer.")
         self._solution_dim = emitters[0].solution_dim
 
         for idx, emitter in enumerate(emitters[1:]):
@@ -71,16 +71,21 @@ class Optimizer:
             (n_solutions, dim) array: An array of n solutions to evaluate. Each
             row contains a single solution.
         Raises:
-            RuntimeError: You attempt to call this method again without first
-                calling :meth:`tell`.
+            RuntimeError: This method was called without first calling
+                :meth:`tell`.
         """
         if self._asked:
-            raise RuntimeError("You have called ask() twice in a row.")
+            raise RuntimeError("ask() was called twice in a row.")
         self._asked = True
 
         self._solutions = []
-        for emitter in self._emitters:
-            self._solutions.append(emitter.ask())
+
+        # Limit OpenBLAS to single thread. This is typically faster than
+        # multithreading because our data is too small.
+        with threadpool_limits(limits=1, user_api="blas"):
+            for emitter in self._emitters:
+                self._solutions.append(emitter.ask())
+
         self._solutions = np.concatenate(self._solutions, axis=0)
         return self._solutions
 
@@ -98,20 +103,24 @@ class Optimizer:
             behavior_values ((n_solutions, behavior_dm) array): Each row of
                 this array contains a solution's coordinates in behavior space.
         Raises:
-            RuntimeError: You attempt to call this method without first calling
+            RuntimeError: This method is called without first calling
                 :meth:`ask`.
         """
         if not self._asked:
-            raise RuntimeError("You have called tell() without ask().")
+            raise RuntimeError("tell() was called without calling ask().")
         self._asked = False
 
         objective_values = np.asarray(objective_values)
         behavior_values = np.asarray(behavior_values)
 
-        # Keep track of pos because emitters may have different batch sizes.
-        pos = 0
-        for emitter in self._emitters:
-            end = pos + emitter.batch_size
-            emitter.tell(self._solutions[pos:end], objective_values[pos:end],
-                         behavior_values[pos:end])
-            pos = end
+        # Limit OpenBLAS to single thread. This is typically faster than
+        # multithreading because our data is too small.
+        with threadpool_limits(limits=1, user_api="blas"):
+            # Keep track of pos because emitters may have different batch sizes.
+            pos = 0
+            for emitter in self._emitters:
+                end = pos + emitter.batch_size
+                emitter.tell(self._solutions[pos:end],
+                             objective_values[pos:end],
+                             behavior_values[pos:end])
+                pos = end

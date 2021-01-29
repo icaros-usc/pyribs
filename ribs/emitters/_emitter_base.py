@@ -15,6 +15,9 @@ class EmitterBase(ABC):
         accessed by child classes.
 
     Args:
+        archive (ribs.archives.ArchiveBase): An archive to use when creating and
+            inserting solutions. For instance, this can be
+            :class:`ribs.archives.GridArchive`.
         solution_dim (int): The dimension of solutions produced by this emitter.
         bounds (None or array-like): Bounds of the solution space. Each emitter
             decides how to handle these bounds (if at all). Unbounded upper
@@ -28,9 +31,6 @@ class EmitterBase(ABC):
             ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to generate on each call to
             :meth:`ask`.
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
-            :class:`ribs.archives.GridArchive`.
         seed (int): Value to seed the random number generator. Set to None to
             avoid seeding.
     Attributes:
@@ -38,7 +38,7 @@ class EmitterBase(ABC):
         _archive (ribs.archives.ArchiveBase): See ``archive`` arg.
     """
 
-    def __init__(self, solution_dim, bounds, batch_size, archive, seed=None):
+    def __init__(self, archive, solution_dim, bounds, batch_size, seed=None):
         self._rng = np.random.default_rng(seed)
         self._archive = archive
         self._solution_dim = solution_dim

@@ -236,21 +236,24 @@ class SlidingBoundaryArchive(ArchiveBase):
     def add(self, solution, objective_value, behavior_values):
         """Attempts to insert a new solution into the archive.
 
-        This method will remap the archive once every ``self._remap_frequency``
+        This method will remap the archive once every ``self.remap_frequency``
         solutions are found by changing the boundaries of the archive to the
-        percentage marks of the behavior values stored in the buffer and re-add
-        all of the solutions stored in the buffer.
+        percentage marks of the behavior values stored in the buffer and
+        re-adding all of the solutions stored in the buffer.
 
         .. note:: Remapping will not just add solutions in the current archive,
             but **ALL** of the solutions stored in the buffer.
 
         Args:
-            solution (numpy.ndarray): See :meth:`ArchiveBase.add`
+            solution (array-like): See :meth:`ArchiveBase.add`
             objective_value (float): See :meth:`ArchiveBase.add`
-            behavior_values (numpy.ndarray): See :meth:`ArchiveBase.add`
+            behavior_values (array-like): See :meth:`ArchiveBase.add`
         Returns:
             See :meth:`ArchiveBase.add`
         """
+        solution = np.asarray(solution)
+        behavior_values = np.asarray(behavior_values)
+
         self._buffer.add(solution, objective_value, behavior_values)
         self._total_num_sol += 1
 
@@ -314,9 +317,9 @@ class SlidingBoundaryArchive(ArchiveBase):
         Returns:
             pandas.DataFrame: A dataframe where each row is an elite in the
             archive. The dataframe has ``behavior_dim`` columns called
-            ``index-{i}`` for the archive index, ``behavior_dim`` columns called
-            ``behavior-{i}`` for the behavior values, 1 column for the objective
+            ``index_{i}`` for the archive index, ``behavior_dim`` columns called
+            ``behavior_{i}`` for the behavior values, 1 column for the objective
             function value called ``objective``, and ``solution_dim`` columns
-            called ``solution-{i}`` for the solution values.
+            called ``solution_{i}`` for the solution values.
         """
         return ArchiveBase.as_pandas(self, include_solutions)

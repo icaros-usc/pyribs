@@ -28,11 +28,12 @@ def simulate(
     delay: int = 10,
 ):
     """Runs the model in the env and returns the cumulative reward.
+
     Add the `seed` argument to initialize the environment from the given seed
-    (this makes the environment the same between runs).
-    The model is just a linear model from input to output with softmax, so it
-    is represented by a single (action_dim, obs_dim) matrix.
-    Add an integer delay to wait `delay` ms between timesteps.
+    (this makes the environment the same between runs). The model is just a
+    linear model from input to output with argmax, so it is represented by a
+    single (action_dim, obs_dim) matrix. Add an integer delay to wait `delay` ms
+    between timesteps.
     """
     total_reward = 0.0
     env = gym.make(env_name)
@@ -85,9 +86,9 @@ def train_model(
     obs_dim = env.observation_space.shape[0]
 
     archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)], seed=seed)
-    emitter = GaussianEmitter(np.zeros(action_dim * obs_dim),
+    emitter = GaussianEmitter(archive,
+                              np.zeros(action_dim * obs_dim),
                               sigma,
-                              archive,
                               batch_size=64)
     opt = Optimizer(archive, [emitter])
 
@@ -128,7 +129,7 @@ def train_model(
     df.to_pickle(model_filename)
 
     df = archive.as_pandas()
-    df = df.pivot('index-0', 'index-1', 'objective')
+    df = df.pivot('index_0', 'index_1', 'objective')
 
     # Create a heatmap with all of our generated solutions.
     sns.heatmap(df)
@@ -153,6 +154,7 @@ def map_elites(
     run_eval: bool = False,
 ):
     """Uses CMA-ES to train an agent in an environment with discrete actions.
+
     Args:
         env: OpenAI Gym environment name. The environment should have a discrete
             action space.

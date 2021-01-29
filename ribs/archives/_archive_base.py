@@ -275,11 +275,11 @@ class ArchiveBase(ABC):
         than the solution previously in the corresponding bin.
 
         Args:
-            solution (numpy.ndarray): Parameters for the solution.
+            solution (array-like): Parameters for the solution.
             objective_value (float): Objective function evaluation of this
                 solution.
-            behavior_values (numpy.ndarray): Coordinates in behavior space of
-                this solution.
+            behavior_values (array-like): Coordinates in behavior space of this
+                solution.
         Returns:
             tuple: 2-element tuple describing the result of the add operation.
             These outputs are particularly useful for algorithms such as CMA-ME.
@@ -299,6 +299,9 @@ class ArchiveBase(ABC):
                   previously in the archive
                 - ``NEW`` -> the objective value passed in
         """
+        solution = np.asarray(solution)
+        behavior_values = np.asarray(behavior_values)
+
         index = self._get_index(behavior_values)
         old_objective = self._objective_values[index]
         was_inserted, already_occupied = self._add_numba(
@@ -321,10 +324,8 @@ class ArchiveBase(ABC):
     def elite_with_behavior(self, behavior_values):
         """Gets the elite with behavior vals in the same bin as those specified.
 
-        For instance, in the case of CVTArchive, this method would find the bin
-        with the centroid closest to the behavior values. Then, it would return
-        the elite in that bin if it existed.
-
+        Args:
+            behavior_values (array-like): Coordinates in behavior space.
         Returns:
             tuple: 3-element tuple for the elite if it is found:
 
@@ -343,7 +344,7 @@ class ArchiveBase(ABC):
             ``sol, obj, beh = archive.elite_with_behavior(...)`` will still
             work).
         """
-        index = self._get_index(behavior_values)
+        index = self._get_index(np.asarray(behavior_values))
         if self._occupied[index]:
             return (self._solutions[index], self._objective_values[index],
                     self._behavior_values[index])
@@ -384,17 +385,17 @@ class ArchiveBase(ABC):
         This base class implementation will create a dataframe consisting of:
 
         - ``len(self._storage_dims)`` columns for the index, named
-          ``index-0, index-1, ...``
+          ``index_0, index_1, ...``
         - ``self._behavior_dim`` columns for the behavior characteristics, named
-          ``behavior-0, behavior-1, ...``
+          ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``
         - ``self._solution_dim`` columns for the solution vectors, named
-          ``solution-0, solution-1, ...``
+          ``solution_0, solution_1, ...``
 
         In short, the dataframe will look like this:
 
         +---------+-----------+------+-------------+-------------+------+------------+-------------+-------------+-----+
-        | index-0 |  index-1  | ...  | behavior-0  | behavior-1  | ...  | objective  | solution-0  | solution-1  | ... |
+        | index_0 |  index_1  | ...  | behavior_0  | behavior_1  | ...  | objective  | solution_0  | solution_1  | ... |
         +=========+===========+======+=============+=============+======+============+=============+=============+=====+
         | ...     |           | ...  |             | ...         |      | ...        |             | ...         |     |
         +---------+-----------+------+-------------+-------------+------+------------+-------------+-------------+-----+
@@ -418,11 +419,11 @@ class ArchiveBase(ABC):
             else:
                 index_columns = tuple(map(list, zip(*self._occupied_indices)))
         for i in range(index_dim):
-            data[f"index-{i}"] = np.asarray(index_columns[i], dtype=int)
+            data[f"index_{i}"] = np.asarray(index_columns[i], dtype=int)
 
         behavior_values = self._behavior_values[index_columns]
         for i in range(self._behavior_dim):
-            data[f"behavior-{i}"] = np.asarray(behavior_values[:, i],
+            data[f"behavior_{i}"] = np.asarray(behavior_values[:, i],
                                                dtype=self.dtype)
 
         data["objective"] = np.asarray(self._objective_values[index_columns],
@@ -431,6 +432,6 @@ class ArchiveBase(ABC):
         if include_solutions:
             solutions = self._solutions[index_columns]
             for i in range(self._solution_dim):
-                data[f"solution-{i}"] = np.asarray(solutions[:, i],
+                data[f"solution_{i}"] = np.asarray(solutions[:, i],
                                                    dtype=self.dtype)
         return pd.DataFrame(data)

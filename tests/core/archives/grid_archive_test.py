@@ -6,8 +6,6 @@ from ribs.archives import AddStatus
 
 from .conftest import get_archive_data
 
-# pylint: disable = invalid-name
-
 
 @pytest.fixture
 def _data():
@@ -31,9 +29,16 @@ def test_properties_are_correct(_data):
     assert np.all(_data.archive.interval_size == [2, 4])
 
 
-def test_add_to_archive(_data):
-    status, value = _data.archive.add(_data.solution, _data.objective_value,
-                                      _data.behavior_values)
+@pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
+def test_add_to_archive(_data, use_list):
+    if use_list:
+        status, value = _data.archive.add(list(_data.solution),
+                                          _data.objective_value,
+                                          list(_data.behavior_values))
+    else:
+        status, value = _data.archive.add(_data.solution, _data.objective_value,
+                                          _data.behavior_values)
+
     assert status == AddStatus.NEW
     assert np.isclose(value, _data.objective_value)
     _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,
@@ -104,11 +109,11 @@ def test_as_pandas(with_entry, include_solutions, dtype):
         df = data.archive.as_pandas(include_solutions)
 
     expected_columns = [
-        'index-0', 'index-1', 'behavior-0', 'behavior-1', 'objective'
+        'index_0', 'index_1', 'behavior_0', 'behavior_1', 'objective'
     ]
     expected_dtypes = [int, int, dtype, dtype, dtype]
     if include_solutions:
-        expected_columns += ['solution-0', 'solution-1', 'solution-2']
+        expected_columns += ['solution_0', 'solution_1', 'solution_2']
         expected_dtypes += [dtype, dtype, dtype]
     assert (df.columns == expected_columns).all()
     assert (df.dtypes == expected_dtypes).all()
