@@ -3,7 +3,5 @@ include HISTORY.md
 include LICENSE
 include README.md
 
-recursive-exclude tests
-recursive-exclude docs
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
+global-exclude __pycache__
+global-exclude *.py[co]

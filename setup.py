@@ -58,7 +58,7 @@ extras_require = {
 
         # Distribution
         "bump2version==0.5.11",
-        "wheel==0.33.6",
+        "wheel==0.36.2",
         "twine==1.14.0",
     ]
 }
@@ -90,9 +90,9 @@ setup(
     keywords="ribs",
     name="ribs",
     packages=find_packages(include=["ribs", "ribs.*"]),
-    python_requires=">=3.6.0",
+    python_requires=">=3.6,<3.9",
     test_suite="tests",
     url="https://github.com/icaros-usc/ribs",
-    version="version='0.1.1'",
+    version="0.1.1",
     zip_safe=False,
 )
