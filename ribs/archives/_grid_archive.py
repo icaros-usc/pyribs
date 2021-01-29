@@ -25,9 +25,10 @@ class GridArchive(ArchiveBase):
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds ``(-1, 1)``, and
-            the second dimension should have bounds ``(-2, 2)``.
+            the second dimension should have bounds ``(-2, 2)``. ``ranges``
+            should be the same length as ``dims``.
         seed (int): Value to seed the random number generator. Set to None to
-            avoid seeding.
+            avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
             and behavior values. We only support ``"f"`` / :class:`np.float32`
             and ``"d"`` / :class:`np.float64`.

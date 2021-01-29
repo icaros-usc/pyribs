@@ -34,7 +34,7 @@ class RandomBuffer:
 
     Args:
         seed (int): Value to seed the random number generator. Set to None to
-            avoid seeding.
+            avoid a fixed seed.
         buf_size (int): How many random floats to store at once in the buffer.
     """
 
@@ -99,7 +99,7 @@ class ArchiveBase(ABC):
             values and behavior values.
         behavior_dim (int): The dimension of the behavior space.
         seed (int): Value to seed the random number generator. Set to None to
-            avoid seeding.
+            avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
             and behavior values. We only support ``"f"`` / :class:`np.float32`
             and ``"d"`` / :class:`np.float64`.

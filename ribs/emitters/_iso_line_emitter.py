@@ -7,10 +7,10 @@ from ribs.emitters._emitter_base import EmitterBase
 
 
 class IsoLineEmitter(EmitterBase):
-    """Attempts to emit solutions from the same hypervolume as existing elites.
+    """Emits solutions that are nudged towards other archive solutions.
 
-    If the archive is empty, calls to ask() will generate solutions from an
-    isotropic Gaussian distribution with mean ``x0`` and standard deviation
+    If the archive is empty, calls to :meth:`ask` will generate solutions from
+    an isotropic Gaussian distribution with mean ``x0`` and standard deviation
     ``iso_sigma``. Otherwise, to generate each new solution, the emitter selects
     a pair of elites :math:`x_i` and :math:`x_j` and samples from
 
@@ -19,8 +19,8 @@ class IsoLineEmitter(EmitterBase):
         x_i + \\sigma_{iso} \\mathcal{N}(0,\\mathcal{I}) +
             \\sigma_{line}(x_j - x_i)\\mathcal{N}(0,1)
 
-    This emitter is based on the operator presented in this paper:
-    https://arxiv.org/abs/1804.03906
+    This emitter is based on the Iso+LineDD operator presented in `Vassiliades
+    2018 <https://arxiv.org/abs/1804.03906>`_.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -39,9 +39,9 @@ class IsoLineEmitter(EmitterBase):
             in this array-like can be None to indicate no bound, or a tuple of
             ``(lower_bound, upper_bound)``, where ``lower_bound`` or
             ``upper_bound`` may be None to indicate no bound.
-        batch_size (int): Number of solutions to send back in the ask() method.
+        batch_size (int): Number of solutions to send back in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to
-            avoid seeding.
+            avoid a fixed seed.
     """
 
     def __init__(self,
