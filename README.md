@@ -4,7 +4,7 @@
 | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: |
 | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Automated Testing](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Automated+Testing") | [ribs.readthedocs.io](https://ribs.readthedocs.io) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=latest&style=flat-square)](https://readthedocs.org/projects/ribs/) |
 
-A _bare-bones_ quality diversity optimization library. pyribs is the official
+A _bare-bones_ quality diversity optimization library. The pyribs library is the official
 reference implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME)
 algorithm and implements the _Rapid Illumination of Behavior Spaces (RIBS)_
 redesign of MAP-Elites detailed in the paper
@@ -100,7 +100,7 @@ For more information, refer to the [documentation](https://docs.pyribs.org/).
 
 ## Installation
 
-pyribs supports Python 3.6 and greater. Earlier versions may work but are not
+The pyribs library supports Python 3.6 and greater. Earlier Python versions may work but are not
 officially supported.
 
 To install from PyPI, run
@@ -109,8 +109,7 @@ To install from PyPI, run
 pip install ribs
 ```
 
-This command only installs dependencies for the core of pyribs. To be able to
-use tools like `ribs.visualize`, run
+This command only installs dependencies for the core of pyribs. To install support tools like `ribs.visualize`, run
 
 ```bash
 pip install ribs[all]
@@ -165,7 +164,7 @@ This project is developed and maintained by the
 
 ## License
 
-pyribs is released under the
+The pyribs library is released under the
 [MIT License](https://github.com/icaros-usc/pyribs/blob/master/LICENSE).
 
 ## Credits
