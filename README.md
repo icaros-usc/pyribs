@@ -7,7 +7,7 @@
 A _bare-bones_ quality diversity optimization library. This library is the
 official reference implementation of the Covariance Matrix Adaptation MAP-Elites
 algorithm and implements the _Rapid Illumination of Behavior Spaces (RIBS)_
-redesign of MAP-Elites detailed in the paper
+redesign of MAP-Elites (CMA-ME) detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
 
 ## Overview
