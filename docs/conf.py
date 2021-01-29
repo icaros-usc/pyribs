@@ -117,7 +117,7 @@ html_title = "pyribs v" + ribs.__version__
 # material theme options (see theme.conf for more information)
 html_theme_options = {
     "nav_title": "pyribs",
-    "base_url": "https://ribs.readthedocs.io/en/latest/",
+    "base_url": "https://docs.pyribs.org/en/latest/",
     "repo_url": "https://github.com/icaros-usc/pyribs/",
     "repo_name": "pyribs",
     "google_analytics_account": None,
