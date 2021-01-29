@@ -39,7 +39,7 @@ application:
   the algorithm prioritizes quality or diversity.
 - An **Optimizer** joins the **Archive** and **Emitters** together and acts as a
   scheduling algorithm for emitters. The **Optimizer** provides an iterface for
-  requesting new candidate solutions and telling the algorithm how solutions
+  requesting new candidate solutions and telling the algorithm how candidates
   performed.
 
 ## Usage
