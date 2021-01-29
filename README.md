@@ -14,15 +14,11 @@ redesign of MAP-Elites detailed in the paper
 
 ![Types of Optimization](readme_assets/optimization_types.png)
 
-Unlike traditional optimizers which seek to find a single high-performing
-solution to a problem, Quality-Diversity (QD) algorithms seek to discover
-multiple high-performing solutions. These solutions are characterized by
-properties known as behavior characteristics (BCs). After a single run, a QD
-algorithm outputs an archive with the solutions it has found. Each solution is
-the highest-performing one in a certain region of the behavior space. pyribs
-follows the Rapid Illumination of Behavior Spaces framework introduced in
-[Fontaine 2020](https://arxiv.org/abs/1912.02400). Under this framework, pyribs
-divides a QD algorithm into three components:
+Quality-diversity (QD) optimization is a subfield of optimization where solutions generated cover every point in a behavior space while simultaneously maximizing (or minimizing) a single objective. QD algorithms within the MAP-Elites family of QD algorithms produce heatmaps as output where each cell contains the best discovered representative of a region in behavior space.
+
+While many QD libraries exist, this particular library aims to be the QD analog to the [pycma](https://pypi.org/project/cma/) library (a single objective optimization library). In contrast to other libraries, this library is "bare-bones" and (like [pycma](https://pypi.org/project/cma/)) focuses solely on optimizing fixed dimensional continuous domains. Focusing solely on this one commonly occuring problem allows us to optimize the library for performance as well as simplicity of use. QD algorithms are used extensively in neuroevolution research and application. If you are looking for a QD library which implements augmenting topologies or other complex operations beyond the scope of this library, we recommend checking out [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or [sferes](https://github.com/sferes2/sferes2).
+
+TODO
 
 - The **Archive** stores solutions found by the algorithm so far.
 - **Emitters** (one or more) take the archive and decide how to generate new
