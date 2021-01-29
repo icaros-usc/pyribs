@@ -14,9 +14,24 @@ redesign of MAP-Elites (CMA-ME) detailed in the paper
 
 ![Types of Optimization](readme_assets/optimization_types.png)
 
-Quality-diversity (QD) optimization is a subfield of optimization where solutions generated cover every point in a behavior space while simultaneously maximizing (or minimizing) a single objective. QD algorithms within the MAP-Elites family of QD algorithms produce heatmaps as output where each cell contains the best discovered representative of a region in behavior space.
+Quality-diversity (QD) optimization is a subfield of optimization where
+solutions generated cover every point in a behavior space while simultaneously
+maximizing (or minimizing) a single objective. QD algorithms within the
+MAP-Elites family of QD algorithms produce heatmaps (archives) as output where
+each cell contains the best discovered representative of a region in behavior
+space.
 
-While many QD libraries exist, this particular library aims to be the QD analog to the [pycma](https://pypi.org/project/cma/) library (a single objective optimization library). In contrast to other libraries, this library is "bare-bones" and (like [pycma](https://pypi.org/project/cma/)) focuses solely on optimizing fixed dimensional continuous domains. Focusing solely on this one commonly occuring problem allows us to optimize the library for performance as well as simplicity of use. QD algorithms are used extensively in neuroevolution research and application. If you are looking for a QD library which implements augmenting topologies or other complex operations beyond the scope of this library, we recommend checking out [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or [sferes](https://github.com/sferes2/sferes2).
+While many QD libraries exist, this particular library aims to be the QD analog
+to the [pycma](https://pypi.org/project/cma/) library (a single objective
+optimization library). In contrast to other libraries, this library is
+"bare-bones" and (like [pycma](https://pypi.org/project/cma/)) focuses solely on
+optimizing fixed dimensional continuous domains. Focusing solely on this one
+commonly occurring problem allows us to optimize the library for performance as
+well as simplicity of use. QD algorithms are used extensively in neuroevolution
+research and applications. For a QD library which implements augmenting
+topologies or other complex operations beyond the scope of this library, we
+recommend referring to [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
+[sferes](https://github.com/sferes2/sferes2).
 
 TODO
 
@@ -46,6 +61,7 @@ for 1000 iterations. For simplicity, the BCs are the first two entries of each
 
 ```python
 import numpy as np
+
 from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
@@ -58,18 +74,20 @@ for itr in range(1000):
     solutions = optimizer.ask()
 
     objectives = -np.sum(np.square(solutions), axis=1)
-    bcs = solutions[:,:2]
+    bcs = solutions[:, :2]
 
     optimizer.tell(objectives, bcs)
 ```
 
-To visualize this archive, we can then use Seaborn's `heatmap` like so:
+To visualize this archive with matplotlib, we can then use the
+`grid_archive_heatmap` function from `ribs.visualize`.
 
 ```python
-import seaborn as sns
+import matplotlib.pyplot as plt
+from ribs.visualize import grid_archive_heatmap
 
-data = archive.as_pandas().pivot('index-0', 'index-1', 'objective')
-sns.heatmap(data)
+grid_archive_heatmap(archive)
+plt.show()
 ```
 
 ![Sphere heatmap](readme_assets/sphere_heatmap.png)
