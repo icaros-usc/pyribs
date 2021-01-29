@@ -103,7 +103,7 @@ class CMAEvolutionStrategy:
         self.weight_rule = weight_rule
 
         # Calculate gap between covariance matrix updates.
-        num_parents = batch_size // 2
+        num_parents = self.batch_size // 2
         *_, c1, cmu = self._calc_strat_params(self.solution_dim, num_parents,
                                               self.weight_rule)
         self.lazy_gap_evals = (0.5 * self.solution_dim * self.batch_size *

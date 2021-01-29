@@ -81,6 +81,7 @@ class OptimizingEmitter(EmitterBase):
         self.opt.reset(self._x0)
         self._num_parents = (self.opt.batch_size //
                              2 if selection_rule == "mu" else None)
+        self._batch_size = self.opt.batch_size
         self._restarts = 0  # Currently not exposed publicly.
 
     @property

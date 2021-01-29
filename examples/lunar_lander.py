@@ -31,7 +31,7 @@ def simulate(
 
     Add the `seed` argument to initialize the environment from the given seed
     (this makes the environment the same between runs). The model is just a
-    linear model from input to output with softmax, so it is represented by a
+    linear model from input to output with argmax, so it is represented by a
     single (action_dim, obs_dim) matrix. Add an integer delay to wait `delay` ms
     between timesteps.
     """
