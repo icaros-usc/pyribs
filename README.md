@@ -23,7 +23,7 @@ space.
 
 While many QD libraries exist, this particular library aims to be the QD analog
 to the [pycma](https://pypi.org/project/cma/) library (a single objective
-optimization library). In contrast to other libraries, this library is
+optimization library). In contrast to other QD libraries, this library is
 "bare-bones" and (like [pycma](https://pypi.org/project/cma/)) focuses solely on
 optimizing fixed dimensional continuous domains. Focusing solely on this one
 commonly occurring problem allows us to optimize the library for performance as
@@ -33,14 +33,11 @@ topologies or other complex neuroevolution operations beyond the scope of this l
 recommend using [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
 [sferes](https://github.com/sferes2/sferes2).
 
-TODO
+A user of pyribs selects three components that meet their specific application needs:
 
-- The **Archive** stores solutions found by the algorithm so far.
-- **Emitters** (one or more) take the archive and decide how to generate new
-  solutions from it.
-- An **Optimizer** joins the algorithm together. The optimizer repeatedly
-  generates solutions from the archive using the emitters, and adds the
-  evaluated solutions back into the archive.
+- An **Archive** saves the best representatives generated within behavior space. 
+- **Emitters** control how new candidate solutions are generated and effect if the algorithm prioritizes quality or diversity.
+- An **Optimizer** joins the **Archive** and **Emitters** together. The **Optimizer** provides an iterface for requesting new candidate solutions and telling the algorithm how solutions performed.
 
 ## Usage Example
 
