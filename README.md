@@ -8,6 +8,8 @@ A _bare-bones_ quality diversity optimization library. Our library is the offici
 
 ## Overview
 
+![Types of Optimization](readme_assets/optimization_types.png)
+
 Unlike traditional optimizers which seek to find a single high-performing
 solution to a problem, Quality-Diversity (QD) algorithms seek to discover
 multiple high-performing solutions. These solutions are characterized by
