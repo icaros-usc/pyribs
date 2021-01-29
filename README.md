@@ -44,20 +44,14 @@ application:
 
 ## Usage Example
 
-pyribs uses an ask-tell interface similar to that of
-[pycma](https://pypi.org/project/cma/). The following example shows how to run
-the RIBS version of MAP-Elites. Specifically, we create:
+Here we show an example application of CMA-ME in pyribs. To initialize the algorithm, we must first create:
 
-- A 2D **GridArchive** with 20 bins and a range of (-1, 1) in each dimension.
-- A **GaussianEmitter**, which in this case starts by drawing solutions from a
-  Gaussian distribution centered at **0** with standard deviation 0.1. After the
-  first iteration, this emitter selects random solutions in the archive and adds
-  Gaussian noise to it with standard deviation 0.1.
+- A 2D **GridArchive** where each dimension contains 20 bins across the range [-1, 1].
+- A **ImprovementEmitter**, which starts from the search point **0** in 10 dimensional space with a sampling Gaussian distribution with standard deviation 0.1.
 - An **Optimizer** that combines the archive and emitter together.
 
-After creating the components, we then run on the negative 10-D Sphere function
-for 1000 iterations. For simplicity, the BCs are the first two entries of each
-10-D solution vector.
+After initializing the components, we optimize (pyribs maximizes by default) the negative 10-D Sphere function
+for 1000 iterations. Users of the [pycma](https://pypi.org/project/cma/) library will be familiar with ask-tell interface (which pyribs adopted). After evaluating the solution, we tell the algorithm the objective value and behavior characteristics (BCs) of each candidate solution. The algorithm will then populate the archive and make decisions on where to sample solutions from next.
 
 ```python
 import numpy as np
