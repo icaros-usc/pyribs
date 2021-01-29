@@ -24,11 +24,11 @@ representative of a region in behavior space.
 While many QD libraries exist, this particular library aims to be the QD analog
 to the [pycma](https://pypi.org/project/cma/) library (a single objective
 optimization library). In contrast to other QD libraries, this library is
-"bare-bones" and (like [pycma](https://pypi.org/project/cma/)) focuses solely on
-optimizing fixed dimensional continuous domains. Focusing solely on this one
-commonly-occurring problem allows us to optimize the library for performance as
-well as simplicity of use. For applications of QD on discrete domains, we
-recommend using [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
+"bare-bones" and (like pycma) focuses solely on optimizing fixed dimensional
+continuous domains. Focusing solely on this one commonly-occurring problem
+allows us to optimize the library for performance as well as simplicity of use.
+For applications of QD on discrete domains, we recommend using
+[qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
 [sferes](https://github.com/sferes2/sferes2).
 
 A user of pyribs selects three components that meet the needs of their
