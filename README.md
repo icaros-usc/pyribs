@@ -101,8 +101,8 @@ For more information, refer to the [documentation](https://docs.pyribs.org/).
 
 ## Installation
 
-The pyribs library supports Python 3.6 and greater. Earlier Python versions may
-work but are not officially supported.
+The pyribs library supports Python 3.6-3.8 (not yet 3.9). Earlier Python
+versions may work but are not officially supported.
 
 To install from PyPI, run
 
