@@ -60,6 +60,7 @@ extras_require = {
         "bump2version==0.5.11",
         "wheel==0.36.2",
         "twine==1.14.0",
+        "check-wheel-contents==0.2.0",
     ]
 }
 
@@ -86,6 +87,7 @@ setup(
     extras_require=extras_require,
     license="MIT license",
     long_description=readme + "\n\n" + history,
+    long_description_content_type="markdown",
     include_package_data=True,
     keywords="ribs",
     name="ribs",
