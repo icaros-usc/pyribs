@@ -6,7 +6,6 @@
 :caption: Usage
 :hidden:
 
-getting-started
 tutorials
 examples
 ```
