@@ -38,7 +38,7 @@ pyribs uses an ask-tell interface similar to that of
 the RIBS version of MAP-Elites. Specifically, we create:
 
 - A 2D **GridArchive** with 20 bins and a range of (-1, 1) in each dimension.
-- A **GaussianEmitter**, which in this case starts by drawing examples from a
+- A **GaussianEmitter**, which in this case starts by drawing solutions from a
   Gaussian distribution centered at **0** with standard deviation 0.1. After the
   first iteration, this emitter selects random solutions in the archive and adds
   Gaussian noise to it with standard deviation 0.1.
