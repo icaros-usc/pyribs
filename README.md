@@ -4,8 +4,8 @@
 | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: |
 | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Automated Testing](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Automated+Testing") | [ribs.readthedocs.io](https://ribs.readthedocs.io) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=latest&style=flat-square)](https://readthedocs.org/projects/ribs/) |
 
-A _bare-bones_ quality diversity optimization library. This library is the
-official reference implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME) 
+A _bare-bones_ quality diversity optimization library. pyribs is the official
+reference implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME)
 algorithm and implements the _Rapid Illumination of Behavior Spaces (RIBS)_
 redesign of MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
@@ -14,12 +14,12 @@ redesign of MAP-Elites detailed in the paper
 
 ![Types of Optimization](readme_assets/optimization_types.png)
 
-[Quality-diversity (QD) optimization](https://arxiv.org/abs/2012.04322) is a subfield of optimization where
-solutions generated cover every point in a behavior space while simultaneously
-maximizing (or minimizing) a single objective. QD algorithms within the
-MAP-Elites family of QD algorithms produce heatmaps (archives) as output where
-each cell contains the best discovered representative of a region in behavior
-space.
+[Quality-diversity (QD) optimization](https://arxiv.org/abs/2012.04322) is a
+subfield of optimization where solutions generated cover every point in a
+behavior space while simultaneously maximizing (or minimizing) a single
+objective. QD algorithms within the MAP-Elites family of QD algorithms produce
+heatmaps (archives) as output where each cell contains the best discovered
+representative of a region in behavior space.
 
 While many QD libraries exist, this particular library aims to be the QD analog
 to the [pycma](https://pypi.org/project/cma/) library (a single objective
@@ -29,15 +29,20 @@ optimizing fixed dimensional continuous domains. Focusing solely on this one
 commonly occurring problem allows us to optimize the library for performance as
 well as simplicity of use. QD algorithms are used extensively in neuroevolution
 research and applications. For a QD library which implements augmenting
-topologies or other complex neuroevolution operations beyond the scope of this library, we
-recommend using [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
+topologies or other complex neuroevolution operations beyond the scope of this
+library, we recommend using [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
 [sferes](https://github.com/sferes2/sferes2).
 
-A user of pyribs selects three components that meet their specific application needs:
+A user of pyribs selects three components that meet their specific application
+needs:
 
-- An **Archive** saves the best representatives generated within behavior space. 
-- **Emitters** control how new candidate solutions are generated and effect if the algorithm prioritizes quality or diversity.
-- An **Optimizer** joins the **Archive** and **Emitters** together and acts as a scheduling algorithm for emitters. The **Optimizer** provides an iterface for requesting new candidate solutions and telling the algorithm how solutions performed.
+- An **Archive** saves the best representatives generated within behavior space.
+- **Emitters** control how new candidate solutions are generated and effect if
+  the algorithm prioritizes quality or diversity.
+- An **Optimizer** joins the **Archive** and **Emitters** together and acts as a
+  scheduling algorithm for emitters. The **Optimizer** provides an iterface for
+  requesting new candidate solutions and telling the algorithm how solutions
+  performed.
 
 ## Usage Example
 
@@ -54,7 +59,7 @@ the RIBS version of MAP-Elites. Specifically, we create:
 
 After creating the components, we then run on the negative 10-D Sphere function
 for 1000 iterations. For simplicity, the BCs are the first two entries of each
-10D solution vector.
+10-D solution vector.
 
 ```python
 import numpy as np
@@ -89,7 +94,7 @@ plt.show()
 
 ![Sphere heatmap](readme_assets/sphere_heatmap.png)
 
-For more information, please refer to the
+For more information, refer to the
 [documentation](https://ribs.readthedocs.io/).
 
 ## Installation
