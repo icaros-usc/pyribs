@@ -42,16 +42,26 @@ application:
   requesting new candidate solutions and telling the algorithm how solutions
   performed.
 
-## Usage Example
+## Usage
 
-Here we show an example application of CMA-ME in pyribs. To initialize the algorithm, we must first create:
+Here we show an example application of CMA-ME in pyribs. To initialize the
+algorithm, we first create:
 
-- A 2D **GridArchive** where each dimension contains 20 bins across the range [-1, 1].
-- A **ImprovementEmitter**, which starts from the search point **0** in 10 dimensional space and a starting Gaussian sampling distribution with standard deviation 0.1.
+- A 2D **GridArchive** where each dimension contains 20 bins across the range
+  [-1, 1].
+- A **ImprovementEmitter**, which starts from the search point **0** in 10
+  dimensional space and a starting Gaussian sampling distribution with standard
+  deviation 0.1.
 - An **Optimizer** that combines the archive and emitter together.
 
-After initializing the components, we optimize (pyribs maximizes by default) the negative 10-D Sphere function
-for 1000 iterations. Users of the [pycma](https://pypi.org/project/cma/) library will be familiar with ask-tell interface (which pyribs adopted). First, the user asks for new candidate solutions. After evaluating the solution, we tell the algorithm the objective value and behavior characteristics (BCs) of each candidate solution. The algorithm will then populate the archive and make decisions on where to sample solutions from next.
+After initializing the components, we optimize (pyribs maximizes) the negative
+10-D Sphere function for 1000 iterations. Users of
+[pycma](https://pypi.org/project/cma/) will be familiar with the ask-tell
+interface (which pyribs adopted). First, the user must `ask` for new candidate
+solutions. After evaluating the solution, they `tell` the algorithm the
+objective value and behavior characteristics (BCs) of each candidate solution.
+The algorithm then populates the archive and makes decisions on where to sample
+solutions from next.
 
 ```python
 import numpy as np
@@ -73,7 +83,7 @@ for itr in range(1000):
     optimizer.tell(objectives, bcs)
 ```
 
-To visualize this archive with matplotlib, we can then use the
+To visualize this archive with matplotlib, we then use the
 `grid_archive_heatmap` function from `ribs.visualize`.
 
 ```python
@@ -86,8 +96,7 @@ plt.show()
 
 ![Sphere heatmap](readme_assets/sphere_heatmap.png)
 
-For more information, refer to the
-[documentation](https://ribs.readthedocs.io/).
+For more information, refer to the [documentation](https://docs.pyribs.org/).
 
 ## Installation
 
@@ -123,7 +132,7 @@ You should see a version number like `0.2.0` in the output.
 
 ## Documentation
 
-See here for the documentation: <https://ribs.readthedocs.io>
+See here for the documentation: <https://docs.pyribs.org>
 
 To serve the documentation locally, clone the repo and install the development
 requirements with
