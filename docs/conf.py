@@ -126,9 +126,9 @@ html_theme_options = {
     #  "logo_icon": "&#xe869",
     "repo_type": "github",
     "globaltoc_depth": 2,
-    "color_primary": "indigo",
-    "color_accent": "light-blue",
-    "touch_icon": "images/apple-icon-152x152.png",
+    "color_primary": "deep-purple",
+    "color_accent": "purple",
+    "touch_icon": None,
     "master_doc": False,
     "nav_links": [{
         "href": "index",
