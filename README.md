@@ -24,8 +24,8 @@ representative of a region in behavior space.
 While many QD libraries exist, this particular library aims to be the QD analog
 to the [pycma](https://pypi.org/project/cma/) library (a single objective
 optimization library). In contrast to other QD libraries, this library is
-"bare-bones" meaning pyribs (like [pycma](https://pypi.org/project/cma/))
-focuses solely on optimizing fixed dimensional continuous domains. Focusing
+"bare-bones," meaning pyribs (like [pycma](https://pypi.org/project/cma/))
+focuses solely on optimizing fixed-dimensional continuous domains. Focusing
 solely on this one commonly-occurring problem allows us to optimize the library
 for performance as well as simplicity of use. For applications of QD on discrete
 domains, we recommend using [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
@@ -35,10 +35,10 @@ A user of pyribs selects three components that meet the needs of their
 application:
 
 - An **Archive** saves the best representatives generated within behavior space.
-- **Emitters** control how new candidate solutions are generated and effect if
+- **Emitters** control how new candidate solutions are generated and affect if
   the algorithm prioritizes quality or diversity.
 - An **Optimizer** joins the **Archive** and **Emitters** together and acts as a
-  scheduling algorithm for emitters. The **Optimizer** provides an iterface for
+  scheduling algorithm for emitters. The **Optimizer** provides an interface for
   requesting new candidate solutions and telling the algorithm how candidates
   performed.
 
@@ -50,18 +50,18 @@ algorithm, we first create:
 - A 2D **GridArchive** where each dimension contains 20 bins across the range
   [-1, 1].
 - A **ImprovementEmitter**, which starts from the search point **0** in 10
-  dimensional space and a starting Gaussian sampling distribution with standard
-  deviation 0.1.
+  dimensional space and a Gaussian sampling distribution with standard deviation
+  0.1.
 - An **Optimizer** that combines the archive and emitter together.
 
 After initializing the components, we optimize (pyribs maximizes) the negative
 10-D Sphere function for 1000 iterations. Users of
 [pycma](https://pypi.org/project/cma/) will be familiar with the ask-tell
-interface (which pyribs adopted). First, the user must `ask` for new candidate
-solutions. After evaluating the solution, they `tell` the algorithm the
-objective value and behavior characteristics (BCs) of each candidate solution.
-The algorithm then populates the archive and makes decisions on where to sample
-solutions from next.
+interface (which pyribs adopted). First, the user must `ask` the optimizer for
+new candidate solutions. After evaluating the solution, they `tell` the
+optimizer the objective value and behavior characteristics (BCs) of each
+candidate solution. The algorithm then populates the archive and makes decisions
+on where to sample solutions next.
 
 ```python
 import numpy as np
@@ -162,6 +162,8 @@ This project is developed and maintained by the
 - [Sam Sommerer](https://github.com/sam-som-usc)
 - Nikitas Klapsis
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
+
+We thank [Amy K. Hoover](http://amykhoover.com/) and [Julian Togelius](http://julian.togelius.com/) for their contributions deriving the CMA-ME algorithm.
 
 ## License
 
