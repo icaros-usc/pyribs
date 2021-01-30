@@ -65,8 +65,8 @@ extras_require = {
 }
 
 setup(
-    author="ICAROS Lab",
-    author_email="tjanaka@usc.edu",
+    author="ICAROS Lab pyribs Team",
+    author_email="team@pyribs.org",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
