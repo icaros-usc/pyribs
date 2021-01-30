@@ -11,11 +11,11 @@
 
 ## 0.1.0 (2020-09-11)
 
-- Test release
+- Test release (now removed)
 
 ### 0.1.1 (2021-01-29)
 
-- Test release
+- Test release (now removed)
 
 ## 0.0.0 (2020-09-11)
 
