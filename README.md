@@ -101,8 +101,9 @@ For more information, refer to the [documentation](https://docs.pyribs.org/).
 
 ## Installation
 
-The pyribs library supports Python 3.6-3.8 (3.9 support coming soon). Earlier
-Python versions may work but are not officially supported.
+The pyribs library supports Python 3.6-3.8 (for now, 3.9 will only work if you
+are able to build [llvmlite](https://github.com/numba/llvmlite) on your system).
+Earlier Python versions may work but are not officially supported.
 
 To install from PyPI, run
 
