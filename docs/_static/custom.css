@@ -1,7 +1,7 @@
 /* Styles the left border of input cells in rendered Jupyter notebooks (they are
  * green by default, which does not match the theme). */
 div.cell div.cell_input {
-  border-left-color: #3f51b5 !important;
+  border-left-color: #7e57c2 !important;
 }
 
 /* Increases the visibility of classes, methods, etc. in API definitions. */
