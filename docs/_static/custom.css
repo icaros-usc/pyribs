@@ -6,6 +6,15 @@
   background-color: rgba(192, 192, 192, 0.5);
 }
 
+/* Removes the weird title at the top of the global TOC when the page is
+ * expanded. */
+@media only screen and (min-width: 77em) {
+  .md-nav__title.md-nav__title--site a {
+    font-weight: normal !important;
+    display: none;
+  }
+}
+
 /* Styles the left border of input cells in rendered Jupyter notebooks (they are
  * green by default, which does not match the theme). */
 div.cell div.cell_input {
