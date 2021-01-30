@@ -149,7 +149,7 @@ html_theme_options = {
     "table_classes": ["plain"],
 }
 
-html_last_updated_fmt = ""
+html_last_updated_fmt = None
 
 html_use_index = True
 html_domain_indices = True
