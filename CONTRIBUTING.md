@@ -204,36 +204,28 @@ their source is shown in the docs. To create an example:
 
 ### Deploying
 
-Our deployment process is based on the process described in
-[Trunk-based development](https://trunkbaseddevelopment.com/branch-for-release/).
-
-#### Minor Release
-
-Minor versions of ribs are released from a branch off of master.
-
 1. Create a PR into master where you:
-   1. Update the version with
+   1. Update the version with `bump2version` by running the following for minor
+      versions,
       ```bash
       bump2version minor
       ```
+      or the following for patch versions:
+      ```bash
+      bump2version patch
+      ```
    1. Add all necessary info on the version to `HISTORY.md`.
-1. Once this PR is merged, create a branch off of it called
-   `releases/<version>`, e.g. `releases/0.2.0`.
-1. GitHub Actions should now automatically test and deploy this branch. Check
-   that it shows up on PyPI.
-
-#### Patch Release
-
-Patch releases (e.g. `0.2.1`) are released from their corresponding minor
-branch.
-
-1. Checkout the relevant minor branch, and cherry-pick any necessary bug fixes
-   from master branch.
-1. Create a PR into master where you update `HISTORY.md` with info about the
-   release. Once this PR is merged, cherry-pick it onto the minor branch.
-1. On the minor branch, update the version with:
+2. Once the PR has passed CI/CD and been squashed-and-merged into master,
+   locally tag the squash commit with a tag like `v0.2.1`, e.g.
    ```bash
-   bump2version patch
+   git tag v0.2.1 HEAD
    ```
-1. Push the minor branch updates. GitHub Actions should now automatically test
-   and deploy the branch. Check that it shows up on PyPI.
+3. Push the tag with
+   ```bash
+   git push --tags
+   ```
+4. Check that the version was deployed to PyPI. If it failed, delete the tag
+   make appropriate fixes, and repeat steps 2 and 3.
+5. Write up the release on GitHub.
+
+Our deployment process may change in the future as pyribs becomes more complex.
