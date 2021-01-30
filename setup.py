@@ -65,8 +65,8 @@ extras_require = {
 }
 
 setup(
-    author="ICAROS Lab",
-    author_email="tjanaka@usc.edu",
+    author="ICAROS Lab pyribs Team",
+    author_email="team@pyribs.org",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -94,7 +94,7 @@ setup(
     packages=find_packages(include=["ribs", "ribs.*"]),
     python_requires=">=3.6,<3.9",
     test_suite="tests",
-    url="https://github.com/icaros-usc/ribs",
-    version="0.2.0",
+    url="https://github.com/icaros-usc/pyribs",
+    version="0.2.1",
     zip_safe=False,
 )

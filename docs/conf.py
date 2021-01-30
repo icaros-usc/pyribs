@@ -29,6 +29,8 @@ import ribs
 sys.path.insert(0, os.path.abspath(".."))
 
 DEV_MODE = os.environ.get("DOCS_MODE", "regular") == "dev"
+READTHEDOCS_VERSION = os.environ.get("READTHEDOCS_VERSION", "latest")
+READTHEDOCS_LANGUAGE = os.environ.get("READTHEDOCS_LANGUAGE", "en")
 
 # -- General configuration ---------------------------------------------
 
@@ -117,7 +119,8 @@ html_title = "pyribs v" + ribs.__version__
 # material theme options (see theme.conf for more information)
 html_theme_options = {
     "nav_title": "pyribs",
-    "base_url": "https://docs.pyribs.org/en/latest/",
+    "base_url": (f"https://docs.pyribs.org/{READTHEDOCS_LANGUAGE}/"
+                 f"{READTHEDOCS_VERSION}/"),
     "repo_url": "https://github.com/icaros-usc/pyribs/",
     "repo_name": "pyribs",
     "google_analytics_account": None,
@@ -133,7 +136,7 @@ html_theme_options = {
     "nav_links": [{
         "href": "index",
         "internal": True,
-        "title": "pyribs"
+        "title": "Home"
     },],
     "heroes": {
         "index": "A bare-bones quality diversity optimization library."
@@ -149,7 +152,7 @@ html_theme_options = {
     "table_classes": ["plain"],
 }
 
-html_last_updated_fmt = ""
+html_last_updated_fmt = None
 
 html_use_index = True
 html_domain_indices = True

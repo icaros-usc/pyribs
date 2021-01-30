@@ -1,7 +1,24 @@
+/* Grey highlight for selections. */
+::selection {
+  background-color: rgba(192, 192, 192, 0.5);
+}
+::-moz-selection {
+  background-color: rgba(192, 192, 192, 0.5);
+}
+
+/* Removes the weird title at the top of the global TOC when the page is
+ * expanded. */
+@media only screen and (min-width: 77em) {
+  .md-nav__title.md-nav__title--site a {
+    font-weight: normal !important;
+    display: none;
+  }
+}
+
 /* Styles the left border of input cells in rendered Jupyter notebooks (they are
  * green by default, which does not match the theme). */
 div.cell div.cell_input {
-  border-left-color: #3f51b5 !important;
+  border-left-color: #7e57c2 !important;
 }
 
 /* Increases the visibility of classes, methods, etc. in API definitions. */
@@ -14,6 +31,17 @@ dt {
 dd {
   border-left: 8px solid hsla(0, 0%, 92.5%, 0.5);
   padding-left: 15px;
+}
+
+/* Excludes the border from ReadTheDocs version menu. */
+div.rst-versions dd {
+  border-left: 0px;
+  padding-left: 0px;
+}
+
+/* Hides ReadTheDocs "On GitHub" field. */
+div.rst-versions div.rst-other-versions dl:nth-child(3) {
+  display: none;
 }
 
 /* Makes the link icons show up next to items in the API reference. */
