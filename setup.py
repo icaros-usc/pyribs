@@ -94,7 +94,7 @@ setup(
     packages=find_packages(include=["ribs", "ribs.*"]),
     python_requires=">=3.6,<3.9",
     test_suite="tests",
-    url="https://github.com/icaros-usc/ribs",
+    url="https://github.com/icaros-usc/pyribs",
     version="0.2.0",
     zip_safe=False,
 )
