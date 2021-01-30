@@ -120,7 +120,7 @@ html_title = "pyribs v" + ribs.__version__
 html_theme_options = {
     "nav_title": "pyribs",
     "base_url": (f"https://docs.pyribs.org/{READTHEDOCS_LANGUAGE}/"
-                 f"{READTHEDOCS_LANGUAGE}/"),
+                 f"{READTHEDOCS_VERSION}/"),
     "repo_url": "https://github.com/icaros-usc/pyribs/",
     "repo_name": "pyribs",
     "google_analytics_account": None,
