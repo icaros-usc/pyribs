@@ -1,3 +1,11 @@
+/* Grey highlight for selections. */
+::selection {
+  background-color: rgba(192, 192, 192, 0.5);
+}
+::-moz-selection {
+  background-color: rgba(192, 192, 192, 0.5);
+}
+
 /* Styles the left border of input cells in rendered Jupyter notebooks (they are
  * green by default, which does not match the theme). */
 div.cell div.cell_input {
