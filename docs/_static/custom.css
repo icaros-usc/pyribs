@@ -33,6 +33,17 @@ dd {
   padding-left: 15px;
 }
 
+/* Excludes the border from ReadTheDocs version menu. */
+div.rst-versions dd {
+  border-left: 0px;
+  padding-left: 0px;
+}
+
+/* Hides ReadTheDocs "On GitHub" field. */
+div.rst-versions div.rst-other-versions dl:nth-child(3) {
+  display: none;
+}
+
 /* Makes the link icons show up next to items in the API reference. */
 a.headerlink {
   opacity: 1 !important;
