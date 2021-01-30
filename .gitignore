@@ -120,6 +120,7 @@ dask-worker-space/
 !docs/_static/**/*
 !examples/tutorials/_static/**/*
 !readme_assets/*
+results/
 
 # Editor, IDE, and OS settings
 .vscode/
