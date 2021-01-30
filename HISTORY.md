@@ -4,6 +4,11 @@
 
 - Alpha release
 
+### 0.2.1 (2021-01-29)
+
+- Package metadata fixes (author, email, url)
+- Miscellaneous documentation improvements
+
 ## 0.1.0 (2020-09-11)
 
 - Test release
