@@ -53,3 +53,9 @@ a.headerlink {
 .longtable tr:first-child {
   border-top: 1px solid !important;
 }
+
+/* Makes the GitHub stars and forks show up nicer in the side tab. */
+ul.md-source__facts > li.md-source__fact {
+  padding-left: 0px;
+  padding-right: 0px;
+}
