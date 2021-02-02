@@ -19,6 +19,10 @@ the --outdir flag) with the following files:
       archive.
     - heatmap.pdf: Same as above but in PDF format. Useful when adding into
       papers.
+    - metrics.json: Metrics about the run, saved as a mapping from the metric
+      name to a list of x values (iteration number) and a list of y values
+      (metric value) for that metric.
+    - {metric_name}.png: Plots of the metrics.
 
 In evaluation mode, the script will read in the archive from the output
 directory and run evaluations of 10 random models. It will write videos of these
@@ -27,16 +31,16 @@ evaluations to a `videos/` subdirectory in the output directory.
 Usage:
     # Basic usage.
     python lunar_lander.py NUM_WORKERS
-
-    # Now open the Dask dashboard at http://localhost:8787
+    # Now open the Dask dashboard at http://localhost:8787 to view worker
+    # status.
 
     # Evaluation mode. At the very least, you must pass the same outdir and
     # env_seed here as you did when running the algorithm.
     python lunar_lander.py --run-eval
-
-    # For full help message.
+Help:
     python lunar_lander.py --help
 """
+import json
 import time
 from pathlib import Path
 
@@ -166,7 +170,7 @@ def create_optimizer(seed, n_emitters, sigma0, batch_size):
     return optimizer
 
 
-def run_search(client, optimizer, env_seed, iterations):
+def run_search(client, optimizer, env_seed, iterations, log_freq):
     """Runs the QD algorithm for the given number of iterations.
 
     Args:
@@ -174,11 +178,26 @@ def run_search(client, optimizer, env_seed, iterations):
         optimizer (Optimizer): pyribs optimizer.
         env_seed (int): Seed for the environment.
         iterations (int): Iterations to run.
+        log_freq (int): Number of iterations to wait before recording metrics.
+    Returns:
+        metrics: Mapping from various metrics to a list of "x" and "y" values
+            where x is the iteration and y is the value of the metric.
     """
     print(
         "> Starting search.\n"
         "  - Open Dask's dashboard at http://localhost:8787 to monitor workers."
     )
+
+    metrics = {
+        "Max Score": {
+            "x": [],
+            "y": [],
+        },
+        "Archive Size": {
+            "x": [0],
+            "y": [0.0],
+        },
+    }
 
     start_time = time.time()
     with alive_bar(iterations) as progress:
@@ -189,7 +208,8 @@ def run_search(client, optimizer, env_seed, iterations):
             # Evaluate the models and record the objectives and BCs.
             objs, bcs = [], []
 
-            # Distribute the solutions among the workers.
+            # Ask the Dask client to distribute the simulations among the Dask
+            # workers, then gather the results of the simulations.
             futures = client.map(lambda model: simulate(model, env_seed), sols)
             results = client.gather(futures)
 
@@ -203,12 +223,18 @@ def run_search(client, optimizer, env_seed, iterations):
 
             # Logging.
             progress()
-            if itr % 25 == 0:
+            if itr % log_freq == 0 or itr == iterations:
                 df = optimizer.archive.as_pandas(include_solutions=False)
                 elapsed_time = time.time() - start_time
+                metrics["Max Score"]["x"].append(itr)
+                metrics["Max Score"]["y"].append(df["objective"].max())
+                metrics["Archive Size"]["x"].append(itr)
+                metrics["Archive Size"]["y"].append(len(df))
                 print(f"> {itr} itrs completed after {elapsed_time:.2f} s")
-                print(f"  - Archive Size: {len(df)}")
-                print(f"  - Max Score: {df['objective'].max()}")
+                print(f"  - Max Score: {metrics['Max Score']['y'][-1]}")
+                print(f"  - Archive Size: {metrics['Archive Size']['y'][-1]}")
+
+    return metrics
 
 
 def save_heatmap(archive, filename):
@@ -252,18 +278,42 @@ def run_evaluation(outdir, env_seed):
 
     for idx in indices:
         model = np.array(df.loc[idx, "solution_0":])
-        reward = simulate(model, env_seed, video_env)[0]
+        reward, impact_x_pos, impact_y_vel = simulate(model, env_seed,
+                                                      video_env)
         print(f"=== Index {idx} ===\n"
               "Model:\n"
               f"{model}\n"
-              f"Reward: {reward}")
+              f"Reward: {reward}\n"
+              f"Impact x-pos: {impact_x_pos}\n"
+              f"Impact y-vel: {impact_y_vel}\n")
 
     video_env.close()
+
+
+def save_metrics(outdir, metrics):
+    """Saves metrics to png plots and a JSON file.
+
+    Args:
+        outdir (Path): output directory for saving files.
+        metrics (dict): Metrics as output by run_search.
+    """
+    # Plots.
+    for metric in metrics:
+        fig, ax = plt.subplots()
+        ax.plot(metrics[metric]["x"], metrics[metric]["y"])
+        ax.set_title(metric)
+        ax.set_xlabel("Iteration")
+        fig.savefig(str(outdir / f"{metric.lower().replace(' ', '_')}.png"))
+
+    # JSON file.
+    with (outdir / "metrics.json").open("w") as file:
+        json.dump(metrics, file, indent=2)
 
 
 def main(workers=4,
          env_seed=1339,
          iterations=500,
+         log_freq=25,
          n_emitters=5,
          batch_size=30,
          sigma0=1.0,
@@ -277,6 +327,8 @@ def main(workers=4,
         env_seed (int): Environment seed. The default gives the flat terrain
             from the tutorial.
         iterations (int): Number of iterations to run the algorithm.
+        log_freq (int): Number of iterations to wait before recording metrics
+            and saving heatmap.
         n_emitter (int): Number of emitters.
         batch_size (int): Batch size of each emitter.
         sigma0 (float): Initial step size of each emitter.
@@ -292,16 +344,25 @@ def main(workers=4,
         run_evaluation(outdir, env_seed)
         return
 
-    cluster = LocalCluster(n_workers=workers,
-                           threads_per_worker=1,
-                           processes=True)
+    # Setup Dask. The client connects to a "cluster" running on this machine.
+    # The cluster simply manages several concurrent worker processes. If using
+    # Dask across many workers, you would set up a more complicated cluster and
+    # connect the client to it.
+    cluster = LocalCluster(
+        processes=True,  # Each worker is a process.
+        n_workers=workers,  # Create this many worker processes.
+        threads_per_worker=1,  # Each worker process is single-threaded.
+    )
     client = Client(cluster)
-    optimizer = create_optimizer(seed, n_emitters, sigma0, batch_size)
-    run_search(client, optimizer, env_seed, iterations)
 
+    optimizer = create_optimizer(seed, n_emitters, sigma0, batch_size)
+    metrics = run_search(client, optimizer, env_seed, iterations, log_freq)
+
+    # Outputs.
     optimizer.archive.as_pandas().to_csv(outdir / "archive.csv")
     save_heatmap(optimizer.archive, str(outdir / "heatmap.png"))
     save_heatmap(optimizer.archive, str(outdir / "heatmap.pdf"))
+    save_metrics(outdir, metrics)
 
 
 if __name__ == "__main__":
