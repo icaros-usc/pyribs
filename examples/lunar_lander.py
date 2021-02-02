@@ -310,7 +310,7 @@ def run_evaluation(outdir, env_seed):
 
     Args:
         outdir (Path): Path object for the output directory from which to
-            retrieve the archive and save solutions.
+            retrieve the archive and save videos.
         env_seed (int): Seed for the environment.
     """
     df = pd.read_csv(outdir / "archive.csv")
