@@ -1,4 +1,8 @@
-# Lunar Lander Reloaded: Using Dask to Distribute Evaluations
+# Lunar Lander Relanded: Using Dask to Distribute Evaluations
+
+This example extends the [Lunar Lander tutorial](../tutorials/lunar_lander) by
+using [Dask](https://dask.org) to distribute evaluations and thus speed things
+up.
 
 ```{eval-rst}
 .. literalinclude:: ../../examples/lunar_lander.py
