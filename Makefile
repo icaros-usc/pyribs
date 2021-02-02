@@ -74,14 +74,7 @@ servedocs: ## compile the docs watching for changes
 	DOCS_MODE=dev sphinx-autobuild \
 		--open-browser \
 		--watch ribs/ \
-		docs/ \
-		docs/_build/html
-
-servedocs-ignore-vim: ## compile the docs watching for changes, ignore vim .swp files
-	DOCS_MODE=dev sphinx-autobuild \
-		--open-browser \
-		--watch ribs/ \
-		--ignore *.swp \
+		--watch examples/ \
 		docs/ \
 		docs/_build/html
 
