@@ -1,41 +1,45 @@
-"""Learns a linear model with CMA-ME in a discrete OpenAI Gym environment.
+"""Uses CMA-ME to train linear agents in Lunar Lander.
 
 This script uses the same setup as the tutorial, but it also uses Dask to
 parallelize evaluations on a single machine and adds in a CLI. Refer to the
 tutorial here: https://docs.pyribs.org/en/latest/tutorials/lunar_lander.html for
 more info.
 
-If you are not familiar with Dask, we recommend referring to the Dask quickstart
-page: https://distributed.dask.org/en/latest/quickstart.html. If you are
-familiar with other multiprocessing libraries (including Python's
-multiprocessing), Dask should be pretty easy to pick up.
+You should not need much familiarity with Dask to read this example. However, if
+you would like to know more about Dask, we recommend referring to the quickstart
+for Dask distributed: https://distributed.dask.org/en/latest/quickstart.html.
 
 This script creates an output directory (defaults to `lunar_lander_output/`, see
 the --outdir flag) with the following files:
 
     - archive.csv: The CSV representation of the final archive, obtained with
       as_pandas().
+    - archive_ccdf.png: A plot showing the (unnormalized) complementary
+      cumulative distribution function of objective values in the archive. For
+      each objective value p on the x-axis, this plot shows the number of
+      solutions that had an objective value of at least p.
     - heatmap.png: A heatmap showing the performance of solutions in the
       archive.
-    - heatmap.pdf: Same as above but in PDF format. Useful when adding into
-      papers.
     - metrics.json: Metrics about the run, saved as a mapping from the metric
       name to a list of x values (iteration number) and a list of y values
       (metric value) for that metric.
-    - {metric_name}.png: Plots of the metrics.
+    - {metric_name}.png: Plots of the metrics, currently just `archive_size` and
+      `max_score`.
 
-In evaluation mode, the script will read in the archive from the output
-directory and run evaluations of 10 random models. It will write videos of these
-evaluations to a `videos/` subdirectory in the output directory.
+In evaluation mode (--run-eval flag), the script will read in the archive from
+the output directory and simulate 10 random solutions from the archive. It will
+write videos of these simulations to a `videos/` subdirectory in the output
+directory.
 
 Usage:
-    # Basic usage.
+    # Basic usage - should take ~1 hour with 4 cores.
     python lunar_lander.py NUM_WORKERS
     # Now open the Dask dashboard at http://localhost:8787 to view worker
     # status.
 
-    # Evaluation mode. At the very least, you must pass the same outdir and
-    # env_seed here as you did when running the algorithm.
+    # Evaluation mode. If you passed a different outdir and/or env_seed when
+    # running the algorithm with the command above, you must pass the same
+    # outdir and/or env_seed here.
     python lunar_lander.py --run-eval
 Help:
     python lunar_lander.py --help
@@ -132,7 +136,7 @@ def simulate(model, seed=None, video_env=None):
 def create_optimizer(seed, n_emitters, sigma0, batch_size):
     """Creates the Optimizer based on given configurations.
 
-    See main() for description of args.
+    See lunar_lander_main() for description of args.
 
     Returns:
         A pyribs optimizer set up for CMA-ME (i.e. it has ImprovementEmitter's
@@ -174,14 +178,15 @@ def run_search(client, optimizer, env_seed, iterations, log_freq):
     """Runs the QD algorithm for the given number of iterations.
 
     Args:
-        client (Client): A Dask client providing access to local workers.
+        client (Client): A Dask client providing access to workers.
         optimizer (Optimizer): pyribs optimizer.
         env_seed (int): Seed for the environment.
         iterations (int): Iterations to run.
         log_freq (int): Number of iterations to wait before recording metrics.
     Returns:
-        metrics: Mapping from various metrics to a list of "x" and "y" values
-            where x is the iteration and y is the value of the metric.
+        dict: A mapping from various metric names to a list of "x" and "y"
+        values where x is the iteration and y is the value of the metric. Think
+        of each entry as the x's and y's for a matplotlib plot.
     """
     print(
         "> Starting search.\n"
@@ -195,7 +200,7 @@ def run_search(client, optimizer, env_seed, iterations, log_freq):
         },
         "Archive Size": {
             "x": [0],
-            "y": [0.0],
+            "y": [0],
         },
     }
 
@@ -241,7 +246,7 @@ def save_heatmap(archive, filename):
     """Saves a heatmap of the optimizer's archive to the filename.
 
     Args:
-        archive (GridArchive): Archive with results from a QD experiment.
+        archive (GridArchive): Archive with results from an experiment.
         filename (str): Path to an image file.
     """
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -249,6 +254,52 @@ def save_heatmap(archive, filename):
     ax.invert_yaxis()  # Makes more sense if larger velocities are on top.
     ax.set_ylabel("Impact y-velocity")
     ax.set_xlabel("Impact x-position")
+    fig.savefig(filename)
+
+
+def save_metrics(outdir, metrics):
+    """Saves metrics to png plots and a JSON file.
+
+    Args:
+        outdir (Path): output directory for saving files.
+        metrics (dict): Metrics as output by run_search.
+    """
+    # Plots.
+    for metric in metrics:
+        fig, ax = plt.subplots()
+        ax.plot(metrics[metric]["x"], metrics[metric]["y"])
+        ax.set_title(metric)
+        ax.set_xlabel("Iteration")
+        fig.savefig(str(outdir / f"{metric.lower().replace(' ', '_')}.png"))
+
+    # JSON file.
+    with (outdir / "metrics.json").open("w") as file:
+        json.dump(metrics, file, indent=2)
+
+
+def save_ccdf(archive, filename):
+    """Saves a CCDF showing the distribution of the archive's objective values.
+
+    CCDF = Complementary Cumulative Distribution Function (see
+    https://en.wikipedia.org/wiki/Cumulative_distribution_function#Complementary_cumulative_distribution_function_(tail_distribution)).
+    The CCDF plotted here is not normalized to the range (0,1). This may help
+    when comparing CCDF's among archives with different amounts of coverage
+    (i.e. when one archive has more cells filled).
+
+    Args:
+        archive (GridArchive): Archive with results from an experiment.
+        filename (str): Path to an image file.
+    """
+    fig, ax = plt.subplots()
+    ax.hist(
+        archive.as_pandas(include_solutions=False)["objective"],
+        50,  # Number of bins.
+        histtype="step",
+        density=False,
+        cumulative=-1)  # CCDF rather than CDF.
+    ax.set_xlabel("Objective Value")
+    ax.set_ylabel("Num. Entries")
+    ax.set_title("Distribution of Archive Objective Values")
     fig.savefig(filename)
 
 
@@ -290,37 +341,17 @@ def run_evaluation(outdir, env_seed):
     video_env.close()
 
 
-def save_metrics(outdir, metrics):
-    """Saves metrics to png plots and a JSON file.
-
-    Args:
-        outdir (Path): output directory for saving files.
-        metrics (dict): Metrics as output by run_search.
-    """
-    # Plots.
-    for metric in metrics:
-        fig, ax = plt.subplots()
-        ax.plot(metrics[metric]["x"], metrics[metric]["y"])
-        ax.set_title(metric)
-        ax.set_xlabel("Iteration")
-        fig.savefig(str(outdir / f"{metric.lower().replace(' ', '_')}.png"))
-
-    # JSON file.
-    with (outdir / "metrics.json").open("w") as file:
-        json.dump(metrics, file, indent=2)
-
-
-def main(workers=4,
-         env_seed=1339,
-         iterations=500,
-         log_freq=25,
-         n_emitters=5,
-         batch_size=30,
-         sigma0=1.0,
-         seed=None,
-         outdir="lunar_lander_output",
-         run_eval=False):
-    """Uses CMA-ME to train an agent in Lunar Lander.
+def lunar_lander_main(workers=4,
+                      env_seed=1339,
+                      iterations=500,
+                      log_freq=25,
+                      n_emitters=5,
+                      batch_size=30,
+                      sigma0=1.0,
+                      seed=None,
+                      outdir="lunar_lander_output",
+                      run_eval=False):
+    """Uses CMA-ME to train linear agents in Lunar Lander.
 
     Args:
         workers (int): Number of workers to use for simulations.
@@ -329,7 +360,7 @@ def main(workers=4,
         iterations (int): Number of iterations to run the algorithm.
         log_freq (int): Number of iterations to wait before recording metrics
             and saving heatmap.
-        n_emitter (int): Number of emitters.
+        n_emitters (int): Number of emitters.
         batch_size (int): Batch size of each emitter.
         sigma0 (float): Initial step size of each emitter.
         seed (seed): Random seed for the pyribs components.
@@ -346,7 +377,7 @@ def main(workers=4,
 
     # Setup Dask. The client connects to a "cluster" running on this machine.
     # The cluster simply manages several concurrent worker processes. If using
-    # Dask across many workers, you would set up a more complicated cluster and
+    # Dask across many workers, we would set up a more complicated cluster and
     # connect the client to it.
     cluster = LocalCluster(
         processes=True,  # Each worker is a process.
@@ -355,15 +386,16 @@ def main(workers=4,
     )
     client = Client(cluster)
 
+    # CMA-ME.
     optimizer = create_optimizer(seed, n_emitters, sigma0, batch_size)
     metrics = run_search(client, optimizer, env_seed, iterations, log_freq)
 
     # Outputs.
     optimizer.archive.as_pandas().to_csv(outdir / "archive.csv")
+    save_ccdf(optimizer.archive, str(outdir / "archive_ccdf.png"))
     save_heatmap(optimizer.archive, str(outdir / "heatmap.png"))
-    save_heatmap(optimizer.archive, str(outdir / "heatmap.pdf"))
     save_metrics(outdir, metrics)
 
 
 if __name__ == "__main__":
-    fire.Fire(main)
+    fire.Fire(lunar_lander_main)
