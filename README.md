@@ -175,7 +175,7 @@ USC.
 - [Bryon Tjanaka](https://btjanaka.net)
 - [Matt Fontaine](https://github.com/tehqin)
 - [Yulun Zhang](https://github.com/lunjohnzhang)
-- [Sam Sommerer](https://github.com/sam-som-usc)
+- [Sam Sommerer](https://github.com/sam-sommerer)
 - Nikitas Klapsis
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 
