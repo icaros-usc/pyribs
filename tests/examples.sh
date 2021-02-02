@@ -31,6 +31,10 @@ python examples/sphere.py cma_me_rd_mu 20 250 "${SPHERE_OUTPUT}"
 python examples/sphere.py cma_me_opt 20 250 "${SPHERE_OUTPUT}"
 python examples/sphere.py cma_me_mixed 20 250 "${SPHERE_OUTPUT}"
 
+# lunar_lander.py
+LUNAR_LANDER_OUTPUT="${TMPDIR}/lunar_lander_output"
+python examples/lunar_lander.py --iterations 10 --outdir "${LUNAR_LANDER_OUTPUT}"
+
 # Cleanup.
 rm -rf $TMPDIR
 echo "Success"
