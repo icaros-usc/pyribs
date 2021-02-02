@@ -30,7 +30,8 @@ All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 saved in the directory `sphere_output` by default. The archive is saved as a
 CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are
 saved as `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about the run are
-also saved in `{algorithm}_{dim}_metrics.json`.
+also saved in `{algorithm}_{dim}_metrics.json`, and plots of the metrics are
+saved in PNG's with the name `{algorithm}_{dim}_metric_name.png`.
 
 To generate a video of the heatmap from the heatmap images, use a tool like
 ffmpeg. For example, the following will generate a 6FPS video showing the
@@ -39,7 +40,7 @@ heatmap for cma_me_imp with 20 dims.
     ffmpeg -r 6 -i "sphere_output/cma_me_imp_20_heatmap_%*.png \
         sphere_output/cma_me_imp_20_heatmap_video.mp4
 
-Usage (see sphere function for all args):
+Usage (see sphere_main function for all args):
     python sphere.py ALGORITHM DIM
 Example:
     python sphere.py map_elites 20
@@ -205,8 +206,8 @@ def sphere_main(algorithm,
         dim (int): Dimensionality of solutions.
         itrs (int): Iterations to run.
         outdir (str): Directory to save output.
-        log_freq (int): Number of iterations to wait before printing metrics and
-            saving heatmap.
+        log_freq (int): Number of iterations to wait before recording metrics
+            and saving heatmap.
         seed (int): Seed for the algorithm. By default, there is no seed.
     """
     outdir = Path(outdir)
