@@ -155,7 +155,7 @@ def create_optimizer(seed, n_emitters, sigma0, batch_size):
     # If we create the emitters with identical seeds, they will all output the
     # same initial solutions. The algorithm should still work -- eventually, the
     # emitters will produce different solutions because they get different
-    # responses when inserting into the archive). However, using different seeds
+    # responses when inserting into the archive. However, using different seeds
     # avoids this problem altogether.
     seeds = ([None] * n_emitters
              if seed is None else [seed + i for i in range(n_emitters)])
@@ -366,7 +366,7 @@ def lunar_lander_main(workers=4,
         seed (seed): Random seed for the pyribs components.
         outdir (str): Directory for Lunar Lander output.
         run_eval (bool): Pass this flag to run an evaluation of 10 random
-            solutions in the archive in the `outdir`.
+            solutions selected from the archive in the `outdir`.
     """
     outdir = Path(outdir)
     outdir.mkdir(exist_ok=True)
