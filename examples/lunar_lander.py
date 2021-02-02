@@ -1,202 +1,308 @@
-"""Learn a linear model with MAP-Elites in a discrete OpenAI Gym environment.
+"""Learns a linear model with CMA-ME in a discrete OpenAI Gym environment.
 
-Uses Dask for parallelization.
+This script uses the same setup as the tutorial, but it also uses Dask to
+parallelize evaluations on a single machine and adds in a CLI. Refer to the
+tutorial here: https://docs.pyribs.org/en/latest/tutorials/lunar_lander.html for
+more info.
+
+If you are not familiar with Dask, we recommend referring to the Dask quickstart
+page: https://distributed.dask.org/en/latest/quickstart.html. If you are
+familiar with other multiprocessing libraries (including Python's
+multiprocessing), Dask should be pretty easy to pick up.
+
+This script creates an output directory (defaults to `lunar_lander_output/`, see
+the --outdir flag) with the following files:
+
+    - archive.csv: The CSV representation of the final archive, obtained with
+      as_pandas().
+    - heatmap.png: A heatmap showing the performance of solutions in the
+      archive.
+    - heatmap.pdf: Same as above but in PDF format. Useful when adding into
+      papers.
+
+In evaluation mode, the script will read in the archive from the output
+directory and run evaluations of 10 random models. It will write videos of these
+evaluations to a `videos/` subdirectory in the output directory.
 
 Usage:
-    See README.md.
-"""
+    # Basic usage.
+    python lunar_lander.py NUM_WORKERS
 
+    # Now open the Dask dashboard at http://localhost:8787
+
+    # Evaluation mode. At the very least, you must pass the same outdir and
+    # env_seed here as you did when running the algorithm.
+    python lunar_lander.py --run-eval
+
+    # For full help message.
+    python lunar_lander.py --help
+"""
 import time
+from pathlib import Path
 
 import fire
 import gym
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
+import pandas as pd
+from alive_progress import alive_bar
 from dask.distributed import Client, LocalCluster
 
 from ribs.archives import GridArchive
-from ribs.emitters import GaussianEmitter
+from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
+from ribs.visualize import grid_archive_heatmap
 
 
-def simulate(
-    env_name: str,
-    model,
-    seed: int = None,
-    render: bool = False,
-    delay: int = 10,
-):
-    """Runs the model in the env and returns the cumulative reward.
+def simulate(model, seed=None, video_env=None):
+    """Simulates the lunar lander model.
 
-    Add the `seed` argument to initialize the environment from the given seed
-    (this makes the environment the same between runs). The model is just a
-    linear model from input to output with argmax, so it is represented by a
-    single (action_dim, obs_dim) matrix. Add an integer delay to wait `delay` ms
-    between timesteps.
+    Args:
+        model (np.ndarray): The array of weights for the linear policy.
+        seed (int): The seed for the environment.
+        video_env (gym.Env): If passed in, this will be used instead of creating
+            a new env. This is used primarily for recording video during
+            evaluation.
+    Returns:
+        total_reward (float): The reward accrued by the lander throughout its
+            trajectory.
+        impact_x_pos (float): The x position of the lander when it touches the
+            ground for the first time.
+        impact_y_vel (float): The y velocity of the lander when it touches the
+            ground for the first time.
     """
-    total_reward = 0.0
-    env = gym.make(env_name)
+    if video_env is None:
+        # Since we are using multiple processes, it is simpler if each worker
+        # just creates their own copy of the environment instead of trying to
+        # share the environment. This also makes the function "pure."
+        env = gym.make("LunarLander-v2")
+    else:
+        env = video_env
 
-    # Seeding the environment before each reset ensures that our simulations are
-    # deterministic. We cannot vary the environment between the runs because
-    # that would confuse CMA-ES. See
-    # https://github.com/openai/gym/blob/master/gym/envs/box2d/lunar_lander.py#L115
-    # for the implementation of seed() for LunarLander.
     if seed is not None:
         env.seed(seed)
+
+    action_dim = env.action_space.n
+    obs_dim = env.observation_space.shape[0]
+    model = model.reshape((action_dim, obs_dim))
+
+    total_reward = 0.0
+    impact_x_pos = None
+    impact_y_vel = None
+    all_y_vels = []
     obs = env.reset()
-
-    timesteps = 0
-
     done = False
-    while not done:
-        # If render is set to True, then a video will appear showing the Lunar
-        # Lander taking actions in the environment.
-        if render:
-            env.render()
-            if delay is not None:
-                time.sleep(delay / 1000)
 
-        # Deterministic. Here is the action. Multiply observation by policy.
-        # Model is the policy and obs is state
-        action = np.argmax(model @ obs)
+    while not done:
+        action = np.argmax(model @ obs)  # Linear policy.
         obs, reward, done, _ = env.step(action)
         total_reward += reward
-        timesteps += 1
 
-    env.close()
+        # Refer to the definition of state here:
+        # https://github.com/openai/gym/blob/master/gym/envs/box2d/lunar_lander.py#L306
+        x_pos = obs[0]
+        y_vel = obs[3]
+        leg0_touch = bool(obs[6])
+        leg1_touch = bool(obs[7])
+        all_y_vels.append(y_vel)
 
-    return total_reward, obs[0], timesteps
+        # Check if the lunar lander is impacting for the first time.
+        if impact_x_pos is None and (leg0_touch or leg1_touch):
+            impact_x_pos = x_pos
+            impact_y_vel = y_vel
+
+    # If the lunar lander did not land, set the x-pos to the one from the final
+    # timestep, and set the y-vel to the max y-vel (we use min since the lander
+    # goes down).
+    if impact_x_pos is None:
+        impact_x_pos = x_pos
+        impact_y_vel = min(all_y_vels)
+
+    # Only close the env if it was not a video env.
+    if video_env is None:
+        env.close()
+
+    return total_reward, impact_x_pos, impact_y_vel
 
 
-def train_model(
-    client: Client,
-    seed: int,
-    sigma: float,
-    model_filename: str,
-    plot_filename: str,
-    iterations: int,
-    env_name: str = "LunarLander-v2",
-):
-    """Trains a model with MAP-Elites and saves it."""
-    # OpenAI Gym environment properties.
-    env = gym.make(env_name)
+def create_optimizer(seed, n_emitters, sigma0, batch_size):
+    """Creates the Optimizer based on given configurations.
+
+    See main() for description of args.
+
+    Returns:
+        A pyribs optimizer set up for CMA-ME (i.e. it has ImprovementEmitter's
+        and a GridArchive).
+    """
+    env = gym.make("LunarLander-v2")
     action_dim = env.action_space.n
     obs_dim = env.observation_space.shape[0]
 
-    archive = GridArchive((16, 16), [(0, 1000), (-1., 1.)], seed=seed)
-    emitter = GaussianEmitter(archive,
-                              np.zeros(action_dim * obs_dim),
-                              sigma,
-                              batch_size=64)
-    opt = Optimizer(archive, [emitter])
+    archive = GridArchive(
+        [50, 50],  # 50 bins in each dimension.
+        [(-1.0, 1.0), (-3.0, 0.0)],  # (-1, 1) for x-pos and (-3, 0) for y-vel.
+        seed=seed,
+    )
 
-    for _ in range(0, iterations - 1):
+    # If we create the emitters with identical seeds, they will all output the
+    # same initial solutions. The algorithm should still work -- eventually, the
+    # emitters will produce different solutions because they get different
+    # responses when inserting into the archive). However, using different seeds
+    # avoids this problem altogether.
+    seeds = ([None] * n_emitters
+             if seed is None else [seed + i for i in range(n_emitters)])
+    initial_model = np.zeros((action_dim, obs_dim))
+    emitters = [
+        ImprovementEmitter(
+            archive,
+            initial_model.flatten(),
+            sigma0=sigma0,
+            batch_size=batch_size,
+            seed=s,
+        ) for s in seeds
+    ]
 
-        # Generating a batch of solutions
-        sols = opt.ask()
-
-        objs = list()
-        bcs = list()
-
-        # Here, we're running each of the solutions (i.e. policies) we generated
-        # above through the simulate() function. simulate() will return the
-        # objective value, timesteps to run to completion, and x-position of the
-        # lunar lander for each solution we pass in.
-        futures = client.map(
-            lambda sol: simulate(env_name, np.reshape(sol, (action_dim, obs_dim)
-                                                     ), seed), sols)
-
-        results = client.gather(futures)
-
-        # Here we're just constructing a list of objective function evaluations
-        # (i.e. objs) and behavior descriptions (i.e. bcs) for each solution.
-        # These values were returned by our calls to simulation() above.
-        for reward, x_pos, timesteps in results:
-            objs.append(reward)
-            bcs.append((timesteps, x_pos))
-
-        # We have our Optimizer opt tell our Emitters the objective function
-        # evaluations and behavior descriptions of each solution, so that our
-        # Emitter emitter and GridArchive archive can decide where and if to
-        # store each solution in our GridArchive archive.
-        opt.tell(objs, bcs)
-
-    df = archive.as_pandas()
-
-    # Saving our archive to a file.
-    df.to_pickle(model_filename)
-
-    df = archive.as_pandas()
-    df = df.pivot('index_0', 'index_1', 'objective')
-
-    # Create a heatmap with all of our generated solutions.
-    sns.heatmap(df)
-    plt.savefig(plot_filename)
+    optimizer = Optimizer(archive, emitters)
+    return optimizer
 
 
-def run_evaluation(model_filename, env_name, seed):
-    """Runs a single simulation and displays the results."""
-    model = np.load(model_filename)
-    print("=== Model ===")
-    print(model)
-    cost = simulate(env_name, model, seed, True, 10)
-    print("Reward:", -cost[0])
-
-
-def map_elites(
-    seed: int = 42,
-    local_workers: int = 8,
-    sigma: float = 10.0,
-    plot_filename: str = "lunar_lander_plot.png",
-    model_filename: str = "lunar_lander_model.pkl",
-    run_eval: bool = False,
-):
-    """Uses CMA-ES to train an agent in an environment with discrete actions.
+def run_search(client, optimizer, env_seed, iterations):
+    """Runs the QD algorithm for the given number of iterations.
 
     Args:
-        env: OpenAI Gym environment name. The environment should have a discrete
-            action space.
-        seed: Random seed for environments.
-        sigma: Initial standard deviation for CMA-ES.
-        local_workers: Number of workers to use when running locally.
-        slurm: Set to True if running on Slurm.
-        slurm_workers: Number of workers to start when running on Slurm.
-        slurm_cpus_per_worker: Number of CPUs to use on each Slurm worker.
-        plot_filename: Location to store plot image.
-        model_filename: Location for .npy model file (either for storing or
-            reading).
-        run_eval: Pass this to run an evaluation in the environment in `env`
-            with the model in `model_filename`.
+        client (Client): A Dask client providing access to local workers.
+        optimizer (Optimizer): pyribs optimizer.
+        env_seed (int): Seed for the environment.
+        iterations (int): Iterations to run.
     """
-    # Evaluations do not need Dask.
+    print(
+        "> Starting search.\n"
+        "  - Open Dask's dashboard at http://localhost:8787 to monitor workers."
+    )
+
+    start_time = time.time()
+    with alive_bar(iterations) as progress:
+        for itr in range(1, iterations + 1):
+            # Request models from the optimizer.
+            sols = optimizer.ask()
+
+            # Evaluate the models and record the objectives and BCs.
+            objs, bcs = [], []
+
+            # Distribute the solutions among the workers.
+            futures = client.map(lambda model: simulate(model, env_seed), sols)
+            results = client.gather(futures)
+
+            # Process the results.
+            for obj, impact_x_pos, impact_y_vel in results:
+                objs.append(obj)
+                bcs.append([impact_x_pos, impact_y_vel])
+
+            # Send the results back to the optimizer.
+            optimizer.tell(objs, bcs)
+
+            # Logging.
+            progress()
+            if itr % 25 == 0:
+                df = optimizer.archive.as_pandas(include_solutions=False)
+                elapsed_time = time.time() - start_time
+                print(f"> {itr} itrs completed after {elapsed_time:.2f} s")
+                print(f"  - Archive Size: {len(df)}")
+                print(f"  - Max Score: {df['objective'].max()}")
+
+
+def save_heatmap(archive, filename):
+    """Saves a heatmap of the optimizer's archive to the filename.
+
+    Args:
+        archive (GridArchive): Archive with results from a QD experiment.
+        filename (str): Path to an image file.
+    """
+    fig, ax = plt.subplots(figsize=(8, 6))
+    grid_archive_heatmap(archive, vmin=-300, vmax=300, ax=ax)
+    ax.invert_yaxis()  # Makes more sense if larger velocities are on top.
+    ax.set_ylabel("Impact y-velocity")
+    ax.set_xlabel("Impact x-position")
+    fig.savefig(filename)
+
+
+def run_evaluation(outdir, env_seed):
+    """Simulates 10 random archive solutions and saves videos of them.
+
+    Videos are saved to outdir / videos.
+
+    Args:
+        outdir (Path): Path object for the output directory from which to
+            retrieve the archive and save solutions.
+        env_seed (int): Seed for the environment.
+    """
+    df = pd.read_csv(outdir / "archive.csv")
+    indices = np.random.permutation(len(df))[:10]
+
+    # Use a single env so that all the videos go to the same directory.
+    video_env = gym.wrappers.Monitor(
+        gym.make("LunarLander-v2"),
+        str(outdir / "videos"),
+        force=True,
+        # Default is to write the video for "cubic" episodes -- 0,1,8,etc (see
+        # https://github.com/openai/gym/blob/master/gym/wrappers/monitor.py#L54).
+        # This will ensure all the videos are written.
+        video_callable=lambda idx: True,
+    )
+
+    for idx in indices:
+        model = np.array(df.loc[idx, "solution_0":])
+        reward = simulate(model, env_seed, video_env)[0]
+        print(f"=== Index {idx} ===\n"
+              "Model:\n"
+              f"{model}\n"
+              f"Reward: {reward}")
+
+    video_env.close()
+
+
+def main(workers=4,
+         env_seed=1339,
+         iterations=500,
+         n_emitters=5,
+         batch_size=30,
+         sigma0=1.0,
+         seed=None,
+         outdir="lunar_lander_output",
+         run_eval=False):
+    """Uses CMA-ME to train an agent in Lunar Lander.
+
+    Args:
+        workers (int): Number of workers to use for simulations.
+        env_seed (int): Environment seed. The default gives the flat terrain
+            from the tutorial.
+        iterations (int): Number of iterations to run the algorithm.
+        n_emitter (int): Number of emitters.
+        batch_size (int): Batch size of each emitter.
+        sigma0 (float): Initial step size of each emitter.
+        seed (seed): Random seed for the pyribs components.
+        outdir (str): Directory for Lunar Lander output.
+        run_eval (bool): Pass this flag to run an evaluation of 10 random
+            solutions in the archive in the `outdir`.
+    """
+    outdir = Path(outdir)
+    outdir.mkdir(exist_ok=True)
+
     if run_eval:
-        run_evaluation(model_filename, "LunarLander-v2", seed)
+        run_evaluation(outdir, env_seed)
         return
 
-        # Initialize on a local machine. See the docs here:
-        # https://docs.dask.org/en/latest/setup/single-distributed.html for more
-        # info on LocalCluster. Keep in mind that for LocalCluster, the
-        # n_workers is the number of processes. Our LunarLander evaluations do
-        # not release the GIL (I think), so using threads instead of processes
-        # (which we would do by setting n_workers=1 and
-        # threads_per_worker=workers) would be very slow, as it would be
-        # single-threaded. See here for a bit more info about processes in
-        # threads in Dask:
-        # https://distributed.dask.org/en/latest/worker.html#thread-pool
-        # The link above is for multiple machines (each machine is called a
-        # worker, and each workers has processes and threads), but the idea
-        # still holds.
-    cluster = LocalCluster(n_workers=local_workers,
+    cluster = LocalCluster(n_workers=workers,
                            threads_per_worker=1,
                            processes=True)
-    client = Client(cluster)  # pylint: disable=unused-variable
-    print("Cluster config:")
-    print(client.ncores())
+    client = Client(cluster)
+    optimizer = create_optimizer(seed, n_emitters, sigma0, batch_size)
+    run_search(client, optimizer, env_seed, iterations)
 
-    train_model(client, seed, sigma, model_filename, plot_filename, 10)
+    optimizer.archive.as_pandas().to_csv(outdir / "archive.csv")
+    save_heatmap(optimizer.archive, str(outdir / "heatmap.png"))
+    save_heatmap(optimizer.archive, str(outdir / "heatmap.pdf"))
 
 
 if __name__ == "__main__":
-    fire.Fire(map_elites)
+    fire.Fire(main)
