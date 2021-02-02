@@ -29,7 +29,7 @@ extras_require = {
         "matplotlib>=3.0.0",
         "gym~=0.17.0",  # Strict since different gym may give different results.
         "Box2D~=2.3.10",  # Used in envs such as Lunar Lander.
-        "fire>=0.3.0",
+        "fire>=0.4.0",
         "alive-progress>=1.0",
 
         # Dask
