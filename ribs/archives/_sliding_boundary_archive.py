@@ -146,7 +146,7 @@ class SlidingBoundaryArchive(ArchiveBase):
                                    np.inf,
                                    dtype=self.dtype)
         # Add the upper bounds.
-        for i, dim, in enumerate(self._dims):
+        for i, dim in enumerate(self._dims):
             self._boundaries[i][dim] = self._upper_bounds[i]
 
         # Create buffer.
@@ -200,10 +200,10 @@ class SlidingBoundaryArchive(ArchiveBase):
             Archive bins:   | 0 | 1 |   ...   |    self.dims[i]    |
             boundaries[i]:  0   1   2   self.dims[i] - 1     self.dims[i]
 
-        Thus, entry ``j`` and ``j + 1`` are the lower and upper bounds of bin
-        ``j``. To access the lower bounds of all the cells in dimension ``i``,
-        use ``boundaries[i][:-1]``, and to access all the upper bounds, use
-        ``boundaries[i][1:]``.
+        Thus, ``boundaries[i][j]`` and ``boundaries[i][j + 1]`` are the lower
+        and upper bounds of bin ``j`` in dimension ``i``. To access the lower
+        bounds of all the bins in dimension ``i``, use ``boundaries[i][:-1]``,
+        and to access all the upper bounds, use ``boundaries[i][1:]``.
         """
         return [
             bound[:dim + 1] for bound, dim in zip(self._boundaries, self._dims)
