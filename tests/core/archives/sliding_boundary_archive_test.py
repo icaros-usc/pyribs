@@ -29,8 +29,8 @@ def test_attributes_correctly_constructed(_data):
     assert np.all(_data.archive.interval_size == [2, 4])
 
     # Check the shape of boundaries.
-    assert len(_data.archive.boundaries[0]) == 11
-    assert len(_data.archive.boundaries[1]) == 21
+    assert len(_data.archive.boundaries[0]) == 10
+    assert len(_data.archive.boundaries[1]) == 20
     assert _data.archive.remap_frequency == 100
     assert _data.archive.buffer_capacity == 1000
 
