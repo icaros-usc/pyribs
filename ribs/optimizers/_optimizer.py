@@ -16,6 +16,12 @@ class Optimizer:
     solutions with the same dimension (that is, their ``solution_dim`` attribute
     must be the same).
 
+    .. warning:: If you are constructing many emitters at once, do not do
+        something like ``[EmitterClass(...)] * 5``, as this creates a list with
+        the same instance of ``EmitterClass`` in each position. Instead, use
+        ``[EmitterClass(...) for _ in range 5]``, which creates 5 separate
+        instances of ``EmitterClass``.
+
     Args:
         archive (ribs.archives.ArchiveBase): An archive object, selected from
             :mod:`ribs.archives`.
@@ -25,11 +31,23 @@ class Optimizer:
         ValueError: The emitters passed in do not have the same solution
             dimensions.
         ValueError: There is no emitter passed in.
+        ValueError: The same emitter instance was passed in multiple times. Each
+            emitter should be a separate instance (see the warning above).
     """
 
     def __init__(self, archive, emitters):
         if len(emitters) == 0:
             raise ValueError("Pass in at least one emitter to the optimizer.")
+
+        emitter_ids = set(id(e) for e in emitters)
+        if len(emitter_ids) != len(emitters):
+            raise ValueError(
+                "Not all emitters passed in were unique (i.e. some emitters "
+                "had the same id). If emitters were created with something "
+                "like [EmitterClass(...)] * n, instead use "
+                "[EmitterClass(...) for _ in range(n)] so that all emitters "
+                "are unique instances.")
+
         self._solution_dim = emitters[0].solution_dim
 
         for idx, emitter in enumerate(emitters[1:]):
