@@ -19,7 +19,7 @@ class Optimizer:
     .. warning:: If you are constructing many emitters at once, do not do
         something like ``[EmitterClass(...)] * 5``, as this creates a list with
         the same instance of ``EmitterClass`` in each position. Instead, use
-        ``[EmitterClass(...) for _ in range 5]``, which creates 5 separate
+        ``[EmitterClass(...) for _ in range 5]``, which creates 5 unique
         instances of ``EmitterClass``.
 
     Args:
@@ -32,7 +32,7 @@ class Optimizer:
             dimensions.
         ValueError: There is no emitter passed in.
         ValueError: The same emitter instance was passed in multiple times. Each
-            emitter should be a separate instance (see the warning above).
+            emitter should be a unique instance (see the warning above).
     """
 
     def __init__(self, archive, emitters):

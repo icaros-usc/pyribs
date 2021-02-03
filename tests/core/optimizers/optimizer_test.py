@@ -26,7 +26,7 @@ def test_init_fails_with_no_emitters():
 def test_init_fails_on_non_unique_emitter_instances():
     archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
 
-    # All emitters are the same object. This is bad because the same emitter
+    # All emitters are the same instance. This is bad because the same emitter
     # gets called multiple times.
     emitters = [GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1)] * 5
 
