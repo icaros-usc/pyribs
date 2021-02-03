@@ -88,7 +88,7 @@ class GridArchive(ArchiveBase):
             Archive bins:   | 0 | 1 |   ...   |    self.dims[i]    |
             boundaries[i]:  0   1   2   self.dims[i] - 1     self.dims[i]
 
-        Thus, entry ``j`` and ``j + 1`` are the lower and upper bounds of bin
+        Thus, entries ``j`` and ``j + 1`` are the lower and upper bounds of bin
         ``j``. To access the lower bounds of all the cells in dimension ``i``,
         use ``boundaries[i][:-1]``, and to access all the upper bounds, use
         ``boundaries[i][1:]``.
