@@ -28,6 +28,11 @@ def test_properties_are_correct(_data):
     assert np.all(_data.archive.upper_bounds == [1, 2])
     assert np.all(_data.archive.interval_size == [2, 4])
 
+    boundaries = _data.archive.boundaries
+    assert len(boundaries) == 2
+    assert np.isclose(boundaries[0], np.linspace(-1, 1, 10 + 1)).all()
+    assert np.isclose(boundaries[1], np.linspace(-2, 2, 20 + 1)).all()
+
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
 def test_add_to_archive(_data, use_list):
