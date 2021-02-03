@@ -64,7 +64,7 @@ def test_tell_inserts_solutions_into_archive(_optimizer_fixture):
     assert len(optimizer.archive.as_pandas()) == num_solutions
 
 
-def test_tell_inserts_solutions_with_multiple_emitters(_optimizer_fixture):
+def test_tell_inserts_solutions_with_multiple_emitters():
     archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
     emitters = [
         GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1),
@@ -88,3 +88,14 @@ def test_tell_fails_when_ask_not_called(_optimizer_fixture):
     optimizer, _ = _optimizer_fixture
     with pytest.raises(RuntimeError):
         optimizer.tell(None, None)
+
+
+def test_using_the_same_emitter_fails():
+    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+
+    # All emitters are the same object. This is bad because the same emitter
+    # gets called multiple times.
+    emitters = [GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1)] * 5
+
+    with pytest.raises(ValueError):
+        Optimizer(archive, emitters)
