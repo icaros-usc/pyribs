@@ -140,9 +140,14 @@ class SlidingBoundaryArchive(ArchiveBase):
 
         # Sliding boundary specifics.
         self._remap_frequency = remap_frequency
-        self._boundaries = np.full((self._behavior_dim, np.max(self._dims)),
+        # Allocate an extra entry in each row so we can put the upper bound at
+        # the end.
+        self._boundaries = np.full((self._behavior_dim, np.max(self._dims) + 1),
                                    np.inf,
                                    dtype=self.dtype)
+        # Add the upper bounds.
+        for i, dim, in enumerate(self._dims):
+            self._boundaries[i][dim] = self._upper_bounds[i]
 
         # Create buffer.
         self._buffer = IndividualBuffer(buffer_capacity, self._behavior_dim)
@@ -185,15 +190,24 @@ class SlidingBoundaryArchive(ArchiveBase):
 
     @property
     def boundaries(self):
-        """list of numpy.ndarray: The dynamic boundaries of each dimension.
+        """list of numpy.ndarray: The dynamic boundaries of the bins in each
+        dimension.
 
-        The number of boundaries is determined by ``dims``. e.g. if ``dims`` is
-        ``[20, 30, 40]``, ``boundaries`` is ``[b1, b2, b3]`` where ``b1``,
-        ``b2``, and ``b3`` are arrays of size 20, 30, and 40 respectively. To
-        access the j-th boundary of the i-th dimension, use
-        ``boundaries[i][j]``.
+        Entry ``i`` in this list is an array that contains the boundaries of the
+        bins in dimension ``i``. The array contains ``self.dims[i] + 1`` entries
+        laid out like this::
+
+            Archive bins:   | 0 | 1 |   ...   |    self.dims[i]    |
+            boundaries[i]:  0   1   2   self.dims[i] - 1     self.dims[i]
+
+        Thus, entry ``j`` and ``j + 1`` are the lower and upper bounds of bin
+        ``j``. To access the lower bounds of all the cells in dimension ``i``,
+        use ``boundaries[i][:-1]``, and to access all the upper bounds, use
+        ``boundaries[i][1:]``.
         """
-        return [bound[:dim] for bound, dim in zip(self._boundaries, self._dims)]
+        return [
+            bound[:dim + 1] for bound, dim in zip(self._boundaries, self._dims)
+        ]
 
     @staticmethod
     @nb.jit(nopython=True)
