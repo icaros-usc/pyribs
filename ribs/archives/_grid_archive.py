@@ -50,6 +50,12 @@ class GridArchive(ArchiveBase):
         self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
         self._interval_size = self._upper_bounds - self._lower_bounds
 
+        self._boundaries = []
+        for dim, lower_bound, upper_bound in zip(self._dims, self._lower_bounds,
+                                                 self._upper_bounds):
+            self._boundaries.append(
+                np.linspace(lower_bound, upper_bound, dim + 1))
+
     @property
     def dims(self):
         """(behavior_dim,) numpy.ndarray: Number of bins in each dimension."""
@@ -70,6 +76,24 @@ class GridArchive(ArchiveBase):
         """(behavior_dim,) numpy.ndarray: The size of each dim (upper_bounds -
         lower_bounds)."""
         return self._interval_size
+
+    @property
+    def boundaries(self):
+        """list of numpy.ndarray: The boundaries of the bins in each dimension.
+
+        Entry ``i`` in this list is an array that contains the boundaries of the
+        bins in dimension ``i``. The array contains ``self.dims[i] + 1`` entries
+        laid out like this::
+
+            Archive bins:   | 0 | 1 |   ...   |    self.dims[i]    |
+            boundaries[i]:  0   1   2   self.dims[i] - 1     self.dims[i]
+
+        Thus, entry ``j`` and ``j + 1`` are the lower and upper bounds of bin
+        ``j``. To access the lower bounds of all the cells in dimension ``i``,
+        use ``boundaries[i][:-1]``, and to access all the upper bounds, use
+        ``boundaries[i][1:]``.
+        """
+        return self._boundaries
 
     @staticmethod
     @jit(nopython=True)
