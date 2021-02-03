@@ -30,6 +30,7 @@ class DecompMatrix:
         self.eigenvalues = np.ones((dimension,), dtype=dtype)
         self.condition_number = 1
         self.invsqrt = np.eye(dimension, dtype=dtype)  # C^(-1/2)
+        self.dtype = dtype
 
         # The last evaluation on which the eigensystem was updated.
         self.updated_eval = 0
@@ -53,9 +54,10 @@ class DecompMatrix:
         # Force symmetry.
         self.cov = np.maximum(self.cov, self.cov.T)
 
+        # Note: eigh returns float64, so we must cast it.
         self.eigenvalues, self.eigenbasis = np.linalg.eigh(self.cov)
-        self.eigenvalues = self.eigenvalues.real
-        self.eigenbasis = self.eigenbasis.real
+        self.eigenvalues = self.eigenvalues.real.astype(self.dtype)
+        self.eigenbasis = self.eigenbasis.real.astype(self.dtype)
         self.condition_number = (np.max(self.eigenvalues) /
                                  np.min(self.eigenvalues))
         self.invsqrt = (self.eigenbasis *
@@ -199,7 +201,10 @@ class CMAEvolutionStrategy:
         remaining_indices = np.arange(self.batch_size)
         while len(remaining_indices) > 0:
             unscaled_params = self._rng.normal(
-                0.0, self.sigma, (len(remaining_indices), self.solution_dim))
+                0.0,
+                self.sigma,
+                (len(remaining_indices), self.solution_dim),
+            ).astype(self.dtype)
             new_solutions, out_of_bounds = self._transform_and_check_sol(
                 unscaled_params, transform_mat, self.mean, lower_bounds,
                 upper_bounds)

@@ -16,39 +16,41 @@ from ribs.emitters import (ImprovementEmitter, OptimizingEmitter,
 
 
 @pytest.mark.parametrize(
-    "emitter_name",
-    ["ImprovementEmitter", "RandomDirectionEmitter", "OptimizingEmitter"])
-def test_auto_batch_size(emitter_name):
+    "emitter_class",
+    [ImprovementEmitter, RandomDirectionEmitter, OptimizingEmitter])
+def test_auto_batch_size(emitter_class):
     archive = GridArchive([20, 20], [(-1.0, 1.0)] * 2)
-
-    # Batch size is not provided, so it should be auto-generated.
-    emitter = {
-        "ImprovementEmitter":
-            lambda: ImprovementEmitter(archive, np.zeros(20), 1.0),
-        "RandomDirectionEmitter":
-            lambda: RandomDirectionEmitter(archive, np.zeros(20), 1.0),
-        "OptimizingEmitter":
-            lambda: OptimizingEmitter(archive, np.zeros(20), 1.0),
-    }[emitter_name]()
-
+    emitter = emitter_class(archive, np.zeros(10), 1.0)
     assert emitter.batch_size is not None
     assert isinstance(emitter.batch_size, int)
 
 
 @pytest.mark.parametrize(
-    "emitter_name",
-    ["ImprovementEmitter", "RandomDirectionEmitter", "OptimizingEmitter"])
-def test_list_as_initial_solution(emitter_name):
+    "emitter_class",
+    [ImprovementEmitter, RandomDirectionEmitter, OptimizingEmitter])
+def test_list_as_initial_solution(emitter_class):
     archive = GridArchive([20, 20], [(-1.0, 1.0)] * 2)
-
-    emitter = {
-        "ImprovementEmitter":
-            lambda: ImprovementEmitter(archive, [0.0] * 20, 1.0),
-        "RandomDirectionEmitter":
-            lambda: RandomDirectionEmitter(archive, [0.0] * 20, 1.0),
-        "OptimizingEmitter":
-            lambda: OptimizingEmitter(archive, [0.0] * 20, 1.0),
-    }[emitter_name]()
+    emitter = emitter_class(archive, [0.0] * 10, 1.0)
 
     # The list was passed in but should be converted to a numpy array.
-    assert (emitter.x0 == np.zeros(20)).all()
+    assert isinstance(emitter.x0, np.ndarray)
+    assert (emitter.x0 == np.zeros(10)).all()
+
+
+@pytest.mark.parametrize(
+    "emitter_class",
+    [ImprovementEmitter, RandomDirectionEmitter, OptimizingEmitter])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32],
+                         ids=["float64", "float32"])
+def test_dtypes(emitter_class, dtype):
+    archive = GridArchive([20, 20], [(-1.0, 1.0)] * 2, dtype=dtype)
+    archive.initialize(10)
+    emitter = emitter_class(archive, np.zeros(10), 1.0)
+    assert emitter.x0.dtype == dtype
+
+    # Try running with the negative sphere function for a few iterations.
+    for _ in range(10):
+        sols = emitter.ask()
+        objs = -np.sum(np.square(sols), axis=1)
+        bcs = sols[:, :2]
+        emitter.tell(sols, objs, bcs)
