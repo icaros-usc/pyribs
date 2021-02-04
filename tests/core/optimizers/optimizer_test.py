@@ -23,6 +23,17 @@ def test_init_fails_with_no_emitters():
         Optimizer(archive, emitters)
 
 
+def test_init_fails_on_non_unique_emitter_instances():
+    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+
+    # All emitters are the same instance. This is bad because the same emitter
+    # gets called multiple times.
+    emitters = [GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1)] * 5
+
+    with pytest.raises(ValueError):
+        Optimizer(archive, emitters)
+
+
 def test_init_fails_with_mismatched_emitters():
     archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
     emitters = [
@@ -64,7 +75,7 @@ def test_tell_inserts_solutions_into_archive(_optimizer_fixture):
     assert len(optimizer.archive.as_pandas()) == num_solutions
 
 
-def test_tell_inserts_solutions_with_multiple_emitters(_optimizer_fixture):
+def test_tell_inserts_solutions_with_multiple_emitters():
     archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
     emitters = [
         GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1),

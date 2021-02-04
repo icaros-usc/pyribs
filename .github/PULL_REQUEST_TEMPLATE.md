@@ -2,6 +2,10 @@
 
 <!-- Provide a brief description of the PR's purpose here. -->
 
+## Changelog Description
+
+<!-- Please provide a one-line description we can use in the changelog. -->
+
 ## TODO
 
 <!-- Notable points that this PR has either accomplished or will accomplish. -->

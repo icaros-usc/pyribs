@@ -4,10 +4,10 @@
 | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: |
 | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Tests](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Tests") | [docs.pyribs.org](https://docs.pyribs.org) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=latest&style=flat-square)](https://readthedocs.org/projects/ribs/) |
 
-A _bare-bones_ quality diversity optimization library. The pyribs library is the
-official implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME)
-algorithm and implements the _Rapid Illumination of Behavior Space (RIBS)_
-redesign of MAP-Elites detailed in the paper
+A _bare-bones_ quality diversity optimization library. pyribs is the official
+implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME) algorithm
+and implements the _Rapid Illumination of Behavior Space (RIBS)_ redesign of
+MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
 
 ## Overview
@@ -101,9 +101,9 @@ For more information, refer to the [documentation](https://docs.pyribs.org/).
 
 ## Installation
 
-The pyribs library supports Python 3.6-3.8 (for now, 3.9 will only work if you
-are able to build [llvmlite](https://github.com/numba/llvmlite) on your system).
-Earlier Python versions may work but are not officially supported.
+pyribs supports Python 3.6-3.8 (for now, 3.9 will only work if you are able to
+build [llvmlite](https://github.com/numba/llvmlite) on your system). Earlier
+Python versions may work but are not officially supported.
 
 To install from PyPI, run
 
@@ -175,7 +175,7 @@ USC.
 - [Bryon Tjanaka](https://btjanaka.net)
 - [Matt Fontaine](https://github.com/tehqin)
 - [Yulun Zhang](https://github.com/lunjohnzhang)
-- [Sam Sommerer](https://github.com/sam-som-usc)
+- [Sam Sommerer](https://github.com/sam-sommerer)
 - Nikitas Klapsis
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 
@@ -185,7 +185,7 @@ the CMA-ME algorithm.
 
 ## License
 
-The pyribs library is released under the
+pyribs is released under the
 [MIT License](https://github.com/icaros-usc/pyribs/blob/master/LICENSE).
 
 ## Credits
