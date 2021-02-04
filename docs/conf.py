@@ -75,7 +75,7 @@ master_doc = "index"
 # General information about the project.
 project = "pyribs"
 copyright = "2020, ICAROS Lab"
-author = "ICAROS Lab"
+author = "ICAROS Lab pyribs Team"
 
 # The version info for the project you"re documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -114,7 +114,7 @@ html_context = sphinx_material.get_html_context()
 html_theme = "sphinx_material"
 html_logo = "_static/imgs/logo.svg"
 html_favicon = "_static/imgs/favicon.ico"
-html_title = "pyribs v" + ribs.__version__
+html_title = f"pyribs ({READTHEDOCS_VERSION})"
 
 # material theme options (see theme.conf for more information)
 html_theme_options = {

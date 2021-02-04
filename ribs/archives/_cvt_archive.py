@@ -53,10 +53,10 @@ class CVTArchive(ArchiveBase):
             number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
-            indicates the first dimension should have bounds ``(-1, 1)``, and
-            the second dimension should have bounds ``(-2, 2)``. Note that the
-            length of this array defines the dimensionality of the behavior
-            space.
+            indicates the first dimension should have bounds :math:`[-1,1]`
+            (inclusive), and the second dimension should have bounds
+            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
+            ``dims``.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
