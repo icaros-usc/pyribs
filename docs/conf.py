@@ -114,11 +114,11 @@ html_context = sphinx_material.get_html_context()
 html_theme = "sphinx_material"
 html_logo = "_static/imgs/logo.svg"
 html_favicon = "_static/imgs/favicon.ico"
-html_title = "pyribs"
+html_title = f"pyribs ({READTHEDOCS_VERSION})"
 
 # material theme options (see theme.conf for more information)
 html_theme_options = {
-    "nav_title": html_title,
+    "nav_title": "pyribs",
     "base_url": (f"https://docs.pyribs.org/{READTHEDOCS_LANGUAGE}/"
                  f"{READTHEDOCS_VERSION}/"),
     "repo_url": "https://github.com/icaros-usc/pyribs/",
