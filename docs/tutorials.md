@@ -3,6 +3,7 @@
 ```{toctree}
 :hidden:
 
+tutorials/pyribs_overview
 tutorials/lunar_lander
 tutorials/lsi_mnist
 tutorials/arm_repertoire
@@ -17,9 +18,10 @@ running locally, make sure to have
 installed. Each notebook contains cell magic that installs the dependencies it
 needs for execution.
 
-| Name                            | Archive                             | Emitter                                    | Optimizer                           |
-| ------------------------------- | ----------------------------------- | ------------------------------------------ | ----------------------------------- |
-| {doc}`tutorials/lunar_lander`   | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
-| {doc}`tutorials/lsi_mnist`      | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
-| {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
-| {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GaussianEmitter`    | {class}`~ribs.optimizers.Optimizer` |
+| Name                             | Archive                             | Emitter                                    | Optimizer                           |
+| -------------------------------- | ----------------------------------- | ------------------------------------------ | ----------------------------------- |
+| {doc}`tutorials/pyribs_overview` | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
+| {doc}`tutorials/lunar_lander`    | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
+| {doc}`tutorials/lsi_mnist`       | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
+| {doc}`tutorials/arm_repertoire`  | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
+| {doc}`tutorials/fooling_mnist`   | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GaussianEmitter`    | {class}`~ribs.optimizers.Optimizer` |
