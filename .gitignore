@@ -114,6 +114,7 @@ ENV/
 *.mp4
 *.gif
 *.csv
+*.pth
 MNIST/
 dask-worker-space/
 !tests/extras/baseline_images/visualize_test/*

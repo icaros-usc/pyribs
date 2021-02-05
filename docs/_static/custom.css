@@ -70,7 +70,7 @@ ul.md-source__facts > li.md-source__fact {
   color: #7e57c2;
 }
 .admonition.note > p.admonition-title {
-  /* Title background. */
+  /* Title background - light purple. */
   background-color: #f1eafd;
   border-bottom: 0.05rem solid #f1eafd;
 }

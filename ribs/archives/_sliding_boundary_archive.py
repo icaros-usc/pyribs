@@ -81,18 +81,19 @@ class IndividualBuffer:
 class SlidingBoundaryArchive(ArchiveBase):
     """An archive with a fixed number of sliding boundaries on each dimension.
 
-    This archive is the container described in the `Hearthstone Deck Space
-    paper <https://arxiv.org/pdf/1904.10656.pdf>`_. Same as the :class:`~ribs.
-    archives.GridArchive`, it can be visualized as an n-dimensional grid in the
-    behavior space that is divided into a certain number of bins in each
-    dimension. However, it places the boundaries at the percentage marks of
-    the behavior characteristics along each dimension. At a certain frequency,
-    the archive will remap the boundary in accordance with all of the solutions
-    stored in the buffer.
+    This archive is the container described in the `MAP-Elites with Sliding
+    Boundaries paper <https://arxiv.org/pdf/1904.10656.pdf>`_. Just like the
+    :class:`~ribs.archives.GridArchive`, it can be visualized as an
+    n-dimensional grid in the behavior space that is divided into a certain
+    number of bins in each dimension. Internally, this archive stores a buffer
+    with the ``buffer_capacity`` most recent solutions and uses them to
+    determine the boundaries of the behavior characteristics along each
+    dimension. After every ``remap_frequency`` solutions are inserted, the
+    archive remaps the boundaries based on the solutions in the buffer.
 
-    This archive attempts to enable the distribution of the space illuminated
-    by the archive to more accurately match the true distribution of the
-    behavior characteristics are not uniformly distributed.
+    Overall, this archive attempts to make the distribution of the space
+    illuminated by the archive more accurately match the true distribution of
+    the behavior characteristics when they are not uniformly distributed.
 
     Args:
         dims (array-like): Number of bins in each dimension of the behavior
@@ -101,9 +102,10 @@ class SlidingBoundaryArchive(ArchiveBase):
             defined in the length of this argument).
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
-            indicates the first dimension should have bounds ``(-1, 1)``, and
-            the second dimension should have bounds ``(-2, 2)``. ``ranges``
-            should be the same length as ``dims``.
+            indicates the first dimension should have bounds :math:`[-1,1]`
+            (inclusive), and the second dimension should have bounds
+            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
+            ``dims``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
