@@ -17,7 +17,7 @@ to these functions.
 
     ribs.visualize.grid_archive_heatmap
     ribs.visualize.cvt_archive_heatmap
-    ribs.visualize.sliding_boundary_archive_heatmap
+    ribs.visualize.sliding_boundaries_archive_heatmap
 """
 import matplotlib
 import matplotlib.pyplot as plt
@@ -31,7 +31,7 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 __all__ = [
     "grid_archive_heatmap",
     "cvt_archive_heatmap",
-    "sliding_boundary_archive_heatmap",
+    "sliding_boundaries_archive_heatmap",
 ]
 
 
@@ -324,7 +324,7 @@ def cvt_archive_heatmap(archive,
         ax.plot(centroids[:, 0], centroids[:, 1], "ko", ms=ms)
 
 
-def sliding_boundary_archive_heatmap(archive,
+def sliding_boundaries_archive_heatmap(archive,
                                      ax=None,
                                      transpose_bcs=False,
                                      cmap="magma",
@@ -348,7 +348,7 @@ def sliding_boundary_archive_heatmap(archive,
             >>> import numpy as np
             >>> import matplotlib.pyplot as plt
             >>> from ribs.archives import SlidingBoundariesArchive
-            >>> from ribs.visualize import sliding_boundary_archive_heatmap
+            >>> from ribs.visualize import sliding_boundaries_archive_heatmap
             >>> archive = SlidingBoundariesArchive([10, 20],
             ...                                  [(-1, 1), (-1, 1)],
             ...                                  seed=42)
@@ -365,9 +365,9 @@ def sliding_boundary_archive_heatmap(archive,
             >>> # Plot heatmaps of the archive.
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
             >>> fig.suptitle("Negative sphere function")
-            >>> sliding_boundary_archive_heatmap(archive, ax=ax1,
+            >>> sliding_boundaries_archive_heatmap(archive, ax=ax1,
             ...                                  boundary_lw=0.5)
-            >>> sliding_boundary_archive_heatmap(archive, ax=ax2)
+            >>> sliding_boundaries_archive_heatmap(archive, ax=ax2)
             >>> ax1.set_title("With boundaries")
             >>> ax2.set_title("Without boundaries")
             >>> ax1.set(xlabel='x coords', ylabel='y coords')
