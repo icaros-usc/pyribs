@@ -4,6 +4,7 @@
 :hidden:
 
 tutorials/lunar_lander
+tutorials/lsi_mnist
 tutorials/arm_repertoire
 tutorials/fooling_mnist
 ```
@@ -19,5 +20,6 @@ needs for execution.
 | Name                            | Archive                             | Emitter                                    | Optimizer                           |
 | ------------------------------- | ----------------------------------- | ------------------------------------------ | ----------------------------------- |
 | {doc}`tutorials/lunar_lander`   | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
+| {doc}`tutorials/lsi_mnist`      | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
 | {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
 | {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GaussianEmitter`    | {class}`~ribs.optimizers.Optimizer` |
