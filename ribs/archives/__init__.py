@@ -17,7 +17,7 @@ from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._grid_archive import GridArchive
-from ribs.archives._sliding_boundary_archive import SlidingBoundaryArchive
+from ribs.archives._sliding_boundaries_archive import SlidingBoundaryArchive
 
 __all__ = [
     "GridArchive",

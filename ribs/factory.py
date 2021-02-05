@@ -15,7 +15,7 @@ import toml
 
 from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._grid_archive import GridArchive
-from ribs.archives._sliding_boundary_archive import SlidingBoundaryArchive
+from ribs.archives._sliding_boundaries_archive import SlidingBoundaryArchive
 from ribs.emitters._gaussian_emitter import GaussianEmitter
 from ribs.emitters._improvement_emitter import ImprovementEmitter
 from ribs.emitters._iso_line_emitter import IsoLineEmitter
