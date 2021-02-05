@@ -14,7 +14,7 @@ MAP-Elites detailed in the paper
 
 ![Types of Optimization](readme_assets/optimization_types.png)
 
-[Quality-diversity (QD) optimization](https://arxiv.org/abs/2012.04322) is a
+[Quality diversity (QD) optimization](https://arxiv.org/abs/2012.04322) is a
 subfield of optimization where solutions generated cover every point in a
 behavior space while simultaneously maximizing (or minimizing) a single
 objective. QD algorithms within the MAP-Elites family of QD algorithms produce
