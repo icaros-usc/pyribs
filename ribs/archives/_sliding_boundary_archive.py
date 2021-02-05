@@ -11,7 +11,7 @@ from ribs.archives._archive_base import ArchiveBase, require_init
 _EPSILON = 1e-9
 
 
-class IndividualBuffer:
+class SolutionBuffer:
     """An internal class that stores relevant data to re-add after remapping.
 
     It buffers solutions, objective values, and sorted behavior values of each
@@ -152,7 +152,7 @@ class SlidingBoundaryArchive(ArchiveBase):
             self._boundaries[i][dim] = self._upper_bounds[i]
 
         # Create buffer.
-        self._buffer = IndividualBuffer(buffer_capacity, self._behavior_dim)
+        self._buffer = SolutionBuffer(buffer_capacity, self._behavior_dim)
 
         # Total number of solutions encountered.
         self._total_num_sol = 0
