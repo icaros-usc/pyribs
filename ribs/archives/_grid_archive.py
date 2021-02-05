@@ -10,7 +10,7 @@ _EPSILON = 1e-9
 class GridArchive(ArchiveBase):
     """An archive that divides each dimension into uniformly-sized bins.
 
-    This archive is the container described in the `original MAP-Elites paper
+    This archive is the container described in `Mouret 2015
     <https://arxiv.org/pdf/1504.04909.pdf>`_. It can be visualized as an
     n-dimensional grid in the behavior space that is divided into a certain
     number of bins in each dimension. Each bin contains an elite, i.e. a

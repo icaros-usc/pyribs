@@ -9,11 +9,11 @@ class RandomDirectionEmitter(EmitterBase):
     """Performs a random walk in behavior space by pursuing randomly chosen
     behavior space directions.
 
-    This emitter originates in the `CMA-ME paper
-    <https://arxiv.org/abs/1912.02400>`_. Initially, it will start at ``x0`` and
-    use CMA-ES to search for solutions along a randomly chosen direction. Once
-    CMA-ES restarts (see ``restart_rule``), the emitter will start from a
-    randomly chosen elite in the archive and pursue a new random direction.
+    This emitter originates in `Fontaine 2020
+    <https://arxiv.org/abs/1912.02400>`_. Initially, it starts at ``x0`` and
+    uses CMA-ES to search for solutions along a randomly chosen direction. Once
+    CMA-ES restarts (see ``restart_rule``), the emitter starts from a randomly
+    chosen elite in the archive and pursues a new random direction.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and

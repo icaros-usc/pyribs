@@ -9,13 +9,13 @@ from ribs.emitters.opt import CMAEvolutionStrategy
 class ImprovementEmitter(EmitterBase):
     """Adapts a covariance matrix towards changes in the archive.
 
-    This emitter originates in the `CMA-ME paper
-    <https://arxiv.org/abs/1912.02400>`_. Initially, it will start at ``x0`` and
-    use CMA-ES to search for solutions that improve the archive, i.e. solutions
-    that add new entries to the archive or improve existing entries. Once
-    CMA-ES restarts (see ``restart_rule``), the emitter will start from a
-    randomly chosen elite in the archive and continue searching for solutions
-    that improve the archive.
+    This emitter originates in `Fontaine 2020
+    <https://arxiv.org/abs/1912.02400>`_. Initially, it starts at ``x0`` and
+    uses CMA-ES to search for solutions that improve the archive, i.e. solutions
+    that add new entries to the archive or improve existing entries. Once CMA-ES
+    restarts (see ``restart_rule``), the emitter starts from a randomly chosen
+    elite in the archive and continues searching for solutions that improve the
+    archive.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
