@@ -1,4 +1,4 @@
-"""Contains the SlidingBoundaryArchive."""
+"""Contains the SlidingBoundariesArchive."""
 
 from collections import deque
 
@@ -78,7 +78,7 @@ class SolutionBuffer:
         return self._buffer_capacity
 
 
-class SlidingBoundaryArchive(ArchiveBase):
+class SlidingBoundariesArchive(ArchiveBase):
     """An archive with a fixed number of sliding boundaries on each dimension.
 
     This archive is the container described in the `MAP-Elites with Sliding
@@ -233,7 +233,7 @@ class SlidingBoundaryArchive(ArchiveBase):
 
         :meta private:
         """
-        index = SlidingBoundaryArchive._get_index_numba(behavior_values,
+        index = SlidingBoundariesArchive._get_index_numba(behavior_values,
                                                         self.upper_bounds,
                                                         self.lower_bounds,
                                                         self._boundaries,
@@ -311,7 +311,7 @@ class SlidingBoundaryArchive(ArchiveBase):
         sorted_bc = self._buffer.sorted_behavior_values
 
         # Calculate new boundaries.
-        SlidingBoundaryArchive._re_map_numba_helper(sorted_bc,
+        SlidingBoundariesArchive._re_map_numba_helper(sorted_bc,
                                                     self._buffer.size,
                                                     self._boundaries,
                                                     self._behavior_dim,

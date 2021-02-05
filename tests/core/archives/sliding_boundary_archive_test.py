@@ -1,4 +1,4 @@
-"""Test for SlidingBoundaryArchive."""
+"""Test for SlidingBoundariesArchive."""
 import numpy as np
 import pytest
 
@@ -10,7 +10,7 @@ from .conftest import get_archive_data
 @pytest.fixture
 def _data():
     """Data for sliding boundary archive tests."""
-    return get_archive_data("SlidingBoundaryArchive")
+    return get_archive_data("SlidingBoundariesArchive")
 
 
 def _assert_archive_has_entry(archive, indices, behavior_values,
@@ -117,7 +117,7 @@ def test_add_to_archive_without_remap(_data):
 @pytest.mark.parametrize("dtype", [np.float64, np.float32],
                          ids=["float64", "float32"])
 def test_as_pandas(with_entry, include_solutions, dtype):
-    data = get_archive_data("SlidingBoundaryArchive", dtype)
+    data = get_archive_data("SlidingBoundariesArchive", dtype)
     if with_entry:
         df = data.archive_with_entry.as_pandas(include_solutions)
     else:

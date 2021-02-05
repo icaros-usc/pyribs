@@ -333,10 +333,10 @@ def sliding_boundary_archive_heatmap(archive,
                                      boundary_lw=0,
                                      vmin=None,
                                      vmax=None):
-    """Plots heatmap of a :class:`~ribs.archives.SlidingBoundaryArchive` with 2D
-    behavior space.
+    """Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with
+    2D behavior space.
 
-    Since the boundaries of :class:`ribs.archives.SlidingBoundaryArchive` are
+    Since the boundaries of :class:`ribs.archives.SlidingBoundariesArchive` are
     dynamic, we plot the heatmap as a scatter plot, in which each marker is a
     solution and its color represents the objective value. Boundaries can
     optionally be drawn by setting ``boundary_lw`` to a positive value.
@@ -347,9 +347,9 @@ def sliding_boundary_archive_heatmap(archive,
 
             >>> import numpy as np
             >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import SlidingBoundaryArchive
+            >>> from ribs.archives import SlidingBoundariesArchive
             >>> from ribs.visualize import sliding_boundary_archive_heatmap
-            >>> archive = SlidingBoundaryArchive([10, 20],
+            >>> archive = SlidingBoundariesArchive([10, 20],
             ...                                  [(-1, 1), (-1, 1)],
             ...                                  seed=42)
             >>> archive.initialize(solution_dim=2)
@@ -376,7 +376,7 @@ def sliding_boundary_archive_heatmap(archive,
 
 
     Args:
-        archive (SlidingBoundaryArchive): A 2D SlidingBoundaryArchive.
+        archive (SlidingBoundariesArchive): A 2D SlidingBoundariesArchive.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
             the current axis will be used.
         transpose_bcs (bool): By default, the first BC in the archive will

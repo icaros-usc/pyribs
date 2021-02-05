@@ -15,7 +15,7 @@ import toml
 
 from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._grid_archive import GridArchive
-from ribs.archives._sliding_boundaries_archive import SlidingBoundaryArchive
+from ribs.archives._sliding_boundaries_archive import SlidingBoundariesArchive
 from ribs.emitters._gaussian_emitter import GaussianEmitter
 from ribs.emitters._improvement_emitter import ImprovementEmitter
 from ribs.emitters._iso_line_emitter import IsoLineEmitter
@@ -111,7 +111,7 @@ def register_optimizer(name, optimizer_class):
 
 register_archive("CVTArchive", CVTArchive)
 register_archive("GridArchive", GridArchive)
-register_archive("SlidingBoundaryArchive", SlidingBoundaryArchive)
+register_archive("SlidingBoundariesArchive", SlidingBoundariesArchive)
 register_emitter("GaussianEmitter", GaussianEmitter)
 register_emitter("ImprovementEmitter", ImprovementEmitter)
 register_emitter("IsoLineEmitter", IsoLineEmitter)

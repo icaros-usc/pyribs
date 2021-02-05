@@ -1,7 +1,7 @@
-"""Benchmarks for the SlidingBoundaryArchive."""
+"""Benchmarks for the SlidingBoundariesArchive."""
 import numpy as np
 
-from ribs.archives import SlidingBoundaryArchive
+from ribs.archives import SlidingBoundariesArchive
 
 # pylint: disable = unused-variable
 
@@ -10,7 +10,7 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
     n, solutions, objective_values, behavior_values = benchmark_data_10k
 
     def setup():
-        archive = SlidingBoundaryArchive([10, 20], [(-1, 1), (-2, 2)],
+        archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
                                          remap_frequency=100,
                                          buffer_capacity=1000)
         archive.initialize(solutions.shape[1])
@@ -29,7 +29,7 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
 
 def benchmark_get_10k_random_elites(benchmark, benchmark_data_10k):
     n, solutions, objective_values, behavior_values = benchmark_data_10k
-    archive = SlidingBoundaryArchive([10, 20], [(-1, 1), (-2, 2)],
+    archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
                                      remap_frequency=100,
                                      buffer_capacity=1000)
     archive.initialize(solutions.shape[1])
@@ -44,7 +44,7 @@ def benchmark_get_10k_random_elites(benchmark, benchmark_data_10k):
 
 
 def benchmark_as_pandas_2048_elements(benchmark):
-    archive = SlidingBoundaryArchive([32, 64], [(-1, 1), (-2, 2)],
+    archive = SlidingBoundariesArchive([32, 64], [(-1, 1), (-2, 2)],
                                      remap_frequency=1000,
                                      buffer_capacity=10000)
     archive.initialize(10)
