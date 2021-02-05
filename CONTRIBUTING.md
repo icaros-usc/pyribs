@@ -167,6 +167,8 @@ Tutorials are created in Jupyter notebooks that are stored under
 1. Write the notebook and save it under `examples/tutorials`.
 1. If your notebook depends on packages outside of `ribs` and `ribs[all]`, add
    cell magic to install these packages, such as `%pip install foobar`.
+   - Installation cells tend to produce a lot of output. Make sure to clear this
+     output in Jupyter lab so that it does not clutter the documentation.
 1. Add an entry into the toctree and table in `docs/tutorials.md`.
 1. Check that the tutorial shows up on the Tutorials page when you serve the
    docs.
