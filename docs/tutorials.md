@@ -11,8 +11,11 @@ tutorials/fooling_mnist
 ```
 
 Tutorials are Python notebooks with detailed explanations of pyribs usage. They
-may be run locally or on
-[Google Colab](https://colab.research.google.com/notebooks/intro.ipynb). If
+may be run locally (see the
+[examples](https://github.com/icaros-usc/pyribs/tree/master/examples) directory
+on GitHub) or on
+[Google Colab](https://colab.research.google.com/notebooks/intro.ipynb) (click
+the "Open in Colab" button along the right-hand side of each tutorial page). If
 running locally, make sure to have
 [Jupyter Lab](https://jupyterlab.readthedocs.io/en/stable/getting_started/installation.html)
 installed. Each notebook contains cell magic that installs the dependencies it
