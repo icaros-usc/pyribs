@@ -33,6 +33,8 @@ class GridArchive(ArchiveBase):
         dtype (str or data-type): Data type of the solutions, objective values,
             and behavior values. We only support ``"f"`` / :class:`np.float32`
             and ``"d"`` / :class:`np.float64`.
+    Raises:
+        ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
     def __init__(self, dims, ranges, seed=None, dtype=np.float64):
@@ -47,6 +49,9 @@ class GridArchive(ArchiveBase):
         )
 
         ranges = list(zip(*ranges))
+        if len(self._dims) != len(ranges):
+            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
+                             f"(length {len(ranges)}) must be the same length")
         self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
         self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
         self._interval_size = self._upper_bounds - self._lower_bounds

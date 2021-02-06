@@ -139,7 +139,7 @@ class CVTArchive(ArchiveBase):
                 if samples.shape[1] != self._behavior_dim:
                     raise ValueError(
                         f"Samples has shape {samples.shape} but must be of "
-                        f"shape (n_samples, {self._behavior_dim})")
+                        f"shape (n_samples, len(ranges)={self._behavior_dim})")
             self._samples = samples
             self._centroids = None
         else:
@@ -148,7 +148,8 @@ class CVTArchive(ArchiveBase):
             if custom_centroids.shape != (bins, self._behavior_dim):
                 raise ValueError(
                     f"custom_centroids has shape {custom_centroids.shape} but "
-                    f"must be of shape ({bins}, {self._behavior_dim})")
+                    f"must be of shape (bins={bins}, len(ranges)="
+                    f"{self._behavior_dim})")
             self._centroids = custom_centroids
             self._samples = None
 
