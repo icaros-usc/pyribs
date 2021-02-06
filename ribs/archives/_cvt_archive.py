@@ -11,7 +11,7 @@ class CVTArchive(ArchiveBase):
     """An archive that divides the entire behavior space into a fixed number of
     bins.
 
-    This archive originates in the `CVT-MAP-Elites paper
+    This archive originates in `Vassiliades 2018
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
     Tesselation (CVT) to divide an n-dimensional behavior space into k bins. The
     CVT is created by sampling points uniformly from the n-dimensional behavior

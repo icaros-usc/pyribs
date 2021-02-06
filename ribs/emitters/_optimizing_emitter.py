@@ -8,11 +8,11 @@ from ribs.emitters.opt import CMAEvolutionStrategy
 class OptimizingEmitter(EmitterBase):
     """Adapts a covariance matrix towards the objective.
 
-    This emitter originates in the `CMA-ME paper
-    <https://arxiv.org/abs/1912.02400>`_. Initially, it will start at ``x0`` and
-    use CMA-ES to optimize for objective values. After CMA-ES converges, the
-    emitter will restart the optimizer. It will pick a random elite in the
-    archive and begin optimizing from there.
+    This emitter originates in `Fontaine 2020
+    <https://arxiv.org/abs/1912.02400>`_. Initially, it starts at ``x0`` and
+    uses CMA-ES to optimize for objective values. After CMA-ES converges, the
+    emitter restarts the optimizer. It picks a random elite in the archive and
+    begins optimizing from there.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and

@@ -14,7 +14,7 @@ class GaussianEmitter(EmitterBase):
     generates solutions from a Gaussian distribution centered around each
     solution with standard deviation ``sigma0``.
 
-    This is the classic variation operator presented in `MAP-Elites
+    This is the classic variation operator presented in `Mouret 2015
     <https://arxiv.org/pdf/1504.04909.pdf>`_.
 
     Args:
