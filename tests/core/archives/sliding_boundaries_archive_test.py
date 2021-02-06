@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from ribs.archives import AddStatus
+from ribs.archives import AddStatus, SlidingBoundariesArchive
 
 from .conftest import get_archive_data
 
@@ -20,6 +20,14 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
     assert len(archive_data) == 1
     assert (archive_data.iloc[0] == (list(indices) + list(behavior_values) +
                                      [objective_value] + list(solution))).all()
+
+
+def test_fails_on_dim_mismatch():
+    with pytest.raises(ValueError):
+        SlidingBoundariesArchive(
+            dims=[10] * 2,  # 2D space here.
+            ranges=[(-1, 1)] * 3,  # But 3D space here.
+        )
 
 
 def test_attributes_correctly_constructed(_data):
