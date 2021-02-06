@@ -8,7 +8,7 @@ from sortedcontainers import SortedList
 
 from ribs.archives._archive_base import ArchiveBase, require_init
 
-_EPSILON = 1e-9
+_EPSILON = 1e-6
 
 
 class SolutionBuffer:
@@ -233,11 +233,9 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         :meta private:
         """
-        index = SlidingBoundariesArchive._get_index_numba(behavior_values,
-                                                        self.upper_bounds,
-                                                        self.lower_bounds,
-                                                        self._boundaries,
-                                                        self._dims)
+        index = SlidingBoundariesArchive._get_index_numba(
+            behavior_values, self.upper_bounds, self.lower_bounds,
+            self._boundaries, self._dims)
         return tuple(index)
 
     def _reset_archive(self):
@@ -312,10 +310,10 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         # Calculate new boundaries.
         SlidingBoundariesArchive._re_map_numba_helper(sorted_bc,
-                                                    self._buffer.size,
-                                                    self._boundaries,
-                                                    self._behavior_dim,
-                                                    self.dims)
+                                                      self._buffer.size,
+                                                      self._boundaries,
+                                                      self._behavior_dim,
+                                                      self.dims)
 
         # Add all solutions to the new empty archive.
         self._reset_archive()
