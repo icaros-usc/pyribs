@@ -39,19 +39,19 @@ class GridArchive(ArchiveBase):
 
     def __init__(self, dims, ranges, seed=None, dtype=np.float64):
         self._dims = np.array(dims)
-        behavior_dim = len(self._dims)
+        if len(self._dims) != len(ranges):
+            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
+                             f"(length {len(ranges)}) must be the same length")
+
         ArchiveBase.__init__(
             self,
             storage_dims=tuple(self._dims),
-            behavior_dim=behavior_dim,
+            behavior_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
         )
 
         ranges = list(zip(*ranges))
-        if len(self._dims) != len(ranges):
-            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
-                             f"(length {len(ranges)}) must be the same length")
         self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
         self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
         self._interval_size = self._upper_bounds - self._lower_bounds
