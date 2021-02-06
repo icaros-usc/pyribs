@@ -1,63 +1,48 @@
 # Contributing
 
-Contributions are welcome, and they are greatly appreciated! Every little bit
+Contributions are welcome, and they are greatly appreciated. Every little bit
 helps, and credit will always be given.
 
 ## Types of Contributions
 
-### Report Bugs
+- **Report Bugs:** Refer to the
+  [Issue Tracker](https://github.com/icaros-usc/pyribs/issues). Please include
+  details such as operating system, Python version, and ribs version, as well as
+  detailed steps to reproduce the bug.
+- **Fix Bugs:** Look through the Issue Tracker for bugs. Anything tagged with
+  "bug" and "help wanted" is open to whoever wants to implement it.
+- **Propose features:** To request new features in pyribs, submit a Feature
+  Request on the Issue Tracker. In the request, please:
+  - Explain in detail how the feature would work.
+  - Keep the scope as narrow as possible, to make the features easier to
+    implement.
+- **Implement Features:** Look through the Issue Tracker for features. Anything
+  tagged with "enhancement" and "help wanted" is open to whoever wants to
+  implement it.
+- **Write Documentation:** pyribs could always use more documentation, whether
+  as part of the official pyribs docs, in docstrings, or even on the web in blog
+  posts, articles, and such. For the website, refer to the
+  [website repo](https://github.com/icaros-usc/pyribs.org).
+- **Submit Feedback:** The best way to send feedback is to file an issue on the
+  [Issue Tracker](https://github.com/icaros-usc/pyribs/issues).
 
-Report bugs at <https://github.com/icaros-usc/ribs/issues>.
+## Developing pyribs
 
-If you are reporting a bug, please include:
+Ready to contribute? Here's how to set up pyribs for local development.
 
-- Your operating system name and version.
-- Any details about your local setup that might be helpful in troubleshooting.
-- Detailed steps to reproduce the bug.
-
-### Fix Bugs
-
-Look through the GitHub issues for bugs. Anything tagged with "bug" and "help
-wanted" is open to whoever wants to implement it.
-
-### Implement Features
-
-Look through the GitHub issues for features. Anything tagged with "enhancement"
-and "help wanted" is open to whoever wants to implement it.
-
-### Write Documentation
-
-pyribs could always use more documentation, whether as part of the official
-pyribs docs, in docstrings, or even on the web in blog posts, articles, and
-such.
-
-### Submit Feedback
-
-The best way to send feedback is to file an issue at
-<https://github.com/icaros-usc/ribs/issues>.
-
-If you are proposing a feature:
-
-- Explain in detail how it would work.
-- Keep the scope as narrow as possible, to make it easier to implement.
-
-## Get Started!
-
-Ready to contribute? Here's how to set up `ribs` for local development.
-
-1. Fork the `ribs` repo on GitHub.
-2. Clone your fork locally:
+1. [Fork](https://github.com/icaros-usc/pyribs/fork) the pyribs repo on GitHub.
+2. Clone the fork locally:
 
    ```bash
    # If you have SSH set up:
-   git clone git@github.com:your_name_here/pyribs.git
+   git clone git@github.com:USERNAME/pyribs.git
 
    # Or, if you do not have SSH set up:
-   git clone https://github.com/your_name_here/pyribs.git
+   git clone https://github.com/USERNAME/pyribs.git
    ```
 
 3. Install the local copy and dev requirements into an environment. For
-   instance, with Conda, you could use:
+   instance, with Conda, the following creates an environment at `./env`.
 
    ```bash
    cd pyribs
@@ -70,24 +55,23 @@ Ready to contribute? Here's how to set up `ribs` for local development.
 4. Create a branch for local development:
 
    ```bash
-   git checkout -b name-of-your-bugfix-or-feature
+   git checkout -b name-of-bugfix-or-feature
    ```
 
-   Now you can make your changes locally.
+   Now make the appropriate changes locally.
 
-   - Make sure to follow the
+   - Please follow the
      [Google Style Guide](https://google.github.io/styleguide/pyguide.html)
      (particularly when writing docstrings).
-   - Make sure to auto-format your code using YAPF. We highly recommend
-     installing a plugin to your editor that auto-formats on save, but you can
-     also run YAPF on the command line:
+   - Make sure to auto-format the code using YAPF. We highly recommend
+     installing an editor plugin that auto-formats on save, but YAPF also runs
+     on the command line:
 
      ```bash
      yapf -i FILES
      ```
 
-5. When you're done making changes, check that your changes pass pylint and the
-   tests, including testing other Python versions with tox:
+5. After making changes, check that the changes pass the tests:
 
    ```bash
    pylint ribs tests
@@ -96,50 +80,45 @@ Ready to contribute? Here's how to set up `ribs` for local development.
    tox  # Don't worry if this does not run; we will run it in CI/CD
    ```
 
-   If you wish to run the tests without benchmarks (which can take a while),
-   run:
+   To run the tests without benchmarks (benchmarks can take a while), run:
 
    ```bash
    pytest -c pytest_no_benchmark.ini
    make test-only # ^ same as above, but shorter
    ```
 
-   To get pytest, pylint, and tox, pip install them into your virtualenv. They
-   should already install with `pip install -e .[dev]`, however.
+   To get pytest, pylint, and tox, pip install them into the environment.
+   However, they should already install with `pip install -e .[dev]`.
 
-6. Commit your changes and push your branch to GitHub:
+6. Commit the changes and push the branch to GitHub:
 
    ```bash
    git add .
-   git commit -m "Your detailed description of your changes."
-   git push origin name-of-your-bugfix-or-feature
+   git commit -m "Detailed description of changes."
+   git push origin name-of-bugfix-or-feature
    ```
 
 7. Submit a pull request through the GitHub website.
 
 ## Pull Request Guidelines
 
-Before you submit a pull request, check that it meets these guidelines:
+Before submitting a pull request, check that it meets these guidelines:
 
+1. Style: Code should follow the
+   [Google Style Guide](https://google.github.io/styleguide/pyguide.html) and be
+   auto-formatted with [YAPF](https://github.com/google/yapf).
 1. The pull request should include tests.
-2. If the pull request adds functionality, the docs should be updated. Put your
-   new functionality into a function with a docstring, and add the feature to
-   the list in README.rst.
-3. The pull request should work for Python 3.6, 3.7 and 3.8. GitHub Actions will
-   display test results at the bottom of the pull request page; check there to
-   see if your code passes all tests.
-
-### Style
-
-Code should follow the
-[Google Style Guide](https://google.github.io/styleguide/pyguide.html) and be
-auto-formatted using [YAPF](https://github.com/google/yapf).
+1. If the pull request adds functionality, corresponding docstrings and other
+   documentation should be updated.
+1. The pull request should work for Python 3.6 and higher. GitHub Actions will
+   display test results at the bottom of the pull request page. Check there for
+   test results.
 
 ## Instructions
 
 ### Running a Subset of Tests
 
-To run a subset of tests:
+To run a subset of tests, use `pytest` with the directory name, such as:
 
 ```bash
 pytest tests/core/archives
@@ -147,8 +126,8 @@ pytest tests/core/archives
 
 ### Documentation
 
-In addition to reStructuredText, you can write documentation in Markdown, as we
-use [MyST](https://myst-parser.readthedocs.io/en/latest/).
+Documentation is primarily written in Markdown, as we use the
+[MyST](https://myst-parser.readthedocs.io/en/latest/) Sphinx plugin.
 
 To preview documentation, use:
 
@@ -156,38 +135,44 @@ To preview documentation, use:
 make servedocs
 ```
 
-This will open up a window in your browser, and as you make changes to the docs,
-the new pages will reload automatically.
+This will open up a browser window and automatically reload as changes are made
+to the docs.
 
-#### Adding a Tutorial
+### Adding a Tutorial
 
 Tutorials are created in Jupyter notebooks that are stored under
 `examples/tutorials` in the repo. To create a tutorial:
 
 1. Write the notebook and save it under `examples/tutorials`.
-1. If your notebook depends on packages outside of `ribs` and `ribs[all]`, add
-   cell magic to install these packages, such as `%pip install foobar`.
+1. Use cell magic (e.g. `%pip install ribs[all]`) to install `ribs` or
+   `ribs[all]` and any other packages.
    - Installation cells tend to produce a lot of output. Make sure to clear this
      output in Jupyter lab so that it does not clutter the documentation.
+1. Make sure that the only level 1 heading (e.g. `# Awesome Tutorial`) is the
+   title at the top of the notebook. Subsequent titles should be level 2 (e.g.
+   `## Level 2 Heading`) or higher.
 1. Add an entry into the toctree and table in `docs/tutorials.md`.
-1. Check that the tutorial shows up on the Tutorials page when you serve the
-   docs.
+1. Check that the tutorial shows up on the Tutorials page when serving the docs.
+1. Create a PR into the website repo that adds the tutorial onto the home page,
+   specifically
+   [this file](https://github.com/icaros-usc/pyribs.org/blob/master/src/index.liquid).
+   In the PR, include a square image that represents the tutorial.
 
-#### Adding an Example
+### Adding an Example
 
-Examples are created in Python scripts stored under `examples` in the repo, but
+Examples are created in Python scripts stored under `examples/` in the repo, and
 their source is shown in the docs. To create an example:
 
-1. Write the Python script and save it under `examples`.
-1. Add a shell command to `tests/examples.sh` that calls your script with
+1. Write the Python script and save it under `examples/`.
+1. Add a shell command to `tests/examples.sh` that calls the script with
    parameters that will make it run as quickly as possible. In the future, this
-   will help us ensure that your script has basic correctness.
-1. Add any dependencies needed to run your example into the `examples` extra in
+   will help us ensure that the script has basic correctness.
+1. Add any dependencies needed to run the example into the `examples` extra in
    `setup.py` (under `extras_require`).
 1. Add a Markdown file in the `docs/examples` directory with the same name as
-   your Python file -- if your example is `examples/foobar.py`, your Markdown
-   file will be `docs/examples/foobar.md`.
-1. Add a title to your Markdown file, such as:
+   the Python file -- if the example is `examples/foobar.py`, the Markdown file
+   will be `docs/examples/foobar.md`.
+1. Add a title to the Markdown file, such as:
    ```
    # My Awesome Example
    ```
@@ -195,20 +180,26 @@ their source is shown in the docs. To create an example:
    example is displayed.
    ````
    ```{eval-rst}
-   .. literalinclude:: ../../examples/YOUR_EXAMPLE.py
+   .. literalinclude:: ../../examples/EXAMPLE.py
        :language: python
        :linenos:
    ```
    ````
-1. Add whatever other info you would like in the Markdown file.
+1. Add any other relevant info to the Markdown file.
 1. Add an entry into the toctree and table in `docs/examples.md`.
-1. Check that the example shows up on the Examples page when you serve the docs.
+1. Check that the example shows up on the Examples page when serving the docs.
+
+### Referencing Papers
+
+When referencing papers, refer to them as `Lastname YEAR`, e.g. `Smith 2004`.
+Also, prefer to link to the paper's website, rather than just the PDF. This is
+particularly relevant when linking to arXiv papers.
 
 ### Deploying
 
-1. Create a PR into master where you:
+1. Create a PR into master after doing the following:
    1. Update the version with `bump2version` by running the following for minor
-      versions,
+      versions:
       ```bash
       bump2version minor
       ```
@@ -226,8 +217,8 @@ their source is shown in the docs. To create an example:
    ```bash
    git push --tags
    ```
-4. Check that the version was deployed to PyPI. If it failed, delete the tag
+4. Check that the version was deployed to PyPI. If it failed, delete the tag,
    make appropriate fixes, and repeat steps 2 and 3.
-5. Write up the release on GitHub.
+5. Write up the release on GitHub, and attach it to the tag.
 
 Our deployment process may change in the future as pyribs becomes more complex.
