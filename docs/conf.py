@@ -112,7 +112,7 @@ html_sidebars = {"**": ["globaltoc.html", "localtoc.html", "searchbox.html"]}
 html_theme_path = sphinx_material.html_theme_path()
 html_context = sphinx_material.get_html_context()
 html_theme = "sphinx_material"
-html_logo = "_static/imgs/logo.svg"
+html_logo = "_static/imgs/icon.svg"
 html_favicon = "_static/imgs/favicon.ico"
 html_title = f"pyribs ({READTHEDOCS_VERSION})"
 
