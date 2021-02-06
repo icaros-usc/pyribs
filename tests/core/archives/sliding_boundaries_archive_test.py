@@ -1,8 +1,8 @@
-"""Test for SlidingBoundaryArchive."""
+"""Test for SlidingBoundariesArchive."""
 import numpy as np
 import pytest
 
-from ribs.archives import AddStatus
+from ribs.archives import AddStatus, SlidingBoundariesArchive
 
 from .conftest import get_archive_data
 
@@ -10,7 +10,7 @@ from .conftest import get_archive_data
 @pytest.fixture
 def _data():
     """Data for sliding boundary archive tests."""
-    return get_archive_data("SlidingBoundaryArchive")
+    return get_archive_data("SlidingBoundariesArchive")
 
 
 def _assert_archive_has_entry(archive, indices, behavior_values,
@@ -22,6 +22,14 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
                                      [objective_value] + list(solution))).all()
 
 
+def test_fails_on_dim_mismatch():
+    with pytest.raises(ValueError):
+        SlidingBoundariesArchive(
+            dims=[10] * 2,  # 2D space here.
+            ranges=[(-1, 1)] * 3,  # But 3D space here.
+        )
+
+
 def test_attributes_correctly_constructed(_data):
     assert np.all(_data.archive.dims == [10, 20])
     assert np.all(_data.archive.lower_bounds == [-1, -2])
@@ -29,8 +37,8 @@ def test_attributes_correctly_constructed(_data):
     assert np.all(_data.archive.interval_size == [2, 4])
 
     # Check the shape of boundaries.
-    assert len(_data.archive.boundaries[0]) == 10
-    assert len(_data.archive.boundaries[1]) == 20
+    assert len(_data.archive.boundaries[0]) == 11
+    assert len(_data.archive.boundaries[1]) == 21
     assert _data.archive.remap_frequency == 100
     assert _data.archive.buffer_capacity == 1000
 
@@ -94,9 +102,12 @@ def test_add_to_archive_with_full_buffer(_data):
         _data.archive.add(_data.solution, _data.objective_value,
                           _data.behavior_values)
 
-    _assert_archive_has_entry(_data.archive, _data.grid_indices,
-                              _data.behavior_values, _data.objective_value,
-                              _data.solution)
+    _assert_archive_has_entry(
+        _data.archive,
+        (0, 0),  # Should now be the only BC.
+        _data.behavior_values,
+        _data.objective_value,
+        _data.solution)
 
 
 def test_add_to_archive_without_remap(_data):
@@ -117,7 +128,7 @@ def test_add_to_archive_without_remap(_data):
 @pytest.mark.parametrize("dtype", [np.float64, np.float32],
                          ids=["float64", "float32"])
 def test_as_pandas(with_entry, include_solutions, dtype):
-    data = get_archive_data("SlidingBoundaryArchive", dtype)
+    data = get_archive_data("SlidingBoundariesArchive", dtype)
     if with_entry:
         df = data.archive_with_entry.as_pandas(include_solutions)
     else:
