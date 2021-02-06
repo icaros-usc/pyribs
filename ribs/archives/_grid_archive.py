@@ -4,7 +4,7 @@ from numba import jit
 
 from ribs.archives._archive_base import ArchiveBase, require_init
 
-_EPSILON = 1e-9
+_EPSILON = 1e-6
 
 
 class GridArchive(ArchiveBase):
