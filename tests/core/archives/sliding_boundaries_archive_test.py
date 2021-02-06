@@ -102,9 +102,12 @@ def test_add_to_archive_with_full_buffer(_data):
         _data.archive.add(_data.solution, _data.objective_value,
                           _data.behavior_values)
 
-    _assert_archive_has_entry(_data.archive, _data.grid_indices,
-                              _data.behavior_values, _data.objective_value,
-                              _data.solution)
+    _assert_archive_has_entry(
+        _data.archive,
+        (0, 0),  # Should now be the only BC.
+        _data.behavior_values,
+        _data.objective_value,
+        _data.solution)
 
 
 def test_add_to_archive_without_remap(_data):

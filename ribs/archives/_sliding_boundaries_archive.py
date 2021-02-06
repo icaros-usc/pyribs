@@ -83,6 +83,9 @@ class SolutionBuffer:
 class SlidingBoundariesArchive(ArchiveBase):
     """An archive with a fixed number of sliding boundaries on each dimension.
 
+    .. warning:: The SlidingBoundariesArchive implementation is still
+        experimental. Please use with caution.
+
     This archive is the container described in `Fontaine 2019
     <https://arxiv.org/abs/1904.10656>`_. Just like the
     :class:`~ribs.archives.GridArchive`, it can be visualized as an
@@ -260,6 +263,53 @@ class SlidingBoundariesArchive(ArchiveBase):
         self._occupied_indices.clear()
         self._occupied.fill(False)
 
+    @staticmethod
+    @nb.jit(nopython=True)
+    def _remap_numba_helper(sorted_bc, buffer_size, boundaries, behavior_dim,
+                            dims):
+        """Numba helper for _remap().
+
+        See _remap() for usage.
+        """
+        for i in range(behavior_dim):
+            for j in range(dims[i]):
+                sample_idx = int(j * buffer_size / dims[i])
+                boundaries[i][j] = sorted_bc[i][sample_idx]
+            # Set the upper bound to be the greatest BC.
+            boundaries[i][dims[i]] = sorted_bc[i][-1]
+
+    def _remap(self):
+        """Remaps the archive.
+
+        The boundaries are relocated to the percentage marks of the distribution
+        of solutions stored in the archive.
+
+        Also re-adds all of the solutions to the archive.
+
+        Returns:
+            tuple: The result of calling :meth:`ArchiveBase.add` on the last
+            item in the buffer.
+        """
+        # Sort all behavior values along the axis of each bc.
+        sorted_bc = self._buffer.sorted_behavior_values
+
+        # Calculate new boundaries.
+        SlidingBoundariesArchive._remap_numba_helper(sorted_bc,
+                                                     self._buffer.size,
+                                                     self._boundaries,
+                                                     self._behavior_dim,
+                                                     self.dims)
+
+        # TODO (btjanaka): Add an option that allows adding solutions from the
+        # previous archive that are not in the buffer.
+
+        # Add all solutions to the new empty archive.
+        self._reset_archive()
+        for solution, objective_value, behavior_value in self._buffer:
+            status, value = ArchiveBase.add(self, solution, objective_value,
+                                            behavior_value)
+        return status, value
+
     @require_init
     def add(self, solution, objective_value, behavior_values):
         """Attempts to insert a new solution into the archive.
@@ -285,55 +335,16 @@ class SlidingBoundariesArchive(ArchiveBase):
         self._buffer.add(solution, objective_value, behavior_values)
         self._total_num_sol += 1
 
-        if self._total_num_sol % self._remap_frequency == 1:
-            status, value = self._re_map()
+        if self._total_num_sol % self._remap_frequency == 0:
+            status, value = self._remap()
+            self._lower_bounds = np.array(
+                [bound[0] for bound in self._boundaries])
+            self._upper_bounds = np.array([
+                bound[dim] for bound, dim in zip(self._boundaries, self._dims)
+            ])
         else:
             status, value = ArchiveBase.add(self, solution, objective_value,
                                             behavior_values)
-        return status, value
-
-    @staticmethod
-    @nb.jit(nopython=True)
-    def _re_map_numba_helper(sorted_bc, buffer_size, boundaries, behavior_dim,
-                             dims):
-        """Numba helper for _re_map().
-
-        See _re_map() for usage.
-        """
-        for i in range(behavior_dim):
-            for j in range(dims[i]):
-                sample_idx = int(j * buffer_size / dims[i])
-                boundaries[i][j] = sorted_bc[i][sample_idx]
-
-    def _re_map(self):
-        """Remaps the archive.
-
-        The boundaries will be relocated at the percentage marks of the
-        solutions stored in the archive.
-
-        Also re-adds all of the solutions in the buffer.
-
-        Returns:
-            tuple: The result of calling :meth:`ArchiveBase.add` on the last
-            item in the buffer.
-        """
-
-        # Sort all behavior values along the axis of each bc.
-        sorted_bc = self._buffer.sorted_behavior_values
-
-        # Calculate new boundaries.
-        SlidingBoundariesArchive._re_map_numba_helper(sorted_bc,
-                                                      self._buffer.size,
-                                                      self._boundaries,
-                                                      self._behavior_dim,
-                                                      self.dims)
-
-        # Add all solutions to the new empty archive.
-        self._reset_archive()
-        status, value = None, None
-        for solution, objective_value, behavior_value in self._buffer:
-            status, value = ArchiveBase.add(self, solution, objective_value,
-                                            behavior_value)
         return status, value
 
     @require_init

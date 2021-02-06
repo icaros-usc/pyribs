@@ -110,18 +110,18 @@ def get_archive_data(name, dtype=np.float64):
         # and 20 bins and range (-2, 2) in second dim.
         bins = 10 * 20
         archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
-                                         remap_frequency=100,
-                                         buffer_capacity=1000,
-                                         dtype=dtype)
+                                           remap_frequency=100,
+                                           buffer_capacity=1000,
+                                           dtype=dtype)
         archive.initialize(len(solution))
 
         archive_with_entry = SlidingBoundariesArchive([10, 20], [(-1, 1),
-                                                               (-2, 2)],
-                                                    remap_frequency=100,
-                                                    buffer_capacity=1000,
-                                                    dtype=dtype)
+                                                                 (-2, 2)],
+                                                      remap_frequency=100,
+                                                      buffer_capacity=1000,
+                                                      dtype=dtype)
         archive_with_entry.initialize(len(solution))
-        grid_indices = (9, 19)
+        grid_indices = (6, 11)
 
     archive_with_entry.add(solution, objective_value, behavior_values)
     return ArchiveFixtureData(
