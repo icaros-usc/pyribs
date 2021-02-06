@@ -132,6 +132,9 @@ class SlidingBoundariesArchive(ArchiveBase):
                  remap_frequency=100,
                  buffer_capacity=1000):
         self._dims = np.array(dims)
+        if len(self._dims) != len(ranges):
+            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
+                             f"(length {len(ranges)}) must be the same length")
 
         ArchiveBase.__init__(
             self,
@@ -142,23 +145,24 @@ class SlidingBoundariesArchive(ArchiveBase):
         )
 
         ranges = list(zip(*ranges))
-        if len(self._dims) != len(ranges):
-            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
-                             f"(length {len(ranges)}) must be the same length")
         self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
         self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
         self._interval_size = self._upper_bounds - self._lower_bounds
 
-        # Sliding boundary specifics.
+        # Specifics for sliding boundaries.
         self._remap_frequency = remap_frequency
+
         # Allocate an extra entry in each row so we can put the upper bound at
         # the end.
         self._boundaries = np.full((self._behavior_dim, np.max(self._dims) + 1),
-                                   np.inf,
+                                   np.nan,
                                    dtype=self.dtype)
-        # Add the upper bounds.
-        for i, dim in enumerate(self._dims):
-            self._boundaries[i][dim] = self._upper_bounds[i]
+
+        # Initialize the boundaries.
+        for i, (dim, lower_bound, upper_bound) in enumerate(
+                zip(self._dims, self._lower_bounds, self._upper_bounds)):
+            self._boundaries[i, :dim + 1] = np.linspace(lower_bound,
+                                                        upper_bound, dim + 1)
 
         # Create buffer.
         self._buffer = SolutionBuffer(buffer_capacity, self._behavior_dim)
