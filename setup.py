@@ -95,6 +95,6 @@ setup(
     python_requires=">=3.6.0",
     test_suite="tests",
     url="https://github.com/icaros-usc/pyribs",
-    version="0.2.1",
+    version="0.3.0",
     zip_safe=False,
 )
