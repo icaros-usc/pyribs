@@ -81,8 +81,8 @@ class SolutionBuffer:
 class SlidingBoundariesArchive(ArchiveBase):
     """An archive with a fixed number of sliding boundaries on each dimension.
 
-    This archive is the container described in the `MAP-Elites with Sliding
-    Boundaries paper <https://arxiv.org/pdf/1904.10656.pdf>`_. Just like the
+    This archive is the container described in `Fontaine 2019
+    <https://arxiv.org/abs/1904.10656>`_. Just like the
     :class:`~ribs.archives.GridArchive`, it can be visualized as an
     n-dimensional grid in the behavior space that is divided into a certain
     number of bins in each dimension. Internally, this archive stores a buffer
