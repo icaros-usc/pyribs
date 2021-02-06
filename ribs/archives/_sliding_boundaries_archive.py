@@ -14,44 +14,46 @@ _EPSILON = 1e-6
 class SolutionBuffer:
     """An internal class that stores relevant data to re-add after remapping.
 
-    It buffers solutions, objective values, and sorted behavior values of each
-    dimension. It will pop the oldest element if it is full while putting new
-    elements.
+    Maintains two data structures:
+    - Queue storing the buffer_capacity last entries (solution + objective value
+      + behavior values). When new items are inserted, the oldest ones are
+      popped.
+    - Sorted lists with the sorted behavior values in each dimension. Behavior
+      values are removed from theses lists when they are removed from the queue.
     """
 
     def __init__(self, buffer_capacity, behavior_dim):
         self._buffer_capacity = buffer_capacity
-        self._inds_dq = deque()
+        self._queue = deque()
         self._bc_lists = [SortedList() for _ in range(behavior_dim)]
         self._iter_idx = 0
 
     def __iter__(self):
-        """Return self as the iterator."""
+        """Enables iterating over solutions stored in the buffer."""
         return self
 
     def __next__(self):
-        """Return the next solution, objective value, and behavior values from
-        the buffer."""
+        """Returns the next entry in the buffer."""
         if self._iter_idx >= self.size:
             self._iter_idx = 0
             raise StopIteration
-        result = self._inds_dq[self._iter_idx]
+        result = self._queue[self._iter_idx]
         self._iter_idx += 1
         return result
 
     def add(self, solution, objective_value, behavior_values):
-        """Put a new element.
+        """Inserts a new entry.
 
-        Pop the oldest if it is full.
+        Pops the oldest if it is full.
         """
         if self.full():
             # Remove item from the deque.
-            _, _, bc_deleted = self._inds_dq.popleft()
+            _, _, bc_deleted = self._queue.popleft()
             # Remove bc from sorted lists.
             for i, bc in enumerate(bc_deleted):
                 self._bc_lists[i].remove(bc)
 
-        self._inds_dq.append((solution, objective_value, behavior_values))
+        self._queue.append((solution, objective_value, behavior_values))
 
         # Add bc to sorted lists.
         for i, bc in enumerate(behavior_values):
@@ -59,18 +61,18 @@ class SolutionBuffer:
 
     def full(self):
         """Whether buffer is full."""
-        return len(self._inds_dq) >= self._buffer_capacity
+        return len(self._queue) >= self._buffer_capacity
 
     @property
     def sorted_behavior_values(self):
-        """(behavior_dim, self.size) numpy.ndarray: Sorted behaviors of each
-        dimension."""
+        """(behavior_dim, self.size) numpy.ndarray: Sorted behavior values of
+        each dimension."""
         return np.array(self._bc_lists, dtype=np.float)
 
     @property
     def size(self):
         """Number of solutions stored in the buffer."""
-        return len(self._inds_dq)
+        return len(self._queue)
 
     @property
     def capacity(self):
@@ -91,6 +93,10 @@ class SlidingBoundariesArchive(ArchiveBase):
     dimension. After every ``remap_frequency`` solutions are inserted, the
     archive remaps the boundaries based on the solutions in the buffer.
 
+    Initially, the archive has no solutions, so it cannot automatically
+    calculate the boundaries. Thus, until the first remap, this archive divides
+    the behavior space defined by ``ranges`` into equally sized bins.
+
     Overall, this archive attempts to make the distribution of the space
     illuminated by the archive more accurately match the true distribution of
     the behavior characteristics when they are not uniformly distributed.
@@ -100,8 +106,8 @@ class SlidingBoundariesArchive(ArchiveBase):
             space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions
             with 20, 30, and 40 bins. (The number of dimensions is implicitly
             defined in the length of this argument).
-        ranges (array-like of (float, float)): Upper and lower bound of each
-            dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
+        ranges (array-like of (float, float)): `Initial` upper and lower bound
+            of each dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds :math:`[-1,1]`
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
