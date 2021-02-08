@@ -68,7 +68,7 @@ setup(
     author="ICAROS Lab pyribs Team",
     author_email="team@pyribs.org",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
