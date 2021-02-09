@@ -82,7 +82,8 @@ setup(
         "Topic :: Scientific/Engineering :: Mathematics",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-    description="A bare-bones quality diversity optimization library.",
+    description=
+    "A bare-bones Python library for quality diversity optimization.",
     install_requires=install_requires,
     extras_require=extras_require,
     license="MIT license",

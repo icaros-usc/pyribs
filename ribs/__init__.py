@@ -1,4 +1,4 @@
-"""A bare-bones quality diversity optimization library."""
+"""A bare-bones Python library for quality diversity optimization."""
 
 __author__ = "ICAROS Lab pyribs Team"
 __email__ = "team@pyribs.org"

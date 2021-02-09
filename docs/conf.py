@@ -22,9 +22,8 @@
 import os
 import sys
 
-import sphinx_material
-
 import ribs
+import sphinx_material
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -139,7 +138,8 @@ html_theme_options = {
         "title": "Home"
     },],
     "heroes": {
-        "index": "A bare-bones quality diversity optimization library."
+        "index":
+            "A bare-bones Python library for quality diversity optimization."
     },
     "version_dropdown": False,
     "version_json": None,
