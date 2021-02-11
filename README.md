@@ -183,6 +183,24 @@ We thank [Amy K. Hoover](http://amykhoover.com/) and
 [Julian Togelius](http://julian.togelius.com/) for their contributions deriving
 the CMA-ME algorithm.
 
+## Citing pyribs
+
+We are currently working on a paper on pyribs. In the meantime, if you use
+pyribs in your research, please cite it as:
+
+```txt
+@misc{pyribs,
+  title = {pyribs: A bare-bones Python library for quality diversity
+           optimization},
+  author = {Bryon Tjanaka and Matthew C. Fontaine and Yulun Zhang and
+            Sam Sommerer and Stefanos Nikolaidis},
+  year = {2021},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/icaros-usc/pyribs}},
+}
+```
+
 ## License
 
 pyribs is released under the
