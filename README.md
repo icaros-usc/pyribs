@@ -10,6 +10,24 @@ algorithm and implements the _Rapid Illumination of Behavior Space (RIBS)_
 redesign of MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
 
+_If you use pyribs in your research, please cite it as follows. Note that you
+will need to include the
+[hyperref](https://www.overleaf.com/learn/latex/Hyperlinks#Linking_web_addresses)
+package in order to use the `\url` command._
+
+```txt
+@misc{pyribs,
+  title = {pyribs: A bare-bones Python library for quality diversity
+           optimization},
+  author = {Bryon Tjanaka and Matthew C. Fontaine and Yulun Zhang and
+            Sam Sommerer and Stefanos Nikolaidis},
+  year = {2021},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/icaros-usc/pyribs}},
+}
+```
+
 ## Overview
 
 ![Types of Optimization](readme_assets/optimization_types.png)
@@ -182,27 +200,6 @@ USC.
 We thank [Amy K. Hoover](http://amykhoover.com/) and
 [Julian Togelius](http://julian.togelius.com/) for their contributions deriving
 the CMA-ME algorithm.
-
-## Citing pyribs
-
-We are currently working on a publication on pyribs. In the meantime, if you use
-pyribs in your research, please cite it as follows. Note that you will need to
-include the
-[hyperref](https://www.overleaf.com/learn/latex/Hyperlinks#Linking_web_addresses)
-package in order to use the `\url` command.
-
-```txt
-@misc{pyribs,
-  title = {pyribs: A bare-bones Python library for quality diversity
-           optimization},
-  author = {Bryon Tjanaka and Matthew C. Fontaine and Yulun Zhang and
-            Sam Sommerer and Stefanos Nikolaidis},
-  year = {2021},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/icaros-usc/pyribs}},
-}
-```
 
 ## License
 
