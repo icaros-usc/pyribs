@@ -185,8 +185,11 @@ the CMA-ME algorithm.
 
 ## Citing pyribs
 
-We are currently working on a paper on pyribs. In the meantime, if you use
-pyribs in your research, please cite it as:
+We are currently working on a publication on pyribs. In the meantime, if you use
+pyribs in your research, please cite it as follows. Note that you will need to
+include the
+[hyperref](https://www.overleaf.com/learn/latex/Hyperlinks#Linking_web_addresses)
+package in order to use the `\url` command.
 
 ```txt
 @misc{pyribs,
