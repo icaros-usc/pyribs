@@ -26,12 +26,18 @@ The supported algorithms are:
   RandomDirectionEmitter and half (8) are ImprovementEmitter
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
-4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations. Outputs are
-saved in the directory `sphere_output` by default. The archive is saved as a
-CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are
-saved as `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about the run are
-also saved in `{algorithm}_{dim}_metrics.json`, and plots of the metrics are
-saved in PNG's with the name `{algorithm}_{dim}_metric_name.png`.
+4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
+
+Note that the CVTArchive in this example uses 10,000 cells, as opposed to the
+250,000 (500x500) in the GridArchive, so it is not fair to directly compare
+`cvt_map_elites` and `line_cvt_map_elites` to the other algorithms. However, the
+other algorithms may be fairly compared because they use the same archive.
+
+Outputs are saved in the `sphere_output/` directory by default. The archive is
+saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
+heatmap are saved as `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about
+the run are also saved in `{algorithm}_{dim}_metrics.json`, and plots of the
+metrics are saved in PNG's with the name `{algorithm}_{dim}_metric_name.png`.
 
 To generate a video of the heatmap from the heatmap images, use a tool like
 ffmpeg. For example, the following will generate a 6FPS video showing the
@@ -202,10 +208,12 @@ def save_heatmap(archive, heatmap_path):
     if isinstance(archive, GridArchive):
         plt.figure(figsize=(8, 6))
         grid_archive_heatmap(archive, vmin=0, vmax=100)
+        plt.tight_layout()
         plt.savefig(heatmap_path)
     elif isinstance(archive, CVTArchive):
         plt.figure(figsize=(16, 12))
         cvt_archive_heatmap(archive, vmin=0, vmax=100)
+        plt.tight_layout()
         plt.savefig(heatmap_path)
     plt.clf()
 
