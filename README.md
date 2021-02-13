@@ -10,24 +10,6 @@ algorithm and implements the _Rapid Illumination of Behavior Space (RIBS)_
 redesign of MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
 
-_If you use pyribs in your research, please cite it as follows. Note that you
-will need to include the
-[hyperref](https://www.overleaf.com/learn/latex/Hyperlinks#Linking_web_addresses)
-package in order to use the `\url` command._
-
-```txt
-@misc{pyribs,
-  title = {pyribs: A bare-bones Python library for quality diversity
-           optimization},
-  author = {Bryon Tjanaka and Matthew C. Fontaine and Yulun Zhang and
-            Sam Sommerer and Stefanos Nikolaidis},
-  year = {2021},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/icaros-usc/pyribs}},
-}
-```
-
 ## Overview
 
 ![Types of Optimization](readme_assets/optimization_types.png)
@@ -60,6 +42,47 @@ application:
   requesting new candidate solutions and telling the algorithm how candidates
   performed.
 
+## Citation
+
+If you use pyribs in your research, please cite it as follows. Note that you
+will need to include the
+[hyperref](https://www.overleaf.com/learn/latex/Hyperlinks#Linking_web_addresses)
+package in order to use the `\url` command.
+
+```txt
+@misc{pyribs,
+  title = {pyribs: A bare-bones Python library for quality diversity
+           optimization},
+  author = {Bryon Tjanaka and Matthew C. Fontaine and Yulun Zhang and
+            Sam Sommerer and Stefanos Nikolaidis},
+  year = {2021},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/icaros-usc/pyribs}},
+}
+```
+
+If you use the CMA-ME algorithm, please also cite
+[Fontaine 2020](https://dl.acm.org/doi/10.1145/3377930.3390232).
+
+```txt
+@inproceedings{10.1145/3377930.3390232,
+  author = {Fontaine, Matthew C. and Togelius, Julian and Nikolaidis, Stefanos and Hoover, Amy K.},
+  title = {Covariance Matrix Adaptation for the Rapid Illumination of Behavior Space},
+  year = {2020},
+  isbn = {9781450371285},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3377930.3390232},
+  doi = {10.1145/3377930.3390232},
+  booktitle = {Proceedings of the 2020 Genetic and Evolutionary Computation Conference},
+  pages = {94–102},
+  numpages = {9},
+  location = {Canc\'{u}n, Mexico},
+  series = {GECCO '20}
+}
+```
+
 ## Usage
 
 Here we show an example application of CMA-ME in pyribs. To initialize the
@@ -67,7 +90,7 @@ algorithm, we first create:
 
 - A 2D **GridArchive** where each dimension contains 20 bins across the range
   [-1, 1].
-- A **ImprovementEmitter**, which starts from the search point **0** in 10
+- An **ImprovementEmitter**, which starts from the search point **0** in 10
   dimensional space and a Gaussian sampling distribution with standard deviation
   0.1.
 - An **Optimizer** that combines the archive and emitter together.
