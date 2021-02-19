@@ -78,6 +78,8 @@ servedocs: ## compile the docs watching for changes
 		docs/ \
 		docs/_build/html
 
+release-test: dist ## package and upload a release to TestPyPI
+	twine upload --repository testpypi dist/*
 release: dist ## package and upload a release
 	twine upload dist/*
 

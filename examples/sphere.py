@@ -26,18 +26,24 @@ The supported algorithms are:
   RandomDirectionEmitter and half (8) are ImprovementEmitter
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
-4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations. Outputs are
-saved in the directory `sphere_output` by default. The archive is saved as a
-CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are
-saved as `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about the run are
-also saved in `{algorithm}_{dim}_metrics.json`, and plots of the metrics are
-saved in PNG's with the name `{algorithm}_{dim}_metric_name.png`.
+4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
+
+Note that the CVTArchive in this example uses 10,000 cells, as opposed to the
+250,000 (500x500) in the GridArchive, so it is not fair to directly compare
+`cvt_map_elites` and `line_cvt_map_elites` to the other algorithms. However, the
+other algorithms may be fairly compared because they use the same archive.
+
+Outputs are saved in the `sphere_output/` directory by default. The archive is
+saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
+heatmap are saved as `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about
+the run are also saved in `{algorithm}_{dim}_metrics.json`, and plots of the
+metrics are saved in PNG's with the name `{algorithm}_{dim}_metric_name.png`.
 
 To generate a video of the heatmap from the heatmap images, use a tool like
 ffmpeg. For example, the following will generate a 6FPS video showing the
 heatmap for cma_me_imp with 20 dims.
 
-    ffmpeg -r 6 -i "sphere_output/cma_me_imp_20_heatmap_%*.png \
+    ffmpeg -r 6 -i "sphere_output/cma_me_imp_20_heatmap_%*.png" \
         sphere_output/cma_me_imp_20_heatmap_video.mp4
 
 Usage (see sphere_main function for all args):
@@ -58,14 +64,13 @@ from pathlib import Path
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 from alive_progress import alive_bar
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (GaussianEmitter, ImprovementEmitter, IsoLineEmitter,
                            OptimizingEmitter, RandomDirectionEmitter)
 from ribs.optimizers import Optimizer
-from ribs.visualize import cvt_archive_heatmap
+from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
 
 def sphere(sol):
@@ -193,6 +198,26 @@ def create_optimizer(algorithm, dim, seed):
     return Optimizer(archive, emitters)
 
 
+def save_heatmap(archive, heatmap_path):
+    """Saves a heatmap of the archive to the given path.
+
+    Args:
+        archive (GridArchive or CVTArchive): The archive to save.
+        heatmap_path: Image path for the heatmap.
+    """
+    if isinstance(archive, GridArchive):
+        plt.figure(figsize=(8, 6))
+        grid_archive_heatmap(archive, vmin=0, vmax=100)
+        plt.tight_layout()
+        plt.savefig(heatmap_path)
+    elif isinstance(archive, CVTArchive):
+        plt.figure(figsize=(16, 12))
+        cvt_archive_heatmap(archive, vmin=0, vmax=100)
+        plt.tight_layout()
+        plt.savefig(heatmap_path)
+    plt.clf()
+
+
 def sphere_main(algorithm,
                 dim=20,
                 itrs=4500,
@@ -210,6 +235,7 @@ def sphere_main(algorithm,
             and saving heatmap.
         seed (int): Seed for the algorithm. By default, there is no seed.
     """
+    name = f"{algorithm}_{dim}"
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
@@ -229,6 +255,8 @@ def sphere_main(algorithm,
 
     non_logging_time = 0.0
     with alive_bar(itrs) as progress:
+        save_heatmap(archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
+
         for itr in range(1, itrs + 1):
             itr_start = time.time()
             sols = optimizer.ask()
@@ -240,7 +268,6 @@ def sphere_main(algorithm,
             # Logging and output.
             final_itr = itr == itrs
             if itr % log_freq == 0 or final_itr:
-                name = f"{algorithm}_{dim}"
                 data = archive.as_pandas(include_solutions=final_itr)
                 if final_itr:
                     data.to_csv(str(outdir / f"{name}_archive.csv"))
@@ -257,19 +284,8 @@ def sphere_main(algorithm,
                       f"{metrics['Archive Coverage']['y'][-1]:.3f}% "
                       f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
-                # Generate heatmap.
-                heatmap_path = str(outdir / f"{name}_heatmap_{itr:05d}.png")
-                if isinstance(archive, GridArchive):
-                    heatmap_data = np.full(archive.dims, np.nan)
-                    for row in data.itertuples():
-                        heatmap_data[row.index_0, row.index_1] = row.objective
-                    sns.heatmap(heatmap_data, cmap="magma", vmin=0, vmax=100)
-                    plt.savefig(heatmap_path)
-                elif isinstance(archive, CVTArchive):
-                    plt.figure(figsize=(16, 12))
-                    cvt_archive_heatmap(archive, vmin=0, vmax=100)
-                    plt.savefig(heatmap_path)
-                plt.clf()
+                save_heatmap(archive,
+                             str(outdir / f"{name}_heatmap_{itr:05d}.png"))
 
     # Plot metrics.
     print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")

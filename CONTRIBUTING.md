@@ -208,17 +208,22 @@ particularly relevant when linking to arXiv papers.
       bump2version patch
       ```
    1. Add all necessary info on the version to `HISTORY.md`.
-2. Once the PR has passed CI/CD and been squashed-and-merged into master,
-   locally tag the squash commit with a tag like `v0.2.1`, e.g.
+2. (Optional) Once the PR has passed CI/CD and been squashed-and-merged into
+   master, check out the squash commit and locally run `make release-test`. This
+   uploads the code to TestPyPI to check that the deployment works. If this
+   fails, make fixes as appropriate.
+3. Once the PR in step 1 and any changes in step 2 have passed CI/CD and been
+   squashed-and-merged into master, locally tag the master branch with a tag
+   like `v0.2.1`, e.g.
    ```bash
    git tag v0.2.1 HEAD
    ```
-3. Push the tag with
+4. Now push the tag with
    ```bash
    git push --tags
    ```
-4. Check that the version was deployed to PyPI. If it failed, delete the tag,
+5. Check that the version was deployed to PyPI. If it failed, delete the tag,
    make appropriate fixes, and repeat steps 2 and 3.
-5. Write up the release on GitHub, and attach it to the tag.
+6. Write up the release on GitHub, and attach it to the tag.
 
 Our deployment process may change in the future as pyribs becomes more complex.
