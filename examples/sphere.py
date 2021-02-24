@@ -215,7 +215,7 @@ def save_heatmap(archive, heatmap_path):
         cvt_archive_heatmap(archive, vmin=0, vmax=100)
         plt.tight_layout()
         plt.savefig(heatmap_path)
-    plt.clf()
+    plt.close(plt.gcf())
 
 
 def sphere_main(algorithm,
