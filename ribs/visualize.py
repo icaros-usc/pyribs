@@ -325,14 +325,14 @@ def cvt_archive_heatmap(archive,
 
 
 def sliding_boundaries_archive_heatmap(archive,
-                                     ax=None,
-                                     transpose_bcs=False,
-                                     cmap="magma",
-                                     square=False,
-                                     ms=None,
-                                     boundary_lw=0,
-                                     vmin=None,
-                                     vmax=None):
+                                       ax=None,
+                                       transpose_bcs=False,
+                                       cmap="magma",
+                                       square=False,
+                                       ms=None,
+                                       boundary_lw=0,
+                                       vmin=None,
+                                       vmax=None):
     """Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with
     2D behavior space.
 
@@ -454,15 +454,16 @@ def sliding_boundaries_archive_heatmap(archive,
     # Create the colorbar.
     ax.figure.colorbar(t, ax=ax, pad=0.1)
 
+
 def parallel_axes_plot(archive,
-                        ax=None,
-                        bc_order = None,
-                        axis_labels = None,
-                        cmap="magma",
-                        linewidth=1.5,
-                        alpha=0.8,
-                        vmin=None,
-                        vmax=None):
+                       ax=None,
+                       bc_order=None,
+                       axis_labels=None,
+                       cmap="magma",
+                       linewidth=1.5,
+                       alpha=0.8,
+                       vmin=None,
+                       vmax=None):
     """Plots a parallel axes plot of an archive with an N-Dimensional behavior
     space.
 
@@ -545,9 +546,9 @@ def parallel_axes_plot(archive,
 
     if axis_labels is not None and len(axis_labels) != len(cols):
         raise ValueError(f'Label Mismatch: You have {len(cols)} axes'
-                                'and {len(axis_labels)} labels.')
+                         'and {len(axis_labels)} labels.')
 
-    host = plt.gca() if ax is None else ax #which axis to plot on
+    host = plt.gca() if ax is None else ax  #which axis to plot on
     df = archive.as_pandas(include_solutions=False)
     vmin = np.min(df['objective']) if vmin is None else vmin
     vmax = np.max(df['objective']) if vmax is None else vmax
@@ -584,8 +585,11 @@ def parallel_axes_plot(archive,
     for j in range(len(archive_data)):
         #draw straight lines between the axes in the appropriate color
         color = matplotlib.colors.rgb2hex(cmap(norm(objectives[j])))
-        host.plot(range(ys.shape[1]), zs[j,:],
-                    c=color, alpha=alpha, linewidth=linewidth)
+        host.plot(range(ys.shape[1]),
+                  zs[j, :],
+                  c=color,
+                  alpha=alpha,
+                  linewidth=linewidth)
 
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)

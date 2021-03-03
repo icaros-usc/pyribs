@@ -52,6 +52,7 @@ def _add_uniform_sphere(archive, x_range, y_range):
                 behavior_values=np.array([x, y]),
             )
 
+
 def _add_uniform_3D_sphere(archive, x_range, y_range, z_range):
     """Adds points from the negative sphere function in a 100x100x100 grid.
 
@@ -100,6 +101,7 @@ def _grid_archive():
     _add_uniform_sphere(archive, (-1, 1), (-1, 1))
     return archive
 
+
 @pytest.fixture(scope="module")
 def _long_grid_archive():
     """Same as above, but the behavior space is longer in one direction."""
@@ -110,12 +112,13 @@ def _long_grid_archive():
     _add_uniform_sphere(archive, (-2, 2), (-1, 1))
     return archive
 
+
 @pytest.fixture(scope="module")
 def _3D_grid_archive():
     """Deterministic archive, but there are three behavior axes of different
     sizes, and some of the axes are not totally filled. 
     """
-    archive = GridArchive([10, 10, 10], [(-2, 2), (-1, 1), (-2,1)], seed=42)
+    archive = GridArchive([10, 10, 10], [(-2, 2), (-1, 1), (-2, 1)], seed=42)
     archive.initialize(solution_dim=3)
     _add_uniform_3D_sphere(archive, (0, 2), (-1, 1), (-1, 0))
     return archive
@@ -396,9 +399,11 @@ def test_cvt_archive_heatmap_with_samples(_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(_cvt_archive, plot_samples=True)
 
+
 #
 # Parallel coordinate plot test
 #
+
 
 @image_comparison(baseline_images=["parallel_axes_2D"],
                   remove_text=False,
@@ -406,6 +411,7 @@ def test_cvt_archive_heatmap_with_samples(_cvt_archive):
 def test_parallel_axes_2D(_grid_archive):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(_grid_archive)
+
 
 @image_comparison(baseline_images=["parallel_axes_3D"],
                   remove_text=False,
