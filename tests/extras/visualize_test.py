@@ -21,7 +21,8 @@ from matplotlib.testing.decorators import image_comparison
 
 from ribs.archives import CVTArchive, GridArchive, SlidingBoundariesArchive
 from ribs.visualize import (cvt_archive_heatmap, grid_archive_heatmap,
-                            sliding_boundaries_archive_heatmap)
+                            sliding_boundaries_archive_heatmap,
+                            parallel_axes_plot)
 
 
 @pytest.fixture(autouse=True)
@@ -50,6 +51,22 @@ def _add_uniform_sphere(archive, x_range, y_range):
                 objective_value=-(x**2 + y**2),  # Negative sphere.
                 behavior_values=np.array([x, y]),
             )
+
+def _add_uniform_3D_sphere(archive, x_range, y_range, z_range):
+    """Adds points from the negative sphere function in a 100x100x100 grid.
+
+    The solutions are the same as the BCs (the (x,y,z) coordinates).
+
+    x_range, y_range, and z_range are tuples of (lower_bound, upper_bound).
+    """
+    for x in np.linspace(x_range[0], x_range[1], 40):
+        for y in np.linspace(y_range[0], y_range[1], 40):
+            for z in np.linspace(z_range[0], z_range[1], 40):
+                archive.add(
+                    solution=np.array([x, y, z]),
+                    objective_value=-(x**2 + y**2 + z**2),  # Negative sphere.
+                    behavior_values=np.array([x, y, z]),
+                )
 
 
 def _add_random_sphere(archive, x_range, y_range):
@@ -83,13 +100,24 @@ def _grid_archive():
     _add_uniform_sphere(archive, (-1, 1), (-1, 1))
     return archive
 
-
 @pytest.fixture(scope="module")
 def _long_grid_archive():
     """Same as above, but the behavior space is longer in one direction."""
+    # The archive must be low-res enough that we can tell if the number of cells
+    # is correct, yet high-res enough that we can see different colors.
     archive = GridArchive([10, 10], [(-2, 2), (-1, 1)], seed=42)
     archive.initialize(solution_dim=2)
     _add_uniform_sphere(archive, (-2, 2), (-1, 1))
+    return archive
+
+@pytest.fixture(scope="module")
+def _3D_grid_archive():
+    """Deterministic archive, but there are three behavior axes of different
+    sizes, and some of the axes are not totally filled. 
+    """
+    archive = GridArchive([10, 10, 10], [(-2, 2), (-1, 1), (-2,1)], seed=42)
+    archive.initialize(solution_dim=3)
+    _add_uniform_3D_sphere(archive, (0, 2), (-1, 1), (-1, 0))
     return archive
 
 
@@ -367,3 +395,21 @@ def test_sliding_archive_with_boundaries(_sliding_archive):
 def test_cvt_archive_heatmap_with_samples(_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(_cvt_archive, plot_samples=True)
+
+#
+# Parallel coordinate plot test
+#
+
+@image_comparison(baseline_images=["parallel_axes_2D"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_2D(_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_grid_archive)
+
+@image_comparison(baseline_images=["parallel_axes_3D"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3D(_3D_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3D_grid_archive)
