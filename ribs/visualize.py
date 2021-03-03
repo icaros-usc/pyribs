@@ -458,14 +458,12 @@ def sliding_boundaries_archive_heatmap(archive,
 def parallel_axes_plot(archive,
                        ax=None,
                        bc_order=None,
-                       axis_labels=None,
                        cmap="magma",
                        linewidth=1.5,
                        alpha=0.8,
                        vmin=None,
                        vmax=None):
-    """Plots a parallel axes plot of an archive with an N-Dimensional behavior
-    space.
+    """Visualizes archive entries in behavior space with a parallel axes plot.
 
     This visualization is meant to see the coverage of the behavior space at a
     glance. It is possible to glean the correlations between consecutive axes,
@@ -496,21 +494,22 @@ def parallel_axes_plot(archive,
             >>> plt.show()
 
     Args:
-        archive (SlidingBoundariesArchive): A 2D SlidingBoundariesArchive.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
-            the current axis will be used.
-        bc_order (list<str>): By default, the BCs of the parallel axes will
-            appear in-order. To switch the axes around, supply a list of the
-            behavior axes (e.g., ['behavior_1', 'behavior_0', 'behavior_2']).
-        axis_labels(list<str>): By default, the BCs of the parallel axes will be
-            titled with the label 'behavior_x'. If the behavior dimensions have
-            a meaningful label, they can be supplied in order as the labels.
+        archive (ArchiveBase): Any form of archive.
+        ax (matplotlib.axes.Axes): Axes on which to plot the parallel 
+            coordinates plot. If None,the current axis will be used.
+        bc_order (list of int or list of tuples): By default, the BCs of the 
+            parallel axes will appear in-order. To switch the axes around, 
+            supply a list of the
+            behavior axes (e.g.,``['behavior_1', 'behavior_0', 'behavior_2']``). 
+            It is also possible to plot less behaviors than the number of BCs in
+            the archive (the example also works for archives of 4 BCs).
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        linewidth (float): Line width for solutions on the plot.
-        alpha (float): Opacity of solutions on graph (you may want to turn this
-            down if there are many solutions that are found to see them)
+        linewidth (float): Line width for archive entries on the plot.
+        alpha (float): Opacity of archive entries on graph (you may want to turn
+            this down if there are many archive entries that are found to see 
+            all of them at once).
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
@@ -518,37 +517,45 @@ def parallel_axes_plot(archive,
 
     Raises:
         ValueError: The bcs provided do not exist in the archive.
-        ValueError: The incorrect number of labels are provided.
+        TypeError: bc_order is not a list of all ints or all tuples.
     """
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
 
-    #retrieve data from archive
-    archive_data = archive.as_pandas(include_solutions=False)
-
-    #if there is no order specified, plot in increasing numerical order
+    # If there is no order specified, plot in increasing numerical order.
     if bc_order is None:
-        cols = [key for key in archive_data.keys() if 'behavior' in key]
+        cols = [f"behavior_{i}" for i in range(archive.behavior_dim)]
+        axis_labels = cols
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
 
-    #use the requested behaviors (may be less than the original number of bcs)
+    # Use the requested behaviors (may be less than the original number of bcs).
     else:
-        #check for errors in specification
-        for bc in bc_order:
-            if bc not in archive_data.keys():
-                raise ValueError(f'Behavior {bc} is not in the archive.')
-        cols = bc_order
-        #find the indices of the requested order
-        bc_indices = [int(x.split('_')[1]) for x in bc_order]
+        # Check for errors in specification.
+        if all(isinstance(bc, int) for bc in bc_order):
+            bc_indices = np.array(bc_order)
+            axis_labels = [f"behavior_{i}" for i in bc_indices]   
+        elif all(len(bc) == 2 and isinstance(bc[0], int) 
+                and isinstance(bc[1], str)
+                for bc in bc_order):
+            axis_labels, bc_indices = zip(*bc_order)
+        else:
+            raise TypeError("bc_order must be a list of ints or a list of"
+                            "tuples in the form (int, str)")
+
+        
+
+        if np.max(bc_indices) >= archive.behavior_dim:
+            raise ValueError(f"Invalid Behavior: requested behavior index "
+                         f"{np.max(bc_indices)}, but archive only has "
+                         f"{archive.behavior_dim} behaviors.")
+
+        # Find the indices of the requested order.
+        cols = [f"behavior_{i}" for i in bc_indices]
         lower_bounds = archive.lower_bounds[bc_indices]
         upper_bounds = archive.upper_bounds[bc_indices]
 
-    if axis_labels is not None and len(axis_labels) != len(cols):
-        raise ValueError(f'Label Mismatch: You have {len(cols)} axes'
-                         'and {len(axis_labels)} labels.')
-
-    host = plt.gca() if ax is None else ax  #which axis to plot on
+    host_ax = plt.gca() if ax is None else ax  # Try to get current axis to plot.
     df = archive.as_pandas(include_solutions=False)
     vmin = np.min(df['objective']) if vmin is None else vmin
     vmax = np.max(df['objective']) if vmax is None else vmax
@@ -557,36 +564,35 @@ def parallel_axes_plot(archive,
     ys = df[cols].to_numpy()
     y_ranges = upper_bounds - lower_bounds
 
-    # transform all data to be in the first axis coordinates
-    zs = np.zeros_like(ys)
-    zs[:, 0] = ys[:, 0]
-    zs[:, 1:] = (ys[:, 1:] - lower_bounds[1:]) / \
-                y_ranges[1:] * y_ranges[0] + lower_bounds[0]
+    # Transform all data to be in the first axis coordinates.
+    normalized_ys = np.zeros_like(ys)
+    normalized_ys[:, 0] = ys[:, 0]
+    normalized_ys[:, 1:] = ((ys[:, 1:] - lower_bounds[1:]) /
+                y_ranges[1:] * y_ranges[0] + lower_bounds[0])
 
-    #copy the axis for the other bcs
-    axes = [host] + [host.twinx() for i in range(ys.shape[1] - 1)]
+    # Copy the axis for the other bcs.
+    axes = [host_ax] + [host_ax.twinx() for i in range(len(cols) - 1)]
     for i, axis in enumerate(axes):
         axis.set_ylim(lower_bounds[i], upper_bounds[i])
         axis.spines['top'].set_visible(False)
         axis.spines['bottom'].set_visible(False)
-        if axis != host:
+        if axis != host_ax:
             axis.spines['left'].set_visible(False)
             axis.yaxis.set_ticks_position('right')
-            axis.spines["right"].set_position(("axes", i / (ys.shape[1] - 1)))
+            axis.spines["right"].set_position(("axes", i / (len(cols) - 1)))
 
-    host.set_xlim(0, ys.shape[1] - 1)
-    host.set_xticks(range(ys.shape[1]))
-    labels = cols if axis_labels is None else axis_labels
-    host.set_xticklabels(labels)
-    host.tick_params(axis='x', which='major', pad=7)
-    host.spines['right'].set_visible(False)
-    host.xaxis.tick_top()
+    host_ax.set_xlim(0, len(cols) - 1)
+    host_ax.set_xticks(range(len(cols)))
+    host_ax.set_xticklabels(axis_labels)
+    host_ax.tick_params(axis='x', which='major', pad=7)
+    host_ax.spines['right'].set_visible(False)
+    host_ax.xaxis.tick_top()
 
-    for j in range(len(archive_data)):
-        #draw straight lines between the axes in the appropriate color
-        color = matplotlib.colors.rgb2hex(cmap(norm(objectives[j])))
-        host.plot(range(ys.shape[1]),
-                  zs[j, :],
+    for archive_entry, objective in zip(normalized_ys, objectives):
+        # Draw straight lines between the axes in the appropriate color.
+        color = cmap(norm(objective))
+        host_ax.plot(range(len(cols)),
+                  archive_entry,
                   c=color,
                   alpha=alpha,
                   linewidth=linewidth)
@@ -594,4 +600,4 @@ def parallel_axes_plot(archive,
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(vmin, vmax)
-    host.figure.colorbar(mappable, pad=0.05, orientation='horizontal')
+    host_ax.figure.colorbar(mappable, pad=0.05, orientation='horizontal')
