@@ -138,7 +138,7 @@ def test_initial_remap(_data):
     pandas_bcs = archive.as_pandas(include_solutions=False)[[
         "behavior_0", "behavior_1"
     ]]
-    bcs = list(pandas_bcs.itertuples(name=None, index=None))
+    bcs = list(pandas_bcs.itertuples(name=None, index=False))
     assert np.isclose(sorted(bcs), sorted(expected_bcs)).all()
 
 
