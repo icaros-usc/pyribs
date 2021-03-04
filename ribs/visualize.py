@@ -469,8 +469,25 @@ def parallel_axes_plot(archive,
     """Visualizes archive entries in behavior space with a parallel axes plot.
 
     This visualization is meant to see the coverage of the behavior space at a
-    glance. It is possible to glean the correlations between consecutive axes,
-    but the results should be interpreted carefully.
+    glance. Each axis represents one behavioral dimension, and each line in the 
+    diagram represents one entry in the archive. Three main things are evident
+    from this plot.
+
+    The first thing visible is the coverage of the space, as determined by the 
+    amount of the axis that has lines passing through it. If the lines are
+    passing through all parts of the axis, then there is likey good coverage 
+    along that direction.
+
+    The second thing that is discernable is the correlation between neighboring
+    axes. In the below example, we can see the perfect correlation between the
+    first and second axes, since none of the lines cross eachother. We also see
+    the perfect negative correlation between the last and second to last axes,
+    indicated by the crossing of all lines at a single point.
+
+    The final thing, is the ability to see whether certain values of the
+    behavior dimensions affect the objective value strongly. In the below
+    example, we see the the third axis has many high objective entries when it
+    is closer to zero.
 
     Examples:
         .. plot::
@@ -481,14 +498,15 @@ def parallel_axes_plot(archive,
             >>> from ribs.archives import GridArchive
             >>> from ribs.visualize import grid_archive_heatmap
             >>> # Populate the archive with the negative sphere function.
-            >>> archive = GridArchive([20, 20, 20], [(-1, 1), (-1, 1), (-1, 1)])
+            >>> archive = GridArchive([20, 20, 20, 20, 20], 
+                                        [(-1, 1), (-1, 1), (-1, 1), (-1, 1)])
             >>> archive.initialize(solution_dim=2)
             >>> for x in np.linspace(-1, 1, 100):
-            ...     for y in np.linspace(-1, 1, 100):
+            ...     for y in np.linspace(0, 1, 100):
             ...         for z in np.linspace(-1, 1, 100):
             ...             archive.add(solution=np.array([x,y,z]),
             ...                         objective_value=-(x**2 + y**2 + z**2),
-            ...                         behavior_values=np.array([x,y,z]))
+            ...                         behavior_values=np.array([0.5*x,x,y,z,-0.5*z]))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> parallel_axes_plot(archive)
