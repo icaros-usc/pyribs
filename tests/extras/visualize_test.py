@@ -417,3 +417,52 @@ def test_parallel_axes_2d(_grid_archive):
 def test_parallel_axes_3d(_3d_grid_archive):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(_3d_grid_archive)
+
+@image_comparison(baseline_images=["parallel_axes_3d"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_custom_ax(_3d_grid_archive):
+    _, ax = plt.subplots(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, ax=ax)
+
+@image_comparison(baseline_images=["parallel_axes_3d_custom_order"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_custom_order(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, bc_order=[1,2,0])
+
+@image_comparison(baseline_images=["parallel_axes_3d_custom_names"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_custom_names(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, bc_order=[(1, 'One'),(2, 'Two'),(0, 'Zero')])
+
+@image_comparison(baseline_images=["parallel_axes_3d_coolwarm"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_coolwarm_cmap(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, cmap='coolwarm')
+
+@image_comparison(baseline_images=["parallel_axes_3d_width2_alpha2"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_width2_alpha2(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, linewidth=2.0, alpha=0.2)
+
+@image_comparison(baseline_images=["parallel_axes_3d_custom_objective_limits"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_custom_objective_limits(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, vmin=-2.0, vmax=-1.0)
+
+@image_comparison(baseline_images=["parallel_axes_3d_sorted"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_sorted(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, sort_archive=True)

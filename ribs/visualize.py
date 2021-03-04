@@ -21,8 +21,8 @@ to these functions.
 """
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.cm import ScalarMappable
 import numpy as np
+from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 # Matplotlib functions tend to have a ton of args.
@@ -462,7 +462,8 @@ def parallel_axes_plot(archive,
                        linewidth=1.5,
                        alpha=0.8,
                        vmin=None,
-                       vmax=None):
+                       vmax=None,
+                       sort_archive=False):
     """Visualizes archive entries in behavior space with a parallel axes plot.
 
     This visualization is meant to see the coverage of the behavior space at a
@@ -497,12 +498,13 @@ def parallel_axes_plot(archive,
         archive (ArchiveBase): Any form of archive.
         ax (matplotlib.axes.Axes): Axes on which to plot the parallel 
             coordinates plot. If None,the current axis will be used.
-        bc_order (list of int or list of tuples): By default, the BCs of the 
-            parallel axes will appear in-order. To switch the axes around, 
-            supply a list of the
-            behavior axes (e.g.,``['behavior_1', 'behavior_0', 'behavior_2']``). 
-            It is also possible to plot less behaviors than the number of BCs in
-            the archive (the example also works for archives of 4 BCs).
+        bc_order (list of int or list of tuples): if a list of ints, this
+            specifies the order in which the axes are present (i.e., ``[2, 0,
+             1]``). If it is a list of tuples of the form (int, str), then
+            the order will specify the behavior with the int and the axis label
+            will be the str (e.g., ``[(1, "y-value"), (2, "z-value"),
+             (0, "x-value)]``). The order specified does not need to have the
+            same number of elements as the number of behaviors in the archive.
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
@@ -514,6 +516,8 @@ def parallel_axes_plot(archive,
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
+        sorted_archive (boolean): if true, sorts the archive so that the highest
+            performing entries are plotted on top of lower performing entries.
 
     Raises:
         ValueError: The bcs provided do not exist in the archive.
@@ -538,7 +542,7 @@ def parallel_axes_plot(archive,
         elif all(len(bc) == 2 and isinstance(bc[0], int) 
                 and isinstance(bc[1], str)
                 for bc in bc_order):
-            axis_labels, bc_indices = zip(*bc_order)
+            bc_indices, axis_labels = zip(*bc_order)
         else:
             raise TypeError("bc_order must be a list of ints or a list of"
                             "tuples in the form (int, str)")
@@ -552,11 +556,13 @@ def parallel_axes_plot(archive,
 
         # Find the indices of the requested order.
         cols = [f"behavior_{i}" for i in bc_indices]
-        lower_bounds = archive.lower_bounds[bc_indices]
-        upper_bounds = archive.upper_bounds[bc_indices]
+        lower_bounds = archive.lower_bounds[[bc_indices]]
+        upper_bounds = archive.upper_bounds[[bc_indices]]
 
     host_ax = plt.gca() if ax is None else ax  # Try to get current axis to plot.
     df = archive.as_pandas(include_solutions=False)
+    if sort_archive:
+        df.sort_values(by=['objective'], inplace=True)
     vmin = np.min(df['objective']) if vmin is None else vmin
     vmax = np.max(df['objective']) if vmax is None else vmax
     norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
