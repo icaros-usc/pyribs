@@ -463,7 +463,9 @@ def parallel_axes_plot(archive,
                        alpha=0.8,
                        vmin=None,
                        vmax=None,
-                       sort_archive=False):
+                       sort_archive=False,
+                       cbar_orientation='horizontal',
+                       cbar_pad = 0.1):
     """Visualizes archive entries in behavior space with a parallel axes plot.
 
     This visualization is meant to see the coverage of the behavior space at a
@@ -518,6 +520,9 @@ def parallel_axes_plot(archive,
             maximum objective value in the archive is used.
         sorted_archive (boolean): if true, sorts the archive so that the highest
             performing entries are plotted on top of lower performing entries.
+        cbar_orientation (str): The orientation of the colorbar. Use either
+            ``'vertical'`` or ``'horizontal'``
+        cbar_pad (float): The amount of padding to use for the colorbar.
 
     Raises:
         ValueError: The bcs provided do not exist in the archive.
@@ -543,21 +548,19 @@ def parallel_axes_plot(archive,
                 and isinstance(bc[1], str)
                 for bc in bc_order):
             bc_indices, axis_labels = zip(*bc_order)
+            bc_indices = np.array(bc_indices)
         else:
             raise TypeError("bc_order must be a list of ints or a list of"
                             "tuples in the form (int, str)")
-
-        
 
         if np.max(bc_indices) >= archive.behavior_dim:
             raise ValueError(f"Invalid Behavior: requested behavior index "
                          f"{np.max(bc_indices)}, but archive only has "
                          f"{archive.behavior_dim} behaviors.")
-
         # Find the indices of the requested order.
         cols = [f"behavior_{i}" for i in bc_indices]
-        lower_bounds = archive.lower_bounds[[bc_indices]]
-        upper_bounds = archive.upper_bounds[[bc_indices]]
+        lower_bounds = archive.lower_bounds[bc_indices]
+        upper_bounds = archive.upper_bounds[bc_indices]
 
     host_ax = plt.gca() if ax is None else ax  # Try to get current axis to plot.
     df = archive.as_pandas(include_solutions=False)
@@ -606,4 +609,4 @@ def parallel_axes_plot(archive,
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(vmin, vmax)
-    host_ax.figure.colorbar(mappable, pad=0.05, orientation='horizontal')
+    host_ax.figure.colorbar(mappable, pad=cbar_pad, orientation=cbar_orientation)

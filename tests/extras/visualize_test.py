@@ -466,3 +466,10 @@ def test_parallel_axes_3d_custom_objective_limits(_3d_grid_archive):
 def test_parallel_axes_3d_sorted(_3d_grid_archive):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(_3d_grid_archive, sort_archive=True)
+
+@image_comparison(baseline_images=["parallel_axes_3d_vertical_cbar"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_vertical_cbar(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, cbar_orientation='vertical')
