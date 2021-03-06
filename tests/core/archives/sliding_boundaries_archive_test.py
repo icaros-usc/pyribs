@@ -98,7 +98,8 @@ def test_initial_remap(_data):
                                        buffer_capacity=1000)
     archive.initialize(2)
 
-    # Buffer should have 230 entries after this (since (-1,-1) is skipped).
+    # Buffer should have 230 entries after this (since the first entry is
+    # skipped).
     first = True
     expected_bcs = []
     for ix, x in enumerate(np.linspace(-1, 1, 11)):
@@ -161,7 +162,7 @@ def test_add_to_archive_with_full_buffer(_data):
                               2 * _data.objective_value, 2 * _data.solution)
 
 
-def test_remap_with_full_buffer(_data):
+def test_adds_solutions_from_old_archive(_data):
     """Solutions from previous archive should be inserted during remap."""
     archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
                                        remap_frequency=231,
