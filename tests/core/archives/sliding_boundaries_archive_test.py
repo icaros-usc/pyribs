@@ -96,9 +96,9 @@ def test_initial_remap(_data):
     archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
                                        remap_frequency=231,
                                        buffer_capacity=1000)
+    archive.initialize(2)
 
     # Buffer should have 230 entries after this (since (-1,-1) is skipped).
-    archive.initialize(2)
     first = True
     expected_bcs = []
     for ix, x in enumerate(np.linspace(-1, 1, 11)):
@@ -159,6 +159,35 @@ def test_add_to_archive_with_full_buffer(_data):
                       2 * _data.behavior_values)
     _assert_archive_has_entry(_data.archive, (0, 0), 2 * _data.behavior_values,
                               2 * _data.objective_value, 2 * _data.solution)
+
+
+def test_remap_with_full_buffer(_data):
+    """Solutions from previous archive should be inserted during remap."""
+    archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
+                                       remap_frequency=231,
+                                       buffer_capacity=231)
+    archive.initialize(2)
+
+    for x in np.linspace(-1, 1, 11):
+        for y in np.linspace(-2, 2, 21):
+            archive.add([x, y], 2, [x, y])
+
+    # TODO(btjanaka): Use the archive.occupied property when it is available.
+    assert len(archive.as_pandas(include_solutions=False)) == 200
+
+    # Archive gets remapped again, but it should maintain the same BCs since
+    # solutions are the same. All the high-performing solutions should be
+    # cleared from the buffer since the buffer only has capacity 200.
+    for x in np.linspace(-1, 1, 11):
+        for y in np.linspace(-2, 2, 21):
+            archive.add([x, y], 1, [x, y])
+
+    # TODO(btjanaka): Use the archive.occupied property when it is available.
+    assert len(archive.as_pandas(include_solutions=False)) == 200
+
+    # The objective values from the previous archive should remain because they
+    # are higher.
+    assert (archive.as_pandas(include_solutions=False)["objective"] == 2).all()
 
 
 @pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])

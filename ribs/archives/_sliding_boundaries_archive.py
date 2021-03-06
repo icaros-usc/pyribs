@@ -300,27 +300,29 @@ class SlidingBoundariesArchive(ArchiveBase):
                                                      self._behavior_dim,
                                                      self.dims)
 
-        # TODO (btjanaka): Add an option that allows adding solutions from the
-        # previous archive that are not in the buffer.
+        index_columns = tuple(map(list, zip(*self._occupied_indices)))
+        old_sols = self._solutions[index_columns].copy()
+        old_objs = self._objective_values[index_columns].copy()
+        old_behs = self._behavior_values[index_columns].copy()
 
-        # Add all solutions to the new empty archive.
         self._reset_archive()
-        for solution, objective_value, behavior_value in self._buffer:
-            status, value = ArchiveBase.add(self, solution, objective_value,
-                                            behavior_value)
+        for sol, obj, beh in zip(old_sols, old_objs, old_behs):
+            # Add solutions from old archive.
+            status, value = ArchiveBase.add(self, sol, obj, beh)
+            # Add solutions from buffer.
+        for sol, obj, beh in self._buffer:
+            status, value = ArchiveBase.add(self, sol, obj, beh)
         return status, value
 
     @require_init
     def add(self, solution, objective_value, behavior_values):
         """Attempts to insert a new solution into the archive.
 
-        This method will remap the archive once every ``self.remap_frequency``
-        solutions are found by changing the boundaries of the archive to the
-        percentage marks of the behavior values stored in the buffer and
-        re-adding all of the solutions stored in the buffer.
-
-        .. note:: Remapping will not just add solutions in the current archive,
-            but **ALL** of the solutions stored in the buffer.
+        This method remaps the archive after every ``self.remap_frequency``
+        solutions are added. Remapping involves changing the boundaries of the
+        archive to the percentage marks of the behavior values stored in the
+        buffer and re-adding all of the solutions stored in the buffer `and` the
+        current archive.
 
         Args:
             solution (array-like): See :meth:`ArchiveBase.add`
