@@ -306,8 +306,8 @@ class SlidingBoundariesArchive(ArchiveBase):
         for sol, obj, beh in zip(old_sols, old_objs, old_behs):
             # Add solutions from old archive.
             status, value = ArchiveBase.add(self, sol, obj, beh)
-            # Add solutions from buffer.
         for sol, obj, beh in self._buffer:
+            # Add solutions from buffer.
             status, value = ArchiveBase.add(self, sol, obj, beh)
         return status, value
 
