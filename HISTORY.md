@@ -1,5 +1,18 @@
 # History
 
+## 0.3.1 (2021-03-05)
+
+This release features various bug fixes and improvements. In particular, we have
+added tests for SlidingBoundariesArchive and believe it is ready for more
+rigorous use.
+
+### Changelog
+
+- Move SlidingBoundariesArchive out of experimental by adding tests and fixing bugs (#93)
+- Added nicer figures to the Sphere example with `grid_archive_heatmap` (#86)
+- Added testing for Windows and MacOS (#83)
+- Fixed package metadata e.g. description
+
 ## 0.3.0 (2021-02-05)
 
 pyribs is now in beta. Since our alpha release (0.2.0), we have polished the
