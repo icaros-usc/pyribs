@@ -83,9 +83,6 @@ class SolutionBuffer:
 class SlidingBoundariesArchive(ArchiveBase):
     """An archive with a fixed number of sliding boundaries on each dimension.
 
-    .. warning:: The SlidingBoundariesArchive implementation is still
-        experimental. Please use with caution.
-
     This archive is the container described in `Fontaine 2019
     <https://arxiv.org/abs/1904.10656>`_. Just like the
     :class:`~ribs.archives.GridArchive`, it can be visualized as an
