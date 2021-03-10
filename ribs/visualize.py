@@ -467,29 +467,29 @@ def parallel_axes_plot(archive,
                        vmax=None,
                        sort_archive=False,
                        cbar_orientation='horizontal',
-                       cbar_pad = 0.1):
+                       cbar_pad=0.1):
     """Visualizes archive entries in behavior space with a parallel axes plot.
 
-    This visualization is meant to see the coverage of the behavior space at a
+    This visualization is meant to show the coverage of the behavior space at a
     glance. Each axis represents one behavioral dimension, and each line in the
     diagram represents one entry in the archive. Three main things are evident
-    from this plot.
+    from this plot:
 
-    The first thing visible is the coverage of the space, as determined by the
-    amount of the axis that has lines passing through it. If the lines are
-    passing through all parts of the axis, then there is likey good coverage
-    along that direction.
+    - **Behavior space coverage,** as determined by the amount of the axis that
+      has lines passing through it. If the lines are passing through all parts
+      of the axis, then there is likely good coverage for that BC.
 
-    The second thing that is discernable is the correlation between neighboring
-    axes. In the below example, we can see the perfect correlation between the
-    first and second axes, since none of the lines cross eachother. We also see
-    the perfect negative correlation between the last and second to last axes,
-    indicated by the crossing of all lines at a single point.
+    - **Correlation between neighboring BCs.** In the below example, we see
+      perfect correlation between ``behavior_0`` and ``behavior_1``, since none
+      of the lines cross each other. We also see the perfect negative
+      correlation between ``behavior_3`` and ``behavior_4``, indicated by the
+      crossing of all lines at a single point.
 
-    The final thing, is the ability to see whether certain values of the
-    behavior dimensions affect the objective value strongly. In the below
-    example, we see the the third axis has many high objective entries when it
-    is closer to zero.
+    - **Whether certain values of the behavior dimensions affect the objective
+      value strongly.** In the below example, we see ``behavior_2`` has many
+      entries with high objective near zero. This is more visible when
+      ``sort_archive`` is passed in, as entries with higher objective values
+      will be plotted on top of individuals with lower objective values.
 
     Examples:
         .. plot::
@@ -498,17 +498,21 @@ def parallel_axes_plot(archive,
             >>> import numpy as np
             >>> import matplotlib.pyplot as plt
             >>> from ribs.archives import GridArchive
-            >>> from ribs.visualize import grid_archive_heatmap
+            >>> from ribs.visualize import parallel_axes_plot
             >>> # Populate the archive with the negative sphere function.
-            >>> archive = GridArchive([20, 20, 20, 20, 20],
-                                        [(-1, 1), (-1, 1), (-1, 1), (-1, 1)])
-            >>> archive.initialize(solution_dim=2)
+            >>> archive = GridArchive(
+            ...               [20, 20, 20, 20, 20],
+            ...               [(-1, 1), (-1, 1), (-1, 1), (-1, 1), (-1, 1)]
+            ...           )
+            >>> archive.initialize(solution_dim=3)
             >>> for x in np.linspace(-1, 1, 100):
-            >>>     for y in np.linspace(0, 1, 100):
-            >>>         for z in np.linspace(-1, 1, 100):
-            >>>             archive.add(solution=np.array([x,y,z]),
+            ...     for y in np.linspace(0, 1, 100):
+            ...         for z in np.linspace(-1, 1, 100):
+            ...             archive.add(
+            ...                 solution=np.array([x,y,z]),
             ...                 objective_value=-(x**2 + y**2 + z**2),
-            ...                 behavior_values=np.array([0.5*x,x,y,z,-0.5*z]))
+            ...                 behavior_values=np.array([0.5*x,x,y,z,-0.5*z]),
+            ...             )
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> parallel_axes_plot(archive)
@@ -518,36 +522,37 @@ def parallel_axes_plot(archive,
 
     Args:
         archive (ArchiveBase): Any ribs archive.
-        ax (matplotlib.axes.Axes): Axes on which to plot the parallel
-            coordinates plot. If None,the current axis will be used.
-        bc_order (list of int or list of tuples): if a list of ints, this
-            specifies the order in which the axes are present (i.e., ``[2, 0,
-             1]``). If it is a list of tuples of the form (int, str), then
-            the order will specify the behavior with the int and the axis label
-            will be the str (e.g., ``[(1, "y-value"), (2, "z-value"),
-             (0, "x-value)]``). The order specified does not need to have the
-            same number of elements as the number of behaviors in the archive.
-             You can also have multiple occurances of the same behavior (```[1,
-              2, 3, 2]```).
+        ax (matplotlib.axes.Axes): Axes on which to create the plot.
+            If None, the current axis will be used.
+        bc_order (list of int or list of (int, str)): If this is a list of ints,
+            it specifies the axes order for BCs (e.g. ``[2, 0, 1]``). If this is
+            a list of tuples, each tuple takes the form ``(int, str)`` where the
+            int specifies the BC index and the str specifies a name for the BC
+            (e.g. ``[(1, "y-value"), (2, "z-value"), (0, "x-value)]``). The
+            order specified does not need to have the same number of elements as
+            the number of behaviors in the archive, e.g. ``[1, 3]`` or
+            ``[1, 2, 3, 2]``.
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        linewidth (float): Line width for archive entries on the plot.
-        alpha (float): Opacity of archive entries on graph (you may want to turn
-            this down if there are many archive entries to see all of them at
-            once).
+        linewidth (float): Line width for each entry in the plot.
+        alpha (float): Opacity of the line for each entry (passing a low value
+            here may be helpful if there are many archive entries, as more
+            entries would be visible).
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
         sort_archive (boolean): if true, sorts the archive so that the highest
             performing entries are plotted on top of lower performing entries.
-             Note: This may be slow for large archives.
+
+            .. warning:: This may be slow for large archives.
         cbar_orientation (str): The orientation of the colorbar. Use either
             ``'vertical'`` or ``'horizontal'``
         cbar_pad (float): The amount of padding to use for the colorbar.
 
     Raises:
+        ValueError: ``cbar_orientation`` has an invalid value.
         ValueError: The bcs provided do not exist in the archive.
         TypeError: bc_order is not a list of all ints or all tuples.
     """
@@ -555,7 +560,9 @@ def parallel_axes_plot(archive,
     cmap = _retrieve_cmap(cmap)
 
     # Check that the orientation input is correct.
-    assert cbar_orientation in ['vertical', 'horizontal']
+    if cbar_orientation not in ['vertical', 'horizontal']:
+        raise ValueError("cbar_orientation mus be 'vertical' or 'horizontal' "
+                         f"but is '{cbar_orientation}'")
 
     # If there is no order specified, plot in increasing numerical order.
     if bc_order is None:
@@ -570,9 +577,9 @@ def parallel_axes_plot(archive,
         if all(isinstance(bc, int) for bc in bc_order):
             bc_indices = np.array(bc_order)
             axis_labels = [f"behavior_{i}" for i in bc_indices]
-        elif all(len(bc) == 2 and isinstance(bc[0], int)
-                and isinstance(bc[1], str)
-                for bc in bc_order):
+        elif all(
+                len(bc) == 2 and isinstance(bc[0], int) and
+                isinstance(bc[1], str) for bc in bc_order):
             bc_indices, axis_labels = zip(*bc_order)
             bc_indices = np.array(bc_indices)
         else:
@@ -581,8 +588,8 @@ def parallel_axes_plot(archive,
 
         if np.max(bc_indices) >= archive.behavior_dim:
             raise ValueError(f"Invalid Behavior: requested behavior index "
-                         f"{np.max(bc_indices)}, but archive only has "
-                         f"{archive.behavior_dim} behaviors.")
+                             f"{np.max(bc_indices)}, but archive only has "
+                             f"{archive.behavior_dim} behaviors.")
         if any(bc < 0 for bc in bc_indices):
             raise ValueError("Invalid Behavior: requested a negative behavior"
                              " index.")
@@ -606,8 +613,9 @@ def parallel_axes_plot(archive,
     # Transform all data to be in the first axis coordinates.
     normalized_ys = np.zeros_like(ys)
     normalized_ys[:, 0] = ys[:, 0]
-    normalized_ys[:, 1:] = ((ys[:, 1:] - lower_bounds[1:]) /
-                y_ranges[1:] * y_ranges[0] + lower_bounds[0])
+    normalized_ys[:, 1:] = (
+        (ys[:, 1:] - lower_bounds[1:]) / y_ranges[1:] * y_ranges[0] +
+        lower_bounds[0])
 
     # Copy the axis for the other bcs.
     axes = [host_ax] + [host_ax.twinx() for i in range(len(cols) - 1)]
@@ -631,10 +639,10 @@ def parallel_axes_plot(archive,
         # Draw straight lines between the axes in the appropriate color.
         color = cmap(norm(objective))
         host_ax.plot(range(len(cols)),
-                  archive_entry,
-                  c=color,
-                  alpha=alpha,
-                  linewidth=linewidth)
+                     archive_entry,
+                     c=color,
+                     alpha=alpha,
+                     linewidth=linewidth)
 
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)
