@@ -18,6 +18,7 @@ to these functions.
     ribs.visualize.grid_archive_heatmap
     ribs.visualize.cvt_archive_heatmap
     ribs.visualize.sliding_boundaries_archive_heatmap
+    ribs.visualize.parallel_axes_plot
 """
 import matplotlib
 import matplotlib.pyplot as plt
@@ -32,6 +33,7 @@ __all__ = [
     "grid_archive_heatmap",
     "cvt_archive_heatmap",
     "sliding_boundaries_archive_heatmap",
+    "parallel_axes_plot",
 ]
 
 
