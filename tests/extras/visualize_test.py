@@ -114,7 +114,7 @@ def _long_grid_archive():
 @pytest.fixture(scope="module")
 def _3d_grid_archive():
     """Deterministic archive, but there are three behavior axes of different
-    sizes, and some of the axes are not totally filled. 
+    sizes, and some of the axes are not totally filled.
     """
     archive = GridArchive([10, 10, 10], [(-2, 2), (-1, 1), (-2, 1)], seed=42)
     archive.initialize(solution_dim=3)
@@ -437,7 +437,8 @@ def test_parallel_axes_3d_custom_order(_3d_grid_archive):
                   extensions=["png"])
 def test_parallel_axes_3d_custom_names(_3d_grid_archive):
     plt.figure(figsize=(8, 6))
-    parallel_axes_plot(_3d_grid_archive, bc_order=[(1, 'One'),(2, 'Two'),(0, 'Zero')])
+    parallel_axes_plot(_3d_grid_archive,
+                       bc_order=[(1, 'One'),(2, 'Two'),(0, 'Zero')])
 
 @image_comparison(baseline_images=["parallel_axes_3d_coolwarm"],
                   remove_text=False,

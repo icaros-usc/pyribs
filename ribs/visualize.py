@@ -469,13 +469,13 @@ def parallel_axes_plot(archive,
     """Visualizes archive entries in behavior space with a parallel axes plot.
 
     This visualization is meant to see the coverage of the behavior space at a
-    glance. Each axis represents one behavioral dimension, and each line in the 
+    glance. Each axis represents one behavioral dimension, and each line in the
     diagram represents one entry in the archive. Three main things are evident
     from this plot.
 
-    The first thing visible is the coverage of the space, as determined by the 
+    The first thing visible is the coverage of the space, as determined by the
     amount of the axis that has lines passing through it. If the lines are
-    passing through all parts of the axis, then there is likey good coverage 
+    passing through all parts of the axis, then there is likey good coverage
     along that direction.
 
     The second thing that is discernable is the correlation between neighboring
@@ -498,15 +498,15 @@ def parallel_axes_plot(archive,
             >>> from ribs.archives import GridArchive
             >>> from ribs.visualize import grid_archive_heatmap
             >>> # Populate the archive with the negative sphere function.
-            >>> archive = GridArchive([20, 20, 20, 20, 20], 
+            >>> archive = GridArchive([20, 20, 20, 20, 20],
                                         [(-1, 1), (-1, 1), (-1, 1), (-1, 1)])
             >>> archive.initialize(solution_dim=2)
             >>> for x in np.linspace(-1, 1, 100):
-            ...     for y in np.linspace(0, 1, 100):
-            ...         for z in np.linspace(-1, 1, 100):
-            ...             archive.add(solution=np.array([x,y,z]),
-            ...                         objective_value=-(x**2 + y**2 + z**2),
-            ...                         behavior_values=np.array([0.5*x,x,y,z,-0.5*z]))
+            >>>     for y in np.linspace(0, 1, 100):
+            >>>         for z in np.linspace(-1, 1, 100):
+            >>>             archive.add(solution=np.array([x,y,z]),
+            ...                 objective_value=-(x**2 + y**2 + z**2),
+            ...                 behavior_values=np.array([0.5*x,x,y,z,-0.5*z]))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> parallel_axes_plot(archive)
@@ -515,8 +515,8 @@ def parallel_axes_plot(archive,
             >>> plt.show()
 
     Args:
-        archive (ArchiveBase): Any form of archive.
-        ax (matplotlib.axes.Axes): Axes on which to plot the parallel 
+        archive (ArchiveBase): Any ribs archive.
+        ax (matplotlib.axes.Axes): Axes on which to plot the parallel
             coordinates plot. If None,the current axis will be used.
         bc_order (list of int or list of tuples): if a list of ints, this
             specifies the order in which the axes are present (i.e., ``[2, 0,
@@ -525,19 +525,22 @@ def parallel_axes_plot(archive,
             will be the str (e.g., ``[(1, "y-value"), (2, "z-value"),
              (0, "x-value)]``). The order specified does not need to have the
             same number of elements as the number of behaviors in the archive.
+             You can also have multiple occurances of the same behavior (```[1,
+              2, 3, 2]```).
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
         linewidth (float): Line width for archive entries on the plot.
         alpha (float): Opacity of archive entries on graph (you may want to turn
-            this down if there are many archive entries that are found to see 
-            all of them at once).
+            this down if there are many archive entries to see all of them at
+            once).
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
-        sorted_archive (boolean): if true, sorts the archive so that the highest
+        sort_archive (boolean): if true, sorts the archive so that the highest
             performing entries are plotted on top of lower performing entries.
+             Note: This may be slow for large archives.
         cbar_orientation (str): The orientation of the colorbar. Use either
             ``'vertical'`` or ``'horizontal'``
         cbar_pad (float): The amount of padding to use for the colorbar.
@@ -548,6 +551,9 @@ def parallel_axes_plot(archive,
     """
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
+
+    # Check that the orientation input is correct.
+    assert cbar_orientation in ['vertical', 'horizontal']
 
     # If there is no order specified, plot in increasing numerical order.
     if bc_order is None:
@@ -561,8 +567,8 @@ def parallel_axes_plot(archive,
         # Check for errors in specification.
         if all(isinstance(bc, int) for bc in bc_order):
             bc_indices = np.array(bc_order)
-            axis_labels = [f"behavior_{i}" for i in bc_indices]   
-        elif all(len(bc) == 2 and isinstance(bc[0], int) 
+            axis_labels = [f"behavior_{i}" for i in bc_indices]
+        elif all(len(bc) == 2 and isinstance(bc[0], int)
                 and isinstance(bc[1], str)
                 for bc in bc_order):
             bc_indices, axis_labels = zip(*bc_order)
@@ -575,12 +581,16 @@ def parallel_axes_plot(archive,
             raise ValueError(f"Invalid Behavior: requested behavior index "
                          f"{np.max(bc_indices)}, but archive only has "
                          f"{archive.behavior_dim} behaviors.")
+        if any(bc < 0 for bc in bc_indices):
+            raise ValueError("Invalid Behavior: requested a negative behavior"
+                             " index.")
+
         # Find the indices of the requested order.
         cols = [f"behavior_{i}" for i in bc_indices]
         lower_bounds = archive.lower_bounds[bc_indices]
         upper_bounds = archive.upper_bounds[bc_indices]
 
-    host_ax = plt.gca() if ax is None else ax  # Try to get current axis to plot.
+    host_ax = plt.gca() if ax is None else ax  # Try to get current axis.
     df = archive.as_pandas(include_solutions=False)
     if sort_archive:
         df.sort_values(by=['objective'], inplace=True)
@@ -627,4 +637,6 @@ def parallel_axes_plot(archive,
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(vmin, vmax)
-    host_ax.figure.colorbar(mappable, pad=cbar_pad, orientation=cbar_orientation)
+    host_ax.figure.colorbar(mappable,
+                            pad=cbar_pad,
+                            orientation=cbar_orientation)
