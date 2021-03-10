@@ -22,13 +22,14 @@
 import os
 import sys
 
-import ribs
 import sphinx_material
+
+import ribs
 
 sys.path.insert(0, os.path.abspath(".."))
 
 DEV_MODE = os.environ.get("DOCS_MODE", "regular") == "dev"
-READTHEDOCS_VERSION = os.environ.get("READTHEDOCS_VERSION", "latest")
+READTHEDOCS_VERSION = os.environ.get("READTHEDOCS_VERSION", "stable")
 READTHEDOCS_LANGUAGE = os.environ.get("READTHEDOCS_LANGUAGE", "en")
 
 # -- General configuration ---------------------------------------------

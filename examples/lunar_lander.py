@@ -2,7 +2,7 @@
 
 This script uses the same setup as the tutorial, but it also uses Dask to
 parallelize evaluations on a single machine and adds in a CLI. Refer to the
-tutorial here: https://docs.pyribs.org/en/latest/tutorials/lunar_lander.html for
+tutorial here: https://docs.pyribs.org/en/stable/tutorials/lunar_lander.html for
 more info.
 
 You should not need much familiarity with Dask to read this example. However, if
