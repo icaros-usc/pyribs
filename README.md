@@ -49,12 +49,12 @@ will need to include the
 [hyperref](https://www.overleaf.com/learn/latex/Hyperlinks#Linking_web_addresses)
 package in order to use the `\url` command.
 
-```txt
+```
 @misc{pyribs,
   title = {pyribs: A bare-bones Python library for quality diversity
            optimization},
   author = {Bryon Tjanaka and Matthew C. Fontaine and Yulun Zhang and
-            Sam Sommerer and Stefanos Nikolaidis},
+            Sam Sommerer and Nathan Dennler and Stefanos Nikolaidis},
   year = {2021},
   publisher = {GitHub},
   journal = {GitHub repository},
@@ -65,7 +65,7 @@ package in order to use the `\url` command.
 If you use the CMA-ME algorithm, please also cite
 [Fontaine 2020](https://dl.acm.org/doi/10.1145/3377930.3390232).
 
-```txt
+```
 @inproceedings{10.1145/3377930.3390232,
   author = {Fontaine, Matthew C. and Togelius, Julian and Nikolaidis, Stefanos and Hoover, Amy K.},
   title = {Covariance Matrix Adaptation for the Rapid Illumination of Behavior Space},
@@ -230,6 +230,7 @@ USC.
 - [Matt Fontaine](https://github.com/tehqin)
 - [Yulun Zhang](https://github.com/lunjohnzhang)
 - [Sam Sommerer](https://github.com/sam-sommerer)
+- [Nathan Dennler](https://ndennler.github.io/)
 - Nikitas Klapsis
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 
