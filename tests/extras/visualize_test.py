@@ -21,7 +21,8 @@ from matplotlib.testing.decorators import image_comparison
 
 from ribs.archives import CVTArchive, GridArchive, SlidingBoundariesArchive
 from ribs.visualize import (cvt_archive_heatmap, grid_archive_heatmap,
-                            sliding_boundaries_archive_heatmap)
+                            sliding_boundaries_archive_heatmap,
+                            parallel_axes_plot)
 
 
 @pytest.fixture(autouse=True)
@@ -50,6 +51,23 @@ def _add_uniform_sphere(archive, x_range, y_range):
                 objective_value=-(x**2 + y**2),  # Negative sphere.
                 behavior_values=np.array([x, y]),
             )
+
+
+def _add_uniform_3d_sphere(archive, x_range, y_range, z_range):
+    """Adds points from the negative sphere function in a 100x100x100 grid.
+
+    The solutions are the same as the BCs (the (x,y,z) coordinates).
+
+    x_range, y_range, and z_range are tuples of (lower_bound, upper_bound).
+    """
+    for x in np.linspace(x_range[0], x_range[1], 40):
+        for y in np.linspace(y_range[0], y_range[1], 40):
+            for z in np.linspace(z_range[0], z_range[1], 40):
+                archive.add(
+                    solution=np.array([x, y, z]),
+                    objective_value=-(x**2 + y**2 + z**2),  # Negative sphere.
+                    behavior_values=np.array([x, y, z]),
+                )
 
 
 def _add_random_sphere(archive, x_range, y_range):
@@ -90,6 +108,17 @@ def _long_grid_archive():
     archive = GridArchive([10, 10], [(-2, 2), (-1, 1)], seed=42)
     archive.initialize(solution_dim=2)
     _add_uniform_sphere(archive, (-2, 2), (-1, 1))
+    return archive
+
+
+@pytest.fixture(scope="module")
+def _3d_grid_archive():
+    """Deterministic archive, but there are three behavior axes of different
+    sizes, and some of the axes are not totally filled.
+    """
+    archive = GridArchive([10, 10, 10], [(-2, 2), (-1, 1), (-2, 1)], seed=42)
+    archive.initialize(solution_dim=3)
+    _add_uniform_3d_sphere(archive, (0, 2), (-1, 1), (-1, 0))
     return archive
 
 
@@ -367,3 +396,81 @@ def test_sliding_archive_with_boundaries(_sliding_archive):
 def test_cvt_archive_heatmap_with_samples(_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(_cvt_archive, plot_samples=True)
+
+
+#
+# Parallel coordinate plot test
+#
+
+
+@image_comparison(baseline_images=["parallel_axes_2d"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_2d(_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_grid_archive)
+
+
+@image_comparison(baseline_images=["parallel_axes_3d"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive)
+
+@image_comparison(baseline_images=["parallel_axes_3d"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_custom_ax(_3d_grid_archive):
+    _, ax = plt.subplots(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, ax=ax)
+
+@image_comparison(baseline_images=["parallel_axes_3d_custom_order"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_custom_order(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, bc_order=[1,2,0])
+
+@image_comparison(baseline_images=["parallel_axes_3d_custom_names"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_custom_names(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive,
+                       bc_order=[(1, 'One'),(2, 'Two'),(0, 'Zero')])
+
+@image_comparison(baseline_images=["parallel_axes_3d_coolwarm"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_coolwarm_cmap(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, cmap='coolwarm')
+
+@image_comparison(baseline_images=["parallel_axes_3d_width2_alpha2"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_width2_alpha2(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, linewidth=2.0, alpha=0.2)
+
+@image_comparison(baseline_images=["parallel_axes_3d_custom_objective_limits"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_custom_objective_limits(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, vmin=-2.0, vmax=-1.0)
+
+@image_comparison(baseline_images=["parallel_axes_3d_sorted"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_sorted(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, sort_archive=True)
+
+@image_comparison(baseline_images=["parallel_axes_3d_vertical_cbar"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_parallel_axes_3d_vertical_cbar(_3d_grid_archive):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(_3d_grid_archive, cbar_orientation='vertical')
