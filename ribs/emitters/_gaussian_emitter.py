@@ -72,11 +72,6 @@ class GaussianEmitter(EmitterBase):
         distribution."""
         return self._sigma0
 
-    @property
-    def batch_size(self):
-        """int: Number of solutions to generate on each call to :meth:`ask`."""
-        return self._batch_size
-
     @staticmethod
     @jit(nopython=True)
     def _ask_clip_helper(parents, noise, lower_bounds, upper_bounds):
@@ -93,20 +88,20 @@ class GaussianEmitter(EmitterBase):
         the standard deviation is ``self.sigma0``.
 
         Returns:
-            ``(self.batch_size, self.solution_dim)`` array -- contains
-            ``batch_size`` new solutions to evaluate.
+            ``(batch_size, self.solution_dim)`` array -- contains ``batch_size``
+            new solutions to evaluate.
         """
         if self.archive.empty:
             parents = np.expand_dims(self._x0, axis=0)
         else:
             parents = [
                 self.archive.get_random_elite()[0]
-                for _ in range(self.batch_size)
+                for _ in range(self._batch_size)
             ]
 
         noise = self._rng.normal(
             scale=self._sigma0,
-            size=(self.batch_size, self.solution_dim),
+            size=(self._batch_size, self.solution_dim),
         ).astype(self.archive.dtype)
 
         return self._ask_clip_helper(np.asarray(parents), noise,
