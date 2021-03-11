@@ -8,11 +8,11 @@ from ribs.emitters.opt import CMAEvolutionStrategy
 class OptimizingEmitter(EmitterBase):
     """Adapts a covariance matrix towards the objective.
 
-    This emitter originates in the `CMA-ME paper
-    <https://arxiv.org/abs/1912.02400>`_. Initially, it will start at ``x0`` and
-    use CMA-ES to optimize for objective values. After CMA-ES converges, the
-    emitter will restart the optimizer. It will pick a random elite in the
-    archive and begin optimizing from there.
+    This emitter originates in `Fontaine 2020
+    <https://arxiv.org/abs/1912.02400>`_. Initially, it starts at ``x0`` and
+    uses CMA-ES to optimize for objective values. After CMA-ES converges, the
+    emitter restarts the optimizer. It picks a random elite in the archive and
+    begins optimizing from there.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -33,13 +33,12 @@ class OptimizingEmitter(EmitterBase):
             (include negative weights).
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
-
-            Pass an array-like to specify the bounds for each dim. Each element
-            in this array-like can be None to indicate no bound, or a tuple of
-            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
-            ``upper_bound`` may be None to indicate no bound.
-        batch_size (int): Number of solutions to send back in :meth:`ask`.
-            If not passed in, a batch size will automatically be calculated.
+            Alternatively, pass an array-like to specify the bounds for each
+            dim. Each element in this array-like can be None to indicate no
+            bound, or a tuple of ``(lower_bound, upper_bound)``, where
+            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
+        batch_size (int): Number of solutions to return in :meth:`ask`. If not
+            passed in, a batch size will automatically be calculated.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
@@ -57,6 +56,8 @@ class OptimizingEmitter(EmitterBase):
                  bounds=None,
                  batch_size=None,
                  seed=None):
+        self._rng = np.random.default_rng(seed)
+        self._batch_size = batch_size
         self._x0 = np.array(x0, dtype=archive.dtype)
         self._sigma0 = sigma0
         EmitterBase.__init__(
@@ -64,8 +65,6 @@ class OptimizingEmitter(EmitterBase):
             archive,
             len(self._x0),
             bounds,
-            batch_size,
-            seed,
         )
 
         if selection_rule not in ["mu", "filter"]:
@@ -79,7 +78,7 @@ class OptimizingEmitter(EmitterBase):
         opt_seed = None if seed is None else self._rng.integers(10_000)
         self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
                                         weight_rule, opt_seed,
-                                        self._archive.dtype)
+                                        self.archive.dtype)
         self.opt.reset(self._x0)
         self._num_parents = (self.opt.batch_size //
                              2 if selection_rule == "mu" else None)
@@ -96,14 +95,19 @@ class OptimizingEmitter(EmitterBase):
         """float: Initial step size for the CMA-ES optimizer."""
         return self._sigma0
 
+    @property
+    def batch_size(self):
+        """int: Number of solutions to return in :meth:`ask`."""
+        return self._batch_size
+
     def ask(self):
         """Samples new solutions from a multivariate Gaussian.
 
         The multivariate Gaussian is parameterized by the CMA-ES optimizer.
 
         Returns:
-            ``(self.batch_size, self.solution_dim)`` array -- contains
-            ``batch_size`` new solutions to evaluate.
+            ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
+            solutions to evaluate.
         """
         return self.opt.ask(self.lower_bounds, self.upper_bounds)
 
@@ -140,7 +144,7 @@ class OptimizingEmitter(EmitterBase):
         new_sols = 0
         for i, (sol, obj, beh) in enumerate(
                 zip(solutions, objective_values, behavior_values)):
-            status, _ = self._archive.add(sol, obj, beh)
+            status, _ = self.archive.add(sol, obj, beh)
             added = bool(status)
             ranking_data.append((added, obj, i))
             if added:
@@ -164,6 +168,6 @@ class OptimizingEmitter(EmitterBase):
         # Check for reset.
         if (self.opt.check_stop([obj for status, obj, i in ranking_data]) or
                 self._check_restart(new_sols)):
-            new_x0 = self._archive.get_random_elite()[0]
+            new_x0 = self.archive.get_random_elite()[0]
             self.opt.reset(new_x0)
             self._restarts += 1

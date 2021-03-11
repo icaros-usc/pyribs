@@ -68,7 +68,7 @@ setup(
     author="ICAROS Lab pyribs Team",
     author_email="team@pyribs.org",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
@@ -82,7 +82,8 @@ setup(
         "Topic :: Scientific/Engineering :: Mathematics",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-    description="A bare-bones quality diversity optimization library.",
+    description=
+    "A bare-bones Python library for quality diversity optimization.",
     install_requires=install_requires,
     extras_require=extras_require,
     license="MIT license",
@@ -95,6 +96,6 @@ setup(
     python_requires=">=3.6.0",
     test_suite="tests",
     url="https://github.com/icaros-usc/pyribs",
-    version="0.2.1",
+    version="0.3.1",
     zip_safe=False,
 )

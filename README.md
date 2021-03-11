@@ -1,13 +1,13 @@
 # pyribs
 
-|             Website              |                     Source                     |                                                       PyPI                                                        |                                                                                                      CI/CD                                                                                                       |                    Docs                    |                                                                   Docs Status                                                                    |
-| :------------------------------: | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: |
-| [pyribs.org](https://pyribs.org) | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Tests](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Tests") | [docs.pyribs.org](https://docs.pyribs.org) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=latest&style=flat-square)](https://readthedocs.org/projects/ribs/) |
+|             Website              |                     Source                     |                                                       PyPI                                                        |                                                               Conda                                                                |                                                                                                      CI/CD                                                                                                       |                    Docs                    |                                                                   Docs Status                                                                    |                                                                   Twitter                                                                    |
+| :------------------------------: | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------: |
+| [pyribs.org](https://pyribs.org) | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Conda Recipe](https://img.shields.io/badge/recipe-pyribs-green.svg?style=flat-square)](https://anaconda.org/conda-forge/pyribs) | [![Tests](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Tests") | [docs.pyribs.org](https://docs.pyribs.org) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=stable&style=flat-square)](https://readthedocs.org/projects/ribs/) | [![Twitter](https://img.shields.io/badge/twitter-%231DA1F2.svg?&style=flat-square&logo=twitter&logoColor=white)](https://twitter.com/pyribs) |
 
-A _bare-bones_ quality diversity optimization library. pyribs is the official
-implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME) algorithm
-and implements the _Rapid Illumination of Behavior Space (RIBS)_ redesign of
-MAP-Elites detailed in the paper
+A _bare-bones_ Python library for quality diversity optimization. pyribs is the
+official implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME)
+algorithm and implements the _Rapid Illumination of Behavior Space (RIBS)_
+redesign of MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
 
 ## Overview
@@ -42,6 +42,47 @@ application:
   requesting new candidate solutions and telling the algorithm how candidates
   performed.
 
+## Citation
+
+If you use pyribs in your research, please cite it as follows. Note that you
+will need to include the
+[hyperref](https://www.overleaf.com/learn/latex/Hyperlinks#Linking_web_addresses)
+package in order to use the `\url` command.
+
+```
+@misc{pyribs,
+  title = {pyribs: A bare-bones Python library for quality diversity
+           optimization},
+  author = {Bryon Tjanaka and Matthew C. Fontaine and Yulun Zhang and
+            Sam Sommerer and Nathan Dennler and Stefanos Nikolaidis},
+  year = {2021},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/icaros-usc/pyribs}},
+}
+```
+
+If you use the CMA-ME algorithm, please also cite
+[Fontaine 2020](https://dl.acm.org/doi/10.1145/3377930.3390232).
+
+```
+@inproceedings{10.1145/3377930.3390232,
+  author = {Fontaine, Matthew C. and Togelius, Julian and Nikolaidis, Stefanos and Hoover, Amy K.},
+  title = {Covariance Matrix Adaptation for the Rapid Illumination of Behavior Space},
+  year = {2020},
+  isbn = {9781450371285},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3377930.3390232},
+  doi = {10.1145/3377930.3390232},
+  booktitle = {Proceedings of the 2020 Genetic and Evolutionary Computation Conference},
+  pages = {94–102},
+  numpages = {9},
+  location = {Canc\'{u}n, Mexico},
+  series = {GECCO '20}
+}
+```
+
 ## Usage
 
 Here we show an example application of CMA-ME in pyribs. To initialize the
@@ -49,7 +90,7 @@ algorithm, we first create:
 
 - A 2D **GridArchive** where each dimension contains 20 bins across the range
   [-1, 1].
-- A **ImprovementEmitter**, which starts from the search point **0** in 10
+- An **ImprovementEmitter**, which starts from the search point **0** in 10
   dimensional space and a Gaussian sampling distribution with standard deviation
   0.1.
 - An **Optimizer** that combines the archive and emitter together.
@@ -118,6 +159,19 @@ support tools like `ribs.visualize`, run
 pip install ribs[all]
 ```
 
+Equivalently, you can install the base version (equivalent to `ribs`) from Conda
+with
+
+```bash
+conda install -c conda-forge pyribs-base
+```
+
+The full version (equivalent to `ribs[all]`) can be installed with
+
+```bash
+conda install -c conda-forge pyribs
+```
+
 To test your installation, import it and print the version with:
 
 ```bash
@@ -176,6 +230,7 @@ USC.
 - [Matt Fontaine](https://github.com/tehqin)
 - [Yulun Zhang](https://github.com/lunjohnzhang)
 - [Sam Sommerer](https://github.com/sam-sommerer)
+- [Nathan Dennler](https://ndennler.github.io/)
 - Nikitas Klapsis
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 

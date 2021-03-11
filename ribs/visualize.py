@@ -17,7 +17,8 @@ to these functions.
 
     ribs.visualize.grid_archive_heatmap
     ribs.visualize.cvt_archive_heatmap
-    ribs.visualize.sliding_boundary_archive_heatmap
+    ribs.visualize.sliding_boundaries_archive_heatmap
+    ribs.visualize.parallel_axes_plot
 """
 import matplotlib
 import matplotlib.pyplot as plt
@@ -31,7 +32,8 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 __all__ = [
     "grid_archive_heatmap",
     "cvt_archive_heatmap",
-    "sliding_boundary_archive_heatmap",
+    "sliding_boundaries_archive_heatmap",
+    "parallel_axes_plot",
 ]
 
 
@@ -324,19 +326,19 @@ def cvt_archive_heatmap(archive,
         ax.plot(centroids[:, 0], centroids[:, 1], "ko", ms=ms)
 
 
-def sliding_boundary_archive_heatmap(archive,
-                                     ax=None,
-                                     transpose_bcs=False,
-                                     cmap="magma",
-                                     square=False,
-                                     ms=None,
-                                     boundary_lw=0,
-                                     vmin=None,
-                                     vmax=None):
-    """Plots heatmap of a :class:`~ribs.archives.SlidingBoundaryArchive` with 2D
-    behavior space.
+def sliding_boundaries_archive_heatmap(archive,
+                                       ax=None,
+                                       transpose_bcs=False,
+                                       cmap="magma",
+                                       square=False,
+                                       ms=None,
+                                       boundary_lw=0,
+                                       vmin=None,
+                                       vmax=None):
+    """Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with
+    2D behavior space.
 
-    Since the boundaries of :class:`ribs.archives.SlidingBoundaryArchive` are
+    Since the boundaries of :class:`ribs.archives.SlidingBoundariesArchive` are
     dynamic, we plot the heatmap as a scatter plot, in which each marker is a
     solution and its color represents the objective value. Boundaries can
     optionally be drawn by setting ``boundary_lw`` to a positive value.
@@ -347,9 +349,9 @@ def sliding_boundary_archive_heatmap(archive,
 
             >>> import numpy as np
             >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import SlidingBoundaryArchive
-            >>> from ribs.visualize import sliding_boundary_archive_heatmap
-            >>> archive = SlidingBoundaryArchive([10, 20],
+            >>> from ribs.archives import SlidingBoundariesArchive
+            >>> from ribs.visualize import sliding_boundaries_archive_heatmap
+            >>> archive = SlidingBoundariesArchive([10, 20],
             ...                                  [(-1, 1), (-1, 1)],
             ...                                  seed=42)
             >>> archive.initialize(solution_dim=2)
@@ -365,9 +367,9 @@ def sliding_boundary_archive_heatmap(archive,
             >>> # Plot heatmaps of the archive.
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
             >>> fig.suptitle("Negative sphere function")
-            >>> sliding_boundary_archive_heatmap(archive, ax=ax1,
+            >>> sliding_boundaries_archive_heatmap(archive, ax=ax1,
             ...                                  boundary_lw=0.5)
-            >>> sliding_boundary_archive_heatmap(archive, ax=ax2)
+            >>> sliding_boundaries_archive_heatmap(archive, ax=ax2)
             >>> ax1.set_title("With boundaries")
             >>> ax2.set_title("Without boundaries")
             >>> ax1.set(xlabel='x coords', ylabel='y coords')
@@ -376,7 +378,7 @@ def sliding_boundary_archive_heatmap(archive,
 
 
     Args:
-        archive (SlidingBoundaryArchive): A 2D SlidingBoundaryArchive.
+        archive (SlidingBoundariesArchive): A 2D SlidingBoundariesArchive.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
             the current axis will be used.
         transpose_bcs (bool): By default, the first BC in the archive will
@@ -453,3 +455,198 @@ def sliding_boundary_archive_heatmap(archive,
 
     # Create the colorbar.
     ax.figure.colorbar(t, ax=ax, pad=0.1)
+
+
+def parallel_axes_plot(archive,
+                       ax=None,
+                       bc_order=None,
+                       cmap="magma",
+                       linewidth=1.5,
+                       alpha=0.8,
+                       vmin=None,
+                       vmax=None,
+                       sort_archive=False,
+                       cbar_orientation='horizontal',
+                       cbar_pad=0.1):
+    """Visualizes archive entries in behavior space with a parallel axes plot.
+
+    This visualization is meant to show the coverage of the behavior space at a
+    glance. Each axis represents one behavioral dimension, and each line in the
+    diagram represents one entry in the archive. Three main things are evident
+    from this plot:
+
+    - **Behavior space coverage,** as determined by the amount of the axis that
+      has lines passing through it. If the lines are passing through all parts
+      of the axis, then there is likely good coverage for that BC.
+
+    - **Correlation between neighboring BCs.** In the below example, we see
+      perfect correlation between ``behavior_0`` and ``behavior_1``, since none
+      of the lines cross each other. We also see the perfect negative
+      correlation between ``behavior_3`` and ``behavior_4``, indicated by the
+      crossing of all lines at a single point.
+
+    - **Whether certain values of the behavior dimensions affect the objective
+      value strongly.** In the below example, we see ``behavior_2`` has many
+      entries with high objective near zero. This is more visible when
+      ``sort_archive`` is passed in, as entries with higher objective values
+      will be plotted on top of individuals with lower objective values.
+
+    Examples:
+        .. plot::
+            :context: close-figs
+
+            >>> import numpy as np
+            >>> import matplotlib.pyplot as plt
+            >>> from ribs.archives import GridArchive
+            >>> from ribs.visualize import parallel_axes_plot
+            >>> # Populate the archive with the negative sphere function.
+            >>> archive = GridArchive(
+            ...               [20, 20, 20, 20, 20],
+            ...               [(-1, 1), (-1, 1), (-1, 1), (-1, 1), (-1, 1)]
+            ...           )
+            >>> archive.initialize(solution_dim=3)
+            >>> for x in np.linspace(-1, 1, 100):
+            ...     for y in np.linspace(0, 1, 100):
+            ...         for z in np.linspace(-1, 1, 100):
+            ...             archive.add(
+            ...                 solution=np.array([x,y,z]),
+            ...                 objective_value=-(x**2 + y**2 + z**2),
+            ...                 behavior_values=np.array([0.5*x,x,y,z,-0.5*z]),
+            ...             )
+            >>> # Plot a heatmap of the archive.
+            >>> plt.figure(figsize=(8, 6))
+            >>> parallel_axes_plot(archive)
+            >>> plt.title("Negative sphere function")
+            >>> plt.ylabel("axis values")
+            >>> plt.show()
+
+    Args:
+        archive (ArchiveBase): Any ribs archive.
+        ax (matplotlib.axes.Axes): Axes on which to create the plot.
+            If None, the current axis will be used.
+        bc_order (list of int or list of (int, str)): If this is a list of ints,
+            it specifies the axes order for BCs (e.g. ``[2, 0, 1]``). If this is
+            a list of tuples, each tuple takes the form ``(int, str)`` where the
+            int specifies the BC index and the str specifies a name for the BC
+            (e.g. ``[(1, "y-value"), (2, "z-value"), (0, "x-value)]``). The
+            order specified does not need to have the same number of elements as
+            the number of behaviors in the archive, e.g. ``[1, 3]`` or
+            ``[1, 2, 3, 2]``.
+        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
+            plotting intensity. Either the name of a colormap, a list of RGB or
+            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
+        linewidth (float): Line width for each entry in the plot.
+        alpha (float): Opacity of the line for each entry (passing a low value
+            here may be helpful if there are many archive entries, as more
+            entries would be visible).
+        vmin (float): Minimum objective value to use in the plot. If None, the
+            minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If None, the
+            maximum objective value in the archive is used.
+        sort_archive (boolean): if true, sorts the archive so that the highest
+            performing entries are plotted on top of lower performing entries.
+
+            .. warning:: This may be slow for large archives.
+        cbar_orientation (str): The orientation of the colorbar. Use either
+            ``'vertical'`` or ``'horizontal'``
+        cbar_pad (float): The amount of padding to use for the colorbar.
+
+    Raises:
+        ValueError: ``cbar_orientation`` has an invalid value.
+        ValueError: The bcs provided do not exist in the archive.
+        TypeError: bc_order is not a list of all ints or all tuples.
+    """
+    # Try getting the colormap early in case it fails.
+    cmap = _retrieve_cmap(cmap)
+
+    # Check that the orientation input is correct.
+    if cbar_orientation not in ['vertical', 'horizontal']:
+        raise ValueError("cbar_orientation mus be 'vertical' or 'horizontal' "
+                         f"but is '{cbar_orientation}'")
+
+    # If there is no order specified, plot in increasing numerical order.
+    if bc_order is None:
+        cols = [f"behavior_{i}" for i in range(archive.behavior_dim)]
+        axis_labels = cols
+        lower_bounds = archive.lower_bounds
+        upper_bounds = archive.upper_bounds
+
+    # Use the requested behaviors (may be less than the original number of bcs).
+    else:
+        # Check for errors in specification.
+        if all(isinstance(bc, int) for bc in bc_order):
+            bc_indices = np.array(bc_order)
+            axis_labels = [f"behavior_{i}" for i in bc_indices]
+        elif all(
+                len(bc) == 2 and isinstance(bc[0], int) and
+                isinstance(bc[1], str) for bc in bc_order):
+            bc_indices, axis_labels = zip(*bc_order)
+            bc_indices = np.array(bc_indices)
+        else:
+            raise TypeError("bc_order must be a list of ints or a list of"
+                            "tuples in the form (int, str)")
+
+        if np.max(bc_indices) >= archive.behavior_dim:
+            raise ValueError(f"Invalid Behavior: requested behavior index "
+                             f"{np.max(bc_indices)}, but archive only has "
+                             f"{archive.behavior_dim} behaviors.")
+        if any(bc < 0 for bc in bc_indices):
+            raise ValueError("Invalid Behavior: requested a negative behavior"
+                             " index.")
+
+        # Find the indices of the requested order.
+        cols = [f"behavior_{i}" for i in bc_indices]
+        lower_bounds = archive.lower_bounds[bc_indices]
+        upper_bounds = archive.upper_bounds[bc_indices]
+
+    host_ax = plt.gca() if ax is None else ax  # Try to get current axis.
+    df = archive.as_pandas(include_solutions=False)
+    if sort_archive:
+        df.sort_values(by=['objective'], inplace=True)
+    vmin = np.min(df['objective']) if vmin is None else vmin
+    vmax = np.max(df['objective']) if vmax is None else vmax
+    norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
+    objectives = df['objective'].to_numpy()
+    ys = df[cols].to_numpy()
+    y_ranges = upper_bounds - lower_bounds
+
+    # Transform all data to be in the first axis coordinates.
+    normalized_ys = np.zeros_like(ys)
+    normalized_ys[:, 0] = ys[:, 0]
+    normalized_ys[:, 1:] = (
+        (ys[:, 1:] - lower_bounds[1:]) / y_ranges[1:] * y_ranges[0] +
+        lower_bounds[0])
+
+    # Copy the axis for the other bcs.
+    axes = [host_ax] + [host_ax.twinx() for i in range(len(cols) - 1)]
+    for i, axis in enumerate(axes):
+        axis.set_ylim(lower_bounds[i], upper_bounds[i])
+        axis.spines['top'].set_visible(False)
+        axis.spines['bottom'].set_visible(False)
+        if axis != host_ax:
+            axis.spines['left'].set_visible(False)
+            axis.yaxis.set_ticks_position('right')
+            axis.spines["right"].set_position(("axes", i / (len(cols) - 1)))
+
+    host_ax.set_xlim(0, len(cols) - 1)
+    host_ax.set_xticks(range(len(cols)))
+    host_ax.set_xticklabels(axis_labels)
+    host_ax.tick_params(axis='x', which='major', pad=7)
+    host_ax.spines['right'].set_visible(False)
+    host_ax.xaxis.tick_top()
+
+    for archive_entry, objective in zip(normalized_ys, objectives):
+        # Draw straight lines between the axes in the appropriate color.
+        color = cmap(norm(objective))
+        host_ax.plot(range(len(cols)),
+                     archive_entry,
+                     c=color,
+                     alpha=alpha,
+                     linewidth=linewidth)
+
+    # Create a colorbar.
+    mappable = ScalarMappable(cmap=cmap)
+    mappable.set_clim(vmin, vmax)
+    host_ax.figure.colorbar(mappable,
+                            pad=cbar_pad,
+                            orientation=cbar_orientation)

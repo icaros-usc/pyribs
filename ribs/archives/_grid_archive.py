@@ -4,13 +4,13 @@ from numba import jit
 
 from ribs.archives._archive_base import ArchiveBase, require_init
 
-_EPSILON = 1e-9
+_EPSILON = 1e-6
 
 
 class GridArchive(ArchiveBase):
     """An archive that divides each dimension into uniformly-sized bins.
 
-    This archive is the container described in the `original MAP-Elites paper
+    This archive is the container described in `Mouret 2015
     <https://arxiv.org/pdf/1504.04909.pdf>`_. It can be visualized as an
     n-dimensional grid in the behavior space that is divided into a certain
     number of bins in each dimension. Each bin contains an elite, i.e. a
@@ -33,15 +33,20 @@ class GridArchive(ArchiveBase):
         dtype (str or data-type): Data type of the solutions, objective values,
             and behavior values. We only support ``"f"`` / :class:`np.float32`
             and ``"d"`` / :class:`np.float64`.
+    Raises:
+        ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
     def __init__(self, dims, ranges, seed=None, dtype=np.float64):
         self._dims = np.array(dims)
-        behavior_dim = len(self._dims)
+        if len(self._dims) != len(ranges):
+            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
+                             f"(length {len(ranges)}) must be the same length")
+
         ArchiveBase.__init__(
             self,
             storage_dims=tuple(self._dims),
-            behavior_dim=behavior_dim,
+            behavior_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
         )

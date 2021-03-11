@@ -29,7 +29,7 @@ import ribs
 sys.path.insert(0, os.path.abspath(".."))
 
 DEV_MODE = os.environ.get("DOCS_MODE", "regular") == "dev"
-READTHEDOCS_VERSION = os.environ.get("READTHEDOCS_VERSION", "latest")
+READTHEDOCS_VERSION = os.environ.get("READTHEDOCS_VERSION", "stable")
 READTHEDOCS_LANGUAGE = os.environ.get("READTHEDOCS_LANGUAGE", "en")
 
 # -- General configuration ---------------------------------------------
@@ -112,7 +112,7 @@ html_sidebars = {"**": ["globaltoc.html", "localtoc.html", "searchbox.html"]}
 html_theme_path = sphinx_material.html_theme_path()
 html_context = sphinx_material.get_html_context()
 html_theme = "sphinx_material"
-html_logo = "_static/imgs/logo.svg"
+html_logo = "_static/imgs/icon.svg"
 html_favicon = "_static/imgs/favicon.ico"
 html_title = f"pyribs ({READTHEDOCS_VERSION})"
 
@@ -139,7 +139,8 @@ html_theme_options = {
         "title": "Home"
     },],
     "heroes": {
-        "index": "A bare-bones quality diversity optimization library."
+        "index":
+            "A bare-bones Python library for quality diversity optimization."
     },
     "version_dropdown": False,
     "version_json": None,
