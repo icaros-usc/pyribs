@@ -186,6 +186,11 @@ class ArchiveBase(ABC):
         return self._bins
 
     @property
+    def entries(self):
+        """int: Number of bins with an entry."""
+        return len(self._occupied_indices)
+
+    @property
     def behavior_dim(self):
         """int: Dimensionality of the behavior space."""
         return self._behavior_dim

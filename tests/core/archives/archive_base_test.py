@@ -101,6 +101,14 @@ def test_bins_correct(_data):
     assert _data.archive.bins == _data.bins
 
 
+def test_entries_correct(_data):
+    assert _data.archive.entries == 0
+
+
+def test_nonzero_entries_correct(_data):
+    assert _data.archive_with_entry.entries == 1
+
+
 def test_behavior_dim_correct(_data):
     assert _data.archive.behavior_dim == len(_data.behavior_values)
 

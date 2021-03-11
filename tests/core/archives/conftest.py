@@ -53,6 +53,7 @@ ARCHIVE_NAMES = [
     "GridArchive",
     "CVTArchive-brute_force",
     "CVTArchive-kd_tree",
+    "SlidingBoundariesArchive",
 ]
 
 
