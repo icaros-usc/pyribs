@@ -34,11 +34,10 @@ class IsoLineEmitter(EmitterBase):
             generating solutions.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
-
-            Pass an array-like to specify the bounds for each dim. Each element
-            in this array-like can be None to indicate no bound, or a tuple of
-            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
-            ``upper_bound`` may be None to indicate no bound.
+            Alternatively, pass an array-like to specify the bounds for each
+            dim. Each element in this array-like can be None to indicate no
+            bound, or a tuple of ``(lower_bound, upper_bound)``, where
+            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to send back in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
