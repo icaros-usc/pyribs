@@ -38,7 +38,7 @@ class IsoLineEmitter(EmitterBase):
             dim. Each element in this array-like can be None to indicate no
             bound, or a tuple of ``(lower_bound, upper_bound)``, where
             ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
-        batch_size (int): Number of solutions to send back in :meth:`ask`.
+        batch_size (int): Number of solutions to return in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     """
@@ -81,6 +81,11 @@ class IsoLineEmitter(EmitterBase):
         """float: Scale factor for the line distribution used when generating
         solutions."""
         return self._line_sigma
+
+    @property
+    def batch_size(self):
+        """int: Number of solutions to return in :meth:`ask`."""
+        return self._batch_size
 
     @staticmethod
     @jit(nopython=True)

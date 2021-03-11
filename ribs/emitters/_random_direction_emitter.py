@@ -39,8 +39,8 @@ class RandomDirectionEmitter(EmitterBase):
             dim. Each element in this array-like can be None to indicate no
             bound, or a tuple of ``(lower_bound, upper_bound)``, where
             ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
-        batch_size (int): Number of solutions to send back in :meth:`ask`.
-            If not passed in, a batch size will automatically be calculated.
+        batch_size (int): Number of solutions to return in :meth:`ask`. If not
+            passed in, a batch size will automatically be calculated.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
@@ -97,6 +97,11 @@ class RandomDirectionEmitter(EmitterBase):
     def sigma0(self):
         """float: Initial step size for the CMA-ES optimizer."""
         return self._sigma0
+
+    @property
+    def batch_size(self):
+        """int: Number of solutions to return in :meth:`ask`."""
+        return self._batch_size
 
     def ask(self):
         """Samples new solutions from a multivariate Gaussian.

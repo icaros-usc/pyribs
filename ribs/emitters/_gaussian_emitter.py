@@ -33,7 +33,7 @@ class GaussianEmitter(EmitterBase):
             dim. Each element in this array-like can be None to indicate no
             bound, or a tuple of ``(lower_bound, upper_bound)``, where
             ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
-        batch_size (int): Number of solutions to send back in :meth:`ask`.
+        batch_size (int): Number of solutions to return in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
@@ -71,6 +71,11 @@ class GaussianEmitter(EmitterBase):
         """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
         distribution."""
         return self._sigma0
+
+    @property
+    def batch_size(self):
+        """int: Number of solutions to return in :meth:`ask`."""
+        return self._batch_size
 
     @staticmethod
     @jit(nopython=True)
