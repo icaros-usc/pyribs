@@ -120,15 +120,13 @@ def test_initial_remap(_data):
             archive.add([x, y], obj, [x, y])
 
     # There are 199 entries because the last entry has not been inserted.
-    # TODO(btjanaka): Use the archive.occupied property when it is available.
-    assert len(archive.as_pandas(include_solutions=False)) == 199
+    assert archive.entries == 199
 
     # Buffer should now have 231 entries; hence it remaps.
     archive.add([-1, -2], 1, [-1, -2])
     expected_bcs.append((-1, -2))
 
-    # TODO(btjanaka): Use the archive.occupied property when it is available.
-    assert len(archive.as_pandas(include_solutions=False)) == 200
+    assert archive.entries == 200
 
     # Since we passed in unique entries generated with linspace, the boundaries
     # should come from linspace.
@@ -173,8 +171,7 @@ def test_adds_solutions_from_old_archive(_data):
         for y in np.linspace(-2, 2, 21):
             archive.add([x, y], 2, [x, y])
 
-    # TODO(btjanaka): Use the archive.occupied property when it is available.
-    assert len(archive.as_pandas(include_solutions=False)) == 200
+    assert archive.entries == 200
 
     # Archive gets remapped again, but it should maintain the same BCs since
     # solutions are the same. All the high-performing solutions should be
@@ -183,8 +180,7 @@ def test_adds_solutions_from_old_archive(_data):
         for y in np.linspace(-2, 2, 21):
             archive.add([x, y], 1, [x, y])
 
-    # TODO(btjanaka): Use the archive.occupied property when it is available.
-    assert len(archive.as_pandas(include_solutions=False)) == 200
+    assert archive.entries == 200
 
     # The objective values from the previous archive should remain because they
     # are higher.
