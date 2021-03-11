@@ -66,6 +66,8 @@ class Optimizer:
         self._asked = False
         # The last set of solutions returned by ask().
         self._solutions = []
+        # The number of solutions created by each emitter.
+        self._num_emitted = [None for _ in self._emitters]
 
     @property
     def archive(self):
@@ -101,8 +103,10 @@ class Optimizer:
         # Limit OpenBLAS to single thread. This is typically faster than
         # multithreading because our data is too small.
         with threadpool_limits(limits=1, user_api="blas"):
-            for emitter in self._emitters:
-                self._solutions.append(emitter.ask())
+            for i, emitter in enumerate(self._emitters):
+                emitter_sols = emitter.ask()
+                self._solutions.append(emitter_sols)
+                self._num_emitted[i] = len(emitter_sols)
 
         self._solutions = np.concatenate(self._solutions, axis=0)
         return self._solutions
@@ -136,8 +140,8 @@ class Optimizer:
         with threadpool_limits(limits=1, user_api="blas"):
             # Keep track of pos because emitters may have different batch sizes.
             pos = 0
-            for emitter in self._emitters:
-                end = pos + emitter.batch_size
+            for emitter, n in zip(self._emitters, self._num_emitted):
+                end = pos + n
                 emitter.tell(self._solutions[pos:end],
                              objective_values[pos:end],
                              behavior_values[pos:end])
