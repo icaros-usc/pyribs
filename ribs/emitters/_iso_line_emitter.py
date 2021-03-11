@@ -114,21 +114,21 @@ class IsoLineEmitter(EmitterBase):
         iso_gaussian = self._rng.normal(
             scale=self._iso_sigma,
             size=(self._batch_size, self.solution_dim),
-        ).astype(self._archive.dtype)
+        ).astype(self.archive.dtype)
 
-        if self._archive.empty:
+        if self.archive.empty:
             solutions = np.expand_dims(self._x0, axis=0) + iso_gaussian
         else:
             parents = [
-                self._archive.get_random_elite()[0]
+                self.archive.get_random_elite()[0]
                 for _ in range(self._batch_size)
             ]
-            directions = [(self._archive.get_random_elite()[0] - parents[i])
+            directions = [(self.archive.get_random_elite()[0] - parents[i])
                           for i in range(self._batch_size)]
             line_gaussian = self._rng.normal(
                 scale=self._line_sigma,
                 size=(self._batch_size, 1),
-            ).astype(self._archive.dtype)
+            ).astype(self.archive.dtype)
 
             solutions = self._ask_solutions_numba(np.asarray(parents),
                                                   iso_gaussian, line_gaussian,

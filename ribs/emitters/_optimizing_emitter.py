@@ -78,7 +78,7 @@ class OptimizingEmitter(EmitterBase):
         opt_seed = None if seed is None else self._rng.integers(10_000)
         self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
                                         weight_rule, opt_seed,
-                                        self._archive.dtype)
+                                        self.archive.dtype)
         self.opt.reset(self._x0)
         self._num_parents = (self.opt.batch_size //
                              2 if selection_rule == "mu" else None)
@@ -144,7 +144,7 @@ class OptimizingEmitter(EmitterBase):
         new_sols = 0
         for i, (sol, obj, beh) in enumerate(
                 zip(solutions, objective_values, behavior_values)):
-            status, _ = self._archive.add(sol, obj, beh)
+            status, _ = self.archive.add(sol, obj, beh)
             added = bool(status)
             ranking_data.append((added, obj, i))
             if added:
@@ -168,6 +168,6 @@ class OptimizingEmitter(EmitterBase):
         # Check for reset.
         if (self.opt.check_stop([obj for status, obj, i in ranking_data]) or
                 self._check_restart(new_sols)):
-            new_x0 = self._archive.get_random_elite()[0]
+            new_x0 = self.archive.get_random_elite()[0]
             self.opt.reset(new_x0)
             self._restarts += 1

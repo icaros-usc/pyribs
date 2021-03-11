@@ -80,7 +80,7 @@ class RandomDirectionEmitter(EmitterBase):
         opt_seed = None if seed is None else self._rng.integers(10_000)
         self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
                                         weight_rule, opt_seed,
-                                        self._archive.dtype)
+                                        self.archive.dtype)
         self.opt.reset(self._x0)
         self._num_parents = (self.opt.batch_size //
                              2 if selection_rule == "mu" else None)
@@ -121,7 +121,7 @@ class RandomDirectionEmitter(EmitterBase):
         Gaussian is isotropic, there is equal probability for any direction. The
         direction is then scaled to the behavior space bounds.
         """
-        ranges = self._archive.upper_bounds - self._archive.lower_bounds
+        ranges = self.archive.upper_bounds - self.archive.lower_bounds
         behavior_dim = len(ranges)
         unscaled_dir = self._rng.standard_normal(behavior_dim)
         return unscaled_dir * ranges
@@ -162,7 +162,7 @@ class RandomDirectionEmitter(EmitterBase):
         # Add solutions to the archive.
         for i, (sol, obj, beh) in enumerate(
                 zip(solutions, objective_values, behavior_values)):
-            status, _ = self._archive.add(sol, obj, beh)
+            status, _ = self.archive.add(sol, obj, beh)
             added = bool(status)
             projection = np.dot(beh, self._target_behavior_dir)
             ranking_data.append((added, projection, i))
@@ -188,7 +188,7 @@ class RandomDirectionEmitter(EmitterBase):
         if (self.opt.check_stop(
             [projection for status, projection, i in ranking_data]) or
                 self._check_restart(new_sols)):
-            new_x0 = self._archive.get_random_elite()[0]
+            new_x0 = self.archive.get_random_elite()[0]
             self.opt.reset(new_x0)
             self._target_behavior_dir = self._generate_random_direction()
             self._restarts += 1
