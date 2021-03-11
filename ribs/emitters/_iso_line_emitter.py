@@ -108,8 +108,8 @@ class IsoLineEmitter(EmitterBase):
         this class's docstring.
 
         Returns:
-            ``(batch_size, self.solution_dim)`` array -- contains ``batch_size``
-            new solutions to evaluate.
+            ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
+            solutions to evaluate.
         """
         iso_gaussian = self._rng.normal(
             scale=self._iso_sigma,

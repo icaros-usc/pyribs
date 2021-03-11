@@ -109,8 +109,8 @@ class ImprovementEmitter(EmitterBase):
         The multivariate Gaussian is parameterized by the CMA-ES optimizer.
 
         Returns:
-            ``(batch_size, self.solution_dim)`` array -- contains ``batch_size``
-            new solutions to evaluate.
+            ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
+            solutions to evaluate.
         """
         return self.opt.ask(self.lower_bounds, self.upper_bounds)
 

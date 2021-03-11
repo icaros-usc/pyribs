@@ -93,8 +93,8 @@ class GaussianEmitter(EmitterBase):
         the standard deviation is ``self.sigma0``.
 
         Returns:
-            ``(batch_size, self.solution_dim)`` array -- contains ``batch_size``
-            new solutions to evaluate.
+            ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
+            solutions to evaluate.
         """
         if self.archive.empty:
             parents = np.expand_dims(self._x0, axis=0)
