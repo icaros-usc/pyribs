@@ -59,6 +59,8 @@ class ImprovementEmitter(EmitterBase):
                  bounds=None,
                  batch_size=None,
                  seed=None):
+        self._rng = np.random.default_rng(seed)
+        self._batch_size = batch_size
         self._x0 = np.array(x0, dtype=archive.dtype)
         self._sigma0 = sigma0
         EmitterBase.__init__(
@@ -66,8 +68,6 @@ class ImprovementEmitter(EmitterBase):
             archive,
             len(self._x0),
             bounds,
-            batch_size,
-            seed,
         )
 
         if selection_rule not in ["mu", "filter"]:
@@ -104,8 +104,8 @@ class ImprovementEmitter(EmitterBase):
         The multivariate Gaussian is parameterized by the CMA-ES optimizer.
 
         Returns:
-            ``(self.batch_size, self.solution_dim)`` array -- contains
-            ``batch_size`` new solutions to evaluate.
+            ``(batch_size, self.solution_dim)`` array -- contains ``batch_size``
+            new solutions to evaluate.
         """
         return self.opt.ask(self.lower_bounds, self.upper_bounds)
 
