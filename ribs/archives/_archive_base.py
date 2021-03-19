@@ -103,6 +103,7 @@ class ArchiveBase(ABC):
         dtype (str or data-type): Data type of the solutions, objective values,
             and behavior values. We only support ``"f"`` / :class:`np.float32`
             and ``"d"`` / :class:`np.float64`.
+        use_metadata (bool): Whether to use metadata in the archive.
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
@@ -119,24 +120,35 @@ class ArchiveBase(ABC):
         _objective_values (numpy.ndarray): Float array storing the objective
             values of each solution. This attribute is None until
             :meth:`initialize` is called.
-        _behavior_value_dim (numpy.ndarray): Float array storing the behavior
+        _behavior_values (numpy.ndarray): Float array storing the behavior
             values of each solution. This attribute is None until
             :meth:`initialize` is called.
+        _use_metadata (bool): Whether this archive uses metadata.
+        _metadata (numpy.ndarray): Object array storing the metadata associated
+            with each solution. This attribute is None until :meth:`initialize`
+            is called. If ``use_metadata`` is False, it is always None.
         _occupied_indices (list of (int or tuple of int)): A list of indices
             that are occupied in the archive. This attribute is None until
             :meth:`initialize` is called.
     """
 
-    def __init__(self, storage_dims, behavior_dim, seed=None, dtype=np.float64):
+    def __init__(self,
+                 storage_dims,
+                 behavior_dim,
+                 seed=None,
+                 dtype=np.float64,
+                 use_metadata=False):
         # Intended to be accessed by child classes.
         self._rng = np.random.default_rng(seed)
         self._storage_dims = storage_dims
         self._behavior_dim = behavior_dim
         self._solution_dim = None
         self._occupied = None
+        self._solutions = None
         self._objective_values = None
         self._behavior_values = None
-        self._solutions = None
+        self._use_metadata = use_metadata
+        self._metadata = None
         self._occupied_indices = None
 
         # Not intended to be accessed by children (and thus not mentioned in the
@@ -225,6 +237,8 @@ class ArchiveBase(ABC):
             (*self._storage_dims, self._behavior_dim), dtype=self.dtype)
         self._solutions = np.empty((*self._storage_dims, solution_dim),
                                    dtype=self.dtype)
+        self._metadata = (np.empty(self._storage_dims, dtype=object)
+                          if self._use_metadata else None)
         self._occupied_indices = []
 
     @abstractmethod
@@ -268,7 +282,7 @@ class ArchiveBase(ABC):
         return False, already_occupied
 
     @require_init
-    def add(self, solution, objective_value, behavior_values):
+    def add(self, solution, objective_value, behavior_values, metadata=None):
         """Attempts to insert a new solution into the archive.
 
         The solution is only inserted if it has a higher ``objective_value``
@@ -280,6 +294,8 @@ class ArchiveBase(ABC):
                 solution.
             behavior_values (array-like): Coordinates in behavior space of this
                 solution.
+            metadata (object): Metadata object for this solution. This should
+                only be passed in if ``use_metadata`` is True.
         Returns:
             tuple: 2-element tuple describing the result of the add operation.
             These outputs are particularly useful for algorithms such as CMA-ME.
@@ -308,6 +324,9 @@ class ArchiveBase(ABC):
             index, solution, objective_value, behavior_values, self._occupied,
             self._solutions, self._objective_values, self._behavior_values)
 
+        if self._use_metadata and was_inserted:
+            self._metadata[index] = metadata
+
         if was_inserted and not already_occupied:
             self._occupied_indices.append(index)
             status = AddStatus.NEW
@@ -327,7 +346,7 @@ class ArchiveBase(ABC):
         Args:
             behavior_values (array-like): Coordinates in behavior space.
         Returns:
-            tuple: 3-element tuple for the elite if it is found:
+            tuple: 3-element or 4-element tuple for the elite if it is found:
 
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
@@ -339,6 +358,9 @@ class ArchiveBase(ABC):
                 space coordinates of the elite (may not be exactly the same as
                 those specified).
 
+                **metadata** (object): Metadata for the solution. This is only
+                included if ``use_metadata`` is True.
+
             If there is no elite in the bin, a tuple of (None, None, None) is
             returned (thus, something like
             ``sol, obj, beh = archive.elite_with_behavior(...)`` will still
@@ -346,16 +368,24 @@ class ArchiveBase(ABC):
         """
         index = self._get_index(np.asarray(behavior_values))
         if self._occupied[index]:
-            return (self._solutions[index], self._objective_values[index],
-                    self._behavior_values[index])
-        return (None, None, None)
+            if self._use_metadata:
+                return (self._solutions[index], self._objective_values[index],
+                        self._behavior_values[index], self._metadata[index])
+            else:
+                return (self._solutions[index], self._objective_values[index],
+                        self._behavior_values[index])
+
+        if self._use_metadata:
+            return (None, None, None, None)
+        else:
+            return (None, None, None)
 
     @require_init
     def get_random_elite(self):
         """Selects an elite uniformly at random from one of the archive's bins.
 
         Returns:
-            tuple: 3-element tuple containing:
+            tuple: 3-element or 4-element tuple containing:
 
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
@@ -365,6 +395,9 @@ class ArchiveBase(ABC):
 
                 **behavior_values** (:class:`numpy.ndarray`): Behavior space
                 coordinates.
+
+                **metadata** (object): Metadata for the solution. This is only
+                included if ``use_metadata`` is True.
         Raises:
             IndexError: The archive is empty.
         """
@@ -373,13 +406,22 @@ class ArchiveBase(ABC):
 
         random_idx = self._rand_buf.get(len(self._occupied_indices))
         index = self._occupied_indices[random_idx]
-        return (
-            self._solutions[index],
-            self._objective_values[index],
-            self._behavior_values[index],
-        )
 
-    def as_pandas(self, include_solutions=True):
+        if self._use_metadata:
+            return (
+                self._solutions[index],
+                self._objective_values[index],
+                self._behavior_values[index],
+                self._metadata[index],
+            )
+        else:
+            return (
+                self._solutions[index],
+                self._objective_values[index],
+                self._behavior_values[index],
+            )
+
+    def as_pandas(self, include_solutions=True, include_metadata=False):
         """Converts the archive into a Pandas dataframe.
 
         This base class implementation will create a dataframe consisting of:
@@ -402,6 +444,11 @@ class ArchiveBase(ABC):
 
         Args:
             include_solutions (bool): Whether to include solution columns.
+            include_metadata (bool): If this archive uses metadata, setting this
+                to True will include an additional column for storing metadata
+                objects. Note that methods like :meth:`~pandas.DataFrame.to_csv`
+                may not properly save the dataframe since the objects may not be
+                representable in a CSV.
         Returns:
             pandas.DataFrame: See above.
         """ # pylint: disable = line-too-long
@@ -434,4 +481,9 @@ class ArchiveBase(ABC):
             for i in range(self._solution_dim):
                 data[f"solution_{i}"] = np.asarray(solutions[:, i],
                                                    dtype=self.dtype)
+
+        if self._use_metadata and include_metadata:
+            metadata = self._metadata[index_columns]
+            data["metadata"] = np.asarray(metadata, dtype=object)
+
         return pd.DataFrame(data)
