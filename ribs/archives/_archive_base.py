@@ -59,6 +59,7 @@ class RandomBuffer:
         return val
 
 
+# TODO: Update this docstring
 class ArchiveBase(ABC):
     """Base class for archives.
 
@@ -75,6 +76,7 @@ class ArchiveBase(ABC):
     - ``_solutions`` (shape ``(*storage_dims, solution_dim)``)
     - ``_objective_values`` (shape ``(*storage_dims)``)
     - ``_behavior_values`` (shape ``(*storage_dims, behavior_dim)``)
+    - ``_metadata`` (shape ``(*storage_dims)``)
 
     All of these arrays are accessed by a common index. If we have index ``i``,
     we can access its solution at ``_solutions[i]``, its behavior values at
