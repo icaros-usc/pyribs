@@ -1,8 +1,8 @@
 # pyribs
 
-|             Website              |                     Source                     |                                                       PyPI                                                        |                                                                                                      CI/CD                                                                                                       |                    Docs                    |                                                                   Docs Status                                                                    |                                                                   Twitter                                                                    |
-| :------------------------------: | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------: |
-| [pyribs.org](https://pyribs.org) | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Tests](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Tests") | [docs.pyribs.org](https://docs.pyribs.org) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=latest&style=flat-square)](https://readthedocs.org/projects/ribs/) | [![Twitter](https://img.shields.io/badge/twitter-%231DA1F2.svg?&style=flat-square&logo=twitter&logoColor=white)](https://twitter.com/pyribs) |
+|             Website              |                     Source                     |                                                       PyPI                                                        |                                                               Conda                                                                |                                                                                                      CI/CD                                                                                                       |                    Docs                    |                                                                   Docs Status                                                                    |                                                                   Twitter                                                                    |
+| :------------------------------: | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------: |
+| [pyribs.org](https://pyribs.org) | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Conda Recipe](https://img.shields.io/badge/recipe-pyribs-green.svg?style=flat-square)](https://anaconda.org/conda-forge/pyribs) | [![Tests](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Tests") | [docs.pyribs.org](https://docs.pyribs.org) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=stable&style=flat-square)](https://readthedocs.org/projects/ribs/) | [![Twitter](https://img.shields.io/badge/twitter-%231DA1F2.svg?&style=flat-square&logo=twitter&logoColor=white)](https://twitter.com/pyribs) |
 
 A _bare-bones_ Python library for quality diversity optimization. pyribs is the
 official implementation of the Covariance Matrix Adaptation MAP-Elites (CMA-ME)
@@ -49,12 +49,12 @@ will need to include the
 [hyperref](https://www.overleaf.com/learn/latex/Hyperlinks#Linking_web_addresses)
 package in order to use the `\url` command.
 
-```txt
+```
 @misc{pyribs,
   title = {pyribs: A bare-bones Python library for quality diversity
            optimization},
   author = {Bryon Tjanaka and Matthew C. Fontaine and Yulun Zhang and
-            Sam Sommerer and Stefanos Nikolaidis},
+            Sam Sommerer and Nathan Dennler and Stefanos Nikolaidis},
   year = {2021},
   publisher = {GitHub},
   journal = {GitHub repository},
@@ -65,7 +65,7 @@ package in order to use the `\url` command.
 If you use the CMA-ME algorithm, please also cite
 [Fontaine 2020](https://dl.acm.org/doi/10.1145/3377930.3390232).
 
-```txt
+```
 @inproceedings{10.1145/3377930.3390232,
   author = {Fontaine, Matthew C. and Togelius, Julian and Nikolaidis, Stefanos and Hoover, Amy K.},
   title = {Covariance Matrix Adaptation for the Rapid Illumination of Behavior Space},
@@ -159,6 +159,19 @@ support tools like `ribs.visualize`, run
 pip install ribs[all]
 ```
 
+Equivalently, you can install the base version (equivalent to `ribs`) from Conda
+with
+
+```bash
+conda install -c conda-forge pyribs-base
+```
+
+The full version (equivalent to `ribs[all]`) can be installed with
+
+```bash
+conda install -c conda-forge pyribs
+```
+
 To test your installation, import it and print the version with:
 
 ```bash
@@ -217,6 +230,7 @@ USC.
 - [Matt Fontaine](https://github.com/tehqin)
 - [Yulun Zhang](https://github.com/lunjohnzhang)
 - [Sam Sommerer](https://github.com/sam-sommerer)
+- [Nathan Dennler](https://ndennler.github.io/)
 - Nikitas Klapsis
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 

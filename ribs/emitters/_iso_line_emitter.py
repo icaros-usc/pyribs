@@ -34,12 +34,11 @@ class IsoLineEmitter(EmitterBase):
             generating solutions.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
-
-            Pass an array-like to specify the bounds for each dim. Each element
-            in this array-like can be None to indicate no bound, or a tuple of
-            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
-            ``upper_bound`` may be None to indicate no bound.
-        batch_size (int): Number of solutions to send back in :meth:`ask`.
+            Alternatively, pass an array-like to specify the bounds for each
+            dim. Each element in this array-like can be None to indicate no
+            bound, or a tuple of ``(lower_bound, upper_bound)``, where
+            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
+        batch_size (int): Number of solutions to return in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     """
@@ -52,6 +51,8 @@ class IsoLineEmitter(EmitterBase):
                  bounds=None,
                  batch_size=64,
                  seed=None):
+        self._rng = np.random.default_rng(seed)
+        self._batch_size = batch_size
         self._x0 = np.array(x0, dtype=archive.dtype)
         self._iso_sigma = archive.dtype(iso_sigma)
         self._line_sigma = archive.dtype(line_sigma)
@@ -61,8 +62,6 @@ class IsoLineEmitter(EmitterBase):
             archive,
             len(self._x0),
             bounds,
-            batch_size,
-            seed,
         )
 
     @property
@@ -83,6 +82,11 @@ class IsoLineEmitter(EmitterBase):
         solutions."""
         return self._line_sigma
 
+    @property
+    def batch_size(self):
+        """int: Number of solutions to return in :meth:`ask`."""
+        return self._batch_size
+
     @staticmethod
     @jit(nopython=True)
     def _ask_solutions_numba(parents, iso_gaussian, line_gaussian, directions):
@@ -96,7 +100,7 @@ class IsoLineEmitter(EmitterBase):
         return np.minimum(np.maximum(solutions, lower_bounds), upper_bounds)
 
     def ask(self):
-        """Generates ``self.batch_size`` solutions.
+        """Generates ``batch_size`` solutions.
 
         If the archive is empty, solutions are drawn from an isotropic Gaussian
         distribution centered at ``self.x0`` with standard deviation
@@ -104,27 +108,27 @@ class IsoLineEmitter(EmitterBase):
         this class's docstring.
 
         Returns:
-            ``(self.batch_size, self.solution_dim)`` array -- contains
-            ``batch_size`` new solutions to evaluate.
+            ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
+            solutions to evaluate.
         """
         iso_gaussian = self._rng.normal(
             scale=self._iso_sigma,
-            size=(self.batch_size, self.solution_dim),
-        ).astype(self._archive.dtype)
+            size=(self._batch_size, self.solution_dim),
+        ).astype(self.archive.dtype)
 
-        if self._archive.empty:
+        if self.archive.empty:
             solutions = np.expand_dims(self._x0, axis=0) + iso_gaussian
         else:
             parents = [
-                self._archive.get_random_elite()[0]
-                for _ in range(self.batch_size)
+                self.archive.get_random_elite()[0]
+                for _ in range(self._batch_size)
             ]
-            directions = [(self._archive.get_random_elite()[0] - parents[i])
-                          for i in range(self.batch_size)]
+            directions = [(self.archive.get_random_elite()[0] - parents[i])
+                          for i in range(self._batch_size)]
             line_gaussian = self._rng.normal(
                 scale=self._line_sigma,
-                size=(self.batch_size, 1),
-            ).astype(self._archive.dtype)
+                size=(self._batch_size, 1),
+            ).astype(self.archive.dtype)
 
             solutions = self._ask_solutions_numba(np.asarray(parents),
                                                   iso_gaussian, line_gaussian,

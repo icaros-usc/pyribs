@@ -29,12 +29,11 @@ class GaussianEmitter(EmitterBase):
             must be 1D.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
-
-            Pass an array-like to specify the bounds for each dim. Each element
-            in this array-like can be None to indicate no bound, or a tuple of
-            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
-            ``upper_bound`` may be None to indicate no bound.
-        batch_size (int): Number of solutions to send back in :meth:`ask`.
+            Alternatively, pass an array-like to specify the bounds for each
+            dim. Each element in this array-like can be None to indicate no
+            bound, or a tuple of ``(lower_bound, upper_bound)``, where
+            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
+        batch_size (int): Number of solutions to return in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
@@ -48,6 +47,8 @@ class GaussianEmitter(EmitterBase):
                  bounds=None,
                  batch_size=64,
                  seed=None):
+        self._rng = np.random.default_rng(seed)
+        self._batch_size = batch_size
         self._x0 = np.array(x0, dtype=archive.dtype)
         self._sigma0 = archive.dtype(sigma0) if isinstance(
             sigma0, (float, np.floating)) else np.array(sigma0)
@@ -57,8 +58,6 @@ class GaussianEmitter(EmitterBase):
             archive,
             len(self._x0),
             bounds,
-            batch_size,
-            seed,
         )
 
     @property
@@ -72,6 +71,11 @@ class GaussianEmitter(EmitterBase):
         """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
         distribution."""
         return self._sigma0
+
+    @property
+    def batch_size(self):
+        """int: Number of solutions to return in :meth:`ask`."""
+        return self._batch_size
 
     @staticmethod
     @jit(nopython=True)
@@ -89,21 +93,21 @@ class GaussianEmitter(EmitterBase):
         the standard deviation is ``self.sigma0``.
 
         Returns:
-            ``(self.batch_size, self.solution_dim)`` array -- contains
-            ``batch_size`` new solutions to evaluate.
+            ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
+            solutions to evaluate.
         """
-        if self._archive.empty:
+        if self.archive.empty:
             parents = np.expand_dims(self._x0, axis=0)
         else:
             parents = [
-                self._archive.get_random_elite()[0]
-                for _ in range(self.batch_size)
+                self.archive.get_random_elite()[0]
+                for _ in range(self._batch_size)
             ]
 
         noise = self._rng.normal(
             scale=self._sigma0,
-            size=(self.batch_size, self.solution_dim),
-        ).astype(self._archive.dtype)
+            size=(self._batch_size, self.solution_dim),
+        ).astype(self.archive.dtype)
 
         return self._ask_clip_helper(np.asarray(parents), noise,
-                                     self._lower_bounds, self._upper_bounds)
+                                     self.lower_bounds, self.upper_bounds)

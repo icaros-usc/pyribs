@@ -5,7 +5,7 @@ We group these emitters together because they are very similar.
 Currently:
 - ImprovementEmitter
 - RandomDirectionEmitter
-- OptimizingEmitter.
+- OptimizingEmitter
 """
 import numpy as np
 import pytest
