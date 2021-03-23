@@ -67,7 +67,7 @@ class SolutionBuffer:
     def sorted_behavior_values(self):
         """(behavior_dim, self.size) numpy.ndarray: Sorted behavior values of
         each dimension."""
-        return np.array(self._bc_lists, dtype=np.float)
+        return np.array(self._bc_lists, dtype=np.float64)
 
     @property
     def size(self):
