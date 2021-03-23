@@ -65,17 +65,17 @@ test-all: ## run tests on every Python version with tox
 	tox
 .PHONY: test-all
 
-benchmarks: ## run benchmarks (may take a while)
+benchmark: ## run benchmarks (may take a while)
 	pytest -c pytest_benchmark.ini tests
-.PHONY: benchmarks
+.PHONY: benchmark
 
 xtest: ## run tests with n workers (e.g. make xtest n=4)
 	pytest -n $(n) tests
 .PHONY: xtest
 
-xbenchmarks: ## run benchmarks with n workers (e.g. make xbenchmarks n=4)
+xbenchmark: ## run benchmarks with n workers (e.g. make xbenchmarks n=4)
 	pytest -n $(n) -c pytest_no_benchmark.ini tests
-.PHONY: xbenchmarks
+.PHONY: xbenchmark
 
 test-examples: ## test examples are working
 	bash tests/examples.sh
