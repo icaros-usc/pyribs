@@ -16,7 +16,7 @@ install_requires = [
     "pandas>=1.0.0",
     "toml>=0.10.0",
     "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
-    "scikit-learn>=0.20",  # Primarily used in CVTArchive.
+    "scikit-learn>=0.20.0",  # Primarily used in CVTArchive.
     "scipy>=1.4.0",  # Primarily used in CVTArchive.
     "decorator>=4.0.0",
     "threadpoolctl>=2.0.0",
@@ -31,7 +31,7 @@ extras_require = {
         "gym~=0.17.0",  # Strict since different gym may give different results.
         "Box2D~=2.3.10",  # Used in envs such as Lunar Lander.
         "fire>=0.4.0",
-        "alive-progress>=1.0",
+        "alive-progress>=1.0.0",
 
         # Dask
         "dask>=2.0.0",
