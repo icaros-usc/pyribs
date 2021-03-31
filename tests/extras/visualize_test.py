@@ -13,7 +13,6 @@ tests/extras/baseline_images/visualize_test. For instance, for
 Assuming the output is as expected (and assuming the code is deterministic), the
 test should now pass when it is re-run.
 """
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -21,8 +20,8 @@ from matplotlib.testing.decorators import image_comparison
 
 from ribs.archives import CVTArchive, GridArchive, SlidingBoundariesArchive
 from ribs.visualize import (cvt_archive_heatmap, grid_archive_heatmap,
-                            sliding_boundaries_archive_heatmap,
-                            parallel_axes_plot)
+                            parallel_axes_plot,
+                            sliding_boundaries_archive_heatmap)
 
 
 @pytest.fixture(autouse=True)
@@ -114,8 +113,7 @@ def _long_grid_archive():
 @pytest.fixture(scope="module")
 def _3d_grid_archive():
     """Deterministic archive, but there are three behavior axes of different
-    sizes, and some of the axes are not totally filled.
-    """
+    sizes, and some of the axes are not totally filled."""
     archive = GridArchive([10, 10, 10], [(-2, 2), (-1, 1), (-2, 1)], seed=42)
     archive.initialize(solution_dim=3)
     _add_uniform_3d_sphere(archive, (0, 2), (-1, 1), (-1, 0))
@@ -167,7 +165,11 @@ def _long_sliding_archive():
 #
 # Tests for all heatmap functions. Unfortunately, these tests are hard to
 # parametrize because the image_comparison decorator needs the filename, and
-# pytest does not seem to pass params to decorators.
+# pytest does not seem to pass params to decorators. It is important to keep
+# these tests separate so that if the test fails, we can immediately retrieve
+# the correct result image. For instance, if we have 3 tests in a row and the
+# first one fails, no result images will be generated for the remaining two
+# tests.
 #
 
 
@@ -191,177 +193,203 @@ def test_heatmap_fails_on_non_2d(archive_type):
         }[archive_type](archive)
 
 
-@image_comparison(
-    baseline_images=[
-        "grid_archive_heatmap",
-        "cvt_archive_heatmap",
-        "sliding_boundaries_heatmap",
-    ],
-    remove_text=False,
-    extensions=["png"],
-)
-def test_heatmap_archive(_grid_archive, _cvt_archive, _sliding_archive):
+@image_comparison(baseline_images=["grid_archive_heatmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid(_grid_archive):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(_grid_archive)
 
+
+@image_comparison(baseline_images=["cvt_archive_heatmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt(_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(_cvt_archive)
 
+
+@image_comparison(baseline_images=["sliding_boundaries_heatmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__sliding(_sliding_archive):
     plt.figure(figsize=(8, 6))
     sliding_boundaries_archive_heatmap(_sliding_archive)
 
 
-@image_comparison(
-    baseline_images=[
-        "grid_archive_heatmap",
-        "cvt_archive_heatmap",
-        "sliding_boundaries_heatmap",
-    ],
-    remove_text=False,
-    extensions=["png"],
-)
-def test_cvt_archive_heatmap_with_custom_axis(_grid_archive, _cvt_archive,
-                                              _sliding_archive):
+@image_comparison(baseline_images=["grid_archive_heatmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_with_custom_axis__grid(_grid_archive):
     _, ax = plt.subplots(figsize=(8, 6))
     grid_archive_heatmap(_grid_archive, ax=ax)
 
+
+@image_comparison(baseline_images=["cvt_archive_heatmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_with_custom_axis__cvt(_cvt_archive):
     _, ax = plt.subplots(figsize=(8, 6))
     cvt_archive_heatmap(_cvt_archive, ax=ax)
 
+
+@image_comparison(baseline_images=["sliding_boundaries_heatmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_with_custom_axis__sliding(_sliding_archive):
     _, ax = plt.subplots(figsize=(8, 6))
     sliding_boundaries_archive_heatmap(_sliding_archive, ax=ax)
 
 
-@image_comparison(
-    baseline_images=[
-        "grid_archive_heatmap_long",
-        "cvt_archive_heatmap_long",
-        "sliding_boundaries_heatmap_long",
-    ],
-    remove_text=False,
-    extensions=["png"],
-)
-def test_heatmap_long(_long_grid_archive, _long_cvt_archive,
-                      _long_sliding_archive):
+@image_comparison(baseline_images=["grid_archive_heatmap_long"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_long__grid(_long_grid_archive):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(_long_grid_archive)
 
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_long"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_long__cvt(_long_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(_long_cvt_archive)
 
+
+@image_comparison(baseline_images=["sliding_boundaries_heatmap_long"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_long__sliding(_long_sliding_archive):
     plt.figure(figsize=(8, 6))
     sliding_boundaries_archive_heatmap(_long_sliding_archive)
 
 
-@image_comparison(
-    baseline_images=[
-        "grid_archive_heatmap_long_square",
-        "cvt_archive_heatmap_long_square",
-        "sliding_boundaries_heatmap_long_square",
-    ],
-    remove_text=False,
-    extensions=["png"],
-)
-def test_heatmap_long_square(_long_grid_archive, _long_cvt_archive,
-                             _long_sliding_archive):
+@image_comparison(baseline_images=["grid_archive_heatmap_long_square"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_long_square__grid(_long_grid_archive):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(_long_grid_archive, square=True)
 
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_long_square"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_long_square__cvt(_long_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(_long_cvt_archive, square=True)
 
+
+@image_comparison(baseline_images=["sliding_boundaries_heatmap_long_square"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_long_square__sliding(_long_sliding_archive):
     plt.figure(figsize=(8, 6))
     sliding_boundaries_archive_heatmap(_long_sliding_archive, square=True)
 
 
-@image_comparison(
-    baseline_images=[
-        "grid_archive_heatmap_long_transpose",
-        "cvt_archive_heatmap_long_transpose",
-        "sliding_boundaries_heatmap_long_transpose",
-    ],
-    remove_text=False,
-    extensions=["png"],
-)
-def test_heatmap_long_transpose(_long_grid_archive, _long_cvt_archive,
-                                _long_sliding_archive):
+@image_comparison(baseline_images=["grid_archive_heatmap_long_transpose"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_long_transpose__grid(_long_grid_archive):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(_long_grid_archive, transpose_bcs=True)
 
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_long_transpose"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_long_transpose__cvt(_long_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(_long_cvt_archive, transpose_bcs=True)
 
+
+@image_comparison(baseline_images=["sliding_boundaries_heatmap_long_transpose"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_long_transpose__sliding(_long_sliding_archive):
     plt.figure(figsize=(8, 6))
     sliding_boundaries_archive_heatmap(_long_sliding_archive,
                                        transpose_bcs=True)
 
 
-@image_comparison(
-    baseline_images=[
-        "grid_archive_heatmap_with_limits",
-        "cvt_archive_heatmap_with_limits",
-        "sliding_boundaries_heatmap_with_limits",
-    ],
-    remove_text=False,
-    extensions=["png"],
-)
-def test_heatmap_with_limits(_grid_archive, _cvt_archive, _sliding_archive):
+@image_comparison(baseline_images=["grid_archive_heatmap_with_limits"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_with_limits__grid(_grid_archive):
     # Negative sphere function should have range (-2, 0). These limits should
     # give a more uniform-looking archive.
-    kwargs = {"vmin": -1.0, "vmax": -0.5}
-
     plt.figure(figsize=(8, 6))
-    grid_archive_heatmap(_grid_archive, **kwargs)
+    grid_archive_heatmap(_grid_archive, vmin=-1.0, vmax=-0.5)
 
-    plt.figure(figsize=(8, 6))
-    cvt_archive_heatmap(_cvt_archive, **kwargs)
 
+@image_comparison(baseline_images=["cvt_archive_heatmap_with_limits"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_with_limits__cvt(_cvt_archive):
     plt.figure(figsize=(8, 6))
-    sliding_boundaries_archive_heatmap(_sliding_archive, **kwargs)
+    cvt_archive_heatmap(_cvt_archive, vmin=-1.0, vmax=-0.5)
+
+
+@image_comparison(baseline_images=["sliding_boundaries_heatmap_with_limits"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_with_limits__sliding(_sliding_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundaries_archive_heatmap(_sliding_archive, vmin=-1.0, vmax=-0.5)
+
+
+@image_comparison(baseline_images=["grid_archive_heatmap_with_listed_cmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_listed_cmap__grid(_grid_archive):
+    # cmap consists of primary red, green, and blue.
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(_grid_archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_with_listed_cmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_listed_cmap__cvt(_cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(_cvt_archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
 
 @image_comparison(
-    baseline_images=[
-        "grid_archive_heatmap_with_listed_cmap",
-        "cvt_archive_heatmap_with_listed_cmap",
-        "sliding_boundaries_heatmap_with_listed_cmap",
-    ],
+    baseline_images=["sliding_boundaries_heatmap_with_listed_cmap"],
     remove_text=False,
-    extensions=["png"],
-)
-def test_heatmap_listed_cmap(_grid_archive, _cvt_archive, _sliding_archive):
-    cmap = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]  # Primary red, green, blue.
-
+    extensions=["png"])
+def test_heatmap_listed_cmap__sliding(_sliding_archive):
     plt.figure(figsize=(8, 6))
-    grid_archive_heatmap(_grid_archive, cmap=cmap)
+    sliding_boundaries_archive_heatmap(_sliding_archive,
+                                       cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
-    plt.figure(figsize=(8, 6))
-    cvt_archive_heatmap(_cvt_archive, cmap=cmap)
 
+@image_comparison(baseline_images=["grid_archive_heatmap_with_coolwarm_cmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_coolwarm_cmap__grid(_grid_archive):
     plt.figure(figsize=(8, 6))
-    sliding_boundaries_archive_heatmap(_sliding_archive, cmap=cmap)
+    grid_archive_heatmap(_grid_archive, cmap="coolwarm")
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_with_coolwarm_cmap"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_coolwarm_cmap__cvt(_cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(_cvt_archive, cmap="coolwarm")
 
 
 @image_comparison(
-    baseline_images=[
-        "grid_archive_heatmap_with_coolwarm_cmap",
-        "cvt_archive_heatmap_with_coolwarm_cmap",
-        "sliding_boundaries_heatmap_with_coolwarm_cmap",
-    ],
+    baseline_images=["sliding_boundaries_heatmap_with_coolwarm_cmap"],
     remove_text=False,
-    extensions=["png"],
-)
-def test_heatmap_coolwarm_cmap(_grid_archive, _cvt_archive, _sliding_archive):
-    cmap = matplotlib.cm.get_cmap("coolwarm")
-
+    extensions=["png"])
+def test_heatmap_coolwarm_cmap__sliding(_sliding_archive):
     plt.figure(figsize=(8, 6))
-    grid_archive_heatmap(_grid_archive, cmap=cmap)
-
-    plt.figure(figsize=(8, 6))
-    cvt_archive_heatmap(_cvt_archive, cmap=cmap)
-
-    plt.figure(figsize=(8, 6))
-    sliding_boundaries_archive_heatmap(_sliding_archive, cmap=cmap)
+    sliding_boundaries_archive_heatmap(_sliding_archive, cmap="coolwarm")
 
 
 #
@@ -418,6 +446,7 @@ def test_parallel_axes_3d(_3d_grid_archive):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(_3d_grid_archive)
 
+
 @image_comparison(baseline_images=["parallel_axes_3d"],
                   remove_text=False,
                   extensions=["png"])
@@ -425,12 +454,14 @@ def test_parallel_axes_3d_custom_ax(_3d_grid_archive):
     _, ax = plt.subplots(figsize=(8, 6))
     parallel_axes_plot(_3d_grid_archive, ax=ax)
 
+
 @image_comparison(baseline_images=["parallel_axes_3d_custom_order"],
                   remove_text=False,
                   extensions=["png"])
 def test_parallel_axes_3d_custom_order(_3d_grid_archive):
     plt.figure(figsize=(8, 6))
-    parallel_axes_plot(_3d_grid_archive, bc_order=[1,2,0])
+    parallel_axes_plot(_3d_grid_archive, bc_order=[1, 2, 0])
+
 
 @image_comparison(baseline_images=["parallel_axes_3d_custom_names"],
                   remove_text=False,
@@ -438,7 +469,8 @@ def test_parallel_axes_3d_custom_order(_3d_grid_archive):
 def test_parallel_axes_3d_custom_names(_3d_grid_archive):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(_3d_grid_archive,
-                       bc_order=[(1, 'One'),(2, 'Two'),(0, 'Zero')])
+                       bc_order=[(1, 'One'), (2, 'Two'), (0, 'Zero')])
+
 
 @image_comparison(baseline_images=["parallel_axes_3d_coolwarm"],
                   remove_text=False,
@@ -447,12 +479,14 @@ def test_parallel_axes_3d_coolwarm_cmap(_3d_grid_archive):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(_3d_grid_archive, cmap='coolwarm')
 
+
 @image_comparison(baseline_images=["parallel_axes_3d_width2_alpha2"],
                   remove_text=False,
                   extensions=["png"])
 def test_parallel_axes_3d_width2_alpha2(_3d_grid_archive):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(_3d_grid_archive, linewidth=2.0, alpha=0.2)
+
 
 @image_comparison(baseline_images=["parallel_axes_3d_custom_objective_limits"],
                   remove_text=False,
@@ -461,12 +495,14 @@ def test_parallel_axes_3d_custom_objective_limits(_3d_grid_archive):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(_3d_grid_archive, vmin=-2.0, vmax=-1.0)
 
+
 @image_comparison(baseline_images=["parallel_axes_3d_sorted"],
                   remove_text=False,
                   extensions=["png"])
 def test_parallel_axes_3d_sorted(_3d_grid_archive):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(_3d_grid_archive, sort_archive=True)
+
 
 @image_comparison(baseline_images=["parallel_axes_3d_vertical_cbar"],
                   remove_text=False,
