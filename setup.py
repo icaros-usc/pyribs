@@ -9,14 +9,15 @@ with open("README.md") as readme_file:
 with open("HISTORY.md") as history_file:
     history = history_file.read()
 
+# NOTE: Update pinned_reqs whenever install_requires or extras_require changes.
 install_requires = [
     "numpy>=1.17.0",  # >=1.17.0 that is when default_rng becomes available.
     "numba>=0.45.1",  # Has support for numpy 1.17.
     "pandas>=1.0.0",
     "toml>=0.10.0",
     "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
-    "scikit-learn>=0.20",  # Primarily used in CVTArchive.
-    "scipy>=1.0.0",  # Primarily used in CVTArchive.
+    "scikit-learn>=0.20.0",  # Primarily used in CVTArchive.
+    "scipy>=1.4.0",  # Primarily used in CVTArchive.
     "decorator>=4.0.0",
     "threadpoolctl>=2.0.0",
 ]
@@ -30,7 +31,7 @@ extras_require = {
         "gym~=0.17.0",  # Strict since different gym may give different results.
         "Box2D~=2.3.10",  # Used in envs such as Lunar Lander.
         "fire>=0.4.0",
-        "alive-progress>=1.0",
+        "alive-progress>=1.0.0",
 
         # Dask
         "dask>=2.0.0",
