@@ -59,18 +59,17 @@ class RandomBuffer:
         return val
 
 
-# TODO: Update this docstring
 class ArchiveBase(ABC):
     """Base class for archives.
 
-    This class assumes that all archives will use a fixed-size container with
-    cells that hold 1) information about whether the cell is occupied (bool),
-    2) a solution (1D array), 3) objective function evaluation of the solution
-    (float), and 4) behavior space coordinates of the solution (1D array). In
-    this class, this is implemented with 4 separate numpy arrays with common
-    dimensions. Using the `storage_dims` and `behavior_dim` arguments in
-    :meth:`__init__` and the ``solution_dim`` argument in ``initialize``, these
-    arrays are as follows:
+    This class assumes all archives use a fixed-size container with bins that
+    hold 1) information about whether the bin is occupied (bool), 2) a solution
+    (1D array), 3) objective function evaluation of the solution (float), 4)
+    behavior space coordinates of the solution (1D array), and 5) any additional
+    metadata associated with the solution (object). In this class, this is
+    implemented with separate numpy arrays with common dimensions. Using the
+    ``storage_dims`` and ``behavior_dim`` arguments in :meth:`__init__` and the
+    ``solution_dim`` argument in ``initialize``, these arrays are as follows:
 
     - ``_occupied`` (shape ``(*storage_dims)``)
     - ``_solutions`` (shape ``(*storage_dims, solution_dim)``)
@@ -79,15 +78,15 @@ class ArchiveBase(ABC):
     - ``_metadata`` (shape ``(*storage_dims)``)
 
     All of these arrays are accessed by a common index. If we have index ``i``,
-    we can access its solution at ``_solutions[i]``, its behavior values at
+    we access its solution at ``_solutions[i]``, its behavior values at
     ``_behavior_values[i]``, etc.
 
     Thus, child classes must override the following methods:
 
     - :meth:`__init__`: child classes must invoke this class's :meth:`__init__`
       with the appropriate arguments
-    - :meth:`_get_index`: this method returns an index into those arrays given
-      the behavior values of a solution
+    - :meth:`_get_index`: this method returns an index into the arrays above
+      when given the behavior values of a solution
     - :meth:`initialize`: since this method sets up the arrays described, child
       classes should invoke this in their own implementation -- however, child
       classes may not need to override this method at all
@@ -103,8 +102,8 @@ class ArchiveBase(ABC):
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
-            and behavior values. We only support ``"f"`` / :class:`np.float32`
-            and ``"d"`` / :class:`np.float64`.
+            and behavior values. We only support ``"f"`` / ``np.float32`` and
+            ``"d"`` / ``np.float64``.
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
@@ -352,10 +351,10 @@ class ArchiveBase(ABC):
 
                 **metadata** (object): Metadata for the solution.
 
-            If there is no elite in the bin, a tuple of (None, None, None) is
-            returned (thus, something like
-            ``sol, obj, beh = archive.elite_with_behavior(...)`` will still
-            work).
+            If there is no elite in the bin, a tuple of (None, None, None, None)
+            is returned (thus, something like
+            ``sol, obj, beh, met = archive.elite_with_behavior(...)`` still
+            works).
         """
         index = self._get_index(np.asarray(behavior_values))
         if self._occupied[index]:
@@ -368,7 +367,7 @@ class ArchiveBase(ABC):
         """Selects an elite uniformly at random from one of the archive's bins.
 
         Returns:
-            tuple: 3-element or 4-element tuple containing:
+            tuple: 4-element tuple containing:
 
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
@@ -395,7 +394,7 @@ class ArchiveBase(ABC):
     def as_pandas(self, include_solutions=True, include_metadata=False):
         """Converts the archive into a Pandas dataframe.
 
-        This base class implementation will create a dataframe consisting of:
+        This base class implementation creates a dataframe consisting of:
 
         - ``len(self._storage_dims)`` columns for the index, named
           ``index_0, index_1, ...``
@@ -404,22 +403,22 @@ class ArchiveBase(ABC):
         - 1 column for the objective values, named ``objective``
         - ``self._solution_dim`` columns for the solution vectors, named
           ``solution_0, solution_1, ...``
+        - 1 column for the metadata objects, named ``metadata``
 
-        In short, the dataframe will look like this:
+        In short, the dataframe looks like this:
 
-        +---------+-----------+------+-------------+-------------+------+------------+-------------+-------------+-----+
-        | index_0 |  index_1  | ...  | behavior_0  | behavior_1  | ...  | objective  | solution_0  | solution_1  | ... |
-        +=========+===========+======+=============+=============+======+============+=============+=============+=====+
-        | ...     |           | ...  |             | ...         |      | ...        |             | ...         |     |
-        +---------+-----------+------+-------------+-------------+------+------------+-------------+-------------+-----+
+        +---------+------+-------------+------+------------+-------------+-----+----------+
+        | index_0 | ...  | behavior_0  | ...  | objective  | solution_0  | ... | metadata |
+        +=========+======+=============+======+============+=============+=====+==========+
+        |         | ...  |             | ...  |            |             | ... |          |
+        +---------+------+-------------+------+------------+-------------+-----+----------+
 
         Args:
             include_solutions (bool): Whether to include solution columns.
-            include_metadata (bool): If this archive uses metadata, setting this
-                to True will include an additional column for storing metadata
-                objects. Note that methods like :meth:`~pandas.DataFrame.to_csv`
-                may not properly save the dataframe since the objects may not be
-                representable in a CSV.
+            include_metadata (bool): Whether to include the metadata column.
+                Note that methods like :meth:`~pandas.DataFrame.to_csv` may not
+                properly save the dataframe since the metadata objects may not
+                be representable in a CSV.
         Returns:
             pandas.DataFrame: See above.
         """ # pylint: disable = line-too-long
