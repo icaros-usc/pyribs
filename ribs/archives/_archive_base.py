@@ -338,7 +338,7 @@ class ArchiveBase(ABC):
         Args:
             behavior_values (array-like): Coordinates in behavior space.
         Returns:
-            tuple: 3-element or 4-element tuple for the elite if it is found:
+            tuple: 4-element tuple for the elite if it is found:
 
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
@@ -361,7 +361,6 @@ class ArchiveBase(ABC):
         if self._occupied[index]:
             return (self._solutions[index], self._objective_values[index],
                     self._behavior_values[index], self._metadata[index])
-
         return (None, None, None, None)
 
     @require_init
