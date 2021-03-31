@@ -1,5 +1,6 @@
 numpy==1.17.0
-numba==0.45.1
+numba==0.47.0
+llvmlite==0.32.1
 pandas==1.0.0
 toml==0.10.0
 sortedcontainers==2.0.0
