@@ -1,5 +1,5 @@
 # Pinned Requirements
 
-This directory contains pinned requirements for testing pyribs with the minimum
-dependencies. Each file corresponds to the `install_requires` or one part of the
-`extras_require` in part of `setup.py`.
+This directory contains pinned requirements for testing pyribs on Python >= 3.7.
+In general, the requirements are as close to the minimum version from `setup.py`
+as possible.
