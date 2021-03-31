@@ -31,7 +31,7 @@ jobs:
           pip install tox tox-gh-actions
       - name: Test with tox
         run: tox
-  min:
+  pin:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -45,8 +45,8 @@ jobs:
           pip install tox
       - name: Test with tox
         run: |
-          tox -e min_core
-          tox -e min_extras
+          tox -e pin_core
+          tox -e pin_extras
   coverage:
     runs-on: ubuntu-latest
     steps:
