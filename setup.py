@@ -12,7 +12,7 @@ with open("HISTORY.md") as history_file:
 # NOTE: Update pinned_reqs whenever install_requires or extras_require changes.
 install_requires = [
     "numpy>=1.17.0",  # >=1.17.0 that is when default_rng becomes available.
-    "numba>=0.45.1",  # Has support for numpy 1.17.
+    "numba>=0.51.0",
     "pandas>=1.0.0",
     "toml>=0.10.0",
     "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
