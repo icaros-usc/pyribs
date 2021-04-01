@@ -1,4 +1,6 @@
 """Provides the OptimizingEmitter."""
+import itertools
+
 import numpy as np
 
 from ribs.emitters._emitter_base import EmitterBase
@@ -120,7 +122,7 @@ class OptimizingEmitter(EmitterBase):
             return num_parents == 0
         return False
 
-    def tell(self, solutions, objective_values, behavior_values):
+    def tell(self, solutions, objective_values, behavior_values, metadata=None):
         """Gives the emitter results from evaluating solutions.
 
         As solutions are inserted into the archive, we record their objective
@@ -138,13 +140,16 @@ class OptimizingEmitter(EmitterBase):
                 function value of each solution.
             behavior_values (numpy.ndarray): ``(n, <behavior space dimension>)``
                 array with the behavior space coordinates of each solution.
+            metadata (numpy.ndarray): 1D object array containing a metadata
+                object for each solution.
         """
         # Tuples of (solution was added, objective value, index).
         ranking_data = []
         new_sols = 0
-        for i, (sol, obj, beh) in enumerate(
-                zip(solutions, objective_values, behavior_values)):
-            status, _ = self.archive.add(sol, obj, beh)
+        metadata = itertools.repeat(None) if metadata is None else metadata
+        for i, (sol, obj, beh, meta) in enumerate(
+                zip(solutions, objective_values, behavior_values, metadata)):
+            status, _ = self.archive.add(sol, obj, beh, meta)
             added = bool(status)
             ranking_data.append((added, obj, i))
             if added:

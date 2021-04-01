@@ -1,4 +1,6 @@
 """Provides the ImprovementEmitter."""
+import itertools
+
 import numpy as np
 
 from ribs.archives import AddStatus
@@ -123,7 +125,7 @@ class ImprovementEmitter(EmitterBase):
             return num_parents == 0
         return False
 
-    def tell(self, solutions, objective_values, behavior_values):
+    def tell(self, solutions, objective_values, behavior_values, metadata=None):
         """Gives the emitter results from evaluating solutions.
 
         As solutions are inserted into the archive, we record their "improvement
@@ -142,12 +144,15 @@ class ImprovementEmitter(EmitterBase):
                 function value of each solution.
             behavior_values (numpy.ndarray): ``(n, <behavior space dimension>)``
                 array with the behavior space coordinates of each solution.
+            metadata (numpy.ndarray): 1D object array containing a metadata
+                object for each solution.
         """
         ranking_data = []
         new_sols = 0
-        for i, (sol, obj, beh) in enumerate(
-                zip(solutions, objective_values, behavior_values)):
-            status, value = self.archive.add(sol, obj, beh)
+        metadata = itertools.repeat(None) if metadata is None else metadata
+        for i, (sol, obj, beh, meta) in enumerate(
+                zip(solutions, objective_values, behavior_values, metadata)):
+            status, value = self.archive.add(sol, obj, beh, meta)
             ranking_data.append((status, value, i))
             if status in (AddStatus.NEW, AddStatus.IMPROVE_EXISTING):
                 new_sols += 1

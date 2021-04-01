@@ -1,4 +1,5 @@
 """Provides EmitterBase."""
+import itertools
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -98,10 +99,10 @@ class EmitterBase(ABC):
     def ask(self):
         """Generates an ``(n, solution_dim)`` array of solutions."""
 
-    def tell(self, solutions, objective_values, behavior_values):
+    def tell(self, solutions, objective_values, behavior_values, metadata=None):
         """Inserts entries into the archive.
 
-        This parent implementation (in :class:`~ribs.emitters.EmitterBase`)
+        This base class implementation (in :class:`~ribs.emitters.EmitterBase`)
         simply inserts entries into the archive by calling
         :meth:`~ribs.archives.ArchiveBase.add`. It is enough for simple emitters
         like :class:`~ribs.emitters.GaussianEmitter`, but more complex emitters
@@ -114,6 +115,10 @@ class EmitterBase(ABC):
                 function value of each solution.
             behavior_values (numpy.ndarray): ``(n, <behavior space dimension>)``
                 array with the behavior space coordinates of each solution.
+            metadata (numpy.ndarray): 1D object array containing a metadata
+                object for each solution.
         """
-        for sol, obj, beh in zip(solutions, objective_values, behavior_values):
-            self.archive.add(sol, obj, beh)
+        metadata = itertools.repeat(None) if metadata is None else metadata
+        for sol, obj, beh, meta in zip(solutions, objective_values,
+                                       behavior_values, metadata):
+            self.archive.add(sol, obj, beh, meta)

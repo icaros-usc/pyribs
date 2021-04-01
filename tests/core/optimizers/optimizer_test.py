@@ -62,7 +62,9 @@ def test_ask_fails_when_called_twice(_optimizer_fixture):
         optimizer.ask()
 
 
-def test_tell_inserts_solutions_into_archive(_optimizer_fixture):
+@pytest.mark.parametrize("tell_metadata", [True, False],
+                         ids=["metadata", "no_metadata"])
+def test_tell_inserts_solutions_into_archive(_optimizer_fixture, tell_metadata):
     optimizer, _, num_solutions = _optimizer_fixture
     _ = optimizer.ask()  # Ignore the actual values of the solutions.
 
@@ -71,12 +73,15 @@ def test_tell_inserts_solutions_into_archive(_optimizer_fixture):
     optimizer.tell(
         objective_values=[1.0, 1.0, 1.0, 1.0],
         behavior_values=[[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]],
+        metadata=[f"metadata_{i}" for i in range(4)] if tell_metadata else None,
     )
 
     assert len(optimizer.archive.as_pandas()) == num_solutions
 
 
-def test_tell_inserts_solutions_with_multiple_emitters():
+@pytest.mark.parametrize("tell_metadata", [True, False],
+                         ids=["metadata", "no_metadata"])
+def test_tell_inserts_solutions_with_multiple_emitters(tell_metadata):
     archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
     emitters = [
         GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1),
@@ -92,6 +97,7 @@ def test_tell_inserts_solutions_with_multiple_emitters():
         objective_values=[1.0] * 6,
         behavior_values=[[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0],
                          [0.0, 0.0], [0.0, 1.0]],
+        metadata=[f"metadata_{i}" for i in range(6)] if tell_metadata else None,
     )
     assert len(optimizer.archive.as_pandas()) == 6
 
