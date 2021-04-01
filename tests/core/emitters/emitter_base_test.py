@@ -61,12 +61,20 @@ def test_ask_emits_correct_num_sols_on_nonempty_archive(_emitter_fixture):
 #
 
 
-def test_tell_inserts_into_archive(_emitter_fixture):
+@pytest.mark.parametrize("tell_metadata", [True, False],
+                         ids=["metadata", "no_metadata"])
+def test_tell_inserts_into_archive(_emitter_fixture, tell_metadata):
     archive, emitter, batch_size, _ = _emitter_fixture
     solutions = emitter.ask()
     objective_values = np.full(batch_size, 1.)
     behavior_values = np.array([[-1, -1], [0, 0], [1, 1]])
-    metadata = np.full(batch_size, {"metadata_key": 42})
+    if tell_metadata:
+        metadata = np.full(batch_size, {"metadata_key": 42})
+        expected_metadata = metadata
+    else:
+        metadata = None
+        expected_metadata = np.full(batch_size, None)
+
     emitter.tell(solutions, objective_values, behavior_values, metadata)
 
     # Check all values are inserted. Only behavior values, objectives, and
@@ -76,7 +84,7 @@ def test_tell_inserts_into_archive(_emitter_fixture):
     unittest.TestCase().assertCountEqual(behavior_values.tolist(),
                                          archive_beh.tolist())
     assert (archive_data["objective"] == objective_values).all()
-    assert (archive_data["metadata"] == metadata).all()
+    assert (archive_data["metadata"].to_numpy() == expected_metadata).all()
 
 
 #
