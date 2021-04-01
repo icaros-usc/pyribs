@@ -6,6 +6,8 @@
 # Usage:
 #   bash tests/examples.sh
 
+SECONDS=0 # For timing.
+
 set -e  # Exit if any of the commands fail.
 set -x  # Print out commands as they are run.
 
@@ -37,4 +39,4 @@ python examples/lunar_lander.py --iterations 5 --outdir "${LUNAR_LANDER_OUTPUT}"
 
 # Cleanup.
 rm -rf $TMPDIR
-echo "Success"
+echo "Success in $SECONDS seconds"
