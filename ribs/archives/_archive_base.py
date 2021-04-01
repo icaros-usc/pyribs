@@ -397,11 +397,13 @@ class ArchiveBase(ABC):
         This base class implementation creates a dataframe consisting of:
 
         - ``len(self._storage_dims)`` columns for the index, named
-          ``index_0, index_1, ...``
+          ``index_0, index_1, ...`` In :class:`~ribs.archives.GridArchive` and
+          :class:`~ribs.archives.SlidingBoundariesArchive`, there are
+          ``behavior_dim`` columns.
         - ``self._behavior_dim`` columns for the behavior characteristics, named
           ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``
-        - ``self._solution_dim`` columns for the solution vectors, named
+        - ``solution_dim`` columns for the solution vectors, named
           ``solution_0, solution_1, ...``
         - 1 column for the metadata objects, named ``metadata``
 

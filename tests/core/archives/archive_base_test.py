@@ -109,14 +109,13 @@ def test_solution_dim_correct(_data):
     assert _data.archive.solution_dim == len(_data.solution)
 
 
-# TODO: use proper metadata
 def test_elite_with_behavior_gets_correct_elite(_data):
     sol, obj, beh, meta = _data.archive_with_entry.elite_with_behavior(
         _data.behavior_values)
     assert (sol == _data.solution).all()
     assert obj == _data.objective_value
     assert (beh == _data.behavior_values).all()
-    assert meta is None
+    assert meta == _data.metadata
 
 
 def test_elite_with_behavior_returns_none(_data):
@@ -130,7 +129,7 @@ def test_random_elite_gets_single_elite(_data):
     assert np.all(sol == _data.solution)
     assert obj == _data.objective_value
     assert np.all(beh == _data.behavior_values)
-    assert meta is None
+    assert meta == _data.metadata
 
 
 def test_random_elite_fails_when_empty(_data):
