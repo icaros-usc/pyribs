@@ -41,7 +41,7 @@ class SolutionBuffer:
         self._iter_idx += 1
         return result
 
-    def add(self, solution, objective_value, behavior_values, metadata):
+    def add(self, solution, objective_value, behavior_values, metadata=None):
         """Inserts a new entry.
 
         Pops the oldest if it is full.
