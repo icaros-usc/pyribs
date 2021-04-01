@@ -148,6 +148,10 @@ Tutorials are created in Jupyter notebooks that are stored under
    `ribs[all]` and any other packages.
    - Installation cells tend to produce a lot of output. Make sure to clear this
      output in Jupyter lab so that it does not clutter the documentation.
+1. Before the main loop of the QD algorithm, include a line like
+   `total_itrs = 500` (or any other integer). This line will be replaced during
+   testing (see `tests/tutorials.sh`) in order to test that the notebook runs
+   end-to-end.
 1. Make sure that the only level 1 heading (e.g. `# Awesome Tutorial`) is the
    title at the top of the notebook. Subsequent titles should be level 2 (e.g.
    `## Level 2 Heading`) or higher.
