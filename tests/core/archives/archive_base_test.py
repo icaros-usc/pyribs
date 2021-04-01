@@ -110,24 +110,29 @@ def test_solution_dim_correct(_data):
 
 
 def test_elite_with_behavior_gets_correct_elite(_data):
-    retrieved = _data.archive_with_entry.elite_with_behavior(
+    sol, obj, beh, meta = _data.archive_with_entry.elite_with_behavior(
         _data.behavior_values)
-    assert (retrieved[0] == _data.solution).all()
-    assert retrieved[1] == _data.objective_value
-    assert (retrieved[2] == _data.behavior_values).all()
+    assert (sol == _data.solution).all()
+    assert obj == _data.objective_value
+    assert (beh == _data.behavior_values).all()
+    assert meta == _data.metadata
 
 
 def test_elite_with_behavior_returns_none(_data):
-    retrieved = _data.archive.elite_with_behavior(_data.behavior_values)
-    assert (retrieved[0] is None and retrieved[1] is None and
-            retrieved[2] is None)
+    sol, obj, beh, meta = _data.archive.elite_with_behavior(
+        _data.behavior_values)
+    assert sol is None
+    assert obj is None
+    assert beh is None
+    assert meta is None
 
 
 def test_random_elite_gets_single_elite(_data):
-    retrieved = _data.archive_with_entry.get_random_elite()
-    assert np.all(retrieved[0] == _data.solution)
-    assert retrieved[1] == _data.objective_value
-    assert np.all(retrieved[2] == _data.behavior_values)
+    sol, obj, beh, meta = _data.archive_with_entry.get_random_elite()
+    assert np.all(sol == _data.solution)
+    assert obj == _data.objective_value
+    assert np.all(beh == _data.behavior_values)
+    assert meta == _data.metadata
 
 
 def test_random_elite_fails_when_empty(_data):

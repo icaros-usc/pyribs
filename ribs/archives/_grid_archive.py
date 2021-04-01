@@ -2,7 +2,7 @@
 import numpy as np
 from numba import jit
 
-from ribs.archives._archive_base import ArchiveBase, require_init
+from ribs.archives._archive_base import ArchiveBase
 
 _EPSILON = 1e-6
 
@@ -130,19 +130,3 @@ class GridArchive(ArchiveBase):
                                              self._lower_bounds,
                                              self._interval_size, self._dims)
         return tuple(index)
-
-    @require_init
-    def as_pandas(self, include_solutions=True):
-        """Converts the archive into a Pandas dataframe.
-
-        Args:
-            include_solutions (bool): Whether to include solution columns.
-        Returns:
-            pandas.DataFrame: A dataframe where each row is an elite in the
-            archive. The dataframe has ``behavior_dim`` columns called
-            ``index_{i}`` for the archive index, ``behavior_dim`` columns called
-            ``behavior_{i}`` for the behavior values, 1 column for the objective
-            function value called ``objective``, and ``solution_dim`` columns
-            called ``solution_{i}`` for the solution values.
-        """
-        return ArchiveBase.as_pandas(self, include_solutions)

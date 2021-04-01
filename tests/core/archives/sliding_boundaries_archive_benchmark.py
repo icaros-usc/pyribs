@@ -40,7 +40,7 @@ def benchmark_get_10k_random_elites(benchmark, benchmark_data_10k):
     @benchmark
     def get_elites():
         for i in range(n):
-            sol, obj, beh = archive.get_random_elite()
+            archive.get_random_elite()
 
 
 def benchmark_as_pandas_2048_elements(benchmark):

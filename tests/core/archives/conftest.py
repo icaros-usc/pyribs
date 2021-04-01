@@ -43,6 +43,7 @@ ArchiveFixtureData = namedtuple(
         "solution",  # A solution.
         "objective_value",  # Float objective value.
         "behavior_values",  # 2D behavior values for the solution.
+        "metadata",  # Metadata object for the solution.
         "grid_indices",  # Intended indices for GridArchive.
         "centroid",  # Intended centroid coordinates for CVTArchive.
         "bins",  # Total number of bins in the archive.
@@ -53,6 +54,7 @@ ARCHIVE_NAMES = [
     "GridArchive",
     "CVTArchive-brute_force",
     "CVTArchive-kd_tree",
+    "SlidingBoundariesArchive",
 ]
 
 
@@ -71,6 +73,7 @@ def get_archive_data(name, dtype=np.float64):
     solution = np.array([1, 2, 3])
     objective_value = 1.0
     behavior_values = np.array([0.25, 0.25])
+    metadata = {"metadata_key": 42}
     grid_indices = None
     centroid = None
 
@@ -123,13 +126,14 @@ def get_archive_data(name, dtype=np.float64):
         archive_with_entry.initialize(len(solution))
         grid_indices = (6, 11)
 
-    archive_with_entry.add(solution, objective_value, behavior_values)
+    archive_with_entry.add(solution, objective_value, behavior_values, metadata)
     return ArchiveFixtureData(
         archive,
         archive_with_entry,
         solution,
         objective_value,
         behavior_values,
+        metadata,
         grid_indices,
         centroid,
         bins,
