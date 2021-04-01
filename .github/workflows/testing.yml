@@ -86,7 +86,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e . .[examples]
+          pip install .[all] .[examples]
       - name: Test Examples
         run: bash tests/examples.sh
   deploy:
