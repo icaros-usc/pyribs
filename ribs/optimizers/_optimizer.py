@@ -111,19 +111,22 @@ class Optimizer:
         self._solutions = np.concatenate(self._solutions, axis=0)
         return self._solutions
 
-    def tell(self, objective_values, behavior_values):
-        """Returns objective and behavior values for solutions from :meth:`ask`.
+    def tell(self, objective_values, behavior_values, metadata=None):
+        """Returns info for solutions from :meth:`ask`.
 
-        .. note:: The objective values and behavior values must be in the same
-            order as the solutions created by :meth:`ask`; i.e.
-            ``objective_values[i]`` and ``behavior_values[i]`` should be the
-            objective value and behavior values for ``solutions[i]``.
+        .. note:: The objective values, behavior values, and metadata must be in
+            the same order as the solutions created by :meth:`ask`; i.e.
+            ``objective_values[i]``, ``behavior_values[i]``, and ``metadata[i]``
+            should be the objective value, behavior values, and metadata for
+            ``solutions[i]``.
 
         Args:
             objective_values ((n_solutions,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
             behavior_values ((n_solutions, behavior_dm) array): Each row of
                 this array contains a solution's coordinates in behavior space.
+            metadata ((n_solutions,) array): Each entry of this array contains a
+                an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
@@ -134,6 +137,8 @@ class Optimizer:
 
         objective_values = np.asarray(objective_values)
         behavior_values = np.asarray(behavior_values)
+        metadata = (np.empty(len(self._solutions))
+                    if metadata is None else np.asarray(metadata))
 
         # Limit OpenBLAS to single thread. This is typically faster than
         # multithreading because our data is too small.
