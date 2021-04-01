@@ -1,4 +1,6 @@
 """Provides the RandomDirectionEmitter."""
+import itertools
+
 import numpy as np
 
 from ribs.emitters._emitter_base import EmitterBase
@@ -135,7 +137,7 @@ class RandomDirectionEmitter(EmitterBase):
             return num_parents == 0
         return False
 
-    def tell(self, solutions, objective_values, behavior_values):
+    def tell(self, solutions, objective_values, behavior_values, metadata=None):
         """Gives the emitter results from evaluating solutions.
 
         As we insert solutions into the archive, we record the solutions'
@@ -153,6 +155,8 @@ class RandomDirectionEmitter(EmitterBase):
                 function value of each solution.
             behavior_values (numpy.ndarray): ``(n, <behavior space dimension>)``
                 array with the behavior space coordinates of each solution.
+            metadata (numpy.ndarray): 1D object array containing a metadata
+                object for each solution.
         """
         # Tuples of (solution was added, projection onto random direction,
         # index).
@@ -160,9 +164,10 @@ class RandomDirectionEmitter(EmitterBase):
         new_sols = 0
 
         # Add solutions to the archive.
-        for i, (sol, obj, beh) in enumerate(
-                zip(solutions, objective_values, behavior_values)):
-            status, _ = self.archive.add(sol, obj, beh)
+        metadata = itertools.repeat(None) if metadata is None else metadata
+        for i, (sol, obj, beh, meta) in enumerate(
+                zip(solutions, objective_values, behavior_values, metadata)):
+            status, _ = self.archive.add(sol, obj, beh, meta)
             added = bool(status)
             projection = np.dot(beh, self._target_behavior_dir)
             ranking_data.append((added, projection, i))

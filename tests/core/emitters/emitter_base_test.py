@@ -66,13 +66,17 @@ def test_tell_inserts_into_archive(_emitter_fixture):
     solutions = emitter.ask()
     objective_values = np.full(batch_size, 1.)
     behavior_values = np.array([[-1, -1], [0, 0], [1, 1]])
-    emitter.tell(solutions, objective_values, behavior_values)
+    metadata = np.full(batch_size, {"metadata_key": 42})
+    emitter.tell(solutions, objective_values, behavior_values, metadata)
 
-    # Check that the archive contains the behavior values inserted above.
-    archive_data = archive.as_pandas()
+    # Check all values are inserted. Only behavior values, objectives, and
+    # metadata are known; solutions may vary.
+    archive_data = archive.as_pandas(include_metadata=True)
     archive_beh = archive_data.loc[:, ["behavior_0", "behavior_1"]].to_numpy()
     unittest.TestCase().assertCountEqual(behavior_values.tolist(),
                                          archive_beh.tolist())
+    assert (archive_data["objective"] == objective_values).all()
+    assert (archive_data["metadata"] == metadata).all()
 
 
 #
