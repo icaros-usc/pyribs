@@ -13,7 +13,9 @@ the repo).
 
 For information on running tests, see [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-## Testing Examples
+## Additional Tests
 
-This directory also contains `examples.sh`, a long-running script intended to
-check that the examples are working.
+This directory also contains:
+
+- `examples.sh`: checks that the examples work end-to-end
+- `tutorials.sh`: checks that the tutorials work end-to-end
