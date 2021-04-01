@@ -44,7 +44,7 @@ class FakeArchive(ArchiveBase):
             self._behavior_values[index],
         )
 
-    def add(self, solution, objective_value, behavior_values):
+    def add(self, solution, objective_value, behavior_values, metadata=None):
         return True
 
     @jit(nopython=True)
