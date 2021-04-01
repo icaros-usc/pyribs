@@ -121,7 +121,10 @@ def test_elite_with_behavior_gets_correct_elite(_data):
 def test_elite_with_behavior_returns_none(_data):
     sol, obj, beh, meta = _data.archive.elite_with_behavior(
         _data.behavior_values)
-    assert (sol is None and obj is None and beh is None and meta is None)
+    assert sol is None
+    assert obj is None
+    assert beh is None
+    assert meta is None
 
 
 def test_random_elite_gets_single_elite(_data):
