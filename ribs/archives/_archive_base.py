@@ -63,25 +63,34 @@ class ArchiveBase(ABC):
     """Base class for archives.
 
     This class assumes all archives use a fixed-size container with bins that
-    hold 1) information about whether the bin is occupied (bool), 2) a solution
-    (1D array), 3) objective function evaluation of the solution (float), 4)
-    behavior space coordinates of the solution (1D array), and 5) any additional
-    metadata associated with the solution (object). In this class, this is
-    implemented with separate numpy arrays with common dimensions. Using the
-    ``storage_dims`` and ``behavior_dim`` arguments in :meth:`__init__` and the
-    ``solution_dim`` argument in ``initialize``, these arrays are as follows:
+    hold (1) information about whether the bin is occupied (bool), (2) a
+    solution (1D array), (3) objective function evaluation of the solution
+    (float), (4) behavior space coordinates of the solution (1D array), and (5)
+    any additional metadata associated with the solution (object). In this
+    class, the container is implemented with separate numpy arrays that share
+    common dimensions. Using the ``storage_dims`` and ``behavior_dim`` arguments
+    in :meth:`__init__` and the ``solution_dim`` argument in ``initialize``,
+    these arrays are as follows:
 
-    - ``_occupied`` (shape ``(*storage_dims)``)
-    - ``_solutions`` (shape ``(*storage_dims, solution_dim)``)
-    - ``_objective_values`` (shape ``(*storage_dims)``)
-    - ``_behavior_values`` (shape ``(*storage_dims, behavior_dim)``)
-    - ``_metadata`` (shape ``(*storage_dims)``)
+    +------------------------+------------------------------------+
+    | Name                   |  Shape                             |
+    +========================+====================================+
+    | ``_occupied``          |  ``(*storage_dims)``               |
+    +------------------------+------------------------------------+
+    | ``_solutions``         |  ``(*storage_dims, solution_dim)`` |
+    +------------------------+------------------------------------+
+    | ``_objective_values``  |  ``(*storage_dims)``               |
+    +------------------------+------------------------------------+
+    | ``_behavior_values``   |  ``(*storage_dims, behavior_dim)`` |
+    +------------------------+------------------------------------+
+    | ``_metadata``          |  ``(*storage_dims)``               |
+    +------------------------+------------------------------------+
 
     All of these arrays are accessed by a common index. If we have index ``i``,
     we access its solution at ``_solutions[i]``, its behavior values at
     ``_behavior_values[i]``, etc.
 
-    Thus, child classes must override the following methods:
+    Thus, child classes typically override at least the following methods:
 
     - :meth:`__init__`: child classes must invoke this class's :meth:`__init__`
       with the appropriate arguments
@@ -92,12 +101,11 @@ class ArchiveBase(ABC):
       classes may not need to override this method at all
 
     .. note:: Attributes beginning with an underscore are only intended to be
-        accessed by child classes.
+        accessed by child classes (i.e. they are "protected" attributes).
 
     Args:
         storage_dims (tuple of int): Primary dimensions of the archive storage.
-            This is used to create numpy arrays for items such as objective
-            values and behavior values.
+            This is used to create the numpy arrays described above.
         behavior_dim (int): The dimension of the behavior space.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
@@ -281,19 +289,21 @@ class ArchiveBase(ABC):
         than the solution previously in the corresponding bin.
 
         Args:
-            solution (array-like): Parameters for the solution.
-            objective_value (float): Objective function evaluation of this
+            solution (array-like): Parameters of the solution.
+            objective_value (float): Objective function evaluation of the
                 solution.
-            behavior_values (array-like): Coordinates in behavior space of this
+            behavior_values (array-like): Coordinates in behavior space of the
                 solution.
-            metadata (object): Metadata object for this solution.
+            metadata (object): Any Python object representing metadata for the
+                solution. For instance, this could be a dict with several
+                properties.
         Returns:
             tuple: 2-element tuple describing the result of the add operation.
             These outputs are particularly useful for algorithms such as CMA-ME.
 
                 **status** (:class:`AddStatus`): See :class:`AddStatus`.
 
-                **value** (``self.dtype``): The meaning of this value depends on
+                **value** (:attr:`dtype`): The meaning of this value depends on
                 the value of ``status``:
 
                 - ``NOT_ADDED`` -> the "negative improvement," i.e. objective
@@ -342,7 +352,7 @@ class ArchiveBase(ABC):
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
 
-                **objective_value** (``self.dtype``): Objective function
+                **objective_value** (:attr:`dtype`): Objective function
                 evaluation.
 
                 **behavior_values** (:class:`numpy.ndarray`): Actual behavior
@@ -352,8 +362,8 @@ class ArchiveBase(ABC):
                 **metadata** (object): Metadata for the solution.
 
             If there is no elite in the bin, a tuple of (None, None, None, None)
-            is returned (thus, something like
-            ``sol, obj, beh, met = archive.elite_with_behavior(...)`` still
+            is returned. Thus, something like
+            ``sol, obj, beh, meta = archive.elite_with_behavior(...)`` still
             works).
         """
         index = self._get_index(np.asarray(behavior_values))
@@ -372,7 +382,7 @@ class ArchiveBase(ABC):
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
 
-                **objective_value** (``self.dtype``): Objective function
+                **objective_value** (:attr:`dtype`): Objective function
                 evaluation.
 
                 **behavior_values** (:class:`numpy.ndarray`): Behavior space
@@ -399,7 +409,8 @@ class ArchiveBase(ABC):
         - ``len(self._storage_dims)`` columns for the index, named
           ``index_0, index_1, ...`` In :class:`~ribs.archives.GridArchive` and
           :class:`~ribs.archives.SlidingBoundariesArchive`, there are
-          ``behavior_dim`` columns.
+          ``behavior_dim`` columns. In :class:`~ribs.archives.CVTArchive`, there
+          is just one column.
         - ``self._behavior_dim`` columns for the behavior characteristics, named
           ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``

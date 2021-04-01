@@ -327,6 +327,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             solution (array-like): See :meth:`ArchiveBase.add`
             objective_value (float): See :meth:`ArchiveBase.add`
             behavior_values (array-like): See :meth:`ArchiveBase.add`
+            behavior_values (object): See :meth:`ArchiveBase.add`
         Returns:
             See :meth:`ArchiveBase.add`
         """
