@@ -409,8 +409,8 @@ class ArchiveBase(ABC):
         - ``len(self._storage_dims)`` columns for the index, named
           ``index_0, index_1, ...`` In :class:`~ribs.archives.GridArchive` and
           :class:`~ribs.archives.SlidingBoundariesArchive`, there are
-          ``behavior_dim`` columns. In :class:`~ribs.archives.CVTArchive`, there
-          is just one column.
+          :attr:`behavior_dim` columns. In :class:`~ribs.archives.CVTArchive`,
+          there is just one column.
         - ``self._behavior_dim`` columns for the behavior characteristics, named
           ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``

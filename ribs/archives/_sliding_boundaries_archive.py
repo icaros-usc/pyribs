@@ -317,7 +317,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     def add(self, solution, objective_value, behavior_values, metadata=None):
         """Attempts to insert a new solution into the archive.
 
-        This method remaps the archive after every ``self.remap_frequency``
+        This method remaps the archive after every :attr:`remap_frequency`
         solutions are added. Remapping involves changing the boundaries of the
         archive to the percentage marks of the behavior values stored in the
         buffer and re-adding all of the solutions stored in the buffer `and` the
