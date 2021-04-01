@@ -138,3 +138,64 @@ def test_random_elite_gets_single_elite(_data):
 def test_random_elite_fails_when_empty(_data):
     with pytest.raises(IndexError):
         _data.archive.get_random_elite()
+
+
+@pytest.mark.parametrize("name", ARCHIVE_NAMES)
+@pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
+@pytest.mark.parametrize("include_solutions", [True, False],
+                         ids=["solutions", "no_solutions"])
+@pytest.mark.parametrize("include_metadata", [True, False],
+                         ids=["metadata", "no_metadata"])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32],
+                         ids=["float64", "float32"])
+def test_as_pandas(name, with_entry, include_solutions, include_metadata,
+                   dtype):
+    data = get_archive_data(name, dtype)
+    is_cvt = name.startswith("CVTArchive-")
+
+    # Set up expected columns and data types.
+    num_index_cols = 1 if is_cvt else len(data.behavior_values)
+    index_cols = [f"index_{i}" for i in range(num_index_cols)]
+    behavior_cols = [f"behavior_{i}" for i in range(len(data.behavior_values))]
+    expected_cols = index_cols + behavior_cols + ["objective"]
+    expected_dtypes = [
+        *[int for _ in index_cols],
+        *[dtype for _ in behavior_cols],
+        dtype,
+    ]
+    if include_solutions:
+        solution_cols = [f"solution_{i}" for i in range(len(data.solution))]
+        expected_cols += solution_cols
+        expected_dtypes += [dtype for _ in solution_cols]
+    if include_metadata:
+        expected_cols.append("metadata")
+        expected_dtypes.append(object)
+
+    # Retrieve the dataframe.
+    if with_entry:
+        df = data.archive_with_entry.as_pandas(include_solutions,
+                                               include_metadata)
+    else:
+        df = data.archive.as_pandas(include_solutions, include_metadata)
+
+    # Check columns and data types.
+    assert (df.columns == expected_cols).all()
+    assert (df.dtypes == expected_dtypes).all()
+
+    if with_entry:
+        if is_cvt:
+            # For CVTArchive, we check the centroid because the index can vary.
+            index = df.loc[0, "index_0"]
+            assert (data.archive_with_entry.centroids[index] == data.centroid
+                   ).all()
+        else:
+            # Other archives have expected grid indices.
+            assert (df.loc[0, index_cols[0]:index_cols[-1]] == list(
+                data.grid_indices)).all()
+
+        expected_data = [*data.behavior_values, data.objective_value]
+        if include_solutions:
+            expected_data += list(data.solution)
+        if include_metadata:
+            expected_data.append(data.metadata)
+        assert (df.loc[0, "behavior_0":] == expected_data).all()
