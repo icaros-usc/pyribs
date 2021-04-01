@@ -1,12 +1,10 @@
 #!/bin/bash
 # Runs minimal examples to make sure they are working properly. Intended to be
-# run from the root directory of the repo. This script takes a while to run, so
-# it is not intended to be run very often.
+# run from the root directory of the repo. This script takes a few minutes to
+# run.
 #
 # Usage:
 #   bash tests/examples.sh
-
-SECONDS=0 # For timing.
 
 set -e  # Exit if any of the commands fail.
 set -x  # Print out commands as they are run.
@@ -20,12 +18,12 @@ fi
 export OPENBLAS_NUM_THREADS=1
 export OMP_NUM_THREADS=1
 
-# sphere.py
+# sphere.py - CVT excluded since it takes a while to build the archive.
 SPHERE_OUTPUT="${TMPDIR}/sphere_output"
 python examples/sphere.py map_elites 20 10 "${SPHERE_OUTPUT}"
 python examples/sphere.py line_map_elites 20 10 "${SPHERE_OUTPUT}"
-python examples/sphere.py cvt_map_elites 20 10 "${SPHERE_OUTPUT}"
-python examples/sphere.py line_cvt_map_elites 20 10 "${SPHERE_OUTPUT}"
+# python examples/sphere.py cvt_map_elites 20 10 "${SPHERE_OUTPUT}"
+# python examples/sphere.py line_cvt_map_elites 20 10 "${SPHERE_OUTPUT}"
 python examples/sphere.py cma_me_imp 20 10 "${SPHERE_OUTPUT}"
 python examples/sphere.py cma_me_imp_mu 20 10 "${SPHERE_OUTPUT}"
 python examples/sphere.py cma_me_rd 20 10 "${SPHERE_OUTPUT}"
