@@ -51,8 +51,8 @@ def _get_pt_to_obj(cvt_archive):
     data = cvt_archive.as_pandas(include_solutions=False)
     pt_to_obj = {}
     for row in data.itertuples():
-        # row.index is the centroid index. The dataframe index is row.Index.
-        pt_to_obj[row.index] = row.objective
+        # row.index_0 is the centroid index. The dataframe index is row.Index.
+        pt_to_obj[row.index_0] = row.objective
     return pt_to_obj
 
 

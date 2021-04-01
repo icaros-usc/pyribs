@@ -246,22 +246,3 @@ class CVTArchive(ArchiveBase):
             return self._centroid_kd_tree.query(behavior_values)[1]
 
         return self._brute_force_nn_numba(behavior_values, self._centroids)
-
-    @require_init
-    def as_pandas(self, include_solutions=True):
-        """Converts the archive into a Pandas dataframe.
-
-        Args:
-            include_solutions (bool): Whether to include solution columns.
-        Returns:
-            pandas.DataFrame: A dataframe where each row is an elite in the
-            archive. The dataframe consists of 1 ``index`` column indicating the
-            index of the centroid in ``self._centroids``, ``behavior_dim``
-            columns called ``behavior_{i}`` for the behavior values, 1 column
-            for the objective function value called ``objective``, and
-            ``solution_dim`` columns called ``solution_{i}`` for the solution
-            values.
-        """
-        df = ArchiveBase.as_pandas(self, include_solutions)
-        df.rename(columns={"index_0": "index"}, inplace=True)
-        return df
