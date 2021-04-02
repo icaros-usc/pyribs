@@ -16,12 +16,13 @@ TMP_FILE="tmp.ipynb"
 TMP_OUTPUT="tmp_output.ipynb"
 
 function test_notebook {
-  echo "========== Testing $t =========="
+  notebook="$1"
+  echo "========== Testing $notebook =========="
 
   # Set the number of test iterations based on the tutorial name. Use this to
   # give special amounts to different tutorials if the default of 5 does not
   # work.
-  case "$t" in
+  case "$notebook" in
     examples/tutorials/arm_repertoire.ipynb)
       test_itrs=50
       ;;
@@ -32,10 +33,10 @@ function test_notebook {
   echo "Test Iterations: ${test_itrs}"
 
   # Generate a copy of the notebook with reduced iterations.
-  sed "s/total_itrs = [0-9]\\+/total_itrs = ${test_itrs}/g" < "$t" > "${TMP_FILE}"
+  sed "s/total_itrs = [0-9]\\+/total_itrs = ${test_itrs}/g" < "$notebook" > "${TMP_FILE}"
 
   # Any further special replacements for testing.
-  case "$t" in
+  case "$notebook" in
     examples/tutorials/fooling_mnist.ipynb)
       # Reduce training for the LeNet-5 network.
       sed -i 's/fit(LENET5, 2)/fit(LENET5, 1)/g' "${TMP_FILE}"
