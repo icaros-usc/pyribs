@@ -1,21 +1,21 @@
 #!/bin/bash
-# Runs minimal tutorials to make sure they are working properly. Intended to be
-# run from the root directory of the repo. By default, this script tests all
+# Runs minimal tutorials to make sure they are working end-to-end. Intended to
+# be run from the root directory of the repo. By default, this script tests all
 # tutorial notebooks, which takes a few minutes. Alternatively, just a single
 # notebook can be tested by passing in the name of the notebook.
 #
 # Usage:
 #   pip install .[all] jupyter nbconvert
-#   bash tests/tutorials.sh  # Run all.
+#   bash tests/tutorials.sh  # Test all tutorials.
 #   bash tests/tutorials.sh NOTEBOOK.ipynb  # Test a single notebook.
 
 set -e  # Exit if any of the commands fail.
 set -x  # Print out commands as they are run.
 
-TMP_FILE="tmp.ipynb"
-TMP_OUTPUT="tmp_output.ipynb"
-
 function test_notebook {
+  TMP_FILE="tmp.ipynb"
+  TMP_OUTPUT="tmp_output.ipynb"
+
   notebook="$1"
   echo "========== Testing $notebook =========="
 
@@ -38,6 +38,7 @@ function test_notebook {
   # Any further special replacements for testing.
   case "$notebook" in
     examples/tutorials/arm_repertoire.ipynb)
+      # Reduce samples so that CVTArchive runs quickly.
       sed -i 's/use_kd_tree=True,/use_kd_tree=True, samples=10000,/g' "${TMP_FILE}"
       ;;
     examples/tutorials/fooling_mnist.ipynb)
@@ -54,8 +55,8 @@ function test_notebook {
       ;;
   esac
 
-  # Run the notebook. Timeout is long since some cells like creating CVTArchive
-  # take a while.
+  # Run the notebook. Timeout is long since some notebook cells take a while,
+  # such as the ones that train the MNIST network.
   jupyter nbconvert \
     --to notebook \
     --execute "${TMP_FILE}" \
