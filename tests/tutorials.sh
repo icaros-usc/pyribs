@@ -27,7 +27,7 @@ function test_notebook {
       test_itrs=50
       ;;
     *)
-      test_itrs=5
+      test_itrs=3
       ;;
   esac
   echo "Test Iterations: ${test_itrs}"
@@ -37,6 +37,9 @@ function test_notebook {
 
   # Any further special replacements for testing.
   case "$notebook" in
+    examples/tutorials/arm_repertoire.ipynb)
+      sed -i 's/use_kd_tree=True,/use_kd_tree=True, samples=10000,/g' "${TMP_FILE}"
+      ;;
     examples/tutorials/fooling_mnist.ipynb)
       # Reduce training for the LeNet-5 network.
       sed -i 's/fit(LENET5, 2)/fit(LENET5, 1)/g' "${TMP_FILE}"
