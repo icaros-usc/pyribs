@@ -107,34 +107,3 @@ def test_add_without_overwrite(_data):
     _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,
                               _data.behavior_values, _data.objective_value,
                               _data.solution)
-
-
-@pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
-@pytest.mark.parametrize("include_solutions", [True, False],
-                         ids=["solutions", "no_solutions"])
-@pytest.mark.parametrize("dtype", [np.float64, np.float32],
-                         ids=["float64", "float32"])
-def test_as_pandas(with_entry, include_solutions, dtype):
-    data = get_archive_data("GridArchive", dtype)
-    if with_entry:
-        df = data.archive_with_entry.as_pandas(include_solutions)
-    else:
-        df = data.archive.as_pandas(include_solutions)
-
-    expected_columns = [
-        'index_0', 'index_1', 'behavior_0', 'behavior_1', 'objective'
-    ]
-    expected_dtypes = [int, int, dtype, dtype, dtype]
-    if include_solutions:
-        expected_columns += ['solution_0', 'solution_1', 'solution_2']
-        expected_dtypes += [dtype, dtype, dtype]
-    assert (df.columns == expected_columns).all()
-    assert (df.dtypes == expected_dtypes).all()
-
-    if with_entry:
-        expected_data = [
-            *data.grid_indices, *data.behavior_values, data.objective_value
-        ]
-        if include_solutions:
-            expected_data += list(data.solution)
-        assert (df.loc[0] == np.array(expected_data)).all()
