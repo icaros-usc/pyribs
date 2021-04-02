@@ -47,13 +47,13 @@ function test_notebook {
       ;;
   esac
 
-  # Run the notebook. Timeout is 120 since CVTArchive and training the MNIST
-  # network can take a while.
+  # Run the notebook. Timeout is long since some cells like creating CVTArchive
+  # take a while.
   jupyter nbconvert \
     --to notebook \
     --execute "${TMP_FILE}" \
     --output "${TMP_OUTPUT}" \
-    --ExecutePreprocessor.timeout=120
+    --ExecutePreprocessor.timeout=300
   rm -f "${TMP_FILE}" "${TMP_OUTPUT}"
 }
 
