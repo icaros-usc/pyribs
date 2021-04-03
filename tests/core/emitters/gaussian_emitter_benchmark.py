@@ -4,8 +4,6 @@ import numpy as np
 
 from ribs.emitters import GaussianEmitter
 
-# pylint: disable = unused-variable
-
 
 def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     archive, x0 = fake_archive_fixture
@@ -26,10 +24,11 @@ def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     obj_vals = np.random.rand(n, batch_size)
     behavior_vals = np.random.rand(n, batch_size, 2)
 
-    @benchmark
     def ask_and_tell():
         for i in range(n):
             solutions = emitter.ask()
             objective_values = obj_vals[i]
             behavior_values = behavior_vals[i]
             emitter.tell(solutions, objective_values, behavior_values)
+
+    benchmark(ask_and_tell)
