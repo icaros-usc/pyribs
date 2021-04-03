@@ -137,8 +137,8 @@ class Optimizer:
 
         objective_values = np.asarray(objective_values)
         behavior_values = np.asarray(behavior_values)
-        metadata = (np.empty(len(self._solutions))
-                    if metadata is None else np.asarray(metadata))
+        metadata = (np.empty(len(self._solutions), dtype=object)
+                    if metadata is None else np.asarray(metadata, dtype=object))
 
         # Limit OpenBLAS to single thread. This is typically faster than
         # multithreading because our data is too small.
@@ -149,5 +149,5 @@ class Optimizer:
                 end = pos + n
                 emitter.tell(self._solutions[pos:end],
                              objective_values[pos:end],
-                             behavior_values[pos:end])
+                             behavior_values[pos:end], metadata[pos:end])
                 pos = end

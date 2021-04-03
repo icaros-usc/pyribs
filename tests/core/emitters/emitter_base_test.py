@@ -80,9 +80,9 @@ def test_tell_inserts_into_archive(_emitter_fixture, tell_metadata):
     # Check all values are inserted. Only behavior values, objectives, and
     # metadata are known; solutions may vary.
     archive_data = archive.as_pandas(include_metadata=True)
-    archive_beh = archive_data.loc[:, ["behavior_0", "behavior_1"]].to_numpy()
-    unittest.TestCase().assertCountEqual(behavior_values.tolist(),
-                                         archive_beh.tolist())
+    archive_beh = (
+        archive_data.loc[:, ["behavior_0", "behavior_1"]].to_numpy().tolist())
+    unittest.TestCase().assertCountEqual(behavior_values.tolist(), archive_beh)
     assert (archive_data["objective"] == objective_values).all()
     assert (archive_data["metadata"].to_numpy() == expected_metadata).all()
 
