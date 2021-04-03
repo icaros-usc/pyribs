@@ -1,5 +1,7 @@
 """Tests for the Optimizer."""
+import unittest
 
+import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
@@ -67,16 +69,29 @@ def test_ask_fails_when_called_twice(_optimizer_fixture):
 def test_tell_inserts_solutions_into_archive(_optimizer_fixture, tell_metadata):
     optimizer, _, num_solutions = _optimizer_fixture
     _ = optimizer.ask()  # Ignore the actual values of the solutions.
+    behavior_values = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
+    metadata = ([f"metadata_{i}" for i in range(num_solutions)]
+                if tell_metadata else None)
+    expected_metadata = metadata if tell_metadata else [None] * num_solutions
 
     # We pass in 4 solutions with unique behavior values, so all should go into
     # the archive.
     optimizer.tell(
-        objective_values=[1.0, 1.0, 1.0, 1.0],
-        behavior_values=[[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]],
-        metadata=[f"metadata_{i}" for i in range(4)] if tell_metadata else None,
+        objective_values=np.ones(num_solutions),
+        behavior_values=behavior_values,
+        metadata=metadata,
     )
 
-    assert len(optimizer.archive.as_pandas()) == num_solutions
+    archive_data = optimizer.archive.as_pandas(include_metadata=True)
+    archive_beh = (
+        archive_data.loc[:, ["behavior_0", "behavior_1"]].to_numpy().tolist())
+    archive_meta = archive_data.loc[:,
+                                    "metadata"].to_numpy(dtype=object).tolist()
+
+    # TODO: Use the raw data API described in #118 when it becomes available.
+    assert len(archive_data) == num_solutions
+    unittest.TestCase().assertCountEqual(behavior_values, archive_beh)
+    unittest.TestCase().assertCountEqual(expected_metadata, archive_meta)
 
 
 @pytest.mark.parametrize("tell_metadata", [True, False],
@@ -91,15 +106,29 @@ def test_tell_inserts_solutions_with_multiple_emitters(tell_metadata):
     optimizer = Optimizer(archive, emitters)
 
     _ = optimizer.ask()
+    behavior_values = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0],
+                       [0.0, 0.0], [0.0, 1.0]]
+    metadata = [f"metadata_{i}" for i in range(6)] if tell_metadata else None
+    expected_metadata = metadata if tell_metadata else [None] * 6
 
     # The sum of all the emitters' batch sizes is 6.
     optimizer.tell(
-        objective_values=[1.0] * 6,
-        behavior_values=[[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0],
-                         [0.0, 0.0], [0.0, 1.0]],
-        metadata=[f"metadata_{i}" for i in range(6)] if tell_metadata else None,
+        objective_values=np.ones(6),
+        behavior_values=behavior_values,
+        metadata=metadata,
     )
     assert len(optimizer.archive.as_pandas()) == 6
+
+    archive_data = optimizer.archive.as_pandas(include_metadata=True)
+    archive_beh = (
+        archive_data.loc[:, ["behavior_0", "behavior_1"]].to_numpy().tolist())
+    archive_meta = archive_data.loc[:,
+                                    "metadata"].to_numpy(dtype=object).tolist()
+
+    # TODO: Use the raw data API described in #118 when it becomes available.
+    assert len(archive_data) == 6
+    unittest.TestCase().assertCountEqual(behavior_values, archive_beh)
+    unittest.TestCase().assertCountEqual(expected_metadata, archive_meta)
 
 
 def test_tell_fails_when_ask_not_called(_optimizer_fixture):
