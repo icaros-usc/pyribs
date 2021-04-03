@@ -70,7 +70,8 @@ def test_tell_inserts_solutions_into_archive(_optimizer_fixture, tell_metadata):
     optimizer, _, num_solutions = _optimizer_fixture
     _ = optimizer.ask()  # Ignore the actual values of the solutions.
     behavior_values = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
-    metadata = [f"metadata_{i}" for i in range(4)] if tell_metadata else None
+    metadata = ([f"metadata_{i}" for i in range(num_solutions)]
+                if tell_metadata else None)
     expected_metadata = metadata if tell_metadata else [None] * num_solutions
 
     # We pass in 4 solutions with unique behavior values, so all should go into
