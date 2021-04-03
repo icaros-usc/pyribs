@@ -3,8 +3,6 @@ import numpy as np
 
 from ribs.archives import SlidingBoundariesArchive
 
-# pylint: disable = unused-variable
-
 
 def benchmark_add_10k(benchmark, benchmark_data_10k):
     n, solutions, objective_values, behavior_values = benchmark_data_10k
@@ -37,10 +35,11 @@ def benchmark_get_10k_random_elites(benchmark, benchmark_data_10k):
     for i in range(n):
         archive.add(solutions[i], objective_values[i], behavior_values[i])
 
-    @benchmark
     def get_elites():
-        for i in range(n):
+        for _ in range(n):
             archive.get_random_elite()
+
+    benchmark(get_elites)
 
 
 def benchmark_as_pandas_2048_elements(benchmark):
