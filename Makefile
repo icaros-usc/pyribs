@@ -49,14 +49,6 @@ test: ## run tests with the default Python
 	pytest tests
 .PHONY: test
 
-test-core: ## only test the core of ribs
-	pytest tests/core
-.PHONY: test-core
-
-test-extras: ## only test the extras of ribs
-	pytest tests/extras
-.PHONY: test-extras
-
 test-coverage: ## get better test coverage by running without numba on
 	NUMBA_DISABLE_JIT=1 pytest tests
 .PHONY: test-coverage
