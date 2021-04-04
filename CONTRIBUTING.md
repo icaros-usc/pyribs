@@ -34,10 +34,10 @@ Ready to contribute? Here's how to set up pyribs for local development.
 2. Clone the fork locally:
 
    ```bash
-   # If you have SSH set up:
+   # With SSH:
    git clone git@github.com:USERNAME/pyribs.git
 
-   # Or, if you do not have SSH set up:
+   # Without SSH:
    git clone https://github.com/USERNAME/pyribs.git
    ```
 
@@ -74,21 +74,26 @@ Ready to contribute? Here's how to set up pyribs for local development.
 5. After making changes, check that the changes pass the tests:
 
    ```bash
-   pylint ribs tests
    pytest tests/
    make test # ^ same as above
-   tox  # Don't worry if this does not run; we will run it in CI/CD
    ```
 
-   To run the tests without benchmarks (benchmarks can take a while), run:
+   And to run the benchmarks:
 
    ```bash
-   pytest -c pytest_no_benchmark.ini
-   make test-only # ^ same as above, but shorter
+   pytest -c pytest_benchmark.ini
+   make benchmark # ^ same as above
    ```
 
-   To get pytest, pylint, and tox, pip install them into the environment.
-   However, they should already install with `pip install -e .[dev]`.
+   Finally, to lint the code:
+
+   ```bash
+   pylint ribs tests benchmarks examples
+   make lint # ^ same as above
+   ```
+
+   To get pytest and pylint, pip install them into the environment. However,
+   they should already install with `pip install -e .[dev]`.
 
 6. Commit the changes and push the branch to GitHub:
 
@@ -151,9 +156,9 @@ Tutorials are created in Jupyter notebooks that are stored under
 1. Before the main loop of the QD algorithm, include a line like
    `total_itrs = 500` (any other integer will work). This line will be replaced
    during testing (see `tests/tutorials.sh`) in order to test that the notebook
-   runs end-to-end. By default, the tests run the notebook with `total_itrs =
-   5`. If this tutorial needs more (or less), modify the switch-case statement
-   in `tests/tutorials.sh`.
+   runs end-to-end. By default, the tests run the notebook with
+   `total_itrs = 5`. If this tutorial needs more (or less), modify the
+   switch-case statement in `tests/tutorials.sh`.
 1. Make sure that the only level 1 heading (e.g. `# Awesome Tutorial`) is the
    title at the top of the notebook. Subsequent titles should be level 2 (e.g.
    `## Level 2 Heading`) or higher.

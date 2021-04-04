@@ -1,17 +1,14 @@
-"""Benchmarks for the GaussianEmitter."""
+"""Benchmarks for the IsoLineEmitter."""
 
 import numpy as np
 
-from ribs.emitters import GaussianEmitter
-
-# pylint: disable = unused-variable
+from ribs.emitters import IsoLineEmitter
 
 
 def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     archive, x0 = fake_archive_fixture
-    sigma0 = 1
     batch_size = 32
-    emitter = GaussianEmitter(archive, x0, sigma0, batch_size=batch_size)
+    emitter = IsoLineEmitter(archive, x0, batch_size=batch_size)
     n = 100_000
 
     np.random.seed(0)
@@ -26,10 +23,11 @@ def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
     obj_vals = np.random.rand(n, batch_size)
     behavior_vals = np.random.rand(n, batch_size, 2)
 
-    @benchmark
     def ask_and_tell():
         for i in range(n):
             solutions = emitter.ask()
             objective_values = obj_vals[i]
             behavior_values = behavior_vals[i]
             emitter.tell(solutions, objective_values, behavior_values)
+
+    benchmark(ask_and_tell)

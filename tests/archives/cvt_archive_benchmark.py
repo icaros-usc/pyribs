@@ -3,18 +3,17 @@ import numpy as np
 
 from ribs.archives import CVTArchive
 
-# pylint: disable = unused-variable
-
 
 def benchmark_init(use_kd_tree, benchmark):
     """Construction includes k-means clustering and building a kd-tree."""
 
-    @benchmark
     def init():
         archive = CVTArchive(1000, [(-1, 1), (-1, 1)],
                              samples=20_000,
                              use_kd_tree=use_kd_tree)
         archive.initialize(solution_dim=2)
+
+    benchmark(init)
 
 
 def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
@@ -47,10 +46,11 @@ def benchmark_get_10k_random_elites(use_kd_tree, benchmark, benchmark_data_10k):
     for i in range(n):
         archive.add(solutions[i], objective_values[i], behavior_values[i])
 
-    @benchmark
     def get_elites():
-        for i in range(n):
+        for _ in range(n):
             archive.get_random_elite()
+
+    benchmark(get_elites)
 
 
 def benchmark_as_pandas_2000_items(benchmark):
