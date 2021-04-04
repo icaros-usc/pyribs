@@ -52,8 +52,7 @@ def test_solution_dim_requires_init(_data):
 
 
 #
-# Test the dtypes of all classes, as some classes use the dtype in their
-# constructor.
+# Test the dtypes of all classes.
 #
 
 
