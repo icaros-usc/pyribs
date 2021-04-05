@@ -1,7 +1,10 @@
 """Emitters output new candidate solutions in QD algorithms.
 
-A note on data types: The emitters provided here will use the same data type as
-the ones in the archive passed in.
+.. note::
+    Emitters provided here take on the data type of the archive passed to their
+    constructor. For instance, if an archive has dtype ``np.float64``, then an
+    emitter created with that archive will emit solutions with dtype
+    ``np.float64``.
 
 .. autosummary::
     :toctree:
