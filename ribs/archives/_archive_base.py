@@ -422,6 +422,54 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return (self._solutions[index], self._objective_values[index],
                 self._behavior_values[index], self._metadata[index])
 
+    def data(self):
+        """Returns columns containing all data in the archive.
+
+        Namely, this method returns 4 arrays containing all of the solutions,
+        objective values, behavior values, and metadata in the archive. For
+        example::
+
+            (all_solutions, all_objective_values,
+             all_behavior_values, all_metadata) = archive.data()
+
+        All the arrays correspond to each other, i.e. ``all_solutions[i]``
+        corresponds to ``all_objective_values[i]``,
+        ``all_behavior_values[i]``, and ``all_metadata[i]``. This means that
+        an iteration like the following would work::
+
+            for sol, obj, beh, meta in zip(*archive.data()):
+                ...
+
+        This method is also useful when extracting insights from one
+        component of the archive. For instance, one can easily extract all the
+        objective values and calculate their mean with this method.
+
+        .. note:: This method returns a numpy view into existing data in the
+            archive, so it does not make any copies. However, the data may
+            change if the archive is modified after calling this method.
+
+        Returns:
+            tuple: 4-element tuple containing:
+
+                **all_solutions** (:class:`numpy.ndarray` -- shape (n_entries,
+                :attr:`solution_dim`)): Parameters for all the solutions in the
+                archive.
+
+                **all_objective_values** (:class:`numpy.ndarray` -- shape
+                (n_entries,)): Objective value of all entries in the archive.
+
+                **all_behavior_values** (:class:`numpy.ndarray`-- shape
+                (n_entries, :attr:`behavior_dim`)): Behavior space coordinates
+                of all the entries.
+
+                **all_metadata** (:class:`numpy.ndarray` -- shape (n_entries,)):
+                Object array with metadata of all entries.
+        """
+        return (self._solutions[self._occupied_indices_cols],
+                self._objective_values[self._occupied_indices_cols],
+                self._behavior_values[self._occupied_indices_cols],
+                self._metadata[self._occupied_indices_cols])
+
     def as_pandas(self, include_solutions=True, include_metadata=False):
         """Converts the archive into a Pandas dataframe.
 
