@@ -469,10 +469,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 **all_metadata** (:class:`numpy.ndarray` -- shape (n_entries,)):
                 Object array with metadata of all entries.
         """
+        # This ensures that tuple indices remain as tuples, as np.asarray
+        # converts the tuples to arrays.
+        all_indices = np.empty(len(self._occupied_indices), dtype=object)
+        all_indices[:] = self._occupied_indices
+
         return (self._solutions[self._occupied_indices_cols],
                 self._objective_values[self._occupied_indices_cols],
-                self._behavior_values[self._occupied_indices_cols],
-                np.asarray(self._occupied_indices, dtype=object),
+                self._behavior_values[self._occupied_indices_cols], all_indices,
                 self._metadata[self._occupied_indices_cols])
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
