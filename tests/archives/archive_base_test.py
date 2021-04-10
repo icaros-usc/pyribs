@@ -45,7 +45,7 @@ def test_add_requires_init():
         archive.add(np.array([1, 2, 3]), 1.0, np.array([1.0, 1.0]))
 
 
-def test_solution_dim_requires_init(_data):
+def test_solution_dim_requires_init():
     archive = GridArchive([20, 20], [(-1, 1)] * 2)
     with pytest.raises(RuntimeError):
         _ = archive.solution_dim
@@ -61,8 +61,8 @@ def test_solution_dim_requires_init(_data):
                          ids=["f", "d"])
 def test_str_dtype_float(name, dtype):
     str_dtype, np_dtype = dtype
-    data = get_archive_data(name, str_dtype)
-    assert data.archive.dtype == np_dtype
+    archive = get_archive_data(name, str_dtype).archive
+    assert archive.dtype == np_dtype
 
 
 def test_invalid_dtype():
@@ -78,65 +78,64 @@ def test_invalid_dtype():
 
 
 @pytest.fixture(params=ARCHIVE_NAMES)
-def _data(request):
+def data(request):
     """Provides data for testing all kinds of archives."""
     return get_archive_data(request.param)
 
 
-def test_archive_cannot_reinit(_data):
+def test_archive_cannot_reinit(data):
     with pytest.raises(RuntimeError):
-        _data.archive.initialize(len(_data.solution))
+        data.archive.initialize(len(data.solution))
 
 
-def test_new_archive_is_empty(_data):
-    assert _data.archive.empty
+def test_new_archive_is_empty(data):
+    assert data.archive.empty
 
 
-def test_archive_with_entry_is_not_empty(_data):
-    assert not _data.archive_with_entry.empty
+def test_archive_with_entry_is_not_empty(data):
+    assert not data.archive_with_entry.empty
 
 
-def test_bins_correct(_data):
-    assert _data.archive.bins == _data.bins
+def test_bins_correct(data):
+    assert data.archive.bins == data.bins
 
 
-def test_behavior_dim_correct(_data):
-    assert _data.archive.behavior_dim == len(_data.behavior_values)
+def test_behavior_dim_correct(data):
+    assert data.archive.behavior_dim == len(data.behavior_values)
 
 
-def test_solution_dim_correct(_data):
-    assert _data.archive.solution_dim == len(_data.solution)
+def test_solution_dim_correct(data):
+    assert data.archive.solution_dim == len(data.solution)
 
 
-def test_elite_with_behavior_gets_correct_elite(_data):
-    sol, obj, beh, meta = _data.archive_with_entry.elite_with_behavior(
-        _data.behavior_values)
-    assert (sol == _data.solution).all()
-    assert obj == _data.objective_value
-    assert (beh == _data.behavior_values).all()
-    assert meta == _data.metadata
+def test_elite_with_behavior_gets_correct_elite(data):
+    sol, obj, beh, meta = data.archive_with_entry.elite_with_behavior(
+        data.behavior_values)
+    assert (sol == data.solution).all()
+    assert obj == data.objective_value
+    assert (beh == data.behavior_values).all()
+    assert meta == data.metadata
 
 
-def test_elite_with_behavior_returns_none(_data):
-    sol, obj, beh, meta = _data.archive.elite_with_behavior(
-        _data.behavior_values)
+def test_elite_with_behavior_returns_none(data):
+    sol, obj, beh, meta = data.archive.elite_with_behavior(data.behavior_values)
     assert sol is None
     assert obj is None
     assert beh is None
     assert meta is None
 
 
-def test_random_elite_gets_single_elite(_data):
-    sol, obj, beh, meta = _data.archive_with_entry.get_random_elite()
-    assert np.all(sol == _data.solution)
-    assert obj == _data.objective_value
-    assert np.all(beh == _data.behavior_values)
-    assert meta == _data.metadata
+def test_random_elite_gets_single_elite(data):
+    sol, obj, beh, meta = data.archive_with_entry.get_random_elite()
+    assert np.all(sol == data.solution)
+    assert obj == data.objective_value
+    assert np.all(beh == data.behavior_values)
+    assert meta == data.metadata
 
 
-def test_random_elite_fails_when_empty(_data):
+def test_random_elite_fails_when_empty(data):
     with pytest.raises(IndexError):
-        _data.archive.get_random_elite()
+        data.archive.get_random_elite()
 
 
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
