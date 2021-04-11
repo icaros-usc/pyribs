@@ -229,9 +229,9 @@ class SlidingBoundariesArchive(ArchiveBase):
     @nb.jit(nopython=True)
     def _get_index_numba(behavior_values, upper_bounds, lower_bounds,
                          boundaries, dims):
-        """Numba helper for _get_index().
+        """Numba helper for get_index().
 
-        See _get_index() for usage.
+        See get_index() for usage.
         """
         behavior_values = np.minimum(
             np.maximum(behavior_values + _EPSILON, lower_bounds),
@@ -242,11 +242,8 @@ class SlidingBoundariesArchive(ArchiveBase):
             index.append(max(0, idx - 1))
         return index
 
-    def _get_index(self, behavior_values):
-        """Index is determined based on sliding boundaries.
-
-        :meta private:
-        """
+    def get_index(self, behavior_values):
+        """Index is determined based on sliding boundaries."""
         index = SlidingBoundariesArchive._get_index_numba(
             behavior_values, self.upper_bounds, self.lower_bounds,
             self._boundaries, self._dims)

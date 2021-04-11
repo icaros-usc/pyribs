@@ -94,7 +94,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     - :meth:`__init__`: child classes must invoke this class's :meth:`__init__`
       with the appropriate arguments
-    - :meth:`_get_index`: this method returns an index into the arrays above
+    - :meth:`get_index`: this method returns an index into the arrays above
       when given the behavior values of a solution
     - :meth:`initialize`: since this method sets up the arrays described, child
       classes should invoke this in their own implementation -- however, child
@@ -250,7 +250,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             [] for _ in range(len(self._storage_dims)))
 
     @abstractmethod
-    def _get_index(self, behavior_values):
+    def get_index(self, behavior_values):
         """Returns archive indices for the given behavior values.
 
         Indices must be either an int or a tuple of int.
@@ -341,7 +341,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         solution = np.asarray(solution)
         behavior_values = np.asarray(behavior_values)
 
-        index = self._get_index(behavior_values)
+        index = self.get_index(behavior_values)
         old_objective = self._objective_values[index]
         was_inserted, already_occupied = self._add_numba(
             index, solution, objective_value, behavior_values, self._occupied,
@@ -388,7 +388,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             ``sol, obj, beh, meta = archive.elite_with_behavior(...)`` still
             works).
         """
-        index = self._get_index(np.asarray(behavior_values))
+        index = self.get_index(np.asarray(behavior_values))
         if self._occupied[index]:
             return (self._solutions[index], self._objective_values[index],
                     self._behavior_values[index], self._metadata[index])

@@ -105,9 +105,9 @@ class GridArchive(ArchiveBase):
     @jit(nopython=True)
     def _get_index_numba(behavior_values, upper_bounds, lower_bounds,
                          interval_size, dims):
-        """Numba helper for _get_index().
+        """Numba helper for get_index().
 
-        See _get_index() for usage.
+        See get_index() for usage.
         """
         # Adding epsilon to behavior values accounts for floating point
         # precision errors from transforming behavior values. Subtracting
@@ -120,10 +120,10 @@ class GridArchive(ArchiveBase):
         index = (behavior_values - lower_bounds) / interval_size * dims
         return index.astype(np.int32)
 
-    def _get_index(self, behavior_values):
-        """Retrieves grid indices. Clips behavior values to behavior bounds.
+    def get_index(self, behavior_values):
+        """Retrieves grid indices.
 
-        :meta private:
+        Clips behavior values to behavior bounds.
         """
         index = GridArchive._get_index_numba(behavior_values,
                                              self._upper_bounds,
