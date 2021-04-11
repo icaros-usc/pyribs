@@ -7,6 +7,8 @@ import pytest
 from ribs.emitters import (GaussianEmitter, ImprovementEmitter, IsoLineEmitter,
                            OptimizingEmitter, RandomDirectionEmitter)
 
+# pylint: disable = redefined-outer-name
+
 
 @pytest.fixture(params=[
     "GaussianEmitter", "IsoLineEmitter", "ImprovementEmitter",
