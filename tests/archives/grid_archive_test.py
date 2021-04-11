@@ -6,20 +6,25 @@ from ribs.archives import AddStatus, GridArchive
 
 from .conftest import get_archive_data
 
+# pylint: disable = redefined-outer-name
+
 
 @pytest.fixture
-def _data():
+def data():
     """Data for grid archive tests."""
     return get_archive_data("GridArchive")
 
 
-def _assert_archive_has_entry(archive, indices, behavior_values,
-                              objective_value, solution):
+def assert_archive_entry(archive, solution, objective_value, behavior_values,
+                         indices, metadata):
     """Assert that the archive has one specific entry."""
-    archive_df = archive.as_pandas()
-    assert len(archive_df) == 1
-    assert (archive_df.iloc[0] == (list(indices) + list(behavior_values) +
-                                   [objective_value] + list(solution))).all()
+    all_sols, all_objs, all_behs, all_idxs, all_meta = archive.data()
+    assert len(all_sols) == 1
+    assert np.isclose(all_sols[0], solution).all()
+    assert np.isclose(all_objs[0], objective_value).all()
+    assert np.isclose(all_behs[0], behavior_values).all()
+    assert all_idxs[0] == indices
+    assert all_meta[0] == metadata
 
 
 def test_fails_on_dim_mismatch():
@@ -30,80 +35,85 @@ def test_fails_on_dim_mismatch():
         )
 
 
-def test_properties_are_correct(_data):
-    assert np.all(_data.archive.dims == [10, 20])
-    assert np.all(_data.archive.lower_bounds == [-1, -2])
-    assert np.all(_data.archive.upper_bounds == [1, 2])
-    assert np.all(_data.archive.interval_size == [2, 4])
+def test_properties_are_correct(data):
+    assert np.all(data.archive.dims == [10, 20])
+    assert np.all(data.archive.lower_bounds == [-1, -2])
+    assert np.all(data.archive.upper_bounds == [1, 2])
+    assert np.all(data.archive.interval_size == [2, 4])
 
-    boundaries = _data.archive.boundaries
+    boundaries = data.archive.boundaries
     assert len(boundaries) == 2
     assert np.isclose(boundaries[0], np.linspace(-1, 1, 10 + 1)).all()
     assert np.isclose(boundaries[1], np.linspace(-2, 2, 20 + 1)).all()
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
-def test_add_to_archive(_data, use_list):
+def test_add_to_archive(data, use_list):
     if use_list:
-        status, value = _data.archive.add(list(_data.solution),
-                                          _data.objective_value,
-                                          list(_data.behavior_values))
+        status, value = data.archive.add(list(data.solution),
+                                         data.objective_value,
+                                         list(data.behavior_values),
+                                         data.metadata)
     else:
-        status, value = _data.archive.add(_data.solution, _data.objective_value,
-                                          _data.behavior_values)
+        status, value = data.archive.add(data.solution, data.objective_value,
+                                         data.behavior_values, data.metadata)
 
     assert status == AddStatus.NEW
-    assert np.isclose(value, _data.objective_value)
-    _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,
-                              _data.behavior_values, _data.objective_value,
-                              _data.solution)
+    assert np.isclose(value, data.objective_value)
+    assert_archive_entry(data.archive_with_entry, data.solution,
+                         data.objective_value, data.behavior_values,
+                         data.grid_indices, data.metadata)
 
 
-def test_add_with_low_behavior_val(_data):
+def test_add_with_low_behavior_val(data):
     behavior_values = np.array([-2, -3])
     indices = (0, 0)
-    status, _ = _data.archive.add(_data.solution, _data.objective_value,
-                                  behavior_values)
+    status, _ = data.archive.add(data.solution, data.objective_value,
+                                 behavior_values, data.metadata)
     assert status
-    _assert_archive_has_entry(_data.archive, indices, behavior_values,
-                              _data.objective_value, _data.solution)
+    assert_archive_entry(data.archive, data.solution, data.objective_value,
+                         behavior_values, indices, data.metadata)
 
 
-def test_add_with_high_behavior_val(_data):
+def test_add_with_high_behavior_val(data):
     behavior_values = np.array([2, 3])
     indices = (9, 19)
-    status, _ = _data.archive.add(_data.solution, _data.objective_value,
-                                  behavior_values)
+    status, _ = data.archive.add(data.solution, data.objective_value,
+                                 behavior_values, data.metadata)
     assert status
-    _assert_archive_has_entry(_data.archive, indices, behavior_values,
-                              _data.objective_value, _data.solution)
+    assert_archive_entry(data.archive, data.solution, data.objective_value,
+                         behavior_values, indices, data.metadata)
 
 
-def test_add_and_overwrite(_data):
+def test_add_and_overwrite(data):
     """Test adding a new entry with a higher objective value."""
-    arbitrary_sol = _data.solution + 1
-    high_objective_value = _data.objective_value + 1.0
+    arbitrary_sol = data.solution + 1
+    arbitrary_metadata = {"foobar": 12}
+    high_objective_value = data.objective_value + 1.0
 
-    status, value = _data.archive_with_entry.add(arbitrary_sol,
-                                                 high_objective_value,
-                                                 _data.behavior_values)
+    status, value = data.archive_with_entry.add(arbitrary_sol,
+                                                high_objective_value,
+                                                data.behavior_values,
+                                                arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
-    assert np.isclose(value, high_objective_value - _data.objective_value)
-    _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,
-                              _data.behavior_values, high_objective_value,
-                              arbitrary_sol)
+    assert np.isclose(value, high_objective_value - data.objective_value)
+    assert_archive_entry(data.archive_with_entry, arbitrary_sol,
+                         high_objective_value, data.behavior_values,
+                         data.grid_indices, arbitrary_metadata)
 
 
-def test_add_without_overwrite(_data):
+def test_add_without_overwrite(data):
     """Test adding a new entry with a lower objective value."""
-    arbitrary_sol = _data.solution + 1
-    low_objective_value = _data.objective_value - 1.0
+    arbitrary_sol = data.solution + 1
+    arbitrary_metadata = {"foobar": 12}
+    low_objective_value = data.objective_value - 1.0
 
-    status, value = _data.archive_with_entry.add(arbitrary_sol,
-                                                 low_objective_value,
-                                                 _data.behavior_values)
+    status, value = data.archive_with_entry.add(arbitrary_sol,
+                                                low_objective_value,
+                                                data.behavior_values,
+                                                arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective_value - _data.objective_value)
-    _assert_archive_has_entry(_data.archive_with_entry, _data.grid_indices,
-                              _data.behavior_values, _data.objective_value,
-                              _data.solution)
+    assert np.isclose(value, low_objective_value - data.objective_value)
+    assert_archive_entry(data.archive_with_entry, data.solution,
+                         data.objective_value, data.behavior_values,
+                         data.grid_indices, data.metadata)

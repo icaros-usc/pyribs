@@ -59,7 +59,7 @@ class RandomBuffer:
         return val
 
 
-class ArchiveBase(ABC):
+class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     """Base class for archives.
 
     This class assumes all archives use a fixed-size container with bins that
@@ -137,6 +137,11 @@ class ArchiveBase(ABC):
         _occupied_indices (list of (int or tuple of int)): A list of indices
             that are occupied in the archive. This attribute is None until
             :meth:`initialize` is called.
+        _occupied_indices_cols (tuple of list of int): Stores the same data as
+            ``_occupied_indices``, but in column-wise fashion. For instance,
+            ``_occupied_indices_cols[0]`` holds entry 0 of all the indices in
+            ``_occupied_indices``. This attribute is None until
+            :meth:`initialize` is called.
     """
 
     def __init__(self, storage_dims, behavior_dim, seed=None, dtype=np.float64):
@@ -151,6 +156,7 @@ class ArchiveBase(ABC):
         self._behavior_values = None
         self._metadata = None
         self._occupied_indices = None
+        self._occupied_indices_cols = None
 
         # Not intended to be accessed by children (and thus not mentioned in the
         # docstring).
@@ -245,10 +251,14 @@ class ArchiveBase(ABC):
                                    dtype=self.dtype)
         self._metadata = np.empty(self._storage_dims, dtype=object)
         self._occupied_indices = []
+        self._occupied_indices_cols = tuple(
+            [] for _ in range(len(self._storage_dims)))
 
     @abstractmethod
     def _get_index(self, behavior_values):
         """Returns archive indices for the given behavior values.
+
+        Indices must be either an int or a tuple of int.
 
         :meta public:
         """
@@ -285,6 +295,18 @@ class ArchiveBase(ABC):
             return True, already_occupied
 
         return False, already_occupied
+
+    def _add_occupied_index(self, index):
+        """Adds a new index to the lists of occupied indices."""
+        self._occupied_indices.append(index)
+
+        # Some archives (e.g. CVTArchive) have a 1D index and use ints instead
+        # of tuples, so we convert to a singleton tuple here.
+        if not isinstance(index, tuple):
+            index = (index,)
+
+        for i, idx in enumerate(index):
+            self._occupied_indices_cols[i].append(idx)
 
     @require_init
     def add(self, solution, objective_value, behavior_values, metadata=None):
@@ -334,7 +356,7 @@ class ArchiveBase(ABC):
             self._metadata[index] = metadata
 
         if was_inserted and not already_occupied:
-            self._occupied_indices.append(index)
+            self._add_occupied_index(index)
             status = AddStatus.NEW
             value = objective_value
         elif was_inserted and already_occupied:
@@ -406,6 +428,59 @@ class ArchiveBase(ABC):
         return (self._solutions[index], self._objective_values[index],
                 self._behavior_values[index], self._metadata[index])
 
+    def data(self):
+        """Returns columns containing all data in the archive.
+
+        Namely, this method returns 5 arrays containing all of the solutions,
+        objective values, behavior values, indices, and metadata in the archive.
+        For example::
+
+            (all_solutions, all_objective_values,
+             all_behavior_values, all_indices, all_metadata) = archive.data()
+
+        All the arrays correspond to each other, i.e. ``all_solutions[i]``
+        corresponds to ``all_objective_values[i]``, ``all_behavior_values[i]``,
+        ``all_indices[i]``, and ``all_metadata[i]``. This means that an
+        iteration like the following would work::
+
+            for sol, obj, beh, idx, meta in zip(*archive.data()):
+                ...
+
+        This method is also useful when extracting insights from one
+        component of the archive. For instance, one can easily extract all the
+        objective values and calculate their mean with this method.
+
+        .. note:: This method returns numpy views into existing data in the
+            archive, so it does not make any copies. However, the data may
+            change if the archive is modified after calling this method.
+
+        Returns:
+            tuple: 5-element tuple containing:
+
+                **all_solutions** (:class:`numpy.ndarray` -- shape (n_entries,
+                :attr:`solution_dim`)): Parameters for all the solutions in the
+                archive.
+
+                **all_objective_values** (:class:`numpy.ndarray` -- shape
+                (n_entries,)): Objective value of all entries in the archive.
+
+                **all_behavior_values** (:class:`numpy.ndarray`-- shape
+                (n_entries, :attr:`behavior_dim`)): Behavior space coordinates
+                of all the entries.
+
+                **all_indices** (:class:`list` -- shape (n_entries,)): Index of
+                all entries in the archive. As each index can be either an int
+                or a tuple, this is a Python list.
+
+                **all_metadata** (:class:`numpy.ndarray` -- shape (n_entries,)):
+                Object array with metadata of all entries.
+        """
+        return (self._solutions[self._occupied_indices_cols],
+                self._objective_values[self._occupied_indices_cols],
+                self._behavior_values[self._occupied_indices_cols],
+                self._occupied_indices,
+                self._metadata[self._occupied_indices_cols])
+
     def as_pandas(self, include_solutions=True, include_metadata=False):
         """Converts the archive into a Pandas dataframe.
 
@@ -414,8 +489,10 @@ class ArchiveBase(ABC):
         - ``len(self._storage_dims)`` columns for the index, named
           ``index_0, index_1, ...`` In :class:`~ribs.archives.GridArchive` and
           :class:`~ribs.archives.SlidingBoundariesArchive`, there are
-          :attr:`behavior_dim` columns. In :class:`~ribs.archives.CVTArchive`,
-          there is just one column.
+          :attr:`behavior_dim` columns, and the indices correspond to the bins
+          of the entries. In :class:`~ribs.archives.CVTArchive`,
+          there is just one column, and the index is the index of the entry's
+          centroid in :attr:`~ribs.archives.CVTArchive.centroids`.
         - ``self._behavior_dim`` columns for the behavior characteristics, named
           ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``
@@ -443,35 +520,27 @@ class ArchiveBase(ABC):
         data = OrderedDict()
 
         index_dim = len(self._storage_dims)
-        if self.empty:
-            index_columns = ([],) * index_dim
-        else:
-            if index_dim == 1 and isinstance(self._occupied_indices[0],
-                                             (int, np.integer)):
-                # Some archives (i.e. CVTArchive) have a 1D index and use ints
-                # instead of 1D tuples.
-                index_columns = (self._occupied_indices,)
-            else:
-                index_columns = tuple(map(list, zip(*self._occupied_indices)))
         for i in range(index_dim):
-            data[f"index_{i}"] = np.asarray(index_columns[i], dtype=int)
+            data[f"index_{i}"] = np.asarray(self._occupied_indices_cols[i],
+                                            dtype=int)
 
-        behavior_values = self._behavior_values[index_columns]
+        behavior_values = self._behavior_values[self._occupied_indices_cols]
         for i in range(self._behavior_dim):
             data[f"behavior_{i}"] = np.asarray(behavior_values[:, i],
                                                dtype=self.dtype)
 
-        data["objective"] = np.asarray(self._objective_values[index_columns],
-                                       dtype=self.dtype)
+        data["objective"] = np.asarray(
+            self._objective_values[self._occupied_indices_cols],
+            dtype=self.dtype)
 
         if include_solutions:
-            solutions = self._solutions[index_columns]
+            solutions = self._solutions[self._occupied_indices_cols]
             for i in range(self._solution_dim):
                 data[f"solution_{i}"] = np.asarray(solutions[:, i],
                                                    dtype=self.dtype)
 
         if include_metadata:
-            metadata = self._metadata[index_columns]
+            metadata = self._metadata[self._occupied_indices_cols]
             data["metadata"] = np.asarray(metadata, dtype=object)
 
         return pd.DataFrame(data)

@@ -255,10 +255,13 @@ class SlidingBoundariesArchive(ArchiveBase):
     def _reset_archive(self):
         """Reset the archive.
 
-        Only ``self._occupied_indices`` and ``self._occupied`` are reset because
-        other members do not matter.
+        Only ``self._occupied_indices``, ``self._occupied_indices_cols``, and
+        ``self._occupied`` are reset, as an entry can have arbitrary values when
+        its index is marked as unoccupied.
         """
         self._occupied_indices.clear()
+        for col in self._occupied_indices_cols:
+            col.clear()
         self._occupied.fill(False)
 
     @staticmethod

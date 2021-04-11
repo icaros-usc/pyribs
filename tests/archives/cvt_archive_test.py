@@ -8,27 +8,26 @@ from ribs.archives import AddStatus, CVTArchive
 
 from .conftest import get_archive_data
 
+# pylint: disable = redefined-outer-name
+
 
 @pytest.fixture
-def _data(use_kd_tree):
+def data(use_kd_tree):
     """Data for CVT Archive tests."""
     return (get_archive_data("CVTArchive-kd_tree")
             if use_kd_tree else get_archive_data("CVTArchive-brute_force"))
 
 
-def _assert_archive_has_entry(archive, centroid, behavior_values,
-                              objective_value, solution):
+def assert_archive_entry(archive, solution, objective_value, behavior_values,
+                         centroid, metadata):
     """Assert that the archive has one specific entry."""
-    archive_data = archive.as_pandas()
-    assert len(archive_data) == 1
-
-    # Check that the centroid is correct.
-    index = archive_data.loc[0, "index_0"]
-    assert (archive.centroids[index] == centroid).all()
-
-    assert (archive_data.loc[0, "behavior_0":] == (list(behavior_values) +
-                                                   [objective_value] +
-                                                   list(solution))).all()
+    all_sols, all_objs, all_behs, all_idxs, all_meta = archive.data()
+    assert len(all_sols) == 1
+    assert np.isclose(all_sols[0], solution).all()
+    assert np.isclose(all_objs[0], objective_value).all()
+    assert np.isclose(all_behs[0], behavior_values).all()
+    assert np.isclose(archive.centroids[all_idxs[0]], centroid).all()
+    assert all_meta[0] == metadata
 
 
 def test_samples_bad_shape(use_kd_tree):
@@ -39,13 +38,13 @@ def test_samples_bad_shape(use_kd_tree):
                    use_kd_tree=use_kd_tree)
 
 
-def test_properties_are_correct(_data):
-    assert np.all(_data.archive.lower_bounds == [-1, -1])
-    assert np.all(_data.archive.upper_bounds == [1, 1])
+def test_properties_are_correct(data):
+    assert np.all(data.archive.lower_bounds == [-1, -1])
+    assert np.all(data.archive.upper_bounds == [1, 1])
 
     points = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
-    unittest.TestCase().assertCountEqual(_data.archive.samples.tolist(), points)
-    unittest.TestCase().assertCountEqual(_data.archive.centroids.tolist(),
+    unittest.TestCase().assertCountEqual(data.archive.samples.tolist(), points)
+    unittest.TestCase().assertCountEqual(data.archive.centroids.tolist(),
                                          points)
 
 
@@ -69,47 +68,52 @@ def test_custom_centroids_bad_shape(use_kd_tree):
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
-def test_add_to_archive(_data, use_list):
+def test_add_to_archive(data, use_list):
     if use_list:
-        status, value = _data.archive.add(list(_data.solution),
-                                          _data.objective_value,
-                                          list(_data.behavior_values))
+        status, value = data.archive.add(list(data.solution),
+                                         data.objective_value,
+                                         list(data.behavior_values),
+                                         data.metadata)
     else:
-        status, value = _data.archive.add(_data.solution, _data.objective_value,
-                                          _data.behavior_values)
+        status, value = data.archive.add(data.solution, data.objective_value,
+                                         data.behavior_values, data.metadata)
 
     assert status == AddStatus.NEW
-    assert np.isclose(value, _data.objective_value)
-    _assert_archive_has_entry(_data.archive_with_entry, _data.centroid,
-                              _data.behavior_values, _data.objective_value,
-                              _data.solution)
+    assert np.isclose(value, data.objective_value)
+    assert_archive_entry(data.archive_with_entry, data.solution,
+                         data.objective_value, data.behavior_values,
+                         data.centroid, data.metadata)
 
 
-def test_add_and_overwrite(_data):
+def test_add_and_overwrite(data):
     """Test adding a new entry with a higher objective value."""
-    arbitrary_sol = _data.solution + 1
-    high_objective_value = _data.objective_value + 1.0
+    arbitrary_sol = data.solution + 1
+    arbitrary_metadata = {"foobar": 12}
+    high_objective_value = data.objective_value + 1.0
 
-    status, value = _data.archive_with_entry.add(arbitrary_sol,
-                                                 high_objective_value,
-                                                 _data.behavior_values)
+    status, value = data.archive_with_entry.add(arbitrary_sol,
+                                                high_objective_value,
+                                                data.behavior_values,
+                                                arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
-    assert np.isclose(value, high_objective_value - _data.objective_value)
-    _assert_archive_has_entry(_data.archive_with_entry, _data.centroid,
-                              _data.behavior_values, high_objective_value,
-                              arbitrary_sol)
+    assert np.isclose(value, high_objective_value - data.objective_value)
+    assert_archive_entry(data.archive_with_entry, arbitrary_sol,
+                         high_objective_value, data.behavior_values,
+                         data.centroid, arbitrary_metadata)
 
 
-def test_add_without_overwrite(_data):
+def test_add_without_overwrite(data):
     """Test adding a new entry with a lower objective value."""
-    arbitrary_sol = _data.solution + 1
-    low_objective_value = _data.objective_value - 1.0
+    arbitrary_sol = data.solution + 1
+    arbitrary_metadata = {"foobar": 12}
+    low_objective_value = data.objective_value - 1.0
 
-    status, value = _data.archive_with_entry.add(arbitrary_sol,
-                                                 low_objective_value,
-                                                 _data.behavior_values)
+    status, value = data.archive_with_entry.add(arbitrary_sol,
+                                                low_objective_value,
+                                                data.behavior_values,
+                                                arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective_value - _data.objective_value)
-    _assert_archive_has_entry(_data.archive_with_entry, _data.centroid,
-                              _data.behavior_values, _data.objective_value,
-                              _data.solution)
+    assert np.isclose(value, low_objective_value - data.objective_value)
+    assert_archive_entry(data.archive_with_entry, data.solution,
+                         data.objective_value, data.behavior_values,
+                         data.centroid, data.metadata)
