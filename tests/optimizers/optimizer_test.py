@@ -1,12 +1,12 @@
 """Tests for the Optimizer."""
-import unittest
-
 import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
+
+# pylint: disable = redefined-outer-name
 
 
 @pytest.fixture
@@ -82,16 +82,13 @@ def test_tell_inserts_solutions_into_archive(optimizer_fixture, tell_metadata):
         metadata=metadata,
     )
 
-    archive_data = optimizer.archive.as_pandas(include_metadata=True)
-    archive_beh = (
-        archive_data.loc[:, ["behavior_0", "behavior_1"]].to_numpy().tolist())
-    archive_meta = archive_data.loc[:,
-                                    "metadata"].to_numpy(dtype=object).tolist()
-
-    # TODO: Use the raw data API described in #118 when it becomes available.
-    assert len(archive_data) == num_solutions
-    unittest.TestCase().assertCountEqual(behavior_values, archive_beh)
-    unittest.TestCase().assertCountEqual(expected_metadata, archive_meta)
+    # Note: This assumes data() returns entries in order of insertion, but this
+    # may change in the future.
+    all_sols, all_objs, all_behs, _, all_meta = optimizer.archive.data()
+    assert len(all_sols) == num_solutions
+    assert (behavior_values == all_behs).all()
+    assert (all_objs == np.ones(num_solutions)).all()
+    assert (expected_metadata == all_meta).all()
 
 
 @pytest.mark.parametrize("tell_metadata", [True, False],
@@ -117,18 +114,14 @@ def test_tell_inserts_solutions_with_multiple_emitters(tell_metadata):
         behavior_values=behavior_values,
         metadata=metadata,
     )
-    assert len(optimizer.archive.as_pandas()) == 6
 
-    archive_data = optimizer.archive.as_pandas(include_metadata=True)
-    archive_beh = (
-        archive_data.loc[:, ["behavior_0", "behavior_1"]].to_numpy().tolist())
-    archive_meta = archive_data.loc[:,
-                                    "metadata"].to_numpy(dtype=object).tolist()
-
-    # TODO: Use the raw data API described in #118 when it becomes available.
-    assert len(archive_data) == 6
-    unittest.TestCase().assertCountEqual(behavior_values, archive_beh)
-    unittest.TestCase().assertCountEqual(expected_metadata, archive_meta)
+    # Note: This assumes data() returns entries in order of insertion, but this
+    # may change in the future.
+    all_sols, all_objs, all_behs, _, all_meta = optimizer.archive.data()
+    assert len(all_sols) == 6
+    assert (behavior_values == all_behs).all()
+    assert (all_objs == np.ones(6)).all()
+    assert (expected_metadata == all_meta).all()
 
 
 def test_tell_fails_when_ask_not_called(optimizer_fixture):
