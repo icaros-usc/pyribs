@@ -256,7 +256,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         """Reset the archive.
 
         Only ``self._occupied_indices``, ``self._occupied_indices_cols``, and
-        ``self._occupied`` are reset, an entry can have arbitrary values when
+        ``self._occupied`` are reset, as an entry can have arbitrary values when
         its index is marked as unoccupied.
         """
         self._occupied_indices.clear()
