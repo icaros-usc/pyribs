@@ -138,6 +138,25 @@ def test_random_elite_fails_when_empty(data):
         data.archive.get_random_elite()
 
 
+def test_data(data):
+    """General checks for data() method.
+
+    The assert_archive_entry method in the other archive tests already tests the
+    correctness of data().
+    """
+    (all_sols, all_objs, all_behs, all_idxs,
+     all_meta) = data.archive_with_entry.data()
+    assert len(all_sols) == 1
+    assert len(all_objs) == 1
+    assert len(all_behs) == 1
+
+    assert len(all_idxs) == 1
+    assert all_idxs.dtype == object
+    assert len(all_idxs.shape) == 1  # 1D array of object indices.
+
+    assert len(all_meta) == 1
+
+
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
 @pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
 @pytest.mark.parametrize("include_solutions", [True, False],
