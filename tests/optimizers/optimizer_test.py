@@ -10,7 +10,7 @@ from ribs.optimizers import Optimizer
 
 
 @pytest.fixture
-def _optimizer_fixture():
+def optimizer_fixture():
     """Returns an Optimizer with GridArchive and one GaussianEmitter."""
     solution_dim = 2
     num_solutions = 4
@@ -51,14 +51,14 @@ def test_init_fails_with_mismatched_emitters():
         Optimizer(archive, emitters)
 
 
-def test_ask_returns_correct_solution_shape(_optimizer_fixture):
-    optimizer, solution_dim, num_solutions = _optimizer_fixture
+def test_ask_returns_correct_solution_shape(optimizer_fixture):
+    optimizer, solution_dim, num_solutions = optimizer_fixture
     solutions = optimizer.ask()
     assert solutions.shape == (num_solutions, solution_dim)
 
 
-def test_ask_fails_when_called_twice(_optimizer_fixture):
-    optimizer, *_ = _optimizer_fixture
+def test_ask_fails_when_called_twice(optimizer_fixture):
+    optimizer, *_ = optimizer_fixture
     with pytest.raises(RuntimeError):
         optimizer.ask()
         optimizer.ask()
@@ -66,8 +66,8 @@ def test_ask_fails_when_called_twice(_optimizer_fixture):
 
 @pytest.mark.parametrize("tell_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
-def test_tell_inserts_solutions_into_archive(_optimizer_fixture, tell_metadata):
-    optimizer, _, num_solutions = _optimizer_fixture
+def test_tell_inserts_solutions_into_archive(optimizer_fixture, tell_metadata):
+    optimizer, _, num_solutions = optimizer_fixture
     _ = optimizer.ask()  # Ignore the actual values of the solutions.
     behavior_values = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
     metadata = ([f"metadata_{i}" for i in range(num_solutions)]
@@ -131,7 +131,7 @@ def test_tell_inserts_solutions_with_multiple_emitters(tell_metadata):
     unittest.TestCase().assertCountEqual(expected_metadata, archive_meta)
 
 
-def test_tell_fails_when_ask_not_called(_optimizer_fixture):
-    optimizer, *_ = _optimizer_fixture
+def test_tell_fails_when_ask_not_called(optimizer_fixture):
+    optimizer, *_ = optimizer_fixture
     with pytest.raises(RuntimeError):
         optimizer.tell(None, None)
