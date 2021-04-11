@@ -6,8 +6,6 @@ from ribs.archives import AddStatus, GridArchive
 
 from .conftest import get_archive_data
 
-# pylint: disable = redefined-outer-name
-
 
 @pytest.fixture
 def data():

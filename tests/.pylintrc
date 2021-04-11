@@ -1,0 +1,3 @@
+# Specific pylint configs for tests.
+
+disable=redefined-outer-name
