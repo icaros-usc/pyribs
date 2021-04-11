@@ -7,6 +7,8 @@ from ribs.archives._archive_base import RandomBuffer
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
+# pylint: disable = redefined-outer-name
+
 #
 # RandomBuffer tests -- note this is an internal class.
 #
@@ -73,8 +75,6 @@ def test_invalid_dtype():
 #
 # ArchiveBase tests -- should work for all archive classes.
 #
-
-# pylint: disable = redefined-outer-name
 
 
 @pytest.fixture(params=ARCHIVE_NAMES)

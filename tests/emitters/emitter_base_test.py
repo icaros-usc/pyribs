@@ -7,12 +7,14 @@ import pytest
 from ribs.emitters import (GaussianEmitter, ImprovementEmitter, IsoLineEmitter,
                            OptimizingEmitter, RandomDirectionEmitter)
 
+# pylint: disable = redefined-outer-name
+
 
 @pytest.fixture(params=[
     "GaussianEmitter", "IsoLineEmitter", "ImprovementEmitter",
     "RandomDirectionEmitter", "OptimizingEmitter"
 ])
-def _emitter_fixture(request, archive_fixture):
+def emitter_fixture(request, archive_fixture):
     """Creates an archive, emitter, and initial solution.
 
     Returns:
@@ -43,14 +45,14 @@ def _emitter_fixture(request, archive_fixture):
 #
 
 
-def test_ask_emits_correct_num_sols(_emitter_fixture):
-    _, emitter, batch_size, x0 = _emitter_fixture
+def test_ask_emits_correct_num_sols(emitter_fixture):
+    _, emitter, batch_size, x0 = emitter_fixture
     solutions = emitter.ask()
     assert solutions.shape == (batch_size, len(x0))
 
 
-def test_ask_emits_correct_num_sols_on_nonempty_archive(_emitter_fixture):
-    archive, emitter, batch_size, x0 = _emitter_fixture
+def test_ask_emits_correct_num_sols_on_nonempty_archive(emitter_fixture):
+    archive, emitter, batch_size, x0 = emitter_fixture
     archive.add(x0, 1, np.array([0, 0]))
     solutions = emitter.ask()
     assert solutions.shape == (batch_size, len(x0))
@@ -63,8 +65,8 @@ def test_ask_emits_correct_num_sols_on_nonempty_archive(_emitter_fixture):
 
 @pytest.mark.parametrize("tell_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
-def test_tell_inserts_into_archive(_emitter_fixture, tell_metadata):
-    archive, emitter, batch_size, _ = _emitter_fixture
+def test_tell_inserts_into_archive(emitter_fixture, tell_metadata):
+    archive, emitter, batch_size, _ = emitter_fixture
     solutions = emitter.ask()
     objective_values = np.full(batch_size, 1.)
     behavior_values = np.array([[-1, -1], [0, 0], [1, 1]])
