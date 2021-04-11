@@ -20,7 +20,6 @@ def assert_archive_entry(archive, solution, objective_value, behavior_values,
     """Assert that the archive has one specific entry."""
     all_sols, all_objs, all_behs, all_idxs, all_meta = archive.data()
     assert len(all_sols) == 1
-
     assert np.isclose(all_sols[0], solution).all()
     assert np.isclose(all_objs[0], objective_value).all()
     assert np.isclose(all_behs[0], behavior_values).all()

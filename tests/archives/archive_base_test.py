@@ -149,11 +149,8 @@ def test_data(data):
     assert len(all_sols) == 1
     assert len(all_objs) == 1
     assert len(all_behs) == 1
-
     assert len(all_idxs) == 1
-    assert all_idxs.dtype == object
-    assert len(all_idxs.shape) == 1  # 1D array of object indices.
-
+    assert isinstance(all_idxs, list)
     assert len(all_meta) == 1
 
 
