@@ -295,8 +295,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """Adds a new index to the lists of occupied indices."""
         self._occupied_indices.append(index)
 
-        # Some archives (e.g. CVTArchive) have a 1D index and use ints.
-        if isinstance(index, (int, np.integer)):
+        # Some archives (e.g. CVTArchive) have a 1D index and use ints instead
+        # of tuples, so we convert to a singleton tuple here.
+        if not isinstance(index, tuple):
             index = (index,)
 
         for i, idx in enumerate(index):
@@ -463,8 +464,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 of all the entries.
 
                 **all_indices** (:class:`list` -- shape (n_entries,)): Index of
-                all entries in the archive. As the index can be either an int or
-                a tuple, this is a Python list.
+                all entries in the archive. As each index can be either an int
+                or a tuple, this is a Python list.
 
                 **all_metadata** (:class:`numpy.ndarray` -- shape (n_entries,)):
                 Object array with metadata of all entries.
