@@ -253,6 +253,7 @@ class CVTArchive(ArchiveBase):
         Returns:
             int: Centroid index.
         """
+        # We use int() here since these methods may return a numpy integer.
         if self._use_kd_tree:
             return int(self._centroid_kd_tree.query(behavior_values)[1])
 
