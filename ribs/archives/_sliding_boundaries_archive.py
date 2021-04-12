@@ -229,9 +229,9 @@ class SlidingBoundariesArchive(ArchiveBase):
     @nb.jit(nopython=True)
     def _get_index_numba(behavior_values, upper_bounds, lower_bounds,
                          boundaries, dims):
-        """Numba helper for _get_index().
+        """Numba helper for get_index().
 
-        See _get_index() for usage.
+        See get_index() for usage.
         """
         behavior_values = np.minimum(
             np.maximum(behavior_values + _EPSILON, lower_bounds),
@@ -242,10 +242,28 @@ class SlidingBoundariesArchive(ArchiveBase):
             index.append(max(0, idx - 1))
         return index
 
-    def _get_index(self, behavior_values):
-        """Index is determined based on sliding boundaries.
+    def get_index(self, behavior_values):
+        """Returns indices of the entry within the archive's grid.
 
-        :meta private:
+        First, values are clipped to the bounds of the behavior space. Then, the
+        values are mapped to bins via a binary search along the boundaries in
+        each dimension.
+
+        The indices can be used to access boundaries of a behavior value's bin.
+        For example, the following retrieves the lower and upper bounds of the
+        bin along dimension 0::
+
+            idx = archive.get_index(...)  # Other methods also return indices.
+            lower = archive.boundaries[0][idx[0]]
+            upper = archive.boundaries[0][idx[0] + 1]
+
+        See :attr:`boundaries` for more info.
+
+        Args:
+            behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
+                coordinates in behavior space.
+        Returns:
+            tuple of int: The grid indices.
         """
         index = SlidingBoundariesArchive._get_index_numba(
             behavior_values, self.upper_bounds, self.lower_bounds,
@@ -301,11 +319,10 @@ class SlidingBoundariesArchive(ArchiveBase):
                                                      self._behavior_dim,
                                                      self.dims)
 
-        index_columns = tuple(map(list, zip(*self._occupied_indices)))
-        old_sols = self._solutions[index_columns].copy()
-        old_objs = self._objective_values[index_columns].copy()
-        old_behs = self._behavior_values[index_columns].copy()
-        old_metas = self._metadata[index_columns].copy()
+        old_sols = self._solutions[self._occupied_indices_cols].copy()
+        old_objs = self._objective_values[self._occupied_indices_cols].copy()
+        old_behs = self._behavior_values[self._occupied_indices_cols].copy()
+        old_metas = self._metadata[self._occupied_indices_cols].copy()
 
         self._reset_archive()
         for sol, obj, beh, meta in zip(old_sols, old_objs, old_behs, old_metas):

@@ -43,10 +43,10 @@ class CVTArchive(ArchiveBase):
     Finally, if running multiple experiments, it may be beneficial to use the
     same centroids across each experiment. Doing so can keep experiments
     consistent and reduce execution time. To do this, either 1) construct custom
-    centroids centroids and pass them in via the ``custom_centroids`` argument,
-    or 2) access the centroids created in the first archive with
-    :attr:`centroids` and pass them into ``custom_centroids`` when constructing
-    archives for subsequent experiments.
+    centroids and pass them in via the ``custom_centroids`` argument, or 2)
+    access the centroids created in the first archive with :attr:`centroids` and
+    pass them into ``custom_centroids`` when constructing archives for
+    subsequent experiments.
 
     Args:
         bins (int): The number of bins to use in the archive, equivalent to the
@@ -82,8 +82,8 @@ class CVTArchive(ArchiveBase):
         ckdtree_kwargs (dict): kwargs for :class:`~scipy.spatial.cKDTree`. By
             default, we do not pass in any kwargs.
     Raises:
-        ValueError: The ``samples`` array or the ``custom_centroids`` array is
-            of the wrong dimensionality.
+        ValueError: The ``samples`` array or the ``custom_centroids`` array has
+            the wrong shape.
     """
 
     def __init__(self,
@@ -176,8 +176,8 @@ class CVTArchive(ArchiveBase):
     @property
     @require_init
     def centroids(self):
-        """(num_centroids, behavior_dim) numpy.ndarray: The centroids used in
-        the CVT.
+        """(n_centroids, :attr:`behavior_dim`) numpy.ndarray: The centroids used
+        in the CVT.
 
         None until :meth:`initialize` is called.
         """
@@ -237,10 +237,21 @@ class CVTArchive(ArchiveBase):
         distances = np.sum(np.square(distances), axis=1)
         return np.argmin(distances)
 
-    def _get_index(self, behavior_values):
-        """Finds the centroid index using either the k-D tree or brute force.
+    def get_index(self, behavior_values):
+        """Finds the index of the centroid closest to the behavior values.
 
-        :meta private:
+        If ``idx`` is the index returned by this method for some behavior values
+        ``beh``, then ``archive.centroids[idx]`` holds the coordinates of the
+        centroid closest to ``beh``. See :attr:`centroids` for more info.
+
+        The centroid index is located using either the k-D tree or brute force,
+        depending on the value of ``use_kd_tree`` in the constructor.
+
+        Args:
+            behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
+                coordinates in behavior space.
+        Returns:
+            int: Centroid index.
         """
         if self._use_kd_tree:
             return self._centroid_kd_tree.query(behavior_values)[1]
