@@ -121,9 +121,27 @@ class GridArchive(ArchiveBase):
         return index.astype(np.int32)
 
     def get_index(self, behavior_values):
-        """Retrieves grid indices.
+        """Returns indices of the entry within the archive's grid.
 
-        Clips behavior values to behavior bounds.
+        First, values are clipped to the bounds of the behavior space. Then, the
+        values are mapped to bins; e.g. bin 5 along dimension 0 and bin 3 along
+        dimension 1.
+
+        One use of the indices is for determining boundaries of a behavior
+        value's bin. For example, the following retrieves the lower and upper
+        bounds of the bin along dimension 0::
+
+            idx = archive.get_index(...)  # Other methods also return indices.
+            lower = archive.boundaries[0][idx[0]]
+            upper = archive.boundaries[0][idx[0] + 1]
+
+        See :attr:`boundaries` for more info.
+
+        Args:
+            behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
+                coordinates in behavior space.
+        Returns:
+            tuple of int: The grid indices.
         """
         index = GridArchive._get_index_numba(behavior_values,
                                              self._upper_bounds,
