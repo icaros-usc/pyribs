@@ -114,11 +114,7 @@ def test_elite_with_behavior_gets_correct_elite(data):
     assert (sol == data.solution).all()
     assert obj == data.objective_value
     assert (beh == data.behavior_values).all()
-    assert isinstance(idx, (
-        int,
-        np.integer,
-        tuple,
-    ))  # Exact value depends on archive.
+    assert isinstance(idx, (int, tuple))  # Exact value depends on archive.
     assert meta == data.metadata
 
 
@@ -137,11 +133,7 @@ def test_random_elite_gets_single_elite(data):
     assert np.all(sol == data.solution)
     assert obj == data.objective_value
     assert np.all(beh == data.behavior_values)
-    assert isinstance(idx, (
-        int,
-        np.integer,
-        tuple,
-    ))  # Exact value depends on archive.
+    assert isinstance(idx, (int, tuple))  # Exact value depends on archive.
     assert meta == data.metadata
 
 

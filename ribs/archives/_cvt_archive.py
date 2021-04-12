@@ -254,6 +254,6 @@ class CVTArchive(ArchiveBase):
             int: Centroid index.
         """
         if self._use_kd_tree:
-            return self._centroid_kd_tree.query(behavior_values)[1]
+            return int(self._centroid_kd_tree.query(behavior_values)[1])
 
-        return self._brute_force_nn_numba(behavior_values, self._centroids)
+        return int(self._brute_force_nn_numba(behavior_values, self._centroids))
