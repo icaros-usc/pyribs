@@ -374,10 +374,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def elite_with_behavior(self, behavior_values):
         """Gets the elite with behavior vals in the same bin as those specified.
 
+        .. note:: Values like ``index`` and ``metadata`` are often not used.
+            In such cases, consider ignoring them::
+
+                sol, obj, beh, *_ = archive.elite_with_behavior(...)
+
         Args:
             behavior_values (array-like): Coordinates in behavior space.
         Returns:
-            tuple: 4-element tuple for the elite if it is found:
+            tuple: 5-element tuple for the elite if it is found:
 
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
@@ -389,25 +394,38 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 space coordinates of the elite (may not be exactly the same as
                 those specified).
 
+                **index** (int or tuple of int): Index of the entry in the
+                archive. See :attr:`get_index` for more info.
+
                 **metadata** (object): Metadata for the solution.
 
-            If there is no elite in the bin, a tuple of (None, None, None, None)
-            is returned. Thus, something like
-            ``sol, obj, beh, meta = archive.elite_with_behavior(...)`` still
-            works).
+            If there is no elite in the bin, each of the above values is None.
+            Thus, something like
+            ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``
+            still works).
         """
         index = self.get_index(np.asarray(behavior_values))
         if self._occupied[index]:
-            return (self._solutions[index], self._objective_values[index],
-                    self._behavior_values[index], self._metadata[index])
-        return (None, None, None, None)
+            return (
+                self._solutions[index],
+                self._objective_values[index],
+                self._behavior_values[index],
+                index,
+                self._metadata[index],
+            )
+        return (None, None, None, None, None)
 
     @require_init
     def get_random_elite(self):
         """Selects an elite uniformly at random from one of the archive's bins.
 
+        .. note:: Values like ``index`` and ``metadata`` are often not used.
+            In such cases, consider ignoring them::
+
+                sol, obj, beh, *_ = archive.get_random_elite()
+
         Returns:
-            tuple: 4-element tuple containing:
+            tuple: 5-element tuple containing:
 
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
@@ -417,6 +435,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
                 **behavior_values** (:class:`numpy.ndarray`): Behavior space
                 coordinates.
+
+                **index** (int or tuple of int): Index of the entry in the
+                archive. See :attr:`get_index` for more info.
 
                 **metadata** (object): Metadata for the solution.
         Raises:
@@ -428,8 +449,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         random_idx = self._rand_buf.get(len(self._occupied_indices))
         index = self._occupied_indices[random_idx]
 
-        return (self._solutions[index], self._objective_values[index],
-                self._behavior_values[index], self._metadata[index])
+        return (
+            self._solutions[index],
+            self._objective_values[index],
+            self._behavior_values[index],
+            index,
+            self._metadata[index],
+        )
 
     def data(self):
         """Returns columns containing all data in the archive.
@@ -479,11 +505,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 **all_metadata** (:class:`numpy.ndarray` -- shape (n_entries,)):
                 Object array with metadata of all entries.
         """
-        return (self._solutions[self._occupied_indices_cols],
-                self._objective_values[self._occupied_indices_cols],
-                self._behavior_values[self._occupied_indices_cols],
-                self._occupied_indices,
-                self._metadata[self._occupied_indices_cols])
+        return (
+            self._solutions[self._occupied_indices_cols],
+            self._objective_values[self._occupied_indices_cols],
+            self._behavior_values[self._occupied_indices_cols],
+            self._occupied_indices,
+            self._metadata[self._occupied_indices_cols],
+        )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
         """Converts the archive into a Pandas dataframe.
