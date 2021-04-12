@@ -127,9 +127,9 @@ class GridArchive(ArchiveBase):
         values are mapped to bins; e.g. bin 5 along dimension 0 and bin 3 along
         dimension 1.
 
-        One use of the indices is for determining boundaries of a behavior
-        value's bin. For example, the following retrieves the lower and upper
-        bounds of the bin along dimension 0::
+        The indices can be used to access boundaries of a behavior value's bin.
+        For example, the following retrieves the lower and upper bounds of the
+        bin along dimension 0::
 
             idx = archive.get_index(...)  # Other methods also return indices.
             lower = archive.boundaries[0][idx[0]]
