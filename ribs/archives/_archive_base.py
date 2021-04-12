@@ -86,19 +86,21 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     | ``_metadata``          |  ``(*storage_dims)``               |
     +------------------------+------------------------------------+
 
-    All of these arrays are accessed by a common index. If we have index ``i``,
+    All of these arrays are accessed via a common index. If we have index ``i``,
     we access its solution at ``_solutions[i]``, its behavior values at
     ``_behavior_values[i]``, etc.
 
-    Thus, child classes typically override at least the following methods:
+    Thus, child classes typically override the following methods:
 
-    - :meth:`__init__`: child classes must invoke this class's :meth:`__init__`
-      with the appropriate arguments
-    - :meth:`_get_index`: this method returns an index into the arrays above
-      when given the behavior values of a solution
-    - :meth:`initialize`: since this method sets up the arrays described, child
-      classes should invoke this in their own implementation -- however, child
-      classes may not need to override this method at all
+    - :meth:`__init__`: Child classes must invoke this class's :meth:`__init__`
+      with the appropriate arguments.
+    - :meth:`get_index`: Returns an index into the arrays above when given the
+      behavior values of a solution. Usually, the index has a meaning, e.g. in
+      :class:`~ribs.archives.CVTArchive` it is the index of a centroid. This
+      method should include an explanation of what the index means.
+    - :meth:`initialize`: By default, this method sets up the arrays described,
+      so child classes should invoke the parent implementation if they are
+      overriding it.
 
     .. note:: Attributes beginning with an underscore are only intended to be
         accessed by child classes (i.e. they are "protected" attributes).
@@ -126,10 +128,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             themselves. This attribute is None until :meth:`initialize` is
             called.
         _objective_values (numpy.ndarray): Float array storing the objective
-            values of each solution. This attribute is None until
+            value of each solution. This attribute is None until
             :meth:`initialize` is called.
         _behavior_values (numpy.ndarray): Float array storing the behavior
-            values of each solution. This attribute is None until
+            space coordinates of each solution. This attribute is None until
             :meth:`initialize` is called.
         _metadata (numpy.ndarray): Object array storing the metadata associated
             with each solution. This attribute is None until :meth:`initialize`
@@ -255,12 +257,18 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             [] for _ in range(len(self._storage_dims)))
 
     @abstractmethod
-    def _get_index(self, behavior_values):
+    def get_index(self, behavior_values):
         """Returns archive indices for the given behavior values.
 
-        Indices must be either an int or a tuple of int.
+        See the main :class:`~ribs.archives.ArchiveBase` docstring for more
+        info.
 
-        :meta public:
+        Args:
+            behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
+                coordinates in behavior space.
+        Returns:
+            int or tuple of int: Indices of the entry in the archive's storage
+            arrays.
         """
 
     @staticmethod
@@ -346,7 +354,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         solution = np.asarray(solution)
         behavior_values = np.asarray(behavior_values)
 
-        index = self._get_index(behavior_values)
+        index = self.get_index(behavior_values)
         old_objective = self._objective_values[index]
         was_inserted, already_occupied = self._add_numba(
             index, solution, objective_value, behavior_values, self._occupied,
@@ -371,10 +379,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def elite_with_behavior(self, behavior_values):
         """Gets the elite with behavior vals in the same bin as those specified.
 
+        .. note:: Values like ``index`` and ``metadata`` are often not used.
+            In such cases, consider ignoring them::
+
+                sol, obj, beh, *_ = archive.elite_with_behavior(...)
+
         Args:
             behavior_values (array-like): Coordinates in behavior space.
         Returns:
-            tuple: 4-element tuple for the elite if it is found:
+            tuple: 5-element tuple for the elite if it is found:
 
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
@@ -386,25 +399,38 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 space coordinates of the elite (may not be exactly the same as
                 those specified).
 
+                **index** (int or tuple of int): Index of the entry in the
+                archive. See :attr:`get_index` for more info.
+
                 **metadata** (object): Metadata for the solution.
 
-            If there is no elite in the bin, a tuple of (None, None, None, None)
-            is returned. Thus, something like
-            ``sol, obj, beh, meta = archive.elite_with_behavior(...)`` still
-            works).
+            If there is no elite in the bin, each of the above values is None.
+            Thus, something like
+            ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``
+            still works).
         """
-        index = self._get_index(np.asarray(behavior_values))
+        index = self.get_index(np.asarray(behavior_values))
         if self._occupied[index]:
-            return (self._solutions[index], self._objective_values[index],
-                    self._behavior_values[index], self._metadata[index])
-        return (None, None, None, None)
+            return (
+                self._solutions[index],
+                self._objective_values[index],
+                self._behavior_values[index],
+                index,
+                self._metadata[index],
+            )
+        return (None, None, None, None, None)
 
     @require_init
     def get_random_elite(self):
         """Selects an elite uniformly at random from one of the archive's bins.
 
+        .. note:: Values like ``index`` and ``metadata`` are often not used.
+            In such cases, consider ignoring them::
+
+                sol, obj, beh, *_ = archive.get_random_elite()
+
         Returns:
-            tuple: 4-element tuple containing:
+            tuple: 5-element tuple containing:
 
                 **solution** (:class:`numpy.ndarray`): Parameters for the
                 solution.
@@ -414,6 +440,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
                 **behavior_values** (:class:`numpy.ndarray`): Behavior space
                 coordinates.
+
+                **index** (int or tuple of int): Index of the entry in the
+                archive. See :attr:`get_index` for more info.
 
                 **metadata** (object): Metadata for the solution.
         Raises:
@@ -425,8 +454,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         random_idx = self._rand_buf.get(len(self._occupied_indices))
         index = self._occupied_indices[random_idx]
 
-        return (self._solutions[index], self._objective_values[index],
-                self._behavior_values[index], self._metadata[index])
+        return (
+            self._solutions[index],
+            self._objective_values[index],
+            self._behavior_values[index],
+            index,
+            self._metadata[index],
+        )
 
     def data(self):
         """Returns columns containing all data in the archive.
@@ -470,16 +504,19 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
                 **all_indices** (:class:`list` -- shape (n_entries,)): Index of
                 all entries in the archive. As each index can be either an int
-                or a tuple, this is a Python list.
+                or a tuple, this is a Python list. See :meth:`get_index` for
+                more info.
 
                 **all_metadata** (:class:`numpy.ndarray` -- shape (n_entries,)):
                 Object array with metadata of all entries.
         """
-        return (self._solutions[self._occupied_indices_cols],
-                self._objective_values[self._occupied_indices_cols],
-                self._behavior_values[self._occupied_indices_cols],
-                self._occupied_indices,
-                self._metadata[self._occupied_indices_cols])
+        return (
+            self._solutions[self._occupied_indices_cols],
+            self._objective_values[self._occupied_indices_cols],
+            self._behavior_values[self._occupied_indices_cols],
+            self._occupied_indices,
+            self._metadata[self._occupied_indices_cols],
+        )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
         """Converts the archive into a Pandas dataframe.
@@ -489,10 +526,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         - ``len(self._storage_dims)`` columns for the index, named
           ``index_0, index_1, ...`` In :class:`~ribs.archives.GridArchive` and
           :class:`~ribs.archives.SlidingBoundariesArchive`, there are
-          :attr:`behavior_dim` columns, and the indices correspond to the bins
-          of the entries. In :class:`~ribs.archives.CVTArchive`,
-          there is just one column, and the index is the index of the entry's
-          centroid in :attr:`~ribs.archives.CVTArchive.centroids`.
+          :attr:`behavior_dim` columns. In :class:`~ribs.archives.CVTArchive`,
+          there is just one column. See :meth:`get_index` for more info.
         - ``self._behavior_dim`` columns for the behavior characteristics, named
           ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``

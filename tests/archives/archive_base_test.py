@@ -7,6 +7,8 @@ from ribs.archives._archive_base import RandomBuffer
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
+# pylint: disable = redefined-outer-name
+
 #
 # RandomBuffer tests -- note this is an internal class.
 #
@@ -74,8 +76,6 @@ def test_invalid_dtype():
 # ArchiveBase tests -- should work for all archive classes.
 #
 
-# pylint: disable = redefined-outer-name
-
 
 @pytest.fixture(params=ARCHIVE_NAMES)
 def data(request):
@@ -117,27 +117,31 @@ def test_solution_dim_correct(data):
 
 
 def test_elite_with_behavior_gets_correct_elite(data):
-    sol, obj, beh, meta = data.archive_with_entry.elite_with_behavior(
-        data.behavior_values)
+    (sol, obj, beh, idx,
+     meta) = data.archive_with_entry.elite_with_behavior(data.behavior_values)
     assert (sol == data.solution).all()
     assert obj == data.objective_value
     assert (beh == data.behavior_values).all()
+    assert isinstance(idx, (int, tuple))  # Exact value depends on archive.
     assert meta == data.metadata
 
 
 def test_elite_with_behavior_returns_none(data):
-    sol, obj, beh, meta = data.archive.elite_with_behavior(data.behavior_values)
+    (sol, obj, beh, idx,
+     meta) = data.archive.elite_with_behavior(data.behavior_values)
     assert sol is None
     assert obj is None
     assert beh is None
+    assert idx is None
     assert meta is None
 
 
 def test_random_elite_gets_single_elite(data):
-    sol, obj, beh, meta = data.archive_with_entry.get_random_elite()
+    sol, obj, beh, idx, meta = data.archive_with_entry.get_random_elite()
     assert np.all(sol == data.solution)
     assert obj == data.objective_value
     assert np.all(beh == data.behavior_values)
+    assert isinstance(idx, (int, tuple))  # Exact value depends on archive.
     assert meta == data.metadata
 
 
