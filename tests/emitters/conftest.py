@@ -19,12 +19,9 @@ def archive_fixture():
 class FakeArchive(ArchiveBase):
     """Bare-bones archive solely for emitter benchmarking.
 
-    Because this archive is used in emitter benchmarking, we want to
-    spend as little time in this archive as possible. Thus, the archive
-    functions are optimized for speed and not for any meaningful
-    functionality. That's why this is a "fake" archive.
-
-    Note that the get_index() method may not ever actually be called.
+    This archive is used in emitter benchmarking, so each method does as little
+    as possible. Since the methods have no meaningful functionality, this
+    archive is "fake."
     """
 
     def __init__(self, dims):

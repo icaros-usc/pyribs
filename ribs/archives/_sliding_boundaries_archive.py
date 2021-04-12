@@ -245,7 +245,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     def get_index(self, behavior_values):
         """Returns indices of the entry within the archive's grid.
 
-        First, values are clipped to the bounds of the behavior space. The
+        First, values are clipped to the bounds of the behavior space. Then, the
         values are mapped to bins via a binary search along the boundaries in
         each dimension.
 

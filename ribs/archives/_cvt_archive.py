@@ -241,8 +241,8 @@ class CVTArchive(ArchiveBase):
         """Finds the index of the centroid closest to the behavior values.
 
         If ``idx`` is the index returned by this method for some behavior values
-        ``beh``, then ``archive.centroids[idx]`` (see :attr:`centroids`) is the
-        coordinates of the centroid closest to ``beh``.
+        ``beh``, then ``archive.centroids[idx]`` holds the coordinates of the
+        centroid closest to ``beh``. See :attr:`centroids` for more info.
 
         The centroid index is located using either the k-D tree or brute force,
         depending on the value of ``use_kd_tree`` in the constructor.

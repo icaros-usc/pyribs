@@ -260,7 +260,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         Args:
             behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
-                behavior values for a solution.
+                coordinates in behavior space.
         Returns:
             int or tuple of int: Indices of the entry in the archive's storage
             arrays.
