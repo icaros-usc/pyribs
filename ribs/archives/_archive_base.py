@@ -131,7 +131,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             value of each solution. This attribute is None until
             :meth:`initialize` is called.
         _behavior_values (numpy.ndarray): Float array storing the behavior
-            values of each solution. This attribute is None until
+            space coordinates of each solution. This attribute is None until
             :meth:`initialize` is called.
         _metadata (numpy.ndarray): Object array storing the metadata associated
             with each solution. This attribute is None until :meth:`initialize`
