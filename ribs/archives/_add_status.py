@@ -10,9 +10,9 @@ class AddStatus(IntEnum):
     - ``NOT_ADDED``: The solution given to :meth:`~ArchiveBase.add` was not
       added to the archive.
     - ``IMPROVE_EXISTING``: The solution given to :meth:`~ArchiveBase.add`
-      improved an entry already in the archive.
+      improved an elite already in the archive.
     - ``NEW``: The solution given to :meth:`~ArchiveBase.add` created a new
-      entry in the archive.
+      elite in the archive.
 
     Example:
 
@@ -21,7 +21,7 @@ class AddStatus(IntEnum):
             from ribs.archives import AddStatus
             status, _ = archive.add(solution, objective_value, behavior_values)
             if status == AddStatus.NEW:
-                # Do something if the solution made a new entry in the archive.
+                # Do something if the solution made a new elite in the archive.
 
         To check whether the solution was added to the archive, the status can
         act like a bool::

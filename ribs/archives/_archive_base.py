@@ -262,8 +262,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
                 coordinates in behavior space.
         Returns:
-            int or tuple of int: Indices of the entry in the archive's storage
-            arrays.
+            int or tuple of int: Indices of the behavior values in the archive's
+            storage arrays.
         """
 
     @staticmethod
@@ -394,7 +394,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 space coordinates of the elite (may not be exactly the same as
                 those specified).
 
-                **index** (int or tuple of int): Index of the entry in the
+                **index** (int or tuple of int): Index of the elite in the
                 archive. See :attr:`get_index` for more info.
 
                 **metadata** (object): Metadata for the solution.
@@ -436,7 +436,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 **behavior_values** (:class:`numpy.ndarray`): Behavior space
                 coordinates.
 
-                **index** (int or tuple of int): Index of the entry in the
+                **index** (int or tuple of int): Index of the elite in the
                 archive. See :attr:`get_index` for more info.
 
                 **metadata** (object): Metadata for the solution.
