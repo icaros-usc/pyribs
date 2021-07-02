@@ -28,7 +28,7 @@ The supported algorithms are:
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
 
-Note that the CVTArchive in this example uses 10,000 cells, as opposed to the
+Note that the CVTArchive in this example uses 10,000 bins, as opposed to the
 250,000 (500x500) in the GridArchive, so it is not fair to directly compare
 `cvt_map_elites` and `line_cvt_map_elites` to the other algorithms. However, the
 other algorithms may be fairly compared because they use the same archive.
@@ -273,13 +273,13 @@ def sphere_main(algorithm,
                     data.to_csv(str(outdir / f"{name}_archive.csv"))
 
                 # Record and display metrics.
-                total_cells = 10_000 if isinstance(archive,
-                                                   CVTArchive) else 500 * 500
+                total_bins = 10_000 if isinstance(archive,
+                                                  CVTArchive) else 500 * 500
                 metrics["QD Score"]["x"].append(itr)
                 metrics["QD Score"]["y"].append(data['objective'].sum())
                 metrics["Archive Coverage"]["x"].append(itr)
                 metrics["Archive Coverage"]["y"].append(
-                    len(data) / total_cells * 100)
+                    len(data) / total_bins * 100)
                 print(f"Iteration {itr} | Archive Coverage: "
                       f"{metrics['Archive Coverage']['y'][-1]:.3f}% "
                       f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
