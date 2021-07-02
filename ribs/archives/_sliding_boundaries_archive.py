@@ -270,18 +270,6 @@ class SlidingBoundariesArchive(ArchiveBase):
             self._boundaries, self._dims)
         return tuple(index)
 
-    def _reset_archive(self):
-        """Reset the archive.
-
-        Only ``self._occupied_indices``, ``self._occupied_indices_cols``, and
-        ``self._occupied`` are reset, as an entry can have arbitrary values when
-        its index is marked as unoccupied.
-        """
-        self._occupied_indices.clear()
-        for col in self._occupied_indices_cols:
-            col.clear()
-        self._occupied.fill(False)
-
     @staticmethod
     @nb.jit(nopython=True)
     def _remap_numba_helper(sorted_bc, buffer_size, boundaries, behavior_dim,
@@ -324,7 +312,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         old_behs = self._behavior_values[self._occupied_indices_cols].copy()
         old_metas = self._metadata[self._occupied_indices_cols].copy()
 
-        self._reset_archive()
+        self.clear()
         for sol, obj, beh, meta in zip(old_sols, old_objs, old_behs, old_metas):
             # Add solutions from old archive.
             status, value = ArchiveBase.add(self, sol, obj, beh, meta)

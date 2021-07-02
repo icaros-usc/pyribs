@@ -251,6 +251,18 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied_indices_cols = tuple(
             [] for _ in range(len(self._storage_dims)))
 
+    def clear(self):
+        """Reset the archive.
+
+        Only ``self._occupied_indices``, ``self._occupied_indices_cols``, and
+        ``self._occupied`` are reset, as an entry can have arbitrary values when
+        its index is marked as unoccupied.
+        """
+        self._occupied_indices.clear()
+        for col in self._occupied_indices_cols:
+            col.clear()
+        self._occupied.fill(False)
+
     @abstractmethod
     def get_index(self, behavior_values):
         """Returns archive indices for the given behavior values.
