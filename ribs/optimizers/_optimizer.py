@@ -125,7 +125,7 @@ class Optimizer:
                 contains the objective function evaluation of a solution.
             behavior_values ((n_solutions, behavior_dm) array): Each row of
                 this array contains a solution's coordinates in behavior space.
-            metadata ((n_solutions,) array): Each entry of this array contains a
+            metadata ((n_solutions,) array): Each entry of this array contains
                 an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
