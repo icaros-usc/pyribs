@@ -339,8 +339,8 @@ def sliding_boundaries_archive_heatmap(archive,
     2D behavior space.
 
     Since the boundaries of :class:`ribs.archives.SlidingBoundariesArchive` are
-    dynamic, we plot the heatmap as a scatter plot, in which each marker is a
-    solution and its color represents the objective value. Boundaries can
+    dynamic, we plot the heatmap as a scatter plot, in which each marker is an
+    elite and its color represents the objective value. Boundaries can
     optionally be drawn by setting ``boundary_lw`` to a positive value.
 
     Examples:
