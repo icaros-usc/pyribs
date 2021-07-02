@@ -121,7 +121,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         _behavior_dim (int): See ``behavior_dim`` arg.
         _solution_dim (int): Dimension of the solution space, passed in with
             :meth:`initialize`.
-        _occupied (numpy.ndarray): Bool array storing whether each cell in the
+        _occupied (numpy.ndarray): Bool array storing whether each bin in the
             archive is occupied. This attribute is None until :meth:`initialize`
             is called.
         _solutions (numpy.ndarray): Float array storing the solutions
