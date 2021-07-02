@@ -96,6 +96,11 @@ def test_archive_with_entry_is_not_empty(data):
     assert not data.archive_with_entry.empty
 
 
+def test_archive_is_empty_after_clear(data):
+    data.archive_with_entry.clear()
+    assert data.archive_with_entry.empty
+
+
 def test_bins_correct(data):
     assert data.archive.bins == data.bins
 
