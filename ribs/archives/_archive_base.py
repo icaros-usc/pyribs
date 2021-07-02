@@ -316,7 +316,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """Attempts to insert a new solution into the archive.
 
         The solution is only inserted if it has a higher ``objective_value``
-        than the solution previously in the corresponding bin.
+        than the elite previously in the corresponding bin.
 
         Args:
             solution (array-like): Parameters of the solution.
@@ -397,7 +397,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 **index** (int or tuple of int): Index of the elite in the
                 archive. See :attr:`get_index` for more info.
 
-                **metadata** (object): Metadata for the solution.
+                **metadata** (object): Metadata for the elite.
 
             If there is no elite in the bin, each of the above values is None.
             Thus, something like
@@ -439,7 +439,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 **index** (int or tuple of int): Index of the elite in the
                 archive. See :attr:`get_index` for more info.
 
-                **metadata** (object): Metadata for the solution.
+                **metadata** (object): Metadata for the elite.
         Raises:
             IndexError: The archive is empty.
         """
