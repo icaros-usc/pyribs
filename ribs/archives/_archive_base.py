@@ -121,7 +121,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         _behavior_dim (int): See ``behavior_dim`` arg.
         _solution_dim (int): Dimension of the solution space, passed in with
             :meth:`initialize`.
-        _occupied (numpy.ndarray): Bool array storing whether each cell in the
+        _occupied (numpy.ndarray): Bool array storing whether each bin in the
             archive is occupied. This attribute is None until :meth:`initialize`
             is called.
         _solutions (numpy.ndarray): Float array storing the solutions
@@ -141,7 +141,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             :meth:`initialize` is called.
         _occupied_indices_cols (tuple of list of int): Stores the same data as
             ``_occupied_indices``, but in column-wise fashion. For instance,
-            ``_occupied_indices_cols[0]`` holds entry 0 of all the indices in
+            ``_occupied_indices_cols[0]`` holds index 0 of all the indices in
             ``_occupied_indices``. This attribute is None until
             :meth:`initialize` is called.
     """
@@ -262,8 +262,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
                 coordinates in behavior space.
         Returns:
-            int or tuple of int: Indices of the entry in the archive's storage
-            arrays.
+            int or tuple of int: Indices of the behavior values in the archive's
+            storage arrays.
         """
 
     @staticmethod
@@ -316,7 +316,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """Attempts to insert a new solution into the archive.
 
         The solution is only inserted if it has a higher ``objective_value``
-        than the solution previously in the corresponding bin.
+        than the elite previously in the corresponding bin.
 
         Args:
             solution (array-like): Parameters of the solution.
@@ -394,10 +394,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 space coordinates of the elite (may not be exactly the same as
                 those specified).
 
-                **index** (int or tuple of int): Index of the entry in the
+                **index** (int or tuple of int): Index of the elite in the
                 archive. See :attr:`get_index` for more info.
 
-                **metadata** (object): Metadata for the solution.
+                **metadata** (object): Metadata for the elite.
 
             If there is no elite in the bin, each of the above values is None.
             Thus, something like
@@ -436,10 +436,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 **behavior_values** (:class:`numpy.ndarray`): Behavior space
                 coordinates.
 
-                **index** (int or tuple of int): Index of the entry in the
+                **index** (int or tuple of int): Index of the elite in the
                 archive. See :attr:`get_index` for more info.
 
-                **metadata** (object): Metadata for the solution.
+                **metadata** (object): Metadata for the elite.
         Raises:
             IndexError: The archive is empty.
         """

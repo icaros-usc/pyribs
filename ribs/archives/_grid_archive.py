@@ -121,7 +121,7 @@ class GridArchive(ArchiveBase):
         return index.astype(np.int32)
 
     def get_index(self, behavior_values):
-        """Returns indices of the entry within the archive's grid.
+        """Returns indices of the behavior values within the archive's grid.
 
         First, values are clipped to the bounds of the behavior space. Then, the
         values are mapped to bins; e.g. bin 5 along dimension 0 and bin 3 along

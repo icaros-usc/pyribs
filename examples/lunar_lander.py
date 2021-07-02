@@ -284,7 +284,7 @@ def save_ccdf(archive, filename):
     https://en.wikipedia.org/wiki/Cumulative_distribution_function#Complementary_cumulative_distribution_function_(tail_distribution)).
     The CCDF plotted here is not normalized to the range (0,1). This may help
     when comparing CCDF's among archives with different amounts of coverage
-    (i.e. when one archive has more cells filled).
+    (i.e. when one archive has more bins filled).
 
     Args:
         archive (GridArchive): Archive with results from an experiment.

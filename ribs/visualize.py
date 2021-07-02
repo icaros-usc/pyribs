@@ -339,8 +339,8 @@ def sliding_boundaries_archive_heatmap(archive,
     2D behavior space.
 
     Since the boundaries of :class:`ribs.archives.SlidingBoundariesArchive` are
-    dynamic, we plot the heatmap as a scatter plot, in which each marker is a
-    solution and its color represents the objective value. Boundaries can
+    dynamic, we plot the heatmap as a scatter plot, in which each marker is an
+    elite and its color represents the objective value. Boundaries can
     optionally be drawn by setting ``boundary_lw`` to a positive value.
 
     Examples:
@@ -472,7 +472,7 @@ def parallel_axes_plot(archive,
 
     This visualization is meant to show the coverage of the behavior space at a
     glance. Each axis represents one behavioral dimension, and each line in the
-    diagram represents one entry in the archive. Three main things are evident
+    diagram represents one elite in the archive. Three main things are evident
     from this plot:
 
     - **Behavior space coverage,** as determined by the amount of the axis that
@@ -535,8 +535,8 @@ def parallel_axes_plot(archive,
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        linewidth (float): Line width for each entry in the plot.
-        alpha (float): Opacity of the line for each entry (passing a low value
+        linewidth (float): Line width for each elite in the plot.
+        alpha (float): Opacity of the line for each elite (passing a low value
             here may be helpful if there are many archive entries, as more
             entries would be visible).
         vmin (float): Minimum objective value to use in the plot. If None, the
@@ -635,11 +635,11 @@ def parallel_axes_plot(archive,
     host_ax.spines['right'].set_visible(False)
     host_ax.xaxis.tick_top()
 
-    for archive_entry, objective in zip(normalized_ys, objectives):
+    for elite_ys, objective in zip(normalized_ys, objectives):
         # Draw straight lines between the axes in the appropriate color.
         color = cmap(norm(objective))
         host_ax.plot(range(len(cols)),
-                     archive_entry,
+                     elite_ys,
                      c=color,
                      alpha=alpha,
                      linewidth=linewidth)
