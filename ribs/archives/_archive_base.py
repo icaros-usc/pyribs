@@ -141,7 +141,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             :meth:`initialize` is called.
         _occupied_indices_cols (tuple of list of int): Stores the same data as
             ``_occupied_indices``, but in column-wise fashion. For instance,
-            ``_occupied_indices_cols[0]`` holds entry 0 of all the indices in
+            ``_occupied_indices_cols[0]`` holds index 0 of all the indices in
             ``_occupied_indices``. This attribute is None until
             :meth:`initialize` is called.
     """
