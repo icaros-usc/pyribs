@@ -31,12 +31,18 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install tox tox-gh-actions
-      - name: Test with tox
-        run: tox
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+      - name: Install core deps
+        run: pip install .
+      - name: Test core
+        run: >
+          pytest tests/archives tests/emitters tests/optimizers
+          tests/factory_test.py
+      - name: Install extras deps
+        run: pip install .[all]
+      - name: Test extras
+        run: pytest tests/visualize_test.py
   pin:
     runs-on: ubuntu-latest
     steps:
@@ -45,14 +51,18 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install tox
-      - name: Test with tox
-        run: |
-          tox -e pin_core
-          tox -e pin_extras
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+      - name: Install core deps
+        run: pip install -r pinned_reqs/install.txt
+      - name: Test core
+        run: >
+          pytest tests/archives tests/emitters tests/optimizers
+          tests/factory_test.py
+      - name: Install extras deps
+        run: pip install -r pinned_reqs/extras_all.txt
+      - name: Test extras
+        run: pytest tests/visualize_test.py
   coverage:
     runs-on: ubuntu-latest
     steps:
@@ -61,12 +71,14 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install tox
-      - name: Test with tox
-        run: tox -e coverage
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+      - name: Install deps
+        run: pip install .[all]
+      - name: Test coverage
+        env:
+          NUMBA_DISABLE_JIT: 1
+        run: pytest tests
   benchmarks:
     runs-on: ubuntu-latest
     steps:
@@ -75,12 +87,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install tox
-      - name: Test with tox
-        run: tox -e benchmarks
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+      - name: Install deps
+        run: pip install .[all]
+      - name: Run benchmarks
+        run: pytest -c pytest_benchmark.ini tests
   examples:
     runs-on: ubuntu-latest
     steps:
@@ -89,10 +101,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .[all] .[examples]
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+      - name: Install deps
+        run: pip install .[all] .[examples]
       - name: Test Examples
         run: bash tests/examples.sh
   tutorials:
@@ -103,10 +115,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .[all] jupyter nbconvert
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+      - name: Install deps
+        run: pip install .[all] jupyter nbconvert
       - name: Test Tutorials
         run: bash tests/tutorials.sh
   deploy:
@@ -119,9 +131,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install -e .
           pip install -e .[dev]
       - name: Publish
