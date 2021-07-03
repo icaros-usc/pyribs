@@ -39,10 +39,14 @@ jobs:
         run: >
           pytest tests/archives tests/emitters tests/optimizers
           tests/factory_test.py
+      # Extras are not tested on 3.6 because matplotlib 3.4.0, which was used to
+      # generate the reference images in the repo, is not available for 3.6.
       - name: Install extras deps
         run: pip install .[all]
+        if: ${{ matrix.python-version != '3.6' }}
       - name: Test extras
         run: pytest tests/visualize_test.py
+        if: ${{ matrix.python-version != '3.6' }}
   pin:
     runs-on: ubuntu-latest
     steps:
