@@ -39,7 +39,7 @@ ArchiveFixtureData = namedtuple(
     "ArchiveFixtureData",
     [
         "archive",  # An empty archive with 2D behavior space.
-        "archive_with_entry",  # 2D behavior space with one entry.
+        "archive_with_elite",  # 2D behavior space with one elite.
         "solution",  # A solution.
         "objective_value",  # Float objective value.
         "behavior_values",  # 2D behavior values for the solution.
@@ -69,7 +69,7 @@ def get_archive_data(name, dtype=np.float64):
     The name is the name of an archive to create. It should come from
     ARCHIVE_NAMES.
     """
-    # Characteristics of a single solution to insert into archive_with_entry.
+    # Characteristics of a single solution to insert into archive_with_elite.
     solution = np.array([1, 2, 3])
     objective_value = 1.0
     behavior_values = np.array([0.25, 0.25])
@@ -84,14 +84,14 @@ def get_archive_data(name, dtype=np.float64):
         archive = GridArchive([10, 20], [(-1, 1), (-2, 2)], dtype=dtype)
         archive.initialize(len(solution))
 
-        archive_with_entry = GridArchive([10, 20], [(-1, 1), (-2, 2)],
+        archive_with_elite = GridArchive([10, 20], [(-1, 1), (-2, 2)],
                                          dtype=dtype)
-        archive_with_entry.initialize(len(solution))
+        archive_with_elite.initialize(len(solution))
         grid_indices = (6, 11)
     elif name.startswith("CVTArchive-"):
         # CVT archive with bounds (-1,1) and (-1,1), and 4 centroids at (0.5,
-        # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The entry in
-        # archive_with_entry should match with centroid (0.5, 0.5).
+        # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The elite in
+        # archive_with_elite should match with centroid (0.5, 0.5).
         bins = 4
         kd_tree = name == "CVTArchive-kd_tree"
         samples = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
@@ -103,11 +103,11 @@ def get_archive_data(name, dtype=np.float64):
                              dtype=dtype)
         archive.initialize(len(solution))
 
-        archive_with_entry = CVTArchive(4, [(-1, 1), (-1, 1)],
+        archive_with_elite = CVTArchive(4, [(-1, 1), (-1, 1)],
                                         samples=samples,
                                         use_kd_tree=kd_tree,
                                         dtype=dtype)
-        archive_with_entry.initialize(len(solution))
+        archive_with_elite.initialize(len(solution))
     elif name == "SlidingBoundariesArchive":
         # Sliding boundary archive with 10 bins and range (-1, 1) in first dim,
         # and 20 bins and range (-2, 2) in second dim.
@@ -118,18 +118,18 @@ def get_archive_data(name, dtype=np.float64):
                                            dtype=dtype)
         archive.initialize(len(solution))
 
-        archive_with_entry = SlidingBoundariesArchive([10, 20], [(-1, 1),
+        archive_with_elite = SlidingBoundariesArchive([10, 20], [(-1, 1),
                                                                  (-2, 2)],
                                                       remap_frequency=100,
                                                       buffer_capacity=1000,
                                                       dtype=dtype)
-        archive_with_entry.initialize(len(solution))
+        archive_with_elite.initialize(len(solution))
         grid_indices = (6, 11)
 
-    archive_with_entry.add(solution, objective_value, behavior_values, metadata)
+    archive_with_elite.add(solution, objective_value, behavior_values, metadata)
     return ArchiveFixtureData(
         archive,
-        archive_with_entry,
+        archive_with_elite,
         solution,
         objective_value,
         behavior_values,

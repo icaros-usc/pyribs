@@ -92,13 +92,13 @@ def test_new_archive_is_empty(data):
     assert data.archive.empty
 
 
-def test_archive_with_entry_is_not_empty(data):
-    assert not data.archive_with_entry.empty
+def test_archive_with_elite_is_not_empty(data):
+    assert not data.archive_with_elite.empty
 
 
 def test_archive_is_empty_after_clear(data):
-    data.archive_with_entry.clear()
-    assert data.archive_with_entry.empty
+    data.archive_with_elite.clear()
+    assert data.archive_with_elite.empty
 
 
 def test_bins_correct(data):
@@ -114,7 +114,7 @@ def test_solution_dim_correct(data):
 
 
 def test_elite_with_behavior_gets_correct_elite(data):
-    elite = data.archive_with_entry.elite_with_behavior(data.behavior_values)
+    elite = data.archive_with_elite.elite_with_behavior(data.behavior_values)
     assert np.all(elite.sol == data.solution)
     assert elite.obj == data.objective_value
     assert np.all(elite.beh == data.behavior_values)
@@ -132,7 +132,7 @@ def test_elite_with_behavior_returns_none(data):
 
 
 def test_random_elite_gets_single_elite(data):
-    elite = data.archive_with_entry.get_random_elite()
+    elite = data.archive_with_elite.get_random_elite()
     assert np.all(elite.sol == data.solution)
     assert elite.obj == data.objective_value
     assert np.all(elite.beh == data.behavior_values)
@@ -148,11 +148,11 @@ def test_random_elite_fails_when_empty(data):
 def test_data(data):
     """General checks for data() method.
 
-    The assert_archive_entry method in the other archive tests already tests the
+    The assert_archive_elite method in the other archive tests already tests the
     correctness of data().
     """
     (all_sols, all_objs, all_behs, all_idxs,
-     all_meta) = data.archive_with_entry.data()
+     all_meta) = data.archive_with_elite.data()
     assert len(all_sols) == 1
     assert len(all_objs) == 1
     assert len(all_behs) == 1
@@ -162,14 +162,14 @@ def test_data(data):
 
 
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
-@pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
+@pytest.mark.parametrize("with_elite", [True, False], ids=["nonempty", "empty"])
 @pytest.mark.parametrize("include_solutions", [True, False],
                          ids=["solutions", "no_solutions"])
 @pytest.mark.parametrize("include_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
 @pytest.mark.parametrize("dtype", [np.float64, np.float32],
                          ids=["float64", "float32"])
-def test_as_pandas(name, with_entry, include_solutions, include_metadata,
+def test_as_pandas(name, with_elite, include_solutions, include_metadata,
                    dtype):
     data = get_archive_data(name, dtype)
     is_cvt = name.startswith("CVTArchive-")
@@ -193,8 +193,8 @@ def test_as_pandas(name, with_entry, include_solutions, include_metadata,
         expected_dtypes.append(object)
 
     # Retrieve the dataframe.
-    if with_entry:
-        df = data.archive_with_entry.as_pandas(include_solutions,
+    if with_elite:
+        df = data.archive_with_elite.as_pandas(include_solutions,
                                                include_metadata)
     else:
         df = data.archive.as_pandas(include_solutions, include_metadata)
@@ -203,11 +203,11 @@ def test_as_pandas(name, with_entry, include_solutions, include_metadata,
     assert (df.columns == expected_cols).all()
     assert (df.dtypes == expected_dtypes).all()
 
-    if with_entry:
+    if with_elite:
         if is_cvt:
             # For CVTArchive, we check the centroid because the index can vary.
             index = df.loc[0, "index_0"]
-            assert (data.archive_with_entry.centroids[index] == data.centroid
+            assert (data.archive_with_elite.centroids[index] == data.centroid
                    ).all()
         else:
             # Other archives have expected grid indices.
