@@ -252,6 +252,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied_indices_cols = tuple(
             [] for _ in range(len(self._storage_dims)))
 
+    @require_init
     def clear(self):
         """Removes all elites from the archive.
 
