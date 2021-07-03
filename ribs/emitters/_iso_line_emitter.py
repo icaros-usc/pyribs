@@ -120,10 +120,10 @@ class IsoLineEmitter(EmitterBase):
             solutions = np.expand_dims(self._x0, axis=0) + iso_gaussian
         else:
             parents = [
-                self.archive.get_random_elite()[0]
+                self.archive.get_random_elite().sol
                 for _ in range(self._batch_size)
             ]
-            directions = [(self.archive.get_random_elite()[0] - parents[i])
+            directions = [(self.archive.get_random_elite().sol - parents[i])
                           for i in range(self._batch_size)]
             line_gaussian = self._rng.normal(
                 scale=self._line_sigma,
