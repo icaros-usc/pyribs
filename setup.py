@@ -44,7 +44,6 @@ extras_require = {
         "yapf",
 
         # Testing
-        "tox==3.14.0",
         "pytest==6.1.2",
         "pytest-cov==2.10.1",
         "pytest-benchmark==3.2.3",
