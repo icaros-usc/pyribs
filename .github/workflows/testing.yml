@@ -34,7 +34,7 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install core deps
-        run: pip install .
+        run: pip install . .[dev]
       - name: Test core
         run: >
           pytest tests/archives tests/emitters tests/optimizers
@@ -54,7 +54,7 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install core deps
-        run: pip install -r pinned_reqs/install.txt
+        run: pip install -r pinned_reqs/install.txt .[dev]
       - name: Test core
         run: >
           pytest tests/archives tests/emitters tests/optimizers
@@ -74,7 +74,7 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install deps
-        run: pip install .[all]
+        run: pip install .[all] .[dev]
       - name: Test coverage
         env:
           NUMBA_DISABLE_JIT: 1
@@ -90,7 +90,7 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install deps
-        run: pip install .[all]
+        run: pip install .[all] .[dev]
       - name: Run benchmarks
         run: pytest -c pytest_benchmark.ini tests
   examples:
