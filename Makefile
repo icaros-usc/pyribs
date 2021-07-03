@@ -35,7 +35,6 @@ clean-pyc: ## remove Python file artifacts
 .PHONY: clean-pyc
 
 clean-test: ## remove test and coverage artifacts
-	rm -fr .tox/
 	rm -f .coverage
 	rm -fr htmlcov/
 	rm -fr .pytest_cache
@@ -52,10 +51,6 @@ test: ## run tests with the default Python
 test-coverage: ## get better test coverage by running without numba on
 	NUMBA_DISABLE_JIT=1 pytest tests
 .PHONY: test-coverage
-
-test-all: ## run tests on every Python version with tox
-	tox
-.PHONY: test-all
 
 benchmark: ## run benchmarks (may take a while)
 	pytest -c pytest_benchmark.ini tests
