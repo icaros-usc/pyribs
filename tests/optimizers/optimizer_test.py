@@ -82,7 +82,7 @@ def test_tell_inserts_solutions_into_archive(optimizer_fixture, tell_metadata):
         metadata=metadata,
     )
 
-    # Note: This assumes data() returns entries in order of insertion, but this
+    # Note: This assumes data() returns elites in order of insertion, but this
     # may change in the future.
     all_sols, all_objs, all_behs, _, all_meta = optimizer.archive.data()
     assert len(all_sols) == num_solutions
@@ -115,7 +115,7 @@ def test_tell_inserts_solutions_with_multiple_emitters(tell_metadata):
         metadata=metadata,
     )
 
-    # Note: This assumes data() returns entries in order of insertion, but this
+    # Note: This assumes data() returns elites in order of insertion, but this
     # may change in the future.
     all_sols, all_objs, all_behs, _, all_meta = optimizer.archive.data()
     assert len(all_sols) == 6

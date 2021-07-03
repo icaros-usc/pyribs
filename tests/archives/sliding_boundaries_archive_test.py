@@ -5,7 +5,7 @@ import pytest
 from ribs.archives import AddStatus, SlidingBoundariesArchive
 
 from .conftest import get_archive_data
-from .grid_archive_test import assert_archive_entry
+from .grid_archive_test import assert_archive_elite
 
 # pylint: disable = redefined-outer-name
 
@@ -50,13 +50,13 @@ def test_add_to_archive(data, use_list):
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective_value)
-    assert_archive_entry(data.archive_with_elite, data.solution,
+    assert_archive_elite(data.archive_with_elite, data.solution,
                          data.objective_value, data.behavior_values,
                          data.grid_indices, data.metadata)
 
 
 def test_add_and_overwrite(data):
-    """Test adding a new entry with a higher objective value."""
+    """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     high_objective_value = data.objective_value + 1.0
@@ -67,13 +67,13 @@ def test_add_and_overwrite(data):
                                                 arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective_value - data.objective_value)
-    assert_archive_entry(data.archive_with_elite, arbitrary_sol,
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol,
                          high_objective_value, data.behavior_values,
                          data.grid_indices, arbitrary_metadata)
 
 
 def test_add_without_overwrite(data):
-    """Test adding a new entry with a lower objective value."""
+    """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     low_objective_value = data.objective_value - 1.0
@@ -84,7 +84,7 @@ def test_add_without_overwrite(data):
                                                 arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective_value - data.objective_value)
-    assert_archive_entry(data.archive_with_elite, data.solution,
+    assert_archive_elite(data.archive_with_elite, data.solution,
                          data.objective_value, data.behavior_values,
                          data.grid_indices, data.metadata)
 
@@ -147,18 +147,18 @@ def test_add_to_archive_with_full_buffer(data):
         data.archive.add(data.solution, data.objective_value,
                          data.behavior_values, data.metadata)
 
-    # After adding the same entry multiple times, there should only be one
-    # entry, and it should be at (0, 0).
-    assert_archive_entry(data.archive, data.solution, data.objective_value,
+    # After adding the same elite multiple times, there should only be one
+    # elite, and it should be at (0, 0).
+    assert_archive_elite(data.archive, data.solution, data.objective_value,
                          data.behavior_values, (0, 0), data.metadata)
 
-    # Even if another entry is added, it should still go to the same cell
+    # Even if another elite is added, it should still go to the same cell
     # because the behavior values are clipped to the boundaries before being
     # inserted.
     arbitrary_metadata = {"foobar": 12}
     data.archive.add(2 * data.solution, 2 * data.objective_value,
                      2 * data.behavior_values, arbitrary_metadata)
-    assert_archive_entry(data.archive, 2 * data.solution,
+    assert_archive_elite(data.archive, 2 * data.solution,
                          2 * data.objective_value, 2 * data.behavior_values,
                          (0, 0), arbitrary_metadata)
 

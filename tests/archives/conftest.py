@@ -39,7 +39,7 @@ ArchiveFixtureData = namedtuple(
     "ArchiveFixtureData",
     [
         "archive",  # An empty archive with 2D behavior space.
-        "archive_with_elite",  # 2D behavior space with one entry.
+        "archive_with_elite",  # 2D behavior space with one elite.
         "solution",  # A solution.
         "objective_value",  # Float objective value.
         "behavior_values",  # 2D behavior values for the solution.
@@ -90,7 +90,7 @@ def get_archive_data(name, dtype=np.float64):
         grid_indices = (6, 11)
     elif name.startswith("CVTArchive-"):
         # CVT archive with bounds (-1,1) and (-1,1), and 4 centroids at (0.5,
-        # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The entry in
+        # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The elite in
         # archive_with_elite should match with centroid (0.5, 0.5).
         bins = 4
         kd_tree = name == "CVTArchive-kd_tree"

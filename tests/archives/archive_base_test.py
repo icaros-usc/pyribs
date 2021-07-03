@@ -148,7 +148,7 @@ def test_random_elite_fails_when_empty(data):
 def test_data(data):
     """General checks for data() method.
 
-    The assert_archive_entry method in the other archive tests already tests the
+    The assert_archive_elite method in the other archive tests already tests the
     correctness of data().
     """
     (all_sols, all_objs, all_behs, all_idxs,
@@ -162,14 +162,14 @@ def test_data(data):
 
 
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
-@pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
+@pytest.mark.parametrize("with_elite", [True, False], ids=["nonempty", "empty"])
 @pytest.mark.parametrize("include_solutions", [True, False],
                          ids=["solutions", "no_solutions"])
 @pytest.mark.parametrize("include_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
 @pytest.mark.parametrize("dtype", [np.float64, np.float32],
                          ids=["float64", "float32"])
-def test_as_pandas(name, with_entry, include_solutions, include_metadata,
+def test_as_pandas(name, with_elite, include_solutions, include_metadata,
                    dtype):
     data = get_archive_data(name, dtype)
     is_cvt = name.startswith("CVTArchive-")
@@ -193,7 +193,7 @@ def test_as_pandas(name, with_entry, include_solutions, include_metadata,
         expected_dtypes.append(object)
 
     # Retrieve the dataframe.
-    if with_entry:
+    if with_elite:
         df = data.archive_with_elite.as_pandas(include_solutions,
                                                include_metadata)
     else:
@@ -203,7 +203,7 @@ def test_as_pandas(name, with_entry, include_solutions, include_metadata,
     assert (df.columns == expected_cols).all()
     assert (df.dtypes == expected_dtypes).all()
 
-    if with_entry:
+    if with_elite:
         if is_cvt:
             # For CVTArchive, we check the centroid because the index can vary.
             index = df.loc[0, "index_0"]
