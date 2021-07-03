@@ -80,7 +80,7 @@ def test_add_to_archive(data, use_list):
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective_value)
-    assert_archive_entry(data.archive_with_entry, data.solution,
+    assert_archive_entry(data.archive_with_elite, data.solution,
                          data.objective_value, data.behavior_values,
                          data.centroid, data.metadata)
 
@@ -91,13 +91,13 @@ def test_add_and_overwrite(data):
     arbitrary_metadata = {"foobar": 12}
     high_objective_value = data.objective_value + 1.0
 
-    status, value = data.archive_with_entry.add(arbitrary_sol,
+    status, value = data.archive_with_elite.add(arbitrary_sol,
                                                 high_objective_value,
                                                 data.behavior_values,
                                                 arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective_value - data.objective_value)
-    assert_archive_entry(data.archive_with_entry, arbitrary_sol,
+    assert_archive_entry(data.archive_with_elite, arbitrary_sol,
                          high_objective_value, data.behavior_values,
                          data.centroid, arbitrary_metadata)
 
@@ -108,12 +108,12 @@ def test_add_without_overwrite(data):
     arbitrary_metadata = {"foobar": 12}
     low_objective_value = data.objective_value - 1.0
 
-    status, value = data.archive_with_entry.add(arbitrary_sol,
+    status, value = data.archive_with_elite.add(arbitrary_sol,
                                                 low_objective_value,
                                                 data.behavior_values,
                                                 arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective_value - data.objective_value)
-    assert_archive_entry(data.archive_with_entry, data.solution,
+    assert_archive_entry(data.archive_with_elite, data.solution,
                          data.objective_value, data.behavior_values,
                          data.centroid, data.metadata)
