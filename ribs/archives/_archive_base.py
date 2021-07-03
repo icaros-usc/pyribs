@@ -8,6 +8,7 @@ import pandas as pd
 from decorator import decorator
 
 from ribs.archives._add_status import AddStatus
+from ribs.archives._elite import Elite
 
 
 @decorator
@@ -268,7 +269,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def get_index(self, behavior_values):
         """Returns archive indices for the given behavior values.
 
-        See the main :class:`~ribs.archives.ArchiveBase` docstring for more
+        See the :class:`~ribs.archives.ArchiveBase` class docstring for more
         info.
 
         Args:
@@ -387,72 +388,62 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def elite_with_behavior(self, behavior_values):
         """Gets the elite with behavior vals in the same bin as those specified.
 
-        .. note:: Values like ``index`` and ``metadata`` are often not used.
-            In such cases, consider ignoring them::
+        Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
+        (here we show how to ignore some of the fields)::
 
-                sol, obj, beh, *_ = archive.elite_with_behavior(...)
+            sol, obj, beh, *_ = archive.elite_with_behavior(...)
+
+        Or the fields may be accessed by name::
+
+            elite = archive.elite_with_behavior(...)
+            elite.sol
+            elite.obj
+            ...
 
         Args:
             behavior_values (array-like): Coordinates in behavior space.
         Returns:
-            tuple: 5-element tuple for the elite if it is found:
-
-                **solution** (:class:`numpy.ndarray`): Parameters for the
-                solution.
-
-                **objective_value** (:attr:`dtype`): Objective function
-                evaluation.
-
-                **behavior_values** (:class:`numpy.ndarray`): Actual behavior
-                space coordinates of the elite (may not be exactly the same as
-                those specified).
-
-                **index** (int or tuple of int): Index of the elite in the
-                archive. See :attr:`get_index` for more info.
-
-                **metadata** (object): Metadata for the elite.
-
-            If there is no elite in the bin, each of the above values is None.
-            Thus, something like
-            ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``
-            still works).
+            Elite:
+              * If there is an elite with behavior values in the same bin as
+                those specified, this :namedtuple:`Elite` holds the info for
+                that elite. In that case, ``beh`` (the behavior values) may not
+                be exactly the same as the behavior values specified since the
+                elite is only guaranteed to be in the same archive bin.
+              * If no such elite exists, then all fields of the
+                :namedtuple:`Elite` are set to None. This way, tuple unpacking
+                (e.g.
+                ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``)
+                still works.
         """
         index = self.get_index(np.asarray(behavior_values))
         if self._occupied[index]:
-            return (
+            return Elite(
                 self._solutions[index],
                 self._objective_values[index],
                 self._behavior_values[index],
                 index,
                 self._metadata[index],
             )
-        return (None, None, None, None, None)
+        return Elite(None, None, None, None, None)
 
     @require_init
     def get_random_elite(self):
         """Selects an elite uniformly at random from one of the archive's bins.
 
-        .. note:: Values like ``index`` and ``metadata`` are often not used.
-            In such cases, consider ignoring them::
+        Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
+        (here we show how to ignore some of the fields)::
 
-                sol, obj, beh, *_ = archive.get_random_elite()
+            sol, obj, beh, *_ = archive.get_random_elite()
+
+        Or the fields may be accessed by name::
+
+            elite = archive.get_random_elite()
+            elite.sol
+            elite.obj
+            ...
 
         Returns:
-            tuple: 5-element tuple containing:
-
-                **solution** (:class:`numpy.ndarray`): Parameters for the
-                solution.
-
-                **objective_value** (:attr:`dtype`): Objective function
-                evaluation.
-
-                **behavior_values** (:class:`numpy.ndarray`): Behavior space
-                coordinates.
-
-                **index** (int or tuple of int): Index of the elite in the
-                archive. See :attr:`get_index` for more info.
-
-                **metadata** (object): Metadata for the elite.
+            Elite: A randomly selected elite from the archive.
         Raises:
             IndexError: The archive is empty.
         """
@@ -462,7 +453,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         random_idx = self._rand_buf.get(len(self._occupied_indices))
         index = self._occupied_indices[random_idx]
 
-        return (
+        return Elite(
             self._solutions[index],
             self._objective_values[index],
             self._behavior_values[index],
