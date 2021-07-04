@@ -282,7 +282,17 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return len(self._occupied_indices)
 
     def __iter__(self):
-        """Creates an iterator over the elites in the archive."""
+        """Creates an iterator over the :class:`Elite`'s in the archive.
+
+        Example:
+
+            ::
+
+                for elite in archive:
+                    elite.sol
+                    elite.obj
+                    ...
+        """
         require_init_inline(self)
         return ArchiveIterator(self)
 
