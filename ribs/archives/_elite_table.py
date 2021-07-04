@@ -1,6 +1,8 @@
 """Provides EliteTable."""
 from ribs.archives._elite import Elite
 
+# TODO: Usage examples
+
 
 class EliteTable:
     """Represents an ordered collection of elites from an archive.
@@ -32,7 +34,6 @@ class EliteTable:
         self._behavior_values = behavior_values
         self._indices = indices
         self._metadata = metadata
-        self._iter_idx = None
 
         if not (len(solutions) == len(objective_values) == len(behavior_values)
                 == len(indices) == len(metadata)):
@@ -105,22 +106,29 @@ class EliteTable:
                      self._objective_values[0], self._behavior_values[0],
                      tuple(self._indices[0]), self._metadata[0])
 
+    #  def __getitem__(self):
+    #      # Returns new EliteTable or Elite?
+    #      # Integers should be converted to singleton arrays
+    #      pass
+
+    #  def filter(self, predicate):
+    #      # Returns new EliteTable where elites are filtered by predicate
+    #      pass
+
+    # Note: The EliteTable itself cannot be an iterable object because if there
+    # are multiple iterators over it, they will all share state.  Instead, we
+    # return a new iterable object, just like Python containers do. See
+    # https://stackoverflow.com/questions/46941719/how-can-i-have-multiple-iterators-over-a-single-python-iterable-at-the-same-time
+    # for more info.
     def __iter__(self):
-        """Creates an iterator over the elites in the archive."""
-        self._iter_idx = 0
-        return self
-
-    def __next__(self):
-        """Returns the next :class:`Elite` in the table."""
-        if self._iter_idx >= len(self):
-            raise StopIteration
-
-        elite = Elite(
-            self._solutions[self._iter_idx],
-            self._objective_values[self._iter_idx],
-            self._behavior_values[self._iter_idx],
-            tuple(self._indices[self._iter_idx]),
-            self._metadata[self._iter_idx],
+        """Creates an iterator over the elites in the table."""
+        return map(
+            lambda e: Elite(e[0], e[1], e[2], tuple(e[3]), e[4]),
+            zip(
+                self._solutions,
+                self._objective_values,
+                self._behavior_values,
+                self._indices,
+                self._metadata,
+            ),
         )
-        self._iter_idx += 1
-        return elite
