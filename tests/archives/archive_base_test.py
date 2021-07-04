@@ -110,6 +110,15 @@ def test_clear_during_iteration():
             data.archive_with_elite.clear()
 
 
+def test_clear_and_add_during_iteration():
+    data = get_archive_data("GridArchive")
+    with pytest.raises(RuntimeError):
+        for _ in data.archive_with_elite:
+            data.archive_with_elite.clear()
+            data.archive_with_elite.add(data.solution, data.objective_value + 1,
+                                        data.behavior_values)
+
+
 #
 # General tests -- should work for all archive classes.
 #
