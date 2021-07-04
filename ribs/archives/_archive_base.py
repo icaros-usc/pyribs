@@ -121,8 +121,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     any additional metadata associated with the solution (object). In this
     class, the container is implemented with separate numpy arrays that share
     common dimensions. Using the ``storage_dims`` and ``behavior_dim`` arguments
-    in :meth:`__init__` and the ``solution_dim`` argument in ``initialize``,
-    these arrays are as follows:
+    in ``__init__`` and the ``solution_dim`` argument in ``initialize``, these
+    arrays are as follows:
 
     +------------------------+------------------------------------+
     | Name                   |  Shape                             |
@@ -144,8 +144,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     Thus, child classes typically override the following methods:
 
-    - :meth:`__init__`: Child classes must invoke this class's :meth:`__init__`
-      with the appropriate arguments.
+    - ``__init__``: Child classes must invoke this class's ``__init__`` with the
+      appropriate arguments.
     - :meth:`get_index`: Returns an index into the arrays above when given the
       behavior values of a solution. Usually, the index has a meaning, e.g. in
       :class:`~ribs.archives.CVTArchive` it is the index of a centroid. This
