@@ -1,7 +1,18 @@
 """Provides EliteTable."""
+import numpy as np
+
 from ribs.archives._elite import Elite
 
 # TODO: Usage examples
+
+
+def convert_idx(idx):
+    """Converts indices to a tuple when necessary.
+
+    We need this since EliteTable stores indices as an array. However, the
+    indices may just be int's, in which case we cannot convert them to tuple.
+    """
+    return tuple(idx) if isinstance(idx, np.ndarray) else idx
 
 
 class EliteTable:
@@ -88,6 +99,39 @@ class EliteTable:
         """The number of elites stored in the table."""
         return len(self._solutions)
 
+    # Note: The EliteTable itself cannot be an iterable object because if there
+    # are multiple iterators over it, they will all share state.  Instead, we
+    # return a new iterable object, just like Python containers do. See
+    # https://stackoverflow.com/questions/46941719/how-can-i-have-multiple-iterators-over-a-single-python-iterable-at-the-same-time
+    # for more info.
+    def __iter__(self):
+        """Creates an iterator over the elites in the table."""
+        return map(
+            lambda e: Elite(e[0], e[1], e[2], convert_idx(e[3]), e[4]),
+            zip(
+                self._solutions,
+                self._objective_values,
+                self._behavior_values,
+                self._indices,
+                self._metadata,
+            ),
+        )
+
+    def __getitem__(self, key):
+        """Indexing works like in a 1D numpy array, returning a new EliteTable.
+
+        The exception is when the index is an integer -- in this case, the Elite
+        at that position is returned.
+        """
+        if isinstance(key, (int, np.integer)):
+            return Elite(self._solutions[key], self._objective_values[key],
+                         self._behavior_values[key],
+                         convert_idx(self._indices[key]), self._metadata[key])
+
+        return EliteTable(self._solutions[key], self._objective_values[key],
+                          self._behavior_values[key], self._indices[key],
+                          self._metadata[key])
+
     def item(self):
         """If there is only one elite in the table, this method returns it.
 
@@ -104,31 +148,8 @@ class EliteTable:
 
         return Elite(self._solutions[0],
                      self._objective_values[0], self._behavior_values[0],
-                     tuple(self._indices[0]), self._metadata[0])
-
-    #  def __getitem__(self):
-    #      # Returns new EliteTable or Elite?
-    #      # Integers should be converted to singleton arrays
-    #      pass
+                     convert_idx(self._indices[0]), self._metadata[0])
 
     #  def filter(self, predicate):
     #      # Returns new EliteTable where elites are filtered by predicate
     #      pass
-
-    # Note: The EliteTable itself cannot be an iterable object because if there
-    # are multiple iterators over it, they will all share state.  Instead, we
-    # return a new iterable object, just like Python containers do. See
-    # https://stackoverflow.com/questions/46941719/how-can-i-have-multiple-iterators-over-a-single-python-iterable-at-the-same-time
-    # for more info.
-    def __iter__(self):
-        """Creates an iterator over the elites in the table."""
-        return map(
-            lambda e: Elite(e[0], e[1], e[2], tuple(e[3]), e[4]),
-            zip(
-                self._solutions,
-                self._objective_values,
-                self._behavior_values,
-                self._indices,
-                self._metadata,
-            ),
-        )

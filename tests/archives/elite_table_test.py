@@ -17,7 +17,7 @@ def assert_elite_eq(a, b):
 
 
 @pytest.fixture
-def data():
+def table():
     """EliteTable with 5 elites."""
     return EliteTable(
         np.array([[1, 2, 3], [4, 5, 6], [4, 5, 6], [10, 11, 12], [7, 8, 9]],
@@ -52,12 +52,56 @@ def test_init_fails_diff_length():
         )
 
 
-def test_length(data):
-    assert len(data) == 5
+def test_length(table):
+    assert len(table) == 5
+
+
+def test_iteration(table):
+    for (elite, (sol, obj, beh, idx, meta)) in zip(
+            table,
+            zip(table.solutions, table.objective_values, table.behavior_values,
+                table.indices, table.metadata)):
+        assert_elite_eq(elite, Elite(sol, obj, beh, tuple(idx), meta))
+
+
+def test_index_int(table):
+    assert_elite_eq(
+        table[0],
+        Elite(table.solutions[0],
+              table.objective_values[0], table.behavior_values[0],
+              tuple(table.indices[0]), table.metadata[0]))
+
+
+def test_index_array(table):
+    table2 = table[[0, 4]]
+    assert len(table2) == 2
+    assert_elite_eq(
+        table2[0],
+        Elite(table.solutions[0],
+              table.objective_values[0], table.behavior_values[0],
+              tuple(table.indices[0]), table.metadata[0]))
+    assert_elite_eq(
+        table2[1],
+        Elite(table.solutions[4],
+              table.objective_values[4], table.behavior_values[4],
+              tuple(table.indices[4]), table.metadata[4]))
+
+
+def test_index_with_comparisons(table):
+    table2 = table[table.objective_values == 2.0]
+    assert len(table2) == 2
+    assert_elite_eq(
+        table2[0],
+        Elite(table.solutions[1], 2.0, table.behavior_values[1],
+              tuple(table.indices[1]), table.metadata[1]))
+    assert_elite_eq(
+        table2[1],
+        Elite(table.solutions[2], 2.0, table.behavior_values[2],
+              tuple(table.indices[2]), table.metadata[2]))
 
 
 def test_item():
-    data = EliteTable(
+    table = EliteTable(
         np.array([[1, 2, 3]], dtype=float),
         np.array([1], dtype=float),
         np.array([[1, 2]], dtype=float),
@@ -66,20 +110,12 @@ def test_item():
             "a": 1
         }]),
     )
-    elite = data.item()
+    elite = table.item()
     assert_elite_eq(
         elite,
         Elite(np.array([1, 2, 3]), 1.0, np.array([1, 2]), (0, 1), {"a": 1}))
 
 
-def test_item_fails_when_more_than_one_elite(data):
+def test_item_fails_when_more_than_one_elite(table):
     with pytest.raises(ValueError):
-        data.item()
-
-
-def test_iteration(data):
-    for (elite, (sol, obj, beh, idx, meta)) in zip(
-            data,
-            zip(data.solutions, data.objective_values, data.behavior_values,
-                data.indices, data.metadata)):
-        assert_elite_eq(elite, Elite(sol, obj, beh, tuple(idx), meta))
+        table.item()
