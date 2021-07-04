@@ -309,14 +309,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def solutions(self):
         """((len(archive), solution_dim) numpy.ndarray): Solutions of all elites
         currently in the archive."""
-        return self._solutions_view.update(self._occupied_indices, self._state)
+        return self._solutions_view.update(self._occupied_indices_cols,
+                                           self._state)
 
     @property
     @require_init
     def objective_values(self):
         """(len(archive),) numpy.ndarray): Objective values of all elites
         currently in the archive."""
-        return self._objective_values_view.update(self._occupied_indices,
+        return self._objective_values_view.update(self._occupied_indices_cols,
                                                   self._state)
 
     @property
@@ -324,7 +325,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def behavior_values(self):
         """(len(archive), behavior_dim) numpy.ndarray): Behavior values of all
         elites currently in the archive."""
-        return self._behavior_values_view.update(self._occupied_indices,
+        return self._behavior_values_view.update(self._occupied_indices_cols,
                                                  self._state)
 
     @property
@@ -349,7 +350,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         This array is an object array.
         """
-        return self._metadata_view.update(self._occupied_indices, self._state)
+        return self._metadata_view.update(self._occupied_indices_cols,
+                                          self._state)
 
     @property
     def dtype(self):
