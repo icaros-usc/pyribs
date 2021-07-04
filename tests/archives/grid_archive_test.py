@@ -17,7 +17,7 @@ def data():
 
 def assert_archive_elite(archive, solution, objective_value, behavior_values,
                          indices, metadata):
-    """Assert that the archive has one specific elite."""
+    """Asserts that the archive has one specific elite."""
     elite = archive.table().item()
     assert np.isclose(elite.sol, solution).all()
     assert np.isclose(elite.obj, objective_value).all()

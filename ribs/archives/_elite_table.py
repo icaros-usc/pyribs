@@ -47,7 +47,7 @@ class EliteTable:
         Indexing is also supported, and the table behaves similarly to a 1D
         numpy array. This is particularly useful when selecting elites which
         satisfy a given condition. The following returns a new table with elites
-        that have objective value at least 200::
+        that have objective value greater than 200::
 
             table[table.objective_values > 200]
 
@@ -57,12 +57,12 @@ class EliteTable:
 
             table[0]  # Elite
 
-        Finally, we can filter elites by providing a predicate which takes in an
+        We can filter elites by providing a predicate which takes in an
         :class:`Elite` and returns a bool telling whether to keep the elite. The
         following selects elites which have objective value greater than 200 and
         metadata that is not None::
 
-            filtered = table.filter(
+            new_table = table.filter(
                 lambda elite: elite.obj > 200 and elite.meta is not None
             )
 
@@ -96,7 +96,7 @@ class EliteTable:
 
     @property
     def solutions(self):
-        """((n, solution_dim) numpy.ndarray): Solution parameters for ``n``
+        """((n, solution_dim) numpy.ndarray): Solution parameters of the
         elites."""
         return self._solutions
 
@@ -119,9 +119,9 @@ class EliteTable:
 
             Each index should actually be an int or tuple of int, but since
             numpy arrays cannot easily store tuples, we use an array here to
-            make batch manipulation easy. Nevertheless, iterating through
-            this class still yields :class:`Elite` objects which have a
-            tuple index.
+            make batch manipulation easy. Nevertheless, iterating through this
+            class still yields :class:`Elite` objects which have an ``idx`` that
+            is either int or tuple of int.
         """
         return self._indices
 
