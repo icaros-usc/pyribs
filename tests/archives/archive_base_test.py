@@ -145,20 +145,21 @@ def test_random_elite_fails_when_empty(data):
         data.archive.get_random_elite()
 
 
-def test_data(data):
-    """General checks for data() method.
+@pytest.mark.parametrize("copy", [True, False])
+def test_table(data, copy):
+    """General checks for table() method.
 
     The assert_archive_elite method in the other archive tests already tests the
-    correctness of data().
+    correctness of table().
     """
-    (all_sols, all_objs, all_behs, all_idxs,
-     all_meta) = data.archive_with_elite.data()
-    assert len(all_sols) == 1
-    assert len(all_objs) == 1
-    assert len(all_behs) == 1
-    assert len(all_idxs) == 1
-    assert isinstance(all_idxs, list)
-    assert len(all_meta) == 1
+    table = data.archive_with_elite.table(copy=copy)
+    assert len(table) == 1
+    if not copy:
+        assert not table.solutions.flags.writeable
+        assert not table.objective_values.flags.writeable
+        assert not table.behavior_values.flags.writeable
+        assert not table.indices.flags.writeable
+        assert not table.metadata.flags.writeable
 
 
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
