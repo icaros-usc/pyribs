@@ -1,4 +1,9 @@
-{# Adapted from https://stackoverflow.com/questions/62142793/autosummary-generated-documentation-missing-all-dunder-methods-except-for-ini #}
+{#
+  Adapted from
+  https://github.com/sphinx-doc/sphinx/blob/v3.2.1/sphinx/ext/autosummary/templates/autosummary/class.rst
+  and
+  https://stackoverflow.com/questions/62142793/autosummary-generated-documentation-missing-all-dunder-methods-except-for-ini
+#}
 
 {{ fullname | escape | underline}}
 
