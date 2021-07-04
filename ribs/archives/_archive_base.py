@@ -270,6 +270,46 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._solution_dim
 
     @property
+    @require_init
+    def solutions(self):
+        return self._solutions
+
+    """
+    class CachedView:
+        def __init__(self, array):
+            self.array = array
+            self.view = None
+            self.update_idx = None
+
+        def update(self, indices, update_idx):
+            if update_idx != self.update_idx:
+                self.update_idx = update_idx
+                self.view = self.array[indices]
+                self.view.flags.writeable = False
+            return self.view
+    """
+
+    @property
+    @require_init
+    def objective_values(self):
+        return self._objective_values
+
+    @property
+    @require_init
+    def behavior_values(self):
+        return self._behavior_values
+
+    @property
+    @require_init
+    def indices(self):
+        return tuple(self._occupied_indices)
+
+    @property
+    @require_init
+    def metadata(self):
+        return self._metadata
+
+    @property
     def dtype(self):
         """data-type: The dtype of the solutions, objective values, and behavior
         values."""
