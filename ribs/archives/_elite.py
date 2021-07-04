@@ -1,4 +1,4 @@
-"""Provides Elite and EliteTable."""
+"""Provides Elite."""
 from typing import NamedTuple, Tuple, Union
 
 import numpy as np
