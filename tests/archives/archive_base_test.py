@@ -94,12 +94,9 @@ def test_iteration():
 
 
 def test_add_during_iteration():
+    # Even with just one entry, adding during iteration should still raise an
+    # error, just like it does in set.
     data = get_archive_data("GridArchive")
-    # Archive needs two elites so it can be interrupted.
-    data.archive_with_elite.add(data.solution, data.objective_value,
-                                -data.behavior_values)
-
-    assert len(data.archive_with_elite) == 2
     with pytest.raises(RuntimeError):
         for _ in data.archive_with_elite:
             data.archive_with_elite.add(data.solution, data.objective_value + 1,
@@ -108,11 +105,6 @@ def test_add_during_iteration():
 
 def test_clear_during_iteration():
     data = get_archive_data("GridArchive")
-    # Archive needs two elites so it can be interrupted.
-    data.archive_with_elite.add(data.solution, data.objective_value,
-                                -data.behavior_values)
-
-    assert len(data.archive_with_elite) == 2
     with pytest.raises(RuntimeError):
         for _ in data.archive_with_elite:
             data.archive_with_elite.clear()
