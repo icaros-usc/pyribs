@@ -46,16 +46,6 @@ def _retrieve_cmap(cmap):
     return cmap
 
 
-def _get_pt_to_obj(cvt_archive):
-    """Creates a dict from centroid index to objective value in a CVTArchive."""
-    data = cvt_archive.as_pandas(include_solutions=False)
-    pt_to_obj = {}
-    for row in data.itertuples():
-        # row.index_0 is the centroid index. The dataframe index is row.Index.
-        pt_to_obj[row.index_0] = row.objective
-    return pt_to_obj
-
-
 def grid_archive_heatmap(archive,
                          ax=None,
                          transpose_bcs=False,
@@ -134,11 +124,9 @@ def grid_archive_heatmap(archive,
     y_bounds = np.linspace(lower_bounds[1], upper_bounds[1], y_dim + 1)
 
     # Color for each cell in the heatmap.
-    archive_data = archive.as_pandas(include_solutions=False)
     colors = np.full((y_dim, x_dim), np.nan)
-    for row in archive_data.itertuples():
-        colors[row.index_1, row.index_0] = row.objective
-    objective_values = archive_data["objective"]
+    for elite in archive:
+        colors[elite.idx[1], elite.idx[0]] = elite.obj
 
     if transpose_bcs:
         # Since the archive is 2D, transpose by swapping the x and y boundaries
@@ -158,8 +146,8 @@ def grid_archive_heatmap(archive,
 
     # Create the plot.
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-    vmin = np.min(objective_values) if vmin is None else vmin
-    vmax = np.max(objective_values) if vmax is None else vmax
+    vmin = np.min(archive.table().objective_values) if vmin is None else vmin
+    vmax = np.max(archive.table().objective_values) if vmax is None else vmax
     t = ax.pcolormesh(x_bounds,
                       y_bounds,
                       colors,
@@ -287,7 +275,7 @@ def cvt_archive_heatmap(archive,
     # the region index of each point.
     region_obj = [None] * len(vor.regions)
     min_obj, max_obj = np.inf, -np.inf
-    pt_to_obj = _get_pt_to_obj(archive)
+    pt_to_obj = {elite.idx: elite.obj for elite in archive}
     for pt_idx, region_idx in enumerate(
             vor.point_region[:-4]):  # Exclude faraway_pts.
         if region_idx != -1 and pt_idx in pt_to_obj:
