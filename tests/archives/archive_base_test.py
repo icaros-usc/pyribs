@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
-from ribs.archives._archive_base import RandomBuffer
+from ribs.archives._archive_base import CachedView, RandomBuffer
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
@@ -33,6 +33,33 @@ def test_random_buffer_not_repeating():
     x2 = [buffer.get(100) for _ in range(buf_size)]
 
     assert x1 != x2
+
+
+#
+# CachedView tests -- note this is an internal class.
+#
+
+
+def test_cached_view_changes():
+    arr = 2 * np.arange(5, dtype=int)
+    cache = CachedView(arr)
+
+    view1 = cache.update([0, 1], {"a": 1, "b": 1})
+    assert (view1 == 2 * np.array([0, 1])).all()
+
+    view2 = cache.update([2, 3, 4], {"a": 1, "b": 2})
+    assert (view2 == 2 * np.array([2, 3, 4])).all()
+
+
+def test_cached_view_no_change():
+    arr = 2 * np.arange(5, dtype=int)
+    cache = CachedView(arr)
+
+    view1 = cache.update([0, 1], {"a": 1, "b": 1})
+    assert (view1 == 2 * np.array([0, 1])).all()
+
+    view2 = cache.update([2, 3, 4], {"a": 1, "b": 1})
+    assert (view2 == 2 * np.array([0, 1])).all()
 
 
 #
