@@ -176,8 +176,8 @@ class CVTArchive(ArchiveBase):
     @property
     @require_init
     def centroids(self):
-        """(n_centroids, :attr:`behavior_dim`) numpy.ndarray: The centroids used
-        in the CVT.
+        """(n_centroids, behavior_dim) numpy.ndarray: The centroids used in the
+        CVT.
 
         None until :meth:`initialize` is called.
         """

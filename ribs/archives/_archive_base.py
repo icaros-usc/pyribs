@@ -9,6 +9,7 @@ from decorator import decorator
 
 from ribs.archives._add_status import AddStatus
 from ribs.archives._elite import Elite
+from ribs.archives._elite_table import EliteTable
 
 
 @decorator
@@ -22,6 +23,12 @@ def require_init(method, self, *args, **kwargs):
         raise RuntimeError("Archive has not been initialized. "
                            "Please call initialize().")
     return method(self, *args, **kwargs)
+
+
+def readonly(arr):
+    """Sets an array to be readonly."""
+    arr.flags.writeable = False
+    return arr
 
 
 class RandomBuffer:
@@ -419,9 +426,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         index = self.get_index(np.asarray(behavior_values))
         if self._occupied[index]:
             return Elite(
-                self._solutions[index],
+                readonly(self._solutions[index]),
                 self._objective_values[index],
-                self._behavior_values[index],
+                readonly(self._behavior_values[index]),
                 index,
                 self._metadata[index],
             )
@@ -455,67 +462,38 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         index = self._occupied_indices[random_idx]
 
         return Elite(
-            self._solutions[index],
+            readonly(self._solutions[index]),
             self._objective_values[index],
-            self._behavior_values[index],
+            readonly(self._behavior_values[index]),
             index,
             self._metadata[index],
         )
 
-    def data(self):
-        """Returns columns containing all data in the archive.
+    def table(self, copy=False):
+        """Returns :class:`EliteTable` containing all elites in the archive.
 
-        Namely, this method returns 5 arrays containing all of the solutions,
-        objective values, behavior values, indices, and metadata in the archive.
-        For example::
+        See :class:`EliteTable` documentation for more info.
 
-            (all_solutions, all_objective_values,
-             all_behavior_values, all_indices, all_metadata) = archive.data()
+        .. note:: By default, the :class:`EliteTable` contains views into
+            existing data in the archive. However, the data may change if the
+            archive is modified after calling this method.
 
-        All the arrays correspond to each other, i.e. ``all_solutions[i]``
-        corresponds to ``all_objective_values[i]``, ``all_behavior_values[i]``,
-        ``all_indices[i]``, and ``all_metadata[i]``. This means that an
-        iteration like the following would work::
-
-            for sol, obj, beh, idx, meta in zip(*archive.data()):
-                ...
-
-        This method is also useful when extracting insights from one
-        component of the archive. For instance, one can easily extract all the
-        objective values and calculate their mean with this method.
-
-        .. note:: This method returns numpy views into existing data in the
-            archive, so it does not make any copies. However, the data may
-            change if the archive is modified after calling this method.
-
+        Args:
+            copy: If True, :class:`EliteTable` is given copies of the data in
+                the archive, e.g. solutions and behavior values. Otherwise, it
+                is given readonly views (but as mentioned above, the data in
+                these views may change if the archive is modified).
         Returns:
-            tuple: 5-element tuple containing:
-
-                **all_solutions** (:class:`numpy.ndarray` -- shape (n_entries,
-                :attr:`solution_dim`)): Parameters for all the solutions in the
-                archive.
-
-                **all_objective_values** (:class:`numpy.ndarray` -- shape
-                (n_entries,)): Objective value of all entries in the archive.
-
-                **all_behavior_values** (:class:`numpy.ndarray`-- shape
-                (n_entries, :attr:`behavior_dim`)): Behavior space coordinates
-                of all the entries.
-
-                **all_indices** (:class:`list` -- shape (n_entries,)): Index of
-                all entries in the archive. As each index can be either an int
-                or a tuple, this is a Python list. See :meth:`get_index` for
-                more info.
-
-                **all_metadata** (:class:`numpy.ndarray` -- shape (n_entries,)):
-                Object array with metadata of all entries.
+            EliteTable: Contains all elites in the archive.
         """
-        return (
-            self._solutions[self._occupied_indices_cols],
-            self._objective_values[self._occupied_indices_cols],
-            self._behavior_values[self._occupied_indices_cols],
-            self._occupied_indices,
-            self._metadata[self._occupied_indices_cols],
+        indices = np.array(self._occupied_indices)
+        modifier = np.copy if copy else readonly
+        return EliteTable(
+            modifier(self._solutions[self._occupied_indices_cols]),
+            modifier(self._objective_values[self._occupied_indices_cols]),
+            modifier(self._behavior_values[self._occupied_indices_cols]),
+            indices if copy else readonly(indices),
+            modifier(self._metadata[self._occupied_indices_cols]),
         )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):

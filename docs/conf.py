@@ -59,6 +59,7 @@ napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 napoleon_use_param = False
 napoleon_use_ivar = True
+napoleon_include_special_with_doc = True
 
 # MyST NB -- exclude execution of Jupyter notebooks because they can take a
 # while to run.

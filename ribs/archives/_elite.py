@@ -1,4 +1,4 @@
-"""Provides Elite and EliteTable."""
+"""Provides Elite."""
 from typing import NamedTuple, Tuple, Union
 
 import numpy as np
@@ -11,7 +11,7 @@ class Elite(NamedTuple):
     either by name or by integer indices.
     """
 
-    #: Parameter's of the elite's solution.
+    #: Parameters of the elite's solution.
     sol: np.ndarray
 
     #: Objective value evaluation.
