@@ -25,6 +25,14 @@ def require_init(method, self, *args, **kwargs):
     return method(self, *args, **kwargs)
 
 
+def require_init_inline(archive):
+    """Same as require_init but for when decorators cannot be used, such as on
+    special methods."""
+    if not archive.initialized:
+        raise RuntimeError("Archive has not been initialized. "
+                           "Please call initialize().")
+
+
 def readonly(arr):
     """Sets an array to be readonly."""
     arr.flags.writeable = False
@@ -65,6 +73,42 @@ class RandomBuffer:
             self._buffer = self._rng.random(self._buf_size)
 
         return val
+
+
+class ArchiveIterator:
+    """An iterator for an archive's elites."""
+
+    # pylint: disable = protected-access
+
+    def __init__(self, archive):
+        self.archive = archive
+        self.iter_idx = 0
+        self.add_count = archive._add_count
+
+    def __iter__(self):
+        """This is the iterator, so return self."""
+        return self
+
+    def __next__(self):
+        """Raises RuntimeError if the archive was modified with add() or
+        clear()."""
+        if self.add_count != self.archive._add_count:
+            # This check should go first because a call to clear() would clear
+            # _occupied_indices and cause StopIteration to happen early.
+            raise RuntimeError(
+                "Archive was modified with add() or clear() during iteration.")
+        if self.iter_idx >= len(self.archive._occupied_indices):
+            raise StopIteration
+
+        idx = self.archive._occupied_indices[self.iter_idx]
+        self.iter_idx += 1
+        return Elite(
+            self.archive._solutions[idx],
+            self.archive._objective_values[idx],
+            self.archive._behavior_values[idx],
+            idx,
+            self.archive._metadata[idx],
+        )
 
 
 class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
@@ -174,6 +218,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._seed = seed
         self._initialized = False
         self._bins = np.product(self._storage_dims)
+        self._add_count = None  # Number of times add() has been called.
 
         self._dtype = self._parse_dtype(dtype)
 
@@ -231,6 +276,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         values."""
         return self._dtype
 
+    def __len__(self):
+        """Number of elites in the archive."""
+        require_init_inline(self)
+        return len(self._occupied_indices)
+
+    def __iter__(self):
+        """Creates an iterator over the elites in the archive."""
+        require_init_inline(self)
+        return ArchiveIterator(self)
+
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
 
@@ -259,6 +314,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied_indices_cols = tuple(
             [] for _ in range(len(self._storage_dims)))
 
+        self._add_count = 0
+
     @require_init
     def clear(self):
         """Removes all elites from the archive.
@@ -272,6 +329,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         for col in self._occupied_indices_cols:
             col.clear()
         self._occupied.fill(False)
+        self._add_count = 0
 
     @abstractmethod
     def get_index(self, behavior_values):
@@ -368,6 +426,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                   previously in the archive
                 - ``NEW`` -> the objective value passed in
         """
+        self._add_count += 1
         solution = np.asarray(solution)
         behavior_values = np.asarray(behavior_values)
 
@@ -555,5 +614,4 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         if include_metadata:
             metadata = self._metadata[self._occupied_indices_cols]
             data["metadata"] = np.asarray(metadata, dtype=object)
-
         return pd.DataFrame(data)
