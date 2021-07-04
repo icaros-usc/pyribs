@@ -75,14 +75,14 @@ class RandomBuffer:
 
 
 class CachedView:
-    """Maintains a view of the given numpy array.
+    """Maintains a readonly view of the given numpy array.
 
-    Whenever the state changes in update(), the view of the array is updated.
+    Whenever the state changes in update(), the view is updated.
 
     This class is useful when returning the archive data, e.g.
-    archive.solutions. If the archive has a lot of indices, indexing into the
-    array can be expensive (e.g. ~0.5 seconds for 250k indices), and it adds up
-    if the user does this many times, so we only want to do the indexing once.
+    archive.solutions. If the archive has many indices, indexing into the array
+    can be expensive (e.g. ~0.5 seconds for 250k indices), and it adds up if the
+    user does this many times, so we only want to do the indexing once.
     """
 
     def __init__(self, array):
