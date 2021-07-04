@@ -246,10 +246,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._bins = np.product(self._storage_dims)
 
         # Array views for providing access to data.
-        self._solutions_view = CachedView(self._solutions)
-        self._objective_values_view = CachedView(self._objective_values)
-        self._behavior_values_view = CachedView(self._behavior_values)
-        self._metadata_view = CachedView(self._metadata)
+        self._solutions_view = None
+        self._objective_values_view = None
+        self._behavior_values_view = None
+        self._metadata_view = None
 
         # Tracks archive modifications by counting calls to clear() and add().
         self._state = None
@@ -395,16 +395,20 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._rand_buf = RandomBuffer(self._seed)
         self._solution_dim = solution_dim
         self._occupied = np.zeros(self._storage_dims, dtype=bool)
+        self._solutions = np.empty((*self._storage_dims, solution_dim),
+                                   dtype=self.dtype)
         self._objective_values = np.empty(self._storage_dims, dtype=self.dtype)
         self._behavior_values = np.empty(
             (*self._storage_dims, self._behavior_dim), dtype=self.dtype)
-        self._solutions = np.empty((*self._storage_dims, solution_dim),
-                                   dtype=self.dtype)
         self._metadata = np.empty(self._storage_dims, dtype=object)
         self._occupied_indices = []
         self._occupied_indices_cols = tuple(
             [] for _ in range(len(self._storage_dims)))
 
+        self._solutions_view = CachedView(self._solutions)
+        self._objective_values_view = CachedView(self._objective_values)
+        self._behavior_values_view = CachedView(self._behavior_values)
+        self._metadata_view = CachedView(self._metadata)
         self._state = {"clear": 0, "add": 0}
 
     @require_init
