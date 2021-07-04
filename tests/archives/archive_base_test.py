@@ -41,6 +41,12 @@ def test_random_buffer_not_repeating():
 #
 
 
+def test_iter_require_init():
+    archive = GridArchive([20, 20], [(-1, 1)] * 2)
+    with pytest.raises(RuntimeError):
+        iter(archive)
+
+
 def test_add_requires_init():
     archive = GridArchive([20, 20], [(-1, 1)] * 2)
     with pytest.raises(RuntimeError):
@@ -73,7 +79,39 @@ def test_invalid_dtype():
 
 
 #
-# ArchiveBase tests -- should work for all archive classes.
+# Tests for iteration -- only GridArchive for simplicity.
+#
+
+
+def test_iteration():
+    data = get_archive_data("GridArchive")
+    for elite in data.archive_with_elite:
+        assert np.isclose(elite.sol, data.solution).all()
+        assert np.isclose(elite.obj, data.objective_value).all()
+        assert np.isclose(elite.beh, data.behavior_values).all()
+        assert elite.idx == data.grid_indices
+        assert elite.meta == data.metadata
+
+
+def test_add_during_iteration():
+    # Even with just one entry, adding during iteration should still raise an
+    # error, just like it does in set.
+    data = get_archive_data("GridArchive")
+    with pytest.raises(RuntimeError):
+        for _ in data.archive_with_elite:
+            data.archive_with_elite.add(data.solution, data.objective_value + 1,
+                                        data.behavior_values)
+
+
+def test_clear_during_iteration():
+    data = get_archive_data("GridArchive")
+    with pytest.raises(RuntimeError):
+        for _ in data.archive_with_elite:
+            data.archive_with_elite.clear()
+
+
+#
+# General tests -- should work for all archive classes.
 #
 
 
@@ -81,6 +119,11 @@ def test_invalid_dtype():
 def data(request):
     """Provides data for testing all kinds of archives."""
     return get_archive_data(request.param)
+
+
+def test_length(data):
+    assert len(data.archive) == 0
+    assert len(data.archive_with_elite) == 1
 
 
 def test_archive_cannot_reinit(data):
