@@ -18,13 +18,12 @@ def data():
 def assert_archive_elite(archive, solution, objective_value, behavior_values,
                          indices, metadata):
     """Assert that the archive has one specific elite."""
-    all_sols, all_objs, all_behs, all_idxs, all_meta = archive.data()
-    assert len(all_sols) == 1
-    assert np.isclose(all_sols[0], solution).all()
-    assert np.isclose(all_objs[0], objective_value).all()
-    assert np.isclose(all_behs[0], behavior_values).all()
-    assert all_idxs[0] == indices
-    assert all_meta[0] == metadata
+    elite = archive.table().item()
+    assert np.isclose(elite.sol, solution).all()
+    assert np.isclose(elite.obj, objective_value).all()
+    assert np.isclose(elite.beh, behavior_values).all()
+    assert elite.idx == indices
+    assert elite.meta == metadata
 
 
 def test_fails_on_dim_mismatch():
