@@ -3,8 +3,6 @@ import numpy as np
 
 from ribs.archives._elite import Elite
 
-# TODO: Usage examples
-
 
 def convert_idx(idx):
     """Converts indices to a tuple when necessary.
@@ -24,9 +22,49 @@ class EliteTable:
     Example:
 
         An :class:`EliteTable` typically comes from an archive's
-        :meth:`~ArchiveBase.data` method (i.e. users do not construct it)::
+        :meth:`~ArchiveBase.table` method (i.e. users do not construct it)::
 
-            data = archive.data()
+            table = archive.table()
+
+        The table provides access to data from all the elites::
+
+            table.solutions
+            table.objective_values
+            ...
+
+        The length of the table is the number of elites in it::
+
+            len(table)
+
+        The table can be iterated over -- :class:`Elite`'s are returned when
+        doing so::
+
+            for elite in table:
+                elite.sol
+                elite.obj
+                ...
+
+        Indexing is also supported, and the table behaves similarly to a 1D
+        numpy array. This is particularly useful when selecting elites which
+        satisfy a given condition. The following returns a new table with elites
+        that have objective value at least 200::
+
+            table[table.objective_values > 200]
+
+        Note that while indexing usually returns a new :class:`EliteTable`, an
+        integer index returns the :class:`Elite` at the given index in the
+        table::
+
+            table[0]  # Elite
+
+        Finally, we can filter elites by providing a predicate which takes in an
+        :class:`Elite` and returns a bool telling whether to keep the elite. The
+        following selects elites which have objective value greater than 200 and
+        metadata that is not None::
+
+            filtered = table.filter(
+                lambda elite: elite.obj > 200 and elite.meta is not None
+            )
 
     Args:
         solutions: See :attr:`solutions`.
@@ -124,13 +162,21 @@ class EliteTable:
         at that position is returned.
         """
         if isinstance(key, (int, np.integer)):
-            return Elite(self._solutions[key], self._objective_values[key],
-                         self._behavior_values[key],
-                         convert_idx(self._indices[key]), self._metadata[key])
+            return Elite(
+                self._solutions[key],
+                self._objective_values[key],
+                self._behavior_values[key],
+                convert_idx(self._indices[key]),
+                self._metadata[key],
+            )
 
-        return EliteTable(self._solutions[key], self._objective_values[key],
-                          self._behavior_values[key], self._indices[key],
-                          self._metadata[key])
+        return EliteTable(
+            self._solutions[key],
+            self._objective_values[key],
+            self._behavior_values[key],
+            self._indices[key],
+            self._metadata[key],
+        )
 
     def item(self):
         """If there is only one elite in the table, this method returns it.
@@ -146,10 +192,29 @@ class EliteTable:
             raise ValueError(
                 f"Must have one elite to call item() but there are {len(self)}")
 
-        return Elite(self._solutions[0],
-                     self._objective_values[0], self._behavior_values[0],
-                     convert_idx(self._indices[0]), self._metadata[0])
+        return Elite(
+            self._solutions[0],
+            self._objective_values[0],
+            self._behavior_values[0],
+            convert_idx(self._indices[0]),
+            self._metadata[0],
+        )
 
-    #  def filter(self, predicate):
-    #      # Returns new EliteTable where elites are filtered by predicate
-    #      pass
+    def filter(self, predicate):
+        """Filters the elites in the table according to ``predicate``.
+
+        Args:
+            predicate: A function which takes in a single :class:`Elite` and
+                returns a bool indicating if the elite should be kept.
+        Returns:
+            EliteTable: New table only containing elites for which ``predicate``
+            evaluates to True.
+        """
+        filter_indices = [bool(predicate(elite)) for elite in self]
+        return EliteTable(
+            self._solutions[filter_indices],
+            self._objective_values[filter_indices],
+            self._behavior_values[filter_indices],
+            self._indices[filter_indices],
+            self._metadata[filter_indices],
+        )

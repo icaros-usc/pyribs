@@ -119,3 +119,16 @@ def test_item():
 def test_item_fails_when_more_than_one_elite(table):
     with pytest.raises(ValueError):
         table.item()
+
+
+def test_filter(table):
+    table2 = table.filter(lambda elite: elite.meta is None)
+    assert len(table2) == 2
+    assert_elite_eq(
+        table2[0],
+        Elite(table.solutions[3], table.objective_values[3],
+              table.behavior_values[3], tuple(table.indices[3]), None))
+    assert_elite_eq(
+        table2[1],
+        Elite(table.solutions[4], table.objective_values[4],
+              table.behavior_values[4], tuple(table.indices[4]), None))
