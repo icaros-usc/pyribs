@@ -316,7 +316,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     @require_init
     def objective_values(self):
         """(len(archive),) numpy.ndarray): Objective values of all elites
-        currently in the archive."""
+        currently in the archive.
+
+        These correspond to :attr:`solutions`, e.g. ``objective_values[0]``
+        corresponds to ``solutions[0]``.
+        """
         return self._objective_values_view.update(self._occupied_indices_cols,
                                                   self._state)
 
@@ -324,7 +328,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     @require_init
     def behavior_values(self):
         """(len(archive), behavior_dim) numpy.ndarray): Behavior values of all
-        elites currently in the archive."""
+        elites currently in the archive.
+
+        These correspond to :attr:`solutions`, e.g. ``behavior_values[0]``
+        corresponds to ``solutions[0]``.
+        """
         return self._behavior_values_view.update(self._occupied_indices_cols,
                                                  self._state)
 
@@ -336,6 +344,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         Each entry in the tuple is an index, which can be either an int or tuple
         of int (see :meth:`get_index` for the specific archive for more info).
+
+        These correspond to :attr:`solutions`, e.g. ``indices[0]`` corresponds
+        to ``solutions[0]``.
 
         This is a tuple instead of a numpy array because numpy arrays are unable
         to (easily) store tuples directly.
@@ -349,6 +360,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         the archive.
 
         This array is an object array.
+
+        These correspond to :attr:`solutions`, e.g. ``metadata[0]`` corresponds
+        to ``solutions[0]``.
         """
         return self._metadata_view.update(self._occupied_indices_cols,
                                           self._state)
