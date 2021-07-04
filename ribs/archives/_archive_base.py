@@ -9,7 +9,6 @@ from decorator import decorator
 
 from ribs.archives._add_status import AddStatus
 from ribs.archives._elite import Elite
-from ribs.archives._elite_table import EliteTable
 
 
 @decorator
@@ -536,33 +535,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             readonly(self._behavior_values[index]),
             index,
             self._metadata[index],
-        )
-
-    def table(self, copy=False):
-        """Returns :class:`EliteTable` containing all elites in the archive.
-
-        See :class:`EliteTable` documentation for more info.
-
-        .. note:: By default, the :class:`EliteTable` contains views into
-            existing data in the archive. However, the data may change if the
-            archive is modified after calling this method.
-
-        Args:
-            copy: If True, :class:`EliteTable` is given copies of the data in
-                the archive, e.g. solutions and behavior values. Otherwise, it
-                is given readonly views (but as mentioned above, the data in
-                these views may change if the archive is modified).
-        Returns:
-            EliteTable: Contains all elites in the archive.
-        """
-        indices = np.array(self._occupied_indices)
-        modifier = np.copy if copy else readonly
-        return EliteTable(
-            modifier(self._solutions[self._occupied_indices_cols]),
-            modifier(self._objective_values[self._occupied_indices_cols]),
-            modifier(self._behavior_values[self._occupied_indices_cols]),
-            indices if copy else readonly(indices),
-            modifier(self._metadata[self._occupied_indices_cols]),
         )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
