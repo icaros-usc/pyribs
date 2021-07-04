@@ -83,7 +83,7 @@ class ArchiveIterator:
     def __init__(self, archive):
         self.archive = archive
         self.iter_idx = 0
-        self.add_count = archive._add_count
+        self.state = archive._state.copy()
 
     def __iter__(self):
         """This is the iterator, so return self."""
@@ -92,7 +92,7 @@ class ArchiveIterator:
     def __next__(self):
         """Raises RuntimeError if the archive was modified with add() or
         clear()."""
-        if self.add_count != self.archive._add_count:
+        if self.state != self.archive._state:
             # This check should go first because a call to clear() would clear
             # _occupied_indices and cause StopIteration to happen early.
             raise RuntimeError(
@@ -218,7 +218,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._seed = seed
         self._initialized = False
         self._bins = np.product(self._storage_dims)
-        self._add_count = None  # Number of times add() has been called.
+        # Tracks archive modifications by counting calls to clear() and add().
+        self._state = None
 
         self._dtype = self._parse_dtype(dtype)
 
@@ -324,7 +325,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied_indices_cols = tuple(
             [] for _ in range(len(self._storage_dims)))
 
-        self._add_count = 0
+        self._state = {"clear": 0, "add": 0}
 
     @require_init
     def clear(self):
@@ -339,7 +340,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         for col in self._occupied_indices_cols:
             col.clear()
         self._occupied.fill(False)
-        self._add_count = 0
+
+        self._state["clear"] += 1
+        self._state["add"] = 0
 
     @abstractmethod
     def get_index(self, behavior_values):
@@ -436,7 +439,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                   previously in the archive
                 - ``NEW`` -> the objective value passed in
         """
-        self._add_count += 1
+        self._state["add"] += 1
         solution = np.asarray(solution)
         behavior_values = np.asarray(behavior_values)
 
