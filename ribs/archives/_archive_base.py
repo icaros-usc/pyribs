@@ -74,6 +74,31 @@ class RandomBuffer:
         return val
 
 
+class CachedView:
+    """Maintains a view of the given numpy array.
+
+    Whenever the state changes in update(), the view of the array is updated.
+
+    This class is useful when returning the archive data, e.g.
+    archive.solutions. If the archive has a lot of indices, indexing into the
+    array can be expensive (e.g. ~0.5 seconds for 250k indices), and it adds up
+    if the user does this many times, so we only want to do the indexing once.
+    """
+
+    def __init__(self, array):
+        self.array = array
+        self.view = None
+        self.state = None
+
+    def update(self, indices, state):
+        """Sets view to array[indices], but only if state has changed."""
+        if state != self.state:
+            self.state = state.copy()
+            self.view = self.array[indices]
+            self.view.flags.writeable = False
+        return self.view
+
+
 class ArchiveIterator:
     """An iterator for an archive's elites."""
 
@@ -198,7 +223,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     """
 
     def __init__(self, storage_dims, behavior_dim, seed=None, dtype=np.float64):
-        # Intended to be accessed by child classes.
+
+        ## Intended to be accessed by child classes. ##
+
         self._rng = np.random.default_rng(seed)
         self._storage_dims = storage_dims
         self._behavior_dim = behavior_dim
@@ -211,12 +238,19 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied_indices = None
         self._occupied_indices_cols = None
 
-        # Not intended to be accessed by children (and thus not mentioned in the
-        # docstring).
+        ## Not intended to be accessed by children. ##
+
         self._rand_buf = None
         self._seed = seed
         self._initialized = False
         self._bins = np.product(self._storage_dims)
+
+        # Array views for providing access to data.
+        self._solutions_view = CachedView(self._solutions)
+        self._objective_values_view = CachedView(self._objective_values)
+        self._behavior_values_view = CachedView(self._behavior_values)
+        self._metadata_view = CachedView(self._metadata)
+
         # Tracks archive modifications by counting calls to clear() and add().
         self._state = None
 
@@ -273,42 +307,49 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     @property
     @require_init
     def solutions(self):
-        return self._solutions
-
-    """
-    class CachedView:
-        def __init__(self, array):
-            self.array = array
-            self.view = None
-            self.update_idx = None
-
-        def update(self, indices, update_idx):
-            if update_idx != self.update_idx:
-                self.update_idx = update_idx
-                self.view = self.array[indices]
-                self.view.flags.writeable = False
-            return self.view
-    """
+        """((len(archive), solution_dim) numpy.ndarray): Solutions of all elites
+        currently in the archive."""
+        return self._solutions_view.update(self._occupied_indices, self._state)
 
     @property
     @require_init
     def objective_values(self):
-        return self._objective_values
+        """(len(archive),) numpy.ndarray): Objective values of all elites
+        currently in the archive."""
+        return self._objective_values_view.update(self._occupied_indices,
+                                                  self._state)
 
     @property
     @require_init
     def behavior_values(self):
-        return self._behavior_values
+        """(len(archive), behavior_dim) numpy.ndarray): Behavior values of all
+        elites currently in the archive."""
+        return self._behavior_values_view.update(self._occupied_indices,
+                                                 self._state)
 
     @property
     @require_init
     def indices(self):
-        return tuple(self._occupied_indices)
+        """(len(archive),) tuple: Tuple with indices of all elites in the
+        archive.
+
+        Each entry in the tuple is an index, which can be either an int or tuple
+        of int (see :meth:`get_index` for the specific archive for more info).
+
+        This is a tuple instead of a numpy array because numpy arrays are unable
+        to (easily) store tuples directly.
+        """
+        return tuple(self._occupied_indices)  # List to tuple is cheap.
 
     @property
     @require_init
     def metadata(self):
-        return self._metadata
+        """(len(archive),) numpy.ndarray): Metadata of all elites currently in
+        the archive.
+
+        This array is an object array.
+        """
+        return self._metadata_view.update(self._occupied_indices, self._state)
 
     @property
     def dtype(self):
