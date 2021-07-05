@@ -82,13 +82,12 @@ def test_tell_inserts_solutions_into_archive(optimizer_fixture, tell_metadata):
         metadata=metadata,
     )
 
-    # Note: This assumes table() returns elites in order of insertion, but this
-    # may change in the future.
-    table = optimizer.archive.table()
-    assert len(table) == num_solutions
-    assert (table.behavior_values == behavior_values).all()
-    assert (table.objective_values == np.ones(num_solutions)).all()
-    assert (table.metadata == expected_metadata).all()
+    # Note: This assumes elite data is in order of insertion, which may change
+    # in the future.
+    assert len(optimizer.archive) == num_solutions
+    assert (optimizer.archive.behavior_values == behavior_values).all()
+    assert (optimizer.archive.objective_values == np.ones(num_solutions)).all()
+    assert (optimizer.archive.metadata == expected_metadata).all()
 
 
 @pytest.mark.parametrize("tell_metadata", [True, False],
@@ -115,13 +114,12 @@ def test_tell_inserts_solutions_with_multiple_emitters(tell_metadata):
         metadata=metadata,
     )
 
-    # Note: This assumes table() returns elites in order of insertion, but this
-    # may change in the future.
-    table = optimizer.archive.table()
-    assert len(table) == 6
-    assert (table.behavior_values == behavior_values).all()
-    assert (table.objective_values == np.ones(6)).all()
-    assert (table.metadata == expected_metadata).all()
+    # Note: This assumes elite data is in order of insertion, which may change
+    # in the future.
+    assert len(optimizer.archive) == 6
+    assert (optimizer.archive.behavior_values == behavior_values).all()
+    assert (optimizer.archive.objective_values == np.ones(6)).all()
+    assert (optimizer.archive.metadata == expected_metadata).all()
 
 
 def test_tell_fails_when_ask_not_called(optimizer_fixture):

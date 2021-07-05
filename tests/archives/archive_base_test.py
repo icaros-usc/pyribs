@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
-from ribs.archives._archive_base import RandomBuffer
+from ribs.archives._archive_base import CachedView, RandomBuffer
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
@@ -33,6 +33,33 @@ def test_random_buffer_not_repeating():
     x2 = [buffer.get(100) for _ in range(buf_size)]
 
     assert x1 != x2
+
+
+#
+# CachedView tests -- note this is an internal class.
+#
+
+
+def test_cached_view_changes():
+    arr = 2 * np.arange(5, dtype=int)
+    cache = CachedView(arr)
+
+    view1 = cache.update([0, 1], {"a": 1, "b": 1})
+    assert (view1 == 2 * np.array([0, 1])).all()
+
+    view2 = cache.update([2, 3, 4], {"a": 1, "b": 2})
+    assert (view2 == 2 * np.array([2, 3, 4])).all()
+
+
+def test_cached_view_no_change():
+    arr = 2 * np.arange(5, dtype=int)
+    cache = CachedView(arr)
+
+    view1 = cache.update([0, 1], {"a": 1, "b": 1})
+    assert (view1 == 2 * np.array([0, 1])).all()
+
+    view2 = cache.update([2, 3, 4], {"a": 1, "b": 1})
+    assert (view2 == 2 * np.array([0, 1])).all()
 
 
 #
@@ -108,6 +135,15 @@ def test_clear_during_iteration():
     with pytest.raises(RuntimeError):
         for _ in data.archive_with_elite:
             data.archive_with_elite.clear()
+
+
+def test_clear_and_add_during_iteration():
+    data = get_archive_data("GridArchive")
+    with pytest.raises(RuntimeError):
+        for _ in data.archive_with_elite:
+            data.archive_with_elite.clear()
+            data.archive_with_elite.add(data.solution, data.objective_value + 1,
+                                        data.behavior_values)
 
 
 #
@@ -186,23 +222,6 @@ def test_random_elite_gets_single_elite(data):
 def test_random_elite_fails_when_empty(data):
     with pytest.raises(IndexError):
         data.archive.get_random_elite()
-
-
-@pytest.mark.parametrize("copy", [True, False])
-def test_table(data, copy):
-    """General checks for table() method.
-
-    The assert_archive_elite method in the other archive tests already tests the
-    correctness of table().
-    """
-    table = data.archive_with_elite.table(copy=copy)
-    assert len(table) == 1
-    if not copy:
-        assert not table.solutions.flags.writeable
-        assert not table.objective_values.flags.writeable
-        assert not table.behavior_values.flags.writeable
-        assert not table.indices.flags.writeable
-        assert not table.metadata.flags.writeable
 
 
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
