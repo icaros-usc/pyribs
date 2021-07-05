@@ -561,29 +561,28 @@ def parallel_axes_plot(archive,
     else:
         # Check for errors in specification.
         if all(isinstance(bc, int) for bc in bc_order):
-            bc_indices = np.array(bc_order)
-            axis_labels = [f"behavior_{i}" for i in bc_indices]
+            cols = np.array(bc_order)
+            axis_labels = [f"behavior_{i}" for i in cols]
         elif all(
                 len(bc) == 2 and isinstance(bc[0], int) and
                 isinstance(bc[1], str) for bc in bc_order):
-            bc_indices, axis_labels = zip(*bc_order)
-            bc_indices = np.array(bc_indices)
+            cols, axis_labels = zip(*bc_order)
+            cols = np.array(cols)
         else:
             raise TypeError("bc_order must be a list of ints or a list of"
                             "tuples in the form (int, str)")
 
-        if np.max(bc_indices) >= archive.behavior_dim:
+        if np.max(cols) >= archive.behavior_dim:
             raise ValueError(f"Invalid Behavior: requested behavior index "
-                             f"{np.max(bc_indices)}, but archive only has "
+                             f"{np.max(cols)}, but archive only has "
                              f"{archive.behavior_dim} behaviors.")
-        if any(bc < 0 for bc in bc_indices):
+        if any(bc < 0 for bc in cols):
             raise ValueError("Invalid Behavior: requested a negative behavior"
                              " index.")
 
         # Find the indices of the requested order.
-        cols = bc_indices
-        lower_bounds = archive.lower_bounds[bc_indices]
-        upper_bounds = archive.upper_bounds[bc_indices]
+        lower_bounds = archive.lower_bounds[cols]
+        upper_bounds = archive.upper_bounds[cols]
 
     host_ax = plt.gca() if ax is None else ax  # Try to get current axis.
     vmin = np.min(archive.objective_values) if vmin is None else vmin
