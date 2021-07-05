@@ -284,6 +284,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         raise ValueError("Unsupported dtype. Must be np.float32 or np.float64")
 
+    ## "Housekeeping" attributes ##
+
     @property
     def initialized(self):
         """Whether the archive has been initialized by a call to
@@ -296,11 +298,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return not self._occupied_indices
 
     @property
-    def bins(self):
-        """int: Total number of bins in the archive."""
-        return self._bins
-
-    @property
     def behavior_dim(self):
         """int: Dimensionality of the behavior space."""
         return self._behavior_dim
@@ -310,6 +307,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def solution_dim(self):
         """int: Dimensionality of the solutions in the archive."""
         return self._solution_dim
+
+    @property
+    def dtype(self):
+        """data-type: The dtype of the solutions, objective values, and behavior
+        values."""
+        return self._dtype
+
+    ## Data attributes ##
 
     @property
     @require_init
@@ -374,11 +379,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._metadata_view.update(self._occupied_indices_cols,
                                           self._state)
 
+    ## Statistics attributes ##
+
     @property
-    def dtype(self):
-        """data-type: The dtype of the solutions, objective values, and behavior
-        values."""
-        return self._dtype
+    def bins(self):
+        """int: Total number of bins in the archive."""
+        return self._bins
+
+    ## Methods ##
 
     def __len__(self):
         """Number of elites in the archive."""
