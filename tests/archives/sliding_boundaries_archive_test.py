@@ -5,7 +5,7 @@ import pytest
 from ribs.archives import AddStatus, SlidingBoundariesArchive
 
 from .conftest import get_archive_data
-from .grid_archive_test import assert_archive_entry
+from .grid_archive_test import assert_archive_elite
 
 # pylint: disable = redefined-outer-name
 
@@ -50,41 +50,41 @@ def test_add_to_archive(data, use_list):
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective_value)
-    assert_archive_entry(data.archive_with_entry, data.solution,
+    assert_archive_elite(data.archive_with_elite, data.solution,
                          data.objective_value, data.behavior_values,
                          data.grid_indices, data.metadata)
 
 
 def test_add_and_overwrite(data):
-    """Test adding a new entry with a higher objective value."""
+    """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     high_objective_value = data.objective_value + 1.0
 
-    status, value = data.archive_with_entry.add(arbitrary_sol,
+    status, value = data.archive_with_elite.add(arbitrary_sol,
                                                 high_objective_value,
                                                 data.behavior_values,
                                                 arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective_value - data.objective_value)
-    assert_archive_entry(data.archive_with_entry, arbitrary_sol,
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol,
                          high_objective_value, data.behavior_values,
                          data.grid_indices, arbitrary_metadata)
 
 
 def test_add_without_overwrite(data):
-    """Test adding a new entry with a lower objective value."""
+    """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     low_objective_value = data.objective_value - 1.0
 
-    status, value = data.archive_with_entry.add(arbitrary_sol,
+    status, value = data.archive_with_elite.add(arbitrary_sol,
                                                 low_objective_value,
                                                 data.behavior_values,
                                                 arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective_value - data.objective_value)
-    assert_archive_entry(data.archive_with_entry, data.solution,
+    assert_archive_elite(data.archive_with_elite, data.solution,
                          data.objective_value, data.behavior_values,
                          data.grid_indices, data.metadata)
 
@@ -119,13 +119,13 @@ def test_initial_remap():
             archive.add([x, y], obj, [x, y])
 
     # There are 199 entries because the last entry has not been inserted.
-    assert archive.entries == 199
+    assert len(archive) == 199
 
     # Buffer should now have 231 entries; hence it remaps.
     archive.add([-1, -2], 1, [-1, -2])
     expected_bcs.append((-1, -2))
 
-    assert archive.entries == 200
+    assert len(archive) == 200
 
     # Since we passed in unique entries generated with linspace, the boundaries
     # should come from linspace.
@@ -145,18 +145,18 @@ def test_add_to_archive_with_full_buffer(data):
         data.archive.add(data.solution, data.objective_value,
                          data.behavior_values, data.metadata)
 
-    # After adding the same entry multiple times, there should only be one
-    # entry, and it should be at (0, 0).
-    assert_archive_entry(data.archive, data.solution, data.objective_value,
+    # After adding the same elite multiple times, there should only be one
+    # elite, and it should be at (0, 0).
+    assert_archive_elite(data.archive, data.solution, data.objective_value,
                          data.behavior_values, (0, 0), data.metadata)
 
-    # Even if another entry is added, it should still go to the same cell
+    # Even if another elite is added, it should still go to the same cell
     # because the behavior values are clipped to the boundaries before being
     # inserted.
     arbitrary_metadata = {"foobar": 12}
     data.archive.add(2 * data.solution, 2 * data.objective_value,
                      2 * data.behavior_values, arbitrary_metadata)
-    assert_archive_entry(data.archive, 2 * data.solution,
+    assert_archive_elite(data.archive, 2 * data.solution,
                          2 * data.objective_value, 2 * data.behavior_values,
                          (0, 0), arbitrary_metadata)
 
@@ -172,7 +172,7 @@ def test_adds_solutions_from_old_archive():
         for y in np.linspace(-2, 2, 21):
             archive.add([x, y], 2, [x, y])
 
-    assert archive.entries == 200
+    assert len(archive) == 200
 
     # Archive gets remapped again, but it should maintain the same BCs since
     # solutions are the same. All the high-performing solutions should be
@@ -181,7 +181,7 @@ def test_adds_solutions_from_old_archive():
         for y in np.linspace(-2, 2, 21):
             archive.add([x, y], 1, [x, y])
 
-    assert archive.entries == 200
+    assert len(archive) == 200
 
     # The objective values from the previous archive should remain because they
     # are higher.

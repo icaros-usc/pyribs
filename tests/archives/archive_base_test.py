@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
-from ribs.archives._archive_base import RandomBuffer
+from ribs.archives._archive_base import CachedView, RandomBuffer
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
@@ -36,9 +36,42 @@ def test_random_buffer_not_repeating():
 
 
 #
+# CachedView tests -- note this is an internal class.
+#
+
+
+def test_cached_view_changes():
+    arr = 2 * np.arange(5, dtype=int)
+    cache = CachedView(arr)
+
+    view1 = cache.update([0, 1], {"a": 1, "b": 1})
+    assert (view1 == 2 * np.array([0, 1])).all()
+
+    view2 = cache.update([2, 3, 4], {"a": 1, "b": 2})
+    assert (view2 == 2 * np.array([2, 3, 4])).all()
+
+
+def test_cached_view_no_change():
+    arr = 2 * np.arange(5, dtype=int)
+    cache = CachedView(arr)
+
+    view1 = cache.update([0, 1], {"a": 1, "b": 1})
+    assert (view1 == 2 * np.array([0, 1])).all()
+
+    view2 = cache.update([2, 3, 4], {"a": 1, "b": 1})
+    assert (view2 == 2 * np.array([0, 1])).all()
+
+
+#
 # Tests for the require_init decorator. Just need to make sure it works on a few
 # methods, as it is too much to test on all.
 #
+
+
+def test_iter_require_init():
+    archive = GridArchive([20, 20], [(-1, 1)] * 2)
+    with pytest.raises(RuntimeError):
+        iter(archive)
 
 
 def test_add_requires_init():
@@ -73,7 +106,48 @@ def test_invalid_dtype():
 
 
 #
-# ArchiveBase tests -- should work for all archive classes.
+# Tests for iteration -- only GridArchive for simplicity.
+#
+
+
+def test_iteration():
+    data = get_archive_data("GridArchive")
+    for elite in data.archive_with_elite:
+        assert np.isclose(elite.sol, data.solution).all()
+        assert np.isclose(elite.obj, data.objective_value).all()
+        assert np.isclose(elite.beh, data.behavior_values).all()
+        assert elite.idx == data.grid_indices
+        assert elite.meta == data.metadata
+
+
+def test_add_during_iteration():
+    # Even with just one entry, adding during iteration should still raise an
+    # error, just like it does in set.
+    data = get_archive_data("GridArchive")
+    with pytest.raises(RuntimeError):
+        for _ in data.archive_with_elite:
+            data.archive_with_elite.add(data.solution, data.objective_value + 1,
+                                        data.behavior_values)
+
+
+def test_clear_during_iteration():
+    data = get_archive_data("GridArchive")
+    with pytest.raises(RuntimeError):
+        for _ in data.archive_with_elite:
+            data.archive_with_elite.clear()
+
+
+def test_clear_and_add_during_iteration():
+    data = get_archive_data("GridArchive")
+    with pytest.raises(RuntimeError):
+        for _ in data.archive_with_elite:
+            data.archive_with_elite.clear()
+            data.archive_with_elite.add(data.solution, data.objective_value + 1,
+                                        data.behavior_values)
+
+
+#
+# General tests -- should work for all archive classes.
 #
 
 
@@ -81,6 +155,11 @@ def test_invalid_dtype():
 def data(request):
     """Provides data for testing all kinds of archives."""
     return get_archive_data(request.param)
+
+
+def test_length(data):
+    assert len(data.archive) == 0
+    assert len(data.archive_with_elite) == 1
 
 
 def test_archive_cannot_reinit(data):
@@ -92,20 +171,17 @@ def test_new_archive_is_empty(data):
     assert data.archive.empty
 
 
-def test_archive_with_entry_is_not_empty(data):
-    assert not data.archive_with_entry.empty
+def test_archive_with_elite_is_not_empty(data):
+    assert not data.archive_with_elite.empty
+
+
+def test_archive_is_empty_after_clear(data):
+    data.archive_with_elite.clear()
+    assert data.archive_with_elite.empty
 
 
 def test_bins_correct(data):
     assert data.archive.bins == data.bins
-
-
-def test_entries_correct(data):
-    assert data.archive.entries == 0
-
-
-def test_nonzero_entries_correct(data):
-    assert data.archive_with_entry.entries == 1
 
 
 def test_behavior_dim_correct(data):
@@ -117,32 +193,30 @@ def test_solution_dim_correct(data):
 
 
 def test_elite_with_behavior_gets_correct_elite(data):
-    (sol, obj, beh, idx,
-     meta) = data.archive_with_entry.elite_with_behavior(data.behavior_values)
-    assert (sol == data.solution).all()
-    assert obj == data.objective_value
-    assert (beh == data.behavior_values).all()
-    assert isinstance(idx, (int, tuple))  # Exact value depends on archive.
-    assert meta == data.metadata
+    elite = data.archive_with_elite.elite_with_behavior(data.behavior_values)
+    assert np.all(elite.sol == data.solution)
+    assert elite.obj == data.objective_value
+    assert np.all(elite.beh == data.behavior_values)
+    assert isinstance(elite.idx, (int, tuple))  # Exact val depends on archive.
+    assert elite.meta == data.metadata
 
 
 def test_elite_with_behavior_returns_none(data):
-    (sol, obj, beh, idx,
-     meta) = data.archive.elite_with_behavior(data.behavior_values)
-    assert sol is None
-    assert obj is None
-    assert beh is None
-    assert idx is None
-    assert meta is None
+    elite = data.archive.elite_with_behavior(data.behavior_values)
+    assert elite.sol is None
+    assert elite.obj is None
+    assert elite.beh is None
+    assert elite.idx is None
+    assert elite.meta is None
 
 
 def test_random_elite_gets_single_elite(data):
-    sol, obj, beh, idx, meta = data.archive_with_entry.get_random_elite()
-    assert np.all(sol == data.solution)
-    assert obj == data.objective_value
-    assert np.all(beh == data.behavior_values)
-    assert isinstance(idx, (int, tuple))  # Exact value depends on archive.
-    assert meta == data.metadata
+    elite = data.archive_with_elite.get_random_elite()
+    assert np.all(elite.sol == data.solution)
+    assert elite.obj == data.objective_value
+    assert np.all(elite.beh == data.behavior_values)
+    assert isinstance(elite.idx, (int, tuple))  # Exact val depends on archive.
+    assert elite.meta == data.metadata
 
 
 def test_random_elite_fails_when_empty(data):
@@ -150,31 +224,15 @@ def test_random_elite_fails_when_empty(data):
         data.archive.get_random_elite()
 
 
-def test_data(data):
-    """General checks for data() method.
-
-    The assert_archive_entry method in the other archive tests already tests the
-    correctness of data().
-    """
-    (all_sols, all_objs, all_behs, all_idxs,
-     all_meta) = data.archive_with_entry.data()
-    assert len(all_sols) == 1
-    assert len(all_objs) == 1
-    assert len(all_behs) == 1
-    assert len(all_idxs) == 1
-    assert isinstance(all_idxs, list)
-    assert len(all_meta) == 1
-
-
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
-@pytest.mark.parametrize("with_entry", [True, False], ids=["nonempty", "empty"])
+@pytest.mark.parametrize("with_elite", [True, False], ids=["nonempty", "empty"])
 @pytest.mark.parametrize("include_solutions", [True, False],
                          ids=["solutions", "no_solutions"])
 @pytest.mark.parametrize("include_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
 @pytest.mark.parametrize("dtype", [np.float64, np.float32],
                          ids=["float64", "float32"])
-def test_as_pandas(name, with_entry, include_solutions, include_metadata,
+def test_as_pandas(name, with_elite, include_solutions, include_metadata,
                    dtype):
     data = get_archive_data(name, dtype)
     is_cvt = name.startswith("CVTArchive-")
@@ -198,8 +256,8 @@ def test_as_pandas(name, with_entry, include_solutions, include_metadata,
         expected_dtypes.append(object)
 
     # Retrieve the dataframe.
-    if with_entry:
-        df = data.archive_with_entry.as_pandas(include_solutions,
+    if with_elite:
+        df = data.archive_with_elite.as_pandas(include_solutions,
                                                include_metadata)
     else:
         df = data.archive.as_pandas(include_solutions, include_metadata)
@@ -208,11 +266,11 @@ def test_as_pandas(name, with_entry, include_solutions, include_metadata,
     assert (df.columns == expected_cols).all()
     assert (df.dtypes == expected_dtypes).all()
 
-    if with_entry:
+    if with_elite:
         if is_cvt:
             # For CVTArchive, we check the centroid because the index can vary.
             index = df.loc[0, "index_0"]
-            assert (data.archive_with_entry.centroids[index] == data.centroid
+            assert (data.archive_with_elite.centroids[index] == data.centroid
                    ).all()
         else:
             # Other archives have expected grid indices.

@@ -8,6 +8,7 @@ import pandas as pd
 from decorator import decorator
 
 from ribs.archives._add_status import AddStatus
+from ribs.archives._elite import Elite
 
 
 @decorator
@@ -21,6 +22,20 @@ def require_init(method, self, *args, **kwargs):
         raise RuntimeError("Archive has not been initialized. "
                            "Please call initialize().")
     return method(self, *args, **kwargs)
+
+
+def require_init_inline(archive):
+    """Same as require_init but for when decorators cannot be used, such as on
+    special methods."""
+    if not archive.initialized:
+        raise RuntimeError("Archive has not been initialized. "
+                           "Please call initialize().")
+
+
+def readonly(arr):
+    """Sets an array to be readonly."""
+    arr.flags.writeable = False
+    return arr
 
 
 class RandomBuffer:
@@ -59,6 +74,67 @@ class RandomBuffer:
         return val
 
 
+class CachedView:
+    """Maintains a readonly view of the given numpy array.
+
+    Whenever the state changes in update(), the view is updated.
+
+    This class is useful when returning the archive data, e.g.
+    archive.solutions. If the archive has many indices, indexing into the array
+    can be expensive (e.g. ~0.5 seconds for 250k indices), and it adds up if the
+    user does this many times, so we only want to do the indexing once.
+    """
+
+    def __init__(self, array):
+        self.array = array
+        self.view = None
+        self.state = None
+
+    def update(self, indices, state):
+        """Sets view to array[indices], but only if state has changed."""
+        if state != self.state:
+            self.state = state.copy()
+            self.view = self.array[indices]
+            self.view.flags.writeable = False
+        return self.view
+
+
+class ArchiveIterator:
+    """An iterator for an archive's elites."""
+
+    # pylint: disable = protected-access
+
+    def __init__(self, archive):
+        self.archive = archive
+        self.iter_idx = 0
+        self.state = archive._state.copy()
+
+    def __iter__(self):
+        """This is the iterator, so return self."""
+        return self
+
+    def __next__(self):
+        """Raises RuntimeError if the archive was modified with add() or
+        clear()."""
+        if self.state != self.archive._state:
+            # This check should go first because a call to clear() would clear
+            # _occupied_indices and cause StopIteration to happen early.
+            raise RuntimeError(
+                "Archive was modified with add() or clear() during iteration.")
+        if self.iter_idx >= len(self.archive._occupied_indices):
+            raise StopIteration
+
+        idx = self.archive._occupied_indices[self.iter_idx]
+        self.iter_idx += 1
+        return Elite(
+            self.archive._solutions[idx],
+            self.archive._objective_values[idx],
+            self.archive._behavior_values[idx],
+            idx,
+            self.archive._metadata[idx],
+        )
+
+
 class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     """Base class for archives.
 
@@ -69,8 +145,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     any additional metadata associated with the solution (object). In this
     class, the container is implemented with separate numpy arrays that share
     common dimensions. Using the ``storage_dims`` and ``behavior_dim`` arguments
-    in :meth:`__init__` and the ``solution_dim`` argument in ``initialize``,
-    these arrays are as follows:
+    in ``__init__`` and the ``solution_dim`` argument in ``initialize``, these
+    arrays are as follows:
 
     +------------------------+------------------------------------+
     | Name                   |  Shape                             |
@@ -86,14 +162,21 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     | ``_metadata``          |  ``(*storage_dims)``               |
     +------------------------+------------------------------------+
 
+    .. note::
+
+        These arrays are different from the elite data attributes
+        :attr:`solutions`, :attr:`objective_values`, :attr:`behavior_values`,
+        and :attr:`metadata`. The attributes provide access to data about elites
+        in the archive via a view into these arrays.
+
     All of these arrays are accessed via a common index. If we have index ``i``,
     we access its solution at ``_solutions[i]``, its behavior values at
     ``_behavior_values[i]``, etc.
 
     Thus, child classes typically override the following methods:
 
-    - :meth:`__init__`: Child classes must invoke this class's :meth:`__init__`
-      with the appropriate arguments.
+    - ``__init__``: Child classes must invoke this class's ``__init__`` with the
+      appropriate arguments.
     - :meth:`get_index`: Returns an index into the arrays above when given the
       behavior values of a solution. Usually, the index has a meaning, e.g. in
       :class:`~ribs.archives.CVTArchive` it is the index of a centroid. This
@@ -121,7 +204,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         _behavior_dim (int): See ``behavior_dim`` arg.
         _solution_dim (int): Dimension of the solution space, passed in with
             :meth:`initialize`.
-        _occupied (numpy.ndarray): Bool array storing whether each cell in the
+        _occupied (numpy.ndarray): Bool array storing whether each bin in the
             archive is occupied. This attribute is None until :meth:`initialize`
             is called.
         _solutions (numpy.ndarray): Float array storing the solutions
@@ -141,13 +224,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             :meth:`initialize` is called.
         _occupied_indices_cols (tuple of list of int): Stores the same data as
             ``_occupied_indices``, but in column-wise fashion. For instance,
-            ``_occupied_indices_cols[0]`` holds entry 0 of all the indices in
+            ``_occupied_indices_cols[0]`` holds index 0 of all the indices in
             ``_occupied_indices``. This attribute is None until
             :meth:`initialize` is called.
     """
 
     def __init__(self, storage_dims, behavior_dim, seed=None, dtype=np.float64):
-        # Intended to be accessed by child classes.
+
+        ## Intended to be accessed by child classes. ##
+
         self._rng = np.random.default_rng(seed)
         self._storage_dims = storage_dims
         self._behavior_dim = behavior_dim
@@ -160,12 +245,21 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied_indices = None
         self._occupied_indices_cols = None
 
-        # Not intended to be accessed by children (and thus not mentioned in the
-        # docstring).
+        ## Not intended to be accessed by children. ##
+
         self._rand_buf = None
         self._seed = seed
         self._initialized = False
         self._bins = np.product(self._storage_dims)
+
+        # Array views for providing access to data.
+        self._solutions_view = None
+        self._objective_values_view = None
+        self._behavior_values_view = None
+        self._metadata_view = None
+
+        # Tracks archive modifications by counting calls to clear() and add().
+        self._state = None
 
         self._dtype = self._parse_dtype(dtype)
 
@@ -207,11 +301,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._bins
 
     @property
-    def entries(self):
-        """int: Number of bins with an entry."""
-        return len(self._occupied_indices)
-
-    @property
     def behavior_dim(self):
         """int: Dimensionality of the behavior space."""
         return self._behavior_dim
@@ -223,10 +312,93 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._solution_dim
 
     @property
+    @require_init
+    def solutions(self):
+        """((len(archive), solution_dim) numpy.ndarray): Solutions of all elites
+        currently in the archive."""
+        return self._solutions_view.update(self._occupied_indices_cols,
+                                           self._state)
+
+    @property
+    @require_init
+    def objective_values(self):
+        """(len(archive),) numpy.ndarray): Objective values of all elites
+        currently in the archive.
+
+        These correspond to :attr:`solutions`, e.g. ``objective_values[0]``
+        corresponds to ``solutions[0]``.
+        """
+        return self._objective_values_view.update(self._occupied_indices_cols,
+                                                  self._state)
+
+    @property
+    @require_init
+    def behavior_values(self):
+        """(len(archive), behavior_dim) numpy.ndarray): Behavior values of all
+        elites currently in the archive.
+
+        These correspond to :attr:`solutions`, e.g. ``behavior_values[0]``
+        corresponds to ``solutions[0]``.
+        """
+        return self._behavior_values_view.update(self._occupied_indices_cols,
+                                                 self._state)
+
+    @property
+    @require_init
+    def indices(self):
+        """(len(archive),) tuple: Tuple with indices of all elites in the
+        archive.
+
+        Each entry in the tuple is an index, which can be either an int or tuple
+        of int (see :meth:`get_index` for the specific archive for more info).
+
+        These correspond to :attr:`solutions`, e.g. ``indices[0]`` corresponds
+        to ``solutions[0]``.
+
+        This is a tuple instead of a numpy array because numpy arrays are unable
+        to (easily) store tuples directly.
+        """
+        return tuple(self._occupied_indices)  # List to tuple is cheap.
+
+    @property
+    @require_init
+    def metadata(self):
+        """(len(archive),) numpy.ndarray): Metadata of all elites currently in
+        the archive.
+
+        This array is an object array.
+
+        These correspond to :attr:`solutions`, e.g. ``metadata[0]`` corresponds
+        to ``solutions[0]``.
+        """
+        return self._metadata_view.update(self._occupied_indices_cols,
+                                          self._state)
+
+    @property
     def dtype(self):
         """data-type: The dtype of the solutions, objective values, and behavior
         values."""
         return self._dtype
+
+    def __len__(self):
+        """Number of elites in the archive."""
+        require_init_inline(self)
+        return len(self._occupied_indices)
+
+    def __iter__(self):
+        """Creates an iterator over the :class:`Elite`'s in the archive.
+
+        Example:
+
+            ::
+
+                for elite in archive:
+                    elite.sol
+                    elite.obj
+                    ...
+        """
+        require_init_inline(self)
+        return ArchiveIterator(self)
 
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
@@ -246,29 +418,52 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._rand_buf = RandomBuffer(self._seed)
         self._solution_dim = solution_dim
         self._occupied = np.zeros(self._storage_dims, dtype=bool)
+        self._solutions = np.empty((*self._storage_dims, solution_dim),
+                                   dtype=self.dtype)
         self._objective_values = np.empty(self._storage_dims, dtype=self.dtype)
         self._behavior_values = np.empty(
             (*self._storage_dims, self._behavior_dim), dtype=self.dtype)
-        self._solutions = np.empty((*self._storage_dims, solution_dim),
-                                   dtype=self.dtype)
         self._metadata = np.empty(self._storage_dims, dtype=object)
         self._occupied_indices = []
         self._occupied_indices_cols = tuple(
             [] for _ in range(len(self._storage_dims)))
 
+        self._solutions_view = CachedView(self._solutions)
+        self._objective_values_view = CachedView(self._objective_values)
+        self._behavior_values_view = CachedView(self._behavior_values)
+        self._metadata_view = CachedView(self._metadata)
+        self._state = {"clear": 0, "add": 0}
+
+    @require_init
+    def clear(self):
+        """Removes all elites from the archive.
+
+        After this method is called, the archive will be :attr:`empty`.
+        """
+        # Only ``self._occupied_indices``, ``self._occupied_indices_cols``, and
+        # ``self._occupied`` are cleared, as a bin can have arbitrary values
+        # when its index is marked as unoccupied.
+        self._occupied_indices.clear()
+        for col in self._occupied_indices_cols:
+            col.clear()
+        self._occupied.fill(False)
+
+        self._state["clear"] += 1
+        self._state["add"] = 0
+
     @abstractmethod
     def get_index(self, behavior_values):
         """Returns archive indices for the given behavior values.
 
-        See the main :class:`~ribs.archives.ArchiveBase` docstring for more
+        See the :class:`~ribs.archives.ArchiveBase` class docstring for more
         info.
 
         Args:
             behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
                 coordinates in behavior space.
         Returns:
-            int or tuple of int: Indices of the entry in the archive's storage
-            arrays.
+            int or tuple of int: Indices of the behavior values in the archive's
+            storage arrays.
         """
 
     @staticmethod
@@ -321,7 +516,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """Attempts to insert a new solution into the archive.
 
         The solution is only inserted if it has a higher ``objective_value``
-        than the solution previously in the corresponding bin.
+        than the elite previously in the corresponding bin.
 
         Args:
             solution (array-like): Parameters of the solution.
@@ -351,6 +546,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                   previously in the archive
                 - ``NEW`` -> the objective value passed in
         """
+        self._state["add"] += 1
         solution = np.asarray(solution)
         behavior_values = np.asarray(behavior_values)
 
@@ -379,72 +575,62 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def elite_with_behavior(self, behavior_values):
         """Gets the elite with behavior vals in the same bin as those specified.
 
-        .. note:: Values like ``index`` and ``metadata`` are often not used.
-            In such cases, consider ignoring them::
+        Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
+        (here we show how to ignore some of the fields)::
 
-                sol, obj, beh, *_ = archive.elite_with_behavior(...)
+            sol, obj, beh, *_ = archive.elite_with_behavior(...)
+
+        Or the fields may be accessed by name::
+
+            elite = archive.elite_with_behavior(...)
+            elite.sol
+            elite.obj
+            ...
 
         Args:
             behavior_values (array-like): Coordinates in behavior space.
         Returns:
-            tuple: 5-element tuple for the elite if it is found:
-
-                **solution** (:class:`numpy.ndarray`): Parameters for the
-                solution.
-
-                **objective_value** (:attr:`dtype`): Objective function
-                evaluation.
-
-                **behavior_values** (:class:`numpy.ndarray`): Actual behavior
-                space coordinates of the elite (may not be exactly the same as
-                those specified).
-
-                **index** (int or tuple of int): Index of the entry in the
-                archive. See :attr:`get_index` for more info.
-
-                **metadata** (object): Metadata for the solution.
-
-            If there is no elite in the bin, each of the above values is None.
-            Thus, something like
-            ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``
-            still works).
+            Elite:
+              * If there is an elite with behavior values in the same bin as
+                those specified, this :namedtuple:`Elite` holds the info for
+                that elite. In that case, ``beh`` (the behavior values) may not
+                be exactly the same as the behavior values specified since the
+                elite is only guaranteed to be in the same archive bin.
+              * If no such elite exists, then all fields of the
+                :namedtuple:`Elite` are set to None. This way, tuple unpacking
+                (e.g.
+                ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``)
+                still works.
         """
         index = self.get_index(np.asarray(behavior_values))
         if self._occupied[index]:
-            return (
-                self._solutions[index],
+            return Elite(
+                readonly(self._solutions[index]),
                 self._objective_values[index],
-                self._behavior_values[index],
+                readonly(self._behavior_values[index]),
                 index,
                 self._metadata[index],
             )
-        return (None, None, None, None, None)
+        return Elite(None, None, None, None, None)
 
     @require_init
     def get_random_elite(self):
         """Selects an elite uniformly at random from one of the archive's bins.
 
-        .. note:: Values like ``index`` and ``metadata`` are often not used.
-            In such cases, consider ignoring them::
+        Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
+        (here we show how to ignore some of the fields)::
 
-                sol, obj, beh, *_ = archive.get_random_elite()
+            sol, obj, beh, *_ = archive.get_random_elite()
+
+        Or the fields may be accessed by name::
+
+            elite = archive.get_random_elite()
+            elite.sol
+            elite.obj
+            ...
 
         Returns:
-            tuple: 5-element tuple containing:
-
-                **solution** (:class:`numpy.ndarray`): Parameters for the
-                solution.
-
-                **objective_value** (:attr:`dtype`): Objective function
-                evaluation.
-
-                **behavior_values** (:class:`numpy.ndarray`): Behavior space
-                coordinates.
-
-                **index** (int or tuple of int): Index of the entry in the
-                archive. See :attr:`get_index` for more info.
-
-                **metadata** (object): Metadata for the solution.
+            Elite: A randomly selected elite from the archive.
         Raises:
             IndexError: The archive is empty.
         """
@@ -454,68 +640,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         random_idx = self._rand_buf.get(len(self._occupied_indices))
         index = self._occupied_indices[random_idx]
 
-        return (
-            self._solutions[index],
+        return Elite(
+            readonly(self._solutions[index]),
             self._objective_values[index],
-            self._behavior_values[index],
+            readonly(self._behavior_values[index]),
             index,
             self._metadata[index],
-        )
-
-    def data(self):
-        """Returns columns containing all data in the archive.
-
-        Namely, this method returns 5 arrays containing all of the solutions,
-        objective values, behavior values, indices, and metadata in the archive.
-        For example::
-
-            (all_solutions, all_objective_values,
-             all_behavior_values, all_indices, all_metadata) = archive.data()
-
-        All the arrays correspond to each other, i.e. ``all_solutions[i]``
-        corresponds to ``all_objective_values[i]``, ``all_behavior_values[i]``,
-        ``all_indices[i]``, and ``all_metadata[i]``. This means that an
-        iteration like the following would work::
-
-            for sol, obj, beh, idx, meta in zip(*archive.data()):
-                ...
-
-        This method is also useful when extracting insights from one
-        component of the archive. For instance, one can easily extract all the
-        objective values and calculate their mean with this method.
-
-        .. note:: This method returns numpy views into existing data in the
-            archive, so it does not make any copies. However, the data may
-            change if the archive is modified after calling this method.
-
-        Returns:
-            tuple: 5-element tuple containing:
-
-                **all_solutions** (:class:`numpy.ndarray` -- shape (n_entries,
-                :attr:`solution_dim`)): Parameters for all the solutions in the
-                archive.
-
-                **all_objective_values** (:class:`numpy.ndarray` -- shape
-                (n_entries,)): Objective value of all entries in the archive.
-
-                **all_behavior_values** (:class:`numpy.ndarray`-- shape
-                (n_entries, :attr:`behavior_dim`)): Behavior space coordinates
-                of all the entries.
-
-                **all_indices** (:class:`list` -- shape (n_entries,)): Index of
-                all entries in the archive. As each index can be either an int
-                or a tuple, this is a Python list. See :meth:`get_index` for
-                more info.
-
-                **all_metadata** (:class:`numpy.ndarray` -- shape (n_entries,)):
-                Object array with metadata of all entries.
-        """
-        return (
-            self._solutions[self._occupied_indices_cols],
-            self._objective_values[self._occupied_indices_cols],
-            self._behavior_values[self._occupied_indices_cols],
-            self._occupied_indices,
-            self._metadata[self._occupied_indices_cols],
         )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
@@ -577,5 +707,4 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         if include_metadata:
             metadata = self._metadata[self._occupied_indices_cols]
             data["metadata"] = np.asarray(metadata, dtype=object)
-
         return pd.DataFrame(data)
