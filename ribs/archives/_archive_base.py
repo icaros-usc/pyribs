@@ -162,6 +162,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     | ``_metadata``          |  ``(*storage_dims)``               |
     +------------------------+------------------------------------+
 
+    .. note::
+
+        These arrays are different from the elite data attributes
+        :attr:`solutions`, :attr:`objective_values`, :attr:`behavior_values`,
+        and :attr:`metadata`. The attributes provide access to data about elites
+        in the archive via a view into these arrays.
+
     All of these arrays are accessed via a common index. If we have index ``i``,
     we access its solution at ``_solutions[i]``, its behavior values at
     ``_behavior_values[i]``, etc.
