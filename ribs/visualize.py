@@ -146,8 +146,8 @@ def grid_archive_heatmap(archive,
 
     # Create the plot.
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-    vmin = np.min(archive.table().objective_values) if vmin is None else vmin
-    vmax = np.max(archive.table().objective_values) if vmax is None else vmax
+    vmin = np.min(archive.objective_values) if vmin is None else vmin
+    vmax = np.max(archive.objective_values) if vmax is None else vmax
     t = ax.pcolormesh(x_bounds,
                       y_bounds,
                       colors,
@@ -393,14 +393,12 @@ def sliding_boundaries_archive_heatmap(archive,
     cmap = _retrieve_cmap(cmap)
 
     # Retrieve data from archive.
-    archive_data = archive.as_pandas(include_solutions=False)
-    x = archive_data["behavior_0"]
-    y = archive_data["behavior_1"]
+    x = archive.behavior_values[:, 0]
+    y = archive.behavior_values[:, 1]
     x_boundary = archive.boundaries[0]
     y_boundary = archive.boundaries[1]
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
-    objective_values = archive_data["objective"]
 
     if transpose_bcs:
         # Since the archive is 2D, transpose by swapping the x and y behavior
@@ -420,12 +418,12 @@ def sliding_boundaries_archive_heatmap(archive,
         ax.set_aspect("equal")
 
     # Create the plot.
-    vmin = np.min(objective_values) if vmin is None else vmin
-    vmax = np.max(objective_values) if vmax is None else vmax
+    vmin = np.min(archive.objective_values) if vmin is None else vmin
+    vmax = np.max(archive.objective_values) if vmax is None else vmax
     t = ax.scatter(x,
                    y,
                    s=ms,
-                   c=objective_values,
+                   c=archive.objective_values,
                    cmap=cmap,
                    vmin=vmin,
                    vmax=vmax)
@@ -554,8 +552,8 @@ def parallel_axes_plot(archive,
 
     # If there is no order specified, plot in increasing numerical order.
     if bc_order is None:
-        cols = [f"behavior_{i}" for i in range(archive.behavior_dim)]
-        axis_labels = cols
+        cols = np.arange(archive.behavior_dim)
+        axis_labels = [f"behavior_{i}" for i in range(archive.behavior_dim)]
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
 
@@ -583,19 +581,18 @@ def parallel_axes_plot(archive,
                              " index.")
 
         # Find the indices of the requested order.
-        cols = [f"behavior_{i}" for i in bc_indices]
+        cols = bc_indices
         lower_bounds = archive.lower_bounds[bc_indices]
         upper_bounds = archive.upper_bounds[bc_indices]
 
     host_ax = plt.gca() if ax is None else ax  # Try to get current axis.
-    df = archive.as_pandas(include_solutions=False)
-    if sort_archive:
-        df.sort_values(by=['objective'], inplace=True)
-    vmin = np.min(df['objective']) if vmin is None else vmin
-    vmax = np.max(df['objective']) if vmax is None else vmax
+    vmin = np.min(archive.objective_values) if vmin is None else vmin
+    vmax = np.max(archive.objective_values) if vmax is None else vmax
     norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
-    objectives = df['objective'].to_numpy()
-    ys = df[cols].to_numpy()
+    ordering_indices = (np.argsort(archive.objective_values)
+                        if sort_archive else np.arange(len(archive)))
+    objectives = archive.objective_values[ordering_indices]
+    ys = archive.behavior_values[ordering_indices][:, cols]
     y_ranges = upper_bounds - lower_bounds
 
     # Transform all data to be in the first axis coordinates.
