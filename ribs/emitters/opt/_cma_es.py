@@ -211,7 +211,7 @@ class CMAEvolutionStrategy:
             solutions[remaining_indices] = new_solutions
 
             # Find indices in remaining_indices that are still out of bounds
-            # (out_of_bounds indicates whether each entry in each solution is
+            # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
             out_of_bounds_indices = np.where(np.any(out_of_bounds, axis=1))[0]
             remaining_indices = remaining_indices[out_of_bounds_indices]

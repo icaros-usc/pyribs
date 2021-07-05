@@ -44,7 +44,6 @@ extras_require = {
         "yapf",
 
         # Testing
-        "tox==3.14.0",
         "pytest==6.1.2",
         "pytest-cov==2.10.1",
         "pytest-benchmark==3.2.3",
@@ -56,6 +55,7 @@ extras_require = {
         "sphinx-autobuild==2020.9.1",
         "sphinx-copybutton==0.3.1",
         "myst-nb==0.10.1",
+        "sphinx-toolbox==2.12.1",
 
         # Distribution
         "bump2version==0.5.11",

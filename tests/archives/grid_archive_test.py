@@ -15,16 +15,16 @@ def data():
     return get_archive_data("GridArchive")
 
 
-def assert_archive_entry(archive, solution, objective_value, behavior_values,
+def assert_archive_elite(archive, solution, objective_value, behavior_values,
                          indices, metadata):
-    """Assert that the archive has one specific entry."""
-    all_sols, all_objs, all_behs, all_idxs, all_meta = archive.data()
-    assert len(all_sols) == 1
-    assert np.isclose(all_sols[0], solution).all()
-    assert np.isclose(all_objs[0], objective_value).all()
-    assert np.isclose(all_behs[0], behavior_values).all()
-    assert all_idxs[0] == indices
-    assert all_meta[0] == metadata
+    """Asserts that the archive has one specific elite."""
+    assert len(archive) == 1
+    elite = list(archive)[0]
+    assert np.isclose(elite.sol, solution).all()
+    assert np.isclose(elite.obj, objective_value).all()
+    assert np.isclose(elite.beh, behavior_values).all()
+    assert elite.idx == indices
+    assert elite.meta == metadata
 
 
 def test_fails_on_dim_mismatch():
@@ -60,7 +60,7 @@ def test_add_to_archive(data, use_list):
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective_value)
-    assert_archive_entry(data.archive_with_entry, data.solution,
+    assert_archive_elite(data.archive_with_elite, data.solution,
                          data.objective_value, data.behavior_values,
                          data.grid_indices, data.metadata)
 
@@ -71,7 +71,7 @@ def test_add_with_low_behavior_val(data):
     status, _ = data.archive.add(data.solution, data.objective_value,
                                  behavior_values, data.metadata)
     assert status
-    assert_archive_entry(data.archive, data.solution, data.objective_value,
+    assert_archive_elite(data.archive, data.solution, data.objective_value,
                          behavior_values, indices, data.metadata)
 
 
@@ -81,39 +81,39 @@ def test_add_with_high_behavior_val(data):
     status, _ = data.archive.add(data.solution, data.objective_value,
                                  behavior_values, data.metadata)
     assert status
-    assert_archive_entry(data.archive, data.solution, data.objective_value,
+    assert_archive_elite(data.archive, data.solution, data.objective_value,
                          behavior_values, indices, data.metadata)
 
 
 def test_add_and_overwrite(data):
-    """Test adding a new entry with a higher objective value."""
+    """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     high_objective_value = data.objective_value + 1.0
 
-    status, value = data.archive_with_entry.add(arbitrary_sol,
+    status, value = data.archive_with_elite.add(arbitrary_sol,
                                                 high_objective_value,
                                                 data.behavior_values,
                                                 arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective_value - data.objective_value)
-    assert_archive_entry(data.archive_with_entry, arbitrary_sol,
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol,
                          high_objective_value, data.behavior_values,
                          data.grid_indices, arbitrary_metadata)
 
 
 def test_add_without_overwrite(data):
-    """Test adding a new entry with a lower objective value."""
+    """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     low_objective_value = data.objective_value - 1.0
 
-    status, value = data.archive_with_entry.add(arbitrary_sol,
+    status, value = data.archive_with_elite.add(arbitrary_sol,
                                                 low_objective_value,
                                                 data.behavior_values,
                                                 arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective_value - data.objective_value)
-    assert_archive_entry(data.archive_with_entry, data.solution,
+    assert_archive_elite(data.archive_with_elite, data.solution,
                          data.objective_value, data.behavior_values,
                          data.grid_indices, data.metadata)

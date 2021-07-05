@@ -23,6 +23,6 @@
 - [ ] I have read the guidelines in
       [CONTRIBUTING.md](https://github.com/icaros-usc/pyribs/blob/master/CONTRIBUTING.md).
 - [ ] I have formatted my code using `yapf`
-- [ ] I have tested my code by running `pytest` (`tox` is run in CI/CD)
+- [ ] I have tested my code by running `pytest`
 - [ ] I have linted my code with `pylint`
 - [ ] This PR is ready to go

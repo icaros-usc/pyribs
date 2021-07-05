@@ -173,6 +173,6 @@ class OptimizingEmitter(EmitterBase):
         # Check for reset.
         if (self.opt.check_stop([obj for status, obj, i in ranking_data]) or
                 self._check_restart(new_sols)):
-            new_x0 = self.archive.get_random_elite()[0]
+            new_x0 = self.archive.get_random_elite().sol
             self.opt.reset(new_x0)
             self._restarts += 1
