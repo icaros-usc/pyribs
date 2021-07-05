@@ -120,8 +120,8 @@ def grid_archive_heatmap(archive,
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
     x_dim, y_dim = archive.dims
-    x_bounds = np.linspace(lower_bounds[0], upper_bounds[0], x_dim + 1)
-    y_bounds = np.linspace(lower_bounds[1], upper_bounds[1], y_dim + 1)
+    x_bounds = archive.boundaries[0]
+    y_bounds = archive.boundaries[1]
 
     # Color for each cell in the heatmap.
     colors = np.full((y_dim, x_dim), np.nan)
