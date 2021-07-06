@@ -181,7 +181,7 @@ def test_stats_add_and_overwrite():
     archive.add([1, 2, 3], 1.0, [0, 0])
     archive.add([1, 2, 3], 2.0, [0.25, 0.25])
     archive.add([1, 2, 3], 3.0, [-0.25, -0.25])
-    archive.add([1, 2, 3], 5.0, [0.25, 0.25])  # Overwrites the second solution.
+    archive.add([1, 2, 3], 5.0, [0.25, 0.25])  # Overwrites the second add().
 
     assert np.isclose(archive.coverage, 3 / 200)
     assert np.isclose(archive.qd_score, 9.0)
