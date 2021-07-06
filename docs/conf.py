@@ -116,7 +116,8 @@ html_context = sphinx_material.get_html_context()
 html_theme = "sphinx_material"
 html_logo = "_static/imgs/icon.svg"
 html_favicon = "_static/imgs/favicon.ico"
-html_title = f"pyribs ({READTHEDOCS_VERSION})"
+html_title = (f"pyribs (stable - v{version})" if READTHEDOCS_VERSION == "stable"
+              else f"pyribs ({READTHEDOCS_VERSION})")
 
 # material theme options (see theme.conf for more information)
 html_theme_options = {
