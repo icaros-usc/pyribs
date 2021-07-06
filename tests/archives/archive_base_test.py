@@ -147,6 +147,49 @@ def test_clear_and_add_during_iteration():
 
 
 #
+# Statistics tests -- just GridArchive for simplicity.
+#
+
+
+@pytest.mark.parametrize("dtype", [np.float64, np.float32],
+                         ids=["float64", "float32"])
+def test_stats_dtype(dtype):
+    data = get_archive_data("GridArchive", dtype=dtype)
+    assert isinstance(data.archive_with_elite.coverage, dtype)
+    assert isinstance(data.archive_with_elite.qd_score, dtype)
+    assert isinstance(data.archive_with_elite.obj_max, dtype)
+    print(type(data.archive_with_elite.obj_mean))
+    assert isinstance(data.archive_with_elite.obj_mean, dtype)
+
+
+def test_stats_multiple_add():
+    archive = GridArchive([10, 20], [(-1, 1), (-2, 2)])
+    archive.initialize(3)
+    archive.add([1, 2, 3], 1.0, [0, 0])
+    archive.add([1, 2, 3], 2.0, [0.25, 0.25])
+    archive.add([1, 2, 3], 3.0, [-0.25, -0.25])
+
+    assert np.isclose(archive.coverage, 3 / 200)
+    assert np.isclose(archive.qd_score, 6.0)
+    assert np.isclose(archive.obj_max, 3.0)
+    assert np.isclose(archive.obj_mean, 2.0)
+
+
+def test_stats_add_and_overwrite():
+    archive = GridArchive([10, 20], [(-1, 1), (-2, 2)])
+    archive.initialize(3)
+    archive.add([1, 2, 3], 1.0, [0, 0])
+    archive.add([1, 2, 3], 2.0, [0.25, 0.25])
+    archive.add([1, 2, 3], 3.0, [-0.25, -0.25])
+    archive.add([1, 2, 3], 5.0, [0.25, 0.25])  # Overwrites the second add().
+
+    assert np.isclose(archive.coverage, 3 / 200)
+    assert np.isclose(archive.qd_score, 9.0)
+    assert np.isclose(archive.obj_max, 5.0)
+    assert np.isclose(archive.obj_mean, 3.0)
+
+
+#
 # General tests -- should work for all archive classes.
 #
 
@@ -190,6 +233,18 @@ def test_behavior_dim_correct(data):
 
 def test_solution_dim_correct(data):
     assert data.archive.solution_dim == len(data.solution)
+
+
+def test_basic_stats(data):
+    assert data.archive.coverage == 0.0
+    assert data.archive.qd_score == 0.0
+    assert data.archive.obj_max is None
+    assert data.archive.obj_mean is None
+
+    assert data.archive_with_elite.coverage == 1 / data.bins
+    assert data.archive_with_elite.qd_score == data.objective_value
+    assert data.archive_with_elite.obj_max == data.objective_value
+    assert data.archive_with_elite.obj_mean == data.objective_value
 
 
 def test_elite_with_behavior_gets_correct_elite(data):
