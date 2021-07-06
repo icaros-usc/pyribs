@@ -8,6 +8,7 @@ import pandas as pd
 from decorator import decorator
 
 from ribs.archives._add_status import AddStatus
+from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._elite import Elite
 
 
@@ -135,9 +136,7 @@ class ArchiveIterator:
         )
 
 
-class ArchiveBase(
-        ABC
-):  # pylint: disable = too-many-instance-attributes, too-many-public-methods
+class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     """Base class for archives.
 
     This class assumes all archives use a fixed-size container with bins that
@@ -253,6 +252,7 @@ class ArchiveBase(
         self._seed = seed
         self._initialized = False
         self._bins = np.product(self._storage_dims)
+        self._stats = None
 
         # Array views for providing access to data.
         self._solutions_view = None
@@ -262,12 +262,6 @@ class ArchiveBase(
 
         # Tracks archive modifications by counting calls to clear() and add().
         self._state = None
-
-        # Stats.
-        self._coverage = None
-        self._qd_score = None
-        self._obj_max = None
-        self._obj_mean = None
 
         self._dtype = self._parse_dtype(dtype)
 
@@ -291,8 +285,6 @@ class ArchiveBase(
             return np.float64
 
         raise ValueError("Unsupported dtype. Must be np.float32 or np.float64")
-
-    ## "Housekeeping" attributes ##
 
     @property
     def initialized(self):
@@ -320,6 +312,14 @@ class ArchiveBase(
     def solution_dim(self):
         """int: Dimensionality of the solutions in the archive."""
         return self._solution_dim
+
+    @property
+    def stats(self):
+        """:class:`ArchiveStats`: Statistics about the archive.
+
+        See :class:`ArchiveStats` for more info.
+        """
+        return self._stats
 
     @property
     def dtype(self):
@@ -392,47 +392,6 @@ class ArchiveBase(
         return self._metadata_view.update(self._occupied_indices_cols,
                                           self._state)
 
-    ## Statistics attributes ##
-
-    @property
-    @require_init
-    def coverage(self):
-        """:attr:`dtype`: Proportion of bins in the archive that have an elite.
-
-        This will be a value in the range :math:`[0,1]`
-        """
-        return self._coverage
-
-    @property
-    @require_init
-    def qd_score(self):
-        """:attr:`dtype`: QD score, i.e. sum of objective values of all elites
-        in the archive.
-
-        .. note::
-
-            This score only makes sense if objective values are non-negative.
-        """
-        return self._qd_score
-
-    @property
-    @require_init
-    def obj_max(self):
-        """:attr:`dtype`: Maximum objective value of the elites in the archive.
-
-        This value is None if there are no elites in the archive.
-        """
-        return self._obj_max
-
-    @property
-    @require_init
-    def obj_mean(self):
-        """:attr:`dtype`: mean objective value of the elites in the archive.
-
-        This value is None if there are no elites in the archive.
-        """
-        return self._obj_mean
-
     ## Methods ##
 
     def __len__(self):
@@ -457,18 +416,24 @@ class ArchiveBase(
 
     def _stats_reset(self):
         """Resets the archive stats."""
-        self._coverage = self.dtype(0.0)
-        self._qd_score = self.dtype(0.0)
-        self._obj_max = None
-        self._obj_mean = None
+        self._stats = ArchiveStats(0, self.dtype(0.0), self.dtype(0.0), None,
+                                   None)
 
     def _stats_update(self, old_obj, new_obj):
-        """Updates the archive stats when old_obj is replaced by new_obj."""
-        self._coverage = self.dtype(len(self) / self.bins)
-        self._qd_score += new_obj - old_obj
-        self._obj_max = new_obj if self._obj_max is None else max(
-            self._obj_max, new_obj)
-        self._obj_mean = self._qd_score / self.dtype(len(self))
+        """Updates the archive stats when old_obj is replaced by new_obj.
+
+        A new object is created so that stats which have been collected
+        previously do not change.
+        """
+        new_qd_score = self._stats.qd_score + new_obj - old_obj
+        self._stats = ArchiveStats(
+            elites=len(self),
+            coverage=self.dtype(len(self) / self.bins),
+            qd_score=new_qd_score,
+            obj_max=new_obj if self._stats.obj_max is None else max(
+                self._stats.obj_max, new_obj),
+            obj_mean=new_qd_score / self.dtype(len(self)),
+        )
 
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
