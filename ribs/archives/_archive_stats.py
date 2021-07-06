@@ -5,7 +5,11 @@ import numpy as np
 
 
 class ArchiveStats(NamedTuple):
-    """Holds statistics about an archive."""
+    """Holds statistics about an archive.
+
+    Attributes of type :class:`~numpy.floating` will match the
+    :attr:`~ArchiveBase.dtype` of their archive.
+    """
 
     #: Number of elites in the archive.
     elites: int
