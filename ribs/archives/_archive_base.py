@@ -397,8 +397,7 @@ class ArchiveBase(
     @property
     @require_init
     def coverage(self):
-        """:attr:`dtype`: Proportion of bins in the archive that are currently
-        occupied.
+        """:attr:`dtype`: Proportion of bins in the archive that have an elite.
 
         This will be a value in the range :math:`[0,1]`
         """
@@ -407,19 +406,19 @@ class ArchiveBase(
     @property
     @require_init
     def qd_score(self):
-        """:attr:`dtype`: QD score, i.e. sum of objective values
-        of all elites in the archive.
+        """:attr:`dtype`: QD score, i.e. sum of objective values of all elites
+        in the archive.
 
-        Note that this score only makes sense if objective values are all
-        non-negative.
+        .. note::
+
+            This score only makes sense if objective values are non-negative.
         """
         return self._qd_score
 
     @property
     @require_init
     def obj_max(self):
-        """:attr:`dtype`: Maximum objective value of the elites currently in the
-        archive.
+        """:attr:`dtype`: Maximum objective value of the elites in the archive.
 
         This value is None if there are no elites in the archive.
         """
@@ -428,8 +427,7 @@ class ArchiveBase(
     @property
     @require_init
     def obj_mean(self):
-        """:attr:`dtype`: mean objective value of the elites currently in the
-        archive.
+        """:attr:`dtype`: mean objective value of the elites in the archive.
 
         This value is None if there are no elites in the archive.
         """
