@@ -135,7 +135,9 @@ class ArchiveIterator:
         )
 
 
-class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
+class ArchiveBase(
+        ABC
+):  # pylint: disable = too-many-instance-attributes, too-many-public-methods
     """Base class for archives.
 
     This class assumes all archives use a fixed-size container with bins that
@@ -261,6 +263,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Tracks archive modifications by counting calls to clear() and add().
         self._state = None
 
+        # Stats.
+        self._coverage = None
+        self._qd_score = None
+        self._obj_max = None
+        self._obj_mean = None
+
         self._dtype = self._parse_dtype(dtype)
 
     @staticmethod
@@ -291,6 +299,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """Whether the archive has been initialized by a call to
         :meth:`initialize`"""
         return self._initialized
+
+    @property
+    def bins(self):
+        """int: Total number of bins in the archive."""
+        return self._bins
 
     @property
     def empty(self):
@@ -382,9 +395,45 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     ## Statistics attributes ##
 
     @property
-    def bins(self):
-        """int: Total number of bins in the archive."""
-        return self._bins
+    @require_init
+    def coverage(self):
+        """:attr:`dtype`: Proportion of bins in the archive that are currently
+        occupied.
+
+        This will be a value in the range :math:`[0,1]`
+        """
+        return self._coverage
+
+    @property
+    @require_init
+    def qd_score(self):
+        """:attr:`dtype`: QD score, i.e. sum of objective values
+        of all elites in the archive.
+
+        Note that this score only makes sense if objective values are all
+        non-negative.
+        """
+        return self._qd_score
+
+    @property
+    @require_init
+    def obj_max(self):
+        """:attr:`dtype`: Maximum objective value of the elites currently in the
+        archive.
+
+        This value is None if there are no elites in the archive.
+        """
+        return self._obj_max
+
+    @property
+    @require_init
+    def obj_mean(self):
+        """:attr:`dtype`: mean objective value of the elites currently in the
+        archive.
+
+        This value is None if there are no elites in the archive.
+        """
+        return self._obj_mean
 
     ## Methods ##
 
@@ -407,6 +456,21 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """
         require_init_inline(self)
         return ArchiveIterator(self)
+
+    def _stats_reset(self):
+        """Resets the archive stats."""
+        self._coverage = self.dtype(0.0)
+        self._qd_score = self.dtype(0.0)
+        self._obj_max = None
+        self._obj_mean = None
+
+    def _stats_update(self, old_obj, new_obj):
+        """Updates the archive stats when old_obj is replaced by new_obj."""
+        self._coverage = self.dtype(len(self) / self.bins)
+        self._qd_score += new_obj - old_obj
+        self._obj_max = new_obj if self._obj_max is None else max(
+            self._obj_max, new_obj)
+        self._obj_mean = self._qd_score / len(self)
 
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
@@ -442,6 +506,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._metadata_view = CachedView(self._metadata)
         self._state = {"clear": 0, "add": 0}
 
+        self._stats_reset()
+
     @require_init
     def clear(self):
         """Removes all elites from the archive.
@@ -458,6 +524,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         self._state["clear"] += 1
         self._state["add"] = 0
+
+        self._stats_reset()
 
     @abstractmethod
     def get_index(self, behavior_values):
@@ -557,6 +625,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._state["add"] += 1
         solution = np.asarray(solution)
         behavior_values = np.asarray(behavior_values)
+        objective_value = self.dtype(objective_value)
 
         index = self.get_index(behavior_values)
         old_objective = self._objective_values[index]
@@ -571,13 +640,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             self._add_occupied_index(index)
             status = AddStatus.NEW
             value = objective_value
+            self._stats_update(0.0, objective_value)
         elif was_inserted and already_occupied:
             status = AddStatus.IMPROVE_EXISTING
             value = objective_value - old_objective
+            self._stats_update(old_objective, objective_value)
         else:
             status = AddStatus.NOT_ADDED
             value = objective_value - old_objective
-        return status, self.dtype(value)
+        return status, value
 
     @require_init
     def elite_with_behavior(self, behavior_values):
