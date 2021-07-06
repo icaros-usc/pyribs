@@ -588,8 +588,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         include_objectives=True,
         include_behaviors=True,
         include_metadata=False,
-        split_arrays=True,
-        copy=True,
     ):
         """Converts the archive into a Pandas dataframe.
 
@@ -629,47 +627,26 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         indices = self._occupied_indices_cols
 
         if include_indices:
-            if split_arrays:
-                for i, col in enumerate(indices):
-                    data[f"index_{i}"] = np.asarray(col, dtype=int)
-            else:
-                data["indices"] = np.asarray(indices, dtype=int)
+            for i, col in enumerate(indices):
+                data[f"index_{i}"] = np.asarray(col, dtype=int)
 
         if include_behaviors:
             behavior_values = self._behavior_values[indices]
-            if split_arrays:
-                for i in range(self._behavior_dim):
-                    data[f"behavior_{i}"] = behavior_values[:, i]
-            else:
-                data["behaviors"] = behavior_values
+            for i in range(self._behavior_dim):
+                data[f"behavior_{i}"] = behavior_values[:, i]
 
         if include_objectives:
             data["objective"] = self._objective_values[indices]
 
         if include_solutions:
             solutions = self._solutions[indices]
-            if split_arrays:
-                for i in range(self._solution_dim):
-                    data[f"solution_{i}"] = solutions[:, i]
-            else:
-                data["solutions"] = solutions
+            for i in range(self._solution_dim):
+                data[f"solution_{i}"] = solutions[:, i]
 
         if include_metadata:
             data["metadata"] = self._metadata[indices]
 
-        # Either copy data or set it to read-only.
-        if copy:
-            for key in data:
-                data[key] = np.copy(data[key])
-        else:
-            for key in data:
-                data[key].flags.writeable = False
-
-        for key in data:
-            data[key] = list(data[key])
-
         return pd.DataFrame(
             data,
-            dtype=object if split_arrays else None,
-            copy=False,  # We handle copying.
+            copy=False,  # Fancy indexing above already results in copying.
         )
