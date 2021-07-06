@@ -580,7 +580,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             self._metadata[index],
         )
 
-    # TODO: Update docstring
+    # TODO: Update docstring, warn about copying
     def as_pandas(  # pylint: disable = too-many-branches
         self,
         include_solutions=True,
