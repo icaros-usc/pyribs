@@ -581,14 +581,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         )
 
     # TODO: Update docstring
-    def as_pandas(self,
-                  include_solutions=True,
-                  include_indices=True,
-                  include_objectives=True,
-                  include_behaviors=True,
-                  include_metadata=False,
-                  split_arrays=True,
-                  copy=True):
+    def as_pandas(  # pylint: disable = too-many-branches
+        self,
+        include_solutions=True,
+        include_indices=True,
+        include_objectives=True,
+        include_behaviors=True,
+        include_metadata=False,
+        split_arrays=True,
+        copy=True,
+    ):
         """Converts the archive into a Pandas dataframe.
 
         This base class implementation creates a dataframe consisting of:
@@ -639,7 +641,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 for i in range(self._behavior_dim):
                     data[f"behavior_{i}"] = behavior_values[:, i]
             else:
-                data["behavior_values"] = behavior_values
+                data["behaviors"] = behavior_values
 
         if include_objectives:
             data["objective"] = self._objective_values[indices]
@@ -663,7 +665,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             for key in data:
                 data[key].flags.writeable = False
 
+        for key in data:
+            data[key] = list(data[key])
+
         return pd.DataFrame(
             data,
+            dtype=object if split_arrays else None,
             copy=False,  # We handle copying.
         )
