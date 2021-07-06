@@ -75,31 +75,6 @@ class RandomBuffer:
         return val
 
 
-class CachedView:
-    """Maintains a readonly view of the given numpy array.
-
-    Whenever the state changes in update(), the view is updated.
-
-    This class is useful when returning the archive data, e.g.
-    archive.solutions. If the archive has many indices, indexing into the array
-    can be expensive (e.g. ~0.5 seconds for 250k indices), and it adds up if the
-    user does this many times, so we only want to do the indexing once.
-    """
-
-    def __init__(self, array):
-        self.array = array
-        self.view = None
-        self.state = None
-
-    def update(self, indices, state):
-        """Sets view to array[indices], but only if state has changed."""
-        if state != self.state:
-            self.state = state.copy()
-            self.view = self.array[indices]
-            self.view.flags.writeable = False
-        return self.view
-
-
 class ArchiveIterator:
     """An iterator for an archive's elites."""
 
@@ -162,13 +137,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     +------------------------+------------------------------------+
     | ``_metadata``          |  ``(*storage_dims)``               |
     +------------------------+------------------------------------+
-
-    .. note::
-
-        These arrays are different from the elite data attributes
-        :attr:`solutions`, :attr:`objective_values`, :attr:`behavior_values`,
-        and :attr:`metadata`. The attributes provide access to data about elites
-        in the archive via a view into these arrays.
 
     All of these arrays are accessed via a common index. If we have index ``i``,
     we access its solution at ``_solutions[i]``, its behavior values at
@@ -254,12 +222,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._bins = np.product(self._storage_dims)
         self._stats = None
 
-        # Array views for providing access to data.
-        self._solutions_view = None
-        self._objective_values_view = None
-        self._behavior_values_view = None
-        self._metadata_view = None
-
         # Tracks archive modifications by counting calls to clear() and add().
         self._state = None
 
@@ -326,73 +288,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """data-type: The dtype of the solutions, objective values, and behavior
         values."""
         return self._dtype
-
-    ## Data attributes ##
-
-    @property
-    @require_init
-    def solutions(self):
-        """((len(archive), solution_dim) numpy.ndarray): Solutions of all elites
-        currently in the archive."""
-        return self._solutions_view.update(self._occupied_indices_cols,
-                                           self._state)
-
-    @property
-    @require_init
-    def objective_values(self):
-        """(len(archive),) numpy.ndarray): Objective values of all elites
-        currently in the archive.
-
-        These correspond to :attr:`solutions`, e.g. ``objective_values[0]``
-        corresponds to ``solutions[0]``.
-        """
-        return self._objective_values_view.update(self._occupied_indices_cols,
-                                                  self._state)
-
-    @property
-    @require_init
-    def behavior_values(self):
-        """(len(archive), behavior_dim) numpy.ndarray): Behavior values of all
-        elites currently in the archive.
-
-        These correspond to :attr:`solutions`, e.g. ``behavior_values[0]``
-        corresponds to ``solutions[0]``.
-        """
-        return self._behavior_values_view.update(self._occupied_indices_cols,
-                                                 self._state)
-
-    @property
-    @require_init
-    def indices(self):
-        """(len(archive),) tuple: Tuple with indices of all elites in the
-        archive.
-
-        Each entry in the tuple is an index, which can be either an int or tuple
-        of int (see :meth:`get_index` for the specific archive for more info).
-
-        These correspond to :attr:`solutions`, e.g. ``indices[0]`` corresponds
-        to ``solutions[0]``.
-
-        This is a tuple instead of a numpy array because numpy arrays are unable
-        to (easily) store tuples directly.
-        """
-        return tuple(self._occupied_indices)  # List to tuple is cheap.
-
-    @property
-    @require_init
-    def metadata(self):
-        """(len(archive),) numpy.ndarray): Metadata of all elites currently in
-        the archive.
-
-        This array is an object array.
-
-        These correspond to :attr:`solutions`, e.g. ``metadata[0]`` corresponds
-        to ``solutions[0]``.
-        """
-        return self._metadata_view.update(self._occupied_indices_cols,
-                                          self._state)
-
-    ## Methods ##
 
     def __len__(self):
         """Number of elites in the archive."""
@@ -463,13 +358,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied_indices_cols = tuple(
             [] for _ in range(len(self._storage_dims)))
 
-        self._solutions_view = CachedView(self._solutions)
-        self._objective_values_view = CachedView(self._objective_values)
-        self._behavior_values_view = CachedView(self._behavior_values)
-        self._metadata_view = CachedView(self._metadata)
-        self._state = {"clear": 0, "add": 0}
-
         self._stats_reset()
+        self._state = {"clear": 0, "add": 0}
 
     @require_init
     def clear(self):
@@ -690,7 +580,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             self._metadata[index],
         )
 
-    def as_pandas(self, include_solutions=True, include_metadata=False):
+    # TODO: Update docstring
+    def as_pandas(self,
+                  include_solutions=True,
+                  include_indices=True,
+                  include_objectives=True,
+                  include_behaviors=True,
+                  include_metadata=False,
+                  split_arrays=True,
+                  copy=True):
         """Converts the archive into a Pandas dataframe.
 
         This base class implementation creates a dataframe consisting of:
@@ -724,22 +622,48 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         Returns:
             pandas.DataFrame: See above.
         """ # pylint: disable = line-too-long
+
         data = OrderedDict()
+        indices = self._occupied_indices_cols
 
-        index_dim = len(self._storage_dims)
-        for i in range(index_dim):
-            data[f"index_{i}"] = np.asarray(self._occupied_indices_cols[i],
-                                            dtype=int)
+        if include_indices:
+            if split_arrays:
+                for i, col in enumerate(indices):
+                    data[f"index_{i}"] = np.asarray(col, dtype=int)
+            else:
+                data["indices"] = np.asarray(indices, dtype=int)
 
-        for i in range(self._behavior_dim):
-            data[f"behavior_{i}"] = self.behavior_values[:, i]
+        if include_behaviors:
+            behavior_values = self._behavior_values[indices]
+            if split_arrays:
+                for i in range(self._behavior_dim):
+                    data[f"behavior_{i}"] = behavior_values[:, i]
+            else:
+                data["behavior_values"] = behavior_values
 
-        data["objective"] = self.objective_values
+        if include_objectives:
+            data["objective"] = self._objective_values[indices]
 
         if include_solutions:
-            for i in range(self._solution_dim):
-                data[f"solution_{i}"] = self.solutions[:, i]
+            solutions = self._solutions[indices]
+            if split_arrays:
+                for i in range(self._solution_dim):
+                    data[f"solution_{i}"] = solutions[:, i]
+            else:
+                data["solutions"] = solutions
 
         if include_metadata:
-            data["metadata"] = self.metadata
-        return pd.DataFrame(data)
+            data["metadata"] = self._metadata[indices]
+
+        # Either copy data or set it to read-only.
+        if copy:
+            for key in data:
+                data[key] = np.copy(data[key])
+        else:
+            for key in data:
+                data[key].flags.writeable = False
+
+        return pd.DataFrame(
+            data,
+            copy=False,  # We handle copying.
+        )
