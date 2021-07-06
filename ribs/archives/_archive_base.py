@@ -470,7 +470,7 @@ class ArchiveBase(
         self._qd_score += new_obj - old_obj
         self._obj_max = new_obj if self._obj_max is None else max(
             self._obj_max, new_obj)
-        self._obj_mean = self._qd_score / len(self)
+        self._obj_mean = self._qd_score / self.dtype(len(self))
 
     def initialize(self, solution_dim):
         """Initializes the archive by allocating storage space.
@@ -640,7 +640,7 @@ class ArchiveBase(
             self._add_occupied_index(index)
             status = AddStatus.NEW
             value = objective_value
-            self._stats_update(0.0, objective_value)
+            self._stats_update(self.dtype(0.0), objective_value)
         elif was_inserted and already_occupied:
             status = AddStatus.IMPROVE_EXISTING
             value = objective_value - old_objective
@@ -768,22 +768,15 @@ class ArchiveBase(
             data[f"index_{i}"] = np.asarray(self._occupied_indices_cols[i],
                                             dtype=int)
 
-        behavior_values = self._behavior_values[self._occupied_indices_cols]
         for i in range(self._behavior_dim):
-            data[f"behavior_{i}"] = np.asarray(behavior_values[:, i],
-                                               dtype=self.dtype)
+            data[f"behavior_{i}"] = self.behavior_values[:, i]
 
-        data["objective"] = np.asarray(
-            self._objective_values[self._occupied_indices_cols],
-            dtype=self.dtype)
+        data["objective"] = self.objective_values
 
         if include_solutions:
-            solutions = self._solutions[self._occupied_indices_cols]
             for i in range(self._solution_dim):
-                data[f"solution_{i}"] = np.asarray(solutions[:, i],
-                                                   dtype=self.dtype)
+                data[f"solution_{i}"] = self.solutions[:, i]
 
         if include_metadata:
-            metadata = self._metadata[self._occupied_indices_cols]
-            data["metadata"] = np.asarray(metadata, dtype=object)
+            data["metadata"] = self.metadata
         return pd.DataFrame(data)
