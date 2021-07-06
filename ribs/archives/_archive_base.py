@@ -110,7 +110,7 @@ class ArchiveIterator:
         self.state = archive._state.copy()
 
     def __iter__(self):
-        """This is the iterator, so return self."""
+        """This is the iterator, so it returns itself."""
         return self
 
     def __next__(self):
