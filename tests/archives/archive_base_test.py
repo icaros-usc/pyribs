@@ -192,6 +192,18 @@ def test_solution_dim_correct(data):
     assert data.archive.solution_dim == len(data.solution)
 
 
+def test_basic_stats(data):
+    assert data.archive.coverage == 0.0
+    assert data.archive.qd_score == 0.0
+    assert data.archive.obj_max is None
+    assert data.archive.obj_mean is None
+
+    assert data.archive_with_elite.coverage == 1 / data.archive_with_elite.bins
+    assert data.archive_with_elite.qd_score == data.objective_value
+    assert data.archive_with_elite.obj_max == data.objective_value
+    assert data.archive_with_elite.obj_mean == data.objective_value
+
+
 def test_elite_with_behavior_gets_correct_elite(data):
     elite = data.archive_with_elite.elite_with_behavior(data.behavior_values)
     assert np.all(elite.sol == data.solution)
