@@ -88,9 +88,9 @@ class Optimizer:
         """Converts emitter_kwargs to an iterable so it can zip with the
         emitters."""
         if emitter_kwargs is None:
-            emitter_kwargs = itertools.repeat({})
+            return itertools.repeat({})
         if isinstance(emitter_kwargs, dict):
-            emitter_kwargs = itertools.repeat(emitter_kwargs)
+            return itertools.repeat(emitter_kwargs)
         return emitter_kwargs  # Assume it is a list/iterable of dicts.
 
     def ask(self, emitter_kwargs=None):
