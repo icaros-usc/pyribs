@@ -88,7 +88,7 @@ class Optimizer:
         """Converts emitter_kwargs to an iterable so we can zip it with the
         emitters."""
         if emitter_kwargs is None:
-            emitter_kwargs = itertools.repeat(None)
+            emitter_kwargs = itertools.repeat({})
         if isinstance(emitter_kwargs, dict):
             emitter_kwargs = itertools.repeat(emitter_kwargs)
         return emitter_kwargs  # Assume it is a list/iterable of dicts.
@@ -179,13 +179,14 @@ class Optimizer:
         with threadpool_limits(limits=1, user_api="blas"):
             # Keep track of pos because emitters may have different batch sizes.
             pos = 0
-            for emitter, n in zip(self._emitters, self._num_emitted):
+            for emitter, n, kwargs in zip(self._emitters, self._num_emitted,
+                                          emitter_kwargs):
                 end = pos + n
                 emitter.tell(
                     self._solutions[pos:end],
                     objective_values[pos:end],
                     behavior_values[pos:end],
                     metadata[pos:end],
-                    **emitter_kwargs,
+                    **kwargs,
                 )
                 pos = end
