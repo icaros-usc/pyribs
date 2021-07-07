@@ -85,7 +85,7 @@ class Optimizer:
 
     @staticmethod
     def _process_emitter_kwargs(emitter_kwargs):
-        """Converts emitter_kwargs to an iterable so we can zip it with the
+        """Converts emitter_kwargs to an iterable so it can zip with the
         emitters."""
         if emitter_kwargs is None:
             emitter_kwargs = itertools.repeat({})
