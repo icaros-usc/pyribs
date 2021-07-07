@@ -422,7 +422,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def _stats_update(self, old_obj, new_obj):
         """Updates the archive stats when old_obj is replaced by new_obj.
 
-        A new object is created so that stats which have been collected
+        A new namedtuple is created so that stats which have been collected
         previously do not change.
         """
         new_qd_score = self._stats.qd_score + new_obj - old_obj
