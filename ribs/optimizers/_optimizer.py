@@ -105,8 +105,8 @@ class Optimizer:
                 dict is passed in, its kwargs are passed to all the emitters. If
                 a list of dicts is passed in, each dict is passed to each
                 emitter (e.g. ``dict[0]`` goes to :attr:`emitters` [0]).
-                Emitters are in the same order as when the optimizer was
-                constructed.
+                Emitters are in the same order as they were when the optimizer
+                was constructed.
         Returns:
             (n_solutions, dim) array: An array of n solutions to evaluate. Each
             row contains a single solution.
@@ -158,8 +158,8 @@ class Optimizer:
                 dict is passed in, its kwargs are passed to all the emitters. If
                 a list of dicts is passed in, each dict is passed to each
                 emitter (e.g. ``dict[0]`` goes to :attr:`emitters` [0]).
-                Emitters are in the same order as when the optimizer was
-                constructed.
+                Emitters are in the same order as they were when the optimizer
+                was constructed.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
