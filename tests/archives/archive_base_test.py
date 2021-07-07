@@ -155,6 +155,7 @@ def test_clear_and_add_during_iteration():
                          ids=["float64", "float32"])
 def test_stats_dtype(dtype):
     data = get_archive_data("GridArchive", dtype=dtype)
+    assert isinstance(data.archive_with_elite.stats.elites, int)
     assert isinstance(data.archive_with_elite.stats.coverage, dtype)
     assert isinstance(data.archive_with_elite.stats.qd_score, dtype)
     assert isinstance(data.archive_with_elite.stats.obj_max, dtype)
