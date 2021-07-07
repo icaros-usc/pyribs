@@ -104,7 +104,7 @@ class Optimizer:
                 emitters' :meth:`~ribs.emitters.EmitterBase.ask` method. If one
                 dict is passed in, its kwargs are passed to all the emitters. If
                 a list of dicts is passed in, each dict is passed to each
-                emitter (e.g.  ``dict[0]`` goes to :attr:`emitters` [0]).
+                emitter (e.g. ``dict[0]`` goes to :attr:`emitters` [0]).
                 Emitters are in the same order as when the optimizer was
                 constructed.
         Returns:
@@ -157,7 +157,7 @@ class Optimizer:
                 emitters' :meth:`~ribs.emitters.EmitterBase.tell` method. If one
                 dict is passed in, its kwargs are passed to all the emitters. If
                 a list of dicts is passed in, each dict is passed to each
-                emitter (e.g.  ``dict[0]`` goes to :attr:`emitters` [0]).
+                emitter (e.g. ``dict[0]`` goes to :attr:`emitters` [0]).
                 Emitters are in the same order as when the optimizer was
                 constructed.
         Raises:
