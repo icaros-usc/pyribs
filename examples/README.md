@@ -15,3 +15,6 @@ descriptions of these examples, see the
 [Examples](https://docs.pyribs.org/en/stable/examples.html) page in the
 documentation. To run these other examples locally, install some additional
 dependencies with `pip install ribs[examples]` or `pip install -e .[examples]`.
+
+Finally, `tools` contains tools for making the examples, such as a script for
+training an MNIST classifier.
