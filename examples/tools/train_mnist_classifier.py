@@ -3,6 +3,9 @@
 Weights are output to mnist_classifier.pth (We have saved a copy in
 examples/tutorials/_static/).
 
+Adapted from "Training a Classifier," a tutorial in the PyTorch 60-minute blitz:
+https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#sphx-glr-beginner-blitz-cifar10-tutorial-py
+
 Requirements:
     torch==1.7
     torchvision==0.8
