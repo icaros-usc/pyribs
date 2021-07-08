@@ -1,8 +1,5 @@
 """Trains a LeNet-5 classifier for MNIST.
 
-Weights are output to mnist_classifier.pth (We have saved a copy in
-examples/tutorials/_static/).
-
 Adapted from "Training a Classifier," a tutorial in the PyTorch 60-minute blitz:
 https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#sphx-glr-beginner-blitz-cifar10-tutorial-py
 
@@ -11,8 +8,15 @@ Requirements:
     torchvision==0.8
 
 Usage:
+    # Saves classifier to mnist_classifier.pth (We have saved a copy in
+    # examples/tutorials/_static/).
     python train_mnist_classifier.py
+
+    # Evaluates an existing network.
+    python train_mnist_classifier.py FILE.pth
 """
+import sys
+
 import torch
 import torch.nn as nn
 import torchvision
@@ -109,8 +113,14 @@ def main():
         nn.LogSoftmax(dim=1),  # (10,) log probabilities
     ).to(device)
 
-    print("===== Fitting Network =====")
-    fit(lenet5, 2, trainloader)
+    if len(sys.argv) > 1:
+        print("===== Loading existing network for evaluation =====")
+        filename = sys.argv[1]
+        print("Filename:", filename)
+        lenet5.load_state_dict(torch.load(filename, map_location=device))
+    else:
+        print("===== Fitting Network =====")
+        fit(lenet5, 2, trainloader)
 
     print("===== Evaluation =====")
     print("=== Training Set Evaluation ===")
