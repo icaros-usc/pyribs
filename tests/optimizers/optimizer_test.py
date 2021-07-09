@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
-from ribs.emitters import GaussianEmitter
+from ribs.emitters import EmitterBase, GaussianEmitter
 from ribs.optimizers import Optimizer
 
 # pylint: disable = redefined-outer-name
@@ -126,3 +126,90 @@ def test_tell_fails_when_ask_not_called(optimizer_fixture):
     optimizer, *_ = optimizer_fixture
     with pytest.raises(RuntimeError):
         optimizer.tell(None, None)
+
+
+@pytest.fixture
+def kwargs_fixture():
+    """Fixture for testing emitter_kwargs in the optimizer."""
+
+    class KwargsEmitter(EmitterBase):
+        """Emitter which takes in kwargs in its ask() and tell() methods.
+
+        ask() and tell() simply set self.arg to be the value of arg.
+        """
+
+        def __init__(self, archive):
+            EmitterBase.__init__(self, archive, 3, None)
+            self.arg = None
+
+        def ask(self, arg=None):
+            self.arg = arg
+            return []
+
+        def tell(self,
+                 solutions,
+                 objective_values,
+                 behavior_values,
+                 metadata=None,
+                 arg=None):
+            self.arg = arg
+
+    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    emitters = [KwargsEmitter(archive) for _ in range(3)]
+    return emitters, Optimizer(archive, emitters)
+
+
+def test_ask_with_no_emitter_kwargs(kwargs_fixture):
+    emitters, optimizer = kwargs_fixture
+    optimizer.ask(emitter_kwargs=None)
+    for e in emitters:
+        assert e.arg is None
+
+
+def test_ask_with_dict_emitter_kwargs(kwargs_fixture):
+    emitters, optimizer = kwargs_fixture
+    optimizer.ask(emitter_kwargs={"arg": 42})
+    for e in emitters:
+        assert e.arg == 42
+
+
+def test_ask_with_list_emitter_kwargs(kwargs_fixture):
+    emitters, optimizer = kwargs_fixture
+    optimizer.ask(emitter_kwargs=[{"arg": 1}, {"arg": 2}, {"arg": 3}])
+    for e, val in zip(emitters, [1, 2, 3]):
+        assert e.arg == val
+
+
+def test_tell_with_no_emitter_kwargs(kwargs_fixture):
+    emitters, optimizer = kwargs_fixture
+    optimizer.ask()
+    optimizer.tell([], [], [], emitter_kwargs=None)
+    for e in emitters:
+        assert e.arg is None
+
+
+def test_tell_with_dict_emitter_kwargs(kwargs_fixture):
+    emitters, optimizer = kwargs_fixture
+    optimizer.ask()
+    optimizer.tell([], [], [], emitter_kwargs={"arg": 42})
+    for e in emitters:
+        assert e.arg == 42
+
+
+def test_tell_with_list_emitter_kwargs(kwargs_fixture):
+    emitters, optimizer = kwargs_fixture
+    optimizer.ask()
+    optimizer.tell(
+        [],
+        [],
+        [],
+        emitter_kwargs=[{
+            "arg": 1
+        }, {
+            "arg": 2
+        }, {
+            "arg": 3
+        }],
+    )
+    for e, val in zip(emitters, [1, 2, 3]):
+        assert e.arg == val

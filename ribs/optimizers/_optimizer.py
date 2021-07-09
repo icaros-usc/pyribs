@@ -1,4 +1,6 @@
 """Provides the Optimizer."""
+import itertools
+
 import numpy as np
 from threadpoolctl import threadpool_limits
 
@@ -81,12 +83,30 @@ class Optimizer:
         in this optimizer."""
         return self._emitters
 
-    def ask(self):
+    @staticmethod
+    def _process_emitter_kwargs(emitter_kwargs):
+        """Converts emitter_kwargs to an iterable so it can zip with the
+        emitters."""
+        if emitter_kwargs is None:
+            return itertools.repeat({})
+        if isinstance(emitter_kwargs, dict):
+            return itertools.repeat(emitter_kwargs)
+        return emitter_kwargs  # Assume it is a list/iterable of dicts.
+
+    def ask(self, emitter_kwargs=None):
         """Generates a batch of solutions by calling ask() on all emitters.
 
         .. note:: The order of the solutions returned from this method is
             important, so do not rearrange them.
 
+        Args:
+            emitter_kwargs (dict or list of dict): kwargs to pass to the
+                emitters' :meth:`~ribs.emitters.EmitterBase.ask` method. If one
+                dict is passed in, its kwargs are passed to all the emitters. If
+                a list of dicts is passed in, each dict is passed to each
+                emitter (e.g. ``dict[0]`` goes to :attr:`emitters` [0]).
+                Emitters are in the same order as they were when the optimizer
+                was constructed.
         Returns:
             (n_solutions, dim) array: An array of n solutions to evaluate. Each
             row contains a single solution.
@@ -99,19 +119,25 @@ class Optimizer:
         self._asked = True
 
         self._solutions = []
+        emitter_kwargs = self._process_emitter_kwargs(emitter_kwargs)
 
         # Limit OpenBLAS to single thread. This is typically faster than
         # multithreading because our data is too small.
         with threadpool_limits(limits=1, user_api="blas"):
-            for i, emitter in enumerate(self._emitters):
-                emitter_sols = emitter.ask()
+            for i, (emitter,
+                    kwargs) in enumerate(zip(self._emitters, emitter_kwargs)):
+                emitter_sols = emitter.ask(**kwargs)
                 self._solutions.append(emitter_sols)
                 self._num_emitted[i] = len(emitter_sols)
 
         self._solutions = np.concatenate(self._solutions, axis=0)
         return self._solutions
 
-    def tell(self, objective_values, behavior_values, metadata=None):
+    def tell(self,
+             objective_values,
+             behavior_values,
+             metadata=None,
+             emitter_kwargs=None):
         """Returns info for solutions from :meth:`ask`.
 
         .. note:: The objective values, behavior values, and metadata must be in
@@ -127,6 +153,13 @@ class Optimizer:
                 this array contains a solution's coordinates in behavior space.
             metadata ((n_solutions,) array): Each entry of this array contains
                 an object holding metadata for a solution.
+            emitter_kwargs (dict or list of dict): kwargs to pass to the
+                emitters' :meth:`~ribs.emitters.EmitterBase.tell` method. If one
+                dict is passed in, its kwargs are passed to all the emitters. If
+                a list of dicts is passed in, each dict is passed to each
+                emitter (e.g. ``dict[0]`` goes to :attr:`emitters` [0]).
+                Emitters are in the same order as they were when the optimizer
+                was constructed.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
@@ -135,6 +168,7 @@ class Optimizer:
             raise RuntimeError("tell() was called without calling ask().")
         self._asked = False
 
+        emitter_kwargs = self._process_emitter_kwargs(emitter_kwargs)
         objective_values = np.asarray(objective_values)
         behavior_values = np.asarray(behavior_values)
         metadata = (np.empty(len(self._solutions), dtype=object)
@@ -145,9 +179,14 @@ class Optimizer:
         with threadpool_limits(limits=1, user_api="blas"):
             # Keep track of pos because emitters may have different batch sizes.
             pos = 0
-            for emitter, n in zip(self._emitters, self._num_emitted):
+            for emitter, n, kwargs in zip(self._emitters, self._num_emitted,
+                                          emitter_kwargs):
                 end = pos + n
-                emitter.tell(self._solutions[pos:end],
-                             objective_values[pos:end],
-                             behavior_values[pos:end], metadata[pos:end])
+                emitter.tell(
+                    self._solutions[pos:end],
+                    objective_values[pos:end],
+                    behavior_values[pos:end],
+                    metadata[pos:end],
+                    **kwargs,
+                )
                 pos = end
