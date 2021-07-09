@@ -12,7 +12,7 @@ class ArchiveStats(NamedTuple):
     """
 
     #: Number of elites in the archive.
-    elites: int
+    num_elites: int
 
     #: Proportion of bins in the archive that have an elite - always in the
     #: range :math:`[0,1]`.
