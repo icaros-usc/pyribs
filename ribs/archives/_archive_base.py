@@ -6,7 +6,6 @@ import numba as nb
 import numpy as np
 import pandas as pd
 from decorator import decorator
-
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._elite import Elite
@@ -580,15 +579,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             self._metadata[index],
         )
 
-    # TODO: Update docstring, warn about copying
-    def as_pandas(  # pylint: disable = too-many-branches
-        self,
-        include_solutions=True,
-        include_indices=True,
-        include_objectives=True,
-        include_behaviors=True,
-        include_metadata=False,
-    ):
+    def as_pandas(self, include_solutions=True, include_metadata=False):
         """Converts the archive into a Pandas dataframe.
 
         This base class implementation creates a dataframe consisting of:
@@ -626,17 +617,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         data = OrderedDict()
         indices = self._occupied_indices_cols
 
-        if include_indices:
-            for i, col in enumerate(indices):
-                data[f"index_{i}"] = np.asarray(col, dtype=int)
+        for i, col in enumerate(indices):
+            data[f"index_{i}"] = np.asarray(col, dtype=int)
 
-        if include_behaviors:
-            behavior_values = self._behavior_values[indices]
-            for i in range(self._behavior_dim):
-                data[f"behavior_{i}"] = behavior_values[:, i]
+        behavior_values = self._behavior_values[indices]
+        for i in range(self._behavior_dim):
+            data[f"behavior_{i}"] = behavior_values[:, i]
 
-        if include_objectives:
-            data["objective"] = self._objective_values[indices]
+        data["objective"] = self._objective_values[indices]
 
         if include_solutions:
             solutions = self._solutions[indices]
