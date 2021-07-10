@@ -155,7 +155,7 @@ def test_clear_and_add_during_iteration():
                          ids=["float64", "float32"])
 def test_stats_dtype(dtype):
     data = get_archive_data("GridArchive", dtype=dtype)
-    assert isinstance(data.archive_with_elite.stats.elites, int)
+    assert isinstance(data.archive_with_elite.stats.num_elites, int)
     assert isinstance(data.archive_with_elite.stats.coverage, dtype)
     assert isinstance(data.archive_with_elite.stats.qd_score, dtype)
     assert isinstance(data.archive_with_elite.stats.obj_max, dtype)
@@ -169,7 +169,7 @@ def test_stats_multiple_add():
     archive.add([1, 2, 3], 2.0, [0.25, 0.25])
     archive.add([1, 2, 3], 3.0, [-0.25, -0.25])
 
-    assert archive.stats.elites == 3
+    assert archive.stats.num_elites == 3
     assert np.isclose(archive.stats.coverage, 3 / 200)
     assert np.isclose(archive.stats.qd_score, 6.0)
     assert np.isclose(archive.stats.obj_max, 3.0)
@@ -184,7 +184,7 @@ def test_stats_add_and_overwrite():
     archive.add([1, 2, 3], 3.0, [-0.25, -0.25])
     archive.add([1, 2, 3], 5.0, [0.25, 0.25])  # Overwrites the second add().
 
-    assert archive.stats.elites == 3
+    assert archive.stats.num_elites == 3
     assert np.isclose(archive.stats.coverage, 3 / 200)
     assert np.isclose(archive.stats.qd_score, 9.0)
     assert np.isclose(archive.stats.obj_max, 5.0)
@@ -238,13 +238,13 @@ def test_solution_dim_correct(data):
 
 
 def test_basic_stats(data):
-    assert data.archive.stats.elites == 0
+    assert data.archive.stats.num_elites == 0
     assert data.archive.stats.coverage == 0.0
     assert data.archive.stats.qd_score == 0.0
     assert data.archive.stats.obj_max is None
     assert data.archive.stats.obj_mean is None
 
-    assert data.archive_with_elite.stats.elites == 1
+    assert data.archive_with_elite.stats.num_elites == 1
     assert data.archive_with_elite.stats.coverage == 1 / data.bins
     assert data.archive_with_elite.stats.qd_score == data.objective_value
     assert data.archive_with_elite.stats.obj_max == data.objective_value
