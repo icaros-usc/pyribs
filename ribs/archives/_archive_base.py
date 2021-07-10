@@ -6,6 +6,7 @@ import numba as nb
 import numpy as np
 import pandas as pd
 from decorator import decorator
+
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._elite import Elite
@@ -613,7 +614,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         Returns:
             pandas.DataFrame: See above.
         """ # pylint: disable = line-too-long
-
         data = OrderedDict()
         indices = self._occupied_indices_cols
 
