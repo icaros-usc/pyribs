@@ -322,7 +322,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """
         new_qd_score = self._stats.qd_score + new_obj - old_obj
         self._stats = ArchiveStats(
-            elites=len(self),
+            num_elites=len(self),
             coverage=self.dtype(len(self) / self.bins),
             qd_score=new_qd_score,
             obj_max=new_obj if self._stats.obj_max is None else max(
