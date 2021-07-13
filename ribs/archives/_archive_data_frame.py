@@ -119,7 +119,8 @@ class ArchiveDataFrame(pd.DataFrame):
         designed to store tuple objects.
         """
         return [
-            tuple(idx) for idx in self.loc[:, self._index_slice].itertuples()
+            tuple(idx[1:])
+            for idx in self.loc[:, self._index_slice].itertuples()
         ]
 
     @property
