@@ -18,7 +18,7 @@
 """
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_base import ArchiveBase
-from ribs.archives._archive_dataframe import ArchiveDataFrame
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._elite import Elite
