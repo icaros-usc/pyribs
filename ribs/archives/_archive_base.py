@@ -584,7 +584,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """Converts the archive into an :class:`ArchiveDataFrame` (a child class
         of :class:`pandas.DataFrame`).
 
-        This base class implementation creates a dataframe consisting of:
+        The implementation of this method in :class:`ArchiveBase` creates a
+        dataframe consisting of:
 
         - ``len(self._storage_dims)`` columns for the index, named
           ``index_0, index_1, ...`` In :class:`~ribs.archives.GridArchive` and
