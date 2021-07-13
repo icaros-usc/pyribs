@@ -65,6 +65,9 @@ class ArchiveDataFrame(pd.DataFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Extract slices for creating the attrs. Indices, objectives, and
+        # behaviors are always included, while solutions and metadata may be
+        # excluded.
         last_index = None
         last_behavior = None
         last_solution = None
