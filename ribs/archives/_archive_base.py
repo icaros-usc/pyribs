@@ -4,10 +4,10 @@ from collections import OrderedDict
 
 import numba as nb
 import numpy as np
-import pandas as pd
 from decorator import decorator
 
 from ribs.archives._add_status import AddStatus
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._elite import Elite
 
@@ -581,7 +581,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
-        """Converts the archive into a Pandas dataframe.
+        """Converts the archive into an :class:`ArchiveDataFrame` (a child class
+        of :class:`pandas.DataFrame`).
 
         This base class implementation creates a dataframe consisting of:
 
@@ -590,10 +591,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
           :class:`~ribs.archives.SlidingBoundariesArchive`, there are
           :attr:`behavior_dim` columns. In :class:`~ribs.archives.CVTArchive`,
           there is just one column. See :meth:`get_index` for more info.
-        - ``self._behavior_dim`` columns for the behavior characteristics, named
+        - :attr:`behavior_dim` columns for the behavior characteristics, named
           ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``
-        - ``solution_dim`` columns for the solution vectors, named
+        - :attr:`solution_dim` columns for the solution vectors, named
           ``solution_0, solution_1, ...``
         - 1 column for the metadata objects, named ``metadata``
 
@@ -605,6 +606,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         |         | ...  |             | ...  |            |             | ... |          |
         +---------+------+-------------+------+------------+-------------+-----+----------+
 
+        Compared to :class:`pandas.DataFrame`, the :class:`ArchiveDataFrame`
+        adds methods and attributes which make it easier to manipulate archive
+        data.  For more information, refer to the :class:`ArchiveDataFrame`
+        documentation.
+
         Args:
             include_solutions (bool): Whether to include solution columns.
             include_metadata (bool): Whether to include the metadata column.
@@ -612,7 +618,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 properly save the dataframe since the metadata objects may not
                 be representable in a CSV.
         Returns:
-            pandas.DataFrame: See above.
+            ArchiveDataFrame: See above.
         """ # pylint: disable = line-too-long
         data = OrderedDict()
         indices = self._occupied_indices_cols
@@ -634,7 +640,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         if include_metadata:
             data["metadata"] = self._metadata[indices]
 
-        return pd.DataFrame(
+        return ArchiveDataFrame(
             data,
             copy=False,  # Fancy indexing above already results in copying.
         )
