@@ -87,7 +87,7 @@ def test_iteration():
     data = get_archive_data("GridArchive")
     for elite in data.archive_with_elite:
         assert np.isclose(elite.sol, data.solution).all()
-        assert np.isclose(elite.obj, data.objective_value).all()
+        assert np.isclose(elite.obj, data.objective_value)
         assert np.isclose(elite.beh, data.behavior_values).all()
         assert elite.idx == data.grid_indices
         assert elite.meta == data.metadata
