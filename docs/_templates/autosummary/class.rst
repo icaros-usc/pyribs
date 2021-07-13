@@ -46,11 +46,11 @@
 
    .. autosummary::
    {% if name == "ArchiveDataFrame" %}
-       ~{{ name }}.behaviors
-       ~{{ name }}.indices
-       ~{{ name }}.metadata
-       ~{{ name }}.objectives
-       ~{{ name }}.solutions
+       ~{{ name }}.batch_behaviors
+       ~{{ name }}.batch_indices
+       ~{{ name }}.batch_metadata
+       ~{{ name }}.batch_objectives
+       ~{{ name }}.batch_solutions
    {% else %}
      {% for item in attributes %}
        ~{{ name }}.{{ item }}
