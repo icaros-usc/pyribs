@@ -454,7 +454,7 @@ def parallel_axes_plot(archive,
                        sort_archive=False,
                        cbar_orientation='horizontal',
                        cbar_pad=0.1):
-    """Visualizes archive entries in behavior space with a parallel axes plot.
+    """Visualizes archive elites in behavior space with a parallel axes plot.
 
     This visualization is meant to show the coverage of the behavior space at a
     glance. Each axis represents one behavioral dimension, and each line in the
@@ -473,8 +473,8 @@ def parallel_axes_plot(archive,
 
     - **Whether certain values of the behavior dimensions affect the objective
       value strongly.** In the below example, we see ``behavior_2`` has many
-      entries with high objective near zero. This is more visible when
-      ``sort_archive`` is passed in, as entries with higher objective values
+      elites with high objective near zero. This is more visible when
+      ``sort_archive`` is passed in, as elites with higher objective values
       will be plotted on top of individuals with lower objective values.
 
     Examples:
@@ -523,14 +523,14 @@ def parallel_axes_plot(archive,
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
         linewidth (float): Line width for each elite in the plot.
         alpha (float): Opacity of the line for each elite (passing a low value
-            here may be helpful if there are many archive entries, as more
-            entries would be visible).
+            here may be helpful if there are many archive elites, as more
+            elites would be visible).
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
         sort_archive (boolean): if true, sorts the archive so that the highest
-            performing entries are plotted on top of lower performing entries.
+            performing elites are plotted on top of lower performing elites.
 
             .. warning:: This may be slow for large archives.
         cbar_orientation (str): The orientation of the colorbar. Use either
