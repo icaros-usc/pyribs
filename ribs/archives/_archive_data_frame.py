@@ -96,16 +96,16 @@ class ArchiveDataFrame(pd.DataFrame):
         """Iterator which outputs every :class:`Elite` in the DataFrame."""
         batch_solutions = (itertools.repeat(None)
                            if self._solution_slice is None else
-                           self.batch_solutions)
+                           self.batch_solutions())
         batch_metadata = (itertools.repeat(None)
-                          if not self._has_metadata else self.batch_metadata)
+                          if not self._has_metadata else self.batch_metadata())
         return map(
             lambda e: Elite(e[0], e[1], e[2], e[3], e[4]),
             zip(
                 batch_solutions,
-                self.batch_objectives,
-                self.batch_behaviors,
-                self.batch_indices,
+                self.batch_objectives(),
+                self.batch_behaviors(),
+                self.batch_indices(),
                 batch_metadata,
             ),
         )

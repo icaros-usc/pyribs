@@ -146,7 +146,7 @@ def grid_archive_heatmap(archive,
 
     # Create the plot.
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-    objectives = archive.as_pandas().batch_objectives
+    objectives = archive.as_pandas().batch_objectives()
     vmin = np.min(objectives) if vmin is None else vmin
     vmax = np.max(objectives) if vmax is None else vmax
     t = ax.pcolormesh(x_bounds,
@@ -396,7 +396,7 @@ def sliding_boundaries_archive_heatmap(archive,
     cmap = _retrieve_cmap(cmap)
 
     # Retrieve data from archive.
-    behaviors = df.batch_behaviors
+    behaviors = df.batch_behaviors()
     x = behaviors[:, 0]
     y = behaviors[:, 1]
     x_boundary = archive.boundaries[0]
@@ -422,7 +422,7 @@ def sliding_boundaries_archive_heatmap(archive,
         ax.set_aspect("equal")
 
     # Create the plot.
-    objectives = df.batch_objectives
+    objectives = df.batch_objectives()
     vmin = np.min(objectives) if vmin is None else vmin
     vmax = np.max(objectives) if vmax is None else vmax
     t = ax.scatter(x, y, s=ms, c=objectives, cmap=cmap, vmin=vmin, vmax=vmax)
@@ -590,8 +590,8 @@ def parallel_axes_plot(archive,
     norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
     if sort_archive:
         df.sort_values("objective", inplace=True)
-    objectives = df.batch_objectives
-    ys = df.batch_behaviors[:, cols]
+    objectives = df.batch_objectives()
+    ys = df.batch_behaviors()[:, cols]
     y_ranges = upper_bounds - lower_bounds
 
     # Transform all data to be in the first axis coordinates.
