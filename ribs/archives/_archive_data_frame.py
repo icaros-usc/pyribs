@@ -32,31 +32,31 @@ class ArchiveDataFrame(pd.DataFrame):
                 elite.obj
                 ...
 
-        There are also attributes to access the solutions, objectives, etc. of
+        There are also methods to access the solutions, objectives, etc. of
         all elites in the archive. For instance, the following is an array
         where entry ``i`` contains the behavior values of the ``i``'th elite in
         the DataFrame::
 
-            df.batch_behaviors
+            df.batch_behaviors()
 
-        Note that all the ``batch`` attributes "align" with each other -- i.e.
-        ``batch_solutions[i]`` corresponds to ``batch_behaviors[i]``,
-        ``batch_indices[i]``, ``batch_metadata[i]``, and
-        ``batch_objectives[i]``.
+        Note that all the ``batch`` methods "align" with each other -- i.e.
+        ``batch_solutions()[i]`` corresponds to ``batch_behaviors()[i]``,
+        ``batch_indices()[i]``, ``batch_metadata()[i]``, and
+        ``batch_objectives()[i]``.
 
     .. warning::
 
-        Accessing ``batch`` attributes (e.g. ``batch_behaviors``) always creates
-        a copy, so the following will copy the behaviors 3 times::
+        Accessing ``batch`` methods (e.g. :meth:`batch_behaviors`) always
+        creates a copy, so the following will copy the behaviors 3 times::
 
-            df.batch_behaviors[0]
-            df.batch_behaviors.mean()
-            df.batch_behaviors.median()
+            df.batch_behaviors()[0]
+            df.batch_behaviors().mean()
+            df.batch_behaviors().median()
 
-        **Thus, if you need to use the attribute several times, we recommend
+        **Thus, if you need to use the method several times, we recommend
         storing it first, like so**::
 
-            behaviors = df.batch_behaviors
+            behaviors = df.batch_behaviors()
             behaviors[0]
             behaviors.mean()
             behaviors.median()
@@ -105,45 +105,56 @@ class ArchiveDataFrame(pd.DataFrame):
             ),
         )
 
-    @property
     def batch_behaviors(self):
-        """(n, behavior_dim) numpy.ndarray: Array with behavior values of all
-        elites."""
+        """Array with behavior values of all elites.
+
+        Returns:
+            (n, behavior_dim) numpy.ndarray: See above.
+        """
         return self.loc[:, self._behavior_slice].to_numpy(copy=True)
 
-    @property
     def batch_indices(self):
-        """(n,) list: List of archive indices of all elites.
+        """List of archive indices of all elites.
 
         This is a list because each index is a tuple, and numpy arrays are not
         designed to store tuple objects.
+
+        Returns:
+            (n,) list: See above.
         """
         return [
             tuple(idx[1:])
             for idx in self.loc[:, self._index_slice].itertuples()
         ]
 
-    @property
     def batch_metadata(self):
-        """(n,) numpy.ndarray: Array with metadata of all elites.
+        """Array with metadata of all elites.
 
-        None if metadata was excluded (i.e.
-        ``include_metadata = False`` in :meth:`~ArchiveBase.as_pandas`).
+        None if metadata was excluded (i.e. if ``include_metadata=False`` in
+        :meth:`~ArchiveBase.as_pandas`).
+
+        Returns:
+            (n,) numpy.ndarray: See above.
         """
         return self["metadata"].to_numpy(
             copy=True) if self._has_metadata else None
 
-    @property
     def batch_objectives(self):
-        """(n,) numpy.ndarray: Array with objective values of all elites."""
+        """Array with objective values of all elites.
+
+        Returns:
+            (n,) numpy.ndarray: See above.
+        """
         return self["objective"].to_numpy(copy=True)
 
-    @property
     def batch_solutions(self):
-        """(n, solution_dim) numpy.ndarray: Array with solutions of all elites.
+        """Array with solutions of all elites.
 
-        None if solutions were excluded (i.e.
-        ``include_solutions = False`` in :meth:`~ArchiveBase.as_pandas`).
+        None if solutions were excluded (i.e. if ``include_solutions=False``
+        in :meth:`~ArchiveBase.as_pandas`).
+
+        Returns:
+            (n, solution_dim) numpy.ndarray: See above.
         """
         return (None if self._solution_slice is None else
                 self.loc[:, self._solution_slice].to_numpy(copy=True))

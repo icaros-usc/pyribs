@@ -21,6 +21,11 @@
 
    .. autosummary::
    {% if name == "ArchiveDataFrame" %}
+       ~{{ name }}.batch_behaviors
+       ~{{ name }}.batch_indices
+       ~{{ name }}.batch_metadata
+       ~{{ name }}.batch_objectives
+       ~{{ name }}.batch_solutions
        ~{{ name }}.iterelites
    {% else %}
      {% for item in all_methods %}
@@ -46,11 +51,6 @@
 
    .. autosummary::
    {% if name == "ArchiveDataFrame" %}
-       ~{{ name }}.batch_behaviors
-       ~{{ name }}.batch_indices
-       ~{{ name }}.batch_metadata
-       ~{{ name }}.batch_objectives
-       ~{{ name }}.batch_solutions
    {% else %}
      {% for item in attributes %}
        ~{{ name }}.{{ item }}
