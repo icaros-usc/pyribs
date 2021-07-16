@@ -40,7 +40,7 @@ def test_iterelites(data, df):
         assert elite.meta == meta
 
 
-def test_batch_attributes(data, df):
+def test_batch_methods(data, df):
     solutions, objectives, behaviors, indices, metadata = data
     assert np.isclose(df.batch_solutions(), solutions).all()
     assert np.isclose(df.batch_objectives(), objectives).all()
