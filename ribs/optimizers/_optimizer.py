@@ -99,10 +99,9 @@ class Optimizer:
         emitter_kwargs = list(emitter_kwargs)
         if len(emitter_kwargs) != len(self.emitters):
             raise ValueError(
-                "emitter_kwargs is a list of dict, but it has "
-                f"{len(emitter_kwargs)} entries even though there are "
-                f"{len(self.emitters)} emitters (the number of entries must "
-                "match the number of emitters)")
+                "emitter_kwargs is a list of dict but the list length "
+                f"({len(emitter_kwargs)}) is not the same as the number of "
+                f"emitters ({len(self.emitters)})")
         return emitter_kwargs
 
     def ask(self, emitter_kwargs=None):
