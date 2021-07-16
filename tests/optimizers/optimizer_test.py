@@ -180,6 +180,13 @@ def test_ask_with_list_emitter_kwargs(kwargs_fixture):
         assert e.arg == val
 
 
+def test_ask_with_wrong_num_emitter_kwargs(kwargs_fixture):
+    _, optimizer = kwargs_fixture
+    with pytest.raises(ValueError):
+        # There are 3 emitters but only 2 dicts of kwargs here.
+        optimizer.ask(emitter_kwargs=[{"arg": 1}, {"arg": 2}])
+
+
 def test_tell_with_no_emitter_kwargs(kwargs_fixture):
     emitters, optimizer = kwargs_fixture
     optimizer.ask()

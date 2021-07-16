@@ -83,15 +83,27 @@ class Optimizer:
         in this optimizer."""
         return self._emitters
 
-    @staticmethod
-    def _process_emitter_kwargs(emitter_kwargs):
+    def _process_emitter_kwargs(self, emitter_kwargs):
         """Converts emitter_kwargs to an iterable so it can zip with the
-        emitters."""
+        emitters.
+
+        Raises ValueError if emitter_kwargs comes in as a list/iterable and the
+        list length is not the same as the number of emitters.
+        """
         if emitter_kwargs is None:
             return itertools.repeat({})
         if isinstance(emitter_kwargs, dict):
             return itertools.repeat(emitter_kwargs)
-        return emitter_kwargs  # Assume it is a list/iterable of dicts.
+
+        # Assume emitter_kwargs is a list/iterable of dicts.
+        emitter_kwargs = list(emitter_kwargs)
+        if len(emitter_kwargs) != len(self.emitters):
+            raise ValueError(
+                "emitter_kwargs is a list of dict, but it has "
+                f"{len(emitter_kwargs)} entries even though there are "
+                f"{len(self.emitters)} emitters (the number of entries must "
+                "match the number of emitters)")
+        return emitter_kwargs
 
     def ask(self, emitter_kwargs=None):
         """Generates a batch of solutions by calling ask() on all emitters.
@@ -113,6 +125,8 @@ class Optimizer:
         Raises:
             RuntimeError: This method was called without first calling
                 :meth:`tell`.
+            ValueError: ``emitter_kwargs`` is a list of dict but the list length
+                is not the same as the number of emitters.
         """
         if self._asked:
             raise RuntimeError("ask() was called twice in a row.")
