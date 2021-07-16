@@ -177,6 +177,8 @@ class Optimizer:
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
+            ValueError: ``emitter_kwargs`` is a list of dict but the list length
+                is not the same as the number of emitters.
         """
         if not self._asked:
             raise RuntimeError("tell() was called without calling ask().")

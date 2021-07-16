@@ -220,3 +220,20 @@ def test_tell_with_list_emitter_kwargs(kwargs_fixture):
     )
     for e, val in zip(emitters, [1, 2, 3]):
         assert e.arg == val
+
+
+def test_tell_with_wrong_num_emitter_kwargs(kwargs_fixture):
+    _, optimizer = kwargs_fixture
+    optimizer.ask()
+    with pytest.raises(ValueError):
+        # There are 3 emitters but only 2 dicts of kwargs here.
+        optimizer.tell(
+            [],
+            [],
+            [],
+            emitter_kwargs=[{
+                "arg": 1
+            }, {
+                "arg": 2
+            }],
+        )
