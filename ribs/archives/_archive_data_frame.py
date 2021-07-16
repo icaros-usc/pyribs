@@ -15,8 +15,12 @@ class ArchiveDataFrame(pd.DataFrame):
     As this class inherits from :class:`~pandas.DataFrame`, it has all of the
     same methods and attributes, but it adds several more that make it
     convenient to work with elites. This documentation only lists the additional
-    methods and attributes. Note that the ``__init__`` takes in the exact same
-    arguments as :class:`~pandas.DataFrame`.
+    methods and attributes.
+
+    .. note::
+        This class takes in the exact same arguments as
+        :class:`~pandas.DataFrame`, even though the arguments are shown here as
+        ``*args`` and ``**kwargs``.
 
     Example:
 
@@ -39,10 +43,11 @@ class ArchiveDataFrame(pd.DataFrame):
 
             df.batch_behaviors()
 
-        Note that all the ``batch`` methods "align" with each other -- i.e.
-        ``batch_solutions()[i]`` corresponds to ``batch_behaviors()[i]``,
-        ``batch_indices()[i]``, ``batch_metadata()[i]``, and
-        ``batch_objectives()[i]``.
+        .. note::
+            All the ``batch`` methods "align" with each other -- i.e.
+            ``batch_solutions()[i]`` corresponds to ``batch_behaviors()[i]``,
+            ``batch_indices()[i]``, ``batch_metadata()[i]``, and
+            ``batch_objectives()[i]``.
 
     .. warning::
 

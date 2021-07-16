@@ -609,7 +609,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         Compared to :class:`pandas.DataFrame`, the :class:`ArchiveDataFrame`
         adds methods and attributes which make it easier to manipulate archive
-        data.  For more information, refer to the :class:`ArchiveDataFrame`
+        data. For more information, refer to the :class:`ArchiveDataFrame`
         documentation.
 
         Args:
