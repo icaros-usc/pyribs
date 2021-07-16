@@ -42,8 +42,32 @@ def test_iterelites(data, df):
 
 def test_batch_attributes(data, df):
     solutions, objectives, behaviors, indices, metadata = data
-    assert np.isclose(df.batch_solutions, solutions).all()
-    assert np.isclose(df.batch_objectives, objectives).all()
-    assert np.isclose(df.batch_behaviors, behaviors).all()
-    assert df.batch_indices == indices
-    assert (df.batch_metadata == metadata).all()
+    assert np.isclose(df.batch_solutions(), solutions).all()
+    assert np.isclose(df.batch_objectives(), objectives).all()
+    assert np.isclose(df.batch_behaviors(), behaviors).all()
+    assert df.batch_indices() == indices
+    assert (df.batch_metadata() == metadata).all()
+
+
+def test_batch_solutions_is_none(data):
+    _, objectives, behaviors, indices, metadata = data
+    df = ArchiveDataFrame({
+        "index_0": [idx[0] for idx in indices],
+        "objective": objectives,
+        "behavior_0": behaviors[:, 0],
+        "metadata": metadata,
+    })
+
+    assert df.batch_solutions() is None
+
+
+def test_batch_metadata_is_none(data):
+    solutions, objectives, behaviors, indices, _ = data
+    df = ArchiveDataFrame({
+        "index_0": [idx[0] for idx in indices],
+        "objective": objectives,
+        "behavior_0": behaviors[:, 0],
+        "solution_0": solutions[:, 0],
+    })
+
+    assert df.batch_metadata() is None

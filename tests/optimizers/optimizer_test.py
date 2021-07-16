@@ -86,9 +86,9 @@ def test_tell_inserts_solutions_into_archive(optimizer_fixture, tell_metadata):
     # in the future.
     assert len(optimizer.archive) == num_solutions
     df = optimizer.archive.as_pandas(include_metadata=True)
-    assert (df.batch_behaviors == behavior_values).all()
-    assert (df.batch_objectives == np.ones(num_solutions)).all()
-    assert (df.batch_metadata == expected_metadata).all()
+    assert (df.batch_behaviors() == behavior_values).all()
+    assert (df.batch_objectives() == np.ones(num_solutions)).all()
+    assert (df.batch_metadata() == expected_metadata).all()
 
 
 @pytest.mark.parametrize("tell_metadata", [True, False],
@@ -119,9 +119,9 @@ def test_tell_inserts_solutions_with_multiple_emitters(tell_metadata):
     # in the future.
     assert len(optimizer.archive) == 6
     df = optimizer.archive.as_pandas(include_metadata=True)
-    assert (df.batch_behaviors == behavior_values).all()
-    assert (df.batch_objectives == np.ones(6)).all()
-    assert (df.batch_metadata == expected_metadata).all()
+    assert (df.batch_behaviors() == behavior_values).all()
+    assert (df.batch_objectives() == np.ones(6)).all()
+    assert (df.batch_metadata() == expected_metadata).all()
 
 
 def test_tell_fails_when_ask_not_called(optimizer_fixture):
