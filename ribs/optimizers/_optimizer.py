@@ -147,6 +147,15 @@ class Optimizer:
         self._solutions = np.concatenate(self._solutions, axis=0)
         return self._solutions
 
+    def _check_length(self, name, array):
+        """Raises a ValueError if array does not have the same length as the
+        solutions."""
+        if len(array) != len(self._solutions):
+            raise ValueError(
+                f"{name} should have length {len(self._solutions)} (this is "
+                "the number of solutions output by ask()) but has length "
+                f"{len(array)}")
+
     def tell(self,
              objective_values,
              behavior_values,
@@ -177,6 +186,8 @@ class Optimizer:
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
+            ValueError: ``objective_values``, ``behavior_values``, or
+                ``metadata`` has the wrong shape.
             ValueError: ``emitter_kwargs`` is a list of dict but the list length
                 is not the same as the number of emitters.
         """
@@ -189,6 +200,10 @@ class Optimizer:
         behavior_values = np.asarray(behavior_values)
         metadata = (np.empty(len(self._solutions), dtype=object)
                     if metadata is None else np.asarray(metadata, dtype=object))
+
+        self._check_length("objective_values", objective_values)
+        self._check_length("behavior_values", behavior_values)
+        self._check_length("metadata", metadata)
 
         # Limit OpenBLAS to single thread. This is typically faster than
         # multithreading because our data is too small.

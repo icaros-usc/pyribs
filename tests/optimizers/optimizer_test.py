@@ -128,6 +128,39 @@ def test_tell_fails_when_ask_not_called(optimizer_fixture):
         optimizer.tell(None, None)
 
 
+@pytest.mark.parametrize("array",
+                         ["objective_values", "behavior_values", "metadata"])
+def test_tell_fails_with_wrong_shapes(optimizer_fixture, array):
+    optimizer, _, num_solutions = optimizer_fixture
+    _ = optimizer.ask()  # Ignore the actual values of the solutions.
+
+    objective_values = np.ones(num_solutions)
+    behavior_values = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
+    metadata = [f"metadata_{i}" for i in range(num_solutions)]
+
+    # Each condition makes a certain array have the wrong shape by excluding the
+    # last element.
+    with pytest.raises(ValueError):
+        if array == "objective_values":
+            optimizer.tell(
+                objective_values=objective_values[:-1],
+                behavior_values=behavior_values,
+                metadata=metadata,
+            )
+        elif array == "behavior_values":
+            optimizer.tell(
+                objective_values=objective_values,
+                behavior_values=behavior_values[:-1],
+                metadata=metadata,
+            )
+        elif array == "metadata":
+            optimizer.tell(
+                objective_values=objective_values,
+                behavior_values=behavior_values,
+                metadata=metadata[:-1],
+            )
+
+
 @pytest.fixture
 def kwargs_fixture():
     """Fixture for testing emitter_kwargs in the optimizer."""
