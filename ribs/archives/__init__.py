@@ -13,10 +13,12 @@
     ribs.archives.ArchiveBase
     ribs.archives.AddStatus
     ribs.archives.Elite
+    ribs.archives.ArchiveDataFrame
     ribs.archives.ArchiveStats
 """
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_base import ArchiveBase
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._elite import Elite
@@ -30,5 +32,6 @@ __all__ = [
     "ArchiveBase",
     "AddStatus",
     "Elite",
+    "ArchiveDataFrame",
     "ArchiveStats",
 ]

@@ -4,10 +4,10 @@ from collections import OrderedDict
 
 import numba as nb
 import numpy as np
-import pandas as pd
 from decorator import decorator
 
 from ribs.archives._add_status import AddStatus
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._elite import Elite
 
@@ -75,31 +75,6 @@ class RandomBuffer:
         return val
 
 
-class CachedView:
-    """Maintains a readonly view of the given numpy array.
-
-    Whenever the state changes in update(), the view is updated.
-
-    This class is useful when returning the archive data, e.g.
-    archive.solutions. If the archive has many indices, indexing into the array
-    can be expensive (e.g. ~0.5 seconds for 250k indices), and it adds up if the
-    user does this many times, so we only want to do the indexing once.
-    """
-
-    def __init__(self, array):
-        self.array = array
-        self.view = None
-        self.state = None
-
-    def update(self, indices, state):
-        """Sets view to array[indices], but only if state has changed."""
-        if state != self.state:
-            self.state = state.copy()
-            self.view = self.array[indices]
-            self.view.flags.writeable = False
-        return self.view
-
-
 class ArchiveIterator:
     """An iterator for an archive's elites."""
 
@@ -162,13 +137,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     +------------------------+------------------------------------+
     | ``_metadata``          |  ``(*storage_dims)``               |
     +------------------------+------------------------------------+
-
-    .. note::
-
-        These arrays are different from the elite data attributes
-        :attr:`solutions`, :attr:`objective_values`, :attr:`behavior_values`,
-        and :attr:`metadata`. The attributes provide access to data about elites
-        in the archive via a view into these arrays.
 
     All of these arrays are accessed via a common index. If we have index ``i``,
     we access its solution at ``_solutions[i]``, its behavior values at
@@ -254,12 +222,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._bins = np.product(self._storage_dims)
         self._stats = None
 
-        # Array views for providing access to data.
-        self._solutions_view = None
-        self._objective_values_view = None
-        self._behavior_values_view = None
-        self._metadata_view = None
-
         # Tracks archive modifications by counting calls to clear() and add().
         self._state = None
 
@@ -326,73 +288,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """data-type: The dtype of the solutions, objective values, and behavior
         values."""
         return self._dtype
-
-    ## Data attributes ##
-
-    @property
-    @require_init
-    def solutions(self):
-        """((len(archive), solution_dim) numpy.ndarray): Solutions of all elites
-        currently in the archive."""
-        return self._solutions_view.update(self._occupied_indices_cols,
-                                           self._state)
-
-    @property
-    @require_init
-    def objective_values(self):
-        """(len(archive),) numpy.ndarray): Objective values of all elites
-        currently in the archive.
-
-        These correspond to :attr:`solutions`, e.g. ``objective_values[0]``
-        corresponds to ``solutions[0]``.
-        """
-        return self._objective_values_view.update(self._occupied_indices_cols,
-                                                  self._state)
-
-    @property
-    @require_init
-    def behavior_values(self):
-        """(len(archive), behavior_dim) numpy.ndarray): Behavior values of all
-        elites currently in the archive.
-
-        These correspond to :attr:`solutions`, e.g. ``behavior_values[0]``
-        corresponds to ``solutions[0]``.
-        """
-        return self._behavior_values_view.update(self._occupied_indices_cols,
-                                                 self._state)
-
-    @property
-    @require_init
-    def indices(self):
-        """(len(archive),) tuple: Tuple with indices of all elites in the
-        archive.
-
-        Each entry in the tuple is an index, which can be either an int or tuple
-        of int (see :meth:`get_index` for the specific archive for more info).
-
-        These correspond to :attr:`solutions`, e.g. ``indices[0]`` corresponds
-        to ``solutions[0]``.
-
-        This is a tuple instead of a numpy array because numpy arrays are unable
-        to (easily) store tuples directly.
-        """
-        return tuple(self._occupied_indices)  # List to tuple is cheap.
-
-    @property
-    @require_init
-    def metadata(self):
-        """(len(archive),) numpy.ndarray): Metadata of all elites currently in
-        the archive.
-
-        This array is an object array.
-
-        These correspond to :attr:`solutions`, e.g. ``metadata[0]`` corresponds
-        to ``solutions[0]``.
-        """
-        return self._metadata_view.update(self._occupied_indices_cols,
-                                          self._state)
-
-    ## Methods ##
 
     def __len__(self):
         """Number of elites in the archive."""
@@ -463,13 +358,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied_indices_cols = tuple(
             [] for _ in range(len(self._storage_dims)))
 
-        self._solutions_view = CachedView(self._solutions)
-        self._objective_values_view = CachedView(self._objective_values)
-        self._behavior_values_view = CachedView(self._behavior_values)
-        self._metadata_view = CachedView(self._metadata)
-        self._state = {"clear": 0, "add": 0}
-
         self._stats_reset()
+        self._state = {"clear": 0, "add": 0}
 
     @require_init
     def clear(self):
@@ -691,19 +581,21 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
-        """Converts the archive into a Pandas dataframe.
+        """Converts the archive into an :class:`ArchiveDataFrame` (a child class
+        of :class:`pandas.DataFrame`).
 
-        This base class implementation creates a dataframe consisting of:
+        The implementation of this method in :class:`ArchiveBase` creates a
+        dataframe consisting of:
 
         - ``len(self._storage_dims)`` columns for the index, named
           ``index_0, index_1, ...`` In :class:`~ribs.archives.GridArchive` and
           :class:`~ribs.archives.SlidingBoundariesArchive`, there are
           :attr:`behavior_dim` columns. In :class:`~ribs.archives.CVTArchive`,
           there is just one column. See :meth:`get_index` for more info.
-        - ``self._behavior_dim`` columns for the behavior characteristics, named
+        - :attr:`behavior_dim` columns for the behavior characteristics, named
           ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``
-        - ``solution_dim`` columns for the solution vectors, named
+        - :attr:`solution_dim` columns for the solution vectors, named
           ``solution_0, solution_1, ...``
         - 1 column for the metadata objects, named ``metadata``
 
@@ -715,6 +607,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         |         | ...  |             | ...  |            |             | ... |          |
         +---------+------+-------------+------+------------+-------------+-----+----------+
 
+        Compared to :class:`pandas.DataFrame`, the :class:`ArchiveDataFrame`
+        adds methods and attributes which make it easier to manipulate archive
+        data. For more information, refer to the :class:`ArchiveDataFrame`
+        documentation.
+
         Args:
             include_solutions (bool): Whether to include solution columns.
             include_metadata (bool): Whether to include the metadata column.
@@ -722,24 +619,29 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 properly save the dataframe since the metadata objects may not
                 be representable in a CSV.
         Returns:
-            pandas.DataFrame: See above.
+            ArchiveDataFrame: See above.
         """ # pylint: disable = line-too-long
         data = OrderedDict()
+        indices = self._occupied_indices_cols
 
-        index_dim = len(self._storage_dims)
-        for i in range(index_dim):
-            data[f"index_{i}"] = np.asarray(self._occupied_indices_cols[i],
-                                            dtype=int)
+        for i, col in enumerate(indices):
+            data[f"index_{i}"] = np.asarray(col, dtype=int)
 
+        behavior_values = self._behavior_values[indices]
         for i in range(self._behavior_dim):
-            data[f"behavior_{i}"] = self.behavior_values[:, i]
+            data[f"behavior_{i}"] = behavior_values[:, i]
 
-        data["objective"] = self.objective_values
+        data["objective"] = self._objective_values[indices]
 
         if include_solutions:
+            solutions = self._solutions[indices]
             for i in range(self._solution_dim):
-                data[f"solution_{i}"] = self.solutions[:, i]
+                data[f"solution_{i}"] = solutions[:, i]
 
         if include_metadata:
-            data["metadata"] = self.metadata
-        return pd.DataFrame(data)
+            data["metadata"] = self._metadata[indices]
+
+        return ArchiveDataFrame(
+            data,
+            copy=False,  # Fancy indexing above already results in copying.
+        )
