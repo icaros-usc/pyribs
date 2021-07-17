@@ -268,20 +268,17 @@ def sphere_main(algorithm,
             # Logging and output.
             final_itr = itr == itrs
             if itr % log_freq == 0 or final_itr:
-                data = archive.as_pandas(include_solutions=final_itr)
                 if final_itr:
-                    data.to_csv(str(outdir / f"{name}_archive.csv"))
+                    archive.as_pandas(include_solutions=final_itr).to_csv(
+                        outdir / f"{name}_archive.csv")
 
                 # Record and display metrics.
-                total_bins = 10_000 if isinstance(archive,
-                                                  CVTArchive) else 500 * 500
                 metrics["QD Score"]["x"].append(itr)
-                metrics["QD Score"]["y"].append(data['objective'].sum())
+                metrics["QD Score"]["y"].append(archive.stats.qd_score)
                 metrics["Archive Coverage"]["x"].append(itr)
-                metrics["Archive Coverage"]["y"].append(
-                    len(data) / total_bins * 100)
+                metrics["Archive Coverage"]["y"].append(archive.stats.coverage)
                 print(f"Iteration {itr} | Archive Coverage: "
-                      f"{metrics['Archive Coverage']['y'][-1]:.3f}% "
+                      f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
                       f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
                 save_heatmap(archive,
