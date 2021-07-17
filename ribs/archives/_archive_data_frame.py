@@ -13,9 +13,9 @@ class ArchiveDataFrame(pd.DataFrame):
     """A modified :class:`~pandas.DataFrame` for archive data.
 
     As this class inherits from :class:`~pandas.DataFrame`, it has the same
-    methods, attributes, and arguments (even though the arguments are shown here
-    as ``*args`` and ``**kwargs``).  However, this class adds methods that make
-    it convenient to work with elites. This documentation only lists these
+    methods, attributes, and arguments (even though the arguments shown here are
+    ``*args`` and ``**kwargs``). However, this class adds methods that make it
+    convenient to work with elites. This documentation only lists these
     additional methods and attributes.
 
     Example:
@@ -59,10 +59,18 @@ class ArchiveDataFrame(pd.DataFrame):
     .. note::
 
         If you save an ArchiveDataFrame to a CSV, loading it with
-        :func:`pandas.read_csv` will load a :class:`~pandas.DataFrame`. To
-        load a CSV as an ArchiveDataFrame, simply use::
+        :func:`pandas.read_csv` will load a :class:`~pandas.DataFrame`. To load
+        a CSV as an ArchiveDataFrame, pass the ``DataFrame`` from ``read_csv``
+        to ArchiveDataFrame::
 
             df = ArchiveDataFrame(pd.read_csv("file.csv"))
+
+    .. note::
+
+        All the ``batch`` methods "align" with each other -- i.e.
+        ``batch_behaviors()[i]`` corresponds to ``batch_indices()[i]``,
+        ``batch_metadata()[i]``, ``batch_objectives()[i]``, and
+        ``batch_solutions()[i]``.
     """
 
     def __init__(self, *args, **kwargs):
@@ -110,12 +118,6 @@ class ArchiveDataFrame(pd.DataFrame):
 
     def batch_behaviors(self):
         """Array with behavior values of all elites.
-
-        .. note::
-            All the ``batch`` methods "align" with each other -- i.e.
-            ``batch_behaviors()[i]`` corresponds to ``batch_indices()[i]``,
-            ``batch_metadata()[i]``, ``batch_objectives()[i]``, and
-            ``batch_solutions()[i]``.
 
         Returns:
             (n, behavior_dim) numpy.ndarray: See above.
