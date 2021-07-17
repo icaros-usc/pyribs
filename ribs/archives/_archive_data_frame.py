@@ -12,15 +12,11 @@ from ribs.archives._elite import Elite
 class ArchiveDataFrame(pd.DataFrame):
     """A modified :class:`~pandas.DataFrame` for archive data.
 
-    As this class inherits from :class:`~pandas.DataFrame`, it has all of the
-    same methods and attributes, but it adds several more that make it
-    convenient to work with elites. This documentation only lists the additional
-    methods and attributes.
-
-    .. note::
-        This class takes in the exact same arguments as
-        :class:`~pandas.DataFrame`, even though the arguments are shown here as
-        ``*args`` and ``**kwargs``.
+    As this class inherits from :class:`~pandas.DataFrame`, it has the same
+    methods, attributes, and arguments (even though the arguments are shown here
+    as ``*args`` and ``**kwargs``).  However, this class adds methods that make
+    it convenient to work with elites. This documentation only lists these
+    additional methods and attributes.
 
     Example:
 
@@ -43,12 +39,6 @@ class ArchiveDataFrame(pd.DataFrame):
 
             df.batch_behaviors()
 
-        .. note::
-            All the ``batch`` methods "align" with each other -- i.e.
-            ``batch_solutions()[i]`` corresponds to ``batch_behaviors()[i]``,
-            ``batch_indices()[i]``, ``batch_metadata()[i]``, and
-            ``batch_objectives()[i]``.
-
     .. warning::
 
         Accessing ``batch`` methods (e.g. :meth:`batch_behaviors`) always
@@ -65,6 +55,14 @@ class ArchiveDataFrame(pd.DataFrame):
             behaviors[0]
             behaviors.mean()
             behaviors.median()
+
+    .. note::
+
+        If you save an ArchiveDataFrame to a CSV, loading it with
+        :func:`pandas.read_csv` will load a :class:`~pandas.DataFrame`. To
+        load a CSV as an ArchiveDataFrame, simply use::
+
+            df = ArchiveDataFrame(pd.read_csv("file.csv"))
     """
 
     def __init__(self, *args, **kwargs):
@@ -112,6 +110,12 @@ class ArchiveDataFrame(pd.DataFrame):
 
     def batch_behaviors(self):
         """Array with behavior values of all elites.
+
+        .. note::
+            All the ``batch`` methods "align" with each other -- i.e.
+            ``batch_behaviors()[i]`` corresponds to ``batch_indices()[i]``,
+            ``batch_metadata()[i]``, ``batch_objectives()[i]``, and
+            ``batch_solutions()[i]``.
 
         Returns:
             (n, behavior_dim) numpy.ndarray: See above.
