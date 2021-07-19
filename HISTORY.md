@@ -1,5 +1,48 @@
 # History
 
+## 0.4.0 (2021-07-19)
+
+To learn about this release, see our blog post: https://pyribs.org/blog/0-4-0
+
+### Changelog
+
+#### API
+
+- Add ribs.visualize.parallel_axes_plot for analyzing archives with high-dimensional BCs (#92)
+- **Backwards-incompatible:** Reduce attributes and parameters in EmitterBase to make it easier to extend (#101)
+- In Optimizer, support emitters that return any number of solutions in ask() (#101)
+- **Backwards-incompatible:** Store metadata in archives as described in #87 (#103, #114, #115, #119)
+- **Backwards-incompatible:** Rename "index" to "index_0" in CVTArchive.as_pandas for API consistency (#113)
+- **Backwards-incompatible:** Make get_index() public in archives to emphasize each index's meaning (#128)
+- **Backwards-incompatible:** Add index to get_random_elite() and elite_with_behavior() in archives (#129)
+- Add clear() method to archive (#140, #146)
+- Represent archive elites with an Elite namedtuple (#142)
+- Add len and iter methods to archives (#151, #152)
+- Add statistics to archives (#100, #157)
+- Improve manipulation of elites by modifying as_pandas (#123, #149, #153, #158, #168)
+- Add checks for optimizer array and list shapes (#166)
+
+#### Documentation
+
+- Add bibtex citations for tutorials (#122)
+- Remove network training from Fooling MNIST tutorial (#161)
+- Fix video display for lunar lander in Colab (#163)
+- Fix Colab links in stable docs (#164)
+
+#### Improvements
+
+- Add support for Python 3.9 (#84)
+- Test with pinned versions (#110)
+- Increase minimum required versions for scipy and numba (#110)
+- Refactor as_pandas tests (#114)
+- Expand CI/CD to test examples and tutorials (#117)
+- Tidy up existing tests (#120, #127)
+- Fix vocab in various areas (#138)
+- Fix dependency issues in tests (#139)
+- Remove tox from CI (#143)
+- Replace "entry" with "elite" in tests (#144)
+- Use new archive API in ribs.visualize implementation (#155)
+
 ## 0.3.1 (2021-03-05)
 
 This release features various bug fixes and improvements. In particular, we have
