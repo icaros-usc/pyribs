@@ -55,6 +55,7 @@ def test_batch_methods(data, df):
     ids=["indices", "objectives", "behaviors", "metadata", "solutions"],
 )
 def test_batch_methods_can_be_none(df, remove):
+    """Removes a column so that the corresponding batch method returns None."""
     del df[remove]
 
     method = {
@@ -66,3 +67,13 @@ def test_batch_methods_can_be_none(df, remove):
     }[remove]
 
     assert method() is None
+
+
+def test_correct_constructor(df):
+    """Checks that we defined the _constructor property.
+
+    Essentially, methods which return a DataFrame should now return an
+    ArchiveDataFrame.
+    """
+    assert isinstance(df.iloc[[0, 1]], ArchiveDataFrame)
+    assert isinstance(df[["objective", "metadata"]], ArchiveDataFrame)
