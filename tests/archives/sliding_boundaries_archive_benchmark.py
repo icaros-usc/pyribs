@@ -57,6 +57,6 @@ def benchmark_as_pandas_2048_elements(benchmark):
             archive.add(sol, -(x**2 + y**2), np.array([x, y]))
 
     # Archive should be full.
-    assert len(archive.as_pandas()) == 32 * 64
+    assert len(archive) == 32 * 64
 
     benchmark(archive.as_pandas)

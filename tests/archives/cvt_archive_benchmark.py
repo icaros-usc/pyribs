@@ -67,6 +67,6 @@ def benchmark_as_pandas_2000_items(benchmark):
         archive.add(sol, 1.0, np.array([x, y]))
 
     # Archive should be full.
-    assert len(archive.as_pandas()) == bins
+    assert len(archive) == bins
 
     benchmark(archive.as_pandas)

@@ -229,12 +229,12 @@ def run_search(client, optimizer, env_seed, iterations, log_freq):
             # Logging.
             progress()
             if itr % log_freq == 0 or itr == iterations:
-                df = optimizer.archive.as_pandas(include_solutions=False)
                 elapsed_time = time.time() - start_time
                 metrics["Max Score"]["x"].append(itr)
-                metrics["Max Score"]["y"].append(df["objective"].max())
+                metrics["Max Score"]["y"].append(
+                    optimizer.archive.stats.obj_max)
                 metrics["Archive Size"]["x"].append(itr)
-                metrics["Archive Size"]["y"].append(len(df))
+                metrics["Archive Size"]["y"].append(len(optimizer.archive))
                 print(f"> {itr} itrs completed after {elapsed_time:.2f} s")
                 print(f"  - Max Score: {metrics['Max Score']['y'][-1]}")
                 print(f"  - Archive Size: {metrics['Archive Size']['y'][-1]}")
