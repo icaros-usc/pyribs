@@ -23,7 +23,7 @@ class ArchiveDataFrame(pd.DataFrame):
     Example:
 
         This object is created by :meth:`~ArchiveBase.as_pandas` (i.e. users
-        should not create it on their own)::
+        typically do not create it on their own)::
 
             df = archive.as_pandas()
 
@@ -60,7 +60,7 @@ class ArchiveDataFrame(pd.DataFrame):
 
     .. note::
 
-        If you save an ArchiveDataFrame to a CSV, loading it with
+        After saving an ArchiveDataFrame to a CSV, loading it with
         :func:`pandas.read_csv` will load a :class:`~pandas.DataFrame`. To load
         a CSV as an ArchiveDataFrame, pass the ``DataFrame`` from ``read_csv``
         to ArchiveDataFrame::
