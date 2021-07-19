@@ -49,25 +49,31 @@ def test_batch_methods(data, df):
     assert (df.batch_metadata() == metadata).all()
 
 
-def test_batch_solutions_is_none(data):
-    _, objectives, behaviors, indices, metadata = data
-    df = ArchiveDataFrame({
-        "index_0": [idx[0] for idx in indices],
-        "objective": objectives,
-        "behavior_0": behaviors[:, 0],
-        "metadata": metadata,
-    })
+@pytest.mark.parametrize(
+    "remove",
+    ["index_0", "objective", "behavior_0", "metadata", "solution_0"],
+    ids=["indices", "objectives", "behaviors", "metadata", "solutions"],
+)
+def test_batch_methods_can_be_none(df, remove):
+    """Removes a column so that the corresponding batch method returns None."""
+    del df[remove]
 
-    assert df.batch_solutions() is None
+    method = {
+        "solution_0": df.batch_solutions,
+        "objective": df.batch_objectives,
+        "behavior_0": df.batch_behaviors,
+        "index_0": df.batch_indices,
+        "metadata": df.batch_metadata,
+    }[remove]
+
+    assert method() is None
 
 
-def test_batch_metadata_is_none(data):
-    solutions, objectives, behaviors, indices, _ = data
-    df = ArchiveDataFrame({
-        "index_0": [idx[0] for idx in indices],
-        "objective": objectives,
-        "behavior_0": behaviors[:, 0],
-        "solution_0": solutions[:, 0],
-    })
+def test_correct_constructor(df):
+    """Checks that we defined the _constructor property.
 
-    assert df.batch_metadata() is None
+    Essentially, methods which return a DataFrame should now return an
+    ArchiveDataFrame.
+    """
+    assert isinstance(df.iloc[[0, 1]], ArchiveDataFrame)
+    assert isinstance(df[["objective", "metadata"]], ArchiveDataFrame)
