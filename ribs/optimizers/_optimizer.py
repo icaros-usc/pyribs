@@ -93,8 +93,6 @@ class Optimizer:
         Raises:
             RuntimeError: This method was called without first calling
                 :meth:`tell`.
-            ValueError: ``emitter_kwargs`` is a list of dict but the list length
-                is not the same as the number of emitters.
         """
         if self._asked:
             raise RuntimeError("ask() was called twice in a row.")
@@ -143,8 +141,6 @@ class Optimizer:
                 :meth:`ask`.
             ValueError: ``objective_values``, ``behavior_values``, or
                 ``metadata`` has the wrong shape.
-            ValueError: ``emitter_kwargs`` is a list of dict but the list length
-                is not the same as the number of emitters.
         """
         if not self._asked:
             raise RuntimeError("tell() was called without calling ask().")
