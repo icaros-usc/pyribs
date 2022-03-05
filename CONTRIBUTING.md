@@ -31,7 +31,7 @@ helps, and credit will always be given.
 Ready to contribute? Here's how to set up pyribs for local development.
 
 1. [Fork](https://github.com/icaros-usc/pyribs/fork) the pyribs repo on GitHub.
-2. Clone the fork locally:
+1. Clone the fork locally:
 
    ```bash
    # With SSH:
@@ -41,7 +41,7 @@ Ready to contribute? Here's how to set up pyribs for local development.
    git clone https://github.com/USERNAME/pyribs.git
    ```
 
-3. Install the local copy and dev requirements into an environment. For
+1. Install the local copy and dev requirements into an environment. For
    instance, with Conda, the following creates an environment at `./env`.
 
    ```bash
@@ -52,7 +52,7 @@ Ready to contribute? Here's how to set up pyribs for local development.
    pip install -e .[dev]
    ```
 
-4. Create a branch for local development:
+1. Create a branch for local development:
 
    ```bash
    git checkout -b name-of-bugfix-or-feature
@@ -71,7 +71,7 @@ Ready to contribute? Here's how to set up pyribs for local development.
      yapf -i FILES
      ```
 
-5. After making changes, check that the changes pass the tests:
+1. After making changes, check that the changes pass the tests:
 
    ```bash
    pytest tests/
@@ -95,7 +95,9 @@ Ready to contribute? Here's how to set up pyribs for local development.
    To get pytest and pylint, pip install them into the environment. However,
    they should already install with `pip install -e .[dev]`.
 
-6. Commit the changes and push the branch to GitHub:
+1. Add your change to the changelog for the current version in `HISTORY.md`.
+
+1. Commit the changes and push the branch to GitHub:
 
    ```bash
    git add .
@@ -103,7 +105,7 @@ Ready to contribute? Here's how to set up pyribs for local development.
    git push origin name-of-bugfix-or-feature
    ```
 
-7. Submit a pull request through the GitHub website.
+1. Submit a pull request through the GitHub website.
 
 ## Pull Request Guidelines
 
@@ -219,22 +221,22 @@ particularly relevant when linking to arXiv papers.
       bump2version patch
       ```
    1. Add all necessary info on the version to `HISTORY.md`.
-2. (Optional) Once the PR has passed CI/CD and been squashed-and-merged into
+1. (Optional) Once the PR has passed CI/CD and been squashed-and-merged into
    master, check out the squash commit and locally run `make release-test`. This
    uploads the code to TestPyPI to check that the deployment works. If this
    fails, make fixes as appropriate.
-3. Once the PR in step 1 and any changes in step 2 have passed CI/CD and been
+1. Once the PR in step 1 and any changes in step 2 have passed CI/CD and been
    squashed-and-merged into master, locally tag the master branch with a tag
    like `v0.2.1`, e.g.
    ```bash
    git tag v0.2.1 HEAD
    ```
-4. Now push the tag with
+1. Now push the tag with
    ```bash
    git push --tags
    ```
-5. Check that the version was deployed to PyPI. If it failed, delete the tag,
+1. Check that the version was deployed to PyPI. If it failed, delete the tag,
    make appropriate fixes, and repeat steps 2 and 3.
-6. Write up the release on GitHub, and attach it to the tag.
+1. Write up the release on GitHub, and attach it to the tag.
 
 Our deployment process may change in the future as pyribs becomes more complex.

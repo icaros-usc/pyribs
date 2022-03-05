@@ -1,5 +1,17 @@
 # History
 
+## 0.5.0 (Forthcoming)
+
+### Changelog
+
+#### API
+
+#### Documentation
+
+#### Improvements
+
+- Drop Python 3.6 and add Python 3.10 support (#181)
+
 ## 0.4.0 (2021-07-19)
 
 To learn about this release, see our blog post: https://pyribs.org/blog/0-4-0
