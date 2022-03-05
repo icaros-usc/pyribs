@@ -142,7 +142,7 @@ For more information, refer to the [documentation](https://docs.pyribs.org/).
 
 ## Installation
 
-pyribs supports Python 3.6-3.9. Earlier Python versions may work but are not
+pyribs supports Python 3.7-3.10. Earlier Python versions may work but are not
 officially supported.
 
 To install from PyPI, run

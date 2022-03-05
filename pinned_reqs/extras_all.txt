@@ -1,3 +1,3 @@
-# The reference images in the repo were created with Matplotlib 3.4.0 -- images
+# The reference images in the repo were created with Matplotlib 3.5.1 -- images
 # created with earlier versions are slightly different.
-matplotlib==3.4.0
+matplotlib==3.5.1

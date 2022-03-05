@@ -44,10 +44,10 @@ extras_require = {
         "yapf",
 
         # Testing
-        "pytest==6.1.2",
-        "pytest-cov==2.10.1",
-        "pytest-benchmark==3.2.3",
-        "pytest-xdist==2.1.0",
+        "pytest==7.0.1",
+        "pytest-cov==3.0.0",
+        "pytest-benchmark==3.4.1",
+        "pytest-xdist==2.5.0",
 
         # Documentation
         "Sphinx==3.2.1",
@@ -76,10 +76,10 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Mathematics",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -95,7 +95,7 @@ setup(
     keywords="ribs",
     name="ribs",
     packages=find_packages(include=["ribs", "ribs.*"]),
-    python_requires=">=3.6.0",
+    python_requires=">=3.7.0",
     test_suite="tests",
     url="https://github.com/icaros-usc/pyribs",
     version="0.4.0",
