@@ -8,7 +8,7 @@ tests/extras/baseline_images/visualize_test. For instance, for
 ``test_cvt_archive_heatmap_with_samples``, run::
 
     cp result_images/visualize_test/cvt_archive_heatmap_with_samples.png \
-        tests/extras/baseline_images/visualize_test/
+        tests/baseline_images/visualize_test/
 
 Assuming the output is as expected (and assuming the code is deterministic), the
 test should now pass when it is re-run.
