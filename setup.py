@@ -44,10 +44,10 @@ extras_require = {
         "yapf",
 
         # Testing
-        "pytest==6.1.2",
-        "pytest-cov==2.10.1",
-        "pytest-benchmark==3.2.3",
-        "pytest-xdist==2.1.0",
+        "pytest==7.0.1",
+        "pytest-cov==3.0.0",
+        "pytest-benchmark==3.4.1",
+        "pytest-xdist==2.5.0",
 
         # Documentation
         "Sphinx==3.2.1",
