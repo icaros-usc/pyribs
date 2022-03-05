@@ -2,10 +2,6 @@
 
 <!-- Provide a brief description of the PR's purpose here. -->
 
-## Changelog Description
-
-<!-- Please provide a one-line description we can use in the changelog. -->
-
 ## TODO
 
 <!-- Notable points that this PR has either accomplished or will accomplish. -->
@@ -25,4 +21,6 @@
 - [ ] I have formatted my code using `yapf`
 - [ ] I have tested my code by running `pytest`
 - [ ] I have linted my code with `pylint`
+- [ ] I have added a one-line description of my change to the changelog in
+      `HISTORY.md`
 - [ ] This PR is ready to go
