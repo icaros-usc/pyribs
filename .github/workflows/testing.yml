@@ -58,7 +58,7 @@ jobs:
           pytest tests/archives tests/emitters tests/optimizers
           tests/factory_test.py
       - name: Install extras deps
-        run: pip install -r pinned_reqs/extras_all.txt
+        run: pip install -r pinned_reqs/extras_visualize.txt
       - name: Test extras
         run: pytest tests/visualize_test.py
   coverage:
