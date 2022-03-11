@@ -13,7 +13,7 @@ on:
 jobs:
   # The visualize extra is only tested with pinned reqs because different
   # Matplotlib versions have slightly different outputs.
-  test-core:
+  test:
     strategy:
       max-parallel: 12 # All in parallel.
       matrix:
