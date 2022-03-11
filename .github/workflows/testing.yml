@@ -11,6 +11,8 @@ on:
       - master
 
 jobs:
+  # The visualize extra is only tested with pinned reqs because different
+  # Matplotlib versions have slightly different outputs.
   test:
     strategy:
       max-parallel: 12 # All in parallel.
@@ -34,7 +36,7 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install core deps
-        run: pip install . .[dev]
+        run: pip install .[dev]
       - name: Test core
         run: >
           pytest tests/archives tests/emitters tests/optimizers
@@ -56,7 +58,7 @@ jobs:
           pytest tests/archives tests/emitters tests/optimizers
           tests/factory_test.py
       - name: Install extras deps
-        run: pip install -r pinned_reqs/extras_all.txt
+        run: pip install -r pinned_reqs/extras_visualize.txt
       - name: Test extras
         run: pytest tests/visualize_test.py
   coverage:
@@ -70,7 +72,7 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install deps
-        run: pip install .[all] .[dev]
+        run: pip install .[visualize,dev]
       - name: Test coverage
         env:
           NUMBA_DISABLE_JIT: 1
@@ -86,7 +88,7 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install deps
-        run: pip install .[all] .[dev]
+        run: pip install .[visualize,dev]
       - name: Run benchmarks
         run: pytest -c pytest_benchmark.ini tests
   examples:
@@ -100,7 +102,7 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install deps
-        run: pip install .[all] .[examples]
+        run: pip install .[visualize,examples]
       - name: Test Examples
         run: bash tests/examples.sh
   tutorials:
@@ -114,7 +116,7 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install deps
-        run: pip install .[all] jupyter nbconvert
+        run: pip install .[visualize] jupyter nbconvert
       - name: Test Tutorials
         run: bash tests/tutorials.sh
   deploy:
