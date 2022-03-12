@@ -4,7 +4,7 @@
 # run.
 #
 # Usage:
-#   pip install .[all] .[examples]
+#   pip install .[visualize,examples]
 #   bash tests/examples.sh
 
 set -e  # Exit if any of the commands fail.

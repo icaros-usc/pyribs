@@ -48,7 +48,6 @@ Ready to contribute? Here's how to set up pyribs for local development.
    cd pyribs
    conda create --prefix ./env python=3.7 # 3.7 is the minimum version pyribs supports.
    conda activate ./env
-   pip install -e .[all]
    pip install -e .[dev]
    ```
 
@@ -151,8 +150,8 @@ Tutorials are created in Jupyter notebooks that are stored under
 `examples/tutorials` in the repo. To create a tutorial:
 
 1. Write the notebook and save it under `examples/tutorials`.
-1. Use cell magic (e.g. `%pip install ribs[all]`) to install `ribs` or
-   `ribs[all]` and any other packages.
+1. Use cell magic (e.g. `%pip install ribs`) to install pyribs and other
+   dependencies.
    - Installation cells tend to produce a lot of output. Make sure to clear this
      output in Jupyter lab so that it does not clutter the documentation.
 1. Before the main loop of the QD algorithm, include a line like

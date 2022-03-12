@@ -143,61 +143,18 @@ For more information, refer to the [documentation](https://docs.pyribs.org/).
 ## Installation
 
 pyribs supports Python 3.7-3.10. Earlier Python versions may work but are not
-officially supported.
+officially supported. To find the installation command for your system
+(including for installing from source), visit the
+[installation selector](https://pyribs.org/#installation) on our website.
 
-To install from PyPI, run
-
-```bash
-pip install ribs
-```
-
-This command only installs dependencies for the core of pyribs. To install
-support tools like `ribs.visualize`, run
-
-```bash
-pip install ribs[all]
-```
-
-Equivalently, you can install the base version (equivalent to `ribs`) from Conda
-with
-
-```bash
-conda install -c conda-forge pyribs-base
-```
-
-The full version (equivalent to `ribs[all]`) can be installed with
-
-```bash
-conda install -c conda-forge pyribs
-```
-
-To test your installation, import it and print the version with:
+To test your installation, import pyribs and print the version with this
+command:
 
 ```bash
 python -c "import ribs; print(ribs.__version__)"
 ```
 
-You should see a version number like `0.2.0` in the output.
-
-### From Source
-
-To install a version from source, clone the repo
-
-```bash
-git clone https://github.com/icaros-usc/pyribs
-```
-
-Then `cd` into it
-
-```bash
-cd pyribs
-```
-
-And run
-
-```bash
-pip install -e .[all]
-```
+You should see a version number in the output.
 
 ## Documentation
 
