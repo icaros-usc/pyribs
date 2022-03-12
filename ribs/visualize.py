@@ -8,9 +8,9 @@ After plotting, functions like :func:`~matplotlib.pyplot.xlabel` and
 Alternatively, if using maplotlib's object-oriented API, pass the `ax` parameter
 to these functions.
 
-.. note:: This module only works with ``ribs[all]`` installed. As such, it is
-    not imported with ``import ribs``, and it must be explicitly imported with
-    ``import ribs.visualize``.
+.. note:: This module only works with ``ribs[visualize]`` installed. As such, it
+    is not imported with ``import ribs``, and it must be explicitly imported
+    with ``import ribs.visualize``.
 
 .. autosummary::
     :toctree:

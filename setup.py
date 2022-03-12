@@ -25,7 +25,7 @@ install_requires = [
 extras_require = {
     "visualize": ["matplotlib>=3.0.0",],
     # Dependencies for examples (NOT tutorials -- tutorial notebooks should
-    # install deps with cell magic and only depend on ribs and ribs[all]).
+    # install deps with cell magic and only depend on ribs and ribs[visualize]).
     "examples": [
         "matplotlib>=3.0.0",
         "gym~=0.17.0",  # Strict since different gym may give different results.

@@ -5,7 +5,7 @@
 # notebook can be tested by passing in the name of the notebook.
 #
 # Usage:
-#   pip install .[all] jupyter nbconvert
+#   pip install .[visualize] jupyter nbconvert
 #   bash tests/tutorials.sh  # Test all tutorials.
 #   bash tests/tutorials.sh NOTEBOOK.ipynb  # Test a single notebook.
 
