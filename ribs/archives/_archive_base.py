@@ -97,7 +97,7 @@ class ArchiveIterator:
             # _occupied_indices and cause StopIteration to happen early.
             raise RuntimeError(
                 "Archive was modified with add() or clear() during iteration.")
-        if self.iter_idx >= len(self.archive._occupied_indices):
+        if self.iter_idx >= len(self.archive):
             raise StopIteration
 
         idx = self.archive._occupied_indices[self.iter_idx]
@@ -188,14 +188,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         _metadata (numpy.ndarray): Object array storing the metadata associated
             with each solution. This attribute is None until :meth:`initialize`
             is called.
-        _occupied_indices (list of int): A list of indices that are occupied in
-            the archive. This attribute is None until :meth:`initialize` is
-            called.
-        _occupied_indices_cols (tuple of list of int): Stores the same data as
-            ``_occupied_indices``, but in column-wise fashion. For instance,
-            ``_occupied_indices_cols[0]`` holds index 0 of all the indices in
-            ``_occupied_indices``. This attribute is None until
-            :meth:`initialize` is called.
+        _occupied_indices (numpy.ndarray): A ``(storage_dim,)`` array of integer
+            indices that are occupied in the archive. This could be a list, but
+            for efficiency, we make it a fixed-size array, with only the first
+            ``_num_occupied`` entries will be valid. This attribute is None
+            until :meth:`initialize` is called.
+        _num_occupied (int): Number of elites currently in the archive. This is
+            used to index into ``_occupied_indices``.
     """
 
     def __init__(self, storage_dim, behavior_dim, seed=None, dtype=np.float64):
@@ -212,7 +211,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._behavior_values = None
         self._metadata = None
         self._occupied_indices = None
-        self._occupied_indices_cols = None
+        self._num_occupied = 0
 
         ## Not intended to be accessed by children. ##
 
@@ -262,7 +261,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     @property
     def empty(self):
         """bool: Whether the archive is empty."""
-        return not self._occupied_indices
+        return self._num_occupied == 0
 
     @property
     def behavior_dim(self):
@@ -292,7 +291,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def __len__(self):
         """Number of elites in the archive."""
         require_init_inline(self)
-        return len(self._occupied_indices)
+        return self._num_occupied
 
     def __iter__(self):
         """Creates an iterator over the :class:`Elite`'s in the archive.
@@ -354,8 +353,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._behavior_values = np.empty(
             (self._storage_dim, self._behavior_dim), dtype=self.dtype)
         self._metadata = np.empty(self._storage_dim, dtype=object)
-        self._occupied_indices = []
-        self._occupied_indices_cols = tuple([] for _ in range(1))
+        self._occupied_indices = np.empty(self._storage_dim, dtype=np.int32)
 
         self._stats_reset()
         self._state = {"clear": 0, "add": 0}
@@ -366,12 +364,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         After this method is called, the archive will be :attr:`empty`.
         """
-        # Only ``self._occupied_indices``, ``self._occupied_indices_cols``, and
-        # ``self._occupied`` are cleared, as a bin can have arbitrary values
-        # when its index is marked as unoccupied.
-        self._occupied_indices.clear()
-        for col in self._occupied_indices_cols:
-            col.clear()
+        # Only ``self._occupied_indices`` and ``self._occupied`` are cleared, as
+        # a bin can have arbitrary values when its index is marked as
+        # unoccupied.
+        self._num_occupied = 0
         self._occupied.fill(False)
 
         self._state["clear"] += 1
@@ -428,16 +424,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return False, already_occupied
 
     def _add_occupied_index(self, index):
-        """Adds a new index to the lists of occupied indices."""
-        self._occupied_indices.append(index)
-
-        # Some archives (e.g. CVTArchive) have a 1D index and use ints instead
-        # of tuples, so we convert to a singleton tuple here.
-        if not isinstance(index, tuple):
-            index = (index,)
-
-        for i, idx in enumerate(index):
-            self._occupied_indices_cols[i].append(idx)
+        """Tracks a new occupied index."""
+        self._occupied_indices[self._num_occupied] = index
+        self._num_occupied += 1
 
     @require_init
     def add(self, solution, objective_value, behavior_values, metadata=None):
@@ -568,7 +557,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         if self.empty:
             raise IndexError("No elements in archive.")
 
-        random_idx = self._rand_buf.get(len(self._occupied_indices))
+        random_idx = self._rand_buf.get(self._num_occupied)
         index = self._occupied_indices[random_idx]
 
         return Elite(
@@ -621,10 +610,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             ArchiveDataFrame: See above.
         """ # pylint: disable = line-too-long
         data = OrderedDict()
-        indices = self._occupied_indices_cols
+        indices = self._occupied_indices[:self._num_occupied]
 
-        for i, col in enumerate(indices):
-            data[f"index_{i}"] = np.asarray(col, dtype=int)
+        # TODO: Rename this to just `index`.
+        data["index_0"] = np.asarray(indices, dtype=int)
 
         behavior_values = self._behavior_values[indices]
         for i in range(self._behavior_dim):

@@ -89,7 +89,9 @@ def test_iteration():
         assert np.isclose(elite.sol, data.solution).all()
         assert np.isclose(elite.obj, data.objective_value)
         assert np.isclose(elite.beh, data.behavior_values).all()
-        assert elite.idx == data.grid_indices
+        # TODO: Avoid having to manually ravel.
+        assert elite.idx == np.ravel_multi_index(data.grid_indices,
+                                                 data.archive_with_elite.dims)
         assert elite.meta == data.metadata
 
 
@@ -229,7 +231,7 @@ def test_elite_with_behavior_gets_correct_elite(data):
     assert np.all(elite.sol == data.solution)
     assert elite.obj == data.objective_value
     assert np.all(elite.beh == data.behavior_values)
-    assert isinstance(elite.idx, (int, tuple))  # Exact val depends on archive.
+    # Avoid checking elite.idx since the meaning varies by archive.
     assert elite.meta == data.metadata
 
 
@@ -247,7 +249,7 @@ def test_random_elite_gets_single_elite(data):
     assert np.all(elite.sol == data.solution)
     assert elite.obj == data.objective_value
     assert np.all(elite.beh == data.behavior_values)
-    assert isinstance(elite.idx, (int, tuple))  # Exact val depends on archive.
+    # Avoid checking elite.idx since the meaning varies by archive.
     assert elite.meta == data.metadata
 
 

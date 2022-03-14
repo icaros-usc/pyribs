@@ -121,6 +121,7 @@ class GridArchive(ArchiveBase):
                  dims).astype(np.int32)
         return index
 
+    # TODO: Update docstring.
     def get_index(self, behavior_values):
         """Returns indices of the behavior values within the archive's grid.
 
