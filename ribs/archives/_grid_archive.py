@@ -148,6 +148,15 @@ class GridArchive(ArchiveBase):
                                              self._upper_bounds,
                                              self._lower_bounds,
                                              self._interval_size, self._dims)
+        # TODO: Handle data type? This method returns np.int64 by default.
         # TODO: Implement ravel_multi_index in numpy since it is not supported
         # by numba?
         return np.ravel_multi_index(index, self._dims)
+
+    # TODO: Docstrings.
+    def ravel_index(self, index):
+        return np.ravel_multi_index(index, self._dims)
+
+    def unravel_index(self, index):
+        """Converts an index into indices in the archive's grid."""
+        return np.unravel_index(index, self._dims)

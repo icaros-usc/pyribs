@@ -271,6 +271,14 @@ class SlidingBoundariesArchive(ArchiveBase):
         # TODO: implement raveling in numpy?
         return np.ravel_multi_index(index, self._dims)
 
+    # TODO: Docstrings.
+    def ravel_index(self, index):
+        return np.ravel_multi_index(index, self._dims)
+
+    def unravel_index(self, index):
+        """Converts an index into indices in the archive's grid."""
+        return np.unravel_index(index, self._dims)
+
     @staticmethod
     @nb.jit(nopython=True)
     def _remap_numba_helper(sorted_bc, buffer_size, boundaries, behavior_dim,
