@@ -120,36 +120,36 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     (float), (4) behavior space coordinates of the solution (1D array), and (5)
     any additional metadata associated with the solution (object). In this
     class, the container is implemented with separate numpy arrays that share
-    common dimensions. Using the ``storage_dims`` and ``behavior_dim`` arguments
+    common dimensions. Using the ``storage_dim`` and ``behavior_dim`` arguments
     in ``__init__`` and the ``solution_dim`` argument in ``initialize``, these
     arrays are as follows:
 
-    +------------------------+------------------------------------+
-    | Name                   |  Shape                             |
-    +========================+====================================+
-    | ``_occupied``          |  ``(*storage_dims)``               |
-    +------------------------+------------------------------------+
-    | ``_solutions``         |  ``(*storage_dims, solution_dim)`` |
-    +------------------------+------------------------------------+
-    | ``_objective_values``  |  ``(*storage_dims)``               |
-    +------------------------+------------------------------------+
-    | ``_behavior_values``   |  ``(*storage_dims, behavior_dim)`` |
-    +------------------------+------------------------------------+
-    | ``_metadata``          |  ``(*storage_dims)``               |
-    +------------------------+------------------------------------+
+    +------------------------+----------------------------------+
+    | Name                   |  Shape                           |
+    +========================+==================================+
+    | ``_occupied``          |  ``(storage_dim)``               |
+    +------------------------+----------------------------------+
+    | ``_solutions``         |  ``(storage_dim, solution_dim)`` |
+    +------------------------+----------------------------------+
+    | ``_objective_values``  |  ``(storage_dim)``               |
+    +------------------------+----------------------------------+
+    | ``_behavior_values``   |  ``(storage_dim, behavior_dim)`` |
+    +------------------------+----------------------------------+
+    | ``_metadata``          |  ``(storage_dim)``               |
+    +------------------------+----------------------------------+
 
-    All of these arrays are accessed via a common index. If we have index ``i``,
-    we access its solution at ``_solutions[i]``, its behavior values at
-    ``_behavior_values[i]``, etc.
+    All of these arrays are accessed via a common integer index. If we have
+    index ``i``, we access its solution at ``_solutions[i]``, its behavior
+    values at ``_behavior_values[i]``, etc.
 
     Thus, child classes typically override the following methods:
 
     - ``__init__``: Child classes must invoke this class's ``__init__`` with the
       appropriate arguments.
-    - :meth:`get_index`: Returns an index into the arrays above when given the
-      behavior values of a solution. Usually, the index has a meaning, e.g. in
-      :class:`~ribs.archives.CVTArchive` it is the index of a centroid. This
-      method should include an explanation of what the index means.
+    - :meth:`get_index`: Returns an integer index into the arrays above when
+      given the behavior values of a solution. Usually, the index has a meaning,
+      e.g. in :class:`~ribs.archives.CVTArchive` it is the index of a centroid.
+      Documentation for this method should describe the meaning of the index.
     - :meth:`initialize`: By default, this method sets up the arrays described,
       so child classes should invoke the parent implementation if they are
       overriding it.
@@ -158,8 +158,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         accessed by child classes (i.e. they are "protected" attributes).
 
     Args:
-        storage_dims (tuple of int): Primary dimensions of the archive storage.
-            This is used to create the numpy arrays described above.
+        storage_dim (int): Primary dimension of the archive storage. This is
+            used to create the numpy arrays described above.
         behavior_dim (int): The dimension of the behavior space.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
@@ -169,7 +169,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
-        _storage_dims (tuple of int): See ``storage_dims`` arg.
+        _storage_dim (int): See ``storage_dim`` arg.
         _behavior_dim (int): See ``behavior_dim`` arg.
         _solution_dim (int): Dimension of the solution space, passed in with
             :meth:`initialize`.
@@ -188,9 +188,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         _metadata (numpy.ndarray): Object array storing the metadata associated
             with each solution. This attribute is None until :meth:`initialize`
             is called.
-        _occupied_indices (list of (int or tuple of int)): A list of indices
-            that are occupied in the archive. This attribute is None until
-            :meth:`initialize` is called.
+        _occupied_indices (list of int): A list of indices that are occupied in
+            the archive. This attribute is None until :meth:`initialize` is
+            called.
         _occupied_indices_cols (tuple of list of int): Stores the same data as
             ``_occupied_indices``, but in column-wise fashion. For instance,
             ``_occupied_indices_cols[0]`` holds index 0 of all the indices in
@@ -198,12 +198,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             :meth:`initialize` is called.
     """
 
-    def __init__(self, storage_dims, behavior_dim, seed=None, dtype=np.float64):
+    def __init__(self, storage_dim, behavior_dim, seed=None, dtype=np.float64):
 
         ## Intended to be accessed by child classes. ##
 
         self._rng = np.random.default_rng(seed)
-        self._storage_dims = storage_dims
+        self._storage_dim = storage_dim
         self._behavior_dim = behavior_dim
         self._solution_dim = None
         self._occupied = None
@@ -219,7 +219,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._rand_buf = None
         self._seed = seed
         self._initialized = False
-        self._bins = np.product(self._storage_dims)
+        self._bins = np.product(self._storage_dim)
         self._stats = None
 
         # Tracks archive modifications by counting calls to clear() and add().
@@ -347,16 +347,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         self._rand_buf = RandomBuffer(self._seed)
         self._solution_dim = solution_dim
-        self._occupied = np.zeros(self._storage_dims, dtype=bool)
-        self._solutions = np.empty((*self._storage_dims, solution_dim),
+        self._occupied = np.zeros(self._storage_dim, dtype=bool)
+        self._solutions = np.empty((self._storage_dim, solution_dim),
                                    dtype=self.dtype)
-        self._objective_values = np.empty(self._storage_dims, dtype=self.dtype)
+        self._objective_values = np.empty(self._storage_dim, dtype=self.dtype)
         self._behavior_values = np.empty(
-            (*self._storage_dims, self._behavior_dim), dtype=self.dtype)
-        self._metadata = np.empty(self._storage_dims, dtype=object)
+            (self._storage_dim, self._behavior_dim), dtype=self.dtype)
+        self._metadata = np.empty(self._storage_dim, dtype=object)
         self._occupied_indices = []
-        self._occupied_indices_cols = tuple(
-            [] for _ in range(len(self._storage_dims)))
+        self._occupied_indices_cols = tuple([] for _ in range(1))
 
         self._stats_reset()
         self._state = {"clear": 0, "add": 0}
@@ -587,7 +586,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         The implementation of this method in :class:`ArchiveBase` creates a
         dataframe consisting of:
 
-        - ``len(self._storage_dims)`` columns for the index, named
+        - ``len(self._storage_dim)`` columns for the index, named
           ``index_0, index_1, ...`` In :class:`~ribs.archives.GridArchive` and
           :class:`~ribs.archives.SlidingBoundariesArchive`, there are
           :attr:`behavior_dim` columns. In :class:`~ribs.archives.CVTArchive`,

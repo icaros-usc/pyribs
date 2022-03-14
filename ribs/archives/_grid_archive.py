@@ -45,7 +45,7 @@ class GridArchive(ArchiveBase):
 
         ArchiveBase.__init__(
             self,
-            storage_dims=(np.product(self._dims),),
+            storage_dim=np.product(self._dims),
             behavior_dim=len(self._dims),
             seed=seed,
             dtype=dtype,

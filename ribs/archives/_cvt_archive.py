@@ -98,7 +98,7 @@ class CVTArchive(ArchiveBase):
                  ckdtree_kwargs=None):
         ArchiveBase.__init__(
             self,
-            storage_dims=(bins,),
+            storage_dim=bins,
             behavior_dim=len(ranges),
             seed=seed,
             dtype=dtype,
