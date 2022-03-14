@@ -44,8 +44,8 @@ ArchiveFixtureData = namedtuple(
         "objective_value",  # Float objective value.
         "behavior_values",  # 2D behavior values for the solution.
         "metadata",  # Metadata object for the solution.
-        "grid_indices",  # Intended indices for GridArchive.
-        "centroid",  # Intended centroid coordinates for CVTArchive.
+        "grid_indices",  # Index for GridArchive and SlidingBoundariesArchive.
+        "centroid",  # Centroid coordinates for CVTArchive.
         "bins",  # Total number of bins in the archive.
     ],
 )
