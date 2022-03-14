@@ -45,7 +45,7 @@ class GridArchive(ArchiveBase):
 
         ArchiveBase.__init__(
             self,
-            storage_dims=tuple(self._dims),
+            storage_dims=(np.product(self._dims),),
             behavior_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
@@ -117,8 +117,9 @@ class GridArchive(ArchiveBase):
             np.maximum(behavior_values + _EPSILON, lower_bounds),
             upper_bounds - _EPSILON)
 
-        index = (behavior_values - lower_bounds) / interval_size * dims
-        return index.astype(np.int32)
+        index = ((behavior_values - lower_bounds) / interval_size *
+                 dims).astype(np.int32)
+        return index
 
     def get_index(self, behavior_values):
         """Returns indices of the behavior values within the archive's grid.
@@ -147,4 +148,4 @@ class GridArchive(ArchiveBase):
                                              self._upper_bounds,
                                              self._lower_bounds,
                                              self._interval_size, self._dims)
-        return tuple(index)
+        return np.ravel_multi_index(index, self._dims)
