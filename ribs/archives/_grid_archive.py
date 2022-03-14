@@ -148,4 +148,6 @@ class GridArchive(ArchiveBase):
                                              self._upper_bounds,
                                              self._lower_bounds,
                                              self._interval_size, self._dims)
+        # TODO: Implement ravel_multi_index in numpy since it is not supported
+        # by numba?
         return np.ravel_multi_index(index, self._dims)
