@@ -189,10 +189,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             with each solution. This attribute is None until :meth:`initialize`
             is called.
         _occupied_indices (numpy.ndarray): A ``(storage_dim,)`` array of integer
-            indices that are occupied in the archive. This could be a list, but
-            for efficiency, we make it a fixed-size array, with only the first
-            ``_num_occupied`` entries will be valid. This attribute is None
-            until :meth:`initialize` is called.
+            (``np.int32``) indices that are occupied in the archive. This could
+            be a list, but for efficiency, we make it a fixed-size array, with
+            only the first ``_num_occupied`` entries will be valid. This
+            attribute is None until :meth:`initialize` is called.
         _num_occupied (int): Number of elites currently in the archive. This is
             used to index into ``_occupied_indices``.
     """
@@ -575,11 +575,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         The implementation of this method in :class:`ArchiveBase` creates a
         dataframe consisting of:
 
-        - ``len(self._storage_dim)`` columns for the index, named
-          ``index_0, index_1, ...`` In :class:`~ribs.archives.GridArchive` and
-          :class:`~ribs.archives.SlidingBoundariesArchive`, there are
-          :attr:`behavior_dim` columns. In :class:`~ribs.archives.CVTArchive`,
-          there is just one column. See :meth:`get_index` for more info.
+        - 1 column of integers (``np.int32``) for the index, named ``index``.
+          See :meth:`get_index` for more info.
         - :attr:`behavior_dim` columns for the behavior characteristics, named
           ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``
@@ -589,11 +586,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         In short, the dataframe looks like this:
 
-        +---------+------+-------------+------+------------+-------------+-----+----------+
-        | index_0 | ...  | behavior_0  | ...  | objective  | solution_0  | ... | metadata |
-        +=========+======+=============+======+============+=============+=====+==========+
-        |         | ...  |             | ...  |            |             | ... |          |
-        +---------+------+-------------+------+------------+-------------+-----+----------+
+        +-------+-------------+------+------------+-------------+-----+----------+
+        | index | behavior_0  | ...  | objective  | solution_0  | ... | metadata |
+        +=======+=============+======+============+=============+=====+==========+
+        |       |             | ...  |            |             | ... |          |
+        +-------+-------------+------+------------+-------------+-----+----------+
 
         Compared to :class:`pandas.DataFrame`, the :class:`ArchiveDataFrame`
         adds methods and attributes which make it easier to manipulate archive
@@ -612,8 +609,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         data = OrderedDict()
         indices = self._occupied_indices[:self._num_occupied]
 
-        # TODO: Rename this to just `index`.
-        data["index_0"] = np.asarray(indices, dtype=int)
+        # Copy indices so we do not overwrite.
+        data["index"] = np.copy(indices)
 
         behavior_values = self._behavior_values[indices]
         for i in range(self._behavior_dim):
