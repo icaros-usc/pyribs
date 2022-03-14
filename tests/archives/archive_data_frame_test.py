@@ -13,7 +13,7 @@ def data():
     solutions = np.arange(5).reshape(5, 1)
     objectives = 2 * np.arange(5)
     behaviors = 3 * np.arange(5).reshape(5, 1)
-    indices = 4 * np.arange(5)
+    indices = 4 * np.arange(5, dtype=int)
     metadata = [{"a": 1}, {"b": 2}, {"c": 3}, {"d": 4}, {"e": 5}]
     return solutions, objectives, behaviors, indices, metadata
 
@@ -45,7 +45,7 @@ def test_batch_methods(data, df):
     assert np.isclose(df.batch_solutions(), solutions).all()
     assert np.isclose(df.batch_objectives(), objectives).all()
     assert np.isclose(df.batch_behaviors(), behaviors).all()
-    assert df.batch_indices() == indices
+    assert (df.batch_indices() == indices).all()
     assert (df.batch_metadata() == metadata).all()
 
 

@@ -129,8 +129,7 @@ class ArchiveDataFrame(pd.DataFrame):
         Returns:
             (n,) numpy.ndarray: See above.
         """
-        return self["objective"].to_numpy(
-            copy=True) if "objective" in self else None
+        return self["index"].to_numpy(copy=True) if "index" in self else None
 
     def batch_metadata(self):
         """Array with metadata of all elites.
