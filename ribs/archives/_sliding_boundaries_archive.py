@@ -139,7 +139,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         ArchiveBase.__init__(
             self,
-            storage_dims=tuple(self._dims),
+            storage_dim=np.product(self._dims),
             behavior_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
@@ -268,7 +268,8 @@ class SlidingBoundariesArchive(ArchiveBase):
         index = SlidingBoundariesArchive._get_index_numba(
             behavior_values, self.upper_bounds, self.lower_bounds,
             self._boundaries, self._dims)
-        return tuple(index)
+        # TODO: implement raveling in numpy?
+        return np.ravel_multi_index(index, self._dims)
 
     @staticmethod
     @nb.jit(nopython=True)
@@ -307,10 +308,11 @@ class SlidingBoundariesArchive(ArchiveBase):
                                                      self._behavior_dim,
                                                      self.dims)
 
-        old_sols = self._solutions[self._occupied_indices_cols].copy()
-        old_objs = self._objective_values[self._occupied_indices_cols].copy()
-        old_behs = self._behavior_values[self._occupied_indices_cols].copy()
-        old_metas = self._metadata[self._occupied_indices_cols].copy()
+        indices = self._occupied_indices[:self._num_occupied]
+        old_sols = self._solutions[indices].copy()
+        old_objs = self._objective_values[indices].copy()
+        old_behs = self._behavior_values[indices].copy()
+        old_metas = self._metadata[indices].copy()
 
         self.clear()
         for sol, obj, beh, meta in zip(old_sols, old_objs, old_behs, old_metas):

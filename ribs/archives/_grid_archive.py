@@ -117,9 +117,8 @@ class GridArchive(ArchiveBase):
             np.maximum(behavior_values + _EPSILON, lower_bounds),
             upper_bounds - _EPSILON)
 
-        index = ((behavior_values - lower_bounds) / interval_size *
-                 dims).astype(np.int32)
-        return index
+        index = ((behavior_values - lower_bounds) / interval_size * dims)
+        return index.astype(np.int32)
 
     # TODO: Update docstring.
     def get_index(self, behavior_values):
