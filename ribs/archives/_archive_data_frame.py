@@ -122,19 +122,15 @@ class ArchiveDataFrame(pd.DataFrame):
         return self[cols].to_numpy(copy=True) if cols else None
 
     def batch_indices(self):
-        """List of archive indices of all elites.
-
-        This is a list because each index is a tuple, and numpy arrays are not
-        designed to store tuple objects.
+        """Array with indices of all elites.
 
         None if there are no indices in the ``ArchiveDataFrame``.
 
         Returns:
-            (n,) list: See above.
+            (n,) numpy.ndarray: See above.
         """
-        cols = [c for c in self if c.startswith("index_")]
-        return ([tuple(idx[1:]) for idx in self[cols].itertuples()]
-                if cols else None)
+        return self["objective"].to_numpy(
+            copy=True) if "objective" in self else None
 
     def batch_metadata(self):
         """Array with metadata of all elites.
