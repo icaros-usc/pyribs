@@ -6,7 +6,8 @@
 
 #### API
 
-- **Backwards-incompatible:** Rename bins to cells.
+- **Backwards-incompatible:** Rename bins to cells for consistency with
+  literature.
   - `ArchiveBase`
     - Rename `bins` property to `cells`
 - **Backwards-incompatible:** Only use integer indices in archives (#185)
