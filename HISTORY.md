@@ -6,6 +6,9 @@
 
 #### API
 
+- **Backwards-incompatible:** Rename bins to cells.
+  - `ArchiveBase`
+    - Rename `bins` property to `cells`
 - **Backwards-incompatible:** Only use integer indices in archives (#185)
   - `ArchiveBase`
     - Replaced `storage_dims` (tuple of int) with `storage_dim` (int)
