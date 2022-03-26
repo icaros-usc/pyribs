@@ -169,6 +169,6 @@ class ImprovementEmitter(EmitterBase):
         # Check for reset.
         if (self.opt.check_stop([value for status, value, i in ranking_data]) or
                 self._check_restart(new_sols)):
-            new_x0 = self.archive.get_random_elite().sol
+            new_x0 = self.archive.get_random_elite().solution
             self.opt.reset(new_x0)
             self._restarts += 1
