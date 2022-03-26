@@ -127,8 +127,8 @@ def grid_archive_heatmap(archive,
     colors = np.full((y_dim, x_dim), np.nan)
     for elite in archive:
         # TODO: Do not require calling numpy?
-        idx = np.unravel_index(elite.idx, archive.dims)
-        colors[idx[1], idx[0]] = elite.obj
+        idx = np.unravel_index(elite.index, archive.dims)
+        colors[idx[1], idx[0]] = elite.objective
 
     if transpose_bcs:
         # Since the archive is 2D, transpose by swapping the x and y boundaries
@@ -278,7 +278,7 @@ def cvt_archive_heatmap(archive,
     # the region index of each point.
     region_obj = [None] * len(vor.regions)
     min_obj, max_obj = np.inf, -np.inf
-    pt_to_obj = {elite.idx: elite.obj for elite in archive}
+    pt_to_obj = {elite.index: elite.objective for elite in archive}
     for pt_idx, region_idx in enumerate(
             vor.point_region[:-4]):  # Exclude faraway_pts.
         if region_idx != -1 and pt_idx in pt_to_obj:

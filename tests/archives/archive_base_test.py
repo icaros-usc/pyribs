@@ -86,13 +86,13 @@ def test_invalid_dtype():
 def test_iteration():
     data = get_archive_data("GridArchive")
     for elite in data.archive_with_elite:
-        assert np.isclose(elite.sol, data.solution).all()
-        assert np.isclose(elite.obj, data.objective_value)
-        assert np.isclose(elite.beh, data.behavior_values).all()
+        assert np.isclose(elite.solution, data.solution).all()
+        assert np.isclose(elite.objective, data.objective_value)
+        assert np.isclose(elite.measures, data.behavior_values).all()
         # TODO: Avoid having to manually ravel.
-        assert elite.idx == np.ravel_multi_index(data.grid_indices,
-                                                 data.archive_with_elite.dims)
-        assert elite.meta == data.metadata
+        assert elite.index == np.ravel_multi_index(data.grid_indices,
+                                                   data.archive_with_elite.dims)
+        assert elite.metadata == data.metadata
 
 
 def test_add_during_iteration():
@@ -228,29 +228,29 @@ def test_basic_stats(data):
 
 def test_elite_with_behavior_gets_correct_elite(data):
     elite = data.archive_with_elite.elite_with_behavior(data.behavior_values)
-    assert np.all(elite.sol == data.solution)
-    assert elite.obj == data.objective_value
-    assert np.all(elite.beh == data.behavior_values)
+    assert np.all(elite.solution == data.solution)
+    assert elite.objective == data.objective_value
+    assert np.all(elite.measures == data.behavior_values)
     # Avoid checking elite.idx since the meaning varies by archive.
-    assert elite.meta == data.metadata
+    assert elite.metadata == data.metadata
 
 
 def test_elite_with_behavior_returns_none(data):
     elite = data.archive.elite_with_behavior(data.behavior_values)
-    assert elite.sol is None
-    assert elite.obj is None
-    assert elite.beh is None
-    assert elite.idx is None
-    assert elite.meta is None
+    assert elite.solution is None
+    assert elite.objective is None
+    assert elite.measures is None
+    assert elite.index is None
+    assert elite.metadata is None
 
 
 def test_random_elite_gets_single_elite(data):
     elite = data.archive_with_elite.get_random_elite()
-    assert np.all(elite.sol == data.solution)
-    assert elite.obj == data.objective_value
-    assert np.all(elite.beh == data.behavior_values)
+    assert np.all(elite.solution == data.solution)
+    assert elite.objective == data.objective_value
+    assert np.all(elite.measures == data.behavior_values)
     # Avoid checking elite.idx since the meaning varies by archive.
-    assert elite.meta == data.metadata
+    assert elite.metadata == data.metadata
 
 
 def test_random_elite_fails_when_empty(data):

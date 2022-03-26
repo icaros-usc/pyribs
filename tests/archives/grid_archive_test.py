@@ -15,16 +15,16 @@ def data():
     return get_archive_data("GridArchive")
 
 
-def assert_archive_elite(archive, solution, objective_value, behavior_values,
-                         indices, metadata):
+def assert_archive_elite(archive, solution, objective, measures, indices,
+                         metadata):
     """Asserts that the archive has one specific elite."""
     assert len(archive) == 1
     elite = list(archive)[0]
-    assert np.isclose(elite.sol, solution).all()
-    assert np.isclose(elite.obj, objective_value).all()
-    assert np.isclose(elite.beh, behavior_values).all()
-    assert elite.idx == np.ravel_multi_index(indices, archive.dims)
-    assert elite.meta == metadata
+    assert np.isclose(elite.solution, solution).all()
+    assert np.isclose(elite.objective, objective).all()
+    assert np.isclose(elite.measures, measures).all()
+    assert elite.index == np.ravel_multi_index(indices, archive.dims)
+    assert elite.metadata == metadata
 
 
 def test_fails_on_dim_mismatch():

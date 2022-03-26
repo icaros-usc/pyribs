@@ -18,16 +18,16 @@ def data(use_kd_tree):
             if use_kd_tree else get_archive_data("CVTArchive-brute_force"))
 
 
-def assert_archive_elite(archive, solution, objective_value, behavior_values,
-                         centroid, metadata):
+def assert_archive_elite(archive, solution, objective, measures, centroid,
+                         metadata):
     """Asserts that the archive has one specific elite."""
     assert len(archive) == 1
     elite = list(archive)[0]
-    assert np.isclose(elite.sol, solution).all()
-    assert np.isclose(elite.obj, objective_value).all()
-    assert np.isclose(elite.beh, behavior_values).all()
-    assert np.isclose(archive.centroids[elite.idx], centroid).all()
-    assert elite.meta == metadata
+    assert np.isclose(elite.solution, solution).all()
+    assert np.isclose(elite.objective, objective).all()
+    assert np.isclose(elite.measures, measures).all()
+    assert np.isclose(archive.centroids[elite.index], centroid).all()
+    assert elite.metadata == metadata
 
 
 def test_samples_bad_shape(use_kd_tree):

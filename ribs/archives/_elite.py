@@ -1,4 +1,4 @@
-"""Provides Elite."""
+"""Provides data structures for storing one or more elites."""
 from typing import NamedTuple
 
 import numpy as np
@@ -12,16 +12,39 @@ class Elite(NamedTuple):
     """
 
     #: Parameters of the elite's solution.
-    sol: np.ndarray
+    solution: np.ndarray
 
     #: Objective value evaluation.
-    obj: float
+    objective: float
 
-    #: Behavior values.
-    beh: np.ndarray
+    #: Measure values.
+    measures: np.ndarray
 
     #: Index of the elite in the archive (see :meth:`ArchiveBase.get_index`).
-    idx: int
+    index: int
 
     #: Metadata object for the elite.
-    meta: object
+    metadata: object
+
+
+class EliteBatch(NamedTuple):
+    """Represents a batch of elites.
+
+    Each field is an array with dimensions ``(batch, ...)``. Refer to
+    :class:`Elite` for the non-batched version of this class.
+    """
+
+    #: Batch of solutions -- shape ``(batch, solution_dim)``
+    solution_batch: np.ndarray
+
+    #: Batch of objectives -- shape ``(batch,)``
+    objective_batch: np.ndarray
+
+    #: Batch of measures -- shape ``(batch, measure_dim)``
+    measures_batch: np.ndarray
+
+    #: Batch of indices -- shape ``(batch,)``
+    index_batch: np.ndarray
+
+    #: Batch of metadata -- shape ``(batch,)``
+    metadata_batch: np.ndarray

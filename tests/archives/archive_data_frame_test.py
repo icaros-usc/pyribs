@@ -32,12 +32,13 @@ def df(data):
 
 
 def test_iterelites(data, df):
-    for elite, (sol, obj, beh, idx, meta) in zip(df.iterelites(), zip(*data)):
-        assert np.isclose(elite.sol, sol).all()
-        assert np.isclose(elite.obj, obj)
-        assert np.isclose(elite.beh, beh).all()
-        assert elite.idx == idx
-        assert elite.meta == meta
+    for elite, (solution, objective, measures, index,
+                metadata) in zip(df.iterelites(), zip(*data)):
+        assert np.isclose(elite.solution, solution).all()
+        assert np.isclose(elite.objective, objective)
+        assert np.isclose(elite.measures, measures).all()
+        assert elite.index == index
+        assert elite.metadata == metadata
 
 
 def test_batch_methods(data, df):
