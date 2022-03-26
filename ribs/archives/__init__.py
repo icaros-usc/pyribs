@@ -13,6 +13,7 @@
     ribs.archives.ArchiveBase
     ribs.archives.AddStatus
     ribs.archives.Elite
+    ribs.archives.EliteBatch
     ribs.archives.ArchiveDataFrame
     ribs.archives.ArchiveStats
 """
@@ -21,7 +22,7 @@ from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._cvt_archive import CVTArchive
-from ribs.archives._elite import Elite
+from ribs.archives._elite import Elite, EliteBatch
 from ribs.archives._grid_archive import GridArchive
 from ribs.archives._sliding_boundaries_archive import SlidingBoundariesArchive
 

@@ -452,6 +452,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             value = objective_value - old_objective
         return status, value
 
+    # TODO: Update docstring due to new elite definition.
     @require_init
     def elite_with_behavior(self, behavior_values):
         """Gets the elite with behavior vals in the same cell as those

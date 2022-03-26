@@ -193,7 +193,7 @@ class RandomDirectionEmitter(EmitterBase):
         if (self.opt.check_stop(
             [projection for status, projection, i in ranking_data]) or
                 self._check_restart(new_sols)):
-            new_x0 = self.archive.get_random_elite().sol
+            new_x0 = self.archive.get_random_elite().solution
             self.opt.reset(new_x0)
             self._target_behavior_dir = self._generate_random_direction()
             self._restarts += 1
