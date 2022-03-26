@@ -96,18 +96,13 @@ class GaussianEmitter(EmitterBase):
             ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
             solutions to evaluate.
         """
-        if self.archive.empty:
-            parents = np.expand_dims(self._x0, axis=0)
-        else:
-            parents = [
-                self.archive.get_random_elite().solution
-                for _ in range(self._batch_size)
-            ]
+        parents = (np.expand_dims(self._x0, axis=0) if self.archive.empty else
+                   self.archive.sample_elites(self._batch_size).solution_batch)
 
         noise = self._rng.normal(
             scale=self._sigma0,
             size=(self._batch_size, self.solution_dim),
         ).astype(self.archive.dtype)
 
-        return self._ask_clip_helper(np.asarray(parents), noise,
-                                     self.lower_bounds, self.upper_bounds)
+        return self._ask_clip_helper(parents, noise, self.lower_bounds,
+                                     self.upper_bounds)
