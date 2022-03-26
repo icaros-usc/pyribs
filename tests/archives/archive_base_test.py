@@ -92,7 +92,7 @@ def test_iteration():
         # TODO: Avoid having to manually ravel.
         assert elite.index == np.ravel_multi_index(data.grid_indices,
                                                    data.archive_with_elite.dims)
-        assert elite.meta == data.metadata
+        assert elite.metadata == data.metadata
 
 
 def test_add_during_iteration():
