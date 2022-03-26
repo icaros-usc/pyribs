@@ -218,7 +218,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._rand_buf = None
         self._seed = seed
         self._initialized = False
-        self._bins = np.product(self._storage_dim)
+        self._bins = self._storage_dim
         self._stats = None
 
         # Tracks archive modifications by counting calls to clear() and add().
@@ -377,7 +377,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     @abstractmethod
     def get_index(self, behavior_values):
-        """Returns archive indices for the given behavior values.
+        """Returns archive index for the given behavior values.
 
         See the :class:`~ribs.archives.ArchiveBase` class docstring for more
         info.
@@ -386,8 +386,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
                 coordinates in behavior space.
         Returns:
-            int or tuple of int: Indices of the behavior values in the archive's
-            storage arrays.
+            int: Index of the behavior values in the archive's storage arrays.
         """
 
     @staticmethod

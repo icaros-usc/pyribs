@@ -21,8 +21,7 @@ class Elite(NamedTuple):
     beh: np.ndarray
 
     #: Index of the elite in the archive (see :meth:`ArchiveBase.get_index`).
-    idx: np.int32
-    # TODO: Should it be np.int32 or np.int64 or int?
+    idx: int
 
     #: Metadata object for the elite.
     meta: object
