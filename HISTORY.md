@@ -6,6 +6,14 @@
 
 #### API
 
+- **Backwards-incompatible:** Only use integer indices in archives (#185)
+  - `ArchiveBase`
+    - Replaced `storage_dims` (tuple of int) with `storage_dim` (int)
+    - `_occupied_indices` is now a fixed-size array with `_num_occupied`
+      indicating its current usage, and `_occupied_indices_cols` has been
+      removed
+    - `get_index` must now return an integer
+
 #### Documentation
 
 #### Improvements
@@ -22,18 +30,26 @@ To learn about this release, see our blog post: https://pyribs.org/blog/0-4-0
 
 #### API
 
-- Add ribs.visualize.parallel_axes_plot for analyzing archives with high-dimensional BCs (#92)
-- **Backwards-incompatible:** Reduce attributes and parameters in EmitterBase to make it easier to extend (#101)
-- In Optimizer, support emitters that return any number of solutions in ask() (#101)
-- **Backwards-incompatible:** Store metadata in archives as described in #87 (#103, #114, #115, #119)
-- **Backwards-incompatible:** Rename "index" to "index_0" in CVTArchive.as_pandas for API consistency (#113)
-- **Backwards-incompatible:** Make get_index() public in archives to emphasize each index's meaning (#128)
-- **Backwards-incompatible:** Add index to get_random_elite() and elite_with_behavior() in archives (#129)
+- Add ribs.visualize.parallel_axes_plot for analyzing archives with
+  high-dimensional BCs (#92)
+- **Backwards-incompatible:** Reduce attributes and parameters in EmitterBase to
+  make it easier to extend (#101)
+- In Optimizer, support emitters that return any number of solutions in ask()
+  (#101)
+- **Backwards-incompatible:** Store metadata in archives as described in #87
+  (#103, #114, #115, #119)
+- **Backwards-incompatible:** Rename "index" to "index_0" in
+  CVTArchive.as_pandas for API consistency (#113)
+- **Backwards-incompatible:** Make get_index() public in archives to emphasize
+  each index's meaning (#128)
+- **Backwards-incompatible:** Add index to get_random_elite() and
+  elite_with_behavior() in archives (#129)
 - Add clear() method to archive (#140, #146)
 - Represent archive elites with an Elite namedtuple (#142)
 - Add len and iter methods to archives (#151, #152)
 - Add statistics to archives (#100, #157)
-- Improve manipulation of elites by modifying as_pandas (#123, #149, #153, #158, #168)
+- Improve manipulation of elites by modifying as_pandas (#123, #149, #153, #158,
+  #168)
 - Add checks for optimizer array and list shapes (#166)
 
 #### Documentation
@@ -65,7 +81,8 @@ rigorous use.
 
 ### Changelog
 
-- Move SlidingBoundariesArchive out of experimental by adding tests and fixing bugs (#93)
+- Move SlidingBoundariesArchive out of experimental by adding tests and fixing
+  bugs (#93)
 - Added nicer figures to the Sphere example with `grid_archive_heatmap` (#86)
 - Added testing for Windows and MacOS (#83)
 - Fixed package metadata e.g. description

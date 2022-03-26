@@ -23,7 +23,7 @@ def assert_archive_elite(archive, solution, objective_value, behavior_values,
     assert np.isclose(elite.sol, solution).all()
     assert np.isclose(elite.obj, objective_value).all()
     assert np.isclose(elite.beh, behavior_values).all()
-    assert elite.idx == indices
+    assert elite.idx == np.ravel_multi_index(indices, archive.dims)
     assert elite.meta == metadata
 
 

@@ -45,7 +45,7 @@ class GridArchive(ArchiveBase):
 
         ArchiveBase.__init__(
             self,
-            storage_dims=tuple(self._dims),
+            storage_dim=np.product(self._dims),
             behavior_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
@@ -120,6 +120,7 @@ class GridArchive(ArchiveBase):
         index = (behavior_values - lower_bounds) / interval_size * dims
         return index.astype(np.int32)
 
+    # TODO: Update docstring.
     def get_index(self, behavior_values):
         """Returns indices of the behavior values within the archive's grid.
 
@@ -147,4 +148,14 @@ class GridArchive(ArchiveBase):
                                              self._upper_bounds,
                                              self._lower_bounds,
                                              self._interval_size, self._dims)
-        return tuple(index)
+        # TODO: Implement ravel_multi_index in numpy since it is not supported
+        # by numba?
+        return np.ravel_multi_index(index, self._dims)
+
+    # TODO: Docstrings.
+    def ravel_index(self, index):
+        return np.ravel_multi_index(index, self._dims)
+
+    def unravel_index(self, index):
+        """Converts an index into indices in the archive's grid."""
+        return np.unravel_index(index, self._dims)

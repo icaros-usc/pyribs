@@ -1,5 +1,5 @@
 """Provides Elite."""
-from typing import NamedTuple, Tuple, Union
+from typing import NamedTuple
 
 import numpy as np
 
@@ -20,9 +20,8 @@ class Elite(NamedTuple):
     #: Behavior values.
     beh: np.ndarray
 
-    #: Index of the elite's behavior values in the archive (see
-    #: :meth:`ArchiveBase.get_index`).
-    idx: Union[int, Tuple[int]]
+    #: Index of the elite in the archive (see :meth:`ArchiveBase.get_index`).
+    idx: int
 
     #: Metadata object for the elite.
     meta: object

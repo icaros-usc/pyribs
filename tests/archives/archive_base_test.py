@@ -89,7 +89,9 @@ def test_iteration():
         assert np.isclose(elite.sol, data.solution).all()
         assert np.isclose(elite.obj, data.objective_value)
         assert np.isclose(elite.beh, data.behavior_values).all()
-        assert elite.idx == data.grid_indices
+        # TODO: Avoid having to manually ravel.
+        assert elite.idx == np.ravel_multi_index(data.grid_indices,
+                                                 data.archive_with_elite.dims)
         assert elite.meta == data.metadata
 
 
@@ -229,7 +231,7 @@ def test_elite_with_behavior_gets_correct_elite(data):
     assert np.all(elite.sol == data.solution)
     assert elite.obj == data.objective_value
     assert np.all(elite.beh == data.behavior_values)
-    assert isinstance(elite.idx, (int, tuple))  # Exact val depends on archive.
+    # Avoid checking elite.idx since the meaning varies by archive.
     assert elite.meta == data.metadata
 
 
@@ -247,7 +249,7 @@ def test_random_elite_gets_single_elite(data):
     assert np.all(elite.sol == data.solution)
     assert elite.obj == data.objective_value
     assert np.all(elite.beh == data.behavior_values)
-    assert isinstance(elite.idx, (int, tuple))  # Exact val depends on archive.
+    # Avoid checking elite.idx since the meaning varies by archive.
     assert elite.meta == data.metadata
 
 
@@ -267,18 +269,11 @@ def test_random_elite_fails_when_empty(data):
 def test_as_pandas(name, with_elite, include_solutions, include_metadata,
                    dtype):
     data = get_archive_data(name, dtype)
-    is_cvt = name.startswith("CVTArchive-")
 
     # Set up expected columns and data types.
-    num_index_cols = 1 if is_cvt else len(data.behavior_values)
-    index_cols = [f"index_{i}" for i in range(num_index_cols)]
     behavior_cols = [f"behavior_{i}" for i in range(len(data.behavior_values))]
-    expected_cols = index_cols + behavior_cols + ["objective"]
-    expected_dtypes = [
-        *[int for _ in index_cols],
-        *[dtype for _ in behavior_cols],
-        dtype,
-    ]
+    expected_cols = ["index"] + behavior_cols + ["objective"]
+    expected_dtypes = [np.int32, *[dtype for _ in behavior_cols], dtype]
     if include_solutions:
         solution_cols = [f"solution_{i}" for i in range(len(data.solution))]
         expected_cols += solution_cols
@@ -301,15 +296,16 @@ def test_as_pandas(name, with_elite, include_solutions, include_metadata,
     assert (df.dtypes == expected_dtypes).all()
 
     if with_elite:
-        if is_cvt:
+        if name.startswith("CVTArchive-"):
             # For CVTArchive, we check the centroid because the index can vary.
-            index = df.loc[0, "index_0"]
+            index = df.loc[0, "index"]
             assert (data.archive_with_elite.centroids[index] == data.centroid
                    ).all()
         else:
             # Other archives have expected grid indices.
-            assert (df.loc[0, index_cols[0]:index_cols[-1]] == list(
-                data.grid_indices)).all()
+            # TODO: Avoid having to ravel.
+            assert df.loc[0, "index"] == np.ravel_multi_index(
+                data.grid_indices, data.archive.dims)
 
         expected_data = [*data.behavior_values, data.objective_value]
         if include_solutions:

@@ -29,16 +29,15 @@ class FakeArchive(ArchiveBase):
         behavior_dim = len(self._dims)
         ArchiveBase.__init__(
             self,
-            storage_dims=tuple(self._dims),
+            storage_dim=np.product(self._dims),
             behavior_dim=behavior_dim,
         )
 
     def get_random_elite(self):
-        index = (0,) * self._behavior_dim
         return (
-            self._solutions[index],
-            self._objective_values[index],
-            self._behavior_values[index],
+            self._solutions[0],
+            self._objective_values[0],
+            self._behavior_values[0],
         )
 
     def add(self, solution, objective_value, behavior_values, metadata=None):
