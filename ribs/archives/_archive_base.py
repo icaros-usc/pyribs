@@ -127,15 +127,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     +------------------------+----------------------------+
     | Name                   |  Shape                     |
     +========================+============================+
-    | ``_occupied``          |  ``(cells)``               |
+    | ``_occupied``          |  ``(cells,)``              |
     +------------------------+----------------------------+
     | ``_solutions``         |  ``(cells, solution_dim)`` |
     +------------------------+----------------------------+
-    | ``_objective_values``  |  ``(cells)``               |
+    | ``_objective_values``  |  ``(cells,)``              |
     +------------------------+----------------------------+
     | ``_behavior_values``   |  ``(cells, behavior_dim)`` |
     +------------------------+----------------------------+
-    | ``_metadata``          |  ``(cells)``               |
+    | ``_metadata``          |  ``(cells,)``              |
     +------------------------+----------------------------+
 
     All of these arrays are accessed via a common integer index. If we have
