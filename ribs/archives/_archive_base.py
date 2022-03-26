@@ -9,7 +9,7 @@ from decorator import decorator
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
-from ribs.archives._elite import Elite
+from ribs.archives._elite import Elite, EliteBatch
 
 
 @decorator
@@ -179,7 +179,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         ## Not intended to be accessed by children. ##
 
-        self._rand_buf = None
         self._seed = seed
         self._initialized = False
         self._stats = None
@@ -496,40 +495,46 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             )
         return Elite(None, None, None, None, None)
 
-    # TODO: Rename to sample_elites
     @require_init
-    def get_random_elite(self):
-        """Selects an elite uniformly at random from one of the archive's cells.
+    def sample_elites(self, n):
+        """Randomly samples elites from the archive.
 
-        Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
-        (here we show how to ignore some of the fields)::
+        Currently, this sampling is done uniformly at random. Furthermore, each
+        sample is done independently, so elites may be repeated in the sample.
+        Additional sampling methods may be supported in the future.
 
-            sol, obj, beh, *_ = archive.get_random_elite()
+        Since :namedtuple:`EliteBatch` is a namedtuple, the result can be
+        unpacked (here we show how to ignore some of the fields)::
+
+            solution_batch, objective_batch, measures_batch, *_ = \\
+                archive.sample_elites(32)
 
         Or the fields may be accessed by name::
 
-            elite = archive.get_random_elite()
-            elite.sol
-            elite.obj
+            elite = archive.sample_elites(16)
+            elite.solution_batch
+            elite.objective_batch
             ...
 
+        Args:
+            n (int): Number of elites to sample.
         Returns:
-            Elite: A randomly selected elite from the archive.
+            EliteBatch: A batch of elites randomly selected from the archive.
         Raises:
             IndexError: The archive is empty.
         """
         if self.empty:
             raise IndexError("No elements in archive.")
 
-        random_idx = self._rand_buf.get(self._num_occupied)
-        index = self._occupied_indices[random_idx]
+        random_indices = self._rng.integers(self._num_occupied, size=n)
+        selected_indices = self._occupied_indices[random_indices]
 
-        return Elite(
-            readonly(self._solutions[index]),
-            self._objective_values[index],
-            readonly(self._behavior_values[index]),
-            index,
-            self._metadata[index],
+        return EliteBatch(
+            readonly(self._solutions[selected_indices]),
+            self._objective_values[selected_indices],
+            readonly(self._behavior_values[selected_indices]),
+            selected_indices,
+            self._metadata[selected_indices],
         )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
