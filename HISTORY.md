@@ -6,6 +6,7 @@
 
 #### API
 
+- **Backwards-incompatible:** Add EliteBatch and rename fields in Elite (#191)
 - **Backwards-incompatible:** Rename bins to cells for consistency with
   literature (#189)
   - Archive constructors now take in `cells` argument instead of `bins`
