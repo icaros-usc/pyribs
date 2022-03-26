@@ -29,7 +29,7 @@ class FakeArchive(ArchiveBase):
         behavior_dim = len(self._dims)
         ArchiveBase.__init__(
             self,
-            storage_dim=np.product(self._dims),
+            cells=np.product(self._dims),
             behavior_dim=behavior_dim,
         )
 

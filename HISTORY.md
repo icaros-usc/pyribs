@@ -6,6 +6,10 @@
 
 #### API
 
+- **Backwards-incompatible:** Rename bins to cells for consistency with
+  literature.
+  - Archive constructors now take in `cells` argument instead of `bins`
+  - Archive now have a `cells` property rather than a `bins` property
 - **Backwards-incompatible:** Only use integer indices in archives (#185)
   - `ArchiveBase`
     - Replaced `storage_dims` (tuple of int) with `storage_dim` (int)

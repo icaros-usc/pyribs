@@ -9,23 +9,23 @@ from ribs.archives._archive_base import ArchiveBase, require_init
 
 class CVTArchive(ArchiveBase):
     """An archive that divides the entire behavior space into a fixed number of
-    bins.
+    cells.
 
     This archive originates in `Vassiliades 2018
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
-    Tesselation (CVT) to divide an n-dimensional behavior space into k bins. The
+    Tesselation (CVT) to divide an n-dimensional behavior space into k cell. The
     CVT is created by sampling points uniformly from the n-dimensional behavior
     space and using k-means clustering to identify k centroids. When items are
-    inserted into the archive, we identify their bin by identifying the closest
+    inserted into the archive, we identify their cell by identifying the closest
     centroid in behavior space (using Euclidean distance). For k-means
     clustering, we use :func:`sklearn.cluster.k_means`.
 
-    Finding the closest centroid is done in O(bins) time (i.e. brute force) by
-    default. If ``use_kd_tree`` is True, it can be done in roughly O(log bins)
+    Finding the closest centroid is done in O(cells) time (i.e. brute force) by
+    default. If ``use_kd_tree`` is True, it can be done in roughly O(log cells)
     time using :class:`scipy.spatial.cKDTree`. However, using the k-D tree
-    lowers performance for small numbers of bins. The following plot compares
+    lowers performance for small numbers of cells. The following plot compares
     the runtime of brute force vs k-D tree when inserting 100k samples into a 2D
-    archive with varying numbers of bins (we took the minimum over 5 runs for
+    archive with varying numbers of cells (we took the minimum over 5 runs for
     each data point, as recommended in the docs for :meth:`timeit.Timer.repeat`.
     Note the logarithmic scales. This plot was generated on a reasonably modern
     laptop.
@@ -33,9 +33,9 @@ class CVTArchive(ArchiveBase):
     .. image:: ../_static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
 
-    Archives with at least 5k bins seem to have faster insertion when using a
+    Archives with at least 5k cells seem to have faster insertion when using a
     k-D tree than when using brute force, so **we recommend setting**
-    ``use_kd_tree`` **if the** ``CVTArchive`` **has at least 5k bins**. See
+    ``use_kd_tree`` **if the** ``CVTArchive`` **has at least 5k cells**. See
     `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
@@ -49,8 +49,8 @@ class CVTArchive(ArchiveBase):
     subsequent experiments.
 
     Args:
-        bins (int): The number of bins to use in the archive, equivalent to the
-            number of centroids/areas in the CVT.
+        cells (int): The number of cells to use in the archive, equivalent to
+            the number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds :math:`[-1,1]`
@@ -68,7 +68,7 @@ class CVTArchive(ArchiveBase):
             to use when creating the CVT. It can be useful to pass in custom
             samples when there are restrictions on what samples in the behavior
             space are (physically) possible.
-        custom_centroids (array-like): If passed in, this (bins, behavior_dim)
+        custom_centroids (array-like): If passed in, this (cells, behavior_dim)
             array will be used as the centroids of the CVT instead of generating
             new ones. In this case, ``samples`` will be ignored, and
             ``archive.samples`` will be None. This can be useful when one wishes
@@ -87,7 +87,7 @@ class CVTArchive(ArchiveBase):
     """
 
     def __init__(self,
-                 bins,
+                 cells,
                  ranges,
                  seed=None,
                  dtype=np.float64,
@@ -98,7 +98,7 @@ class CVTArchive(ArchiveBase):
                  ckdtree_kwargs=None):
         ArchiveBase.__init__(
             self,
-            storage_dim=bins,
+            cells=cells,
             behavior_dim=len(ranges),
             seed=seed,
             dtype=dtype,
@@ -107,8 +107,6 @@ class CVTArchive(ArchiveBase):
         ranges = list(zip(*ranges))
         self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
         self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
-
-        self._bins = bins
 
         # Apply default args for k-means. Users can easily override these,
         # particularly if they want higher quality clusters.
@@ -145,10 +143,10 @@ class CVTArchive(ArchiveBase):
         else:
             # Validate shape of `custom_centroids` when they are provided.
             custom_centroids = np.asarray(custom_centroids, dtype=self.dtype)
-            if custom_centroids.shape != (bins, self._behavior_dim):
+            if custom_centroids.shape != (cells, self._behavior_dim):
                 raise ValueError(
                     f"custom_centroids has shape {custom_centroids.shape} but "
-                    f"must be of shape (bins={bins}, len(ranges)="
+                    f"must be of shape (cells={cells}, len(ranges)="
                     f"{self._behavior_dim})")
             self._centroids = custom_centroids
             self._samples = None
@@ -197,9 +195,9 @@ class CVTArchive(ArchiveBase):
         Raises:
             RuntimeError: The archive is already initialized.
             RuntimeError: The number of centroids returned by k-means clustering
-                was fewer than the number of bins specified during construction.
-                This is most likely caused by having too few samples and too
-                many bins.
+                was fewer than the number of cells specified during
+                construction. This is most likely caused by having too few
+                samples and too many cells.
         """
         ArchiveBase.initialize(self, solution_dim)
 
@@ -211,15 +209,15 @@ class CVTArchive(ArchiveBase):
             ).astype(self.dtype) if isinstance(self._samples,
                                                int) else self._samples
 
-            self._centroids = k_means(self._samples, self._bins,
+            self._centroids = k_means(self._samples, self._cells,
                                       **self._k_means_kwargs)[0]
 
-            if self._centroids.shape[0] < self._bins:
+            if self._centroids.shape[0] < self._cells:
                 raise RuntimeError(
                     "While generating the CVT, k-means clustering found "
                     f"{self._centroids.shape[0]} centroids, but this archive "
-                    f"needs {self._bins} bins. This most likely happened "
-                    "because there are too few samples and/or too many bins.")
+                    f"needs {self._cells} cells. This most likely happened "
+                    "because there are too few samples and/or too many cells.")
 
         if self._use_kd_tree:
             self._centroid_kd_tree = cKDTree(self._centroids,

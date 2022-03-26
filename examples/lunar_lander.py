@@ -147,7 +147,7 @@ def create_optimizer(seed, n_emitters, sigma0, batch_size):
     obs_dim = env.observation_space.shape[0]
 
     archive = GridArchive(
-        [50, 50],  # 50 bins in each dimension.
+        [50, 50],  # 50 cells in each dimension.
         [(-1.0, 1.0), (-3.0, 0.0)],  # (-1, 1) for x-pos and (-3, 0) for y-vel.
         seed=seed,
     )
@@ -284,7 +284,7 @@ def save_ccdf(archive, filename):
     https://en.wikipedia.org/wiki/Cumulative_distribution_function#Complementary_cumulative_distribution_function_(tail_distribution)).
     The CCDF plotted here is not normalized to the range (0,1). This may help
     when comparing CCDF's among archives with different amounts of coverage
-    (i.e. when one archive has more bins filled).
+    (i.e. when one archive has more cells filled).
 
     Args:
         archive (GridArchive): Archive with results from an experiment.
@@ -293,7 +293,7 @@ def save_ccdf(archive, filename):
     fig, ax = plt.subplots()
     ax.hist(
         archive.as_pandas(include_solutions=False)["objective"],
-        50,  # Number of bins.
+        50,  # Number of cells.
         histtype="step",
         density=False,
         cumulative=-1)  # CCDF rather than CDF.

@@ -54,8 +54,8 @@ def benchmark_get_10k_random_elites(use_kd_tree, benchmark, benchmark_data_10k):
 
 
 def benchmark_as_pandas_2000_items(benchmark):
-    bins = 2000
-    archive = CVTArchive(bins, [(-1, 1), (-1, 1)],
+    cells = 2000
+    archive = CVTArchive(cells, [(-1, 1), (-1, 1)],
                          use_kd_tree=True,
                          samples=50_000)
     archive.initialize(10)
@@ -67,6 +67,6 @@ def benchmark_as_pandas_2000_items(benchmark):
         archive.add(sol, 1.0, np.array([x, y]))
 
     # Archive should be full.
-    assert len(archive) == bins
+    assert len(archive) == cells
 
     benchmark(archive.as_pandas)

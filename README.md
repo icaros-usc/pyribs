@@ -88,7 +88,7 @@ If you use the CMA-ME algorithm, please also cite
 Here we show an example application of CMA-ME in pyribs. To initialize the
 algorithm, we first create:
 
-- A 2D **GridArchive** where each dimension contains 20 bins across the range
+- A 2D **GridArchive** where each dimension contains 20 cells across the range
   [-1, 1].
 - An **ImprovementEmitter**, which starts from the search point **0** in 10
   dimensional space and a Gaussian sampling distribution with standard deviation

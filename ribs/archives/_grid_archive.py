@@ -8,19 +8,19 @@ _EPSILON = 1e-6
 
 
 class GridArchive(ArchiveBase):
-    """An archive that divides each dimension into uniformly-sized bins.
+    """An archive that divides each dimension into uniformly-sized cells.
 
     This archive is the container described in `Mouret 2015
     <https://arxiv.org/pdf/1504.04909.pdf>`_. It can be visualized as an
     n-dimensional grid in the behavior space that is divided into a certain
-    number of bins in each dimension. Each bin contains an elite, i.e. a
+    number of cells in each dimension. Each cell contains an elite, i.e. a
     solution that `maximizes` the objective function for the behavior values in
-    that bin.
+    that cell.
 
     Args:
-        dims (array-like of int): Number of bins in each dimension of the
+        dims (array-like of int): Number of cells in each dimension of the
             behavior space, e.g. ``[20, 30, 40]`` indicates there should be 3
-            dimensions with 20, 30, and 40 bins. (The number of dimensions is
+            dimensions with 20, 30, and 40 cells. (The number of dimensions is
             implicitly defined in the length of this argument).
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
@@ -45,7 +45,7 @@ class GridArchive(ArchiveBase):
 
         ArchiveBase.__init__(
             self,
-            storage_dim=np.product(self._dims),
+            cells=np.product(self._dims),
             behavior_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
@@ -64,7 +64,7 @@ class GridArchive(ArchiveBase):
 
     @property
     def dims(self):
-        """(behavior_dim,) numpy.ndarray: Number of bins in each dimension."""
+        """(behavior_dim,) numpy.ndarray: Number of cells in each dimension."""
         return self._dims
 
     @property
@@ -85,18 +85,18 @@ class GridArchive(ArchiveBase):
 
     @property
     def boundaries(self):
-        """list of numpy.ndarray: The boundaries of the bins in each dimension.
+        """list of numpy.ndarray: The boundaries of the cells in each dimension.
 
         Entry ``i`` in this list is an array that contains the boundaries of the
-        bins in dimension ``i``. The array contains ``self.dims[i] + 1`` entries
-        laid out like this::
+        cells in dimension ``i``. The array contains ``self.dims[i] + 1``
+        entries laid out like this::
 
-            Archive bins:   | 0 | 1 |   ...   |    self.dims[i]    |
+            Archive cells:  | 0 | 1 |   ...   |    self.dims[i]    |
             boundaries[i]:  0   1   2   self.dims[i] - 1     self.dims[i]
 
         Thus, ``boundaries[i][j]`` and ``boundaries[i][j + 1]`` are the lower
-        and upper bounds of bin ``j`` in dimension ``i``. To access the lower
-        bounds of all the bins in dimension ``i``, use ``boundaries[i][:-1]``,
+        and upper bounds of cell ``j`` in dimension ``i``. To access the lower
+        bounds of all the cells in dimension ``i``, use ``boundaries[i][:-1]``,
         and to access all the upper bounds, use ``boundaries[i][1:]``.
         """
         return self._boundaries
@@ -125,12 +125,12 @@ class GridArchive(ArchiveBase):
         """Returns indices of the behavior values within the archive's grid.
 
         First, values are clipped to the bounds of the behavior space. Then, the
-        values are mapped to bins; e.g. bin 5 along dimension 0 and bin 3 along
-        dimension 1.
+        values are mapped to cells; e.g. cell 5 along dimension 0 and cell 3
+        along dimension 1.
 
-        The indices can be used to access boundaries of a behavior value's bin.
+        The indices can be used to access boundaries of a behavior value's cell.
         For example, the following retrieves the lower and upper bounds of the
-        bin along dimension 0::
+        cell along dimension 0::
 
             idx = archive.get_index(...)  # Other methods also return indices.
             lower = archive.boundaries[0][idx[0]]

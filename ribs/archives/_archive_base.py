@@ -114,29 +114,29 @@ class ArchiveIterator:
 class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     """Base class for archives.
 
-    This class assumes all archives use a fixed-size container with bins that
-    hold (1) information about whether the bin is occupied (bool), (2) a
+    This class assumes all archives use a fixed-size container with cells that
+    hold (1) information about whether the cell is occupied (bool), (2) a
     solution (1D array), (3) objective function evaluation of the solution
     (float), (4) behavior space coordinates of the solution (1D array), and (5)
     any additional metadata associated with the solution (object). In this
     class, the container is implemented with separate numpy arrays that share
-    common dimensions. Using the ``storage_dim`` and ``behavior_dim`` arguments
-    in ``__init__`` and the ``solution_dim`` argument in ``initialize``, these
+    common dimensions. Using the ``cells`` and ``behavior_dim`` arguments in
+    ``__init__`` and the ``solution_dim`` argument in ``initialize``, these
     arrays are as follows:
 
-    +------------------------+----------------------------------+
-    | Name                   |  Shape                           |
-    +========================+==================================+
-    | ``_occupied``          |  ``(storage_dim)``               |
-    +------------------------+----------------------------------+
-    | ``_solutions``         |  ``(storage_dim, solution_dim)`` |
-    +------------------------+----------------------------------+
-    | ``_objective_values``  |  ``(storage_dim)``               |
-    +------------------------+----------------------------------+
-    | ``_behavior_values``   |  ``(storage_dim, behavior_dim)`` |
-    +------------------------+----------------------------------+
-    | ``_metadata``          |  ``(storage_dim)``               |
-    +------------------------+----------------------------------+
+    +------------------------+----------------------------+
+    | Name                   |  Shape                     |
+    +========================+============================+
+    | ``_occupied``          |  ``(cells,)``              |
+    +------------------------+----------------------------+
+    | ``_solutions``         |  ``(cells, solution_dim)`` |
+    +------------------------+----------------------------+
+    | ``_objective_values``  |  ``(cells,)``              |
+    +------------------------+----------------------------+
+    | ``_behavior_values``   |  ``(cells, behavior_dim)`` |
+    +------------------------+----------------------------+
+    | ``_metadata``          |  ``(cells,)``              |
+    +------------------------+----------------------------+
 
     All of these arrays are accessed via a common integer index. If we have
     index ``i``, we access its solution at ``_solutions[i]``, its behavior
@@ -158,8 +158,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         accessed by child classes (i.e. they are "protected" attributes).
 
     Args:
-        storage_dim (int): Primary dimension of the archive storage. This is
-            used to create the numpy arrays described above.
+        cells (int): Number of cells in the archive. This is used to create the
+            numpy arrays described above for storing archive info.
         behavior_dim (int): The dimension of the behavior space.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
@@ -169,11 +169,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
-        _storage_dim (int): See ``storage_dim`` arg.
+        _cells (int): See ``cells`` arg.
         _behavior_dim (int): See ``behavior_dim`` arg.
         _solution_dim (int): Dimension of the solution space, passed in with
             :meth:`initialize`.
-        _occupied (numpy.ndarray): Bool array storing whether each bin in the
+        _occupied (numpy.ndarray): Bool array storing whether each cell in the
             archive is occupied. This attribute is None until :meth:`initialize`
             is called.
         _solutions (numpy.ndarray): Float array storing the solutions
@@ -188,7 +188,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         _metadata (numpy.ndarray): Object array storing the metadata associated
             with each solution. This attribute is None until :meth:`initialize`
             is called.
-        _occupied_indices (numpy.ndarray): A ``(storage_dim,)`` array of integer
+        _occupied_indices (numpy.ndarray): A ``(cells,)`` array of integer
             (``np.int32``) indices that are occupied in the archive. This could
             be a list, but for efficiency, we make it a fixed-size array, with
             only the first ``_num_occupied`` entries will be valid. This
@@ -197,12 +197,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             used to index into ``_occupied_indices``.
     """
 
-    def __init__(self, storage_dim, behavior_dim, seed=None, dtype=np.float64):
+    def __init__(self, cells, behavior_dim, seed=None, dtype=np.float64):
 
         ## Intended to be accessed by child classes. ##
 
         self._rng = np.random.default_rng(seed)
-        self._storage_dim = storage_dim
+        self._cells = cells
         self._behavior_dim = behavior_dim
         self._solution_dim = None
         self._occupied = None
@@ -218,7 +218,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._rand_buf = None
         self._seed = seed
         self._initialized = False
-        self._bins = self._storage_dim
         self._stats = None
 
         # Tracks archive modifications by counting calls to clear() and add().
@@ -254,9 +253,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._initialized
 
     @property
-    def bins(self):
-        """int: Total number of bins in the archive."""
-        return self._bins
+    def cells(self):
+        """int: Total number of cells in the archive."""
+        return self._cells
 
     @property
     def empty(self):
@@ -322,7 +321,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         new_qd_score = self._stats.qd_score + new_obj - old_obj
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=self.dtype(len(self) / self.bins),
+            coverage=self.dtype(len(self) / self.cells),
             qd_score=new_qd_score,
             obj_max=new_obj if self._stats.obj_max is None else max(
                 self._stats.obj_max, new_obj),
@@ -346,14 +345,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         self._rand_buf = RandomBuffer(self._seed)
         self._solution_dim = solution_dim
-        self._occupied = np.zeros(self._storage_dim, dtype=bool)
-        self._solutions = np.empty((self._storage_dim, solution_dim),
+        self._occupied = np.zeros(self._cells, dtype=bool)
+        self._solutions = np.empty((self._cells, solution_dim),
                                    dtype=self.dtype)
-        self._objective_values = np.empty(self._storage_dim, dtype=self.dtype)
-        self._behavior_values = np.empty(
-            (self._storage_dim, self._behavior_dim), dtype=self.dtype)
-        self._metadata = np.empty(self._storage_dim, dtype=object)
-        self._occupied_indices = np.empty(self._storage_dim, dtype=np.int32)
+        self._objective_values = np.empty(self._cells, dtype=self.dtype)
+        self._behavior_values = np.empty((self._cells, self._behavior_dim),
+                                         dtype=self.dtype)
+        self._metadata = np.empty(self._cells, dtype=object)
+        self._occupied_indices = np.empty(self._cells, dtype=np.int32)
 
         self._stats_reset()
         self._state = {"clear": 0, "add": 0}
@@ -365,7 +364,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         After this method is called, the archive will be :attr:`empty`.
         """
         # Only ``self._occupied_indices`` and ``self._occupied`` are cleared, as
-        # a bin can have arbitrary values when its index is marked as
+        # a cell can have arbitrary values when its index is marked as
         # unoccupied.
         self._num_occupied = 0
         self._occupied.fill(False)
@@ -432,7 +431,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """Attempts to insert a new solution into the archive.
 
         The solution is only inserted if it has a higher ``objective_value``
-        than the elite previously in the corresponding bin.
+        than the elite previously in the corresponding cell.
 
         Args:
             solution (array-like): Parameters of the solution.
@@ -492,7 +491,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     @require_init
     def elite_with_behavior(self, behavior_values):
-        """Gets the elite with behavior vals in the same bin as those specified.
+        """Gets the elite with behavior vals in the same cell as those
+        specified.
 
         Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
         (here we show how to ignore some of the fields)::
@@ -510,11 +510,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             behavior_values (array-like): Coordinates in behavior space.
         Returns:
             Elite:
-              * If there is an elite with behavior values in the same bin as
+              * If there is an elite with behavior values in the same cell as
                 those specified, this :namedtuple:`Elite` holds the info for
                 that elite. In that case, ``beh`` (the behavior values) may not
                 be exactly the same as the behavior values specified since the
-                elite is only guaranteed to be in the same archive bin.
+                elite is only guaranteed to be in the same archive cell.
               * If no such elite exists, then all fields of the
                 :namedtuple:`Elite` are set to None. This way, tuple unpacking
                 (e.g.
@@ -534,7 +534,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     @require_init
     def get_random_elite(self):
-        """Selects an elite uniformly at random from one of the archive's bins.
+        """Selects an elite uniformly at random from one of the archive's cells.
 
         Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
         (here we show how to ignore some of the fields)::

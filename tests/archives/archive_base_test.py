@@ -200,8 +200,8 @@ def test_archive_is_empty_after_clear(data):
     assert data.archive_with_elite.empty
 
 
-def test_bins_correct(data):
-    assert data.archive.bins == data.bins
+def test_cells_correct(data):
+    assert data.archive.cells == data.cells
 
 
 def test_behavior_dim_correct(data):
@@ -220,7 +220,7 @@ def test_basic_stats(data):
     assert data.archive.stats.obj_mean is None
 
     assert data.archive_with_elite.stats.num_elites == 1
-    assert data.archive_with_elite.stats.coverage == 1 / data.bins
+    assert data.archive_with_elite.stats.coverage == 1 / data.cells
     assert data.archive_with_elite.stats.qd_score == data.objective_value
     assert data.archive_with_elite.stats.obj_max == data.objective_value
     assert data.archive_with_elite.stats.obj_mean == data.objective_value

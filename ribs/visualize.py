@@ -180,8 +180,8 @@ def cvt_archive_heatmap(archive,
     Essentially, we create a Voronoi diagram and shade in each cell with a
     color corresponding to the objective value of that cell's elite.
 
-    Depending on how many bins are in the archive, ``ms`` and ``lw`` may need to
-    be tuned. If there are too many bins, the Voronoi diagram and centroid
+    Depending on how many cells are in the archive, ``ms`` and ``lw`` may need
+    to be tuned. If there are too many cells, the Voronoi diagram and centroid
     markers will make the entire image appear black. In that case, try turning
     off the centroids with ``plot_centroids=False`` or even removing the lines
     completely with ``lw=0``.
