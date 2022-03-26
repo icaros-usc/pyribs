@@ -46,7 +46,7 @@ ArchiveFixtureData = namedtuple(
         "metadata",  # Metadata object for the solution.
         "grid_indices",  # Index for GridArchive and SlidingBoundariesArchive.
         "centroid",  # Centroid coordinates for CVTArchive.
-        "bins",  # Total number of bins in the archive.
+        "cells",  # Total number of cells in the archive.
     ],
 )
 
@@ -78,9 +78,9 @@ def get_archive_data(name, dtype=np.float64):
     centroid = None
 
     if name == "GridArchive":
-        # Grid archive with 10 bins and range (-1, 1) in first dim, and 20 bins
-        # and range (-2, 2) in second dim.
-        bins = 10 * 20
+        # Grid archive with 10 cells and range (-1, 1) in first dim, and 20
+        # cells and range (-2, 2) in second dim.
+        cells = 10 * 20
         archive = GridArchive([10, 20], [(-1, 1), (-2, 2)], dtype=dtype)
         archive.initialize(len(solution))
 
@@ -92,7 +92,7 @@ def get_archive_data(name, dtype=np.float64):
         # CVT archive with bounds (-1,1) and (-1,1), and 4 centroids at (0.5,
         # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The elite in
         # archive_with_elite should match with centroid (0.5, 0.5).
-        bins = 4
+        cells = 4
         kd_tree = name == "CVTArchive-kd_tree"
         samples = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
         centroid = [0.5, 0.5]
@@ -109,9 +109,9 @@ def get_archive_data(name, dtype=np.float64):
                                         dtype=dtype)
         archive_with_elite.initialize(len(solution))
     elif name == "SlidingBoundariesArchive":
-        # Sliding boundary archive with 10 bins and range (-1, 1) in first dim,
-        # and 20 bins and range (-2, 2) in second dim.
-        bins = 10 * 20
+        # Sliding boundary archive with 10 cells and range (-1, 1) in first dim,
+        # and 20 cells and range (-2, 2) in second dim.
+        cells = 10 * 20
         archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
                                            remap_frequency=100,
                                            buffer_capacity=1000,
@@ -136,5 +136,5 @@ def get_archive_data(name, dtype=np.float64):
         metadata,
         grid_indices,
         centroid,
-        bins,
+        cells,
     )

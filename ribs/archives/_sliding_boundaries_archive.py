@@ -88,7 +88,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     <https://arxiv.org/abs/1904.10656>`_. Just like the
     :class:`~ribs.archives.GridArchive`, it can be visualized as an
     n-dimensional grid in the behavior space that is divided into a certain
-    number of bins in each dimension. Internally, this archive stores a buffer
+    number of cells in each dimension. Internally, this archive stores a buffer
     with the ``buffer_capacity`` most recent solutions and uses them to
     determine the boundaries of the behavior characteristics along each
     dimension. After every ``remap_frequency`` solutions are inserted, the
@@ -96,16 +96,16 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     Initially, the archive has no solutions, so it cannot automatically
     calculate the boundaries. Thus, until the first remap, this archive divides
-    the behavior space defined by ``ranges`` into equally sized bins.
+    the behavior space defined by ``ranges`` into equally sized cells.
 
     Overall, this archive attempts to make the distribution of the space
     illuminated by the archive more accurately match the true distribution of
     the behavior characteristics when they are not uniformly distributed.
 
     Args:
-        dims (array-like): Number of bins in each dimension of the behavior
+        dims (array-like): Number of cells in each dimension of the behavior
             space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions
-            with 20, 30, and 40 bins. (The number of dimensions is implicitly
+            with 20, 30, and 40 cells. (The number of dimensions is implicitly
             defined in the length of this argument).
         ranges (array-like of (float, float)): `Initial` upper and lower bound
             of each dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
@@ -139,7 +139,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         ArchiveBase.__init__(
             self,
-            storage_dim=np.product(self._dims),
+            cells=np.product(self._dims),
             behavior_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
@@ -173,7 +173,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     @property
     def dims(self):
-        """(behavior_dim,) numpy.ndarray: Number of bins in each dimension."""
+        """(behavior_dim,) numpy.ndarray: Number of cells in each dimension."""
         return self._dims
 
     @property
@@ -206,19 +206,19 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     @property
     def boundaries(self):
-        """list of numpy.ndarray: The dynamic boundaries of the bins in each
+        """list of numpy.ndarray: The dynamic boundaries of the cells in each
         dimension.
 
         Entry ``i`` in this list is an array that contains the boundaries of the
-        bins in dimension ``i``. The array contains ``self.dims[i] + 1`` entries
-        laid out like this::
+        cells in dimension ``i``. The array contains ``self.dims[i] + 1``
+        entries laid out like this::
 
-            Archive bins:   | 0 | 1 |   ...   |    self.dims[i]    |
+            Archive cells:  | 0 | 1 |   ...   |    self.dims[i]    |
             boundaries[i]:  0   1   2   self.dims[i] - 1     self.dims[i]
 
         Thus, ``boundaries[i][j]`` and ``boundaries[i][j + 1]`` are the lower
-        and upper bounds of bin ``j`` in dimension ``i``. To access the lower
-        bounds of all the bins in dimension ``i``, use ``boundaries[i][:-1]``,
+        and upper bounds of cell ``j`` in dimension ``i``. To access the lower
+        bounds of all the cells in dimension ``i``, use ``boundaries[i][:-1]``,
         and to access all the upper bounds, use ``boundaries[i][1:]``.
         """
         return [
@@ -246,12 +246,12 @@ class SlidingBoundariesArchive(ArchiveBase):
         """Returns indices of the behavior values within the archive's grid.
 
         First, values are clipped to the bounds of the behavior space. Then, the
-        values are mapped to bins via a binary search along the boundaries in
+        values are mapped to cells via a binary search along the boundaries in
         each dimension.
 
-        The indices can be used to access boundaries of a behavior value's bin.
+        The indices can be used to access boundaries of a behavior value's cell.
         For example, the following retrieves the lower and upper bounds of the
-        bin along dimension 0::
+        cell along dimension 0::
 
             idx = archive.get_index(...)  # Other methods also return indices.
             lower = archive.boundaries[0][idx[0]]

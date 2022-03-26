@@ -28,7 +28,7 @@ The supported algorithms are:
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
 
-Note that the CVTArchive in this example uses 10,000 bins, as opposed to the
+Note that the CVTArchive in this example uses 10,000 cells, as opposed to the
 250,000 (500x500) in the GridArchive, so it is not fair to directly compare
 `cvt_map_elites` and `line_cvt_map_elites` to the other algorithms. However, the
 other algorithms may be fairly compared because they use the same archive.
