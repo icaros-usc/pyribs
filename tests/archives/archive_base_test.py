@@ -217,18 +217,18 @@ def test_elite_with_behavior_returns_none(data):
     assert elite.metadata is None
 
 
-def test_random_elite_gets_single_elite(data):
-    elite = data.archive_with_elite.get_random_elite()
-    assert np.all(elite.solution == data.solution)
-    assert elite.objective == data.objective_value
-    assert np.all(elite.measures == data.behavior_values)
+def test_sample_elites_gets_single_elite(data):
+    elite_batch = data.archive_with_elite.sample_elites(2)
+    assert np.all(elite_batch.solution_batch == data.solution)
+    assert np.all(elite_batch.objective_batch == data.objective_value)
+    assert np.all(elite_batch.measures_batch == data.behavior_values)
     # Avoid checking elite.idx since the meaning varies by archive.
-    assert elite.metadata == data.metadata
+    assert np.all(elite_batch.metadata_batch == data.metadata)
 
 
-def test_random_elite_fails_when_empty(data):
+def test_sample_elites_fails_when_empty(data):
     with pytest.raises(IndexError):
-        data.archive.get_random_elite()
+        data.archive.sample_elites(1)
 
 
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
