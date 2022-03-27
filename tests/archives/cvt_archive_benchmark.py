@@ -47,8 +47,7 @@ def benchmark_get_10k_random_elites(use_kd_tree, benchmark, benchmark_data_10k):
         archive.add(solutions[i], objective_values[i], behavior_values[i])
 
     def get_elites():
-        for _ in range(n):
-            archive.get_random_elite()
+        archive.sample_elites(n)
 
     benchmark(get_elites)
 
