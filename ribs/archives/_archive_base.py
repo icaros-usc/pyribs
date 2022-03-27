@@ -531,10 +531,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         return EliteBatch(
             readonly(self._solutions[selected_indices]),
-            self._objective_values[selected_indices],
+            readonly(self._objective_values[selected_indices]),
             readonly(self._behavior_values[selected_indices]),
-            selected_indices,
-            self._metadata[selected_indices],
+            readonly(selected_indices),
+            readonly(self._metadata[selected_indices]),
         )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
