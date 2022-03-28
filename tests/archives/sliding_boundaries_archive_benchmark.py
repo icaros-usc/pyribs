@@ -25,23 +25,6 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
     benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
 
 
-def benchmark_get_10k_random_elites(benchmark, benchmark_data_10k):
-    n, solutions, objective_values, behavior_values = benchmark_data_10k
-    archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
-                                       remap_frequency=100,
-                                       buffer_capacity=1000)
-    archive.initialize(solutions.shape[1])
-
-    for i in range(n):
-        archive.add(solutions[i], objective_values[i], behavior_values[i])
-
-    def get_elites():
-        for _ in range(n):
-            archive.get_random_elite()
-
-    benchmark(get_elites)
-
-
 def benchmark_as_pandas_2048_elements(benchmark):
     # TODO (btjanaka): Make this size smaller so that we do a remap.
     archive = SlidingBoundariesArchive([32, 64], [(-1, 1), (-2, 2)],

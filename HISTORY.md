@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Replace `get_random_elite()` with batched
+  `sample_elites()` method (#192)
 - **Backwards-incompatible:** Add EliteBatch and rename fields in Elite (#191)
 - **Backwards-incompatible:** Rename bins to cells for consistency with
   literature (#189)

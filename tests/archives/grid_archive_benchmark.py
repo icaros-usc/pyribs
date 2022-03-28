@@ -23,20 +23,6 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
     benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
 
 
-def benchmark_get_10k_random_elites(benchmark, benchmark_data_10k):
-    n, solutions, objective_values, behavior_values = benchmark_data_10k
-    archive = GridArchive((64, 64), [(-1, 1), (-1, 1)])
-    archive.initialize(solutions.shape[1])
-    for i in range(n):
-        archive.add(solutions[i], objective_values[i], behavior_values[i])
-
-    def get_elites():
-        for _ in range(n):
-            archive.get_random_elite()
-
-    benchmark(get_elites)
-
-
 def benchmark_as_pandas_2025_items(benchmark):
     dim = 45
     archive = GridArchive((dim, dim), [(-1, 1), (-1, 1)])

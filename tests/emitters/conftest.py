@@ -33,13 +33,6 @@ class FakeArchive(ArchiveBase):
             behavior_dim=behavior_dim,
         )
 
-    def get_random_elite(self):
-        return (
-            self._solutions[0],
-            self._objective_values[0],
-            self._behavior_values[0],
-        )
-
     def add(self, solution, objective_value, behavior_values, metadata=None):
         return True
 

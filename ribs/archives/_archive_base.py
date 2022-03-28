@@ -9,7 +9,7 @@ from decorator import decorator
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
-from ribs.archives._elite import Elite
+from ribs.archives._elite import Elite, EliteBatch
 
 
 @decorator
@@ -37,42 +37,6 @@ def readonly(arr):
     """Sets an array to be readonly."""
     arr.flags.writeable = False
     return arr
-
-
-class RandomBuffer:
-    """An internal class that stores a buffer of random numbers.
-
-    Generating random indices in get_random_elite() takes a lot of time if done
-    individually. As such, this class generates many random numbers at once and
-    slowly dispenses them. Since the calls in get_random_elite() vary in their
-    range, this class does not store random integers; it stores random floats in
-    the range [0,1) that can be multiplied to get a number in the range [0, x).
-
-    Args:
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
-        buf_size (int): How many random floats to store at once in the buffer.
-    """
-
-    def __init__(self, seed=None, buf_size=10):
-        assert buf_size > 0, "buf_size must be at least 1"
-
-        self._rng = np.random.default_rng(seed)
-        self._buf_size = buf_size
-        self._buffer = self._rng.random(buf_size)
-        self._buf_idx = 0
-
-    def get(self, max_val):
-        """Returns a random int in the range [0, max_val)."""
-        val = int(self._buffer[self._buf_idx] * max_val)
-        self._buf_idx += 1
-
-        # Reset the buffer if necessary.
-        if self._buf_idx >= self._buf_size:
-            self._buf_idx = 0
-            self._buffer = self._rng.random(self._buf_size)
-
-        return val
 
 
 class ArchiveIterator:
@@ -215,7 +179,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         ## Not intended to be accessed by children. ##
 
-        self._rand_buf = None
         self._seed = seed
         self._initialized = False
         self._stats = None
@@ -343,7 +306,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             raise RuntimeError("Cannot re-initialize an archive")
         self._initialized = True
 
-        self._rand_buf = RandomBuffer(self._seed)
         self._solution_dim = solution_dim
         self._occupied = np.zeros(self._cells, dtype=bool)
         self._solutions = np.empty((self._cells, solution_dim),
@@ -534,38 +496,45 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return Elite(None, None, None, None, None)
 
     @require_init
-    def get_random_elite(self):
-        """Selects an elite uniformly at random from one of the archive's cells.
+    def sample_elites(self, n):
+        """Randomly samples elites from the archive.
 
-        Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
-        (here we show how to ignore some of the fields)::
+        Currently, this sampling is done uniformly at random. Furthermore, each
+        sample is done independently, so elites may be repeated in the sample.
+        Additional sampling methods may be supported in the future.
 
-            sol, obj, beh, *_ = archive.get_random_elite()
+        Since :namedtuple:`EliteBatch` is a namedtuple, the result can be
+        unpacked (here we show how to ignore some of the fields)::
+
+            solution_batch, objective_batch, measures_batch, *_ = \\
+                archive.sample_elites(32)
 
         Or the fields may be accessed by name::
 
-            elite = archive.get_random_elite()
-            elite.sol
-            elite.obj
+            elite = archive.sample_elites(16)
+            elite.solution_batch
+            elite.objective_batch
             ...
 
+        Args:
+            n (int): Number of elites to sample.
         Returns:
-            Elite: A randomly selected elite from the archive.
+            EliteBatch: A batch of elites randomly selected from the archive.
         Raises:
             IndexError: The archive is empty.
         """
         if self.empty:
             raise IndexError("No elements in archive.")
 
-        random_idx = self._rand_buf.get(self._num_occupied)
-        index = self._occupied_indices[random_idx]
+        random_indices = self._rng.integers(self._num_occupied, size=n)
+        selected_indices = self._occupied_indices[random_indices]
 
-        return Elite(
-            readonly(self._solutions[index]),
-            self._objective_values[index],
-            readonly(self._behavior_values[index]),
-            index,
-            self._metadata[index],
+        return EliteBatch(
+            readonly(self._solutions[selected_indices]),
+            readonly(self._objective_values[selected_indices]),
+            readonly(self._behavior_values[selected_indices]),
+            readonly(selected_indices),
+            readonly(self._metadata[selected_indices]),
         )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):

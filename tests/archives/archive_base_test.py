@@ -3,37 +3,10 @@ import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
-from ribs.archives._archive_base import RandomBuffer
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
 # pylint: disable = redefined-outer-name
-
-#
-# RandomBuffer tests -- note this is an internal class.
-#
-
-
-def test_random_buffer_in_range():
-    buffer = RandomBuffer(buf_size=10)
-    for _ in range(10):
-        assert buffer.get(1) == 0
-    for _ in range(10):
-        assert buffer.get(2) in [0, 1]
-
-
-def test_random_buffer_not_repeating():
-    buf_size = 100
-    buffer = RandomBuffer(buf_size=buf_size)
-
-    # Both lists contain random integers in the range [0,100), and we triggered
-    # a reset by retrieving more than buf_size integers. It should be nearly
-    # impossible for the lists to be equal unless something is wrong.
-    x1 = [buffer.get(100) for _ in range(buf_size)]
-    x2 = [buffer.get(100) for _ in range(buf_size)]
-
-    assert x1 != x2
-
 
 #
 # Tests for the require_init decorator. Just need to make sure it works on a few
@@ -244,18 +217,18 @@ def test_elite_with_behavior_returns_none(data):
     assert elite.metadata is None
 
 
-def test_random_elite_gets_single_elite(data):
-    elite = data.archive_with_elite.get_random_elite()
-    assert np.all(elite.solution == data.solution)
-    assert elite.objective == data.objective_value
-    assert np.all(elite.measures == data.behavior_values)
+def test_sample_elites_gets_single_elite(data):
+    elite_batch = data.archive_with_elite.sample_elites(2)
+    assert np.all(elite_batch.solution_batch == data.solution)
+    assert np.all(elite_batch.objective_batch == data.objective_value)
+    assert np.all(elite_batch.measures_batch == data.behavior_values)
     # Avoid checking elite.idx since the meaning varies by archive.
-    assert elite.metadata == data.metadata
+    assert np.all(elite_batch.metadata_batch == data.metadata)
 
 
-def test_random_elite_fails_when_empty(data):
+def test_sample_elites_fails_when_empty(data):
     with pytest.raises(IndexError):
-        data.archive.get_random_elite()
+        data.archive.sample_elites(1)
 
 
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
