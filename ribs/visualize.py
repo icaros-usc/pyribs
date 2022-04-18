@@ -21,6 +21,7 @@ to these functions.
     ribs.visualize.parallel_axes_plot
 """
 import matplotlib
+from matplotlib import axes
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable
@@ -53,6 +54,7 @@ def grid_archive_heatmap(archive,
                          square=False,
                          vmin=None,
                          vmax=None,
+                         cbar=None,
                          pcm_kwargs=None):
     """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D behavior
     space.
@@ -105,6 +107,7 @@ def grid_archive_heatmap(archive,
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
+        cbar (boolean, matplotlib.axes.Axes): By default, this is set to None. If True, displays the colorbar on the archive's current Axes. If this is an Axes object, displays the colorbar on the specified Axes
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
     Raises:
@@ -160,7 +163,12 @@ def grid_archive_heatmap(archive,
                       **pcm_kwargs)
 
     # Create the colorbar.
-    ax.figure.colorbar(t, ax=ax, pad=0.1)
+    if cbar == True:
+        print("Plotting cbar on default figure axis")
+        ax.figure.colorbar(t, ax=ax, pad=0.1)
+    elif isinstance(cbar, axes.Axes):
+        print("Plotting cbar on provided figure axis")
+        cbar.figure.colorbar(t, ax=cbar, pad=0.1)
 
 
 def cvt_archive_heatmap(archive,
