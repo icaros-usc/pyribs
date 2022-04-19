@@ -202,6 +202,19 @@ def test_heatmap_archive__grid(grid_archive):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive)
 
+@image_comparison(baseline_images=["grid_archive_heatmap_no_cbar"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_no_cbar(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, cbar=None)
+
+@image_comparison(baseline_images=["grid_archive_heatmap_custom_cbar_axis"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_custom_cbar_axis(grid_archive):
+    _, (ax1, ax2) = plt.subplots(1,2,figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, ax=ax1, cbar=ax2)
 
 @image_comparison(baseline_images=["cvt_archive_heatmap"],
                   remove_text=False,
@@ -348,7 +361,6 @@ def test_heatmap_listed_cmap__grid(grid_archive):
     # cmap consists of primary red, green, and blue.
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_listed_cmap"],
                   remove_text=False,

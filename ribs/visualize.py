@@ -54,8 +54,9 @@ def grid_archive_heatmap(archive,
                          square=False,
                          vmin=None,
                          vmax=None,
-                         cbar=None,
-                         pcm_kwargs=None):
+                         cbar="auto",
+                         pcm_kwargs=None,
+                         cbar_kwargs=None):
     """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D behavior
     space.
 
@@ -107,9 +108,10 @@ def grid_archive_heatmap(archive,
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
-        cbar (boolean, matplotlib.axes.Axes): By default, this is set to None. If True, displays the colorbar on the archive's current Axes. If this is an Axes object, displays the colorbar on the specified Axes
+        cbar (str, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
+        cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
     Raises:
         ValueError: The archive is not 2D.
     """
@@ -163,12 +165,13 @@ def grid_archive_heatmap(archive,
                       **pcm_kwargs)
 
     # Create the colorbar.
-    if cbar == True:
-        print("Plotting cbar on default figure axis")
-        ax.figure.colorbar(t, ax=ax, pad=0.1)
+    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
+    if cbar == "auto":
+        ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
     elif isinstance(cbar, axes.Axes):
-        print("Plotting cbar on provided figure axis")
-        cbar.figure.colorbar(t, ax=cbar, pad=0.1)
+        cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
+    elif cbar is not None:
+        raise ValueError("cbar arg must be 'auto', None, or a matplotlib Axes object")
 
 
 def cvt_archive_heatmap(archive,
