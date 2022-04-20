@@ -194,6 +194,26 @@ def test_heatmap_fails_on_non_2d(archive_type):
             "sliding": sliding_boundaries_archive_heatmap,
         }[archive_type](archive)
 
+@pytest.mark.parametrize("archive_type", ["grid"]) # TODO: impl + test for cvt and sliding show heatmap
+@pytest.mark.parametrize("invalid_arg_cbar", ["None", 3.2, True, (3.2,None), [3.2,None]]) # some random but invalid inputs
+def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
+    archive = {
+        "grid":
+            lambda: GridArchive([20, 20, 20], [(-1, 1)] * 3),
+        "cvt":
+            lambda: CVTArchive(100, [(-1, 1)] * 3, samples=100),
+        "sliding":
+            lambda: SlidingBoundariesArchive([20, 20, 20], [(-1, 1)] * 3),
+    }[archive_type]()
+    archive.initialize(solution_dim=2)
+
+    with pytest.raises(ValueError):
+        {
+            "grid": grid_archive_heatmap,
+            "cvt": cvt_archive_heatmap,
+            "sliding": sliding_boundaries_archive_heatmap,
+        }[archive_type](archive=archive, cbar=invalid_arg_cbar)
+
 
 @image_comparison(baseline_images=["grid_archive_heatmap"],
                   remove_text=False,
@@ -202,6 +222,19 @@ def test_heatmap_archive__grid(grid_archive):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive)
 
+@image_comparison(baseline_images=["grid_archive_heatmap_no_cbar"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_no_cbar(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, cbar=None)
+
+@image_comparison(baseline_images=["grid_archive_heatmap_custom_cbar_axis"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_custom_cbar_axis(grid_archive):
+    _, (ax1, ax2) = plt.subplots(1,2,figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, ax=ax1, cbar=ax2)
 
 @image_comparison(baseline_images=["cvt_archive_heatmap"],
                   remove_text=False,
@@ -348,7 +381,6 @@ def test_heatmap_listed_cmap__grid(grid_archive):
     # cmap consists of primary red, green, and blue.
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_listed_cmap"],
                   remove_text=False,

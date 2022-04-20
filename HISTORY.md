@@ -6,6 +6,7 @@
 
 #### API
 
+- **Backwards-incompatible:** Add cbar option to `grid_archive_heatmap` (#193)
 - **Backwards-incompatible:** Replace `get_random_elite()` with batched
   `sample_elites()` method (#192)
 - **Backwards-incompatible:** Add EliteBatch and rename fields in Elite (#191)

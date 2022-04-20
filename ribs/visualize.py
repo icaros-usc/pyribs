@@ -23,6 +23,7 @@ to these functions.
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import axes
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
@@ -53,7 +54,9 @@ def grid_archive_heatmap(archive,
                          square=False,
                          vmin=None,
                          vmax=None,
-                         pcm_kwargs=None):
+                         cbar="auto",
+                         pcm_kwargs=None,
+                         cbar_kwargs=None):
     """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D behavior
     space.
 
@@ -105,13 +108,17 @@ def grid_archive_heatmap(archive,
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
+        cbar (str, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
+        cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
     Raises:
         ValueError: The archive is not 2D.
     """
     if archive.behavior_dim != 2:
         raise ValueError("Cannot plot heatmap for non-2D archive.")
+    if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
+        raise ValueError(f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes")
 
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
@@ -160,7 +167,11 @@ def grid_archive_heatmap(archive,
                       **pcm_kwargs)
 
     # Create the colorbar.
-    ax.figure.colorbar(t, ax=ax, pad=0.1)
+    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
+    if cbar == "auto":
+        ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
+    elif isinstance(cbar, axes.Axes):
+        cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
 
 
 def cvt_archive_heatmap(archive,
