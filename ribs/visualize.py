@@ -21,9 +21,9 @@ to these functions.
     ribs.visualize.parallel_axes_plot
 """
 import matplotlib
-from matplotlib import axes
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import axes
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
@@ -117,6 +117,8 @@ def grid_archive_heatmap(archive,
     """
     if archive.behavior_dim != 2:
         raise ValueError("Cannot plot heatmap for non-2D archive.")
+    if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
+        raise ValueError(f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes")
 
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
@@ -170,8 +172,6 @@ def grid_archive_heatmap(archive,
         ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
     elif isinstance(cbar, axes.Axes):
         cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
-    elif cbar is not None:
-        raise ValueError("cbar arg must be 'auto', None, or a matplotlib Axes object")
 
 
 def cvt_archive_heatmap(archive,
