@@ -176,7 +176,7 @@ def long_sliding_archive():
 
 
 @pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
-def test_heatmap_fails_on_non_2d(archive_type):
+def test_heatmap_fails_on_unsupported_dims(archive_type):
     archive = {
         "grid":
             lambda: GridArchive([20, 20, 20], [(-1, 1)] * 3),
@@ -214,6 +214,27 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
             "sliding": sliding_boundaries_archive_heatmap,
         }[archive_type](archive=archive, cbar=invalid_arg_cbar)
 
+@pytest.mark.parametrize("archive_type", ["grid"]) # TODO: impl + test for cvt and sliding show heatmap
+@pytest.mark.parametrize("invalid_arg_aspect", ["None", True, (3.2,None), [3.2,None]]) # some random but invalid inputs
+def test_heatmap_fails_on_invalid_aspect_option(archive_type, invalid_arg_aspect):
+    archive = {
+        "grid":
+            lambda: GridArchive([20, 20, 20], [(-1, 1)] * 3),
+        "cvt":
+            lambda: CVTArchive(100, [(-1, 1)] * 3, samples=100),
+        "sliding":
+            lambda: SlidingBoundariesArchive([20, 20, 20], [(-1, 1)] * 3),
+    }[archive_type]()
+    archive.initialize(solution_dim=2)
+
+    with pytest.raises(ValueError):
+        {
+            "grid": grid_archive_heatmap,
+            "cvt": cvt_archive_heatmap,
+            "sliding": sliding_boundaries_archive_heatmap,
+        }[archive_type](archive=archive, aspect=invalid_arg_aspect)
+
+
 
 @image_comparison(baseline_images=["grid_archive_heatmap"],
                   remove_text=False,
@@ -221,6 +242,28 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
 def test_heatmap_archive__grid(grid_archive):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive)
+
+@image_comparison(baseline_images=["grid_archive_heatmap_equal_aspect"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_equal_aspect(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, aspect="equal")
+
+@image_comparison(baseline_images=["grid_archive_heatmap_aspect_gt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_aspect_gt_1(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, aspect=2.5) # random aspect
+
+@image_comparison(baseline_images=["grid_archive_heatmap_aspect_lt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_aspect_lt_1(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, aspect=0.5) # random aspect
+
 
 @image_comparison(baseline_images=["grid_archive_heatmap_no_cbar"],
                   remove_text=False,

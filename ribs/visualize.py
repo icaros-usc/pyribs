@@ -20,6 +20,7 @@ to these functions.
     ribs.visualize.sliding_boundaries_archive_heatmap
     ribs.visualize.parallel_axes_plot
 """
+import warnings
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -52,6 +53,7 @@ def grid_archive_heatmap(archive,
                          transpose_bcs=False,
                          cmap="magma",
                          square=False,
+                         aspect="auto",
                          vmin=None,
                          vmax=None,
                          cbar="auto",
@@ -103,7 +105,8 @@ def grid_archive_heatmap(archive,
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        square (bool): If True, set the axes aspect ratio to be "equal".
+        aspect ('auto', 'equal', float): the aspect ratio of the heatmap. Defaults to 'auto'. 'equal' is the same as `aspect_ratio=1`.
+        square (bool): [DEPRECATED] If True, set the axes aspect ratio to be "equal".
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
@@ -115,63 +118,126 @@ def grid_archive_heatmap(archive,
     Raises:
         ValueError: The archive is not 2D.
     """
-    if archive.behavior_dim != 2:
-        raise ValueError("Cannot plot heatmap for non-2D archive.")
+    if archive.behavior_dim not in [1, 2]:
+        raise ValueError("Archive heatmaps must have dimensions of 1 or 2")
     if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
-        raise ValueError(f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes")
+        raise ValueError(
+            f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
+        )
+    if not (isinstance(aspect, float) or aspect in ["equal", "auto"]):
+        raise ValueError(
+            f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float")
 
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
 
-    # Retrieve data from archive.
-    lower_bounds = archive.lower_bounds
-    upper_bounds = archive.upper_bounds
-    x_dim, y_dim = archive.dims
-    x_bounds = archive.boundaries[0]
-    y_bounds = archive.boundaries[1]
+    if archive.behavior_dim == 1:
+        # Retrieve data from archive. There should be only 2 bounds; upper and lower since its 1D
+        lower_bound = archive.lower_bounds[0]
+        upper_bound = archive.upper_bounds[0]
+        x_dim = archive.dims
+        x_bounds = archive.boundaries[0]
+        y_bounds = [
+            0,
+        ]  # by default x-y aspect ratio =
 
-    # Color for each cell in the heatmap.
-    colors = np.full((y_dim, x_dim), np.nan)
-    for elite in archive:
-        # TODO: Do not require calling numpy?
-        idx = np.unravel_index(elite.index, archive.dims)
-        colors[idx[1], idx[0]] = elite.objective
+        # Color for each cell in the heatmap.
+        colors = np.full(x_dim, np.nan)
+        for elite in archive:
+            # TODO: Do not require calling numpy?
+            idx = np.unravel_index(elite.index, archive.dims)
+            colors[idx] = elite.objective
+        print("Archive:", colors[np.newaxis, :])
 
-    if transpose_bcs:
-        # Since the archive is 2D, transpose by swapping the x and y boundaries
-        # and by flipping the bounds (the bounds are arrays of length 2).
-        x_bounds, y_bounds = y_bounds, x_bounds
-        lower_bounds = np.flip(lower_bounds)
-        upper_bounds = np.flip(upper_bounds)
-        colors = colors.T
+        # Initialize the axis.
+        ax = plt.gca() if ax is None else ax
+        print("lower_bound, upper_bound:", lower_bound, upper_bound)
+        ax.set_xlim(lower_bound, upper_bound)
 
-    # Initialize the axis.
-    ax = plt.gca() if ax is None else ax
-    ax.set_xlim(lower_bounds[0], upper_bounds[0])
-    ax.set_ylim(lower_bounds[1], upper_bounds[1])
+        ax.set_aspect(aspect)
 
-    if square:
-        ax.set_aspect("equal")
+        # overrides `aspect` for now
+        if square:
+            warnings.warn(
+                "The argument 'square' is deprecated and will not be supported in future versions. Use 'aspect' to set the heatmap's aspect ratio instead"
+            )
+            ax.set_aspect("equal")
 
-    # Create the plot.
-    pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-    objectives = archive.as_pandas().batch_objectives()
-    vmin = np.min(objectives) if vmin is None else vmin
-    vmax = np.max(objectives) if vmax is None else vmax
-    t = ax.pcolormesh(x_bounds,
-                      y_bounds,
-                      colors,
-                      cmap=cmap,
-                      vmin=vmin,
-                      vmax=vmax,
-                      **pcm_kwargs)
+        # Create the plot.
+        pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
+        objectives = archive.as_pandas().batch_objectives()
+        vmin = np.min(objectives) if vmin is None else vmin
+        vmax = np.max(objectives) if vmax is None else vmax
+        t = ax.pcolormesh(x_bounds,
+                          y_bounds,
+                          colors[np.newaxis, :],
+                          cmap=cmap,
+                          vmin=vmin,
+                          vmax=vmax,
+                          **pcm_kwargs)
 
-    # Create the colorbar.
-    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
-    if cbar == "auto":
-        ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
-    elif isinstance(cbar, axes.Axes):
-        cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
+        # Create the colorbar.
+        cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
+        if cbar == "auto":
+            ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
+        elif isinstance(cbar, axes.Axes):
+            cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
+    elif archive.behavior_dim == 2:
+        # Retrieve data from archive.
+        lower_bounds = archive.lower_bounds
+        upper_bounds = archive.upper_bounds
+        x_dim, y_dim = archive.dims
+        x_bounds = archive.boundaries[0]
+        y_bounds = archive.boundaries[1]
+
+        # Color for each cell in the heatmap.
+        colors = np.full((y_dim, x_dim), np.nan)
+        for elite in archive:
+            # TODO: Do not require calling numpy?
+            idx = np.unravel_index(elite.index, archive.dims)
+            colors[idx[1], idx[0]] = elite.objective
+
+        if transpose_bcs:
+            # Since the archive is 2D, transpose by swapping the x and y boundaries
+            # and by flipping the bounds (the bounds are arrays of length 2).
+            x_bounds, y_bounds = y_bounds, x_bounds
+            lower_bounds = np.flip(lower_bounds)
+            upper_bounds = np.flip(upper_bounds)
+            colors = colors.T
+
+        # Initialize the axis.
+        ax = plt.gca() if ax is None else ax
+        ax.set_xlim(lower_bounds[0], upper_bounds[0])
+        ax.set_ylim(lower_bounds[1], upper_bounds[1])
+
+        ax.set_aspect(aspect)
+
+        # overrides `aspect` for now
+        if square:
+            warnings.warn(
+                "The argument 'square' is deprecated and will not be supported in future versions. Use 'aspect' to set the heatmap's aspect ratio instead"
+            )
+            ax.set_aspect("equal")
+
+        # Create the plot.
+        pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
+        objectives = archive.as_pandas().batch_objectives()
+        vmin = np.min(objectives) if vmin is None else vmin
+        vmax = np.max(objectives) if vmax is None else vmax
+        t = ax.pcolormesh(x_bounds,
+                          y_bounds,
+                          colors,
+                          cmap=cmap,
+                          vmin=vmin,
+                          vmax=vmax,
+                          **pcm_kwargs)
+
+        # Create the colorbar.
+        cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
+        if cbar == "auto":
+            ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
+        elif isinstance(cbar, axes.Axes):
+            cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
 
 
 def cvt_archive_heatmap(archive,

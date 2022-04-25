@@ -100,7 +100,6 @@ def sphere(sol):
     bcs = np.concatenate(
         (
             np.sum(clipped[:, :dim // 2], axis=1, keepdims=True),
-            np.sum(clipped[:, dim // 2:], axis=1, keepdims=True),
         ),
         axis=1,
     )
@@ -119,7 +118,7 @@ def create_optimizer(algorithm, dim, seed):
         Optimizer: A ribs Optimizer for running the algorithm.
     """
     max_bound = dim / 2 * 5.12
-    bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
+    bounds = [(-max_bound, max_bound)]
     initial_sol = np.zeros(dim)
     batch_size = 37
     num_emitters = 15
@@ -129,7 +128,7 @@ def create_optimizer(algorithm, dim, seed):
             "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
             "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
     ]:
-        archive = GridArchive((500,500), bounds, seed=seed)
+        archive = GridArchive((500,), bounds, seed=seed)
     elif algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
         archive = CVTArchive(10_000, bounds, samples=100_000, use_kd_tree=True)
     else:
