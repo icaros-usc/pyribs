@@ -118,7 +118,6 @@ def grid_archive_heatmap(archive,
     Raises:
         ValueError: The archive is not 2D.
     """
-
     if square is not None:
         raise ValueError(
             "The argument 'square' is deprecated and will not be "
@@ -171,8 +170,8 @@ def grid_archive_heatmap(archive,
         objectives = archive.as_pandas().batch_objectives()
         vmin = np.min(objectives) if vmin is None else vmin
         vmax = np.max(objectives) if vmax is None else vmax
-        t = ax.pcolormesh(x_bounds, 
-                          y_bounds, 
+        t = ax.pcolormesh(x_bounds,
+                          y_bounds,
                           colors,
                           cmap=cmap,
                           vmin=vmin,
@@ -227,6 +226,7 @@ def grid_archive_heatmap(archive,
         ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
     elif isinstance(cbar, axes.Axes):
         cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
+
 
 def cvt_archive_heatmap(archive,
                         ax=None,

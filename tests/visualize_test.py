@@ -258,8 +258,6 @@ def test_heatmap_fails_on_invalid_aspect_option(archive_type, invalid_arg_aspect
             "sliding": sliding_boundaries_archive_heatmap,
         }[archive_type](archive=archive, aspect=invalid_arg_aspect)
 
-
-
 @image_comparison(baseline_images=["grid_archive_heatmap"],
                   remove_text=False,
                   extensions=["png"])
