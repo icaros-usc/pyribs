@@ -38,6 +38,21 @@ def clean_matplotlib():
     plt.close("all")
 
 
+def add_uniform_sphere_1d(archive, x_range):
+    """Adds points from the negative sphere function in a 1D grid w/ 100 elites.
+
+    The solutions are the same as the BCs
+
+    x_range is a tuple of (lower_bound, upper_bound).
+    """
+    for x in np.linspace(x_range[0], x_range[1], 100):
+        archive.add(
+            solution=np.array([x]),
+            objective_value=-(x**2),  # Negative sphere.
+            behavior_values=np.array([x]),
+        )
+
+
 def add_uniform_sphere(archive, x_range, y_range):
     """Adds points from the negative sphere function in a 100x100 grid.
 
@@ -90,6 +105,15 @@ def add_random_sphere(archive, x_range, y_range):
 #
 # Archive fixtures.
 #
+@pytest.fixture(scope="module")
+def grid_archive_1d():
+    """Deterministically created GridArchive with 1 BC."""
+    # The archive must be low-res enough that we can tell if the number of cells
+    # is correct, yet high-res enough that we can see different colors.
+    archive = GridArchive([10], [(-1, 1)], seed=42)
+    archive.initialize(solution_dim=2)
+    add_uniform_sphere_1d(archive, (-1, 1))
+    return archive
 
 
 @pytest.fixture(scope="module")
@@ -264,6 +288,26 @@ def test_heatmap_archive__grid_aspect_lt_1(grid_archive):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive, aspect=0.5) # random aspect
 
+@image_comparison(baseline_images=["grid_archive_heatmap_1d"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_1d(grid_archive_1d):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive_1d)
+
+@image_comparison(baseline_images=["grid_archive_heatmap_1d_aspect_gt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_1d_aspect_gt_1(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, aspect=2.5) # random aspect
+
+@image_comparison(baseline_images=["grid_archive_heatmap_1d_aspect_lt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_1d_aspect_lt_1(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, aspect=0.5) # random aspect
 
 @image_comparison(baseline_images=["grid_archive_heatmap_no_cbar"],
                   remove_text=False,

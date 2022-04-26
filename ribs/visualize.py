@@ -53,7 +53,7 @@ def grid_archive_heatmap(archive,
                          transpose_bcs=False,
                          cmap="magma",
                          square=None,
-                         aspect="auto",
+                         aspect=None,
                          vmin=None,
                          vmax=None,
                          cbar="auto",
@@ -105,7 +105,7 @@ def grid_archive_heatmap(archive,
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        aspect ('auto', 'equal', float): the aspect ratio of the heatmap. Defaults to 'auto'. 'equal' is the same as `aspect_ratio=1`.
+        aspect ('auto', 'equal', float) [optional]: the aspect ratio of the heatmap. Defaults to 'auto' for 2D and 0.3 for 1D. 'equal' is the same as `aspect=1`.
         square (bool): [DEPRECATED] If True, set the axes aspect ratio to be "equal".
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
@@ -118,6 +118,7 @@ def grid_archive_heatmap(archive,
     Raises:
         ValueError: The archive is not 2D.
     """
+
     if square is not None:
         raise ValueError(
             "The argument 'square' is deprecated and will not be "
@@ -130,7 +131,13 @@ def grid_archive_heatmap(archive,
         raise ValueError(
             f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
         )
-    if not (isinstance(aspect, float) or aspect in ["equal", "auto"]):
+
+    if aspect is None:
+        # handles default aspects for different dims
+        if archive.behavior_dim == 1: aspect = 0.5
+        else: aspect = "auto"
+
+    if aspect is not None and not (isinstance(aspect, float) or aspect in ["equal", "auto"]):
         raise ValueError(
             f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float")
 
@@ -139,27 +146,24 @@ def grid_archive_heatmap(archive,
 
     if archive.behavior_dim == 1:
         # Retrieve data from archive. There should be only 2 bounds; upper and lower since its 1D
-        lower_bound = archive.lower_bounds[0]
-        upper_bound = archive.upper_bounds[0]
-        x_dim = archive.dims
+        lower_bounds = archive.lower_bounds
+        upper_bounds = archive.upper_bounds
+        x_dim = archive.dims[0]
         x_bounds = archive.boundaries[0]
-        y_bounds = [
-            0,
-        ]  # by default x-y aspect ratio =
+        y_bounds = np.array([0,1]) # by default x-y aspect ratio
 
         # Color for each cell in the heatmap.
-        colors = np.full(x_dim, np.nan)
+        colors = np.full((1,x_dim), np.nan)
         for elite in archive:
             # TODO: Do not require calling numpy?
             idx = np.unravel_index(elite.index, archive.dims)
-            colors[idx] = elite.objective
-        print("Archive:", colors[np.newaxis, :])
+            colors[0,idx] = elite.objective
 
         # Initialize the axis.
         ax = plt.gca() if ax is None else ax
-        print("lower_bound, upper_bound:", lower_bound, upper_bound)
-        ax.set_xlim(lower_bound, upper_bound)
+        ax.set_xlim(lower_bounds[0], upper_bounds[0])
 
+        # default to 0.3 to make it look good
         ax.set_aspect(aspect)
 
         # Create the plot.
@@ -167,20 +171,13 @@ def grid_archive_heatmap(archive,
         objectives = archive.as_pandas().batch_objectives()
         vmin = np.min(objectives) if vmin is None else vmin
         vmax = np.max(objectives) if vmax is None else vmax
-        t = ax.pcolormesh(x_bounds,
-                          y_bounds,
-                          colors[np.newaxis, :],
+        t = ax.pcolormesh(x_bounds, 
+                          y_bounds, 
+                          colors,
                           cmap=cmap,
                           vmin=vmin,
                           vmax=vmax,
                           **pcm_kwargs)
-
-        # Create the colorbar.
-        cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
-        if cbar == "auto":
-            ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
-        elif isinstance(cbar, axes.Axes):
-            cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
     elif archive.behavior_dim == 2:
         # Retrieve data from archive.
         lower_bounds = archive.lower_bounds
@@ -224,13 +221,12 @@ def grid_archive_heatmap(archive,
                           vmax=vmax,
                           **pcm_kwargs)
 
-        # Create the colorbar.
-        cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
-        if cbar == "auto":
-            ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
-        elif isinstance(cbar, axes.Axes):
-            cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
-
+    # Create the colorbar.
+    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
+    if cbar == "auto":
+        ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
+    elif isinstance(cbar, axes.Axes):
+        cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
 
 def cvt_archive_heatmap(archive,
                         ax=None,
