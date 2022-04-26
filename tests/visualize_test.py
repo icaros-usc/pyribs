@@ -348,7 +348,7 @@ def test_heatmap_long__sliding(long_sliding_archive):
                   extensions=["png"])
 def test_heatmap_long_square__grid(long_grid_archive):
     plt.figure(figsize=(8, 6))
-    grid_archive_heatmap(long_grid_archive, square=True)
+    grid_archive_heatmap(long_grid_archive, aspect="equal")
 
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_long_square"],

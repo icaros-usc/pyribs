@@ -52,7 +52,7 @@ def grid_archive_heatmap(archive,
                          ax=None,
                          transpose_bcs=False,
                          cmap="magma",
-                         square=False,
+                         square=None,
                          aspect="auto",
                          vmin=None,
                          vmax=None,
@@ -118,6 +118,12 @@ def grid_archive_heatmap(archive,
     Raises:
         ValueError: The archive is not 2D.
     """
+    if square is not None:
+        raise ValueError(
+            "The argument 'square' is deprecated and will not be "
+            "supported in future versions. Use 'aspect' to set the "
+            "heatmap's aspect ratio instead"
+        )
     if archive.behavior_dim not in [1, 2]:
         raise ValueError("Archive heatmaps must have dimensions of 1 or 2")
     if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
@@ -155,13 +161,6 @@ def grid_archive_heatmap(archive,
         ax.set_xlim(lower_bound, upper_bound)
 
         ax.set_aspect(aspect)
-
-        # overrides `aspect` for now
-        if square:
-            warnings.warn(
-                "The argument 'square' is deprecated and will not be supported in future versions. Use 'aspect' to set the heatmap's aspect ratio instead"
-            )
-            ax.set_aspect("equal")
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
@@ -211,13 +210,6 @@ def grid_archive_heatmap(archive,
         ax.set_ylim(lower_bounds[1], upper_bounds[1])
 
         ax.set_aspect(aspect)
-
-        # overrides `aspect` for now
-        if square:
-            warnings.warn(
-                "The argument 'square' is deprecated and will not be supported in future versions. Use 'aspect' to set the heatmap's aspect ratio instead"
-            )
-            ax.set_aspect("equal")
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
