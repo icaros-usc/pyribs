@@ -6,6 +6,9 @@
 
 #### API
 
+- **Backwards-incompatible:** Add `aspect` option to `grid_archive_heatmap` +
+  support for 1D heatmaps (#196)
+  - `square` option no longer works
 - **Backwards-incompatible:** Add cbar option to `grid_archive_heatmap` (#193)
 - **Backwards-incompatible:** Replace `get_random_elite()` with batched
   `sample_elites()` method (#192)
