@@ -104,7 +104,7 @@ def grid_archive_heatmap(archive,
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        square (bool): [DEPRECATED] set the Axes aspect to be "equal".
+        square (bool): [DEPRECATED]
         aspect ('auto', 'equal', float) [optional]: the aspect ratio of the heatmap. Defaults to 'auto' for 2D and 0.5 for 1D. 'equal' is the same as ``aspect=1``.
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
