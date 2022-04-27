@@ -20,7 +20,6 @@ to these functions.
     ribs.visualize.sliding_boundaries_archive_heatmap
     ribs.visualize.parallel_axes_plot
 """
-import warnings
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
