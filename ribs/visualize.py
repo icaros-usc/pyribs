@@ -116,7 +116,7 @@ def grid_archive_heatmap(archive,
         cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
 
     Raises:
-        ValueError: The archive is not 2D.
+        ValueError: The archive's dimension is not supported (not 1D or 2D).
     """
     if square is not None:
         raise ValueError(
@@ -304,6 +304,7 @@ def cvt_archive_heatmap(archive,
             maximum objective value in the archive is used.
         cbar (str, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
         cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
+
     Raises:
         ValueError: The archive is not 2D.
     """
