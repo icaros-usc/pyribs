@@ -38,6 +38,21 @@ def clean_matplotlib():
     plt.close("all")
 
 
+def add_uniform_sphere_1d(archive, x_range):
+    """Adds points from the negative sphere function in a 1D grid w/ 100 elites.
+
+    The solutions are the same as the BCs
+
+    x_range is a tuple of (lower_bound, upper_bound).
+    """
+    for x in np.linspace(x_range[0], x_range[1], 100):
+        archive.add(
+            solution=np.array([x]),
+            objective_value=-(x**2),  # Negative sphere.
+            behavior_values=np.array([x]),
+        )
+
+
 def add_uniform_sphere(archive, x_range, y_range):
     """Adds points from the negative sphere function in a 100x100 grid.
 
@@ -90,6 +105,15 @@ def add_random_sphere(archive, x_range, y_range):
 #
 # Archive fixtures.
 #
+@pytest.fixture(scope="module")
+def grid_archive_1d():
+    """Deterministically created GridArchive with 1 BC."""
+    # The archive must be low-res enough that we can tell if the number of cells
+    # is correct, yet high-res enough that we can see different colors.
+    archive = GridArchive([10], [(-1, 1)], seed=42)
+    archive.initialize(solution_dim=2)
+    add_uniform_sphere_1d(archive, (-1, 1))
+    return archive
 
 
 @pytest.fixture(scope="module")
@@ -176,7 +200,7 @@ def long_sliding_archive():
 
 
 @pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
-def test_heatmap_fails_on_non_2d(archive_type):
+def test_heatmap_fails_on_unsupported_dims(archive_type):
     archive = {
         "grid":
             lambda: GridArchive([20, 20, 20], [(-1, 1)] * 3),
@@ -194,8 +218,12 @@ def test_heatmap_fails_on_non_2d(archive_type):
             "sliding": sliding_boundaries_archive_heatmap,
         }[archive_type](archive)
 
-@pytest.mark.parametrize("archive_type", ["grid"]) # TODO: impl + test for cvt and sliding show heatmap
-@pytest.mark.parametrize("invalid_arg_cbar", ["None", 3.2, True, (3.2,None), [3.2,None]]) # some random but invalid inputs
+
+@pytest.mark.parametrize("archive_type", ["grid"]
+                        )  # TODO: impl + test for cvt and sliding show heatmap
+@pytest.mark.parametrize("invalid_arg_cbar",
+                         ["None", 3.2, True, (3.2, None), [3.2, None]]
+                        )  # some random but invalid inputs
 def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
     archive = {
         "grid":
@@ -215,12 +243,86 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
         }[archive_type](archive=archive, cbar=invalid_arg_cbar)
 
 
+@pytest.mark.parametrize("archive_type", ["grid"]
+                        )  # TODO: impl + test for cvt and sliding show heatmap
+@pytest.mark.parametrize("invalid_arg_aspect",
+                         ["None", True, (3.2, None), [3.2, None]]
+                        )  # some random but invalid inputs
+def test_heatmap_fails_on_invalid_aspect_option(archive_type,
+                                                invalid_arg_aspect):
+    archive = {
+        "grid":
+            lambda: GridArchive([20, 20, 20], [(-1, 1)] * 3),
+        "cvt":
+            lambda: CVTArchive(100, [(-1, 1)] * 3, samples=100),
+        "sliding":
+            lambda: SlidingBoundariesArchive([20, 20, 20], [(-1, 1)] * 3),
+    }[archive_type]()
+    archive.initialize(solution_dim=2)
+
+    with pytest.raises(ValueError):
+        {
+            "grid": grid_archive_heatmap,
+            "cvt": cvt_archive_heatmap,
+            "sliding": sliding_boundaries_archive_heatmap,
+        }[archive_type](archive=archive, aspect=invalid_arg_aspect)
+
+
 @image_comparison(baseline_images=["grid_archive_heatmap"],
                   remove_text=False,
                   extensions=["png"])
 def test_heatmap_archive__grid(grid_archive):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive)
+
+
+@image_comparison(baseline_images=["grid_archive_heatmap_equal_aspect"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_equal_aspect(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, aspect="equal")
+
+
+@image_comparison(baseline_images=["grid_archive_heatmap_aspect_gt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_aspect_gt_1(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, aspect=2.5)
+
+
+@image_comparison(baseline_images=["grid_archive_heatmap_aspect_lt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_aspect_lt_1(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, aspect=0.5)
+
+
+@image_comparison(baseline_images=["grid_archive_heatmap_1d"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_1d(grid_archive_1d):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive_1d)
+
+
+@image_comparison(baseline_images=["grid_archive_heatmap_1d_aspect_gt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_1d_aspect_gt_1(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, aspect=2.5)
+
+
+@image_comparison(baseline_images=["grid_archive_heatmap_1d_aspect_lt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__grid_1d_aspect_lt_1(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, aspect=0.5)
+
 
 @image_comparison(baseline_images=["grid_archive_heatmap_no_cbar"],
                   remove_text=False,
@@ -229,12 +331,14 @@ def test_heatmap_archive__grid_no_cbar(grid_archive):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive, cbar=None)
 
+
 @image_comparison(baseline_images=["grid_archive_heatmap_custom_cbar_axis"],
                   remove_text=False,
                   extensions=["png"])
 def test_heatmap_archive__grid_custom_cbar_axis(grid_archive):
-    _, (ax1, ax2) = plt.subplots(1,2,figsize=(8, 6))
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 6))
     grid_archive_heatmap(grid_archive, ax=ax1, cbar=ax2)
+
 
 @image_comparison(baseline_images=["cvt_archive_heatmap"],
                   remove_text=False,
@@ -305,7 +409,7 @@ def test_heatmap_long__sliding(long_sliding_archive):
                   extensions=["png"])
 def test_heatmap_long_square__grid(long_grid_archive):
     plt.figure(figsize=(8, 6))
-    grid_archive_heatmap(long_grid_archive, square=True)
+    grid_archive_heatmap(long_grid_archive, aspect="equal")
 
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_long_square"],
@@ -381,6 +485,7 @@ def test_heatmap_listed_cmap__grid(grid_archive):
     # cmap consists of primary red, green, and blue.
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_listed_cmap"],
                   remove_text=False,
