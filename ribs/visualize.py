@@ -114,6 +114,7 @@ def grid_archive_heatmap(archive,
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
         cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
+
     Raises:
         ValueError: The archive is not 2D.
     """
@@ -123,7 +124,7 @@ def grid_archive_heatmap(archive,
             "supported in future versions. Use 'aspect' to set the "
             "heatmap's aspect ratio instead")
     if archive.behavior_dim not in [1, 2]:
-        raise ValueError("Heatmaps are only supported for 1D and 2D archives")
+        raise ValueError("Heatmaps are only supported for 1D and 2D grid archives")
     if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
         raise ValueError(
             f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
@@ -235,11 +236,14 @@ def cvt_archive_heatmap(archive,
                         plot_samples=False,
                         transpose_bcs=False,
                         cmap="magma",
-                        square=False,
+                        square=None,
+                        aspect="auto",
                         ms=1,
                         lw=0.5,
                         vmin=None,
-                        vmax=None):
+                        vmax=None,
+                        cbar="auto",
+                        cbar_kwargs=None):
     """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 2D behavior
     space.
 
@@ -290,20 +294,44 @@ def cvt_archive_heatmap(archive,
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        square (bool): If True, set the axes aspect ratio to be "equal".
+        square (bool): [DEPRECATED]
+        aspect ('auto', 'equal', float) [optional]: the aspect ratio of the heatmap. Defaults to 'auto' for 2D. 'equal' is the same as ``aspect=1``.
         ms (float): Marker size for both centroids and samples.
         lw (float): Line width when plotting the voronoi diagram.
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
+        cbar (str, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
+        cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
     Raises:
         ValueError: The archive is not 2D.
     """
     # pylint: disable = too-many-locals
 
+    if square is not None:
+        raise ValueError(
+            "The argument 'square' is deprecated and will not be "
+            "supported in future versions. Use 'aspect' to set the "
+            "heatmap's aspect ratio instead")
     if archive.behavior_dim != 2:
-        raise ValueError("Cannot plot heatmap for non-2D archive.")
+        raise ValueError("Heatmaps are only supported for 2D CVT archives")
+    if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
+        raise ValueError(
+            f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
+        )
+
+    if aspect is None:
+        # Handles default aspects for different dims.
+        if archive.behavior_dim == 1:
+            aspect = 0.5
+        else:
+            aspect = "auto"
+
+    if aspect is not None and not (isinstance(aspect, float) or
+                                   aspect in ["equal", "auto"]):
+        raise ValueError(
+            f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float")
 
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
@@ -374,7 +402,13 @@ def cvt_archive_heatmap(archive,
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(min_obj, max_obj)
-    ax.figure.colorbar(mappable, ax=ax, pad=0.1)
+
+    # Create the colorbar.
+    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
+    if cbar == "auto":
+        ax.figure.colorbar(mappable, ax=ax, **cbar_kwargs)
+    elif isinstance(cbar, axes.Axes):
+        cbar.figure.colorbar(mappable, ax=cbar, **cbar_kwargs)
 
     # Plot the sample points and centroids.
     if plot_samples:
