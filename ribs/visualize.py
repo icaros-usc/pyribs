@@ -105,8 +105,8 @@ def grid_archive_heatmap(archive,
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        aspect ('auto', 'equal', float) [optional]: the aspect ratio of the heatmap. Defaults to 'auto' for 2D and 0.3 for 1D. 'equal' is the same as `aspect=1`.
-        square (bool): [DEPRECATED] If True, set the axes aspect ratio to be "equal".
+        square (bool): [DEPRECATED] set the Axes aspect to be "equal".
+        aspect ('auto', 'equal', float) [optional]: the aspect ratio of the heatmap. Defaults to 'auto' for 2D and 0.5 for 1D. 'equal' is the same as ``aspect=1``.
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
@@ -122,21 +122,23 @@ def grid_archive_heatmap(archive,
         raise ValueError(
             "The argument 'square' is deprecated and will not be "
             "supported in future versions. Use 'aspect' to set the "
-            "heatmap's aspect ratio instead"
-        )
+            "heatmap's aspect ratio instead")
     if archive.behavior_dim not in [1, 2]:
-        raise ValueError("Archive heatmaps must have dimensions of 1 or 2")
+        raise ValueError("Heatmaps are only supported for 1D and 2D archives")
     if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
         raise ValueError(
             f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
         )
 
     if aspect is None:
-        # handles default aspects for different dims
-        if archive.behavior_dim == 1: aspect = 0.5
-        else: aspect = "auto"
+        # Handles default aspects for different dims.
+        if archive.behavior_dim == 1:
+            aspect = 0.5
+        else:
+            aspect = "auto"
 
-    if aspect is not None and not (isinstance(aspect, float) or aspect in ["equal", "auto"]):
+    if aspect is not None and not (isinstance(aspect, float) or
+                                   aspect in ["equal", "auto"]):
         raise ValueError(
             f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float")
 
@@ -149,14 +151,14 @@ def grid_archive_heatmap(archive,
         upper_bounds = archive.upper_bounds
         x_dim = archive.dims[0]
         x_bounds = archive.boundaries[0]
-        y_bounds = np.array([0,1]) # by default x-y aspect ratio
+        y_bounds = np.array([0, 1])  # by default x-y aspect ratio
 
         # Color for each cell in the heatmap.
-        colors = np.full((1,x_dim), np.nan)
+        colors = np.full((1, x_dim), np.nan)
         for elite in archive:
             # TODO: Do not require calling numpy?
             idx = np.unravel_index(elite.index, archive.dims)
-            colors[0,idx] = elite.objective
+            colors[0, idx] = elite.objective
 
         # Initialize the axis.
         ax = plt.gca() if ax is None else ax

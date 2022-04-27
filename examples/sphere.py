@@ -129,7 +129,7 @@ def create_optimizer(algorithm, dim, seed):
             "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
             "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
     ]:
-        archive = GridArchive((500,500), bounds, seed=seed)
+        archive = GridArchive((500, 500), bounds, seed=seed)
     elif algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
         archive = CVTArchive(10_000, bounds, samples=100_000, use_kd_tree=True)
     else:
