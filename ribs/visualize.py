@@ -143,15 +143,21 @@ def grid_archive_heatmap(archive,
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
         square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float) [optional]: the aspect ratio of the heatmap. Defaults to 'auto' for 2D and 0.5 for 1D. 'equal' is the same as ``aspect=1``.
+        aspect ('auto', 'equal', float): the aspect ratio of the heatmap.
+            Defaults to 'auto' for 2D and 0.5 for 1D. 'equal' is the same as
+            ``aspect=1``.
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
-        cbar (str, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to 'auto'
+            which displays the colorbar on the archive's current Axes. If None,
+            then colorbar is not displayed. If this is an Axes object, displays
+            the colorbar on the specified Axes
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
-        cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
+        cbar_kwargs (dict): Additional kwargs to pass to
+            :func:`~matplotlib.figure.Figure.colorbar`
 
     Raises:
         ValueError: The archive's dimension must be 1D or 2D.
@@ -314,14 +320,14 @@ def cvt_archive_heatmap(archive,
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
         square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float) [optional]: the aspect ratio of the heatmap. Defaults to 'auto' for 2D. 'equal' is the same as ``aspect=1``.
+        aspect ('auto', 'equal', float): the aspect ratio of the heatmap. Defaults to 'auto' for 2D. 'equal' is the same as ``aspect=1``.
         ms (float): Marker size for both centroids and samples.
         lw (float): Line width when plotting the voronoi diagram.
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
-        cbar (str, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
         cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
 
     Raises:
