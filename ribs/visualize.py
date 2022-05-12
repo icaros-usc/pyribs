@@ -188,7 +188,7 @@ def grid_archive_heatmap(archive,
         ax = plt.gca() if ax is None else ax
         ax.set_xlim(lower_bounds[0], upper_bounds[0])
 
-        # default to 0.3 to make it look good
+        # default to 0.5 to make it look good
         ax.set_aspect(aspect)
 
         # Create the plot.
