@@ -154,7 +154,7 @@ def grid_archive_heatmap(archive,
         cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
 
     Raises:
-        ValueError: The archive's dimension is not supported (not 1D or 2D).
+        ValueError: The archive's dimension must be 1D or 2D.
     """
     if aspect is None:
         # Handles default aspects for different dims.
@@ -352,8 +352,7 @@ def cvt_archive_heatmap(archive,
     ax = plt.gca() if ax is None else ax
     ax.set_xlim(lower_bounds[0], upper_bounds[0])
     ax.set_ylim(lower_bounds[1], upper_bounds[1])
-    if square:
-        ax.set_aspect("equal")
+    ax.set_aspect(aspect)
 
     # Add faraway points so that the edge regions of the Voronoi diagram are
     # filled in. Refer to
