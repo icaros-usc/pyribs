@@ -156,15 +156,14 @@ def grid_archive_heatmap(archive,
     Raises:
         ValueError: The archive's dimension must be 1D or 2D.
     """
+    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim,
+                                  [1, 2], "Heatmaps can only be plotted for 1D or 2D GridArchive")
     if aspect is None:
         # Handles default aspects for different dims.
         if archive.behavior_dim == 1:
             aspect = 0.5
         else:
             aspect = "auto"
-
-    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim,
-                                  [1, 2], "Grid archive must be 1D or 2D")
 
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
@@ -328,11 +327,10 @@ def cvt_archive_heatmap(archive,
     Raises:
         ValueError: The archive is not 2D.
     """
+    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim,
+                                  [2], "Heatmaps can only be plotted for 1D or 2D CVTArchive")
     if aspect is None:
         aspect = "auto"
-
-    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim,
-                                  [2], "CVT archive must be 2D")
 
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
