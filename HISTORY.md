@@ -6,6 +6,7 @@
 
 #### API
 
+- **Backwards-imcompatible:** Add `cbar`, `aspect options` for cvt_archive_heatmap (#197)
 - **Backwards-incompatible:** Add `aspect` option to `grid_archive_heatmap` +
   support for 1D heatmaps (#196)
   - `square` option no longer works
