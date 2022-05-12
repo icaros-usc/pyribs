@@ -47,6 +47,44 @@ def _retrieve_cmap(cmap):
     return cmap
 
 
+def _validate_heatmap_visual_args(aspect, cbar, square, behavior_dim,
+                                  valid_dims, error_msg_behavior_dim):
+    """
+    Helper function to validate arguments passed to `*_archive_heatmap` plotting functions
+
+    Args:
+        valid_dims (list[int]): all specified valid archive dimensions that may be plotted into heatmaps
+        error_msg_behavior_dim (str): Error message in ValueError if archive dimension plotting is not supported
+
+    Raises:
+        ValueError: if validity checks for heatmap args fail
+    """
+    if aspect is not None and not (isinstance(aspect, float) or
+                                   aspect in ["equal", "auto"]):
+        raise ValueError(
+            f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float")
+    if square is not None:
+        raise ValueError(
+            "The argument 'square' is deprecated and will not be "
+            "supported in future versions. Use 'aspect' to set the "
+            "heatmap's aspect ratio instead")
+    if behavior_dim not in valid_dims:
+        raise ValueError(error_msg_behavior_dim)
+    if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
+        raise ValueError(
+            f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
+        )
+
+
+def _set_cbar(t, ax, cbar, cbar_kwargs):
+    """Sets cbar on the Axes given cbar arg"""
+    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
+    if cbar == "auto":
+        ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
+    elif isinstance(cbar, axes.Axes):
+        cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
+
+
 def grid_archive_heatmap(archive,
                          ax=None,
                          transpose_bcs=False,
@@ -105,41 +143,33 @@ def grid_archive_heatmap(archive,
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
         square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float) [optional]: the aspect ratio of the heatmap. Defaults to 'auto' for 2D and 0.5 for 1D. 'equal' is the same as ``aspect=1``.
+        aspect ('auto', 'equal', float): the aspect ratio of the heatmap.
+            Defaults to 'auto' for 2D and 0.5 for 1D. 'equal' is the same as
+            ``aspect=1``.
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
-        cbar (str, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to 'auto'
+            which displays the colorbar on the archive's current Axes. If None,
+            then colorbar is not displayed. If this is an Axes object, displays
+            the colorbar on the specified Axes
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
-        cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
-    Raises:
-        ValueError: The archive is not 2D.
-    """
-    if square is not None:
-        raise ValueError(
-            "The argument 'square' is deprecated and will not be "
-            "supported in future versions. Use 'aspect' to set the "
-            "heatmap's aspect ratio instead")
-    if archive.behavior_dim not in [1, 2]:
-        raise ValueError("Heatmaps are only supported for 1D and 2D archives")
-    if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
-        raise ValueError(
-            f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
-        )
+        cbar_kwargs (dict): Additional kwargs to pass to
+            :func:`~matplotlib.figure.Figure.colorbar`
 
+    Raises:
+        ValueError: The archive's dimension must be 1D or 2D.
+    """
+    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim,
+                                  [1, 2], "Heatmaps can only be plotted for 1D or 2D GridArchive")
     if aspect is None:
         # Handles default aspects for different dims.
         if archive.behavior_dim == 1:
             aspect = 0.5
         else:
             aspect = "auto"
-
-    if aspect is not None and not (isinstance(aspect, float) or
-                                   aspect in ["equal", "auto"]):
-        raise ValueError(
-            f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float")
 
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
@@ -163,7 +193,7 @@ def grid_archive_heatmap(archive,
         ax = plt.gca() if ax is None else ax
         ax.set_xlim(lower_bounds[0], upper_bounds[0])
 
-        # default to 0.3 to make it look good
+        # default to 0.5 to make it look good
         ax.set_aspect(aspect)
 
         # Create the plot.
@@ -221,12 +251,8 @@ def grid_archive_heatmap(archive,
                           vmax=vmax,
                           **pcm_kwargs)
 
-    # Create the colorbar.
-    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
-    if cbar == "auto":
-        ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
-    elif isinstance(cbar, axes.Axes):
-        cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
+    # Create color bar.
+    _set_cbar(t, ax, cbar, cbar_kwargs)
 
 
 def cvt_archive_heatmap(archive,
@@ -235,11 +261,14 @@ def cvt_archive_heatmap(archive,
                         plot_samples=False,
                         transpose_bcs=False,
                         cmap="magma",
-                        square=False,
+                        square=None,
+                        aspect="auto",
                         ms=1,
                         lw=0.5,
                         vmin=None,
-                        vmax=None):
+                        vmax=None,
+                        cbar="auto",
+                        cbar_kwargs=None):
     """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 2D behavior
     space.
 
@@ -290,20 +319,24 @@ def cvt_archive_heatmap(archive,
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        square (bool): If True, set the axes aspect ratio to be "equal".
+        square (bool): [DEPRECATED]
+        aspect ('auto', 'equal', float): the aspect ratio of the heatmap. Defaults to 'auto' for 2D. 'equal' is the same as ``aspect=1``.
         ms (float): Marker size for both centroids and samples.
         lw (float): Line width when plotting the voronoi diagram.
         vmin (float): Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
+        cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
+
     Raises:
         ValueError: The archive is not 2D.
     """
-    # pylint: disable = too-many-locals
-
-    if archive.behavior_dim != 2:
-        raise ValueError("Cannot plot heatmap for non-2D archive.")
+    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim,
+                                  [2], "Heatmaps can only be plotted for 1D or 2D CVTArchive")
+    if aspect is None:
+        aspect = "auto"
 
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
@@ -323,8 +356,7 @@ def cvt_archive_heatmap(archive,
     ax = plt.gca() if ax is None else ax
     ax.set_xlim(lower_bounds[0], upper_bounds[0])
     ax.set_ylim(lower_bounds[1], upper_bounds[1])
-    if square:
-        ax.set_aspect("equal")
+    ax.set_aspect(aspect)
 
     # Add faraway points so that the edge regions of the Voronoi diagram are
     # filled in. Refer to
@@ -374,13 +406,15 @@ def cvt_archive_heatmap(archive,
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(min_obj, max_obj)
-    ax.figure.colorbar(mappable, ax=ax, pad=0.1)
 
     # Plot the sample points and centroids.
     if plot_samples:
         ax.plot(samples[:, 0], samples[:, 1], "o", c="gray", ms=ms)
     if plot_centroids:
         ax.plot(centroids[:, 0], centroids[:, 1], "ko", ms=ms)
+
+    # Create color bar.
+    _set_cbar(mappable, ax, cbar, cbar_kwargs)
 
 
 def sliding_boundaries_archive_heatmap(archive,
