@@ -250,6 +250,41 @@ def grid_archive_heatmap(archive,
                           vmin=vmin,
                           vmax=vmax,
                           **pcm_kwargs)
+    elif archive.behavior_dim == 3:
+        # Retrieve data from archive.
+        lower_bounds = archive.lower_bounds
+        upper_bounds = archive.upper_bounds
+        x_dim, y_dim = archive.dims
+        x_bounds = archive.boundaries[0]
+        y_bounds = archive.boundaries[1]
+
+        # Color for each cell in the heatmap.
+        colors = np.full((y_dim, x_dim), np.nan)
+        for elite in archive:
+            # TODO: Do not require calling numpy?
+            idx = np.unravel_index(elite.index, archive.dims)
+            colors[idx[1], idx[0]] = elite.objective
+
+        # Initialize the axis.
+        ax = plt.gca() if ax is None else ax
+        ax.set_xlim(lower_bounds[0], upper_bounds[0])
+        ax.set_ylim(lower_bounds[1], upper_bounds[1])
+
+        ax.set_aspect(aspect)
+
+        # Create the plot.
+        pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
+        objectives = archive.as_pandas().batch_objectives()
+        vmin = np.min(objectives) if vmin is None else vmin
+        vmax = np.max(objectives) if vmax is None else vmax
+        t = ax.pcolormesh(x_bounds,
+                          y_bounds,
+                          colors,
+                          cmap=cmap,
+                          vmin=vmin,
+                          vmax=vmax,
+                          **pcm_kwargs)
+
 
     # Create color bar.
     _set_cbar(t, ax, cbar, cbar_kwargs)
