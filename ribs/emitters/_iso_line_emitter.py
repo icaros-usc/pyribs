@@ -59,7 +59,8 @@ class IsoLineEmitter(EmitterBase):
         self._batch_size = batch_size
         self._x0 = np.array(x0, dtype=archive.dtype)
         self._iso_sigma = archive.dtype(iso_sigma)
-        self._sigma0 = iso_sigma if sigma0 is None else sigma0
+        self._sigma0 = self._iso_sigma if sigma0 is None else archive.dtype(
+            sigma0)
         self._line_sigma = archive.dtype(line_sigma)
 
         EmitterBase.__init__(

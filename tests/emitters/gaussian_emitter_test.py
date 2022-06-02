@@ -1,5 +1,4 @@
 """Tests for the GaussianEmitter."""
-
 import numpy as np
 
 from ribs.emitters import GaussianEmitter

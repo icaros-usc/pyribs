@@ -28,8 +28,8 @@ class GaussianEmitter(EmitterBase):
             the Gaussian is diagonal, so if this argument is an array, it
             must be 1D.
         sigma0 (float or array-like): Standard deviation of the Gaussian
-            distribution when the archive is empty.If this argument is
-            None, then sigma will be used. Note we assume the Gaussian is
+            distribution when the archive is empty. If this argument is
+            None, then it deaults to sigma. Note we assume the Gaussian is
             diagonal, so if this argument is an array, it must be 1D.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
@@ -58,7 +58,9 @@ class GaussianEmitter(EmitterBase):
         self._sigma = archive.dtype(sigma) if isinstance(
             sigma,
             (float, np.floating)) else np.array(sigma, dtype=archive.dtype)
-        self._sigma0 = sigma if sigma0 is None else sigma0
+        self._sigma0 = self._sigma if sigma0 is None else (
+            archive.dtype(sigma0) if isinstance(sigma0, (
+                float, np.floating)) else np.array(sigma, dtype=archive.dtype))
 
         EmitterBase.__init__(
             self,
