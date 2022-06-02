@@ -57,7 +57,7 @@ def test_from_config_with_valid_input(use_toml, tmp_path):
         "emitters": [{
             "type": "GaussianEmitter",
             "x0": [0.0, 0.0],
-            "sigma0": 0.1,
+            "sigma": 0.1,
             "batch_size": batch_size,
             "seed": seed,
         }],
@@ -106,7 +106,7 @@ def test_from_config_fails_on_unknown_entity(entity_type):
         "emitters": [{
             "type": "GaussianEmitter",
             "x0": [0.0, 0.0],
-            "sigma0": 0.1,
+            "sigma": 0.1,
             "batch_size": 32,
             "seed": 42,
         }],
