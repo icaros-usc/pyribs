@@ -60,7 +60,7 @@ class GaussianEmitter(EmitterBase):
             (float, np.floating)) else np.array(sigma, dtype=archive.dtype)
         self._sigma0 = self._sigma if sigma0 is None else (
             archive.dtype(sigma0) if isinstance(sigma0, (
-                float, np.floating)) else np.array(sigma, dtype=archive.dtype))
+                float, np.floating)) else np.array(sigma0, dtype=archive.dtype))
 
         EmitterBase.__init__(
             self,
