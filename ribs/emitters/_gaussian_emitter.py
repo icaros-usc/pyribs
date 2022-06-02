@@ -29,7 +29,7 @@ class GaussianEmitter(EmitterBase):
             must be 1D.
         sigma0 (float or array-like): Standard deviation of the Gaussian
             distribution when the archive is empty. If this argument is
-            None, then it deaults to sigma. Note we assume the Gaussian is
+            None, then it defaults to sigma. Note we assume the Gaussian is
             diagonal, so if this argument is an array, it must be 1D.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
