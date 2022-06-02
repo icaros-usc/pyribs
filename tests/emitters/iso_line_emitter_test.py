@@ -6,12 +6,12 @@ from ribs.emitters import IsoLineEmitter
 
 def test_properties_are_correct(archive_fixture):
     archive, x0 = archive_fixture
-    iso_sigma = 1
+    iso_sigma0 = 1
     line_sigma = 2
-    emitter = IsoLineEmitter(archive, x0, iso_sigma, line_sigma, batch_size=2)
+    emitter = IsoLineEmitter(archive, x0, iso_sigma0, line_sigma, batch_size=2)
 
     assert (emitter.x0 == x0).all()
-    assert emitter.iso_sigma == iso_sigma
+    assert emitter.iso_sigma0 == iso_sigma0
     assert emitter.line_sigma == line_sigma
 
 
