@@ -46,7 +46,8 @@ class IsoLineEmitter(EmitterBase):
     def __init__(self,
                  archive,
                  x0,
-                 iso_sigma=0.01,
+                 iso_sigma0=0.01,
+                 iso_sigma=None,
                  line_sigma=0.2,
                  bounds=None,
                  batch_size=64,
@@ -54,7 +55,8 @@ class IsoLineEmitter(EmitterBase):
         self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
         self._x0 = np.array(x0, dtype=archive.dtype)
-        self._iso_sigma = archive.dtype(iso_sigma)
+        self._iso_sigma0 = archive.dtype(iso_sigma)
+        self._iso_sigma = iso_sigma0 if iso_sigma is None else iso_sigma
         self._line_sigma = archive.dtype(line_sigma)
 
         EmitterBase.__init__(
@@ -71,9 +73,15 @@ class IsoLineEmitter(EmitterBase):
         return self._x0
 
     @property
+    def iso_sigma0(self):
+        """float: Scale factor for the isotropic distribution used when
+        generating solutions for the first call to :meth:`ask`."""
+        return self._iso_sigma0
+
+    @property
     def iso_sigma(self):
         """float: Scale factor for the isotropic distribution used when
-        generating solutions."""
+        generating solutions for subsequent calls to :meth:`ask`."""
         return self._iso_sigma
 
     @property
@@ -104,15 +112,15 @@ class IsoLineEmitter(EmitterBase):
 
         If the archive is empty, solutions are drawn from an isotropic Gaussian
         distribution centered at ``self.x0`` with standard deviation
-        ``self.iso_sigma``. Otherwise, each solution is drawn as described in
-        this class's docstring.
+        ``self.iso_sigma0``. Otherwise, each solution is drawn as described in
+        this class's docstring with standard deviation ``self.iso_sigma``.
 
         Returns:
             ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
             solutions to evaluate.
         """
         iso_gaussian = self._rng.normal(
-            scale=self._iso_sigma,
+            scale=self._iso_sigma0 if self.archive.empty else self._iso_sigma,
             size=(self._batch_size, self.solution_dim),
         ).astype(self.archive.dtype)
 
