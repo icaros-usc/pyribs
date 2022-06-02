@@ -78,13 +78,13 @@ class GaussianEmitter(EmitterBase):
     @property
     def sigma(self):
         """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
-        distribution for after the initialization step."""
+        distribution when the archive is not empty."""
         return self._sigma
 
     @property
     def sigma0(self):
         """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
-        distribution for the initialization step."""
+        distribution when the archive is empty."""
         return self._sigma0
 
     @property

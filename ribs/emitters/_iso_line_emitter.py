@@ -78,14 +78,14 @@ class IsoLineEmitter(EmitterBase):
 
     @property
     def iso_sigma(self):
-        """float: Scale factor for the isotropic distribution used when
-        generating solutions for subsequent calls to :meth:`ask`."""
+        """float: Scale factor for the isotropic distribution used to
+        generate solutions when the archive is not empty."""
         return self._iso_sigma
 
     @property
     def sigma0(self):
-        """float: Scale factor for the isotropic distribution used when
-        generating solutions for the first call to :meth:`ask`."""
+        """float: Scale factor for the isotropic distribution used to
+        generate solutions when the archive is empty."""
         return self._sigma0
 
     @property
