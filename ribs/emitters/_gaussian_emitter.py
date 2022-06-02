@@ -12,7 +12,7 @@ class GaussianEmitter(EmitterBase):
     user-specified Gaussian distribution with mean ``x0`` and standard deviation
     ``sigma0``. Otherwise, this emitter selects solutions from the archive and
     generates solutions from a Gaussian distribution centered around each
-    solution with standard deviation ``sigma0``.
+    solution with standard deviation ``sigma``.
 
     This is the classic variation operator presented in `Mouret 2015
     <https://arxiv.org/pdf/1504.04909.pdf>`_.
@@ -23,10 +23,14 @@ class GaussianEmitter(EmitterBase):
             :class:`ribs.archives.GridArchive`.
         x0 (array-like): Center of the Gaussian distribution from which to
             sample solutions when the archive is empty.
-        sigma0 (float or array-like): Standard deviation of the Gaussian
-            distribution, both when the archive is empty and afterwards. Note we
-            assume the Gaussian is diagonal, so if this argument is an array, it
+        sigma (float or array-like): Standard deviation of the Gaussian
+            distribution when the archive is not empty. Note we assume
+            the Gaussian is diagonal, so if this argument is an array, it
             must be 1D.
+        sigma0 (float or array-like): Standard deviation of the Gaussian
+            distribution when the archive is empty. If this argument is
+            None, then it defaults to sigma. Note we assume the Gaussian is
+            diagonal, so if this argument is an array, it must be 1D.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
             Alternatively, pass an array-like to specify the bounds for each
@@ -43,15 +47,20 @@ class GaussianEmitter(EmitterBase):
     def __init__(self,
                  archive,
                  x0,
-                 sigma0,
+                 sigma,
+                 sigma0=None,
                  bounds=None,
                  batch_size=64,
                  seed=None):
         self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
         self._x0 = np.array(x0, dtype=archive.dtype)
-        self._sigma0 = archive.dtype(sigma0) if isinstance(
-            sigma0, (float, np.floating)) else np.array(sigma0)
+        self._sigma = archive.dtype(sigma) if isinstance(
+            sigma,
+            (float, np.floating)) else np.array(sigma, dtype=archive.dtype)
+        self._sigma0 = self._sigma if sigma0 is None else (
+            archive.dtype(sigma0) if isinstance(sigma0, (
+                float, np.floating)) else np.array(sigma0, dtype=archive.dtype))
 
         EmitterBase.__init__(
             self,
@@ -67,9 +76,15 @@ class GaussianEmitter(EmitterBase):
         return self._x0
 
     @property
+    def sigma(self):
+        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
+        distribution when the archive is not empty."""
+        return self._sigma
+
+    @property
     def sigma0(self):
         """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
-        distribution."""
+        distribution when the archive is empty."""
         return self._sigma0
 
     @property
@@ -88,19 +103,25 @@ class GaussianEmitter(EmitterBase):
         """Creates solutions by adding Gaussian noise to elites in the archive.
 
         If the archive is empty, solutions are drawn from a (diagonal) Gaussian
-        distribution centered at ``self.x0``. Otherwise, each solution is drawn
-        from a distribution centered at a randomly chosen elite. In either case,
-        the standard deviation is ``self.sigma0``.
+        distribution centered at ``self.x0`` with standard deviation
+        ``self.sigma0``. Otherwise, each solution is drawn from a distribution
+        centered at a randomly chosen elite with standard deviation
+        ``self.sigma``.
 
         Returns:
             ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
             solutions to evaluate.
         """
-        parents = (np.expand_dims(self._x0, axis=0) if self.archive.empty else
-                   self.archive.sample_elites(self._batch_size).solution_batch)
+        if self.archive.empty:
+            sigma = self._sigma0
+            parents = np.expand_dims(self._x0, axis=0)
+        else:
+            sigma = self._sigma
+            parents = self.archive.sample_elites(
+                self._batch_size).solution_batch
 
         noise = self._rng.normal(
-            scale=self._sigma0,
+            scale=sigma,
             size=(self._batch_size, self.solution_dim),
         ).astype(self.archive.dtype)
 

@@ -11,7 +11,7 @@ class IsoLineEmitter(EmitterBase):
 
     If the archive is empty, calls to :meth:`ask` will generate solutions from
     an isotropic Gaussian distribution with mean ``x0`` and standard deviation
-    ``iso_sigma``. Otherwise, to generate each new solution, the emitter selects
+    ``sigma0``. Otherwise, to generate each new solution, the emitter selects
     a pair of elites :math:`x_i` and :math:`x_j` and samples from
 
     .. math::
@@ -28,10 +28,13 @@ class IsoLineEmitter(EmitterBase):
             :class:`ribs.archives.GridArchive`.
         x0 (array-like): Center of the Gaussian distribution from which to
             sample solutions when the archive is empty.
-        iso_sigma (float): Scale factor for the isotropic distribution used when
-            generating solutions.
+        iso_sigma (float): Scale factor for the isotropic distribution used to
+            generate solutions when the archive is non-empty.
         line_sigma (float): Scale factor for the line distribution used when
             generating solutions.
+        sigma0 (float): Standard deviation of the isotropic distribution used to
+            generate solutions when the archive is empty. If this argument is
+            None, then ``iso_sigma`` will be used.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
             Alternatively, pass an array-like to specify the bounds for each
@@ -48,6 +51,7 @@ class IsoLineEmitter(EmitterBase):
                  x0,
                  iso_sigma=0.01,
                  line_sigma=0.2,
+                 sigma0=None,
                  bounds=None,
                  batch_size=64,
                  seed=None):
@@ -55,6 +59,8 @@ class IsoLineEmitter(EmitterBase):
         self._batch_size = batch_size
         self._x0 = np.array(x0, dtype=archive.dtype)
         self._iso_sigma = archive.dtype(iso_sigma)
+        self._sigma0 = self._iso_sigma if sigma0 is None else archive.dtype(
+            sigma0)
         self._line_sigma = archive.dtype(line_sigma)
 
         EmitterBase.__init__(
@@ -72,9 +78,15 @@ class IsoLineEmitter(EmitterBase):
 
     @property
     def iso_sigma(self):
-        """float: Scale factor for the isotropic distribution used when
-        generating solutions."""
+        """float: Scale factor for the isotropic distribution used to
+        generate solutions when the archive is not empty."""
         return self._iso_sigma
+
+    @property
+    def sigma0(self):
+        """float: Scale factor for the isotropic distribution used to
+        generate solutions when the archive is empty."""
+        return self._sigma0
 
     @property
     def line_sigma(self):
@@ -104,15 +116,15 @@ class IsoLineEmitter(EmitterBase):
 
         If the archive is empty, solutions are drawn from an isotropic Gaussian
         distribution centered at ``self.x0`` with standard deviation
-        ``self.iso_sigma``. Otherwise, each solution is drawn as described in
-        this class's docstring.
+        ``self.sigma0``. Otherwise, each solution is drawn as described in
+        this class's docstring with standard deviation ``self.iso_sigma``.
 
         Returns:
             ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
             solutions to evaluate.
         """
         iso_gaussian = self._rng.normal(
-            scale=self._iso_sigma,
+            scale=self._sigma0 if self.archive.empty else self._iso_sigma,
             size=(self._batch_size, self.solution_dim),
         ).astype(self.archive.dtype)
 

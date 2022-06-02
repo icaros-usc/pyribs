@@ -6,11 +6,21 @@ from ribs.emitters import GaussianEmitter
 
 def test_properties_are_correct(archive_fixture):
     archive, x0 = archive_fixture
-    sigma0 = 1
-    emitter = GaussianEmitter(archive, x0, sigma0, batch_size=2)
+    sigma = 1
+    sigma0 = 2
+    emitter = GaussianEmitter(archive, x0, sigma, sigma0, batch_size=2)
 
     assert (emitter.x0 == x0).all()
+    assert emitter.sigma == sigma
     assert emitter.sigma0 == sigma0
+
+
+def test_sigma0_is_correct(archive_fixture):
+    archive, x0 = archive_fixture
+    sigma = 1
+    emitter = GaussianEmitter(archive, x0, sigma)  # sigma0=None
+
+    assert emitter.sigma0 == sigma
 
 
 def test_upper_bounds_enforced(archive_fixture):

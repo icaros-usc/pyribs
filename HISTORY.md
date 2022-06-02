@@ -6,11 +6,14 @@
 
 #### API
 
-- **Backwards-imcompatible:** Add `cbar`, `aspect options` for cvt_archive_heatmap (#197)
+- **Backwards-incompatible:** Add `sigma`, `sigma0` options to `gaussian_emitter` and `iso_line_emitter` (#199)
+  - `gaussian_emitter` constructor requires `sigma`; `sigma0` is optional.
+  - `iso_line_emitter` constructor takes in optional parameter `sigma0`.
+- **Backwards-incompatible:** Add `cbar`, `aspect` options for `cvt_archive_heatmap` (#197)
 - **Backwards-incompatible:** Add `aspect` option to `grid_archive_heatmap` +
   support for 1D heatmaps (#196)
   - `square` option no longer works
-- **Backwards-incompatible:** Add cbar option to `grid_archive_heatmap` (#193)
+- **Backwards-incompatible:** Add `cbar` option to `grid_archive_heatmap` (#193)
 - **Backwards-incompatible:** Replace `get_random_elite()` with batched
   `sample_elites()` method (#192)
 - **Backwards-incompatible:** Add EliteBatch and rename fields in Elite (#191)
