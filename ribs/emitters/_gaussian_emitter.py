@@ -44,6 +44,7 @@ class GaussianEmitter(EmitterBase):
                  archive,
                  x0,
                  sigma0,
+                 sigma=None,
                  bounds=None,
                  batch_size=64,
                  seed=None):
@@ -52,6 +53,7 @@ class GaussianEmitter(EmitterBase):
         self._x0 = np.array(x0, dtype=archive.dtype)
         self._sigma0 = archive.dtype(sigma0) if isinstance(
             sigma0, (float, np.floating)) else np.array(sigma0)
+        self._sigma = sigma0 if sigma is None else sigma
 
         EmitterBase.__init__(
             self,
@@ -69,8 +71,14 @@ class GaussianEmitter(EmitterBase):
     @property
     def sigma0(self):
         """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
-        distribution."""
+        distribution for the initialization step."""
         return self._sigma0
+
+    @property
+    def sigma(self):
+        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
+        distribution for after the initialization step."""
+        return self._sigma
 
     @property
     def batch_size(self):
@@ -88,19 +96,25 @@ class GaussianEmitter(EmitterBase):
         """Creates solutions by adding Gaussian noise to elites in the archive.
 
         If the archive is empty, solutions are drawn from a (diagonal) Gaussian
-        distribution centered at ``self.x0``. Otherwise, each solution is drawn
-        from a distribution centered at a randomly chosen elite. In either case,
-        the standard deviation is ``self.sigma0``.
+        distribution centered at ``self.x0`` with standard deviation
+        ``self.sigma0``. Otherwise, each solution is drawn from a distribution
+        centered at a randomly chosen elite with standard deviation
+        ``self.sigma``.
 
         Returns:
             ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
             solutions to evaluate.
         """
-        parents = (np.expand_dims(self._x0, axis=0) if self.archive.empty else
-                   self.archive.sample_elites(self._batch_size).solution_batch)
+        if self.archive.empty:
+            sigma = self._sigma
+            parents = np.expand_dims(self._x0, axis=0)
+        else:
+            sigma = self._sigma0
+            parents = self.archive.sample_elites(
+                self._batch_size).solution_batch
 
         noise = self._rng.normal(
-            scale=self._sigma0,
+            scale=sigma,
             size=(self._batch_size, self.solution_dim),
         ).astype(self.archive.dtype)
 
