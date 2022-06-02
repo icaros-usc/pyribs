@@ -12,7 +12,7 @@ class GaussianEmitter(EmitterBase):
     user-specified Gaussian distribution with mean ``x0`` and standard deviation
     ``sigma0``. Otherwise, this emitter selects solutions from the archive and
     generates solutions from a Gaussian distribution centered around each
-    solution with standard deviation ``sigma0``.
+    solution with standard deviation ``sigma``.
 
     This is the classic variation operator presented in `Mouret 2015
     <https://arxiv.org/pdf/1504.04909.pdf>`_.
@@ -23,10 +23,14 @@ class GaussianEmitter(EmitterBase):
             :class:`ribs.archives.GridArchive`.
         x0 (array-like): Center of the Gaussian distribution from which to
             sample solutions when the archive is empty.
-        sigma0 (float or array-like): Standard deviation of the Gaussian
-            distribution, both when the archive is empty and afterwards. Note we
-            assume the Gaussian is diagonal, so if this argument is an array, it
+        sigma (float or array-like): Standard deviation of the Gaussian
+            distribution when the archive is not empty. Note we assume
+            the Gaussian is diagonal, so if this argument is an array, it
             must be 1D.
+        sigma0 (float or array-like): Standard deviation of the Gaussian
+            distribution when the archive is empty.If this argument is
+            None, then sigma will be used. Note we assume the Gaussian is
+            diagonal, so if this argument is an array, it must be 1D.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
             Alternatively, pass an array-like to specify the bounds for each
@@ -43,17 +47,18 @@ class GaussianEmitter(EmitterBase):
     def __init__(self,
                  archive,
                  x0,
-                 sigma0,
-                 sigma=None,
+                 sigma,
+                 sigma0=None,
                  bounds=None,
                  batch_size=64,
                  seed=None):
         self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
         self._x0 = np.array(x0, dtype=archive.dtype)
-        self._sigma0 = archive.dtype(sigma0) if isinstance(
-            sigma0, (float, np.floating)) else np.array(sigma0)
-        self._sigma = sigma0 if sigma is None else sigma
+        self._sigma = archive.dtype(sigma) if isinstance(
+            sigma,
+            (float, np.floating)) else np.array(sigma, dtype=archive.dtype)
+        self._sigma0 = sigma if sigma0 is None else sigma0
 
         EmitterBase.__init__(
             self,
@@ -69,16 +74,16 @@ class GaussianEmitter(EmitterBase):
         return self._x0
 
     @property
-    def sigma0(self):
-        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
-        distribution for the initialization step."""
-        return self._sigma0
-
-    @property
     def sigma(self):
         """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
         distribution for after the initialization step."""
         return self._sigma
+
+    @property
+    def sigma0(self):
+        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
+        distribution for the initialization step."""
+        return self._sigma0
 
     @property
     def batch_size(self):
@@ -106,10 +111,10 @@ class GaussianEmitter(EmitterBase):
             solutions to evaluate.
         """
         if self.archive.empty:
-            sigma = self._sigma
+            sigma = self._sigma0
             parents = np.expand_dims(self._x0, axis=0)
         else:
-            sigma = self._sigma0
+            sigma = self._sigma
             parents = self.archive.sample_elites(
                 self._batch_size).solution_batch
 
