@@ -12,25 +12,25 @@ from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._elite import Elite, EliteBatch
 
 
-@decorator
-def require_init(method, self, *args, **kwargs):
-    """Decorator for archive methods that forces the archive to be initialized.
+# @decorator
+# def require_init(method, self, *args, **kwargs):
+#     """Decorator for archive methods that forces the archive to be initialized.
 
-    If the archive is not initialized (according to the ``initialized``
-    property), a RuntimeError is raised.
-    """
-    if not self.initialized:
-        raise RuntimeError("Archive has not been initialized. "
-                           "Please call initialize().")
-    return method(self, *args, **kwargs)
+#     If the archive is not initialized (according to the ``initialized``
+#     property), a RuntimeError is raised.
+#     """
+#     if not self.initialized:
+#         raise RuntimeError("Archive has not been initialized. "
+#                            "Please call initialize().")
+#     return method(self, *args, **kwargs)
 
 
-def require_init_inline(archive):
-    """Same as require_init but for when decorators cannot be used, such as on
-    special methods."""
-    if not archive.initialized:
-        raise RuntimeError("Archive has not been initialized. "
-                           "Please call initialize().")
+# def require_init_inline(archive):
+#     """Same as require_init but for when decorators cannot be used, such as on
+#     special methods."""
+#     if not archive.initialized:
+#         raise RuntimeError("Archive has not been initialized. "
+#                            "Please call initialize().")
 
 
 def readonly(arr):
@@ -161,28 +161,30 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             used to index into ``_occupied_indices``.
     """
 
-    def __init__(self, cells, behavior_dim, seed=None, dtype=np.float64):
+    def __init__(self, cells, behavior_dim, solution_dim, seed=None, dtype=np.float64):
 
         ## Intended to be accessed by child classes. ##
 
         self._rng = np.random.default_rng(seed)
         self._cells = cells
         self._behavior_dim = behavior_dim
-        self._solution_dim = None
-        self._occupied = None
-        self._solutions = None
-        self._objective_values = None
-        self._behavior_values = None
-        self._metadata = None
-        self._occupied_indices = None
+        self._solution_dim = solution_dim
         self._num_occupied = 0
 
+        self._occupied = np.zeros(self._cells, dtype=bool)
+        self._solutions = np.empty((self._cells, solution_dim),
+                                   dtype=self.dtype)
+        self._objective_values = np.empty(self._cells, dtype=self.dtype)
+        self._behavior_values = np.empty((self._cells, self._behavior_dim),
+                                         dtype=self.dtype)
+        self._metadata = np.empty(self._cells, dtype=object)
+        self._occupied_indices = np.empty(self._cells, dtype=np.int32)
+        self._stats = None #this line doesn't do anything, but here for reference? should I keep?
+        self._stats_reset()
+        self._state = {"clear": 0, "add": 0}
         ## Not intended to be accessed by children. ##
 
         self._seed = seed
-        self._initialized = False
-        self._stats = None
-
         # Tracks archive modifications by counting calls to clear() and add().
         self._state = None
 
@@ -209,11 +211,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         raise ValueError("Unsupported dtype. Must be np.float32 or np.float64")
 
-    @property
-    def initialized(self):
-        """Whether the archive has been initialized by a call to
-        :meth:`initialize`"""
-        return self._initialized
+    # @property
+    # def initialized(self):
+    #     """Whether the archive has been initialized by a call to
+    #     :meth:`initialize`"""
+    #     return self._initialized
 
     @property
     def cells(self):
@@ -231,7 +233,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._behavior_dim
 
     @property
-    @require_init
+    #@require_init
     def solution_dim(self):
         """int: Dimensionality of the solutions in the archive."""
         return self._solution_dim
@@ -291,35 +293,35 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             obj_mean=new_qd_score / self.dtype(len(self)),
         )
 
-    def initialize(self, solution_dim):
-        """Initializes the archive by allocating storage space.
+    # def initialize(self, solution_dim):
+    #     """Initializes the archive by allocating storage space.
 
-        Child classes should call this method in their implementation if they
-        are overriding it.
+    #     Child classes should call this method in their implementation if they
+    #     are overriding it.
 
-        Args:
-            solution_dim (int): The dimension of the solution space.
-        Raises:
-            RuntimeError: The archive is already initialized.
-        """
-        if self._initialized:
-            raise RuntimeError("Cannot re-initialize an archive")
-        self._initialized = True
+    #     Args:
+    #         solution_dim (int): The dimension of the solution space.
+    #     Raises:
+    #         RuntimeError: The archive is already initialized.
+    #     """
+    #     if self._initialized:
+    #         raise RuntimeError("Cannot re-initialize an archive")
+    #     self._initialized = True
 
-        self._solution_dim = solution_dim
-        self._occupied = np.zeros(self._cells, dtype=bool)
-        self._solutions = np.empty((self._cells, solution_dim),
-                                   dtype=self.dtype)
-        self._objective_values = np.empty(self._cells, dtype=self.dtype)
-        self._behavior_values = np.empty((self._cells, self._behavior_dim),
-                                         dtype=self.dtype)
-        self._metadata = np.empty(self._cells, dtype=object)
-        self._occupied_indices = np.empty(self._cells, dtype=np.int32)
+    #     self._solution_dim = solution_dim
+    #     self._occupied = np.zeros(self._cells, dtype=bool)
+    #     self._solutions = np.empty((self._cells, solution_dim),
+    #                                dtype=self.dtype)
+    #     self._objective_values = np.empty(self._cells, dtype=self.dtype)
+    #     self._behavior_values = np.empty((self._cells, self._behavior_dim),
+    #                                      dtype=self.dtype)
+    #     self._metadata = np.empty(self._cells, dtype=object)
+    #     self._occupied_indices = np.empty(self._cells, dtype=np.int32)
 
-        self._stats_reset()
-        self._state = {"clear": 0, "add": 0}
+    #     self._stats_reset()
+    #     self._state = {"clear": 0, "add": 0}
 
-    @require_init
+    # #@require_init
     def clear(self):
         """Removes all elites from the archive.
 
@@ -388,7 +390,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied_indices[self._num_occupied] = index
         self._num_occupied += 1
 
-    @require_init
+    #@require_init
     def add(self, solution, objective_value, behavior_values, metadata=None):
         """Attempts to insert a new solution into the archive.
 
@@ -452,7 +454,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return status, value
 
     # TODO: Update docstring due to new elite definition.
-    @require_init
+    #@require_init
     def elite_with_behavior(self, behavior_values):
         """Gets the elite with behavior vals in the same cell as those
         specified.
@@ -495,7 +497,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             )
         return Elite(None, None, None, None, None)
 
-    @require_init
+    #@require_init
     def sample_elites(self, n):
         """Randomly samples elites from the archive.
 
