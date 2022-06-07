@@ -128,6 +128,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     def __init__(self,
                  dims,
                  ranges,
+                 solution_dim,
                  seed=None,
                  dtype=np.float64,
                  remap_frequency=100,
@@ -141,6 +142,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             self,
             cells=np.product(self._dims),
             behavior_dim=len(self._dims),
+            solution_dim=solution_dim,
             seed=seed,
             dtype=dtype,
         )
