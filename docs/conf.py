@@ -64,7 +64,7 @@ napoleon_include_special_with_doc = True
 
 # MyST NB -- exclude execution of Jupyter notebooks because they can take a
 # while to run.
-jupyter_execute_notebooks = "off"
+nb_execution_mode = "off"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
