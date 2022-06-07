@@ -57,6 +57,7 @@ class CVTArchive(ArchiveBase):
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
             ``dims``.
+        solution_dim (int): Dimension of the solution space.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
@@ -97,7 +98,7 @@ class CVTArchive(ArchiveBase):
                  k_means_kwargs=None,
                  use_kd_tree=False,
                  ckdtree_kwargs=None):
-        
+
         ArchiveBase.__init__(
             self,
             cells=cells,

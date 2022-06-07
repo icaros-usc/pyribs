@@ -125,6 +125,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         cells (int): Number of cells in the archive. This is used to create the
             numpy arrays described above for storing archive info.
         behavior_dim (int): The dimension of the behavior space.
+        solution_dim (int): Dimension of the solution space.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
@@ -135,8 +136,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             particular for generating random elites.
         _cells (int): See ``cells`` arg.
         _behavior_dim (int): See ``behavior_dim`` arg.
-        _solution_dim (int): Dimension of the solution space, passed in with
-            :meth:`initialize`.
+        _solution_dim (int): See ``solution_dim`` arg.
         _occupied (numpy.ndarray): Bool array storing whether each cell in the
             archive is occupied. This attribute is None until :meth:`initialize`
             is called.

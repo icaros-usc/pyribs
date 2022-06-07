@@ -333,7 +333,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             status, value = ArchiveBase.add(self, sol, obj, beh, meta)
         return status, value
 
-    @require_init
+    #@require_init
     def add(self, solution, objective_value, behavior_values, metadata=None):
         """Attempts to insert a new solution into the archive.
 
