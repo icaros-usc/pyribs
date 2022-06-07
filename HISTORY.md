@@ -5,7 +5,7 @@
 ### Changelog
 
 #### API
-
+- **Backwards-incompatible:** Moved the initialize() function in ArchiveBase into the constructor. This leaves other changes to be made, detailed in the PR
 - **Backwards-incompatible:** Add `sigma`, `sigma0` options to `gaussian_emitter` and `iso_line_emitter` (#199)
   - `gaussian_emitter` constructor requires `sigma`; `sigma0` is optional.
   - `iso_line_emitter` constructor takes in optional parameter `sigma0`.
