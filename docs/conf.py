@@ -58,7 +58,7 @@ extensions = [
 # Napoleon
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
-napoleon_use_param = True  # need this for autodoc
+napoleon_use_param = True  # see tox-dev/sphinx-autodoc-typehints#15
 napoleon_use_ivar = True
 napoleon_include_special_with_doc = True
 

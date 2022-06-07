@@ -20,12 +20,16 @@ to these functions.
     ribs.visualize.sliding_boundaries_archive_heatmap
     ribs.visualize.parallel_axes_plot
 """
+from typing import Union, Optional
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import axes
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
+
+from ribs.archives import GridArchive
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
@@ -85,17 +89,18 @@ def _set_cbar(t, ax, cbar, cbar_kwargs):
         cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
 
 
-def grid_archive_heatmap(archive,
-                         ax=None,
-                         transpose_bcs=False,
-                         cmap="magma",
-                         square=None,
-                         aspect=None,
-                         vmin=None,
-                         vmax=None,
-                         cbar="auto",
-                         pcm_kwargs=None,
-                         cbar_kwargs=None):
+def grid_archive_heatmap(archive: GridArchive,
+                         ax: axes.Axes = None,
+                         transpose_bcs: bool = False,
+                         cmap: Union[str, list,
+                                     matplotlib.colors.Colormap] = "magma",
+                         square: bool = None,
+                         aspect: Union[str, float] = None,
+                         vmin: float = None,
+                         vmax: float = None,
+                         cbar: Optional[axes.Axes] = "auto",
+                         pcm_kwargs: dict = None,
+                         cbar_kwargs: dict = None):
     """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D behavior
     space.
 
@@ -133,37 +138,36 @@ def grid_archive_heatmap(archive,
 
 
     Args:
-        archive (GridArchive): A 2D GridArchive.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
+        archive: A 2D GridArchive.
+        ax: Axes on which to plot the heatmap. If None,
             the current axis will be used.
-        transpose_bcs (bool): By default, the first BC in the archive will
+        transpose_bcs: By default, the first BC in the archive will
             appear along the x-axis, and the second will be along the y-axis. To
             switch this (i.e. to transpose the axes), set this to True.
-        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
+        cmap: Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
             RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float): the aspect ratio of the heatmap.
+        square: [DEPRECATED]
+        aspect: the aspect ratio of the heatmap.
             Defaults to 'auto' for 2D and 0.5 for 1D. 'equal' is the same as
             ``aspect=1``.
-        vmin (float): Minimum objective value to use in the plot. If None, the
+        vmin: Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If None, the
+        vmax: Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to 'auto'
+        cbar: By default, this is set to 'auto'
             which displays the colorbar on the archive's current Axes. If None,
             then colorbar is not displayed. If this is an Axes object, displays
             the colorbar on the specified Axes
-        pcm_kwargs (dict): Additional kwargs to pass to
+        pcm_kwargs: Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
-        cbar_kwargs (dict): Additional kwargs to pass to
+        cbar_kwargs: Additional kwargs to pass to
             :func:`~matplotlib.figure.Figure.colorbar`
 
     Raises:
         ValueError: The archive's dimension must be 1D or 2D.
     """
-    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim,
-                                  [1, 2], "Heatmaps can only be plotted for 1D or 2D GridArchive")
+    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim, [1, 2], "Heatmaps can only be plotted for 1D or 2D GridArchive")
     if aspect is None:
         # Handles default aspects for different dims.
         if archive.behavior_dim == 1:
@@ -333,8 +337,9 @@ def cvt_archive_heatmap(archive,
     Raises:
         ValueError: The archive is not 2D.
     """
-    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim,
-                                  [2], "Heatmaps can only be plotted for 1D or 2D CVTArchive")
+    _validate_heatmap_visual_args(
+        aspect, cbar, square, archive.behavior_dim, [2],
+        "Heatmaps can only be plotted for 1D or 2D CVTArchive")
     if aspect is None:
         aspect = "auto"
 
