@@ -51,13 +51,14 @@ extensions = [
     "sphinx_copybutton",
     "myst_nb",  # Covers both Markdown files and Jupyter notebooks.
     "matplotlib.sphinxext.plot_directive",
-    "sphinx_toolbox.more_autodoc.autonamedtuple",
+    "sphinx_autodoc_typehints",
+    # "sphinx_toolbox.more_autodoc.autonamedtuple",
 ]
 
 # Napoleon
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
-napoleon_use_param = False
+napoleon_use_param = True  # need this for autodoc
 napoleon_use_ivar = True
 napoleon_include_special_with_doc = True
 
