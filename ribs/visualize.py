@@ -20,16 +20,14 @@ to these functions.
     ribs.visualize.sliding_boundaries_archive_heatmap
     ribs.visualize.parallel_axes_plot
 """
-from typing import Union, Optional
+from typing import Union, Optional, Literal, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import axes
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
-
-from ribs.archives import GridArchive
+from ribs.archives import GridArchive, CVTArchive, SlidingBoundariesArchive, ArchiveBase
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
@@ -52,13 +50,14 @@ def _retrieve_cmap(cmap):
 
 
 def _validate_heatmap_visual_args(aspect, cbar, square, behavior_dim,
-                                  valid_dims, error_msg_behavior_dim):
+                                  valid_dims: list[int],
+                                  error_msg_behavior_dim: str):
     """
     Helper function to validate arguments passed to `*_archive_heatmap` plotting functions
 
     Args:
-        valid_dims (list[int]): all specified valid archive dimensions that may be plotted into heatmaps
-        error_msg_behavior_dim (str): Error message in ValueError if archive dimension plotting is not supported
+        valid_dims: all specified valid archive dimensions that may be plotted into heatmaps
+        error_msg_behavior_dim: Error message in ValueError if archive dimension plotting is not supported
 
     Raises:
         ValueError: if validity checks for heatmap args fail
@@ -74,7 +73,7 @@ def _validate_heatmap_visual_args(aspect, cbar, square, behavior_dim,
             "heatmap's aspect ratio instead")
     if behavior_dim not in valid_dims:
         raise ValueError(error_msg_behavior_dim)
-    if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
+    if not (cbar == "auto" or isinstance(cbar, matplotlib.axes.Axes) or cbar is None):
         raise ValueError(
             f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
         )
@@ -85,20 +84,21 @@ def _set_cbar(t, ax, cbar, cbar_kwargs):
     cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
     if cbar == "auto":
         ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
-    elif isinstance(cbar, axes.Axes):
+    elif isinstance(cbar, matplotlib.axes.Axes):
         cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
 
 
 def grid_archive_heatmap(archive: GridArchive,
-                         ax: axes.Axes = None,
+                         ax: matplotlib.axes.Axes = None,
                          transpose_bcs: bool = False,
                          cmap: Union[str, list,
                                      matplotlib.colors.Colormap] = "magma",
                          square: bool = None,
-                         aspect: Union[str, float] = None,
+                         aspect: Union[Literal['auto', 'equal'], float] = None,
                          vmin: float = None,
                          vmax: float = None,
-                         cbar: Optional[axes.Axes] = "auto",
+                         cbar: Union[Literal['auto'], None,
+                                     matplotlib.axes.Axes] = "auto",
                          pcm_kwargs: dict = None,
                          cbar_kwargs: dict = None):
     """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D behavior
@@ -138,19 +138,19 @@ def grid_archive_heatmap(archive: GridArchive,
 
 
     Args:
-        archive: A 2D GridArchive.
-        ax: Axes on which to plot the heatmap. If None,
+        archive: A 2D :class:`~ribs.archives.GridArchive`.
+        ax: Axes on which to plot the heatmap. If ``None``,
             the current axis will be used.
         transpose_bcs: By default, the first BC in the archive will
             appear along the x-axis, and the second will be along the y-axis. To
-            switch this (i.e. to transpose the axes), set this to True.
+            switch this behavior (i.e. to transpose the axes), set this to ``True``.
         cmap: Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
-            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
+            RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array),
+            or a colormap object.
         square: [DEPRECATED]
-        aspect: the aspect ratio of the heatmap.
-            Defaults to 'auto' for 2D and 0.5 for 1D. 'equal' is the same as
-            ``aspect=1``.
+        aspect: the aspect ratio of the heatmap. Defaults to ``'auto'`` for 2D
+            and 0.5 for 1D. Setting this to ``'equal'`` is the same as ``aspect=1``.
         vmin: Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
         vmax: Maximum objective value to use in the plot. If None, the
@@ -167,7 +167,9 @@ def grid_archive_heatmap(archive: GridArchive,
     Raises:
         ValueError: The archive's dimension must be 1D or 2D.
     """
-    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim, [1, 2], "Heatmaps can only be plotted for 1D or 2D GridArchive")
+    _validate_heatmap_visual_args(
+        aspect, cbar, square, archive.behavior_dim, [1, 2],
+        "Heatmaps can only be plotted for 1D or 2D GridArchive")
     if aspect is None:
         # Handles default aspects for different dims.
         if archive.behavior_dim == 1:
@@ -259,20 +261,21 @@ def grid_archive_heatmap(archive: GridArchive,
     _set_cbar(t, ax, cbar, cbar_kwargs)
 
 
-def cvt_archive_heatmap(archive,
-                        ax=None,
-                        plot_centroids=True,
-                        plot_samples=False,
-                        transpose_bcs=False,
-                        cmap="magma",
-                        square=None,
-                        aspect="auto",
-                        ms=1,
-                        lw=0.5,
-                        vmin=None,
-                        vmax=None,
-                        cbar="auto",
-                        cbar_kwargs=None):
+def cvt_archive_heatmap(archive: CVTArchive,
+                        ax: matplotlib.axes.Axes = None,
+                        plot_centroids: bool = True,
+                        plot_samples: bool = False,
+                        transpose_bcs: bool = False,
+                        cmap: Union[str, list,
+                                    matplotlib.colors.Colormap] = "magma",
+                        square: bool = None,
+                        aspect: Union[Literal['auto', 'equal'], float] = "auto",
+                        ms: float = 1,
+                        lw: float = 0.5,
+                        vmin: float = None,
+                        vmax: float = None,
+                        cbar: Union[Literal['auto'], None, matplotlib.axes.Axes] = "auto",
+                        cbar_kwargs: dict = None):
     """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 2D behavior
     space.
 
@@ -311,28 +314,33 @@ def cvt_archive_heatmap(archive,
             >>> plt.show()
 
     Args:
-        archive (CVTArchive): A 2D CVTArchive.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
-            the current axis will be used.
-        plot_centroids (bool): Whether to plot the cluster centroids.
-        plot_samples (bool): Whether to plot the samples used when generating
-            the clusters.
-        transpose_bcs (bool): By default, the first BC in the archive will
+        archive: A 2D :class:`~ribs.archives.CVTArchive`.
+        ax: Axes on which to plot the heatmap. If None, the current axis will
+            be used.
+        plot_centroids: Whether to plot the cluster centroids.
+        plot_samples: Whether to plot the samples used when generating the
+            clusters.
+        transpose_bcs: By default, the first BC in the archive will
             appear along the x-axis, and the second will be along the y-axis. To
-            switch this (i.e. to transpose the axes), set this to True.
-        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
+            switch this behavior (i.e. to transpose the axes), set this to ``True``.
+        cmap: Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
-            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float): the aspect ratio of the heatmap. Defaults to 'auto' for 2D. 'equal' is the same as ``aspect=1``.
-        ms (float): Marker size for both centroids and samples.
-        lw (float): Line width when plotting the voronoi diagram.
-        vmin (float): Minimum objective value to use in the plot. If None, the
+            RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a colormap object.
+        square: [DEPRECATED]
+        aspect: the aspect ratio of the heatmap.
+            Defaults to ``'auto'`` for 2D. ``'equal'`` is the same as ``aspect=1``.
+        ms: Marker size for both centroids and samples.
+        lw: Line width when plotting the voronoi diagram.
+        vmin: Minimum objective value to use in the plot. If None, the
             minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If None, the
+        vmax: Maximum objective value to use in the plot. If None, the
             maximum objective value in the archive is used.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
-        cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
+        cbar: By default, this is set to ``'auto'`` which displays the colorbar on
+            the archive's current Axes. If ``None``, then colorbar is not displayed.
+            If this is an Axes object, displays the colorbar on the specified
+            Axes.
+        cbar_kwargs: Additional kwargs to pass to
+            :func:`~matplotlib.figure.Figure.colorbar`
 
     Raises:
         ValueError: The archive is not 2D.
@@ -422,15 +430,16 @@ def cvt_archive_heatmap(archive,
     _set_cbar(mappable, ax, cbar, cbar_kwargs)
 
 
-def sliding_boundaries_archive_heatmap(archive,
-                                       ax=None,
-                                       transpose_bcs=False,
-                                       cmap="magma",
-                                       square=False,
-                                       ms=None,
-                                       boundary_lw=0,
-                                       vmin=None,
-                                       vmax=None):
+def sliding_boundaries_archive_heatmap(
+        archive: SlidingBoundariesArchive,
+        ax: matplotlib.axes.Axes = None,
+        transpose_bcs: bool = False,
+        cmap: Union[str, list, matplotlib.colors.Colormap] = "magma",
+        square: bool = False,
+        ms: float = None,
+        boundary_lw: float = 0,
+        vmin: float = None,
+        vmax: float = None):
     """Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with
     2D behavior space.
 
@@ -474,22 +483,23 @@ def sliding_boundaries_archive_heatmap(archive,
 
 
     Args:
-        archive (SlidingBoundariesArchive): A 2D SlidingBoundariesArchive.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
+        archive: A 2D :class:`~ribs.archives.SlidingBoundariesArchive`.
+        ax: Axes on which to plot the heatmap. If ``None``,
             the current axis will be used.
-        transpose_bcs (bool): By default, the first BC in the archive will
+        transpose_bcs : By default, the first BC in the archive will
             appear along the x-axis, and the second will be along the y-axis. To
-            switch this (i.e. to transpose the axes), set this to True.
-        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
+            switch this behavior (i.e. to transpose the axes), set this to ``True``.
+        cmap: Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
-            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        square (bool): If True, set the axes aspect ratio to be "equal".
-        ms (float): Marker size for the solutions.
-        boundary_lw (float): Line width when plotting the boundaries. Set to 0
+            RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array),
+            or a colormap object.
+        square: If ``True``, set the axes aspect ratio to be ``'equal'``.
+        ms: Marker size for the solutions.
+        boundary_lw : Line width when plotting the boundaries. Set to ``0``
             to have no boundaries.
-        vmin (float): Minimum objective value to use in the plot. If None, the
+        vmin: Minimum objective value to use in the plot. If ``None``, the
             minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If None, the
+        vmax: Maximum objective value to use in the plot. If ``None``, the
             maximum objective value in the archive is used.
     Raises:
         ValueError: The archive is not 2D.
@@ -549,17 +559,19 @@ def sliding_boundaries_archive_heatmap(archive,
     ax.figure.colorbar(t, ax=ax, pad=0.1)
 
 
-def parallel_axes_plot(archive,
-                       ax=None,
-                       bc_order=None,
-                       cmap="magma",
-                       linewidth=1.5,
-                       alpha=0.8,
-                       vmin=None,
-                       vmax=None,
-                       sort_archive=False,
-                       cbar_orientation='horizontal',
-                       cbar_pad=0.1):
+def parallel_axes_plot(archive: ArchiveBase,
+                       ax: matplotlib.axes.Axes = None,
+                       bc_order: Union[list[int], list[Tuple[int, str]]] = None,
+                       cmap: Union[str, list,
+                                   matplotlib.colors.Colormap] = "magma",
+                       linewidth: float = 1.5,
+                       alpha: float = 0.8,
+                       vmin: float = None,
+                       vmax: float = None,
+                       sort_archive: bool = False,
+                       cbar_orientation: Literal['horizontal',
+                                                 'vertical'] = 'horizontal',
+                       cbar_pad: float = 0.1):
     """Visualizes archive elites in behavior space with a parallel axes plot.
 
     This visualization is meant to show the coverage of the behavior space at a
@@ -613,10 +625,10 @@ def parallel_axes_plot(archive,
             >>> plt.show()
 
     Args:
-        archive (ArchiveBase): Any ribs archive.
-        ax (matplotlib.axes.Axes): Axes on which to create the plot.
-            If None, the current axis will be used.
-        bc_order (list of int or list of (int, str)): If this is a list of ints,
+        archive: Any ribs archive.
+        ax: Axes on which to create the plot.
+            If ``None``, the current axis will be used.
+        bc_order: If this is a list of ints,
             it specifies the axes order for BCs (e.g. ``[2, 0, 1]``). If this is
             a list of tuples, each tuple takes the form ``(int, str)`` where the
             int specifies the BC index and the str specifies a name for the BC
@@ -624,36 +636,37 @@ def parallel_axes_plot(archive,
             order specified does not need to have the same number of elements as
             the number of behaviors in the archive, e.g. ``[1, 3]`` or
             ``[1, 2, 3, 2]``.
-        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
+        cmap: Colormap to use when
             plotting intensity. Either the name of a colormap, a list of RGB or
-            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        linewidth (float): Line width for each elite in the plot.
-        alpha (float): Opacity of the line for each elite (passing a low value
+            RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array),
+            or a colormap object.
+        linewidth: Line width for each elite in the plot.
+        alpha: Opacity of the line for each elite (passing a low value
             here may be helpful if there are many archive elites, as more
             elites would be visible).
-        vmin (float): Minimum objective value to use in the plot. If None, the
+        vmin: Minimum objective value to use in the plot. If ``None``, the
             minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If None, the
+        vmax: Maximum objective value to use in the plot. If ``None``, the
             maximum objective value in the archive is used.
-        sort_archive (boolean): if true, sorts the archive so that the highest
+        sort_archive: If ``True``, sorts the archive so that the highest
             performing elites are plotted on top of lower performing elites.
 
             .. warning:: This may be slow for large archives.
-        cbar_orientation (str): The orientation of the colorbar. Use either
-            ``'vertical'`` or ``'horizontal'``
-        cbar_pad (float): The amount of padding to use for the colorbar.
+        cbar_orientation: The orientation of the colorbar.
+          Defaults to ``'horizontal'``.
+        cbar_pad: The amount of padding to use for the colorbar.
 
     Raises:
         ValueError: ``cbar_orientation`` has an invalid value.
         ValueError: The bcs provided do not exist in the archive.
-        TypeError: bc_order is not a list of all ints or all tuples.
+        TypeError: ``bc_order`` is not a list of all ints or all tuples.
     """
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
 
     # Check that the orientation input is correct.
     if cbar_orientation not in ['vertical', 'horizontal']:
-        raise ValueError("cbar_orientation mus be 'vertical' or 'horizontal' "
+        raise ValueError("cbar_orientation must be 'vertical' or 'horizontal'"
                          f"but is '{cbar_orientation}'")
 
     # If there is no order specified, plot in increasing numerical order.
