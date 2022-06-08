@@ -30,6 +30,8 @@
     - `get_index` must now return an integer
 
 #### Documentation
+- Use Python3 native type hints in documentations.
+- Migrate `visualize.py` to use Python3 type hints.
 
 #### Improvements
 
