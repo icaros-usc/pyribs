@@ -20,7 +20,7 @@ to these functions.
     ribs.visualize.sliding_boundaries_archive_heatmap
     ribs.visualize.parallel_axes_plot
 """
-from typing import Union, Optional, Literal, Tuple
+from typing import Union, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -73,7 +73,8 @@ def _validate_heatmap_visual_args(aspect, cbar, square, behavior_dim,
             "heatmap's aspect ratio instead")
     if behavior_dim not in valid_dims:
         raise ValueError(error_msg_behavior_dim)
-    if not (cbar == "auto" or isinstance(cbar, matplotlib.axes.Axes) or cbar is None):
+    if not (cbar == "auto" or isinstance(cbar, matplotlib.axes.Axes) or
+            cbar is None):
         raise ValueError(
             f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
         )
@@ -94,13 +95,13 @@ def grid_archive_heatmap(archive: GridArchive,
                          cmap: Union[str, list,
                                      matplotlib.colors.Colormap] = "magma",
                          square: bool = None,
-                         aspect: Union[Literal['auto', 'equal'], float] = None,
+                         aspect: Union['auto', 'equal', float] = None,
                          vmin: float = None,
                          vmax: float = None,
-                         cbar: Union[Literal['auto'], None,
+                         cbar: Union['auto', None,
                                      matplotlib.axes.Axes] = "auto",
                          pcm_kwargs: dict = None,
-                         cbar_kwargs: dict = None):
+                         cbar_kwargs: dict = None) -> GridArchive:
     """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D behavior
     space.
 
@@ -269,12 +270,13 @@ def cvt_archive_heatmap(archive: CVTArchive,
                         cmap: Union[str, list,
                                     matplotlib.colors.Colormap] = "magma",
                         square: bool = None,
-                        aspect: Union[Literal['auto', 'equal'], float] = "auto",
+                        aspect: Union['auto', 'equal', float] = "auto",
                         ms: float = 1,
                         lw: float = 0.5,
                         vmin: float = None,
                         vmax: float = None,
-                        cbar: Union[Literal['auto'], None, matplotlib.axes.Axes] = "auto",
+                        cbar: Union['auto', None,
+                                    matplotlib.axes.Axes] = "auto",
                         cbar_kwargs: dict = None):
     """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 2D behavior
     space.
@@ -569,8 +571,8 @@ def parallel_axes_plot(archive: ArchiveBase,
                        vmin: float = None,
                        vmax: float = None,
                        sort_archive: bool = False,
-                       cbar_orientation: Literal['horizontal',
-                                                 'vertical'] = 'horizontal',
+                       cbar_orientation: Union['horizontal',
+                                               'vertical'] = 'horizontal',
                        cbar_pad: float = 0.1):
     """Visualizes archive elites in behavior space with a parallel axes plot.
 
