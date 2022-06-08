@@ -31,6 +31,8 @@
 
 #### Documentation
 
+- Upgrade Sphinx dependencies (#202)
+
 #### Improvements
 
 - Drop Python 3.6 and add Python 3.10 support (#181)
