@@ -19,7 +19,7 @@ def data():
 def test_fails_on_dim_mismatch():
     with pytest.raises(ValueError):
         SlidingBoundariesArchive(
-            10, #arbitrary
+            10,  #arbitrary
             dims=[10] * 2,  # 2D space here.
             ranges=[(-1, 1)] * 3,  # But 3D space here.
         )

@@ -41,7 +41,9 @@ def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
 
 def benchmark_as_pandas_2000_items(benchmark):
     cells = 2000
-    archive = CVTArchive(solution_dim=10, cells=cells, ranges=[(-1, 1), (-1, 1)],
+    archive = CVTArchive(solution_dim=10,
+                         cells=cells,
+                         ranges=[(-1, 1), (-1, 1)],
                          use_kd_tree=True,
                          samples=50_000)
 

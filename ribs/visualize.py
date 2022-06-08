@@ -290,7 +290,8 @@ def cvt_archive_heatmap(archive,
             >>> from ribs.archives import CVTArchive
             >>> from ribs.visualize import cvt_archive_heatmap
             >>> # Populate the archive with the negative sphere function.
-            >>> archive = CVTArchive(solution_dim=2, cells=100, ranges=[(-1, 1), (-1, 1)])
+            >>> archive = CVTArchive(solution_dim=2,
+                                     cells=100, ranges=[(-1, 1), (-1, 1)])
             >>> for x in np.linspace(-1, 1, 100):
             ...     for y in np.linspace(-1, 1, 100):
             ...         archive.add(solution=np.array([x,y]),

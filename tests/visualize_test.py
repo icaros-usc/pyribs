@@ -120,7 +120,8 @@ def grid_archive():
     """Deterministically created GridArchive."""
     # The archive must be low-res enough that we can tell if the number of cells
     # is correct, yet high-res enough that we can see different colors.
-    archive = GridArchive(2, [10, 10], [(-1, 1), (-1, 1)], solution_dim=2, seed=42)
+    archive = GridArchive(2, [10, 10], [(-1, 1), (-1, 1)],
+                          seed=42)
     add_uniform_sphere(archive, (-1, 1), (-1, 1))
     return archive
 
@@ -128,7 +129,8 @@ def grid_archive():
 @pytest.fixture(scope="module")
 def long_grid_archive():
     """Same as above, but the behavior space is longer in one direction."""
-    archive = GridArchive(2, [10, 10], [(-2, 2), (-1, 1)], solution_dim=2, seed=42)
+    archive = GridArchive(2, [10, 10], [(-2, 2), (-1, 1)],
+                          seed=42)
     add_uniform_sphere(archive, (-2, 2), (-1, 1))
     return archive
 
@@ -137,7 +139,8 @@ def long_grid_archive():
 def three_d_grid_archive():
     """Deterministic archive, but there are three behavior axes of different
     sizes, and some of the axes are not totally filled."""
-    archive = GridArchive(2, [10, 10, 10], [(-2, 2), (-1, 1), (-2, 1)], solution_dim=3, seed=42)
+    archive = GridArchive(3, [10, 10, 10], [(-2, 2), (-1, 1), (-2, 1)],
+                          seed=42)
     add_uniform_3d_sphere(archive, (0, 2), (-1, 1), (-1, 0))
     return archive
 
@@ -158,10 +161,9 @@ def cvt_archive():
 @pytest.fixture(scope="module")
 def long_cvt_archive():
     """Same as above, but the behavior space is longer in one direction."""
-    archive = CVTArchive(100, [(-2, 2), (-1, 1)],
+    archive = CVTArchive(2, 100, [(-2, 2), (-1, 1)],
                          samples=1000,
                          use_kd_tree=True,
-                         solution_dim=2,
                          seed=42)
     add_uniform_sphere(archive, (-2, 2), (-1, 1))
     return archive
@@ -198,11 +200,18 @@ def long_sliding_archive():
 def test_heatmap_fails_on_unsupported_dims(archive_type):
     archive = {
         "grid":
-            lambda: GridArchive(solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
+            lambda: GridArchive(
+                solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
         "cvt":
-            lambda: CVTArchive( solution_dim=2, dims=100, ranges=[(-1, 1)] * 3, samples=100,),
+            lambda: CVTArchive(
+                solution_dim=2,
+                cells=100,
+                ranges=[(-1, 1)] * 3,
+                samples=100,
+            ),
         "sliding":
-            lambda: SlidingBoundariesArchive(solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
+            lambda: SlidingBoundariesArchive(
+                solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
     }[archive_type]()
 
     with pytest.raises(ValueError):
@@ -221,11 +230,21 @@ def test_heatmap_fails_on_unsupported_dims(archive_type):
 def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
     archive = {
         "grid":
-            lambda: GridArchive(solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
+            lambda: GridArchive(
+                solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
         "cvt":
-            lambda: CVTArchive(solution_dim=2, cells=100, ranges=[(-1, 1)] * 3, samples=100, ),
+            lambda: CVTArchive(
+                solution_dim=2,
+                cells=100,
+                ranges=[(-1, 1)] * 3,
+                samples=100,
+            ),
         "sliding":
-            lambda: SlidingBoundariesArchive(solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3, ),
+            lambda: SlidingBoundariesArchive(
+                solution_dim=2,
+                dims=[20, 20, 20],
+                ranges=[(-1, 1)] * 3,
+            ),
     }[archive_type]()
 
     with pytest.raises(ValueError):
@@ -245,11 +264,14 @@ def test_heatmap_fails_on_invalid_aspect_option(archive_type,
                                                 invalid_arg_aspect):
     archive = {
         "grid":
-            lambda: GridArchive(solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
+            lambda: GridArchive(
+                solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
         "cvt":
-            lambda: CVTArchive(100, [(-1, 1)] * 3, samples=100, solution_dim=2),
+            lambda: CVTArchive(2, 100, [(-1, 1)] * 3, samples=100),
         "sliding":
-            lambda: SlidingBoundariesArchive(solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
+            lambda: SlidingBoundariesArchive(solution_dim=2,
+                                             dims=[20, 20, 20],
+                                             ranges=[(-1, 1)] * 3),
     }[archive_type]()
 
     with pytest.raises(ValueError):

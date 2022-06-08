@@ -8,7 +8,8 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
     n, solutions, objective_values, behavior_values = benchmark_data_10k
 
     def setup():
-        archive = SlidingBoundariesArchive(solutions.shape[1], [10, 20], [(-1, 1), (-2, 2)],
+        archive = SlidingBoundariesArchive(solutions.shape[1], [10, 20],
+                                           [(-1, 1), (-2, 2)],
                                            remap_frequency=100,
                                            buffer_capacity=1000)
 

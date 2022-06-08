@@ -30,7 +30,9 @@ def test_init_fails_with_no_emitters():
 
 
 def test_init_fails_on_non_unique_emitter_instances():
-    archive = GridArchive(solution_dim=2, dims=[100, 100], ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
 
     # All emitters are the same instance. This is bad because the same emitter
     # gets called multiple times.

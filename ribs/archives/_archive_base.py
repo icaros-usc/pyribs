@@ -147,7 +147,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._rng = np.random.default_rng(seed)
         self._cells = cells
         self._behavior_dim = behavior_dim
-        
         self._num_occupied = 0
 
         self._occupied = np.zeros(self._cells, dtype=bool)
@@ -158,7 +157,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                          dtype=self.dtype)
         self._metadata = np.empty(self._cells, dtype=object)
         self._occupied_indices = np.empty(self._cells, dtype=np.int32)
-        self._stats = None #this line doesn't do anything, but here for reference? should I keep?
         self._stats_reset()
         self._state = {"clear": 0, "add": 0}
         ## Not intended to be accessed by children. ##

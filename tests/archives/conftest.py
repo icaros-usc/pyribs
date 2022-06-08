@@ -81,9 +81,11 @@ def get_archive_data(name, dtype=np.float64):
         # Grid archive with 10 cells and range (-1, 1) in first dim, and 20
         # cells and range (-2, 2) in second dim.
         cells = 10 * 20
-        archive = GridArchive(len(solution), [10, 20], [(-1, 1), (-2, 2)], dtype=dtype)
+        archive = GridArchive(len(solution), [10, 20], [(-1, 1), (-2, 2)],
+                              dtype=dtype)
 
-        archive_with_elite = GridArchive(len(solution), [10, 20], [(-1, 1), (-2, 2)],
+        archive_with_elite = GridArchive(len(solution), [10, 20], [(-1, 1),
+                                                                   (-2, 2)],
                                          dtype=dtype)
         grid_indices = (6, 11)
     elif name.startswith("CVTArchive-"):
@@ -112,13 +114,14 @@ def get_archive_data(name, dtype=np.float64):
         # Sliding boundary archive with 10 cells and range (-1, 1) in first dim,
         # and 20 cells and range (-2, 2) in second dim.
         cells = 10 * 20
-        archive = SlidingBoundariesArchive(len(solution), [10, 20], [(-1, 1), (-2, 2)],
+        archive = SlidingBoundariesArchive(len(solution), [10, 20], [(-1, 1),
+                                                                     (-2, 2)],
                                            remap_frequency=100,
                                            buffer_capacity=1000,
                                            dtype=dtype)
 
-        archive_with_elite = SlidingBoundariesArchive(len(solution), [10, 20], [(-1, 1),
-                                                                 (-2, 2)],
+        archive_with_elite = SlidingBoundariesArchive(len(solution), [10, 20],
+                                                      [(-1, 1), (-2, 2)],
                                                       remap_frequency=100,
                                                       buffer_capacity=1000,
                                                       dtype=dtype)
