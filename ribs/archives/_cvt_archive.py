@@ -49,6 +49,7 @@ class CVTArchive(ArchiveBase):
     subsequent experiments.
 
     Args:
+        solution_dim (int): Dimension of the solution space.
         cells (int): The number of cells to use in the archive, equivalent to
             the number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
@@ -57,7 +58,6 @@ class CVTArchive(ArchiveBase):
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
             ``dims``.
-        solution_dim (int): Dimension of the solution space.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
@@ -132,7 +132,7 @@ class CVTArchive(ArchiveBase):
         self._centroid_kd_tree = None
         self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
                                 ckdtree_kwargs.copy())
-        #this was copied from the initialize function
+
         if custom_centroids is None:
             if not isinstance(samples, int):
                 # Validate shape of custom samples. These are ignored when

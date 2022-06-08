@@ -101,21 +101,21 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         accessed by child classes (i.e. they are "protected" attributes).
 
     Args:
+        _solution_dim (int): See ``solution_dim`` arg.
         cells (int): Number of cells in the archive. This is used to create the
             numpy arrays described above for storing archive info.
         behavior_dim (int): The dimension of the behavior space.
-        solution_dim (int): Dimension of the solution space.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
             and behavior values. We only support ``"f"`` / ``np.float32`` and
             ``"d"`` / ``np.float64``.
     Attributes:
+        _solution_dim (int): See ``solution_dim`` arg.
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
         _cells (int): See ``cells`` arg.
         _behavior_dim (int): See ``behavior_dim`` arg.
-        _solution_dim (int): See ``solution_dim`` arg.
         _occupied (numpy.ndarray): Bool array storing whether each cell in the
             archive is occupied. This attribute is None until :meth:`initialize`
             is called.
@@ -189,12 +189,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             return np.float64
 
         raise ValueError("Unsupported dtype. Must be np.float32 or np.float64")
-
-    # @property
-    # def initialized(self):
-    #     """Whether the archive has been initialized by a call to
-    #     :meth:`initialize`"""
-    #     return self._initialized
 
     @property
     def cells(self):

@@ -43,7 +43,6 @@ def test_init_fails_on_non_unique_emitter_instances():
 
 
 def test_init_fails_with_mismatched_emitters():
-    #i chose arbitrarily between 2 and 3 for the solution_dim argument
     archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
     emitters = [
         # Emits 2D solutions.

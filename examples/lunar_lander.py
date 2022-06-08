@@ -147,7 +147,7 @@ def create_optimizer(seed, n_emitters, sigma0, batch_size):
     obs_dim = env.observation_space.shape[0]
     initial_model = np.zeros((action_dim, obs_dim))
     archive = GridArchive(
-        solution_dim=len(initial_model.flatten()),
+        solution_dim=initial_model.size,
         dims=[50, 50],  # 50 cells in each dimension.
         ranges=[(-1.0, 1.0), (-3.0, 0.0)],  # (-1, 1) for x-pos and (-3, 0) for y-vel.
         seed=seed

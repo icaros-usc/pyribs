@@ -55,7 +55,6 @@ def test_add_to_archive(data, use_list):
                          data.objective_value, data.behavior_values,
                          data.grid_indices, data.metadata)
 
-
 def test_add_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1

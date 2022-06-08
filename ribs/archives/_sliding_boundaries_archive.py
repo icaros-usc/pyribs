@@ -103,6 +103,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     the behavior characteristics when they are not uniformly distributed.
 
     Args:
+        solution_dim (int): Dimension of the solution space.
         dims (array-like): Number of cells in each dimension of the behavior
             space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions
             with 20, 30, and 40 cells. (The number of dimensions is implicitly

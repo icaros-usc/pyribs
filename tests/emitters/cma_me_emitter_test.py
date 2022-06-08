@@ -29,7 +29,7 @@ def test_auto_batch_size(emitter_class):
     "emitter_class",
     [ImprovementEmitter, RandomDirectionEmitter, OptimizingEmitter])
 def test_list_as_initial_solution(emitter_class):
-    archive = GridArchive(len([0.0] * 10), [20, 20], [(-1.0, 1.0)] * 2)
+    archive = GridArchive(10, [20, 20], [(-1.0, 1.0)] * 2)
     emitter = emitter_class(archive, [0.0] * 10, 1.0)
 
     # The list was passed in but should be converted to a numpy array.
