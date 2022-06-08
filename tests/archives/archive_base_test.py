@@ -24,8 +24,7 @@ def test_str_dtype_float(name, dtype):
 
 def test_invalid_dtype():
     with pytest.raises(ValueError):
-        #arbitrary solution_dim
-        GridArchive(3, [20, 20], [(-1, 1)] * 2, dtype=np.int32)
+        GridArchive(solution_dim=0, dims=[20, 20], ranges=[(-1, 1)] * 2, dtype=np.int32)
 
 
 #
@@ -88,7 +87,7 @@ def test_stats_dtype(dtype):
 
 
 def test_stats_multiple_add():
-    archive = GridArchive(3, [10, 20], [(-1, 1), (-2, 2)])
+    archive = GridArchive(solution_dim=3, dims=[10, 20], ranges=[(-1, 1), (-2, 2)])
     archive.add([1, 2, 3], 1.0, [0, 0])
     archive.add([1, 2, 3], 2.0, [0.25, 0.25])
     archive.add([1, 2, 3], 3.0, [-0.25, -0.25])
@@ -101,7 +100,7 @@ def test_stats_multiple_add():
 
 
 def test_stats_add_and_overwrite():
-    archive = GridArchive(3, [10, 20], [(-1, 1), (-2, 2)])
+    archive = GridArchive(solution_dim=3, dims=[10, 20], ranges=[(-1, 1), (-2, 2)])
     archive.add([1, 2, 3], 1.0, [0, 0])
     archive.add([1, 2, 3], 2.0, [0.25, 0.25])
     archive.add([1, 2, 3], 3.0, [-0.25, -0.25])

@@ -120,7 +120,7 @@ def grid_archive():
     """Deterministically created GridArchive."""
     # The archive must be low-res enough that we can tell if the number of cells
     # is correct, yet high-res enough that we can see different colors.
-    archive = GridArchive(2, [10, 10], [(-1, 1), (-1, 1)],
+    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)],
                           seed=42)
     add_uniform_sphere(archive, (-1, 1), (-1, 1))
     return archive
@@ -129,7 +129,7 @@ def grid_archive():
 @pytest.fixture(scope="module")
 def long_grid_archive():
     """Same as above, but the behavior space is longer in one direction."""
-    archive = GridArchive(2, [10, 10], [(-2, 2), (-1, 1)],
+    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-2, 2), (-1, 1)],
                           seed=42)
     add_uniform_sphere(archive, (-2, 2), (-1, 1))
     return archive
@@ -139,7 +139,7 @@ def long_grid_archive():
 def three_d_grid_archive():
     """Deterministic archive, but there are three behavior axes of different
     sizes, and some of the axes are not totally filled."""
-    archive = GridArchive(3, [10, 10, 10], [(-2, 2), (-1, 1), (-2, 1)],
+    archive = GridArchive(solution_dim=3, dims=[10, 10, 10], ranges=[(-2, 2), (-1, 1), (-2, 1)],
                           seed=42)
     add_uniform_3d_sphere(archive, (0, 2), (-1, 1), (-1, 0))
     return archive
@@ -161,7 +161,9 @@ def cvt_archive():
 @pytest.fixture(scope="module")
 def long_cvt_archive():
     """Same as above, but the behavior space is longer in one direction."""
-    archive = CVTArchive(2, 100, [(-2, 2), (-1, 1)],
+    archive = CVTArchive(solution_dim=2,
+                         cells=100,
+                         ranges=[(-2, 2), (-1, 1)],
                          samples=1000,
                          use_kd_tree=True,
                          seed=42)
@@ -172,7 +174,10 @@ def long_cvt_archive():
 @pytest.fixture(scope="module")
 def sliding_archive():
     """Deterministically created SlidingBoundariesArchive."""
-    archive = SlidingBoundariesArchive(2, [10, 20], [(-1, 1), (-1, 1)], seed=42)
+    archive = SlidingBoundariesArchive(solution_dim=2,
+                                        dims=[10, 20],
+                                        ranges=[(-1, 1), (-1, 1)],
+                                        seed=42)
     add_random_sphere(archive, (-1, 1), (-1, 1))
     return archive
 
@@ -180,7 +185,10 @@ def sliding_archive():
 @pytest.fixture(scope="module")
 def long_sliding_archive():
     """Same as above, but the behavior space is longer in one direction."""
-    archive = SlidingBoundariesArchive(2, [10, 20], [(-2, 2), (-1, 1)], seed=42)
+    archive = SlidingBoundariesArchive(solution_dim=2,
+                                        dims=[10, 20],
+                                        ranges=[(-2, 2), (-1, 1)],
+                                        seed=42)
     add_random_sphere(archive, (-2, 2), (-1, 1))
     return archive
 
@@ -267,7 +275,10 @@ def test_heatmap_fails_on_invalid_aspect_option(archive_type,
             lambda: GridArchive(
                 solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
         "cvt":
-            lambda: CVTArchive(2, 100, [(-1, 1)] * 3, samples=100),
+            lambda: CVTArchive(solution_dim=2,
+                                cells=100,
+                                ranges=[(-1, 1)] * 3,
+                                samples=100),
         "sliding":
             lambda: SlidingBoundariesArchive(solution_dim=2,
                                              dims=[20, 20, 20],

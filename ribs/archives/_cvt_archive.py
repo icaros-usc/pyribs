@@ -204,48 +204,6 @@ class CVTArchive(ArchiveBase):
         """
         return self._centroids
 
-    # def initialize(self, solution_dim):
-    #     """Initializes the archive storage space and centroids.
-
-    #     This method may take a while to run. In addition to allocating storage
-    #     space, it runs :func:`~sklearn.cluster.k_means` to create an approximate
-    #     CVT, and it constructs a :class:`~scipy.spatial.cKDTree` object
-    #     containing the centroids found by k-means. k-means is not run if
-    #     ``custom_centroids`` was passed in during construction.
-
-    #     Args:
-    #         solution_dim (int): The dimension of the solution space.
-    #     Raises:
-    #         RuntimeError: The archive is already initialized.
-    #         RuntimeError: The number of centroids returned by k-means clustering
-    #             was fewer than the number of cells specified during
-    #             construction. This is most likely caused by having too few
-    #             samples and too many cells.
-    #     """
-    #     ArchiveBase.initialize(self, solution_dim)
-
-    #     if self._centroids is None:
-    #         self._samples = self._rng.uniform(
-    #             self._lower_bounds,
-    #             self._upper_bounds,
-    #             size=(self._samples, self._behavior_dim),
-    #         ).astype(self.dtype) if isinstance(self._samples,
-    #                                            int) else self._samples
-
-    #         self._centroids = k_means(self._samples, self._cells,
-    #                                   **self._k_means_kwargs)[0]
-
-    #         if self._centroids.shape[0] < self._cells:
-    #             raise RuntimeError(
-    #                 "While generating the CVT, k-means clustering found "
-    #                 f"{self._centroids.shape[0]} centroids, but this archive "
-    #                 f"needs {self._cells} cells. This most likely happened "
-    #                 "because there are too few samples and/or too many cells.")
-
-    #     if self._use_kd_tree:
-    #         self._centroid_kd_tree = cKDTree(self._centroids,
-    #                                          **self._ckdtree_kwargs)
-
     @staticmethod
     @jit(nopython=True)
     def _brute_force_nn_numba(behavior_values, centroids):

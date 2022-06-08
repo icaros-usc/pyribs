@@ -81,11 +81,14 @@ def get_archive_data(name, dtype=np.float64):
         # Grid archive with 10 cells and range (-1, 1) in first dim, and 20
         # cells and range (-2, 2) in second dim.
         cells = 10 * 20
-        archive = GridArchive(len(solution), [10, 20], [(-1, 1), (-2, 2)],
+        archive = GridArchive(solution_dim=len(solution),
+                              dims=[10, 20],
+                              ranges=[(-1, 1), (-2, 2)],
                               dtype=dtype)
 
-        archive_with_elite = GridArchive(len(solution), [10, 20], [(-1, 1),
-                                                                   (-2, 2)],
+        archive_with_elite = GridArchive(solution_dim=len(solution),
+                                         dims=[10, 20],
+                                         ranges=[(-1, 1), (-2, 2)],
                                          dtype=dtype)
         grid_indices = (6, 11)
     elif name.startswith("CVTArchive-"):

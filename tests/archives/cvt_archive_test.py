@@ -33,7 +33,7 @@ def assert_archive_elite(archive, solution, objective, measures, centroid,
 def test_samples_bad_shape(use_kd_tree):
     # The behavior space is 2D but samples are 3D.
     with pytest.raises(ValueError):
-        CVTArchive(0, 10, [(-1, 1), (-1, 1)],
+        CVTArchive(solution_dim=0, cells=10, ranges=[(-1, 1), (-1, 1)],
                    samples=[[-1, -1, -1], [1, 1, 1]],
                    use_kd_tree=use_kd_tree)
 
@@ -63,7 +63,7 @@ def test_custom_centroids_bad_shape(use_kd_tree):
     with pytest.raises(ValueError):
         # The centroids array should be of shape (10, 2) instead of just (1, 2),
         # hence a ValueError will be raised.
-        CVTArchive(0, 10, [(-1, 1), (-1, 1)],
+        CVTArchive(solution_dim=0, cells=10, ranges=[(-1, 1), (-1, 1)],
                    custom_centroids=[[0.0, 0.0]],
                    use_kd_tree=use_kd_tree)
 

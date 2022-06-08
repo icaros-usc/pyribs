@@ -147,17 +147,19 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._rng = np.random.default_rng(seed)
         self._cells = cells
         self._behavior_dim = behavior_dim
-        self._num_occupied = 0
         self._dtype = self._parse_dtype(dtype)
 
+        self._num_occupied = 0
         self._occupied = np.zeros(self._cells, dtype=bool)
+        self._occupied_indices = np.empty(self._cells, dtype=np.int32)
+        
         self._solutions = np.empty((self._cells, solution_dim),
                                    dtype=self.dtype)
         self._objective_values = np.empty(self._cells, dtype=self.dtype)
         self._behavior_values = np.empty((self._cells, self._behavior_dim),
                                          dtype=self.dtype)
         self._metadata = np.empty(self._cells, dtype=object)
-        self._occupied_indices = np.empty(self._cells, dtype=np.int32)
+        
         self._stats_reset()
         self._state = {"clear": 0, "add": 0}
         ## Not intended to be accessed by children. ##
