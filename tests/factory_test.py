@@ -53,6 +53,7 @@ def test_from_config_with_valid_input(use_toml, tmp_path):
     config_dict = {
         "archive": {
             "type": "GridArchive",
+            "solution_dim": 2,
             "dims": [64, 64],
             "ranges": [(-1, 1), (-1, 1)],
             "seed": seed,
@@ -102,6 +103,7 @@ def test_from_config_fails_on_unknown_entity(entity_type):
     config_dict = {
         "archive": {
             "type": "GridArchive",
+            "solution_dim": 2,
             "dims": [64, 64],
             "ranges": [(-1, 1), (-1, 1)],
             "seed": 42,

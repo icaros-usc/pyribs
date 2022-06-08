@@ -148,6 +148,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._cells = cells
         self._behavior_dim = behavior_dim
         self._num_occupied = 0
+        self._dtype = self._parse_dtype(dtype)
 
         self._occupied = np.zeros(self._cells, dtype=bool)
         self._solutions = np.empty((self._cells, solution_dim),
@@ -163,9 +164,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         self._seed = seed
         # Tracks archive modifications by counting calls to clear() and add().
-        self._state = None
 
-        self._dtype = self._parse_dtype(dtype)
+        
 
     @staticmethod
     def _parse_dtype(dtype):

@@ -130,11 +130,6 @@ def test_length(data):
     assert len(data.archive_with_elite) == 1
 
 
-def test_archive_cannot_reinit(data):
-    with pytest.raises(RuntimeError):
-        data.archive.initialize(len(data.solution))
-
-
 def test_new_archive_is_empty(data):
     assert data.archive.empty
 
