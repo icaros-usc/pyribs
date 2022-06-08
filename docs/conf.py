@@ -38,7 +38,7 @@ READTHEDOCS_LANGUAGE = os.environ.get("READTHEDOCS_LANGUAGE", "en")
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-# needs_sphinx = "1.0"
+needs_sphinx = "4.5.0"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named "sphinx.ext.*") or your custom ones.
@@ -53,7 +53,7 @@ extensions = [
     "sphinx_copybutton",
     "myst_nb",  # Covers both Markdown files and Jupyter notebooks.
     "matplotlib.sphinxext.plot_directive",
-    # "sphinx_toolbox.more_autodoc.autonamedtuple",
+    "sphinx_toolbox.more_autodoc.autonamedtuple",
     "sphinx_autodoc_typehints",
 ]
 
@@ -65,12 +65,6 @@ napoleon_use_ivar = True
 napoleon_include_special_with_doc = True
 
 # Sphinx Autodoc Typehints
-def ignore_strings_formatter(annotation, config):
-  if isinstance(annotation, ForwardRef):
-    return f"'{annotation.__forward_arg__}'"
-  return None
-
-typehints_formatter = ignore_strings_formatter
 typehints_defaults = "comma"
 
 # MyST NB -- exclude execution of Jupyter notebooks because they can take a
