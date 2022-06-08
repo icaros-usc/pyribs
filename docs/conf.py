@@ -23,6 +23,8 @@ import os
 import sys
 
 import sphinx_material
+from sphinx.util import logging
+from typing import ForwardRef
 
 import ribs
 
@@ -51,7 +53,7 @@ extensions = [
     "sphinx_copybutton",
     "myst_nb",  # Covers both Markdown files and Jupyter notebooks.
     "matplotlib.sphinxext.plot_directive",
-    "sphinx_toolbox.more_autodoc.autonamedtuple",
+    # "sphinx_toolbox.more_autodoc.autonamedtuple",
     "sphinx_autodoc_typehints",
 ]
 
@@ -61,6 +63,15 @@ napoleon_numpy_docstring = False
 napoleon_use_param = True  # see tox-dev/sphinx-autodoc-typehints#15
 napoleon_use_ivar = True
 napoleon_include_special_with_doc = True
+
+# Sphinx Autodoc Typehints
+def ignore_strings_formatter(annotation, config):
+  if isinstance(annotation, ForwardRef):
+    return f"'{annotation.__forward_arg__}'"
+  return None
+
+typehints_formatter = ignore_strings_formatter
+typehints_defaults = "comma"
 
 # MyST NB -- exclude execution of Jupyter notebooks because they can take a
 # while to run.
