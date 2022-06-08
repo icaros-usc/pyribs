@@ -50,12 +50,12 @@ extras_require = {
         "pytest-xdist==2.5.0",
 
         # Documentation
-        "Sphinx==3.2.1",
+        "Sphinx==4.5.0",
         "sphinx-material==0.0.32",
         "sphinx-autobuild==2020.9.1",
         "sphinx-copybutton==0.3.1",
-        "myst-nb==0.10.1",
-        "sphinx-toolbox==2.12.1",
+        "myst-nb==0.15.0",
+        "sphinx-toolbox==3.1.0",
 
         # Distribution
         "bump2version==0.5.11",
