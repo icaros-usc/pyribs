@@ -56,6 +56,7 @@ extras_require = {
         "sphinx-copybutton==0.3.1",
         "myst-nb==0.15.0",
         "sphinx-toolbox==3.1.0",
+        "sphinx-autodoc-typehints==1.18.2",
 
         # Distribution
         "bump2version==0.5.11",
