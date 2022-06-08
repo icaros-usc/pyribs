@@ -55,8 +55,8 @@ extras_require = {
         "sphinx-autobuild==2020.9.1",
         "sphinx-copybutton==0.3.1",
         "myst-nb==0.15.0",
-        "sphinx-toolbox==3.0.0",
         "sphinx-autodoc-typehints==1.18.2",
+        "sphinx-toolbox==3.0.0",
 
         # Distribution
         "bump2version==0.5.11",
