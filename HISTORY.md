@@ -32,6 +32,8 @@
 #### Documentation
 
 - Fix typos and formatting in docstrings of `ribs/visualize.py` (#203)
+- Add in-comment type hint rich linking (#204)
+- Upgrade Sphinx dependencies (#202)
 
 #### Improvements
 
