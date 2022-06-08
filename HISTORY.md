@@ -31,6 +31,7 @@
 
 #### Documentation
 
+- Add in-comment type hint rich linking (#204)
 - Upgrade Sphinx dependencies (#202)
 
 #### Improvements
