@@ -30,10 +30,8 @@
     - `get_index` must now return an integer
 
 #### Documentation
-- **Dependencies Upgrade:**
-  - Sphinx `3.2.1` to `4.5.0` (documentation now requires minimal Sphinx version `4.5.0`)
-  - myst-nb `0.10.1` to `0.15.0`
-  - sphinx-toolbox `2.12.1` to `3.1.0`
+
+- Upgrade Sphinx dependencies (#202)
 
 #### Improvements
 
