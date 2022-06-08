@@ -116,8 +116,7 @@ def grid_archive_heatmap(archive,
             >>> from ribs.archives import GridArchive
             >>> from ribs.visualize import grid_archive_heatmap
             >>> # Populate the archive with the negative sphere function.
-            >>> archive = GridArchive([20, 20], [(-1, 1), (-1, 1)])
-            >>> archive.initialize(solution_dim=2)
+            >>> archive = GridArchive(2, [20, 20], [(-1, 1), (-1, 1)])
             >>> for x in np.linspace(-1, 1, 100):
             ...     for y in np.linspace(-1, 1, 100):
             ...         archive.add(solution=np.array([x,y]),
@@ -291,8 +290,7 @@ def cvt_archive_heatmap(archive,
             >>> from ribs.archives import CVTArchive
             >>> from ribs.visualize import cvt_archive_heatmap
             >>> # Populate the archive with the negative sphere function.
-            >>> archive = CVTArchive(100, [(-1, 1), (-1, 1)])
-            >>> archive.initialize(solution_dim=2)
+            >>> archive = CVTArchive(solution_dim=2, cells=100, ranges=[(-1, 1), (-1, 1)])
             >>> for x in np.linspace(-1, 1, 100):
             ...     for y in np.linspace(-1, 1, 100):
             ...         archive.add(solution=np.array([x,y]),
@@ -442,10 +440,9 @@ def sliding_boundaries_archive_heatmap(archive,
             >>> import matplotlib.pyplot as plt
             >>> from ribs.archives import SlidingBoundariesArchive
             >>> from ribs.visualize import sliding_boundaries_archive_heatmap
-            >>> archive = SlidingBoundariesArchive([10, 20],
+            >>> archive = SlidingBoundariesArchive(2, [10, 20],
             ...                                  [(-1, 1), (-1, 1)],
             ...                                  seed=42)
-            >>> archive.initialize(solution_dim=2)
             >>> # Populate the archive with the negative sphere function.
             >>> rng = np.random.default_rng(10)
             >>> for _ in range(1000):
@@ -588,10 +585,9 @@ def parallel_axes_plot(archive,
             >>> from ribs.visualize import parallel_axes_plot
             >>> # Populate the archive with the negative sphere function.
             >>> archive = GridArchive(
-            ...               [20, 20, 20, 20, 20],
+            ...               3, [20, 20, 20, 20, 20],
             ...               [(-1, 1), (-1, 1), (-1, 1), (-1, 1), (-1, 1)]
             ...           )
-            >>> archive.initialize(solution_dim=3)
             >>> for x in np.linspace(-1, 1, 100):
             ...     for y in np.linspace(0, 1, 100):
             ...         for z in np.linspace(-1, 1, 100):

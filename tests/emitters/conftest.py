@@ -10,9 +10,8 @@ from ribs.archives import ArchiveBase, GridArchive
 @pytest.fixture
 def archive_fixture():
     """Provides a simple archive and initial solution."""
-    archive = GridArchive([10, 10], [(-1, 1), (-1, 1)])
+    archive = GridArchive(len(x0), [10, 10], [(-1, 1), (-1, 1)])
     x0 = np.array([1, 2, 3, 4])
-    archive.initialize(len(x0))
     return archive, x0
 
 

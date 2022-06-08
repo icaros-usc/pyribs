@@ -8,10 +8,11 @@ def benchmark_init(use_kd_tree, benchmark):
     """Construction includes k-means clustering and building a kd-tree."""
 
     def init():
-        archive = CVTArchive(1000, [(-1, 1), (-1, 1)],
+        archive = CVTArchive(solution_dim=2,
+                             cells=1000,
+                             ranges=[(-1, 1), (-1, 1)],
                              samples=20_000,
                              use_kd_tree=use_kd_tree)
-        archive.initialize(solution_dim=2)
 
     benchmark(init)
 
@@ -20,10 +21,11 @@ def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
     n, solutions, objective_values, behavior_values = benchmark_data_10k
 
     def setup():
-        archive = CVTArchive(1000, [(-1, 1), (-1, 1)],
+        archive = CVTArchive(solution_dim=solutions.shape[1],
+                             cells=1000,
+                             ranges=[(-1, 1), (-1, 1)],
                              samples=20_000,
                              use_kd_tree=use_kd_tree)
-        archive.initialize(solutions.shape[1])
 
         # Let numba compile.
         archive.add(solutions[0], objective_values[0], behavior_values[0])
@@ -39,10 +41,9 @@ def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
 
 def benchmark_as_pandas_2000_items(benchmark):
     cells = 2000
-    archive = CVTArchive(cells, [(-1, 1), (-1, 1)],
+    archive = CVTArchive(solution_dim=10, cells=cells, ranges=[(-1, 1), (-1, 1)],
                          use_kd_tree=True,
                          samples=50_000)
-    archive.initialize(10)
 
     for x, y in archive.centroids:
         sol = np.random.random(10)

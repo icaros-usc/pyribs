@@ -88,9 +88,9 @@ class CVTArchive(ArchiveBase):
     """
 
     def __init__(self,
+                 solution_dim,
                  cells,
                  ranges,
-                 solution_dim,
                  seed=None,
                  dtype=np.float64,
                  samples=100_000,
@@ -101,9 +101,9 @@ class CVTArchive(ArchiveBase):
 
         ArchiveBase.__init__(
             self,
+            solution_dim=solution_dim,
             cells=cells,
             behavior_dim=len(ranges),
-            solution_dim=solution_dim,
             seed=seed,
             dtype=dtype,
         )
@@ -187,7 +187,6 @@ class CVTArchive(ArchiveBase):
         return self._upper_bounds
 
     @property
-    #@require_init
     def samples(self):
         """(num_samples, behavior_dim) numpy.ndarray: The samples used in
         creating the CVT.
@@ -197,7 +196,6 @@ class CVTArchive(ArchiveBase):
         return self._samples
 
     @property
-    #@require_init
     def centroids(self):
         """(n_centroids, behavior_dim) numpy.ndarray: The centroids used in the
         CVT.

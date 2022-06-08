@@ -145,10 +145,11 @@ def create_optimizer(seed, n_emitters, sigma0, batch_size):
     env = gym.make("LunarLander-v2")
     action_dim = env.action_space.n
     obs_dim = env.observation_space.shape[0]
-
+    initial_model = np.zeros((action_dim, obs_dim))
     archive = GridArchive(
-        [50, 50],  # 50 cells in each dimension.
-        [(-1.0, 1.0), (-3.0, 0.0)],  # (-1, 1) for x-pos and (-3, 0) for y-vel.
+        solution_dim=len(initial_model.flatten())
+        dims=[50, 50],  # 50 cells in each dimension.
+        ranges=[(-1.0, 1.0), (-3.0, 0.0)],  # (-1, 1) for x-pos and (-3, 0) for y-vel.
         seed=seed,
     )
 
@@ -159,7 +160,7 @@ def create_optimizer(seed, n_emitters, sigma0, batch_size):
     # avoids this problem altogether.
     seeds = ([None] * n_emitters
              if seed is None else [seed + i for i in range(n_emitters)])
-    initial_model = np.zeros((action_dim, obs_dim))
+
     emitters = [
         ImprovementEmitter(
             archive,

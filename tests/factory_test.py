@@ -38,7 +38,7 @@ def test_from_config_with_valid_input(use_toml, tmp_path):
     seed = 42
     batch_size = 4
 
-    archive = GridArchive([64, 64], [(-1, 1), (-1, 1)], seed=seed)
+    archive = GridArchive(solution_dim=2, dims=[64, 64], ranges=[(-1, 1), (-1, 1)], seed=seed)
     emitters = [
         GaussianEmitter(archive, [0.0, 0.0],
                         sigma=0.1,

@@ -6,7 +6,7 @@ import numba as nb
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs.archives._archive_base import ArchiveBase, require_init
+from ribs.archives._archive_base import ArchiveBase
 
 _EPSILON = 1e-6
 
@@ -126,9 +126,9 @@ class SlidingBoundariesArchive(ArchiveBase):
     """
 
     def __init__(self,
+                 solution_dim,
                  dims,
                  ranges,
-                 solution_dim,
                  seed=None,
                  dtype=np.float64,
                  remap_frequency=100,
@@ -140,9 +140,9 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         ArchiveBase.__init__(
             self,
+            solution_dim=solution_dim,
             cells=np.product(self._dims),
             behavior_dim=len(self._dims),
-            solution_dim=solution_dim,
             seed=seed,
             dtype=dtype,
         )
@@ -333,7 +333,6 @@ class SlidingBoundariesArchive(ArchiveBase):
             status, value = ArchiveBase.add(self, sol, obj, beh, meta)
         return status, value
 
-    #@require_init
     def add(self, solution, objective_value, behavior_values, metadata=None):
         """Attempts to insert a new solution into the archive.
 

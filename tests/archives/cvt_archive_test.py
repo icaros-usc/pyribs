@@ -50,13 +50,13 @@ def test_properties_are_correct(data):
 
 def test_custom_centroids(use_kd_tree):
     centroids = np.array([[-0.25, -0.25], [0.25, 0.25]])
-    archive = CVTArchive(centroids.shape[0], [(-1, 1), (-1, 1)],
+    archive = CVTArchive(solution_dim=3,
+                         cells=centroids.shape[0],
+                         ranges=[(-1, 1), (-1, 1)],
                          custom_centroids=centroids,
                          use_kd_tree=use_kd_tree)
-    archive.initialize(solution_dim=3)
     assert archive.samples is None
     assert (archive.centroids == centroids).all()
-
 
 def test_custom_centroids_bad_shape(use_kd_tree):
     with pytest.raises(ValueError):

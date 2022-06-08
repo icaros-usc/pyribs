@@ -19,6 +19,7 @@ def data():
 def test_fails_on_dim_mismatch():
     with pytest.raises(ValueError):
         SlidingBoundariesArchive(
+            10, #arbitrary
             dims=[10] * 2,  # 2D space here.
             ranges=[(-1, 1)] * 3,  # But 3D space here.
         )
@@ -92,10 +93,9 @@ def test_add_without_overwrite(data):
 def test_initial_remap():
     """Checks that boundaries and entries are correct after initial remap."""
     # remap_frequency is (10 + 1) * (20 + 1)
-    archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
+    archive = SlidingBoundariesArchive(2, [10, 20], [(-1, 1), (-2, 2)],
                                        remap_frequency=231,
                                        buffer_capacity=1000)
-    archive.initialize(2)
 
     # Buffer should have 230 entries after this (since the first entry is
     # skipped).
@@ -163,10 +163,9 @@ def test_add_to_archive_with_full_buffer(data):
 
 def test_adds_solutions_from_old_archive():
     """Solutions from previous archive should be inserted during remap."""
-    archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
+    archive = SlidingBoundariesArchive(2, [10, 20], [(-1, 1), (-2, 2)],
                                        remap_frequency=231,
                                        buffer_capacity=231)
-    archive.initialize(2)
 
     for x in np.linspace(-1, 1, 11):
         for y in np.linspace(-2, 2, 21):
