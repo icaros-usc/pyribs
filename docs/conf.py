@@ -62,9 +62,6 @@ napoleon_use_param = True  # see tox-dev/sphinx-autodoc-typehints#15
 napoleon_use_ivar = True
 napoleon_include_special_with_doc = True
 
-# Sphinx Autodoc Typehints
-typehints_defaults = "comma"
-
 # MyST NB -- exclude execution of Jupyter notebooks because they can take a
 # while to run.
 nb_execution_mode = "off"
