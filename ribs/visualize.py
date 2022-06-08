@@ -133,37 +133,42 @@ def grid_archive_heatmap(archive,
 
 
     Args:
-        archive (GridArchive): A 2D GridArchive.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
-            the current axis will be used.
+        archive (GridArchive): A 2D :class:`~ribs.archives.GridArchive`.
+        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
+            If ``None``, the current axis will be used.
         transpose_bcs (bool): By default, the first BC in the archive will
-            appear along the x-axis, and the second will be along the y-axis. To
-            switch this (i.e. to transpose the axes), set this to True.
-        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
-            plotting intensity. Either the name of a colormap, a list of RGB or
-            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
+            appear along the x-axis, and the second will be along the y-axis.
+            To switch this behavior (i.e. to transpose the axes), set this to
+            ``True``.
+        cmap (str, list, matplotlib.colors.Colormap): The colormap to use when
+            plotting intensity. Either the name of a
+            :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
+            (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
+            :class:`~matplotlib.colors.Colormap` object.
         square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float): the aspect ratio of the heatmap.
-            Defaults to 'auto' for 2D and 0.5 for 1D. 'equal' is the same as
-            ``aspect=1``.
-        vmin (float): Minimum objective value to use in the plot. If None, the
-            minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If None, the
-            maximum objective value in the archive is used.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to 'auto'
-            which displays the colorbar on the archive's current Axes. If None,
-            then colorbar is not displayed. If this is an Axes object, displays
-            the colorbar on the specified Axes
+        aspect ('auto', 'equal', float): The aspect ratio of the heatmap.
+            Defaults to ``'auto'`` for 2D and ``0.5`` for 1D. ``'equal'`` is the
+            same as ``aspect=1``.
+        vmin (float): Minimum objective value to use in the plot. If ``None``,
+            the minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If ``None``,
+            the maximum objective value in the archive is used.
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to
+            ``'auto'`` which displays the colorbar on the archive's current
+            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not
+            displayed. If this is an :class:`~matplotlib.axes.Axes`, displays
+            the colorbar on the specified Axes.
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
         cbar_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.figure.Figure.colorbar`
+            :func:`~matplotlib.figure.Figure.colorbar`.
 
     Raises:
         ValueError: The archive's dimension must be 1D or 2D.
     """
-    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim,
-                                  [1, 2], "Heatmaps can only be plotted for 1D or 2D GridArchive")
+    _validate_heatmap_visual_args(
+        aspect, cbar, square, archive.behavior_dim, [1, 2],
+        "Heatmaps can only be plotted for 1D or 2D GridArchive")
     if aspect is None:
         # Handles default aspects for different dims.
         if archive.behavior_dim == 1:
@@ -307,34 +312,45 @@ def cvt_archive_heatmap(archive,
             >>> plt.show()
 
     Args:
-        archive (CVTArchive): A 2D CVTArchive.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
-            the current axis will be used.
+        archive (CVTArchive): A 2D :class:`~ribs.archives.CVTArchive`.
+        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
+            If ``None``, the current axis will be used.
         plot_centroids (bool): Whether to plot the cluster centroids.
         plot_samples (bool): Whether to plot the samples used when generating
             the clusters.
         transpose_bcs (bool): By default, the first BC in the archive will
             appear along the x-axis, and the second will be along the y-axis. To
-            switch this (i.e. to transpose the axes), set this to True.
-        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
-            plotting intensity. Either the name of a colormap, a list of RGB or
-            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
+            switch this behavior (i.e. to transpose the axes), set this to
+            ``True``.
+        cmap (str, list, matplotlib.colors.Colormap): The colormap to use when
+            plotting intensity. Either the name of a
+            :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
+            (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
+            :class:`~matplotlib.colors.Colormap` object.
         square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float): the aspect ratio of the heatmap. Defaults to 'auto' for 2D. 'equal' is the same as ``aspect=1``.
+        aspect ('auto', 'equal', float): The aspect ratio of the heatmap.
+            Defaults to ``'auto'`` for 2D. ``'equal'`` is the same as
+            ``aspect=1``.
         ms (float): Marker size for both centroids and samples.
         lw (float): Line width when plotting the voronoi diagram.
-        vmin (float): Minimum objective value to use in the plot. If None, the
-            minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If None, the
-            maximum objective value in the archive is used.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to 'auto' which displays the colorbar on the archive's current Axes. If None, then colorbar is not displayed. If this is an Axes object, displays the colorbar on the specified Axes
-        cbar_kwargs (dict): Additional kwargs to pass to :func:`~matplotlib.figure.Figure.colorbar`
+        vmin (float): Minimum objective value to use in the plot. If ``None``,
+            the minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If ``None``,
+            the maximum objective value in the archive is used.
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to
+            ``'auto'`` which displays the colorbar on the archive's current
+            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not
+            displayed. If this is an :class:`~matplotlib.axes.Axes`, displays
+            the colorbar on the specified Axes.
+        cbar_kwargs (dict): Additional kwargs to pass to
+            :func:`~matplotlib.figure.Figure.colorbar`.
 
     Raises:
         ValueError: The archive is not 2D.
     """
-    _validate_heatmap_visual_args(aspect, cbar, square, archive.behavior_dim,
-                                  [2], "Heatmaps can only be plotted for 1D or 2D CVTArchive")
+    _validate_heatmap_visual_args(
+        aspect, cbar, square, archive.behavior_dim, [2],
+        "Heatmaps can only be plotted for 1D or 2D CVTArchive")
     if aspect is None:
         aspect = "auto"
 
@@ -469,23 +485,27 @@ def sliding_boundaries_archive_heatmap(archive,
 
 
     Args:
-        archive (SlidingBoundariesArchive): A 2D SlidingBoundariesArchive.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If None,
-            the current axis will be used.
+        archive (SlidingBoundariesArchive): A 2D
+            :class:`~ribs.archives.SlidingBoundariesArchive`.
+        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
+            If ``None``, the current axis will be used.
         transpose_bcs (bool): By default, the first BC in the archive will
-            appear along the x-axis, and the second will be along the y-axis. To
-            switch this (i.e. to transpose the axes), set this to True.
+            appear along the x-axis, and the second will be along the y-axis.
+            To switch this behavior (i.e. to transpose the axes), set this to
+            ``True``.
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
-            plotting intensity. Either the name of a colormap, a list of RGB or
-            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
-        square (bool): If True, set the axes aspect ratio to be "equal".
+            plotting intensity. Either the name of a
+            :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
+            (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
+            :class:`~matplotlib.colors.Colormap` object.
+        square (bool): If ``True``, set the axes aspect ratio to be ``'equal'``.
         ms (float): Marker size for the solutions.
-        boundary_lw (float): Line width when plotting the boundaries. Set to 0
-            to have no boundaries.
-        vmin (float): Minimum objective value to use in the plot. If None, the
-            minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If None, the
-            maximum objective value in the archive is used.
+        boundary_lw (float): Line width when plotting the boundaries.
+            Set to ``0`` to have no boundaries.
+        vmin (float): Minimum objective value to use in the plot. If ``None``,
+            the minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If ``None``,
+            the maximum objective value in the archive is used.
     Raises:
         ValueError: The archive is not 2D.
     """
@@ -610,28 +630,31 @@ def parallel_axes_plot(archive,
     Args:
         archive (ArchiveBase): Any ribs archive.
         ax (matplotlib.axes.Axes): Axes on which to create the plot.
-            If None, the current axis will be used.
+            If ``None``, the current axis will be used.
         bc_order (list of int or list of (int, str)): If this is a list of ints,
             it specifies the axes order for BCs (e.g. ``[2, 0, 1]``). If this is
             a list of tuples, each tuple takes the form ``(int, str)`` where the
             int specifies the BC index and the str specifies a name for the BC
-            (e.g. ``[(1, "y-value"), (2, "z-value"), (0, "x-value)]``). The
+            (e.g. ``[(1, "y-value"), (2, "z-value"), (0, "x-value")]``). The
             order specified does not need to have the same number of elements as
             the number of behaviors in the archive, e.g. ``[1, 3]`` or
             ``[1, 2, 3, 2]``.
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
-            plotting intensity. Either the name of a colormap, a list of RGB or
-            RGBA colors (i.e. an Nx3 or Nx4 array), or a colormap object.
+            plotting intensity. Either the name of a
+            :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
+            (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
+            :class:`~matplotlib.colors.Colormap` object.
         linewidth (float): Line width for each elite in the plot.
         alpha (float): Opacity of the line for each elite (passing a low value
             here may be helpful if there are many archive elites, as more
             elites would be visible).
-        vmin (float): Minimum objective value to use in the plot. If None, the
-            minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If None, the
-            maximum objective value in the archive is used.
-        sort_archive (boolean): if true, sorts the archive so that the highest
-            performing elites are plotted on top of lower performing elites.
+        vmin (float): Minimum objective value to use in the plot. If ``None``,
+            the minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If ``None``,
+            the maximum objective value in the archive is used.
+        sort_archive (boolean): If ``True``, sorts the archive so that the
+            highest performing elites are plotted on top of lower performing
+            elites.
 
             .. warning:: This may be slow for large archives.
         cbar_orientation (str): The orientation of the colorbar. Use either
@@ -641,7 +664,7 @@ def parallel_axes_plot(archive,
     Raises:
         ValueError: ``cbar_orientation`` has an invalid value.
         ValueError: The bcs provided do not exist in the archive.
-        TypeError: bc_order is not a list of all ints or all tuples.
+        TypeError: ``bc_order`` is not a list of all ints or all tuples.
     """
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
