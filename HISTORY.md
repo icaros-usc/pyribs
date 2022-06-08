@@ -30,7 +30,8 @@
     - `get_index` must now return an integer
 
 #### Documentation
-- Fix typos and formatting in docstrings of `ribs/visualize.py`
+
+- Fix typos and formatting in docstrings of `ribs/visualize.py` (#203)
 
 #### Improvements
 
