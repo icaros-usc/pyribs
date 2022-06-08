@@ -671,7 +671,7 @@ def parallel_axes_plot(archive,
 
     # Check that the orientation input is correct.
     if cbar_orientation not in ['vertical', 'horizontal']:
-        raise ValueError("cbar_orientation mus be 'vertical' or 'horizontal' "
+        raise ValueError("cbar_orientation must be 'vertical' or 'horizontal' "
                          f"but is '{cbar_orientation}'")
 
     # If there is no order specified, plot in increasing numerical order.
