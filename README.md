@@ -112,7 +112,7 @@ from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
 
-archive = GridArchive([20, 20], [(-1, 1), (-1, 1)])
+archive = GridArchive(solution_dim=len([0.0] * 10), dims=[20, 20], ranges=[(-1, 1), (-1, 1)])
 emitters = [ImprovementEmitter(archive, [0.0] * 10, 0.1)]
 optimizer = Optimizer(archive, emitters)
 

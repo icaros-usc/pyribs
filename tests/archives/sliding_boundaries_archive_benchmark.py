@@ -8,10 +8,10 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
     n, solutions, objective_values, behavior_values = benchmark_data_10k
 
     def setup():
-        archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
+        archive = SlidingBoundariesArchive(solutions.shape[1], [10, 20],
+                                           [(-1, 1), (-2, 2)],
                                            remap_frequency=100,
                                            buffer_capacity=1000)
-        archive.initialize(solutions.shape[1])
 
         # Let numba compile.
         archive.add(solutions[0], objective_values[0], behavior_values[0])
@@ -27,10 +27,9 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
 
 def benchmark_as_pandas_2048_elements(benchmark):
     # TODO (btjanaka): Make this size smaller so that we do a remap.
-    archive = SlidingBoundariesArchive([32, 64], [(-1, 1), (-2, 2)],
+    archive = SlidingBoundariesArchive(10, [32, 64], [(-1, 1), (-2, 2)],
                                        remap_frequency=20000,
                                        buffer_capacity=20000)
-    archive.initialize(10)
 
     for x in np.linspace(-1, 1, 100):
         for y in np.linspace(-2, 2, 100):

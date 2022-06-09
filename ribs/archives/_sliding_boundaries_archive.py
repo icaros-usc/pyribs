@@ -6,7 +6,7 @@ import numba as nb
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs.archives._archive_base import ArchiveBase, require_init
+from ribs.archives._archive_base import ArchiveBase
 
 _EPSILON = 1e-6
 
@@ -103,6 +103,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     the behavior characteristics when they are not uniformly distributed.
 
     Args:
+        solution_dim (int): Dimension of the solution space.
         dims (array-like): Number of cells in each dimension of the behavior
             space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions
             with 20, 30, and 40 cells. (The number of dimensions is implicitly
@@ -126,6 +127,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     """
 
     def __init__(self,
+                 solution_dim,
                  dims,
                  ranges,
                  seed=None,
@@ -139,6 +141,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         ArchiveBase.__init__(
             self,
+            solution_dim=solution_dim,
             cells=np.product(self._dims),
             behavior_dim=len(self._dims),
             seed=seed,
@@ -331,7 +334,6 @@ class SlidingBoundariesArchive(ArchiveBase):
             status, value = ArchiveBase.add(self, sol, obj, beh, meta)
         return status, value
 
-    @require_init
     def add(self, solution, objective_value, behavior_values, metadata=None):
         """Attempts to insert a new solution into the archive.
 

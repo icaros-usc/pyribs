@@ -18,6 +18,7 @@ class GridArchive(ArchiveBase):
     that cell.
 
     Args:
+        solution_dim (int): Dimension of the solution space.
         dims (array-like of int): Number of cells in each dimension of the
             behavior space, e.g. ``[20, 30, 40]`` indicates there should be 3
             dimensions with 20, 30, and 40 cells. (The number of dimensions is
@@ -37,7 +38,7 @@ class GridArchive(ArchiveBase):
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
-    def __init__(self, dims, ranges, seed=None, dtype=np.float64):
+    def __init__(self, solution_dim, dims, ranges, seed=None, dtype=np.float64):
         self._dims = np.array(dims)
         if len(self._dims) != len(ranges):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
@@ -45,6 +46,7 @@ class GridArchive(ArchiveBase):
 
         ArchiveBase.__init__(
             self,
+            solution_dim=solution_dim,
             cells=np.product(self._dims),
             behavior_dim=len(self._dims),
             seed=seed,

@@ -10,9 +10,8 @@ from ribs.archives import ArchiveBase, GridArchive
 @pytest.fixture
 def archive_fixture():
     """Provides a simple archive and initial solution."""
-    archive = GridArchive([10, 10], [(-1, 1), (-1, 1)])
     x0 = np.array([1, 2, 3, 4])
-    archive.initialize(len(x0))
+    archive = GridArchive(len(x0), [10, 10], [(-1, 1), (-1, 1)])
     return archive, x0
 
 
@@ -29,6 +28,7 @@ class FakeArchive(ArchiveBase):
         behavior_dim = len(self._dims)
         ArchiveBase.__init__(
             self,
+            solution_dim=4,
             cells=np.product(self._dims),
             behavior_dim=behavior_dim,
         )
@@ -49,5 +49,4 @@ def fake_archive_fixture():
     """Produces an instance of the FakeArchive."""
     archive = FakeArchive([10, 10])
     x0 = np.array([1, 2, 3, 4])
-    archive.initialize(len(x0))
     return archive, x0
