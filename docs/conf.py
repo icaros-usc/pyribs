@@ -53,6 +53,7 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.more_autodoc.autonamedtuple",
     "sphinx_autodoc_typehints",
+    "sphinx_codeautolink",
 ]
 
 # Napoleon
