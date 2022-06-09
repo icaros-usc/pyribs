@@ -101,7 +101,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         accessed by child classes (i.e. they are "protected" attributes).
 
     Args:
-        solution_dim (int): See ``solution_dim`` arg.
+        solution_dim (int): Dimension of the solution space.
         cells (int): Number of cells in the archive. This is used to create the
             numpy arrays described above for storing archive info.
         behavior_dim (int): The dimension of the behavior space.

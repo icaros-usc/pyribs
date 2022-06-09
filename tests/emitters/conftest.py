@@ -28,7 +28,7 @@ class FakeArchive(ArchiveBase):
         behavior_dim = len(self._dims)
         ArchiveBase.__init__(
             self,
-            solution_dim=4, #len(x0)
+            solution_dim=4,
             cells=np.product(self._dims),
             behavior_dim=behavior_dim,
         )

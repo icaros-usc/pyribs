@@ -444,8 +444,8 @@ def sliding_boundaries_archive_heatmap(archive,
             >>> from ribs.archives import SlidingBoundariesArchive
             >>> from ribs.visualize import sliding_boundaries_archive_heatmap
             >>> archive = SlidingBoundariesArchive(solution_dim=2,
-                                                   dims=[10, 20],
-                                                   ranges=[(-1, 1), (-1, 1)],
+            ...                                    dims=[10, 20],
+            ...                                    ranges=[(-1, 1), (-1, 1)],
             ...                                    seed=42)
             >>> # Populate the archive with the negative sphere function.
             >>> rng = np.random.default_rng(10)

@@ -26,7 +26,9 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
 
 def benchmark_as_pandas_2025_items(benchmark):
     dim = 45
-    archive = GridArchive(solution_dim=10, dims=(dim, dim), ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=10,
+                          dims=(dim, dim),
+                          ranges=[(-1, 1), (-1, 1)])
 
     for x in np.linspace(-1, 1, dim):
         for y in np.linspace(-1, 1, dim):
