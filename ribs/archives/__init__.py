@@ -1,4 +1,5 @@
 """Archives store solutions found by a QD algorithm.
+
 .. autosummary::
     :toctree:
 
