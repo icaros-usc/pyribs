@@ -31,6 +31,7 @@
 
 #### Documentation
 
+- Fix documentation rendering issues on ReadTheDocs (#205)
 - Fix typos and formatting in docstrings of `ribs/visualize.py` (#203)
 - Add in-comment type hint rich linking (#204)
 - Upgrade Sphinx dependencies (#202)
