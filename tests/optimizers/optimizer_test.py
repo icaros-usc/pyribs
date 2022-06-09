@@ -14,7 +14,7 @@ def optimizer_fixture():
     """Returns an Optimizer with GridArchive and one GaussianEmitter."""
     solution_dim = 2
     num_solutions = 4
-    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim, [100, 100], [(-1, 1), (-1, 1)])
     emitters = [
         GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=num_solutions)
     ]
@@ -22,14 +22,17 @@ def optimizer_fixture():
 
 
 def test_init_fails_with_no_emitters():
-    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    #arbitrary sol_dim
+    archive = GridArchive(10, [100, 100], [(-1, 1), (-1, 1)])
     emitters = []
     with pytest.raises(ValueError):
         Optimizer(archive, emitters)
 
 
 def test_init_fails_on_non_unique_emitter_instances():
-    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
 
     # All emitters are the same instance. This is bad because the same emitter
     # gets called multiple times.
@@ -40,7 +43,7 @@ def test_init_fails_on_non_unique_emitter_instances():
 
 
 def test_init_fails_with_mismatched_emitters():
-    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
     emitters = [
         # Emits 2D solutions.
         GaussianEmitter(archive, [0.0, 0.0], 1),
@@ -94,7 +97,7 @@ def test_tell_inserts_solutions_into_archive(optimizer_fixture, tell_metadata):
 @pytest.mark.parametrize("tell_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
 def test_tell_inserts_solutions_with_multiple_emitters(tell_metadata):
-    archive = GridArchive([100, 100], [(-1, 1), (-1, 1)])
+    archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
     emitters = [
         GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1),
         GaussianEmitter(archive, [0.5, 0.5], 1, batch_size=2),

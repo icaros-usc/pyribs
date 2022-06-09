@@ -81,12 +81,15 @@ def get_archive_data(name, dtype=np.float64):
         # Grid archive with 10 cells and range (-1, 1) in first dim, and 20
         # cells and range (-2, 2) in second dim.
         cells = 10 * 20
-        archive = GridArchive([10, 20], [(-1, 1), (-2, 2)], dtype=dtype)
-        archive.initialize(len(solution))
+        archive = GridArchive(solution_dim=len(solution),
+                              dims=[10, 20],
+                              ranges=[(-1, 1), (-2, 2)],
+                              dtype=dtype)
 
-        archive_with_elite = GridArchive([10, 20], [(-1, 1), (-2, 2)],
+        archive_with_elite = GridArchive(solution_dim=len(solution),
+                                         dims=[10, 20],
+                                         ranges=[(-1, 1), (-2, 2)],
                                          dtype=dtype)
-        archive_with_elite.initialize(len(solution))
         grid_indices = (6, 11)
     elif name.startswith("CVTArchive-"):
         # CVT archive with bounds (-1,1) and (-1,1), and 4 centroids at (0.5,
@@ -97,33 +100,34 @@ def get_archive_data(name, dtype=np.float64):
         samples = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
         centroid = [0.5, 0.5]
 
-        archive = CVTArchive(4, [(-1, 1), (-1, 1)],
+        archive = CVTArchive(solution_dim=len(solution),
+                             cells=4,
+                             ranges=[(-1, 1), (-1, 1)],
                              samples=samples,
                              use_kd_tree=kd_tree,
                              dtype=dtype)
-        archive.initialize(len(solution))
 
-        archive_with_elite = CVTArchive(4, [(-1, 1), (-1, 1)],
+        archive_with_elite = CVTArchive(solution_dim=len(solution),
+                                        cells=4,
+                                        ranges=[(-1, 1), (-1, 1)],
                                         samples=samples,
                                         use_kd_tree=kd_tree,
                                         dtype=dtype)
-        archive_with_elite.initialize(len(solution))
     elif name == "SlidingBoundariesArchive":
         # Sliding boundary archive with 10 cells and range (-1, 1) in first dim,
         # and 20 cells and range (-2, 2) in second dim.
         cells = 10 * 20
-        archive = SlidingBoundariesArchive([10, 20], [(-1, 1), (-2, 2)],
+        archive = SlidingBoundariesArchive(len(solution), [10, 20], [(-1, 1),
+                                                                     (-2, 2)],
                                            remap_frequency=100,
                                            buffer_capacity=1000,
                                            dtype=dtype)
-        archive.initialize(len(solution))
 
-        archive_with_elite = SlidingBoundariesArchive([10, 20], [(-1, 1),
-                                                                 (-2, 2)],
+        archive_with_elite = SlidingBoundariesArchive(len(solution), [10, 20],
+                                                      [(-1, 1), (-2, 2)],
                                                       remap_frequency=100,
                                                       buffer_capacity=1000,
                                                       dtype=dtype)
-        archive_with_elite.initialize(len(solution))
         grid_indices = (6, 11)
 
     archive_with_elite.add(solution, objective_value, behavior_values, metadata)

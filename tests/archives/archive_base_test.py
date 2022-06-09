@@ -9,30 +9,6 @@ from .conftest import ARCHIVE_NAMES, get_archive_data
 # pylint: disable = redefined-outer-name
 
 #
-# Tests for the require_init decorator. Just need to make sure it works on a few
-# methods, as it is too much to test on all.
-#
-
-
-def test_iter_require_init():
-    archive = GridArchive([20, 20], [(-1, 1)] * 2)
-    with pytest.raises(RuntimeError):
-        iter(archive)
-
-
-def test_add_requires_init():
-    archive = GridArchive([20, 20], [(-1, 1)] * 2)
-    with pytest.raises(RuntimeError):
-        archive.add(np.array([1, 2, 3]), 1.0, np.array([1.0, 1.0]))
-
-
-def test_solution_dim_requires_init():
-    archive = GridArchive([20, 20], [(-1, 1)] * 2)
-    with pytest.raises(RuntimeError):
-        _ = archive.solution_dim
-
-
-#
 # Test the dtypes of all classes.
 #
 
@@ -48,7 +24,10 @@ def test_str_dtype_float(name, dtype):
 
 def test_invalid_dtype():
     with pytest.raises(ValueError):
-        GridArchive([20, 20], [(-1, 1)] * 2, dtype=np.int32)
+        GridArchive(solution_dim=0,
+                    dims=[20, 20],
+                    ranges=[(-1, 1)] * 2,
+                    dtype=np.int32)
 
 
 #
@@ -111,8 +90,9 @@ def test_stats_dtype(dtype):
 
 
 def test_stats_multiple_add():
-    archive = GridArchive([10, 20], [(-1, 1), (-2, 2)])
-    archive.initialize(3)
+    archive = GridArchive(solution_dim=3,
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
     archive.add([1, 2, 3], 1.0, [0, 0])
     archive.add([1, 2, 3], 2.0, [0.25, 0.25])
     archive.add([1, 2, 3], 3.0, [-0.25, -0.25])
@@ -125,8 +105,9 @@ def test_stats_multiple_add():
 
 
 def test_stats_add_and_overwrite():
-    archive = GridArchive([10, 20], [(-1, 1), (-2, 2)])
-    archive.initialize(3)
+    archive = GridArchive(solution_dim=3,
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
     archive.add([1, 2, 3], 1.0, [0, 0])
     archive.add([1, 2, 3], 2.0, [0.25, 0.25])
     archive.add([1, 2, 3], 3.0, [-0.25, -0.25])
@@ -153,11 +134,6 @@ def data(request):
 def test_length(data):
     assert len(data.archive) == 0
     assert len(data.archive_with_elite) == 1
-
-
-def test_archive_cannot_reinit(data):
-    with pytest.raises(RuntimeError):
-        data.archive.initialize(len(data.solution))
 
 
 def test_new_archive_is_empty(data):
