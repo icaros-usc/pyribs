@@ -112,18 +112,6 @@ class EvolutionStrategyEmitter(EmitterBase):
         """
         return self.opt.ask(self.lower_bounds, self.upper_bounds)
 
-    def _generate_random_direction(self):
-        """Generates a new random direction in the behavior space.
-
-        The direction is sampled from a standard Gaussian -- since the standard
-        Gaussian is isotropic, there is equal probability for any direction. The
-        direction is then scaled to the behavior space bounds.
-        """
-        ranges = self.archive.upper_bounds - self.archive.lower_bounds
-        behavior_dim = len(ranges)
-        unscaled_dir = self._rng.standard_normal(behavior_dim)
-        return unscaled_dir * ranges
-
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
 
