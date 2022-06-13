@@ -1,11 +1,51 @@
 """Provides the EvolutionStrategyEmitter."""
+import itertools
+
 import numpy as np
-from numba import jit
 
 from ribs.emitters._emitter_base import EmitterBase
+from ribs.emitters.opt._cma_es import CMAEvolutionStrategy
 
 
 class EvolutionStrategyEmitter(EmitterBase):
+    """Adapts a evolution strategy towards the objective.
+
+    This emitter originates in `Fontaine 2020
+    <https://arxiv.org/abs/1912.02400>`_. Initially, it starts at ``x0`` and
+    uses CMA-ES to optimize for objective values. After CMA-ES converges, the
+    emitter restarts the optimizer. It picks a random elite in the archive and
+    begins optimizing from there.
+
+    Args:
+        archive (ribs.archives.ArchiveBase): An archive to use when creating and
+            inserting solutions. For instance, this can be
+            :class:`ribs.archives.GridArchive`.
+        x0 (np.ndarray): Initial solution.
+        sigma0 (float): Initial step size.
+        ranker (RankerBase):
+        selector (Selector): Method for selecting solutions in
+            CMA-ES. With "mu" selection, the first half of the solutions will be
+            selected, while in "filter", any solutions that were added to the
+            archive will be selected.
+        evolution_strategy (EvolutionStrategy): The evolution strategy to use
+            :class:`ribs.emitter.opt.CMAEvolutionStrategy`
+        restart_rule ("no_improvement" or "basic"): Method to use when checking
+            for restart. With "basic", only the default CMA-ES convergence rules
+            will be used, while with "no_improvement", the emitter will restart
+            when none of the proposed solutions were added to the archive.
+        bounds (None or array-like): Bounds of the solution space. Solutions are
+            clipped to these bounds. Pass None to indicate there are no bounds.
+            Alternatively, pass an array-like to specify the bounds for each
+            dim. Each element in this array-like can be None to indicate no
+            bound, or a tuple of ``(lower_bound, upper_bound)``, where
+            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
+        batch_size (int): Number of solutions to return in :meth:`ask`. If not
+            passed in, a batch size will automatically be calculated.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid a fixed seed.
+    Raises:
+        ValueError: If ``restart_rule`` is invalid.
+    """
 
     def __init__(
             self,
@@ -16,7 +56,6 @@ class EvolutionStrategyEmitter(EmitterBase):
             selector,
             evolution_strategy,
             restart_rule="no_improvement",
-            # weight_rule="truncation",
             bounds=None,
             batch_size=None,
             seed=None):
@@ -36,11 +75,7 @@ class EvolutionStrategyEmitter(EmitterBase):
             raise ValueError(f"Invalid restart_rule {restart_rule}")
         self._restart_rule = restart_rule
 
-        # opt_seed = None if seed is None else self._rng.integers(10_000)
         self.opt = evolution_strategy
-        # CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
-        #                                 weight_rule, opt_seed,
-        #                                 self.archive.dtype)
         self.opt.reset(self._x0)
         # self._num_parents = (self.batch_size //
         #                      2 if selection_rule == "mu" else None)
@@ -68,7 +103,7 @@ class EvolutionStrategyEmitter(EmitterBase):
     def ask(self):
         """Samples new solutions from a multivariate Gaussian.
 
-        The multivariate Gaussian is parameterized by the CMA-ES optimizer.
+        The multivariate Gaussian is parameterized by the evolution strategy optimizer ``self.opt``.
 
         Returns:
             ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
@@ -123,10 +158,12 @@ class EvolutionStrategyEmitter(EmitterBase):
         ranking_data = []
         new_sols = 0
 
-        # Add solutions to the archive.
         metadata = itertools.repeat(None) if metadata is None else metadata
+
         # Tupe of (add status, add value)
         add_data = []
+
+        # Add solutions to the archive.
         for i, (sol, obj, beh, meta) in enumerate(
                 zip(solutions, objective_values, behavior_values, metadata)):
             add_data.append(self.archive.add(sol, obj, beh, meta))
@@ -134,24 +171,6 @@ class EvolutionStrategyEmitter(EmitterBase):
         indices = self._ranker.rank(self, self._archive, solutions,
                                     objective_values, behavior_values, metadata,
                                     add_data[0], add_data[1])
-        # added = bool(status)
-        # projection = np.dot(beh, self._target_behavior_dir)
-        # ranking_data.append((added, projection, i))
-        # if added:
-        #     new_sols += 1
-
-        # if self._selection_rule == "filter":
-        #     # Sort by whether the solution was added into the archive, followed
-        #     # by projection.
-        #     def key(x):
-        #         return (x[0], x[1])
-        # elif self._selection_rule == "mu":
-        #     # Sort only by projection.
-        #     def key(x):
-        #         return x[1]
-
-        # ranking_data.sort(reverse=True, key=key)
-        # indices = [d[2] for d in ranking_data]
 
         num_parents = self._selector.select(self, self._archive, solutions,
                                             objective_values, behavior_values,
@@ -167,5 +186,5 @@ class EvolutionStrategyEmitter(EmitterBase):
             new_x0 = self.archive.sample_elites(1).solution_batch[0]
             self.opt.reset(new_x0)
             self._target_behavior_dir = self._generate_random_direction()
-            self._ranker.reset()
+            self._ranker.reset(self._target_behavior_dir)
             self._restarts += 1
