@@ -122,6 +122,18 @@ class GridArchive(ArchiveBase):
         index = (behavior_values - lower_bounds) / interval_size * dims
         return index.astype(np.int32)
 
+    def index_of(self, measures):
+        # Adding epsilon to behavior values accounts for floating point
+        # precision errors from transforming behavior values. Subtracting
+        # epsilon from upper bounds makes sure we do not have indices outside
+        # the grid.
+        measures = np.minimum(
+            np.maximum(measures + _EPSILON, self._lower_bounds),
+            self.upper_bounds - _EPSILON)
+
+        indices = (measures - self._lower_bounds) / self._interval_size * self._dims
+        return np.ravel_multi_index(indices.astype(np.int32), self._dims)
+
     # TODO: Update docstring.
     def get_index(self, behavior_values):
         """Returns indices of the behavior values within the archive's grid.
