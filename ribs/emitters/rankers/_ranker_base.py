@@ -10,6 +10,6 @@ class RankerBase(ABC):
         pass
 
     @abstractmethod
-    def reset(self):
+    def reset(self, archive, emitter):
         # TODO add comment
         pass

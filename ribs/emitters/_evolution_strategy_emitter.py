@@ -4,7 +4,6 @@ import itertools
 import numpy as np
 
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.opt._cma_es import CMAEvolutionStrategy
 
 
 class EvolutionStrategyEmitter(EmitterBase):
@@ -47,18 +46,17 @@ class EvolutionStrategyEmitter(EmitterBase):
         ValueError: If ``restart_rule`` is invalid.
     """
 
-    def __init__(
-            self,
-            archive,
-            x0,
-            sigma0,
-            ranker,
-            selector,
-            evolution_strategy,
-            restart_rule="no_improvement",
-            bounds=None,
-            batch_size=None,
-            seed=None):
+    def __init__(self,
+                 archive,
+                 x0,
+                 sigma0,
+                 ranker,
+                 selector,
+                 evolution_strategy,
+                 restart_rule="no_improvement",
+                 bounds=None,
+                 batch_size=None,
+                 seed=None):
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
         self._sigma0 = sigma0
@@ -77,12 +75,14 @@ class EvolutionStrategyEmitter(EmitterBase):
 
         self.opt = evolution_strategy
         self.opt.reset(self._x0)
+
+        self._ranker = ranker
+        self._ranker.reset(archive, self)
+
+        self._selector = selector
         # self._num_parents = (self.batch_size //
         #                      2 if selection_rule == "mu" else None)
-        self._target_behavior_dir = self._generate_random_direction()
         self._batch_size = batch_size
-        self._ranker = ranker
-        self._selector = selector
         self._restarts = 0  # Currently not exposed publicly.
 
     @property
@@ -103,7 +103,8 @@ class EvolutionStrategyEmitter(EmitterBase):
     def ask(self):
         """Samples new solutions from a multivariate Gaussian.
 
-        The multivariate Gaussian is parameterized by the evolution strategy optimizer ``self.opt``.
+        The multivariate Gaussian is parameterized by the evolution strategy
+        optimizer ``self.opt``.
 
         Returns:
             ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
@@ -185,6 +186,5 @@ class EvolutionStrategyEmitter(EmitterBase):
                 self._check_restart(new_sols)):
             new_x0 = self.archive.sample_elites(1).solution_batch[0]
             self.opt.reset(new_x0)
-            self._target_behavior_dir = self._generate_random_direction()
-            self._ranker.reset(self._target_behavior_dir)
+            self._ranker.reset(self.archive, self)
             self._restarts += 1
