@@ -1,3 +1,6 @@
+"""
+Provides the RandomDirectionRanker
+"""
 import numpy as np
 
 from ribs.emitters.rankers._ranker_base import RankerBase
