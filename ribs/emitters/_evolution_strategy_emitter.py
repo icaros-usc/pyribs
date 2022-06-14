@@ -14,7 +14,6 @@ class EvolutionStrategyEmitter(EmitterBase):
     uses some evolution strategy (i.e. CMA-ES) to optimize for objective values.
     After the evolution strategy converges, the emitter restarts the optimizer.
 
-
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
