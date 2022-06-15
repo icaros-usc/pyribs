@@ -136,36 +136,35 @@ class EvolutionStrategyEmitter(EmitterBase):
         # Tuples of (solution was added, projection onto random direction,
         # index).
         ranking_data = []
-        new_sols = 0
-
-        metadata = itertools.repeat(None) if metadata is None else metadata
 
         # Tupe of (add status, add value)
-        add_data = []
+        add_results = []
+
+        metadata = itertools.repeat(None) if metadata is None else metadata
 
         # Add solutions to the archive.
         for i, (sol, obj, beh, meta) in enumerate(
                 zip(solutions, objective_values, behavior_values, metadata)):
-            add_data.append(self.archive.add(sol, obj, beh, meta))
+            add_results.append(self.archive.add(sol, obj, beh, meta))
 
         # Sort the solutions with some Ranker
-        indices = self._ranker.rank(self, self._archive, solutions,
+        indices = self._ranker.rank(self, self.archive, solutions,
                                     objective_values, behavior_values, metadata,
-                                    add_data[0], add_data[1])
+                                    add_results[0], add_results[1])
 
         # Select the number of parents
-        num_parents = self._selector.select(self, self._archive, solutions,
+        num_parents = self._selector.select(self, self.archive, solutions,
                                             objective_values, behavior_values,
-                                            metadata, add_data[0], add_data[1])
+                                            metadata, add_results[0],
+                                            add_results[1])
 
         # Update Evolution Strategy
         self.opt.tell(solutions[indices], num_parents)
 
         # Check for reset.
-        if (self.opt.check_stop(
-            [projection for status, projection, i in ranking_data]) or
+        if (self.opt.check_stop([obj for status, obj, i in ranking_data]) or
                 self._check_restart(new_sols)):
             new_x0 = self.archive.sample_elites(1).solution_batch[0]
             self.opt.reset(new_x0)
-            self._ranker.reset(self.archive, self)
+            self._ranker.reset(self, self.archive)
             self._restarts += 1
