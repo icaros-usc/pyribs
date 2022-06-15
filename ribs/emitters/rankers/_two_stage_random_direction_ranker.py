@@ -59,7 +59,7 @@ class TwoStageRandomDirectionRanker(RankerBase):
         ranking_data.sort(reverse=True, key=lambda x: (x[0], x[1]))
         return [d[2] for d in ranking_data]
 
-    def reset(self, archive, emitter):
+    def reset(self, emitter, archive):
         """Generates a new random direction in the behavior space.
 
         The direction is sampled from a standard Gaussian -- since the standard

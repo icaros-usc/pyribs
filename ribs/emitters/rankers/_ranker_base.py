@@ -39,7 +39,7 @@ class RankerBase(ABC):
             indices: which represent the descending order of the solutions
         """
 
-    def reset(self, archive, emitter):
+    def reset(self, emitter, archive):
         """Resets the internal state of the ranker
 
         Args:
