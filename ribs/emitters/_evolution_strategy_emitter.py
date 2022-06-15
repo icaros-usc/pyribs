@@ -75,8 +75,6 @@ class EvolutionStrategyEmitter(EmitterBase):
         self._ranker.reset(archive, self)
 
         self._selector = selector
-        # self._num_parents = (self.batch_size //
-        #                      2 if selection_rule == "mu" else None)
         self._batch_size = batch_size
         self._restarts = 0  # Currently not exposed publicly.
 
@@ -150,15 +148,17 @@ class EvolutionStrategyEmitter(EmitterBase):
                 zip(solutions, objective_values, behavior_values, metadata)):
             add_data.append(self.archive.add(sol, obj, beh, meta))
 
+        # Sort the solutions with some Ranker
         indices = self._ranker.rank(self, self._archive, solutions,
                                     objective_values, behavior_values, metadata,
                                     add_data[0], add_data[1])
 
+        # Select the number of parents
         num_parents = self._selector.select(self, self._archive, solutions,
                                             objective_values, behavior_values,
                                             metadata, add_data[0], add_data[1])
-        # (new_sols if self._selection_rule == "filter" else self._num_parents)
 
+        # Update Evolution Strategy
         self.opt.tell(solutions[indices], num_parents)
 
         # Check for reset.
