@@ -220,19 +220,19 @@ class CVTArchive(ArchiveBase):
         """Finds the indices of the centroid closest to the given coordinates in
         measure space.
 
-        If ``idx`` is one index returned by this method for some measure
-        ``beh``, then ``archive.centroids[idx]`` holds the coordinates of the
-        centroid closest to ``beh``. See :attr:`centroids` for more info.
+        If ``idx`` is an index returned by this method for some ``measure``,
+        then ``archive.centroids[idx]`` holds the coordinates of the centroid
+        closest to ``measure``. See :attr:`centroids` for more info.
 
-        The centroid indices are located using either the k-D tree or brute force,
-        depending on the value of ``use_kd_tree`` in the constructor.
+        The centroid indices are located using either the k-D tree or brute
+        force, depending on the value of ``use_kd_tree`` in the constructor.
 
         Args:
             measures (numpy.ndarray): ``(batch_size, :attr:`behavior_dim`,)``
-                array of of length batch_size of coordinates in behavior space.
+                array of length batch_size of coordinates in measure space.
         Returns:
-            numpy.ndarray: ``(batch_size,)`` array of centroid indices corresponding
-                to each measure space coordinate.
+            numpy.ndarray: ``(batch_size,)`` array of centroid indices
+            corresponding to each measure space coordinate.
         """
         if self._use_kd_tree:
             # Using the built-in cKDTree.query method on each individual point
