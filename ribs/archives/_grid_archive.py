@@ -131,7 +131,8 @@ class GridArchive(ArchiveBase):
             np.maximum(measures + _EPSILON, self._lower_bounds),
             self.upper_bounds - _EPSILON)
 
-        indices = (measures - self._lower_bounds) / self._interval_size * self._dims
+        indices = (measures -
+                   self._lower_bounds) / self._interval_size * self._dims
         return np.ravel_multi_index(indices.astype(np.int32), self._dims)
 
     # TODO: Update docstring.

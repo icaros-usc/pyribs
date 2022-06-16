@@ -140,7 +140,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             used to index into ``_occupied_indices``.
     """
 
-    def __init__(self, solution_dim, cells, behavior_dim, seed=None, dtype=np.float64):
+    def __init__(self,
+                 solution_dim,
+                 cells,
+                 behavior_dim,
+                 seed=None,
+                 dtype=np.float64):
 
         ## Intended to be accessed by child classes. ##
         self._solution_dim = solution_dim
@@ -152,22 +157,20 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._num_occupied = 0
         self._occupied = np.zeros(self._cells, dtype=bool)
         self._occupied_indices = np.empty(self._cells, dtype=np.int32)
-        
+
         self._solutions = np.empty((self._cells, solution_dim),
                                    dtype=self.dtype)
         self._objective_values = np.empty(self._cells, dtype=self.dtype)
         self._behavior_values = np.empty((self._cells, self._behavior_dim),
                                          dtype=self.dtype)
         self._metadata = np.empty(self._cells, dtype=object)
-        
+
         self._stats_reset()
         self._state = {"clear": 0, "add": 0}
         ## Not intended to be accessed by children. ##
 
         self._seed = seed
         # Tracks archive modifications by counting calls to clear() and add().
-
-        
 
     @staticmethod
     def _parse_dtype(dtype):
