@@ -241,25 +241,3 @@ class CVTArchive(ArchiveBase):
         distances = np.expand_dims(measures, axis=1) - self.centroids
         distances = np.sum(np.square(distances), axis=2)
         return np.astype(np.argmin(distances), int)
-
-    def get_index(self, behavior_values):
-        """Finds the index of the centroid closest to the behavior values.
-
-        If ``idx`` is the index returned by this method for some behavior values
-        ``beh``, then ``archive.centroids[idx]`` holds the coordinates of the
-        centroid closest to ``beh``. See :attr:`centroids` for more info.
-
-        The centroid index is located using either the k-D tree or brute force,
-        depending on the value of ``use_kd_tree`` in the constructor.
-
-        Args:
-            behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
-                coordinates in behavior space.
-        Returns:
-            int: Centroid index.
-        """
-        # We use int() here since these methods may return a numpy integer.
-        if self._use_kd_tree:
-            return int(self._centroid_kd_tree.query(behavior_values)[1])
-
-        return int(self._brute_force_nn_numba(behavior_values, self._centroids))

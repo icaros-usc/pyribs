@@ -591,7 +591,6 @@ def test_cvt_archive_heatmap_with_samples(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, plot_samples=True)
 
-
 #
 # Parallel coordinate plot test
 #

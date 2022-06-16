@@ -5,6 +5,7 @@
 ### Changelog
 
 #### API
+- **Backwards-incompatible:** Batched the index query function, changed from get_index() to to_index(measures), where measures are arrays of coordinates in measure space of any size
 - **Backwards-incompatible:** Made it such that each archive is initialized fully in its constructor instead of needing a separate .initialize(solution_dim) call (#200)
 - **Backwards-incompatible:** Add `sigma`, `sigma0` options to `gaussian_emitter` and `iso_line_emitter` (#199)
   - `gaussian_emitter` constructor requires `sigma`; `sigma0` is optional.

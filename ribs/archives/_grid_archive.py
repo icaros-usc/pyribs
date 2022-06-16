@@ -135,38 +135,6 @@ class GridArchive(ArchiveBase):
                    self._lower_bounds) / self._interval_size * self._dims
         return np.ravel_multi_index(indices.astype(np.int32), self._dims)
 
-    # TODO: Update docstring.
-    def get_index(self, behavior_values):
-        """Returns indices of the behavior values within the archive's grid.
-
-        First, values are clipped to the bounds of the behavior space. Then, the
-        values are mapped to cells; e.g. cell 5 along dimension 0 and cell 3
-        along dimension 1.
-
-        The indices can be used to access boundaries of a behavior value's cell.
-        For example, the following retrieves the lower and upper bounds of the
-        cell along dimension 0::
-
-            idx = archive.get_index(...)  # Other methods also return indices.
-            lower = archive.boundaries[0][idx[0]]
-            upper = archive.boundaries[0][idx[0] + 1]
-
-        See :attr:`boundaries` for more info.
-
-        Args:
-            behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
-                coordinates in behavior space.
-        Returns:
-            tuple of int: The grid indices.
-        """
-        index = GridArchive._get_index_numba(behavior_values,
-                                             self._upper_bounds,
-                                             self._lower_bounds,
-                                             self._interval_size, self._dims)
-        # TODO: Implement ravel_multi_index in numpy since it is not supported
-        # by numba?
-        return np.ravel_multi_index(index, self._dims)
-
     # TODO: Docstrings.
     def ravel_index(self, index):
         return np.ravel_multi_index(index, self._dims)
