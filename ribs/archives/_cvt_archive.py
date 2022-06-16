@@ -229,7 +229,7 @@ class CVTArchive(ArchiveBase):
 
         Args:
             measures (numpy.ndarray): ``(batch_size, :attr:`behavior_dim`,)``
-                array of length batch_size of coordinates in measure space.
+                array of ``batch_size`` coordinates in measure space.
         Returns:
             numpy.ndarray: ``(batch_size,)`` array of centroid indices
             corresponding to each measure space coordinate.
