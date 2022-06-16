@@ -72,9 +72,11 @@ class EvolutionStrategyEmitter(EmitterBase):
         self.opt.reset(self._x0)
 
         self._ranker = ranker
-        self._ranker.reset(archive, self)
+        self._ranker.reset(self, archive)
 
         self._selector = selector
+        self._ranker.reset(self, archive)
+
         self._batch_size = batch_size
         self._restarts = 0  # Currently not exposed publicly.
 
@@ -167,4 +169,5 @@ class EvolutionStrategyEmitter(EmitterBase):
             new_x0 = self.archive.sample_elites(1).solution_batch[0]
             self.opt.reset(new_x0)
             self._ranker.reset(self, self.archive)
+            self._selector.reset(self, self.archive)
             self._restarts += 1

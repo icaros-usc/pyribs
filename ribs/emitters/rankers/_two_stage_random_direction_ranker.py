@@ -19,6 +19,9 @@ class TwoStageRandomDirectionRanker(RankerBase):
     :class:`ribs.emitters.rankers.TwoStageRandomDirectionRanker`.
     """
 
+    def __init__(self):
+        self._target_behavior_dir = None
+
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
         """Ranks the soutions based on TwoStageRandomDirectionRanker

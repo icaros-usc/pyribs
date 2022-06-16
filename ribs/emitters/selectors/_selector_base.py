@@ -6,7 +6,7 @@ class SelectorBase(ABC):
     @abstractmethod
     def select(self, emitter, archive, solutions, objective_values,
                behavior_values, metadata, add_statuses, add_values):
-        """Selects the number of parents that will be used for the evolution strategy
+        """Selects the number of parents that will be used for the evolution strategy.
 
         Args:
             emitter (ribs.emitters.EmitterBase):
@@ -25,9 +25,9 @@ class SelectorBase(ABC):
             add_values ():
 
         Returns:
-            indices: which represent the descending order of the solutions
+            num_parents (int): returns the number of top performing parents to select
+                from the solutions.
         """
 
-    def reset(self):
+    def reset(self, emitter, archive):
         """Resets the Selector object."""
-
