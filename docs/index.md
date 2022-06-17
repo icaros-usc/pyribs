@@ -18,6 +18,7 @@ examples
 api/ribs.archives
 api/ribs.emitters
 api/ribs.emitters.rankers
+api/ribs.emitters.selectors
 api/ribs.optimizers
 api/ribs.factory
 api/ribs.visualize
