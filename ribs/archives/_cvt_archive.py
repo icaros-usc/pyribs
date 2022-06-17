@@ -206,15 +206,15 @@ class CVTArchive(ArchiveBase):
 
     @staticmethod
     @jit(nopython=True)
-    def _brute_force_nn_numba(behavior_values, centroids):
+    def _brute_force_nn_numba(measures, centroids):
         """Calculates the nearest centroid to the given behavior values.
 
         Technically, we calculate squared distance, but we only care about
         finding the neighbor and not the distance itself.
         """
-        distances = np.expand_dims(behavior_values, axis=0) - centroids
-        distances = np.sum(np.square(distances), axis=1)
-        return np.argmin(distances)
+        distances = np.expand_dims(measures, axis=1) - centroids
+        distances = np.sum(np.square(distances), axis=2)
+        return np.astype(np.argmin(distances), int)
 
     def index_of(self, measures):
         """Finds the indices of the centroid closest to the given coordinates in
@@ -238,6 +238,4 @@ class CVTArchive(ArchiveBase):
             # Using the built-in cKDTree.query method on each individual point
             return (self._centroid_kd_tree.query(measures)[1]).astype(int)
         # Batching the indexing with numpy methods
-        distances = np.expand_dims(measures, axis=1) - self.centroids
-        distances = np.sum(np.square(distances), axis=2)
-        return np.astype(np.argmin(distances), int)
+        return self._brute_force_nn_numba(measures, self.centroids)

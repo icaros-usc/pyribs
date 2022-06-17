@@ -230,11 +230,11 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     @staticmethod
     @nb.jit(nopython=True)
-    def _get_index_numba(behavior_values, upper_bounds, lower_bounds,
-                         boundaries, dims):
-        """Numba helper for get_index().
+    def _index_of_numba(behavior_values, upper_bounds, lower_bounds, boundaries,
+                        dims):
+        """Numba helper for index_of().
 
-        See get_index() for usage.
+        See index_of() for usage.
         """
         behavior_values = np.minimum(
             np.maximum(behavior_values + _EPSILON, lower_bounds),
@@ -245,7 +245,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             index.append(max(0, idx - 1))
         return index
 
-    def get_index(self, behavior_values):
+    def index_of(self, behavior_values):
         """Returns indices of the behavior values within the archive's grid.
 
         First, values are clipped to the bounds of the behavior space. Then, the
@@ -256,7 +256,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         For example, the following retrieves the lower and upper bounds of the
         cell along dimension 0::
 
-            idx = archive.get_index(...)  # Other methods also return indices.
+            idx = archive.index_of(...)  # Other methods also return indices.
             lower = archive.boundaries[0][idx[0]]
             upper = archive.boundaries[0][idx[0] + 1]
 
@@ -268,7 +268,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         Returns:
             tuple of int: The grid indices.
         """
-        index = SlidingBoundariesArchive._get_index_numba(
+        index = SlidingBoundariesArchive._index_of_numba(
             behavior_values, self.upper_bounds, self.lower_bounds,
             self._boundaries, self._dims)
         # TODO: implement raveling in numpy?

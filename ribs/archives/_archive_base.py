@@ -89,7 +89,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     - ``__init__``: Child classes must invoke this class's ``__init__`` with the
       appropriate arguments.
-    - :meth:`get_index`: Returns an integer index into the arrays above when
+    - :meth:`index_of`: Returns an integer index into the arrays above when
       given the behavior values of a solution. Usually, the index has a meaning,
       e.g. in :class:`~ribs.archives.CVTArchive` it is the index of a centroid.
       Documentation for this method should describe the meaning of the index.
@@ -283,7 +283,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._stats_reset()
 
     @abstractmethod
-    def get_index(self, behavior_values):
+    def index_of(self, behavior_values):
         """Returns archive index for the given behavior values.
 
         See the :class:`~ribs.archives.ArchiveBase` class docstring for more
@@ -373,7 +373,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         behavior_values = np.asarray(behavior_values)
         objective_value = self.dtype(objective_value)
 
-        index = self.get_index(behavior_values)
+        index = self.index_of(behavior_values)
         old_objective = self._objective_values[index]
         was_inserted, already_occupied = self._add_numba(
             index, solution, objective_value, behavior_values, self._occupied,
@@ -395,6 +395,48 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             status = AddStatus.NOT_ADDED
             value = objective_value - old_objective
         return status, value
+
+    def elites_with_measures(self, measures):
+        """Gets the elite with behavior vals in the same cell as those
+        specified.
+
+        Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
+        (here we show how to ignore some of the fields)::
+
+            sol, obj, beh, *_ = archive.elite_with_behavior(...)
+
+        Or the fields may be accessed by name::
+
+            elite = archive.elite_with_behavior(...)
+            elite.sol
+            elite.obj
+            ...
+
+        Args:
+            behavior_values (array-like): Coordinates in behavior space.
+        Returns:
+            Elite:
+              * If there is an elite with behavior values in the same cell as
+                those specified, this :namedtuple:`Elite` holds the info for
+                that elite. In that case, ``beh`` (the behavior values) may not
+                be exactly the same as the behavior values specified since the
+                elite is only guaranteed to be in the same archive cell.
+              * If no such elite exists, then all fields of the
+                :namedtuple:`Elite` are set to None. This way, tuple unpacking
+                (e.g.
+                ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``)
+                still works.
+        """
+        index = self.index_of(np.asarray(behavior_values))
+        if self._occupied[index]:
+            return Elite(
+                readonly(self._solutions[index]),
+                self._objective_values[index],
+                readonly(self._behavior_values[index]),
+                index,
+                self._metadata[index],
+            )
+        return Elite(None, None, None, None, None)
 
     # TODO: Update docstring due to new elite definition.
     def elite_with_behavior(self, behavior_values):
@@ -428,7 +470,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``)
                 still works.
         """
-        index = self.get_index(np.asarray(behavior_values))
+        index = self.index_of(np.asarray(behavior_values))
         if self._occupied[index]:
             return Elite(
                 readonly(self._solutions[index]),
@@ -488,7 +530,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         dataframe consisting of:
 
         - 1 column of integers (``np.int32``) for the index, named ``index``.
-          See :meth:`get_index` for more info.
+          See :meth:`index_of` for more info.
         - :attr:`behavior_dim` columns for the behavior characteristics, named
           ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``
