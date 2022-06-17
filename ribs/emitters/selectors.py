@@ -104,11 +104,7 @@ class FilterSelector(SelectorBase):
 
     def select(self, emitter, archive, solutions, objective_values,
                behavior_values, metadata, add_statuses, add_values):
-        new_sols = 0
-        for status in add_statuses:
-            if bool(status):
-                new_sols += 1
-        return new_sols
+        return add_statuses.astype(bool).sum()
 
     # Generates the docstring for select
     select.__doc__ = f"""
