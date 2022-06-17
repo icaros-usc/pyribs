@@ -106,17 +106,10 @@ class TwoStageImprovementRanker(RankerBase):
 
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
-        ranking_data = []  # TODO make this numpy
-        for i, (status, add_value) in enumerate(zip(add_statuses, add_value)):
-            added = bool(status)
-            ranking_data.append((added, add_value, i))
-            if status in (AddStatus.NEW, AddStatus.IMPROVE_EXISTING):
-                new_sols += 1
 
         # New solutions sort ahead of improved ones, which sort ahead of ones
         # that were not added.
-        ranking_data.sort(reverse=True)
-        return [d[2] for d in ranking_data]
+        return np.lexsort((add_values, add_statuses))
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -157,18 +150,9 @@ class RandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
-        ranking_data = []
-        for i, (beh, status) in enumerate(zip(behavior_values, add_statuses)):
-            projection = np.dot(beh, self._target_behavior_dir)
-            added = bool(status)
-
-            ranking_data.append((added, projection, i))
-            if added:
-                new_sols += 1
-
+        projections = np.dot(behavior_values, self._target_behavior_dir)
         # Sort only by projection.
-        ranking_data.sort(reverse=True, key=lambda x: x[1])
-        return [d[2] for d in ranking_data]
+        return np.lexsort(projections)
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -228,19 +212,10 @@ class TwoStageRandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
-        ranking_data = []
-        for i, (beh, status) in enumerate(zip(behavior_values, add_statuses)):
-            projection = np.dot(beh, self._target_behavior_dir)
-            added = bool(status)
-
-            ranking_data.append((added, projection, i))
-            if added:
-                new_sols += 1
-
+        projections = np.dot(behavior_values, self._target_behavior_dir)
         # Sort by whether the solution was added into the archive,
         # followed by projection.
-        ranking_data.sort(reverse=True, key=lambda x: (x[0], x[1]))
-        return [d[2] for d in ranking_data]
+        return np.lexsort((add_statuses, projections))
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -292,16 +267,8 @@ class ObjectiveRanker(RankerBase):
 
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
-        ranking_data = []
-        for i, (obj, status) in enumerate(zip(objective_values, add_statuses)):
-            added = bool(status)
-            ranking_data.append((added, obj, i))
-            if added:
-                new_sols += 1
-
         # Sort only by objective value.
-        ranking_data.sort(reverse=True, key=lambda x: x[1])
-        return [d[2] for d in ranking_data]
+        return np.lexsort((objective_values))
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -332,17 +299,9 @@ class TwoStageObjectiveRanker(RankerBase):
 
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
-        ranking_data = []
-        for i, (obj, status) in enumerate(zip(objective_values, add_statuses)):
-            added = bool(status)
-            ranking_data.append((added, obj, i))
-            if added:
-                new_sols += 1
-
         # Sort by whether the solution was added into the archive, followed
         # by objective value.
-        ranking_data.sort(reverse=True, key=lambda x: (x[0], x[1]))
-        return [d[2] for d in ranking_data]
+        return np.lexsort((objective_values, add_statuses))
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
