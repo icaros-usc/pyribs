@@ -1,5 +1,21 @@
+"""Package with selectors for use across emitters."
+.. autosummary::
+    :toctree:
+
+    ribs.emitters.selectors.MuSelector
+    ribs.emitters.selectors.FilterSelector
+    ribs.emitters.selectors.SelectorBase
+"""
+
 from abc import ABC, abstractmethod
+
 from ribs._docstrings import DocstringComponents, _core_docs
+
+__all__ = [
+    "MuSelector",
+    "FilterSelector",
+    "SelectorBase",
+]
 
 _args = _core_docs["args"]
 _returns = DocstringComponents(
@@ -9,6 +25,14 @@ _returns = DocstringComponents(
 
 
 class SelectorBase(ABC):
+    """Base class for selectors.
+
+    Every selector has a :meth:`select` method that returns the number of
+    top-performing parents to select from the ranking and a :meth:`reset`
+    method that resets the internal state of the selector.
+
+    Child classes are only required to override :meth:`select`.
+    """
 
     @abstractmethod
     def select(self, emitter, archive, solutions, objective_values,
@@ -49,6 +73,7 @@ Args:
 
 
 class MuSelector(SelectorBase):
+    # TODO docstring
 
     def select(self, emitter, archive, solutions, objective_values,
                behavior_values, metadata, add_statuses, add_values):
@@ -74,6 +99,7 @@ Returns:
 
 
 class FilterSelector(SelectorBase):
+    # TODO docstring
 
     def select(self, emitter, archive, solutions, objective_values,
                behavior_values, metadata, add_statuses, add_values):
