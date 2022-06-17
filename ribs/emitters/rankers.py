@@ -17,7 +17,6 @@ TODO [Add instructions on how to use]
 from abc import ABC, abstractmethod
 import numpy as np
 
-from ribs.archives import AddStatus
 from ribs._docstrings import DocstringComponents, _core_docs
 
 __all__ = [

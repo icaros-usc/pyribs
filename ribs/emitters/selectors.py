@@ -1,4 +1,5 @@
-"""Package with selectors for use across emitters."
+"""Package with selectors for use across emitters.
+
 .. autosummary::
     :toctree:
 
