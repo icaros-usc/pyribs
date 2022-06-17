@@ -135,35 +135,33 @@ class EvolutionStrategyEmitter(EmitterBase):
             metadata (numpy.ndarray): 1D object array containing a metadata
                 object for each solution.
         """
-        # Tuples of (solution was added, projection onto random direction,
-        # index).
-        ranking_data = []
-
-        # Tupe of (add status, add value)
-        add_results = []
+        add_statues = []
+        add_values = []
 
         metadata = itertools.repeat(None) if metadata is None else metadata
 
         # Add solutions to the archive.
         for i, (sol, obj, beh, meta) in enumerate(
                 zip(solutions, objective_values, behavior_values, metadata)):
-            add_results.append(self.archive.add(sol, obj, beh, meta))
+            status, value = self.archive.add(sol, obj, beh, meta)
+            add_statues.append(status)
+            add_values.append(value)
 
         # Sort the solutions with some Ranker
         indices = self._ranker.rank(self, self.archive, solutions,
                                     objective_values, behavior_values, metadata,
-                                    add_results[0], add_results[1])
+                                    add_statues, add_values)
 
         # Select the number of parents
         num_parents = self._selector.select(self, self.archive, solutions,
                                             objective_values, behavior_values,
-                                            metadata, add_results[0],
-                                            add_results[1])
+                                            metadata, add_statues, add_values)
 
         # Update Evolution Strategy
         self.opt.tell(solutions[indices], num_parents)
 
         # Check for reset.
+        # TODO bug: no access to ranking_data and new_sols
         if (self.opt.check_stop([obj for status, obj, i in ranking_data]) or
                 self._check_restart(new_sols)):
             new_x0 = self.archive.sample_elites(1).solution_batch[0]
