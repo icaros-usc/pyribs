@@ -95,6 +95,10 @@ _core_args = dict(
         calls to archive's :meth:`add()` method. For what these floats
         represent, refer to :meth:`ribs.archives.add()`
     """,
+    seed="""
+    seed (int): Value to seed the random number generator. Set to None to
+        avoid a fixed seed.
+    """
 )
 
 _core_returns = dict(something="""

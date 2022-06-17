@@ -4,6 +4,20 @@ import itertools
 import numpy as np
 
 from ribs.emitters._emitter_base import EmitterBase
+from ribs.emitters.rankers import RankerBase
+
+
+def get_ranker(ranker_name):
+    try:
+        ranker = globals()[ranker_name]()
+        if issubclass(ranker, RankerBase):
+            raise TypeError
+        return ranker
+    except KeyError as key_error:
+        raise RuntimeError("Cannot find class" + ranker_name) from key_error
+    except TypeError as type_error:
+        raise RuntimeError(ranker_name +
+                           "is not a subclass of RankerBase") from type_error
 
 
 class EvolutionStrategyEmitter(EmitterBase):
@@ -19,8 +33,10 @@ class EvolutionStrategyEmitter(EmitterBase):
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
-        ranker (ribs.emitters.rankers.RankerBase): The Ranker object defines
-            how the generated solutions are ranked and what to do on restart.
+        ranker (ribs.emitters.rankers.RankerBase or str): The Ranker object
+            defines how the generated solutions are ranked and what to do on
+            restart. If passing in the name of the ranker as a string,
+            the corresponding ranker will be created in the constructor.
         selector (ribs.emitters.selectors.Selector): Method for selecting
             solutions in CMA-ES. With "mu" selection, the first half of the
             solutions will be selected, while in "filter", any solutions that
@@ -71,7 +87,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         self.opt = evolution_strategy
         self.opt.reset(self._x0)
 
-        self._ranker = ranker
+        self._ranker = get_ranker(ranker) if isinstance(ranker, str) else ranker
         self._ranker.reset(self, archive)
 
         self._selector = selector
