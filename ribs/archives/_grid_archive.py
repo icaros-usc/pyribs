@@ -105,7 +105,7 @@ class GridArchive(ArchiveBase):
 
     @staticmethod
     @jit(nopython=True)
-    def _index_of_numba(behavior_values, upper_bounds, lower_bounds,
+    def _index_of_numba(measures, upper_bounds, lower_bounds,
                         interval_size, dims):
         """Numba helper for index_of().
 
@@ -119,7 +119,7 @@ class GridArchive(ArchiveBase):
                               upper_bounds - _EPSILON)
 
         indices = (measures - lower_bounds) / interval_size * dims
-        return indices.astype(np.int32)
+        return indices
 
     def index_of(self, measures):
         """Returns indices of the behavior values within the archive's grid.
@@ -143,12 +143,11 @@ class GridArchive(ArchiveBase):
         # precision errors from transforming behavior values. Subtracting
         # epsilon from upper bounds makes sure we do not have indices outside
         # the grid.
-        indices = self._index_of_numba(behavior_values, self._upper_bounds,
+        indices = self._index_of_numba(measures, self._upper_bounds,
                                        self._lower_bounds, self._interval_size,
                                        self._dims)
-        return self.ravel_index(indices)
+        return indices.astype(np.int32)
 
-    # TODO: Docstrings.
     def ravel_index(self, index):
         return np.ravel_multi_index(index, self._dims)
 

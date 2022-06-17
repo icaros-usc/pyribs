@@ -214,7 +214,7 @@ class CVTArchive(ArchiveBase):
         """
         distances = np.expand_dims(measures, axis=1) - centroids
         distances = np.sum(np.square(distances), axis=2)
-        return np.astype(np.argmin(distances), int)
+        return np.argmin(distances)
 
     def index_of(self, measures):
         """Finds the indices of the centroid closest to the given coordinates in
@@ -235,7 +235,5 @@ class CVTArchive(ArchiveBase):
             corresponding to each measure space coordinate.
         """
         if self._use_kd_tree:
-            # Using the built-in cKDTree.query method on each individual point
-            return (self._centroid_kd_tree.query(measures)[1]).astype(int)
-        # Batching the indexing with numpy methods
-        return self._brute_force_nn_numba(measures, self.centroids)
+            return np.asarray(self._centroid_kd_tree.query(measures))[1].astype(np.int32)
+        return self._brute_force_nn_numba(measures, self.centroids).astype(np.int32)
