@@ -28,4 +28,4 @@ class MuSelector(SelectorBase):
             num_parents: the number of top parents to use in the evolution strategy
         """
 
-        return self.emitter.batch_size // 2
+        return emitter.batch_size // 2
