@@ -4,7 +4,6 @@ from collections import OrderedDict
 
 import numba as nb
 import numpy as np
-from decorator import decorator
 
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_data_frame import ArchiveDataFrame
@@ -165,12 +164,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                          dtype=self.dtype)
         self._metadata = np.empty(self._cells, dtype=object)
 
+        self._stats = None
         self._stats_reset()
-        self._state = {"clear": 0, "add": 0}
-        ## Not intended to be accessed by children. ##
 
-        self._seed = seed
         # Tracks archive modifications by counting calls to clear() and add().
+        self._state = {"clear": 0, "add": 0}
+
+        ## Not intended to be accessed by children. ##
+        self._seed = seed
 
     @staticmethod
     def _parse_dtype(dtype):
