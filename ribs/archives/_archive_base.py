@@ -59,12 +59,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     This class assumes all archives use a fixed-size container with cells that
     hold (1) information about whether the cell is occupied (bool), (2) a
     solution (1D array), (3) objective function evaluation of the solution
-    (float), (4) behavior space coordinates of the solution (1D array), and (5)
+    (float), (4) measure space coordinates of the solution (1D array), and (5)
     any additional metadata associated with the solution (object). In this
     class, the container is implemented with separate numpy arrays that share
-    common dimensions. Using the ``cells`` and ``behavior_dim`` arguments in
-    ``__init__`` and the ``solution_dim`` argument in ``initialize``, these
-    arrays are as follows:
+    common dimensions. Using the ``solution_dim``, ``cells`, and
+    ``behavior_dim`` arguments in ``__init__``, these arrays are as follows:
 
     +------------------------+----------------------------+
     | Name                   |  Shape                     |
@@ -88,13 +87,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     - ``__init__``: Child classes must invoke this class's ``__init__`` with the
       appropriate arguments.
-    - :meth:`index_of`: Returns an integer index into the arrays above when
-      given the behavior values of a solution. Usually, the index has a meaning,
+    - :meth:`index_of`: Returns integer indices into the arrays above when
+      given the measure values of a solution. Usually, each index has a meaning,
       e.g. in :class:`~ribs.archives.CVTArchive` it is the index of a centroid.
       Documentation for this method should describe the meaning of the index.
-    - :meth:`initialize`: By default, this method sets up the arrays described,
-      so child classes should invoke the parent implementation if they are
-      overriding it.
 
     .. note:: Attributes beginning with an underscore are only intended to be
         accessed by child classes (i.e. they are "protected" attributes).
@@ -116,25 +112,19 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         _cells (int): See ``cells`` arg.
         _behavior_dim (int): See ``behavior_dim`` arg.
         _occupied (numpy.ndarray): Bool array storing whether each cell in the
-            archive is occupied. This attribute is None until :meth:`initialize`
-            is called.
+            archive is occupied.
         _solutions (numpy.ndarray): Float array storing the solutions
-            themselves. This attribute is None until :meth:`initialize` is
-            called.
+            themselves.
         _objective_values (numpy.ndarray): Float array storing the objective
-            value of each solution. This attribute is None until
-            :meth:`initialize` is called.
+            value of each solution.
         _behavior_values (numpy.ndarray): Float array storing the behavior
-            space coordinates of each solution. This attribute is None until
-            :meth:`initialize` is called.
+            space coordinates of each solution.
         _metadata (numpy.ndarray): Object array storing the metadata associated
-            with each solution. This attribute is None until :meth:`initialize`
-            is called.
+            with each solution.
         _occupied_indices (numpy.ndarray): A ``(cells,)`` array of integer
             (``np.int32``) indices that are occupied in the archive. This could
             be a list, but for efficiency, we make it a fixed-size array, with
-            only the first ``_num_occupied`` entries will be valid. This
-            attribute is None until :meth:`initialize` is called.
+            only the first ``_num_occupied`` entries will be valid.
         _num_occupied (int): Number of elites currently in the archive. This is
             used to index into ``_occupied_indices``.
     """
