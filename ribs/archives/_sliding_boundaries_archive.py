@@ -239,11 +239,12 @@ class SlidingBoundariesArchive(ArchiveBase):
         behavior_values = np.minimum(
             np.maximum(behavior_values + _EPSILON, lower_bounds),
             upper_bounds - _EPSILON)
-        index = []
-        for i, behavior_value in enumerate(behavior_values):
-            idx = np.searchsorted(boundaries[i][:dims[i]], behavior_value)
-            index.append(max(0, idx - 1))
-        return index
+        idx_cols = []
+        for boundary, dim, behavior_value_col in zip(boundaries, dims,
+                                                     behavior_values.T):
+            idx_col = np.searchsorted(boundary[:dim], behavior_value_col)
+            idx_cols.append(np.maximum(0, idx_col - 1))
+        return idx_cols
 
     def index_of(self, behavior_values):
         """Returns indices of the behavior values within the archive's grid.
@@ -268,11 +269,10 @@ class SlidingBoundariesArchive(ArchiveBase):
         Returns:
             tuple of int: The grid indices.
         """
-        index = SlidingBoundariesArchive._index_of_numba(
+        index_cols = SlidingBoundariesArchive._index_of_numba(
             behavior_values, self.upper_bounds, self.lower_bounds,
             self._boundaries, self._dims)
-        # TODO: implement raveling in numpy?
-        return np.ravel_multi_index(index, self._dims)
+        return np.ravel_multi_index(index_cols, self._dims).astype(np.int32)
 
     # TODO: Docstrings.
     def ravel_index(self, index):
