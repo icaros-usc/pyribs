@@ -123,7 +123,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             with each solution.
         _occupied_indices (numpy.ndarray): A ``(cells,)`` array of integer
             (``np.int32``) indices that are occupied in the archive. This could
-            be a list, but for efficiency, we make it a fixed-size array, with
+            be a list, but for efficiency, we make it a fixed-size array, where
             only the first ``_num_occupied`` entries will be valid.
         _num_occupied (int): Number of elites currently in the archive. This is
             used to index into ``_occupied_indices``.
