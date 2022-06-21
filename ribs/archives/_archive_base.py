@@ -284,17 +284,18 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._stats_reset()
 
     @abstractmethod
-    def index_of(self, behavior_values):
-        """Returns archive index for the given behavior values.
+    def index_of(self, measures_batch):
+        """Returns archive indices for the given measure values.
 
         See the :class:`~ribs.archives.ArchiveBase` class docstring for more
         info.
 
         Args:
-            behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
-                coordinates in behavior space.
+            measures_batch (numpy.ndarray): (``batch_size``,
+                :attr:`behavior_dim`) array of coordinates in measure space.
         Returns:
-            int: Index of the behavior values in the archive's storage arrays.
+            (numpy.ndarray): (``batch_size``,) array with the indices of the
+            measure values in the archive's storage arrays.
         """
 
     @staticmethod
