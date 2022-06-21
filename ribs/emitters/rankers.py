@@ -151,11 +151,16 @@ class RandomDirectionRanker(RankerBase):
         self._target_behavior_dir = None
         self._rng = np.random.default_rng(seed)
 
+    @property
+    def target_behavior_dir(self):
+        """numpy.ndarray: ``(behavior_dim,)`` array with the target behavior
+        direction vector."""
+        return self._target_behavior_dir
+
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
         projections = np.dot(behavior_values, self._target_behavior_dir)
         # Sort only by projection; use fancy indexing to reverse the order
-        print(projections)
         return np.lexsort((projections,))[::-1]
 
     # Generates the docstring for rank
@@ -213,6 +218,12 @@ class TwoStageRandomDirectionRanker(RankerBase):
     def __init__(self, seed=None):
         self._target_behavior_dir = None
         self._rng = np.random.default_rng(seed)
+
+    @property
+    def target_behavior_dir(self):
+        """numpy.ndarray: ``(behavior_dim,)`` array with the target behavior
+        direction vector."""
+        return self._target_behavior_dir
 
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
