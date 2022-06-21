@@ -299,6 +299,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         # pylint: disable = no-member
         return np.ravel_multi_index(index_cols, self._dims).astype(np.int32)
 
+    # Copy these methods from GridArchive.
     int_to_grid_index = GridArchive.int_to_grid_index
     grid_to_int_index = GridArchive.grid_to_int_index
 
