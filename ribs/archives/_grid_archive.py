@@ -105,7 +105,7 @@ class GridArchive(ArchiveBase):
 
     @staticmethod
     @jit(nopython=True)
-    def _index_of_numba(measures, upper_bounds, lower_bounds,
+    def _index_of_numba(behavior_values, upper_bounds, lower_bounds,
                         interval_size, dims):
         """Numba helper for index_of().
 
@@ -115,14 +115,16 @@ class GridArchive(ArchiveBase):
         # precision errors from transforming behavior values. Subtracting
         # epsilon from upper bounds makes sure we do not have indices outside
         # the grid.
-        measures = np.minimum(np.maximum(measures + _EPSILON, lower_bounds),
-                              upper_bounds - _EPSILON)
+        behavior_values = np.minimum(
+            np.maximum(behavior_values + _EPSILON, lower_bounds),
+            upper_bounds - _EPSILON)
 
-        indices = (measures - lower_bounds) / interval_size * dims
-        return indices
+        indices = (behavior_values - lower_bounds) / interval_size * dims
+        return indices.astype(np.int32)
 
-    def index_of(self, measures):
+    def index_of(self, behavior_values):
         """Returns indices of the behavior values within the archive's grid.
+
         First, values are clipped to the bounds of the behavior space. Then, the
         values are mapped to cells; e.g. cell 5 along dimension 0 and cell 3
         along dimension 1.
@@ -134,8 +136,8 @@ class GridArchive(ArchiveBase):
             upper = archive.boundaries[0][idx[0] + 1]
         See :attr:`boundaries` for more info.
         Args:
-            measures (numpy.ndarray): (:attr:`behavior_dim`, batch_size) array of
-                coordinates in behavior space.
+            behavior_values (numpy.ndarray): (:attr:`behavior_dim`, batch_size)
+                array of coordinates in behavior space.
         Returns:
             tuple of int: The grid indices.
         """
@@ -143,11 +145,12 @@ class GridArchive(ArchiveBase):
         # precision errors from transforming behavior values. Subtracting
         # epsilon from upper bounds makes sure we do not have indices outside
         # the grid.
-        indices = self._index_of_numba(measures, self._upper_bounds,
+        indices = self._index_of_numba(behavior_values, self._upper_bounds,
                                        self._lower_bounds, self._interval_size,
                                        self._dims)
-        return indices.astype(np.int32)
+        return np.ravel_multi_index(indices.T, self._dims).astype(np.int32)
 
+    # TODO: docstrings
     def ravel_index(self, index):
         return np.ravel_multi_index(index, self._dims)
 

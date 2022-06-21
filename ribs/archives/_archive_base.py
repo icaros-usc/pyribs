@@ -374,7 +374,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         behavior_values = np.asarray(behavior_values)
         objective_value = self.dtype(objective_value)
 
-        index = self.index_of(behavior_values)
+        index = self.index_of(behavior_values[None])[0]
         old_objective = self._objective_values[index]
         was_inserted, already_occupied = self._add_numba(
             index, solution, objective_value, behavior_values, self._occupied,
