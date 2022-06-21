@@ -105,10 +105,10 @@ class TwoStageImprovementRanker(RankerBase):
 
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
-
         # New solutions sort ahead of improved ones, which sort ahead of ones
-        # that were not added.
-        return np.lexsort((add_values, add_statuses))
+        # that were not added. Note that lexsort sorts the values in ascending
+        # order, so we use numpy fancy indexing to reverse the sorted array.
+        return np.lexsort((add_values, add_statuses))[::-1]
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -149,9 +149,11 @@ class RandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
-        projections = np.dot(behavior_values, self._target_behavior_dir)
-        # Sort only by projection.
-        return np.lexsort(projections)
+        projections = []
+        for beh in behavior_values:
+            projections.append(np.dot(beh, self._target_behavior_dir))
+        # Sort only by projection; use fancy indexing to reverse the order
+        return np.array(sorted(projections, reverse=True))
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
