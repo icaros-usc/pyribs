@@ -129,13 +129,13 @@ class GridArchive(ArchiveBase):
         along dimension 1.
 
         At this point, we have "grid indices" -- indices of each measure in each
-        dimension. Since indices must be integers, we convert these grid indices
-        into integer indices with :func:`numpy.ravel_multi_index` and return the
-        result.
+        dimension. Since indices returned by this method must be integers, we
+        convert these grid indices into integer indices with
+        :func:`numpy.ravel_multi_index` and return the result.
 
-        At times, it may be useful to have the original grid indices. Thus, we
-        provide the :meth:`grid_to_int_index` and :meth:`int_to_grid_index`
-        methods for converting between grid and integer indices.
+        It may be useful to have the original grid indices. Thus, we provide the
+        :meth:`grid_to_int_index` and :meth:`int_to_grid_index` methods for
+        converting between grid and integer indices.
 
         As an example, the grid indices can be used to access boundaries of a
         measure value's cell.  For example, the following retrieves the lower
