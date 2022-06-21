@@ -232,12 +232,14 @@ class CVTArchive(ArchiveBase):
         force, depending on the value of ``use_kd_tree`` in the constructor.
 
         Args:
-            measures_batch (numpy.ndarray): (batch_size, :attr:`behavior_dim`)
+            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
                 array of coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of centroid indices
             corresponding to each measure space coordinate.
         """
+        measures_batch = np.asarray(measures_batch)
+
         if self._use_kd_tree:
             return np.asarray(
                 self._centroid_kd_tree.query(measures_batch))[1].astype(

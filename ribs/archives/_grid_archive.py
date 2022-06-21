@@ -150,14 +150,14 @@ class GridArchive(ArchiveBase):
         See :attr:`boundaries` for more info.
 
         Args:
-            measures_batch (numpy.ndarray): (batch_size, :attr:`behavior_dim`)
+            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
                 array of coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
             the grid coordinates.
         """
         return self.grid_to_int_index(
-            self._index_of_numba(measures_batch, self._upper_bounds,
+            self._index_of_numba(np.asarray(measures_batch), self._upper_bounds,
                                  self._lower_bounds, self._interval_size,
                                  self._dims))
 
