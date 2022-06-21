@@ -206,47 +206,46 @@ class CVTArchive(ArchiveBase):
 
     @staticmethod
     @jit(nopython=True)
-    def _brute_force_nn_numba(behavior_values, centroids):
-        """Calculates the nearest centroid to the given behavior values.
+    def _brute_force_nn_numba(measures_batch, centroids):
+        """Calculates the nearest centroids to the given batch of measures with
+        brute force."""
 
-        Technically, we calculate squared distance, but we only care about
-        finding the neighbor and not the distance itself.
-        """
         # We want to take the difference between each measure i and all the
         # centroids.
-        distances = np.expand_dims(behavior_values, axis=1) - centroids
+        distances = np.expand_dims(measures_batch, axis=1) - centroids
 
-        # Compute the total squared distance.
+        # Compute the total squared distance -- there is no need to compute the
+        # actual distance with a sqrt.
         distances = np.sum(np.square(distances), axis=2)
 
         return distances
 
-    def index_of(self, behavior_values):
+    def index_of(self, measures_batch):
         """Finds the indices of the centroid closest to the given coordinates in
-        behavior space.
+        measure space.
 
-        If ``idx`` is an index returned by this method for some ``behavior``,
+        If ``idx`` is an index returned by this method for some ``measure``,
         then ``archive.centroids[idx]`` holds the coordinates of the centroid
-        closest to ``behavior``. See :attr:`centroids` for more info.
+        closest to ``measure``. See :attr:`centroids` for more info.
 
         The centroid indices are located using either the k-D tree or brute
         force, depending on the value of ``use_kd_tree`` in the constructor.
 
         Args:
-            behavior_values (numpy.ndarray): ``(batch_size, :attr:`behavior_dim`,)``
-                array of ``batch_size`` coordinates in behavior space.
+            measures_batch (numpy.ndarray): (batch_size, :attr:`behavior_dim`)
+                array of coordinates in measure space.
         Returns:
-            numpy.ndarray: ``(batch_size,)`` array of centroid indices
-            corresponding to each behavior space coordinate.
+            numpy.ndarray: (batch_size,) array of centroid indices
+            corresponding to each measure space coordinate.
         """
         if self._use_kd_tree:
             return np.asarray(
-                self._centroid_kd_tree.query(behavior_values))[1].astype(
+                self._centroid_kd_tree.query(measures_batch))[1].astype(
                     np.int32)
 
         # Older versions of Numba do not support the axis argument for argmin,
         # so the argmin is done here instead of in `_brute_force_nn_numba`.
         return np.argmin(
-            self._brute_force_nn_numba(behavior_values, self.centroids),
+            self._brute_force_nn_numba(measures_batch, self.centroids),
             axis=1,
         ).astype(np.int32)

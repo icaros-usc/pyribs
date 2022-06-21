@@ -281,10 +281,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         info.
 
         Args:
-            measures_batch (numpy.ndarray): (``batch_size``,
-                :attr:`behavior_dim`) array of coordinates in measure space.
+            measures_batch (numpy.ndarray): (batch_size, :attr:`behavior_dim`)
+                array of coordinates in measure space.
         Returns:
-            (numpy.ndarray): (``batch_size``,) array with the indices of the
+            (numpy.ndarray): (batch_size,) array with the indices of the
             measure values in the archive's storage arrays.
         """
 
