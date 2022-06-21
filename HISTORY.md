@@ -5,6 +5,7 @@
 ### Changelog
 
 #### API
+- **Backwards-incompatible:** Introduced the Ranker object, which is responsible for ranking the solutions basic on different objectives (#209)
 - **Backwards-incompatible:** Made it such that each archive is initialized fully in its constructor instead of needing a separate .initialize(solution_dim) call (#200)
 - **Backwards-incompatible:** Add `sigma`, `sigma0` options to `gaussian_emitter` and `iso_line_emitter` (#199)
   - `gaussian_emitter` constructor requires `sigma`; `sigma0` is optional.
