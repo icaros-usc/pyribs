@@ -335,3 +335,28 @@ Args:
 Returns:
 {_returns.indices}
     """
+
+
+name_to_ranker_map = {
+    "RandomDirectionRanker": RandomDirectionRanker,
+    "TwoStageRandomDirectionRanker": TwoStageRandomDirectionRanker,
+    "ObjectiveRanker": ObjectiveRanker,
+    "TwoStageObjectiveRanker": TwoStageObjectiveRanker,
+    "ImprovementRanker": ImprovementRanker,
+    "TwoStageImprovementRanker": TwoStageImprovementRanker,
+}
+
+
+def get_ranker(key):
+    """Constructs and returns a ranker object
+
+    Args:
+        key (str): Full or abbreviated name of ranker.
+
+    Returns:
+        a ranker object
+    """
+    try:
+        return name_to_ranker_map[key]()
+    except KeyError as key_error:
+        raise RuntimeError("Cannot find ranker with name " + key) from key_error
