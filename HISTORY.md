@@ -5,12 +5,18 @@
 ### Changelog
 
 #### API
-- **Backwards-incompatible:** Batched the index query function, changed from get_index() to index_of(measures), where measures are arrays of coordinates in measure space of any size
-- **Backwards-incompatible:** Made it such that each archive is initialized fully in its constructor instead of needing a separate .initialize(solution_dim) call (#200)
-- **Backwards-incompatible:** Add `sigma`, `sigma0` options to `gaussian_emitter` and `iso_line_emitter` (#199)
+
+- **Backwards-incompatible:** Replace get_index with batched index_of method in
+  archives (#208)
+- **Backwards-incompatible:** Made it such that each archive is initialized
+  fully in its constructor instead of needing a separate
+  .initialize(solution_dim) call (#200)
+- **Backwards-incompatible:** Add `sigma`, `sigma0` options to
+  `gaussian_emitter` and `iso_line_emitter` (#199)
   - `gaussian_emitter` constructor requires `sigma`; `sigma0` is optional.
   - `iso_line_emitter` constructor takes in optional parameter `sigma0`.
-- **Backwards-incompatible:** Add `cbar`, `aspect` options for `cvt_archive_heatmap` (#197)
+- **Backwards-incompatible:** Add `cbar`, `aspect` options for
+  `cvt_archive_heatmap` (#197)
 - **Backwards-incompatible:** Add `aspect` option to `grid_archive_heatmap` +
   support for 1D heatmaps (#196)
   - `square` option no longer works
