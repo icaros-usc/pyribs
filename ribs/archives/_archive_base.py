@@ -397,49 +397,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             value = objective_value - old_objective
         return status, value
 
-    def elites_with_measures(self, measures):
-        """Gets the elite with behavior vals in the same cell as those
-        specified.
-
-        Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
-        (here we show how to ignore some of the fields)::
-
-            sol, obj, beh, *_ = archive.elite_with_behavior(...)
-
-        Or the fields may be accessed by name::
-
-            elite = archive.elite_with_behavior(...)
-            elite.sol
-            elite.obj
-            ...
-
-        Args:
-            behavior_values (array-like): Coordinates in behavior space.
-        Returns:
-            Elite:
-              * If there is an elite with behavior values in the same cell as
-                those specified, this :namedtuple:`Elite` holds the info for
-                that elite. In that case, ``beh`` (the behavior values) may not
-                be the same as the behavior values specified since the
-                elite is only guaranteed to be in the same archive cell.
-              * If no such elite exists, then all fields of the
-                :namedtuple:`Elite` are set to None. This way, tuple unpacking
-                (e.g.
-                ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``)
-                still works.
-        """
-        indices = self.index_of(np.asarray(measures))
-        elites = np.where(
-            self.occupied[indices],
-            Elite(
-                readonly(self._solutions[indices]),
-                self._objective_values[indices],
-                readonly(self._behavior_values[indices]),
-                indices,
-                self._metadata[indices],
-            ), Elite(None, None, None, None, None))
-        return elites
-
     # TODO: Update docstring due to new elite definition.
     def elite_with_behavior(self, behavior_values):
         """Gets the elite with behavior vals in the same cell as those
@@ -472,7 +429,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``)
                 still works.
         """
-        index = self.index_of(np.asarray(behavior_values))
+        index = self.index_of(np.asarray(behavior_values)[None])[0]
         if self._occupied[index]:
             return Elite(
                 readonly(self._solutions[index]),
