@@ -150,7 +150,7 @@ class GridArchive(ArchiveBase):
                                        self._dims)
         return np.ravel_multi_index(indices.T, self._dims).astype(np.int32)
 
-    # TODO: docstrings
+    # TODO: Docstrings.
     def ravel_index(self, index):
         return np.ravel_multi_index(index, self._dims)
 
