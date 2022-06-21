@@ -36,10 +36,8 @@ __all__ = [
 # Define common docstrings
 _args = _core_docs["args"]
 _returns = DocstringComponents(
-    dict(indices="""
-    1D array containing the index of each solution representing
-    the ranking of the solutions
-    """,))
+    dict(index_batch="""
+    A batch of indicies representing a ranking of the solutions"""))
 
 
 class RankerBase(ABC):
@@ -54,21 +52,21 @@ class RankerBase(ABC):
     """
 
     @abstractmethod
-    def rank(self, emitter, archive, solutions, objective_values,
-             behavior_values, metadata, add_statuses, add_values):
+    def rank(self, emitter, archive, solution_batch, objective_batch,
+             measure_batch, metadata, add_statuses, add_values):
         # pylint: disable=missing-function-docstring
         pass
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
-Generates a list of indices that represents an ordering of solutions.
+Generates a batch of indicies that represents an ordering of ``solution_batch``.
 
 Args:
 {_args.emitter}
 {_args.archive}
-{_args.solutions}
-{_args.objective_values}
-{_args.behavior_values}
+{_args.solution_batch}
+{_args.objective_batch}
+{_args.measure_batch}
 {_args.metadata}
 {_args.add_statuses}
 {_args.add_values}
@@ -107,8 +105,8 @@ class TwoStageImprovementRanker(RankerBase):
     ones that were not added to the archive.
     """
 
-    def rank(self, emitter, archive, solutions, objective_values,
-             behavior_values, metadata, add_statuses, add_values):
+    def rank(self, emitter, archive, solution_batch, objective_batch,
+             measure_batch, metadata, add_statuses, add_values):
         # New solutions sort ahead of improved ones, which sort ahead of ones
         # that were not added. Note that lexsort sorts the values in ascending
         # order, so we use numpy fancy indexing to reverse the sorted array.
@@ -121,9 +119,9 @@ Generates a list of indices that represents an ordering of solutions.
 Args:
 {_args.emitter}
 {_args.archive}
-{_args.solutions}
-{_args.objective_values}
-{_args.behavior_values}
+{_args.solution_batch}
+{_args.objective_batch}
+{_args.measure_batch}
 {_args.metadata}
 {_args.add_statuses}
 {_args.add_values}
@@ -135,12 +133,12 @@ Returns:
 
 class RandomDirectionRanker(RankerBase):
     """Ranks the solutions based on projection onto a direction in
-    behavior space.
+    measure space.
 
     This ranker originates in `Fontaine 2020
     <https://arxiv.org/abs/1912.02400>`_ as RandomDirectionEmitter.
     The solutions are ranked solely based on their projection onto a random
-    direction in behavior space.
+    direction in measure space.
 
     To rank the solutions first by whether they were added, and then by
     the projection, refer to
@@ -148,22 +146,22 @@ class RandomDirectionRanker(RankerBase):
     """
 
     def __init__(self, seed=None):
-        self._target_behavior_dir = None
+        self._target_measure_dir = None
         self._rng = np.random.default_rng(seed)
 
     @property
-    def target_behavior_dir(self):
-        """numpy.ndarray: ``(behavior_dim,)`` array with the target behavior
+    def target_measure_dir(self):
+        """numpy.ndarray: ``(measure_dim,)`` array with the target measure
         direction vector."""
-        return self._target_behavior_dir
+        return self._target_measure_dir
 
-    @target_behavior_dir.setter
-    def target_behavior_dir(self, value):
-        self._target_behavior_dir = value
+    @target_measure_dir.setter
+    def target_measure_dir(self, value):
+        self._target_measure_dir = value
 
-    def rank(self, emitter, archive, solutions, objective_values,
-             behavior_values, metadata, add_statuses, add_values):
-        projections = np.dot(behavior_values, self._target_behavior_dir)
+    def rank(self, emitter, archive, solution_batch, objective_batch,
+             measure_batch, metadata, add_statuses, add_values):
+        projections = np.dot(measure_batch, self._target_measure_dir)
         # Sort only by projection; use fancy indexing to reverse the order
         return np.lexsort((projections,))[::-1]
 
@@ -174,9 +172,9 @@ Ranks the soutions based on projection onto a direction in behavior space.
 Args:
 {_args.emitter}
 {_args.archive}
-{_args.solutions}
-{_args.objective_values}
-{_args.behavior_values}
+{_args.solution_batch}
+{_args.objective_batch}
+{_args.measure_batch}
 {_args.metadata}
 {_args.add_statuses}
 {_args.add_values}
@@ -189,7 +187,7 @@ Returns:
         ranges = archive.upper_bounds - archive.lower_bounds
         behavior_dim = len(ranges)
         unscaled_dir = self._rng.standard_normal(behavior_dim)
-        self._target_behavior_dir = unscaled_dir * ranges
+        self._target_measure_dir = unscaled_dir * ranges
 
     # Generates the docstring for reset
     reset.__doc__ = f"""
@@ -233,9 +231,9 @@ class TwoStageRandomDirectionRanker(RankerBase):
     def target_behavior_dir(self, value):
         self._target_behavior_dir = value
 
-    def rank(self, emitter, archive, solutions, objective_values,
-             behavior_values, metadata, add_statuses, add_values):
-        projections = np.dot(behavior_values, self._target_behavior_dir)
+    def rank(self, emitter, archive, solution_batch, objective_batch,
+             measure_batch, metadata, add_statuses, add_values):
+        projections = np.dot(measure_batch, self._target_behavior_dir)
         # Sort by whether the solution was added into the archive,
         # followed by projection.
         return np.lexsort((add_statuses, projections))[::-1]
@@ -243,14 +241,14 @@ class TwoStageRandomDirectionRanker(RankerBase):
     # Generates the docstring for rank
     rank.__doc__ = f"""
 Ranks the soutions first by whether they are added, then by their projection on
-a random direction.
+a random direction in measure space.
 
 Args:
 {_args.emitter}
 {_args.archive}
-{_args.solutions}
-{_args.objective_values}
-{_args.behavior_values}
+{_args.solution_batch}
+{_args.objective_batch}
+{_args.measure_batch}
 {_args.metadata}
 {_args.add_statuses}
 {_args.add_values}
@@ -267,7 +265,7 @@ Returns:
 
     # Generates the docstring for reset
     reset.__doc__ = f"""
-Generates a new random direction in the behavior space.
+Generates a new random direction in the measure space.
 
 The direction is sampled from a standard Gaussian -- since the standard
 Gaussian is isotropic, there is equal probability for any direction. The
@@ -288,10 +286,10 @@ class ObjectiveRanker(RankerBase):
     on their objective values.
     """
 
-    def rank(self, emitter, archive, solutions, objective_values,
-             behavior_values, metadata, add_statuses, add_values):
+    def rank(self, emitter, archive, solution_batch, objective_batch,
+             measure_batch, metadata, add_statuses, add_values):
         # Sort only by objective value.
-        return np.argsort(objective_values)[::-1]
+        return np.argsort(objective_batch)[::-1]
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -300,9 +298,9 @@ Ranks the soutions based on their objective values.
 Args:
 {_args.emitter}
 {_args.archive}
-{_args.solutions}
-{_args.objective_values}
-{_args.behavior_values}
+{_args.solution_batch}
+{_args.objective_batch}
+{_args.measure_batch}
 {_args.metadata}
 {_args.add_statuses}
 {_args.add_values}
@@ -320,10 +318,10 @@ class TwoStageObjectiveRanker(RankerBase):
     We rank the solutions solely based on their objective values.
     """
 
-    def rank(self, emitter, archive, solutions, objective_values,
-             behavior_values, metadata, add_statuses, add_values):
+    def rank(self, emitter, archive, solution_batch, objective_batch,
+             measure_batch, metadata, add_statuses, add_values):
         # Sort by whether the solution was added into the archive, followed
-        # by objective value.
+        # by the objective values.
         return np.lexsort((objective_values, add_statuses))[::-1]
 
     # Generates the docstring for rank
@@ -333,9 +331,9 @@ Ranks the soutions based on their objective values, while prioritizing newly add
 Args:
 {_args.emitter}
 {_args.archive}
-{_args.solutions}
-{_args.objective_values}
-{_args.behavior_values}
+{_args.solution_batch}
+{_args.objective_batch}
+{_args.measure_batch}
 {_args.metadata}
 {_args.add_statuses}
 {_args.add_values}
