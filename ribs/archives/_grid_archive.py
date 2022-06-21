@@ -105,55 +105,86 @@ class GridArchive(ArchiveBase):
 
     @staticmethod
     @jit(nopython=True)
-    def _index_of_numba(behavior_values, upper_bounds, lower_bounds,
+    def _index_of_numba(measures_batch, upper_bounds, lower_bounds,
                         interval_size, dims):
         """Numba helper for index_of().
 
         See index_of() for usage.
         """
-        # Adding epsilon to behavior values accounts for floating point
-        # precision errors from transforming behavior values. Subtracting
-        # epsilon from upper bounds makes sure we do not have indices outside
-        # the grid.
-        behavior_values = np.minimum(
-            np.maximum(behavior_values + _EPSILON, lower_bounds),
+        # Adding epsilon to measure values accounts for floating point precision
+        # errors from transforming measure values. Subtracting epsilon from
+        # upper bounds makes sure we do not have indices outside the grid.
+        measures_batch = np.minimum(
+            np.maximum(measures_batch + _EPSILON, lower_bounds),
             upper_bounds - _EPSILON)
 
-        indices = (behavior_values - lower_bounds) / interval_size * dims
+        indices = (measures_batch - lower_bounds) / interval_size * dims
         return indices.astype(np.int32)
 
-    def index_of(self, behavior_values):
-        """Returns indices of the behavior values within the archive's grid.
+    def index_of(self, measures_batch):
+        """Returns archive indices for the given measure values.
 
-        First, values are clipped to the bounds of the behavior space. Then, the
+        First, values are clipped to the bounds of the measure space. Then, the
         values are mapped to cells; e.g. cell 5 along dimension 0 and cell 3
         along dimension 1.
-        The indices can be used to access boundaries of a behavior value's cell.
-        For example, the following retrieves the lower and upper bounds of the
-        cell along dimension 0::
-            idx = archive.index_of(...)  # Other methods also return indices.
+
+        At this point, we have "grid indices" -- indices of each measure in each
+        dimension. Since indices must be integers, we convert these grid indices
+        into integer indices with :func:`numpy.ravel_multi_index` and return the
+        result.
+
+        At times, it may be useful to have the original grid indices. Thus, we
+        provide the :meth:`grid_to_int_index` and :meth:`int_to_grid_index`
+        methods for converting between grid and integer indices.
+
+        As an example, the grid indices can be used to access boundaries of a
+        measure value's cell.  For example, the following retrieves the lower
+        and upper bounds of the cell along dimension 0::
+
+            # Access only element 0 since this method operates in batch.
+            idx = archive.int_to_grid_index(archive.index_of(...))[0]
+
             lower = archive.boundaries[0][idx[0]]
             upper = archive.boundaries[0][idx[0] + 1]
+
         See :attr:`boundaries` for more info.
+
         Args:
-            behavior_values (numpy.ndarray): (:attr:`behavior_dim`, batch_size)
-                array of coordinates in behavior space.
+            measures_batch (numpy.ndarray): (batch_size, :attr:`behavior_dim`)
+                array of coordinates in measure space.
         Returns:
-            tuple of int: The grid indices.
+            numpy.ndarray: (batch_size,) array of integer indices representing
+            the grid coordinates.
         """
-        # Adding epsilon to behavior values accounts for floating point
-        # precision errors from transforming behavior values. Subtracting
-        # epsilon from upper bounds makes sure we do not have indices outside
-        # the grid.
-        indices = self._index_of_numba(behavior_values, self._upper_bounds,
-                                       self._lower_bounds, self._interval_size,
-                                       self._dims)
-        return np.ravel_multi_index(indices.T, self._dims).astype(np.int32)
+        return self.grid_to_int_index(
+            self._index_of_numba(measures_batch, self._upper_bounds,
+                                 self._lower_bounds, self._interval_size,
+                                 self._dims))
 
-    # TODO: Docstrings.
-    def ravel_index(self, index):
-        return np.ravel_multi_index(index, self._dims)
+    def grid_to_int_index(self, grid_index_batch):
+        """Converts a batch of grid indices into a batch of integer indices.
 
-    def unravel_index(self, index):
-        """Converts an index into indices in the archive's grid."""
-        return np.unravel_index(index, self._dims)
+        Refer to :meth:`index_of` for more info.
+
+        Args:
+            grid_index_batch (numpy.ndarray): (batch_size, :attr:`behavior_dim`)
+                array of indices in the archive grid.
+        Returns:
+            numpy.ndarray: (batch_size,) array of integer indices.
+        """
+        return np.ravel_multi_index(grid_index_batch.T,
+                                    self._dims).astype(np.int32)
+
+    def int_to_grid_index(self, int_index_batch):
+        """Converts a batch of indices into indices in the archive's grid.
+
+        Refer to :meth:`index_of` for more info.
+
+        Args:
+            int_index_batch (numpy.ndarray): (batch_size,) array of integer
+                indices such as those output by :meth:`index_of`.
+        Returns:
+            numpy.ndarray: (batch_size, :attr:`behavior_dim`) array of indices
+            in the archive grid.
+        """
+        return np.unravel_index(int_index_batch, self._dims)
