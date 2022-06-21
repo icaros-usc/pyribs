@@ -157,6 +157,10 @@ class RandomDirectionRanker(RankerBase):
         direction vector."""
         return self._target_behavior_dir
 
+    @target_behavior_dir.setter
+    def target_behavior_dir(self, value):
+        self._target_behavior_dir = value
+
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
         projections = np.dot(behavior_values, self._target_behavior_dir)
@@ -224,6 +228,10 @@ class TwoStageRandomDirectionRanker(RankerBase):
         """numpy.ndarray: ``(behavior_dim,)`` array with the target behavior
         direction vector."""
         return self._target_behavior_dir
+
+    @target_behavior_dir.setter
+    def target_behavior_dir(self, value):
+        self._target_behavior_dir = value
 
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
