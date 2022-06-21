@@ -89,22 +89,21 @@ def main():
     # experiments for a certain number of cells (and also save time).
     ref_archives = {
         cells: CVTArchive(
-            cells,
-            [(-1, 1), (-1, 1)],
+            solution_dim=solutions.shape[1],
+            cells=cells,
+            ranges=[(-1, 1), (-1, 1)],
             # Use 200k cells to avoid dropping clusters.
             samples=n_vals if cells != 10_000 else 200_000,
             use_kd_tree=False) for cells in n_cells
     }
-    for cells, archive in ref_archives.items():
-        print(f"Setting up archive with {cells} cells")
-        archive.initialize(solutions.shape[1])
 
     def setup(cells, use_kd_tree):
         nonlocal archive
-        archive = CVTArchive(cells, [(-1, 1), (-1, 1)],
+        archive = CVTArchive(solution_dim=solutions.shape[1],
+                             cells=cells,
+                             ranges=[(-1, 1), (-1, 1)],
                              custom_centroids=ref_archives[cells].centroids,
                              use_kd_tree=use_kd_tree)
-        archive.initialize(solutions.shape[1])
 
     def add_100k_entries():
         nonlocal archive

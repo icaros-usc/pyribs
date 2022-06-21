@@ -1,9 +1,5 @@
 """Archives store solutions found by a QD algorithm.
 
-.. note:: After construction, each archive must be initialized by calling
-    its ``initialize()`` method before it can be used. If using the optimizers
-    in :mod:`ribs.optimizers`, this will be done automatically by the optimizer.
-
 .. autosummary::
     :toctree:
 

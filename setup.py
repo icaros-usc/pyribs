@@ -18,7 +18,6 @@ install_requires = [
     "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
     "scikit-learn>=0.20.0",  # Primarily used in CVTArchive.
     "scipy>=1.4.0",  # Primarily used in CVTArchive.
-    "decorator>=4.0.0",
     "threadpoolctl>=2.0.0",
 ]
 
@@ -57,6 +56,7 @@ extras_require = {
         "myst-nb==0.15.0",
         "sphinx-toolbox==3.1.0",
         "sphinx-autodoc-typehints==1.18.2",
+        "sphinx-codeautolink==0.11.0",
 
         # Distribution
         "bump2version==0.5.11",

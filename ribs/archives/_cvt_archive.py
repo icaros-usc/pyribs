@@ -4,7 +4,7 @@ from numba import jit
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from sklearn.cluster import k_means
 
-from ribs.archives._archive_base import ArchiveBase, require_init
+from ribs.archives._archive_base import ArchiveBase
 
 
 class CVTArchive(ArchiveBase):
@@ -49,6 +49,7 @@ class CVTArchive(ArchiveBase):
     subsequent experiments.
 
     Args:
+        solution_dim (int): Dimension of the solution space.
         cells (int): The number of cells to use in the archive, equivalent to
             the number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
@@ -87,6 +88,7 @@ class CVTArchive(ArchiveBase):
     """
 
     def __init__(self,
+                 solution_dim,
                  cells,
                  ranges,
                  seed=None,
@@ -96,8 +98,10 @@ class CVTArchive(ArchiveBase):
                  k_means_kwargs=None,
                  use_kd_tree=False,
                  ckdtree_kwargs=None):
+
         ArchiveBase.__init__(
             self,
+            solution_dim=solution_dim,
             cells=cells,
             behavior_dim=len(ranges),
             seed=seed,
@@ -150,57 +154,6 @@ class CVTArchive(ArchiveBase):
                     f"{self._behavior_dim})")
             self._centroids = custom_centroids
             self._samples = None
-
-    @property
-    def lower_bounds(self):
-        """(behavior_dim,) numpy.ndarray: Lower bound of each dimension."""
-        return self._lower_bounds
-
-    @property
-    def upper_bounds(self):
-        """(behavior_dim,) numpy.ndarray: Upper bound of each dimension."""
-        return self._upper_bounds
-
-    @property
-    @require_init
-    def samples(self):
-        """(num_samples, behavior_dim) numpy.ndarray: The samples used in
-        creating the CVT.
-
-        May be None until :meth:`initialize` is called.
-        """
-        return self._samples
-
-    @property
-    @require_init
-    def centroids(self):
-        """(n_centroids, behavior_dim) numpy.ndarray: The centroids used in the
-        CVT.
-
-        None until :meth:`initialize` is called.
-        """
-        return self._centroids
-
-    def initialize(self, solution_dim):
-        """Initializes the archive storage space and centroids.
-
-        This method may take a while to run. In addition to allocating storage
-        space, it runs :func:`~sklearn.cluster.k_means` to create an approximate
-        CVT, and it constructs a :class:`~scipy.spatial.cKDTree` object
-        containing the centroids found by k-means. k-means is not run if
-        ``custom_centroids`` was passed in during construction.
-
-        Args:
-            solution_dim (int): The dimension of the solution space.
-        Raises:
-            RuntimeError: The archive is already initialized.
-            RuntimeError: The number of centroids returned by k-means clustering
-                was fewer than the number of cells specified during
-                construction. This is most likely caused by having too few
-                samples and too many cells.
-        """
-        ArchiveBase.initialize(self, solution_dim)
-
         if self._centroids is None:
             self._samples = self._rng.uniform(
                 self._lower_bounds,
@@ -222,6 +175,34 @@ class CVTArchive(ArchiveBase):
         if self._use_kd_tree:
             self._centroid_kd_tree = cKDTree(self._centroids,
                                              **self._ckdtree_kwargs)
+
+    @property
+    def lower_bounds(self):
+        """(behavior_dim,) numpy.ndarray: Lower bound of each dimension."""
+        return self._lower_bounds
+
+    @property
+    def upper_bounds(self):
+        """(behavior_dim,) numpy.ndarray: Upper bound of each dimension."""
+        return self._upper_bounds
+
+    @property
+    def samples(self):
+        """(num_samples, behavior_dim) numpy.ndarray: The samples used in
+        creating the CVT.
+
+        May be None until :meth:`initialize` is called.
+        """
+        return self._samples
+
+    @property
+    def centroids(self):
+        """(n_centroids, behavior_dim) numpy.ndarray: The centroids used in the
+        CVT.
+
+        None until :meth:`initialize` is called.
+        """
+        return self._centroids
 
     @staticmethod
     @jit(nopython=True)

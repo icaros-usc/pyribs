@@ -30,6 +30,7 @@ def assert_archive_elite(archive, solution, objective, measures, indices,
 def test_fails_on_dim_mismatch():
     with pytest.raises(ValueError):
         GridArchive(
+            solution_dim=10,  #arbitrary
             dims=[10] * 2,  # 2D space here.
             ranges=[(-1, 1)] * 3,  # But 3D space here.
         )

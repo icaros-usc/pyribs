@@ -5,7 +5,7 @@
 ### Changelog
 
 #### API
-
+- **Backwards-incompatible:** Made it such that each archive is initialized fully in its constructor instead of needing a separate .initialize(solution_dim) call (#200)
 - **Backwards-incompatible:** Add `sigma`, `sigma0` options to `gaussian_emitter` and `iso_line_emitter` (#199)
   - `gaussian_emitter` constructor requires `sigma`; `sigma0` is optional.
   - `iso_line_emitter` constructor takes in optional parameter `sigma0`.
@@ -31,6 +31,8 @@
 
 #### Documentation
 
+- Add sphinx-codeautolink to docs (#206)
+- Fix documentation rendering issues on ReadTheDocs (#205)
 - Fix typos and formatting in docstrings of `ribs/visualize.py` (#203)
 - Add in-comment type hint rich linking (#204)
 - Upgrade Sphinx dependencies (#202)
