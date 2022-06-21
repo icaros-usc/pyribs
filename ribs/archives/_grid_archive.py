@@ -138,7 +138,7 @@ class GridArchive(ArchiveBase):
         converting between grid and integer indices.
 
         As an example, the grid indices can be used to access boundaries of a
-        measure value's cell.  For example, the following retrieves the lower
+        measure value's cell. For example, the following retrieves the lower
         and upper bounds of the cell along dimension 0::
 
             # Access only element 0 since this method operates in batch.
@@ -167,12 +167,12 @@ class GridArchive(ArchiveBase):
         Refer to :meth:`index_of` for more info.
 
         Args:
-            grid_index_batch (numpy.ndarray): (batch_size, :attr:`behavior_dim`)
+            grid_index_batch (array-like): (batch_size, :attr:`behavior_dim`)
                 array of indices in the archive grid.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices.
         """
-        return np.ravel_multi_index(grid_index_batch.T,
+        return np.ravel_multi_index(np.asarray(grid_index_batch).T,
                                     self._dims).astype(np.int32)
 
     def int_to_grid_index(self, int_index_batch):
@@ -181,10 +181,10 @@ class GridArchive(ArchiveBase):
         Refer to :meth:`index_of` for more info.
 
         Args:
-            int_index_batch (numpy.ndarray): (batch_size,) array of integer
+            int_index_batch (array-like): (batch_size,) array of integer
                 indices such as those output by :meth:`index_of`.
         Returns:
             numpy.ndarray: (batch_size, :attr:`behavior_dim`) array of indices
             in the archive grid.
         """
-        return np.unravel_index(int_index_batch, self._dims)
+        return np.unravel_index(np.asarray(int_index_batch), self._dims)
