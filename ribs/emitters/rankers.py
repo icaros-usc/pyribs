@@ -149,11 +149,10 @@ class RandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
-        projections = []
-        for beh in behavior_values:
-            projections.append(np.dot(beh, self._target_behavior_dir))
+        projections = np.dot(behavior_values, self._target_behavior_dir)
         # Sort only by projection; use fancy indexing to reverse the order
-        return np.array(sorted(projections, reverse=True))
+        print(projections)
+        return np.lexsort((projections,))[::-1]
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -216,7 +215,7 @@ class TwoStageRandomDirectionRanker(RankerBase):
         projections = np.dot(behavior_values, self._target_behavior_dir)
         # Sort by whether the solution was added into the archive,
         # followed by projection.
-        return np.lexsort((add_statuses, projections))
+        return np.lexsort((add_statuses, projections))[::-1]
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -269,7 +268,7 @@ class ObjectiveRanker(RankerBase):
     def rank(self, emitter, archive, solutions, objective_values,
              behavior_values, metadata, add_statuses, add_values):
         # Sort only by objective value.
-        return np.lexsort((objective_values))
+        return np.argsort(objective_values)[::-1]
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -302,7 +301,7 @@ class TwoStageObjectiveRanker(RankerBase):
              behavior_values, metadata, add_statuses, add_values):
         # Sort by whether the solution was added into the archive, followed
         # by objective value.
-        return np.lexsort((objective_values, add_statuses))
+        return np.lexsort((objective_values, add_statuses))[::-1]
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
