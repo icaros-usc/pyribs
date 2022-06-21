@@ -1,4 +1,4 @@
-"""This provides the common docstrings that is used throughout the project"""
+"""This provides the common docstrings that are used throughout the project"""
 
 import re
 
@@ -6,7 +6,7 @@ import re
 class DocstringComponents:
     """
     Adapted from
-    github.com/mwaskom/seaborn/blob/9d8ce6ad4ab213994f0bc84d0c46869df7be0b49/seaborn/_docstrings.py
+    https://github.com/mwaskom/seaborn/blob/9d8ce6ad4ab213994f0bc84d0c46869df7be0b49/seaborn/_docstrings.py
     """
     regexp = re.compile(r"\n((\n|.)+)\n\s*", re.MULTILINE)
 

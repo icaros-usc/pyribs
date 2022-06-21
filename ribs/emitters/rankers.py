@@ -1,6 +1,10 @@
 """Package with rankers for use across emitters.
 
-TODO [Add instructions on how to use]
+The rankers implemented in this file is intended to be used with emitters.
+Specifically, a ranker object should be initialized or passed in the emitters.
+The ``Ranker`` object will define the :meth:`rank` method which returns the
+result of an descending argsort of the solutions. It will also define a
+:meth:`reset` method which resets the internal states of the object.
 
 .. autosummary::
     :toctree:
