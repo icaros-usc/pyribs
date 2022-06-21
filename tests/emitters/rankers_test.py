@@ -61,7 +61,7 @@ def test_random_direction_ranker():
     ranker = RandomDirectionRanker()
 
     # set the random direction
-    ranker._target_behavior_dir = [0, 1, 0]
+    ranker._target_behavior_dir = [0, 1, 0]  # pylint: disable=protected-access
 
     indicies = ranker.rank(emitter, archive, solutions, objective_values,
                            behavior_values, metadata, statuses, values)
@@ -96,7 +96,7 @@ def test_two_stage_random_direction():
     ranker = TwoStageRandomDirectionRanker()
 
     # set the random direction
-    ranker._target_behavior_dir = [0, 1, 0]
+    ranker._target_behavior_dir = [0, 1, 0]  # pylint: disable=protected-access
 
     indicies = ranker.rank(emitter, archive, solutions, objective_values,
                            behavior_values, metadata, statuses, values)
