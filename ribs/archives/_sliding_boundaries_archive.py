@@ -7,6 +7,7 @@ import numpy as np
 from sortedcontainers import SortedList
 
 from ribs.archives._archive_base import ArchiveBase
+from ribs.archives._grid_archive import GridArchive
 
 _EPSILON = 1e-6
 
@@ -230,57 +231,76 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     @staticmethod
     @nb.jit(nopython=True)
-    def _index_of_numba(behavior_values, upper_bounds, lower_bounds, boundaries,
+    def _index_of_numba(measures_batch, upper_bounds, lower_bounds, boundaries,
                         dims):
         """Numba helper for index_of().
 
         See index_of() for usage.
         """
-        behavior_values = np.minimum(
-            np.maximum(behavior_values + _EPSILON, lower_bounds),
+        measures_batch = np.minimum(
+            np.maximum(measures_batch + _EPSILON, lower_bounds),
             upper_bounds - _EPSILON)
         idx_cols = []
-        for boundary, dim, behavior_value_col in zip(boundaries, dims,
-                                                     behavior_values.T):
-            idx_col = np.searchsorted(boundary[:dim], behavior_value_col)
+        for boundary, dim, measures_col in zip(boundaries, dims,
+                                               measures_batch.T):
+            idx_col = np.searchsorted(boundary[:dim], measures_col)
             idx_cols.append(np.maximum(0, idx_col - 1))
         return idx_cols
 
-    def index_of(self, behavior_values):
-        """Returns indices of the behavior values within the archive's grid.
+    def index_of(self, measures_batch):
+        """Returns archive indices for the given measure values.
 
-        First, values are clipped to the bounds of the behavior space. Then, the
+        First, values are clipped to the bounds of the measure space. Then, the
         values are mapped to cells via a binary search along the boundaries in
         each dimension.
 
-        The indices can be used to access boundaries of a behavior value's cell.
-        For example, the following retrieves the lower and upper bounds of the
-        cell along dimension 0::
+        At this point, we have "grid indices" -- indices of each measure in each
+        dimension. Since indices returned by this method must be single integers
+        (as opposed to a tuple of grid indices), we convert these grid indices
+        into integer indices with :func:`numpy.ravel_multi_index` and return the
+        result.
 
-            idx = archive.index_of(...)  # Other methods also return indices.
+        It may be useful to have the original grid indices. Thus, we provide the
+        :meth:`grid_to_int_index` and :meth:`int_to_grid_index` methods for
+        converting between grid and integer indices.
+
+        As an example, the grid indices can be used to access boundaries of a
+        measure value's cell. For example, the following retrieves the lower
+        and upper bounds of the cell along dimension 0::
+
+            # Access only element 0 since this method operates in batch.
+            idx = archive.int_to_grid_index(archive.index_of(...))[0]
+
             lower = archive.boundaries[0][idx[0]]
             upper = archive.boundaries[0][idx[0] + 1]
 
         See :attr:`boundaries` for more info.
 
         Args:
-            behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
-                coordinates in behavior space.
+            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+                array of coordinates in measure space.
         Returns:
-            tuple of int: The grid indices.
+            numpy.ndarray: (batch_size,) array of integer indices representing
+            the grid coordinates.
         """
         index_cols = SlidingBoundariesArchive._index_of_numba(
-            behavior_values, self.upper_bounds, self.lower_bounds,
-            self._boundaries, self._dims)
+            np.asarray(measures_batch),
+            self.upper_bounds,
+            self.lower_bounds,
+            self._boundaries,
+            self._dims,
+        )
+
+        # We cannot use `grid_to_int_index` since that takes in an array of
+        # indices, not index columns.
+        #
+        # pylint seems to think that ravel_multi_index returns a list and thus
+        # has no astype method.
+        # pylint: disable = no-member
         return np.ravel_multi_index(index_cols, self._dims).astype(np.int32)
 
-    # TODO: Docstrings.
-    def ravel_index(self, index):
-        return np.ravel_multi_index(index, self._dims)
-
-    def unravel_index(self, index):
-        """Converts an index into indices in the archive's grid."""
-        return np.unravel_index(index, self._dims)
+    int_to_grid_index = GridArchive.int_to_grid_index
+    grid_to_int_index = GridArchive.grid_to_int_index
 
     @staticmethod
     @nb.jit(nopython=True)

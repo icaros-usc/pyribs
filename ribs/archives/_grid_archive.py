@@ -129,9 +129,10 @@ class GridArchive(ArchiveBase):
         along dimension 1.
 
         At this point, we have "grid indices" -- indices of each measure in each
-        dimension. Since indices returned by this method must be integers, we
-        convert these grid indices into integer indices with
-        :func:`numpy.ravel_multi_index` and return the result.
+        dimension. Since indices returned by this method must be single integers
+        (as opposed to a tuple of grid indices), we convert these grid indices
+        into integer indices with :func:`numpy.ravel_multi_index` and return the
+        result.
 
         It may be useful to have the original grid indices. Thus, we provide the
         :meth:`grid_to_int_index` and :meth:`int_to_grid_index` methods for
@@ -157,9 +158,13 @@ class GridArchive(ArchiveBase):
             the grid coordinates.
         """
         return self.grid_to_int_index(
-            self._index_of_numba(np.asarray(measures_batch), self._upper_bounds,
-                                 self._lower_bounds, self._interval_size,
-                                 self._dims))
+            self._index_of_numba(
+                np.asarray(measures_batch),
+                self._upper_bounds,
+                self._lower_bounds,
+                self._interval_size,
+                self._dims,
+            ))
 
     def grid_to_int_index(self, grid_index_batch):
         """Converts a batch of grid indices into a batch of integer indices.
