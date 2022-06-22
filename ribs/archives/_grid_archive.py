@@ -112,8 +112,8 @@ class GridArchive(ArchiveBase):
         See index_of() for usage.
         """
         # Adding epsilon to measures accounts for floating point precision
-        # errors from transforming measures. Subtracting epsilon from upper
-        # bounds makes sure we do not have indices outside the grid.
+        # errors from transforming measures. Subtracting epsilon from
+        # upper_bounds makes sure we do not have indices outside the grid.
         measures_batch = np.minimum(
             np.maximum(measures_batch + _EPSILON, lower_bounds),
             upper_bounds - _EPSILON)
