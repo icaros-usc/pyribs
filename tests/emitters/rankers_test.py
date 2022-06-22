@@ -29,7 +29,7 @@ def test_two_stage_improvement_ranker(archive_fixture):
 
     ranker = TwoStageImprovementRanker()
     indices = ranker.rank(emitter, archive, solutions, objective_values,
-                          behavior_values, metadata, statuses, values)
+                          behavior_values, metadata, statuses, values, None)
 
     assert (indices == [0, 3, 2, 1]).all()
 
@@ -63,7 +63,7 @@ def test_random_direction_ranker():
     ranker.target_measure_dir = [0, 1, 0]
 
     indices = ranker.rank(emitter, archive, solutions, objective_values,
-                          behavior_values, metadata, statuses, values)
+                          behavior_values, metadata, statuses, values, None)
 
     assert (indices == [1, 3, 2, 0]).all()
 
@@ -97,7 +97,7 @@ def test_two_stage_random_direction():
     ranker.target_measure_dir = [0, 1, 0]
 
     indices = ranker.rank(emitter, archive, solutions, objective_values,
-                          behavior_values, metadata, statuses, values)
+                          behavior_values, metadata, statuses, values, None)
 
     assert (indices == [1, 3, 2, 0]).all()
 
@@ -120,7 +120,7 @@ def test_objective_ranker(archive_fixture):
     ranker = ObjectiveRanker()
 
     indices = ranker.rank(emitter, archive, solutions, objective_values,
-                          behavior_values, metadata, statuses, values)
+                          behavior_values, metadata, statuses, values, None)
 
     assert (indices == [1, 2, 3, 0]).all()
 
@@ -148,6 +148,6 @@ def test_two_stage_objective_ranker(archive_fixture):
     ranker = TwoStageObjectiveRanker()
 
     indices = ranker.rank(emitter, archive, solutions, objective_values,
-                          behavior_values, metadata, statuses, values)
+                          behavior_values, metadata, statuses, values, None)
 
     assert (indices == [2, 0, 1, 3]).all()
