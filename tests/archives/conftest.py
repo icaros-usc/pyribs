@@ -45,6 +45,7 @@ ArchiveFixtureData = namedtuple(
         "behavior_values",  # 2D behavior values for the solution.
         "metadata",  # Metadata object for the solution.
         "grid_indices",  # Index for GridArchive and SlidingBoundariesArchive.
+        "int_index",  # Integer index corresponding to grid_indices.
         "centroid",  # Centroid coordinates for CVTArchive.
         "cells",  # Total number of cells in the archive.
     ],
@@ -75,6 +76,7 @@ def get_archive_data(name, dtype=np.float64):
     behavior_values = np.array([0.25, 0.25])
     metadata = {"metadata_key": 42}
     grid_indices = None
+    int_index = None
     centroid = None
 
     if name == "GridArchive":
@@ -91,6 +93,7 @@ def get_archive_data(name, dtype=np.float64):
                                          ranges=[(-1, 1), (-2, 2)],
                                          dtype=dtype)
         grid_indices = (6, 11)
+        int_index = 131
     elif name.startswith("CVTArchive-"):
         # CVT archive with bounds (-1,1) and (-1,1), and 4 centroids at (0.5,
         # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The elite in
@@ -129,6 +132,7 @@ def get_archive_data(name, dtype=np.float64):
                                                       buffer_capacity=1000,
                                                       dtype=dtype)
         grid_indices = (6, 11)
+        int_index = 131
 
     archive_with_elite.add(solution, objective_value, behavior_values, metadata)
     return ArchiveFixtureData(
@@ -139,6 +143,7 @@ def get_archive_data(name, dtype=np.float64):
         behavior_values,
         metadata,
         grid_indices,
+        int_index,
         centroid,
         cells,
     )

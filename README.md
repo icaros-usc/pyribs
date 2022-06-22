@@ -183,8 +183,10 @@ pyribs is developed and maintained by the [ICAROS Lab](http://icaros.usc.edu) at
 USC.
 
 - [Bryon Tjanaka](https://btjanaka.net)
-- [Matt Fontaine](https://github.com/tehqin)
+- [Matt Fontaine](https://scholar.google.com/citations?user=RqSvzikAAAAJ)
+- [David Lee](https://github.com/itsdawei)
 - [Yulun Zhang](https://github.com/lunjohnzhang)
+- [Vincent Vu](https://vuvincent.com/)
 - [Sam Sommerer](https://github.com/sam-sommerer)
 - [Nathan Dennler](https://ndennler.github.io/)
 - Nikitas Klapsis

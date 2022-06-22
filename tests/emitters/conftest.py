@@ -37,7 +37,7 @@ class FakeArchive(ArchiveBase):
         return True
 
     @jit(nopython=True)
-    def get_index(self, behavior_values):
+    def index_of(self, behavior_values):
         return np.full_like(behavior_values, 0)
 
     def as_pandas(self):
