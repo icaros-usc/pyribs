@@ -37,7 +37,7 @@ __all__ = [
 _args = _core_docs["args"]
 _returns = DocstringComponents(
     dict(index_batch="""
-    A batch of indicies representing a ranking of the solutions"""))
+    A batch of indices representing a ranking of the solutions"""))
 
 
 class RankerBase(ABC):
@@ -59,7 +59,7 @@ class RankerBase(ABC):
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
-Generates a batch of indicies that represents an ordering of ``solution_batch``.
+Generates a batch of indices that represents an ordering of ``solution_batch``.
 
 Args:
 {_args.emitter}
@@ -72,7 +72,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
     def reset(self, emitter, archive):
@@ -127,7 +127,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
 
@@ -161,6 +161,8 @@ class RandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, solution_batch, objective_batch,
              measure_batch, metadata, add_statuses, add_values):
+        if not self.target_measure_dir:
+            raise RuntimeError("target measure direction not set")
         projections = np.dot(measure_batch, self._target_measure_dir)
         # Sort only by projection; use fancy indexing to reverse the order
         return np.lexsort((projections,))[::-1]
@@ -180,7 +182,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
     def reset(self, emitter, archive):
@@ -218,22 +220,24 @@ class TwoStageRandomDirectionRanker(RankerBase):
     """
 
     def __init__(self, seed=None):
-        self._target_behavior_dir = None
+        self._target_measure_dir = None
         self._rng = np.random.default_rng(seed)
 
     @property
-    def target_behavior_dir(self):
+    def target_measure_dir(self):
         """numpy.ndarray: ``(behavior_dim,)`` array with the target behavior
         direction vector."""
-        return self._target_behavior_dir
+        return self._target_measure_dir
 
-    @target_behavior_dir.setter
-    def target_behavior_dir(self, value):
-        self._target_behavior_dir = value
+    @target_measure_dir.setter
+    def target_measure_dir(self, value):
+        self._target_measure_dir = value
 
     def rank(self, emitter, archive, solution_batch, objective_batch,
              measure_batch, metadata, add_statuses, add_values):
-        projections = np.dot(measure_batch, self._target_behavior_dir)
+        if not self.target_measure_dir:
+            raise RuntimeError("target measure direction not set")
+        projections = np.dot(measure_batch, self._target_measure_dir)
         # Sort by whether the solution was added into the archive,
         # followed by projection.
         return np.lexsort((add_statuses, projections))[::-1]
@@ -254,14 +258,14 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
     def reset(self, emitter, archive):
         ranges = archive.upper_bounds - archive.lower_bounds
         behavior_dim = len(ranges)
         unscaled_dir = self._rng.standard_normal(behavior_dim)
-        self._target_behavior_dir = unscaled_dir * ranges
+        self._target_measure_dir = unscaled_dir * ranges
 
     # Generates the docstring for reset
     reset.__doc__ = f"""
@@ -306,7 +310,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
 
@@ -322,7 +326,7 @@ class TwoStageObjectiveRanker(RankerBase):
              measure_batch, metadata, add_statuses, add_values):
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.
-        return np.lexsort((objective_values, add_statuses))[::-1]
+        return np.lexsort((objective_batch, add_statuses))[::-1]
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -339,7 +343,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
 
