@@ -291,9 +291,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def index_of_single(self, measures):
         """Returns the index of the measures for one solution.
 
-        This is the unbatched version of :meth:`index_of`. As long as you
-        implement :meth:`index_of` correctly, this method should work out of the
-        box.
+        While :meth:`index_of` takes in a *batch* of measures, this method takes
+        in the measures for only *one* solution. As long as :meth:`index_of` is
+        implemented correctly, this method should work out of the box.
 
         Args:
             measures (array-like): (:attr:`behavior_dim`,) array of measures for
