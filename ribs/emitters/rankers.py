@@ -357,7 +357,7 @@ _name_to_ranker_map = {
 }
 
 
-def get_ranker(key):
+def get_ranker(key, seed=None):
     """Constructs and returns a ranker object
 
     Args:
@@ -367,6 +367,6 @@ def get_ranker(key):
         a ranker object
     """
     try:
-        return _name_to_ranker_map[key]()
+        return _name_to_ranker_map[key](seed)
     except KeyError as key_error:
         raise RuntimeError("Cannot find ranker with name " + key) from key_error
