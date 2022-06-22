@@ -59,6 +59,9 @@ class RankerBase(ABC):
     Child classes are only required to override :meth:`rank`.
     """
 
+    def __init__(self, seed=None):
+        pass
+
     @abstractmethod
     def rank(self, emitter, archive, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
@@ -155,8 +158,9 @@ class RandomDirectionRanker(RankerBase):
     """
 
     def __init__(self, seed=None):
-        self._target_measure_dir = None
+        super().__init__()
         self._rng = np.random.default_rng(seed)
+        self._target_measure_dir = None
 
     @property
     def target_measure_dir(self):
@@ -224,8 +228,9 @@ class TwoStageRandomDirectionRanker(RankerBase):
     """
 
     def __init__(self, seed=None):
-        self._target_measure_dir = None
+        super().__init__()
         self._rng = np.random.default_rng(seed)
+        self._target_measure_dir = None
 
     @property
     def target_measure_dir(self):
