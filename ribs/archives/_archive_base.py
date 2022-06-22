@@ -394,11 +394,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         This method operates in batch, i.e. it takes in a batch of measures and
         outputs an :namedtuple:`EliteBatch`. Since :namedtuple:`EliteBatch` is a
-        namedtuple, it can be unpacked (here we show how to ignore some of the
-        fields)::
+        namedtuple, it can be unpacked::
 
-            solution_batch, objective_batch, *_ = \
-                archive.elites_with_measures(...)
+            solution_batch, objective_batch, measures_batch, \\
+                index_batch, metadata_batch = archive.elites_with_measures(...)
 
         Or the fields may be accessed by name::
 
@@ -414,18 +413,19 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         ``elite_batch.objective_batch[i]``, ``elite_batch.measures_batch[i]``,
         ``elite_batch.index_batch[i]``, and ``elite_batch.metadata_batch[i]``
         will be set to the properties of the elite. Note that
-        ``elite_batch.measures_batch[i]`` may not match ``measures_batch[i]``
-        exactly since the measures only need to be in the same archive cell.
+        ``elite_batch.measures_batch[i]`` may not be equal to
+        ``measures_batch[i]`` since the measures only need to be in the same
+        archive cell.
 
         If the cell associated with ``measures_batch[i]`` *does not* have any
         elite in it, then the corresponding outputs are set to empty values --
         namely:
 
-            * ``elite_batch.solution_batch[i]`` will be an array of NaN
-            * ``elite_batch.objective_batch[i]`` will be NaN
-            * ``elite_batch.measures_batch[i]`` will be an array of NaN
-            * ``elite_batch.index_batch[i]`` will be -1
-            * ``elite_batch.metadata_batch[i]`` will be None
+        * ``elite_batch.solution_batch[i]`` will be an array of NaN
+        * ``elite_batch.objective_batch[i]`` will be NaN
+        * ``elite_batch.measures_batch[i]`` will be an array of NaN
+        * ``elite_batch.index_batch[i]`` will be -1
+        * ``elite_batch.metadata_batch[i]`` will be None
 
         Args:
             measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
