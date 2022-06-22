@@ -193,11 +193,12 @@ Returns:
 
     # Generates the docstring for reset
     reset.__doc__ = f"""
-Generates a new random direction in the behavior space.
+Generates a random direction in the archive space.
 
-The direction is sampled from a standard Gaussian -- since the standard
+A random direction is sampled from a standard Gaussian -- since the standard
 Gaussian is isotropic, there is equal probability for any direction. The
-direction is then scaled to the behavior space bounds.
+direction is then scaled to the archive bounds so that it is a random archive
+direction.
 
 Args:
 {_args.emitter}
@@ -235,7 +236,7 @@ class TwoStageRandomDirectionRanker(RankerBase):
         projections = np.dot(measures_batch, self._target_measure_dir)
         # Sort by whether the solution was added into the archive,
         # followed by projection.
-        return np.lexsort((add_statuses, projections))[::-1]
+        return np.flip(np.lexsort((add_statuses, projections)))
 
     rank.__doc__ = f"""
 Ranks the soutions first by whether they are added, then by their projection on
@@ -275,7 +276,7 @@ class ObjectiveRanker(RankerBase):
     def rank(self, emitter, archive, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
         # Sort only by objective value.
-        return np.argsort(objective_batch)[::-1]
+        return np.flip(np.argsort(objective_batch))
 
     rank.__doc__ = f"""
 Ranks the soutions based on their objective values.
@@ -327,7 +328,7 @@ Returns:
     """
 
 
-_name_to_ranker_map = {
+__name_to_ranker_map = {
     "ImprovementRanker": ImprovementRanker,
     "TwoStageImprovementRanker": TwoStageImprovementRanker,
     "imp": ImprovementRanker,
@@ -353,6 +354,6 @@ def get_ranker(key):
         a ranker object
     """
     try:
-        return _name_to_ranker_map[key]()
+        return __name_to_ranker_map[key]()
     except KeyError as key_error:
         raise RuntimeError("Cannot find ranker with name " + key) from key_error

@@ -62,7 +62,7 @@ class DocstringComponents:
     #     return cls(comp_dict)
 
 
-_core_args = dict(emitter="""
+__core_args = dict(emitter="""
     emitter (ribs.emitters.EmitterBase): Emitter to use for generating
         solutions and updating the archive.
     """,
@@ -100,6 +100,4 @@ _core_args = dict(emitter="""
         avoid a fixed seed.
     """)
 
-_core_docs = dict(
-    args=DocstringComponents(_core_args),
-)
+_core_docs = dict(args=DocstringComponents(__core_args))
