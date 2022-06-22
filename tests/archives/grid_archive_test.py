@@ -15,7 +15,7 @@ def data():
     return get_archive_data("GridArchive")
 
 
-def assert_archive_elite(archive, solution, objective, measures, indices,
+def assert_archive_elite(archive, solution, objective, measures, grid_indices,
                          metadata):
     """Asserts that the archive has one specific elite."""
     assert len(archive) == 1
@@ -23,7 +23,7 @@ def assert_archive_elite(archive, solution, objective, measures, indices,
     assert np.isclose(elite.solution, solution).all()
     assert np.isclose(elite.objective, objective).all()
     assert np.isclose(elite.measures, measures).all()
-    assert elite.index == np.ravel_multi_index(indices, archive.dims)
+    assert elite.index == archive.grid_to_int_index(grid_indices)
     assert elite.metadata == metadata
 
 
@@ -118,3 +118,14 @@ def test_add_without_overwrite(data):
     assert_archive_elite(data.archive_with_elite, data.solution,
                          data.objective_value, data.behavior_values,
                          data.grid_indices, data.metadata)
+
+
+def test_grid_to_int_index(data):
+    assert (data.archive.grid_to_int_index([data.grid_indices
+                                           ])[0] == data.int_index)
+
+
+def test_int_to_grid_index(data):
+    assert np.all(
+        data.archive.int_to_grid_index([data.int_index])[0] ==
+        data.grid_indices)

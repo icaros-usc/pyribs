@@ -4,7 +4,6 @@ from collections import OrderedDict
 
 import numba as nb
 import numpy as np
-from decorator import decorator
 
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_data_frame import ArchiveDataFrame
@@ -60,12 +59,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     This class assumes all archives use a fixed-size container with cells that
     hold (1) information about whether the cell is occupied (bool), (2) a
     solution (1D array), (3) objective function evaluation of the solution
-    (float), (4) behavior space coordinates of the solution (1D array), and (5)
+    (float), (4) measure space coordinates of the solution (1D array), and (5)
     any additional metadata associated with the solution (object). In this
     class, the container is implemented with separate numpy arrays that share
-    common dimensions. Using the ``cells`` and ``behavior_dim`` arguments in
-    ``__init__`` and the ``solution_dim`` argument in ``initialize``, these
-    arrays are as follows:
+    common dimensions. Using the ``solution_dim``, ``cells`, and
+    ``behavior_dim`` arguments in ``__init__``, these arrays are as follows:
 
     +------------------------+----------------------------+
     | Name                   |  Shape                     |
@@ -89,13 +87,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     - ``__init__``: Child classes must invoke this class's ``__init__`` with the
       appropriate arguments.
-    - :meth:`get_index`: Returns an integer index into the arrays above when
-      given the behavior values of a solution. Usually, the index has a meaning,
-      e.g. in :class:`~ribs.archives.CVTArchive` it is the index of a centroid.
+    - :meth:`index_of`: Returns integer indices into the arrays above when
+      given a batch of measures. Usually, each index has a meaning, e.g. in
+      :class:`~ribs.archives.CVTArchive` it is the index of a centroid.
       Documentation for this method should describe the meaning of the index.
-    - :meth:`initialize`: By default, this method sets up the arrays described,
-      so child classes should invoke the parent implementation if they are
-      overriding it.
 
     .. note:: Attributes beginning with an underscore are only intended to be
         accessed by child classes (i.e. they are "protected" attributes).
@@ -117,30 +112,29 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         _cells (int): See ``cells`` arg.
         _behavior_dim (int): See ``behavior_dim`` arg.
         _occupied (numpy.ndarray): Bool array storing whether each cell in the
-            archive is occupied. This attribute is None until :meth:`initialize`
-            is called.
+            archive is occupied.
         _solutions (numpy.ndarray): Float array storing the solutions
-            themselves. This attribute is None until :meth:`initialize` is
-            called.
+            themselves.
         _objective_values (numpy.ndarray): Float array storing the objective
-            value of each solution. This attribute is None until
-            :meth:`initialize` is called.
+            value of each solution.
         _behavior_values (numpy.ndarray): Float array storing the behavior
-            space coordinates of each solution. This attribute is None until
-            :meth:`initialize` is called.
+            space coordinates of each solution.
         _metadata (numpy.ndarray): Object array storing the metadata associated
-            with each solution. This attribute is None until :meth:`initialize`
-            is called.
+            with each solution.
         _occupied_indices (numpy.ndarray): A ``(cells,)`` array of integer
             (``np.int32``) indices that are occupied in the archive. This could
-            be a list, but for efficiency, we make it a fixed-size array, with
-            only the first ``_num_occupied`` entries will be valid. This
-            attribute is None until :meth:`initialize` is called.
+            be a list, but for efficiency, we make it a fixed-size array, where
+            only the first ``_num_occupied`` entries will be valid.
         _num_occupied (int): Number of elites currently in the archive. This is
             used to index into ``_occupied_indices``.
     """
 
-    def __init__(self, solution_dim, cells, behavior_dim, seed=None, dtype=np.float64):
+    def __init__(self,
+                 solution_dim,
+                 cells,
+                 behavior_dim,
+                 seed=None,
+                 dtype=np.float64):
 
         ## Intended to be accessed by child classes. ##
         self._solution_dim = solution_dim
@@ -152,22 +146,22 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._num_occupied = 0
         self._occupied = np.zeros(self._cells, dtype=bool)
         self._occupied_indices = np.empty(self._cells, dtype=np.int32)
-        
+
         self._solutions = np.empty((self._cells, solution_dim),
                                    dtype=self.dtype)
         self._objective_values = np.empty(self._cells, dtype=self.dtype)
         self._behavior_values = np.empty((self._cells, self._behavior_dim),
                                          dtype=self.dtype)
         self._metadata = np.empty(self._cells, dtype=object)
-        
+
+        self._stats = None
         self._stats_reset()
-        self._state = {"clear": 0, "add": 0}
-        ## Not intended to be accessed by children. ##
 
-        self._seed = seed
         # Tracks archive modifications by counting calls to clear() and add().
+        self._state = {"clear": 0, "add": 0}
 
-        
+        ## Not intended to be accessed by children. ##
+        self._seed = seed
 
     @staticmethod
     def _parse_dtype(dtype):
@@ -280,17 +274,18 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._stats_reset()
 
     @abstractmethod
-    def get_index(self, behavior_values):
-        """Returns archive index for the given behavior values.
+    def index_of(self, measures_batch):
+        """Returns archive indices for the given batch of measures.
 
         See the :class:`~ribs.archives.ArchiveBase` class docstring for more
         info.
 
         Args:
-            behavior_values (numpy.ndarray): (:attr:`behavior_dim`,) array of
-                coordinates in behavior space.
+            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+                array of coordinates in measure space.
         Returns:
-            int: Index of the behavior values in the archive's storage arrays.
+            (numpy.ndarray): (batch_size,) array with the indices of the
+            batch of measures in the archive's storage arrays.
         """
 
     @staticmethod
@@ -370,7 +365,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         behavior_values = np.asarray(behavior_values)
         objective_value = self.dtype(objective_value)
 
-        index = self.get_index(behavior_values)
+        index = self.index_of(behavior_values[None])[0]
         old_objective = self._objective_values[index]
         was_inserted, already_occupied = self._add_numba(
             index, solution, objective_value, behavior_values, self._occupied,
@@ -425,7 +420,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``)
                 still works.
         """
-        index = self.get_index(np.asarray(behavior_values))
+        index = self.index_of(np.asarray(behavior_values)[None])[0]
         if self._occupied[index]:
             return Elite(
                 readonly(self._solutions[index]),
@@ -485,7 +480,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         dataframe consisting of:
 
         - 1 column of integers (``np.int32``) for the index, named ``index``.
-          See :meth:`get_index` for more info.
+          See :meth:`index_of` for more info.
         - :attr:`behavior_dim` columns for the behavior characteristics, named
           ``behavior_0, behavior_1, ...``
         - 1 column for the objective values, named ``objective``

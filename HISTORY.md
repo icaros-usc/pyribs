@@ -5,11 +5,20 @@
 ### Changelog
 
 #### API
-- **Backwards-incompatible:** Made it such that each archive is initialized fully in its constructor instead of needing a separate .initialize(solution_dim) call (#200)
-- **Backwards-incompatible:** Add `sigma`, `sigma0` options to `gaussian_emitter` and `iso_line_emitter` (#199)
+
+- **Backwards-incompatible:** Replace get_index with batched index_of method in
+  archives (#208)
+  - Also added `grid_to_int_index` and `int_to_grid_index` methods for
+    `GridArchive` and `SlidingBoundariesArchive`
+- **Backwards-incompatible:** Made it such that each archive is initialized
+  fully in its constructor instead of needing a separate
+  .initialize(solution_dim) call (#200)
+- **Backwards-incompatible:** Add `sigma`, `sigma0` options to
+  `gaussian_emitter` and `iso_line_emitter` (#199)
   - `gaussian_emitter` constructor requires `sigma`; `sigma0` is optional.
   - `iso_line_emitter` constructor takes in optional parameter `sigma0`.
-- **Backwards-incompatible:** Add `cbar`, `aspect` options for `cvt_archive_heatmap` (#197)
+- **Backwards-incompatible:** Add `cbar`, `aspect` options for
+  `cvt_archive_heatmap` (#197)
 - **Backwards-incompatible:** Add `aspect` option to `grid_archive_heatmap` +
   support for 1D heatmaps (#196)
   - `square` option no longer works
@@ -27,7 +36,7 @@
     - `_occupied_indices` is now a fixed-size array with `_num_occupied`
       indicating its current usage, and `_occupied_indices_cols` has been
       removed
-    - `get_index` must now return an integer
+    - `index_of` must now return an integer
 
 #### Documentation
 
@@ -62,7 +71,7 @@ To learn about this release, see our blog post: https://pyribs.org/blog/0-4-0
   (#103, #114, #115, #119)
 - **Backwards-incompatible:** Rename "index" to "index_0" in
   CVTArchive.as_pandas for API consistency (#113)
-- **Backwards-incompatible:** Make get_index() public in archives to emphasize
+- **Backwards-incompatible:** Make index_of() public in archives to emphasize
   each index's meaning (#128)
 - **Backwards-incompatible:** Add index to get_random_elite() and
   elite_with_behavior() in archives (#129)

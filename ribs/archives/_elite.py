@@ -17,10 +17,10 @@ class Elite(NamedTuple):
     #: Objective value evaluation.
     objective: float
 
-    #: Measure values.
+    #: 1D array of measure values.
     measures: np.ndarray
 
-    #: Index of the elite in the archive (see :meth:`ArchiveBase.get_index`).
+    #: Index of the elite in the archive (see :meth:`ArchiveBase.index_of`).
     index: int
 
     #: Metadata object for the elite.

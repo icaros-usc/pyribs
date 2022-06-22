@@ -41,9 +41,8 @@ def test_iteration():
         assert np.isclose(elite.solution, data.solution).all()
         assert np.isclose(elite.objective, data.objective_value)
         assert np.isclose(elite.measures, data.behavior_values).all()
-        # TODO: Avoid having to manually ravel.
-        assert elite.index == np.ravel_multi_index(data.grid_indices,
-                                                   data.archive_with_elite.dims)
+        assert elite.index == data.archive_with_elite.grid_to_int_index(
+            [data.grid_indices])[0]
         assert elite.metadata == data.metadata
 
 
@@ -252,9 +251,8 @@ def test_as_pandas(name, with_elite, include_solutions, include_metadata,
                    ).all()
         else:
             # Other archives have expected grid indices.
-            # TODO: Avoid having to ravel.
-            assert df.loc[0, "index"] == np.ravel_multi_index(
-                data.grid_indices, data.archive.dims)
+            assert df.loc[0, "index"] == data.archive.grid_to_int_index(
+                [data.grid_indices])[0]
 
         expected_data = [*data.behavior_values, data.objective_value]
         if include_solutions:
