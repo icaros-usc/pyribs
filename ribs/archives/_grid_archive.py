@@ -118,8 +118,12 @@ class GridArchive(ArchiveBase):
             np.maximum(measures_batch + _EPSILON, lower_bounds),
             upper_bounds - _EPSILON)
 
-        indices = (measures_batch - lower_bounds) / interval_size * dims
-        return indices.astype(np.int32)
+        grid_indices_batch = (measures_batch -
+                              lower_bounds) / interval_size * dims
+
+        # Casting to int is necessary for rounding down since grid_indices_batch
+        # is currently float.
+        return grid_indices_batch.astype(np.int32)
 
     def index_of(self, measures_batch):
         """Returns archive indices for the given measure values.
