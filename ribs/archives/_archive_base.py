@@ -444,6 +444,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         * ``elite_batch.index_batch[i]`` will be -1
         * ``elite_batch.metadata_batch[i]`` will be None
 
+        If you need to retrieve a *single* elite associated with some measures,
+        consider using :meth:`elites_with_measures_single`.
+
         Args:
             measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
                 array of coordinates in measure space.
@@ -493,6 +496,32 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                     self._metadata[index_batch],
                     None,
                 )),
+        )
+
+    def elites_with_measures_single(self, measures):
+        """Retrieves the elite with measures in the same cell as the measures
+        specified.
+
+        While :meth:`elites_with_measures` takes in a *batch* of measures, this
+        method takes in the measures for only *one* solution and returns a
+        single :namedtuple:`Elite`.
+
+        Args:
+            measures (array-like): (:attr:`behavior_dim`,) array of measures.
+        Returns:
+            If there is an elite with measures in the same cell as the measures
+            specified, then this method returns an :namedtuple:`Elite` where all
+            the fields hold the info of that elite. Otherwise, this method
+            returns an :namedtuple:`Elite` filled with the same "empty" values
+            described in :meth:`elites_with_measures`.
+        """
+        elite_batch = self.elites_with_measures([measures])
+        return Elite(
+            elite_batch.solution_batch[0],
+            elite_batch.objective_batch[0],
+            elite_batch.measures_batch[0],
+            elite_batch.index_batch[0],
+            elite_batch.metadata_batch[0],
         )
 
     def sample_elites(self, n):
