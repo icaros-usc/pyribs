@@ -36,21 +36,34 @@ __all__ = [
 ]
 
 # Define common docstrings
-core_args["emitter"] = """
+_args = DocstringComponents(core_args)
+
+_rank_args = f"""
+Args:
     emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker``
         object belongs to.
-    """
-core_args["archive"] = """
     archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
         when creating and inserting solutions.
-    """
-core_args["rng"] = """
+{_args.solution_batch}
+{_args.objective_batch}
+{_args.measures_batch}
+{_args.metadata}
+{_args.add_statuses}
+{_args.add_values}
+    rng (numpy.random.Generator): A random number generator.
+
+Returns:
+    Indices representing a ranking of the solutions
+"""
+
+_reset_args = """
+Args:
+    emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker``
+        object belongs to.
+    archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
+        when creating and inserting solutions.
     rng (numpy.random.Generator): A random number generator.
 """
-_args = DocstringComponents(core_args)
-_returns = DocstringComponents(
-    dict(indices="""
-    Indices representing a ranking of the solutions"""))
 
 
 class RankerBase(ABC):
@@ -74,19 +87,7 @@ class RankerBase(ABC):
     rank.__doc__ = f"""
 Generates a batch of indices that represents an ordering of ``solution_batch``.
 
-Args:
-{_args.emitter}
-{_args.archive}
-{_args.solution_batch}
-{_args.objective_batch}
-{_args.measures_batch}
-{_args.metadata}
-{_args.add_statuses}
-{_args.add_values}
-{_args.rng}
-
-Returns:
-{_returns.indices}
+{_rank_args}
     """
 
     def reset(self, emitter, archive, rng):
@@ -96,10 +97,7 @@ Returns:
     reset.__doc__ = f"""
 Resets the internal state of the ranker.
 
-Args:
-{_args.emitter}
-{_args.archive}
-{_args.rng}
+{_reset_args}
    """
 
 
@@ -131,19 +129,7 @@ class TwoStageImprovementRanker(RankerBase):
     rank.__doc__ = f"""
 Generates a list of indices that represents an ordering of solutions.
 
-Args:
-{_args.emitter}
-{_args.archive}
-{_args.solution_batch}
-{_args.objective_batch}
-{_args.measures_batch}
-{_args.metadata}
-{_args.add_statuses}
-{_args.add_values}
-{_args.rng}
-
-Returns:
-{_returns.indices}
+{_rank_args}
     """
 
 
@@ -186,19 +172,7 @@ class RandomDirectionRanker(RankerBase):
     rank.__doc__ = f"""
 Ranks the soutions based on projection onto a direction in measure space.
 
-Args:
-{_args.emitter}
-{_args.archive}
-{_args.solution_batch}
-{_args.objective_batch}
-{_args.measures_batch}
-{_args.metadata}
-{_args.add_statuses}
-{_args.add_values}
-{_args.rng}
-
-Returns:
-{_returns.indices}
+{_rank_args}
     """
 
     def reset(self, emitter, archive, rng):
@@ -216,10 +190,7 @@ Gaussian is isotropic, there is equal probability for any direction. The
 direction is then scaled to the archive bounds so that it is a random archive
 direction.
 
-Args:
-{_args.emitter}
-{_args.archive}
-{_args.rng}
+{_reset_args}
    """
 
 
@@ -259,19 +230,7 @@ class TwoStageRandomDirectionRanker(RankerBase):
 Ranks the soutions first by whether they are added, then by their projection on
 a random direction in measure space.
 
-Args:
-{_args.emitter}
-{_args.archive}
-{_args.solution_batch}
-{_args.objective_batch}
-{_args.measures_batch}
-{_args.metadata}
-{_args.add_statuses}
-{_args.add_values}
-{_args.rng}
-
-Returns:
-{_returns.indices}
+{_rank_args}
     """
 
     def reset(self, emitter, archive, rng):
@@ -299,19 +258,7 @@ class ObjectiveRanker(RankerBase):
     rank.__doc__ = f"""
 Ranks the soutions based on their objective values.
 
-Args:
-{_args.emitter}
-{_args.archive}
-{_args.solution_batch}
-{_args.objective_batch}
-{_args.measures_batch}
-{_args.metadata}
-{_args.add_statuses}
-{_args.add_values}
-{_args.rng}
-
-Returns:
-{_returns.indices}
+{_rank_args}
     """
 
 
@@ -332,19 +279,7 @@ class TwoStageObjectiveRanker(RankerBase):
     rank.__doc__ = f"""
 Ranks the soutions based on their objective values, while prioritizing newly added solutions.
 
-Args:
-{_args.emitter}
-{_args.archive}
-{_args.solution_batch}
-{_args.objective_batch}
-{_args.measures_batch}
-{_args.metadata}
-{_args.add_statuses}
-{_args.add_values}
-{_args.rng}
-
-Returns:
-{_returns.indices}
+{_rank_args}
     """
 
 
