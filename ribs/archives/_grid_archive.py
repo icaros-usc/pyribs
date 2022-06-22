@@ -192,4 +192,8 @@ class GridArchive(ArchiveBase):
             numpy.ndarray: (batch_size, :attr:`behavior_dim`) array of indices
             in the archive grid.
         """
-        return np.unravel_index(np.asarray(int_index_batch), self._dims)
+        return np.asarray(
+            np.unravel_index(
+                np.asarray(int_index_batch),
+                self._dims,
+            )).T.astype(np.int32)
