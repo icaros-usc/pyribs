@@ -88,8 +88,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     - ``__init__``: Child classes must invoke this class's ``__init__`` with the
       appropriate arguments.
     - :meth:`index_of`: Returns integer indices into the arrays above when
-      given the measure values of a solution. Usually, each index has a meaning,
-      e.g. in :class:`~ribs.archives.CVTArchive` it is the index of a centroid.
+      given a batch of measures. Usually, each index has a meaning, e.g. in
+      :class:`~ribs.archives.CVTArchive` it is the index of a centroid.
       Documentation for this method should describe the meaning of the index.
 
     .. note:: Attributes beginning with an underscore are only intended to be
@@ -275,7 +275,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     @abstractmethod
     def index_of(self, measures_batch):
-        """Returns archive indices for the given measure values.
+        """Returns archive indices for the given batch of measures.
 
         See the :class:`~ribs.archives.ArchiveBase` class docstring for more
         info.
@@ -285,7 +285,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 array of coordinates in measure space.
         Returns:
             (numpy.ndarray): (batch_size,) array with the indices of the
-            measure values in the archive's storage arrays.
+            batch of measures in the archive's storage arrays.
         """
 
     @staticmethod

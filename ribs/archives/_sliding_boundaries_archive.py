@@ -248,7 +248,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         return idx_cols
 
     def index_of(self, measures_batch):
-        """Returns archive indices for the given measure values.
+        """Returns archive indices for the given batch of measures.
 
         First, values are clipped to the bounds of the measure space. Then, the
         values are mapped to cells via a binary search along the boundaries in
@@ -281,7 +281,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                 array of coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
-            the grid coordinates.
+            the flattened grid coordinates.
         """
         index_cols = SlidingBoundariesArchive._index_of_numba(
             np.asarray(measures_batch),

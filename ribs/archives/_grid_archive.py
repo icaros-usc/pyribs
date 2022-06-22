@@ -111,9 +111,9 @@ class GridArchive(ArchiveBase):
 
         See index_of() for usage.
         """
-        # Adding epsilon to measure values accounts for floating point precision
-        # errors from transforming measure values. Subtracting epsilon from
-        # upper bounds makes sure we do not have indices outside the grid.
+        # Adding epsilon to measures accounts for floating point precision
+        # errors from transforming measures. Subtracting epsilon from upper
+        # bounds makes sure we do not have indices outside the grid.
         measures_batch = np.minimum(
             np.maximum(measures_batch + _EPSILON, lower_bounds),
             upper_bounds - _EPSILON)
@@ -126,7 +126,7 @@ class GridArchive(ArchiveBase):
         return grid_indices_batch.astype(np.int32)
 
     def index_of(self, measures_batch):
-        """Returns archive indices for the given measure values.
+        """Returns archive indices for the given batch of measures.
 
         First, values are clipped to the bounds of the measure space. Then, the
         values are mapped to cells; e.g. cell 5 along dimension 0 and cell 3
@@ -159,7 +159,7 @@ class GridArchive(ArchiveBase):
                 array of coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
-            the grid coordinates.
+            the flattened grid coordinates.
         """
         return self.grid_to_int_index(
             self._index_of_numba(
