@@ -39,6 +39,7 @@
 
 #### Improvements
 
+- Build docs during CI/CD workflow (#211)
 - Drop Python 3.6 and add Python 3.10 support (#181)
 - Add procedure for updating changelog (#182)
 - Add 'visualize' extra and remove 'all' extra (#183,#184)
