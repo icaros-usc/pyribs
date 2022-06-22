@@ -21,7 +21,7 @@ result of a descending argsort of the solutions. It will also define a
 from abc import ABC, abstractmethod
 import numpy as np
 
-from ribs._docstrings import DocstringComponents, _core_docs
+from ribs._docstrings import DocstringComponents, core_args
 
 __all__ = [
     "ImprovementRanker",
@@ -34,7 +34,15 @@ __all__ = [
 ]
 
 # Define common docstrings
-_args = _core_docs["args"]
+core_args["emitter"] = """
+    emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker``
+        object belongs to.
+    """
+core_args["archive"] = """
+    archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
+        when creating and inserting solutions.
+    """
+_args = DocstringComponents(core_args)
 _returns = DocstringComponents(
     dict(indices="""
     Indices representing a ranking of the solutions"""))
@@ -328,7 +336,7 @@ Returns:
     """
 
 
-__name_to_ranker_map = {
+_name_to_ranker_map = {
     "ImprovementRanker": ImprovementRanker,
     "TwoStageImprovementRanker": TwoStageImprovementRanker,
     "imp": ImprovementRanker,
@@ -354,6 +362,6 @@ def get_ranker(key):
         a ranker object
     """
     try:
-        return __name_to_ranker_map[key]()
+        return _name_to_ranker_map[key]()
     except KeyError as key_error:
         raise RuntimeError("Cannot find ranker with name " + key) from key_error
