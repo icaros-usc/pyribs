@@ -8,6 +8,8 @@
 
 - **Backwards-incompatible:** Replace get_index with batched index_of method in
   archives (#208)
+  - Also added `grid_to_int_index` and `int_to_grid_index` methods for
+    `GridArchive` and `SlidingBoundariesArchive`
 - **Backwards-incompatible:** Made it such that each archive is initialized
   fully in its constructor instead of needing a separate
   .initialize(solution_dim) call (#200)
