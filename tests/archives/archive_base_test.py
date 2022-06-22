@@ -120,6 +120,16 @@ def test_stats_add_and_overwrite():
 
 
 #
+# index_of_single() tests -- on GridArchive only.
+#
+
+
+def test_index_of_single():
+    data = get_archive_data("GridArchive")
+    assert data.archive.index_of_single(data.behavior_values) == data.int_index
+
+
+#
 # General tests -- should work for all archive classes.
 #
 
