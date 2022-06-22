@@ -289,7 +289,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """
 
     def index_of_single(self, measures):
-        """Returns index of measures for one solution.
+        """Returns the index of the measures for one solution.
 
         This is the unbatched version of :meth:`index_of`. As long as you
         implement :meth:`index_of` correctly, this method should work out of the
