@@ -37,7 +37,7 @@ __all__ = [
 _args = _core_docs["args"]
 _returns = DocstringComponents(
     dict(index_batch="""
-    A batch of indicies representing a ranking of the solutions"""))
+    A batch of indices representing a ranking of the solutions"""))
 
 
 class RankerBase(ABC):
@@ -59,7 +59,7 @@ class RankerBase(ABC):
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
-Generates a batch of indicies that represents an ordering of ``solution_batch``.
+Generates a batch of indices that represents an ordering of ``solution_batch``.
 
 Args:
 {_args.emitter}
@@ -72,7 +72,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
     def reset(self, emitter, archive):
@@ -127,7 +127,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
 
@@ -161,6 +161,8 @@ class RandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, solution_batch, objective_batch,
              measure_batch, metadata, add_statuses, add_values):
+        if self._target_measure_dir:
+          raise RuntimeError("target measure direction not set")
         projections = np.dot(measure_batch, self._target_measure_dir)
         # Sort only by projection; use fancy indexing to reverse the order
         return np.lexsort((projections,))[::-1]
@@ -180,7 +182,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
     def reset(self, emitter, archive):
@@ -233,6 +235,8 @@ class TwoStageRandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, solution_batch, objective_batch,
              measure_batch, metadata, add_statuses, add_values):
+        if self._target_measure_dir:
+          raise RuntimeError("target measure direction not set")
         projections = np.dot(measure_batch, self._target_behavior_dir)
         # Sort by whether the solution was added into the archive,
         # followed by projection.
@@ -254,7 +258,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
     def reset(self, emitter, archive):
@@ -306,7 +310,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
 
@@ -322,7 +326,7 @@ class TwoStageObjectiveRanker(RankerBase):
              measure_batch, metadata, add_statuses, add_values):
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.
-        return np.lexsort((objective_values, add_statuses))[::-1]
+        return np.lexsort((objective_batch, add_statuses))[::-1]
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
@@ -339,7 +343,7 @@ Args:
 {_args.add_values}
 
 Returns:
-{_returns.indices}
+{_returns.index_batch}
     """
 
 
