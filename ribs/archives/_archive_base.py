@@ -405,22 +405,33 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             elite_batch = archive.elites_with_measures(...)
             elite_batch.solution_batch
             elite_batch.objective_batch
-            ...
+            elite_batch.measures_batch
+            elite_batch.index_batch
+            elite_batch.metadata_batch
+
+        If the cell associated with ``measures_batch[i]`` has an elite in it,
+        then ``elite_batch.solution_batch[i]``,
+        ``elite_batch.objective_batch[i]``, ``elite_batch.measures_batch[i]``,
+        ``elite_batch.index_batch[i]``, and ``elite_batch.metadata_batch[i]``
+        will be set to the properties of the elite. Note that
+        ``elite_batch.measures_batch[i]`` may not match ``measures_batch[i]``
+        exactly since the measures only need to be in the same archive cell.
+
+        If the cell associated with ``measures_batch[i]`` *does not* have any
+        elite in it, then the corresponding outputs are set to empty values --
+        namely:
+
+            * ``elite_batch.solution_batch[i]`` will be an array of NaN
+            * ``elite_batch.objective_batch[i]`` will be NaN
+            * ``elite_batch.measures_batch[i]`` will be an array of NaN
+            * ``elite_batch.index_batch[i]`` will be -1
+            * ``elite_batch.metadata_batch[i]`` will be None
 
         Args:
             measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
                 array of coordinates in measure space.
         Returns:
-            EliteBatch: For each batch index ``i``, if there is an elite with
-            measures in the same cell as ``measures_batch[i]``, then
-
-            TODO
-
-            If there is an elite with measures in the same cell as
-            those specified, this :namedtuple:`Elite` holds the info for that
-            elite. In that case, ``beh`` (the behavior values) may not be
-            exactly the same as the behavior values specified since the elite is
-            only guaranteed to be in the same archive cell.
+            EliteBatch: See above.
         """
         index_batch = self.index_of(np.asarray(measures_batch))
         occupied_batch = self._occupied[index_batch]
