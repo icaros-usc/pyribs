@@ -184,22 +184,23 @@ def test_basic_stats(data):
     assert data.archive_with_elite.stats.obj_mean == data.objective_value
 
 
-def test_elite_with_behavior_gets_correct_elite(data):
-    elite = data.archive_with_elite.elite_with_behavior(data.behavior_values)
-    assert np.all(elite.solution == data.solution)
-    assert elite.objective == data.objective_value
-    assert np.all(elite.measures == data.behavior_values)
-    # Avoid checking elite.idx since the meaning varies by archive.
-    assert elite.metadata == data.metadata
+def test_elites_with_measures_gets_correct_elite(data):
+    elite_batch = data.archive_with_elite.elites_with_measures(
+        [data.behavior_values])
+    assert np.all(elite_batch.solution_batch[0] == data.solution)
+    assert elite_batch.objective_batch[0] == data.objective_value
+    assert np.all(elite_batch.measures_batch[0] == data.behavior_values)
+    # Avoid checking elite_batch.idx since the meaning varies by archive.
+    assert elite_batch.metadata_batch[0] == data.metadata
 
 
 def test_elite_with_behavior_returns_none(data):
-    elite = data.archive.elite_with_behavior(data.behavior_values)
-    assert elite.solution is None
-    assert elite.objective is None
-    assert elite.measures is None
-    assert elite.index is None
-    assert elite.metadata is None
+    elite_batch = data.archive.elites_with_measures([data.behavior_values])
+    assert np.all(np.isnan(elite_batch.solution_batch[0]))
+    assert np.isnan(elite_batch.objective_batch)
+    assert np.all(np.isnan(elite_batch.measures_batch[0]))
+    assert elite_batch.index_batch[0] == -1
+    assert elite_batch.metadata_batch[0] is None
 
 
 def test_sample_elites_gets_single_elite(data):

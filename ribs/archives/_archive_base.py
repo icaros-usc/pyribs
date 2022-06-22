@@ -405,48 +405,95 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             value = objective_value - old_objective
         return status, value
 
-    # TODO: Update docstring due to new elite definition.
-    def elite_with_behavior(self, behavior_values):
-        """Gets the elite with behavior vals in the same cell as those
+    def elites_with_measures(self, measures_batch):
+        """Retrieves the elites with measures in the same cells as the measures
         specified.
 
-        Since :namedtuple:`Elite` is a namedtuple, the result can be unpacked
-        (here we show how to ignore some of the fields)::
+        This method operates in batch, i.e. it takes in a batch of measures and
+        outputs an :namedtuple:`EliteBatch`. Since :namedtuple:`EliteBatch` is a
+        namedtuple, it can be unpacked::
 
-            sol, obj, beh, *_ = archive.elite_with_behavior(...)
+            solution_batch, objective_batch, measures_batch, \\
+                index_batch, metadata_batch = archive.elites_with_measures(...)
 
         Or the fields may be accessed by name::
 
-            elite = archive.elite_with_behavior(...)
-            elite.sol
-            elite.obj
-            ...
+            elite_batch = archive.elites_with_measures(...)
+            elite_batch.solution_batch
+            elite_batch.objective_batch
+            elite_batch.measures_batch
+            elite_batch.index_batch
+            elite_batch.metadata_batch
+
+        If the cell associated with ``measures_batch[i]`` has an elite in it,
+        then ``elite_batch.solution_batch[i]``,
+        ``elite_batch.objective_batch[i]``, ``elite_batch.measures_batch[i]``,
+        ``elite_batch.index_batch[i]``, and ``elite_batch.metadata_batch[i]``
+        will be set to the properties of the elite. Note that
+        ``elite_batch.measures_batch[i]`` may not be equal to
+        ``measures_batch[i]`` since the measures only need to be in the same
+        archive cell.
+
+        If the cell associated with ``measures_batch[i]`` *does not* have any
+        elite in it, then the corresponding outputs are set to empty values --
+        namely:
+
+        * ``elite_batch.solution_batch[i]`` will be an array of NaN
+        * ``elite_batch.objective_batch[i]`` will be NaN
+        * ``elite_batch.measures_batch[i]`` will be an array of NaN
+        * ``elite_batch.index_batch[i]`` will be -1
+        * ``elite_batch.metadata_batch[i]`` will be None
 
         Args:
-            behavior_values (array-like): Coordinates in behavior space.
+            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+                array of coordinates in measure space.
         Returns:
-            Elite:
-              * If there is an elite with behavior values in the same cell as
-                those specified, this :namedtuple:`Elite` holds the info for
-                that elite. In that case, ``beh`` (the behavior values) may not
-                be exactly the same as the behavior values specified since the
-                elite is only guaranteed to be in the same archive cell.
-              * If no such elite exists, then all fields of the
-                :namedtuple:`Elite` are set to None. This way, tuple unpacking
-                (e.g.
-                ``sol, obj, beh, idx, meta = archive.elite_with_behavior(...)``)
-                still works.
+            EliteBatch: See above.
         """
-        index = self.index_of(np.asarray(behavior_values)[None])[0]
-        if self._occupied[index]:
-            return Elite(
-                readonly(self._solutions[index]),
-                self._objective_values[index],
-                readonly(self._behavior_values[index]),
-                index,
-                self._metadata[index],
-            )
-        return Elite(None, None, None, None, None)
+        index_batch = self.index_of(np.asarray(measures_batch))
+        occupied_batch = self._occupied[index_batch]
+        expanded_occupied_batch = occupied_batch[:, None]
+
+        return EliteBatch(
+            solution_batch=readonly(
+                # For each occupied_batch[i], this np.where selects
+                # self._solutions[index_batch][i] if occupied_batch[i] is True.
+                # Otherwise, it uses the alternate value (a solution array
+                # consisting of np.nan).
+                np.where(
+                    expanded_occupied_batch,
+                    self._solutions[index_batch],
+                    np.full(self._solution_dim, np.nan),
+                )),
+            objective_batch=readonly(
+                np.where(
+                    occupied_batch,
+                    self._objective_values[index_batch],
+                    # Here the alternative is just a scalar np.nan.
+                    np.nan,
+                )),
+            measures_batch=readonly(
+                np.where(
+                    expanded_occupied_batch,
+                    self._behavior_values[index_batch],
+                    # And here it is a measures array of np.nan.
+                    np.full(self._behavior_dim, np.nan),
+                )),
+            index_batch=readonly(
+                np.where(
+                    occupied_batch,
+                    index_batch,
+                    # Indices must be integers, so np.nan would not work, hence
+                    # we use -1.
+                    -1,
+                )),
+            metadata_batch=readonly(
+                np.where(
+                    occupied_batch,
+                    self._metadata[index_batch],
+                    None,
+                )),
+        )
 
     def sample_elites(self, n):
         """Randomly samples elites from the archive.
