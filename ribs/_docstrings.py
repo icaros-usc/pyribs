@@ -78,8 +78,8 @@ _core_args = dict(emitter="""
                   objective_batch="""
     objective_batch (numpy.ndarray): Batch of objective values.
     """,
-                  measure_batch="""
-    measure_batch (numpy.ndarray): ``(n, <measure space dimension>)``
+                  measures_batch="""
+    measures_batch (numpy.ndarray): ``(n, <measure space dimension>)``
         array with the measure space coordinates of each solution.
     """,
                   metadata="""
