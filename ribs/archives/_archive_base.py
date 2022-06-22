@@ -423,7 +423,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             only guaranteed to be in the same archive cell.
         """
         index_batch = self.index_of(np.asarray(measures_batch))
-        occupied_batch = self._occupied[index_batch][:, None]
+        occupied_batch = self._occupied[index_batch]
+        expanded_occupied_batch = occupied_batch[:, None]
 
         return EliteBatch(
             solution_batch=readonly(
@@ -432,7 +433,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 # Otherwise, it uses the alternate value (a solution array
                 # consisting of np.nan).
                 np.where(
-                    occupied_batch,
+                    expanded_occupied_batch,
                     self._solutions[index_batch],
                     np.full(self._solution_dim, np.nan),
                 )),
@@ -440,17 +441,24 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 np.where(
                     occupied_batch,
                     self._objective_values[index_batch],
-                    # Here the alternative is just a single np.nan.
+                    # Here the alternative is just a scalar np.nan.
                     np.nan,
                 )),
             measures_batch=readonly(
                 np.where(
-                    occupied_batch,
+                    expanded_occupied_batch,
                     self._behavior_values[index_batch],
                     # And here it is a measures array of np.nan.
                     np.full(self._behavior_dim, np.nan),
                 )),
-            index_batch=index_batch,
+            index_batch=readonly(
+                np.where(
+                    occupied_batch,
+                    index_batch,
+                    # Indices must be integers, so np.nan would not work, hence
+                    # we use -1.
+                    -1,
+                )),
             metadata_batch=readonly(
                 np.where(
                     occupied_batch,
