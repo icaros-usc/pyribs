@@ -224,9 +224,10 @@ class CVTArchive(ArchiveBase):
         """Finds the indices of the centroid closest to the given coordinates in
         measure space.
 
-        If ``idx`` is an index returned by this method for some ``measure``,
-        then ``archive.centroids[idx]`` holds the coordinates of the centroid
-        closest to ``measure``. See :attr:`centroids` for more info.
+        If ``idx`` is an index returned by this method for some measure values
+        ``m`` in the batch, then ``archive.centroids[idx]`` holds the
+        coordinates of the centroid closest to ``m``. See :attr:`centroids` for
+        more info.
 
         The centroid indices are located using either the k-D tree or brute
         force, depending on the value of ``use_kd_tree`` in the constructor.
