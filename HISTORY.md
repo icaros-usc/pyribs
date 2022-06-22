@@ -6,6 +6,8 @@
 
 #### API
 
+- Add index_of_single method for getting index of measures for one solution
+  (#214)
 - **Backwards-incompatible:** Replace elite_with_behavior with batched
   elites_with_measures method in archives (#213)
 - **Backwards-incompatible:** Replace get_index with batched index_of method in

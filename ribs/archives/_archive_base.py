@@ -277,8 +277,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def index_of(self, measures_batch):
         """Returns archive indices for the given batch of measures.
 
-        See the :class:`~ribs.archives.ArchiveBase` class docstring for more
-        info.
+        If you need to retrieve the index of the measures for a *single*
+        solution, consider using :meth:`index_of_single`.
 
         Args:
             measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
@@ -287,6 +287,23 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             (numpy.ndarray): (batch_size,) array with the indices of the
             batch of measures in the archive's storage arrays.
         """
+
+    def index_of_single(self, measures):
+        """Returns the index of the measures for one solution.
+
+        While :meth:`index_of` takes in a *batch* of measures, this method takes
+        in the measures for only *one* solution. If :meth:`index_of` is
+        implemented correctly, this method should work immediately (i.e. `"out
+        of the box" <https://idioms.thefreedictionary.com/Out-of-the-Box>`_).
+
+        Args:
+            measures (array-like): (:attr:`behavior_dim`,) array of measures for
+                a single solution.
+        Returns:
+            int or numpy.integer: Integer index of the measures in the archive's
+            storage arrays.
+        """
+        return self.index_of(np.asarray(measures)[None])[0]
 
     @staticmethod
     @nb.jit(locals={"already_occupied": nb.types.b1}, nopython=True)
