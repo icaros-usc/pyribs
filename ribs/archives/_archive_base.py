@@ -288,6 +288,21 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             batch of measures in the archive's storage arrays.
         """
 
+    def index_of_single(self, measures):
+        """Returns index of measures for one solution.
+
+        This is the unbatched version of :meth:`index_of`. As long as you
+        implement :meth:`index_of` correctly, this method should work out of the
+        box.
+
+        Args:
+            measures (array-like): (:attr:`behavior_dim`,) array of measures for
+                a single solution.
+        Returns:
+            integer: Index of the measures in the archive's storage arrays.
+        """
+        return self.index_of(np.asarray(measures)[None])[0]
+
     @staticmethod
     @nb.jit(locals={"already_occupied": nb.types.b1}, nopython=True)
     def _add_numba(new_index, new_solution, new_objective_value,
