@@ -226,7 +226,7 @@ class CVTArchive(ArchiveBase):
 
         If ``index_batch`` is the batch of indices returned by this method, then
         ``archive.centroids[index_batch[i]]`` holds the coordinates of the
-        centroid closest to ``measures_batch[i]``.  See :attr:`centroids` for
+        centroid closest to ``measures_batch[i]``. See :attr:`centroids` for
         more info.
 
         The centroid indices are located using either the k-D tree or brute
