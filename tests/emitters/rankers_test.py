@@ -104,7 +104,7 @@ def test_two_stage_random_direction():
 
 def test_objective_ranker(archive_fixture):
     archive, x0 = archive_fixture
-    emitter = GaussianEmitter(archive, x0, 1, batch_size=2)
+    emitter = GaussianEmitter(archive, x0, 1, batch_size=4)
 
     solutions = emitter.ask()
     objective_values = [0, 3, 2, 1]
