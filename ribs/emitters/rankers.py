@@ -18,8 +18,8 @@ result of a descending argsort of the solutions. It will also define a
     ribs.emitters.rankers.TwoStageObjectiveRanker
     ribs.emitters.rankers.RankerBase
 """
-
 from abc import ABC, abstractmethod
+
 import numpy as np
 
 from ribs._docstrings import DocstringComponents, core_args
@@ -134,8 +134,8 @@ Generates a list of indices that represents an ordering of solutions.
 
 
 class RandomDirectionRanker(RankerBase):
-    """Ranks the solutions based on projection onto a direction in
-    measure space.
+    """Ranks the solutions based on projection onto a direction in measure
+    space.
 
     This ranker originates in `Fontaine 2020
     <https://arxiv.org/abs/1912.02400>`_ as random direction emitter.
@@ -195,9 +195,9 @@ direction.
 
 
 class TwoStageRandomDirectionRanker(RankerBase):
-    """Similar to :class:`ribs.emitters.rankers.RandomDirectionRanker`,
-    but the solutions are first ranked by whether they are added, then
-    by their projection onto a random direction in the archive space.
+    """Similar to :class:`ribs.emitters.rankers.RandomDirectionRanker`, but the
+    solutions are first ranked by whether they are added, then by their
+    projection onto a random direction in the archive space.
 
     This ranker originates from `Fontaine 2020
     <https://arxiv.org/abs/1912.02400>`_ as RandomDirectionEmitter.
@@ -246,8 +246,8 @@ class ObjectiveRanker(RankerBase):
     """Ranks the solutions solely based on the objective values.
 
     This ranker originates in `Fontaine 2020
-    <https://arxiv.org/abs/1912.02400>`_ in which it was part of the
-    the optimizing emitter.
+    <https://arxiv.org/abs/1912.02400>`_ in which it was part of the optimizing
+    emitter.
     """
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
@@ -263,8 +263,8 @@ Ranks the soutions based on their objective values.
 
 
 class TwoStageObjectiveRanker(RankerBase):
-    """Similar to :class:`ribs.emitters.rankers.ObjectiveRanker`,
-    but ranks newly added solutions before improved solutions.
+    """Similar to :class:`ribs.emitters.rankers.ObjectiveRanker`, but ranks
+    newly added solutions before improved solutions.
 
     This ranker originates in `Fontaine 2020
     <https://arxiv.org/abs/1912.02400>`_ as OptimizingEmitter.
@@ -286,40 +286,38 @@ Ranks the soutions based on their objective values, while prioritizing newly add
 _NAME_TO_RANKER_MAP = {
     "ImprovementRanker": ImprovementRanker,
     "TwoStageImprovementRanker": TwoStageImprovementRanker,
-    "imp": ImprovementRanker,
-    "2imp": TwoStageImprovementRanker,
     "RandomDirectionRanker": RandomDirectionRanker,
     "TwoStageRandomDirectionRanker": TwoStageRandomDirectionRanker,
-    "rd": RandomDirectionRanker,
-    "2rd": TwoStageRandomDirectionRanker,
     "ObjectiveRanker": ObjectiveRanker,
     "TwoStageObjectiveRanker": TwoStageObjectiveRanker,
+    "imp": ImprovementRanker,
+    "2imp": TwoStageImprovementRanker,
+    "rd": RandomDirectionRanker,
+    "2rd": TwoStageRandomDirectionRanker,
     "obj": ObjectiveRanker,
     "2obj": TwoStageObjectiveRanker
 }
 
 
-def get_ranker(key):
-    """Constructs and returns a ranker object
+def get_ranker(name):
+    """Constructs and returns a ranker object based on its string name.
 
-    The abbreviation(s) for each ranker is listed below:
+    ``name`` may be the full name of a ranker, e.g. "ImprovementRanker" or
+    "RandomDirectionRanker". Alternatively, it can be the abbreviated name for a
+    ranker -- the supported abbreviations are:
 
-    - :class:`ImprovementRanker`: ``imp``
-    - :class:`TwoStageImprovementRanker`: ``2imp``
-    - :class:`RandomDirectionRanker`: ``rd``
-    - :class:`TwoStageRandomDirectionRanker`: ``2rd``
-    - :class:`ObjectiveRanker`: ``obj``
-    - :class:`TwoStageObjectiveRanker`: ``2obj``
+    * ``imp``: :class:`ImprovementRanker`
+    * ``2imp``: :class:`TwoStageImprovementRanker`
+    * ``rd``: :class:`RandomDirectionRanker`
+    * ``2rd``: :class:`TwoStageRandomDirectionRanker`
+    * ``obj``: :class:`ObjectiveRanker`
+    * ``2obj``: :class:`TwoStageObjectiveRanker`
 
     Args:
-        key (str): Full or abbreviated name of ranker.
-
+        name (str): Full or abbreviated name of the ranker.
     Returns:
-        A ranker object
+        A ranker object.
     """
-    if isinstance(key, RankerBase):
-        return key
-    try:
-        return _NAME_TO_RANKER_MAP[key]()
-    except KeyError as key_error:
-        raise RuntimeError("Cannot find ranker with name " + key) from key_error
+    if name in _NAME_TO_RANKER_MAP:
+        return _NAME_TO_RANKER_MAP[name]()
+    raise ValueError(f"Could not find ranker with name {name}")
