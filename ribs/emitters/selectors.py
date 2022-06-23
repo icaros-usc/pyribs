@@ -23,16 +23,18 @@ __all__ = [
     "SelectorBase",
 ]
 
+_args = DocstringComponents(core_args)
+
 _select_args = f"""
 Args:
-{core_args.emitter}
-{core_args.archive}
-{core_args.solutions}
-{core_args.objective_values}
-{core_args.behavior_values}
-{core_args.metadata}
-{core_args.add_statuses}
-{core_args.add_values}
+{_args.emitter}
+{_args.archive}
+{_args.solution_batch}
+{_args.objective_batch}
+{_args.measures_batch}
+{_args.metadata}
+{_args.add_statuses}
+{_args.add_values}
 
 Returns:
     The number of top-performing solutions to select as parents.
@@ -40,8 +42,8 @@ Returns:
 
 _reset_args = f"""
 Args:
-{core_args.emitter}
-{core_args.archive}
+{_args.emitter}
+{_args.archive}
 """
 
 
@@ -57,8 +59,8 @@ class SelectorBase(ABC):
     # pylint: disable=missing-function-docstring
 
     @abstractmethod
-    def select(self, emitter, archive, solutions, objective_values,
-               behavior_values, metadata, add_statuses, add_values):
+    def select(self, emitter, archive, rng, solution_batch, objective_batch,
+               measures_batch, metadata, add_statuses, add_values):
         pass
 
     select.__doc__ = f"""
@@ -67,7 +69,7 @@ Selects the number of parents that will be used for the evolution strategy.
 {_select_args}
     """
 
-    def reset(self, emitter, archive):
+    def reset(self, emitter, archive, rng):
         pass
 
     reset.__doc__ = f"""
@@ -84,8 +86,8 @@ class MuSelector(SelectorBase):
     as parents.
     """
 
-    def select(self, emitter, archive, solutions, objective_values,
-               behavior_values, metadata, add_statuses, add_values):
+    def select(self, emitter, archive, rng, solution_batch, objective_batch,
+               measures_batch, metadata, add_statuses, add_values):
         return emitter.batch_size // 2
 
     select.__doc__ = f"""
@@ -102,12 +104,12 @@ class FilterSelector(SelectorBase):
     as parents.
     """
 
-    def select(self, emitter, archive, solutions, objective_values,
-               behavior_values, metadata, add_statuses, add_values):
+    def select(self, emitter, archive, rng, solution_batch, objective_batch,
+               measures_batch, metadata, add_statuses, add_values):
         return add_statuses.astype(bool).sum()
 
     select.__doc__ = f"""
-Selects all the added solutions and the improved solutions.
+Selects all the added and improved solutions.
 
 {_select_args}
     """

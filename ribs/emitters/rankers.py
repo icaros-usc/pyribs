@@ -76,14 +76,13 @@ class RankerBase(ABC):
 
     Child classes are only required to override :meth:`rank`.
     """
+    # pylint: disable=missing-function-docstring
 
     @abstractmethod
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
-        # pylint: disable=missing-function-docstring
         pass
 
-    # Generates the docstring for rank
     rank.__doc__ = f"""
 Generates a batch of indices that represents an ordering of ``solution_batch``.
 
@@ -91,7 +90,6 @@ Generates a batch of indices that represents an ordering of ``solution_batch``.
     """
 
     def reset(self, emitter, archive, rng):
-        # pylint: disable=missing-function-docstring
         pass
 
     reset.__doc__ = f"""
@@ -181,7 +179,6 @@ Ranks the soutions based on projection onto a direction in measure space.
         unscaled_dir = rng.standard_normal(measure_dim)
         self._target_measure_dir = unscaled_dir * ranges
 
-    # Generates the docstring for reset
     reset.__doc__ = f"""
 Generates a random direction in the archive space.
 
