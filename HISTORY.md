@@ -6,6 +6,8 @@
 
 #### API
 
+- Add selectors (FilterSelector and MuSelector), which determines how many
+  solutions to use as evolution parents (#217)
 - Add elites_with_measures_single method for getting elite for a single
   solution's measures (#215)
 - Introduced the Ranker object, which is responsible for ranking the solutions
