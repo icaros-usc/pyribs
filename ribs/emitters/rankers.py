@@ -78,8 +78,8 @@ class RankerBase(ABC):
     """
 
     @abstractmethod
-    def rank(self, emitter, archive, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values, rng):
+    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
+             measures_batch, metadata, add_statuses, add_values):
         # pylint: disable=missing-function-docstring
         pass
 
@@ -119,8 +119,8 @@ class TwoStageImprovementRanker(RankerBase):
     :meth:`ArchiveBase.add`.
     """
 
-    def rank(self, emitter, archive, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values, rng):
+    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
+             measures_batch, metadata, add_statuses, add_values):
         # New solutions sort ahead of improved ones, which sort ahead of ones
         # that were not added. Note that lexsort sorts the values in ascending
         # order, so we use np.flip to reverse the sorted array.
@@ -161,8 +161,8 @@ class RandomDirectionRanker(RankerBase):
     def target_measure_dir(self, value):
         self._target_measure_dir = value
 
-    def rank(self, emitter, archive, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values, rng):
+    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
+             measures_batch, metadata, add_statuses, add_values):
         if not self.target_measure_dir:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
@@ -217,8 +217,8 @@ class TwoStageRandomDirectionRanker(RankerBase):
     def target_measure_dir(self, value):
         self._target_measure_dir = value
 
-    def rank(self, emitter, archive, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values, rng):
+    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
+             measures_batch, metadata, add_statuses, add_values):
         if not self.target_measure_dir:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
@@ -250,8 +250,8 @@ class ObjectiveRanker(RankerBase):
     the optimizing emitter.
     """
 
-    def rank(self, emitter, archive, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values, rng):
+    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
+             measures_batch, metadata, add_statuses, add_values):
         # Sort only by objective value.
         return np.flip(np.argsort(objective_batch))
 
@@ -270,8 +270,8 @@ class TwoStageObjectiveRanker(RankerBase):
     <https://arxiv.org/abs/1912.02400>`_ as OptimizingEmitter.
     """
 
-    def rank(self, emitter, archive, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values, rng):
+    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
+             measures_batch, metadata, add_statuses, add_values):
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.
         return np.flip(np.lexsort((objective_batch, add_statuses)))
