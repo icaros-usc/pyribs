@@ -15,6 +15,8 @@ the internal state of the object.
 """
 from abc import ABC, abstractmethod
 
+import numpy as np
+
 from ribs._docstrings import DocstringComponents, core_args
 
 __all__ = [
@@ -106,7 +108,7 @@ class FilterSelector(SelectorBase):
 
     def select(self, emitter, archive, rng, solution_batch, objective_batch,
                measures_batch, metadata, add_statuses, add_values):
-        return add_statuses.astype(bool).sum()
+        return np.array(add_statuses).astype(bool).sum()
 
     select.__doc__ = f"""
 Selects all the added and improved solutions.
