@@ -6,6 +6,9 @@
 
 #### API
 
+
+- Introduced the Ranker object, which is responsible for ranking the solutions
+  based on different objectives (#209)
 - Add index_of_single method for getting index of measures for one solution
   (#214)
 - **Backwards-incompatible:** Replace elite_with_behavior with batched
