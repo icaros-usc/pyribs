@@ -80,10 +80,11 @@ class EvolutionStrategyEmitter(EmitterBase):
                                         self.archive.dtype)
         self.opt.reset(self._x0)
 
-        self._ranker = get_ranker(ranker)
-        self._ranker.reset(self, archive)
+        self._ranker = ranker if isinstance(ranker,
+                                            RankerBase) else get_ranker(ranker)
+        self._ranker.reset(self, archive, self._rng)
 
-        self._batch_size = batch_size
+        self._batch_size = self.opt.batch_size
         self._restarts = 0  # Currently not exposed publicly.
 
     @property
@@ -144,6 +145,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         metadata = itertools.repeat(None) if metadata is None else metadata
 
         # Add solutions to the archive.
+        new_sols = 0
         for (sol, obj, beh, meta) in zip(solutions, objective_values,
                                          behavior_values, metadata):
             status, value = self.archive.add(sol, obj, beh, meta)
@@ -153,7 +155,7 @@ class EvolutionStrategyEmitter(EmitterBase):
                 new_sols += 1
 
         # Sort the solutions using ranker
-        indices = self._ranker.rank(self, self.archive, solutions,
+        indices = self._ranker.rank(self, self.archive, self._rng, solutions,
                                     objective_values, behavior_values, metadata,
                                     add_statues, add_values)
 
@@ -169,5 +171,5 @@ class EvolutionStrategyEmitter(EmitterBase):
                 self._check_restart(new_sols)):
             new_x0 = self.archive.sample_elites(1).solution_batch[0]
             self.opt.reset(new_x0)
-            self._ranker.reset(self, self.archive)
+            self._ranker.reset(self, self.archive, self._rng)
             self._restarts += 1
