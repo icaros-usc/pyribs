@@ -194,13 +194,32 @@ def test_elites_with_measures_gets_correct_elite(data):
     assert elite_batch.metadata_batch[0] == data.metadata
 
 
-def test_elite_with_behavior_returns_none(data):
+def test_elites_with_measures_empty_values(data):
     elite_batch = data.archive.elites_with_measures([data.behavior_values])
     assert np.all(np.isnan(elite_batch.solution_batch[0]))
     assert np.isnan(elite_batch.objective_batch)
     assert np.all(np.isnan(elite_batch.measures_batch[0]))
     assert elite_batch.index_batch[0] == -1
     assert elite_batch.metadata_batch[0] is None
+
+
+def test_elites_with_measures_single_gets_correct_elite(data):
+    elite = data.archive_with_elite.elites_with_measures_single(
+        data.behavior_values)
+    assert np.all(elite.solution == data.solution)
+    assert elite.objective == data.objective_value
+    assert np.all(elite.measures == data.behavior_values)
+    # Avoid checking elite.idx since the meaning varies by archive.
+    assert elite.metadata == data.metadata
+
+
+def test_elites_with_measures_single_empty_values(data):
+    elite = data.archive.elites_with_measures_single(data.behavior_values)
+    assert np.all(np.isnan(elite.solution))
+    assert np.isnan(elite.objective)
+    assert np.all(np.isnan(elite.measures))
+    assert elite.index == -1
+    assert elite.metadata is None
 
 
 def test_sample_elites_gets_single_elite(data):
