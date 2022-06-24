@@ -125,7 +125,17 @@ def test_grid_to_int_index(data):
                                            ])[0] == data.int_index)
 
 
+def test_grid_to_int_index_wrong_shape(data):
+    with pytest.raises(ValueError):
+        data.archive.grid_to_int_index([data.grid_indices[:-1]])
+
+
 def test_int_to_grid_index(data):
     assert np.all(
         data.archive.int_to_grid_index([data.int_index])[0] ==
         data.grid_indices)
+
+
+def test_int_to_grid_index_wrong_shape(data):
+    with pytest.raises(ValueError):
+        data.archive.int_to_grid_index(data.int_index)
