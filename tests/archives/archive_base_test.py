@@ -290,3 +290,28 @@ def test_as_pandas(name, with_elite, include_solutions, include_metadata,
         if include_metadata:
             expected_data.append(data.metadata)
         assert (df.loc[0, "behavior_0":] == expected_data).all()
+
+
+#
+# Check that incorrect input shapes are detected by these methods.
+#
+
+
+def test_elites_with_measures_wrong_shape(data):
+    with pytest.raises(ValueError):
+        data.archive.elites_with_measures([data.behavior_values[:-1]])
+
+
+def test_elites_with_measures_single_wrong_shape(data):
+    with pytest.raises(ValueError):
+        data.archive.elites_with_measures_single(data.behavior_values[:-1])
+
+
+def test_index_of_wrong_shape(data):
+    with pytest.raises(ValueError):
+        data.archive.index_of([data.behavior_values[:-1]])
+
+
+def test_index_of_single_wrong_shape(data):
+    with pytest.raises(ValueError):
+        data.archive.elites_with_measures_single(data.behavior_values[:-1])
