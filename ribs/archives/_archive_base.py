@@ -303,6 +303,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's
             storage arrays.
+        Raises:
+            ValueError: ``measures`` is not of shape (:attr:`behavior_dim`,).
         """
         measures = np.asarray(measures)
         check_measures_shape(measures, self.behavior_dim)
@@ -455,6 +457,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 array of coordinates in measure space.
         Returns:
             EliteBatch: See above.
+        Raises:
+            ValueError: ``measures_batch`` is not of shape (batch_size,
+                :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
         check_measures_batch_shape(measures_batch, self.behavior_dim)
@@ -520,6 +525,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             the fields hold the info of that elite. Otherwise, this method
             returns an :namedtuple:`Elite` filled with the same "empty" values
             described in :meth:`elites_with_measures`.
+        Raises:
+            ValueError: ``measures`` is not of shape (:attr:`behavior_dim`,).
         """
         measures = np.asarray(measures)
         check_measures_shape(measures, self.behavior_dim)

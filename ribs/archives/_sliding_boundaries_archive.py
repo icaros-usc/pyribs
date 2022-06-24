@@ -283,6 +283,9 @@ class SlidingBoundariesArchive(ArchiveBase):
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
             the flattened grid coordinates.
+        Raises:
+            ValueError: ``measures_batch`` is not of shape (batch_size,
+                :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
         check_measures_batch_shape(measures_batch, self.behavior_dim)
