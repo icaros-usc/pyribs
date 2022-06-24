@@ -4,6 +4,7 @@ from numba import jit
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from sklearn.cluster import k_means
 
+from ribs._utils import check_measures_batch_shape
 from ribs.archives._archive_base import ArchiveBase
 
 
@@ -238,8 +239,12 @@ class CVTArchive(ArchiveBase):
         Returns:
             numpy.ndarray: (batch_size,) array of centroid indices
             corresponding to each measure space coordinate.
+        Raises:
+            ValueError: ``measures_batch`` is not of shape (batch_size,
+                :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
+        check_measures_batch_shape(measures_batch, self.behavior_dim)
 
         if self._use_kd_tree:
             return np.asarray(

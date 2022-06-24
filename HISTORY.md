@@ -6,6 +6,7 @@
 
 #### API
 
+- Raise ValueError for incorrect array shapes in archive methods (#219)
 - Add elites_with_measures_single method for getting elite for a single
   solution's measures (#215)
 - Introduced the Ranker object, which is responsible for ranking the solutions
