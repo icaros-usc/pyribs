@@ -44,13 +44,13 @@ Args:
         object belongs to.
     archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
         when creating and inserting solutions.
+    rng (numpy.random.Generator): A random number generator.
 {_args.solution_batch}
 {_args.objective_batch}
 {_args.measures_batch}
 {_args.metadata}
 {_args.add_statuses}
 {_args.add_values}
-    rng (numpy.random.Generator): A random number generator.
 
 Returns:
     Indices representing a ranking of the solutions

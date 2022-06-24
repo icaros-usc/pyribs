@@ -211,11 +211,6 @@ def create_optimizer(algorithm, dim, seed):
                                      batch_size=batch_size,
                                      restart_rule="basic",
                                      seed=s) for s in emitter_seeds
-            # OptimizingEmitter(archive,
-            #                   initial_sol,
-            #                   0.5,
-            #                   batch_size=batch_size,
-            #                   seed=s) for s in emitter_seeds
         ]
     elif algorithm == "cma_me_mixed":
         emitters = [
