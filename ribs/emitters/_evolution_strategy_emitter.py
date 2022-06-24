@@ -161,7 +161,7 @@ class EvolutionStrategyEmitter(EmitterBase):
 
         # Select the number of parents
         num_parents = (new_sols if self._selection_rule == "filter" else
-                       self.batch_size // 2)
+                       self._batch_size // 2)
 
         # Update Evolution Strategy
         self.opt.tell(solutions[indices], num_parents)

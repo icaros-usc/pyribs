@@ -163,7 +163,7 @@ class RandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
-        if self.target_measure_dir is None:
+        if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
         # Sort only by projection; use np.flip to reverse the order
@@ -219,12 +219,12 @@ class TwoStageRandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
-        if self.target_measure_dir is None:
+        if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
         # Sort by whether the solution was added into the archive,
         # followed by projection.
-        return np.flip(np.lexsort((add_statuses, projections)))
+        return np.flip(np.lexsort((projections, add_statuses)))
 
     rank.__doc__ = f"""
 Ranks the soutions first by whether they are added, then by their projection on
