@@ -204,6 +204,7 @@ def create_optimizer(algorithm, dim, seed):
         else:
             selection_rule = "mu"
             ranker = get_ranker("obj")
+            print(ranker)
         emitters = [
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
