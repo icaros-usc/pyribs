@@ -120,13 +120,24 @@ def test_stats_add_and_overwrite():
 
 
 #
-# index_of_single() tests -- on GridArchive only.
+# index_of() and index_of_single() tests
 #
 
 
+def test_index_of_wrong_shape(data):
+    with pytest.raises(ValueError):
+        data.archive.index_of([data.behavior_values[:-1]])
+
+
+# Only test on GridArchive.
 def test_index_of_single():
     data = get_archive_data("GridArchive")
     assert data.archive.index_of_single(data.behavior_values) == data.int_index
+
+
+def test_index_of_single_wrong_shape(data):
+    with pytest.raises(ValueError):
+        data.archive.elites_with_measures_single(data.behavior_values[:-1])
 
 
 #
@@ -203,6 +214,11 @@ def test_elites_with_measures_empty_values(data):
     assert elite_batch.metadata_batch[0] is None
 
 
+def test_elites_with_measures_wrong_shape(data):
+    with pytest.raises(ValueError):
+        data.archive.elites_with_measures([data.behavior_values[:-1]])
+
+
 def test_elites_with_measures_single_gets_correct_elite(data):
     elite = data.archive_with_elite.elites_with_measures_single(
         data.behavior_values)
@@ -220,6 +236,11 @@ def test_elites_with_measures_single_empty_values(data):
     assert np.all(np.isnan(elite.measures))
     assert elite.index == -1
     assert elite.metadata is None
+
+
+def test_elites_with_measures_single_wrong_shape(data):
+    with pytest.raises(ValueError):
+        data.archive.elites_with_measures_single(data.behavior_values[:-1])
 
 
 def test_sample_elites_gets_single_elite(data):
@@ -290,28 +311,3 @@ def test_as_pandas(name, with_elite, include_solutions, include_metadata,
         if include_metadata:
             expected_data.append(data.metadata)
         assert (df.loc[0, "behavior_0":] == expected_data).all()
-
-
-#
-# Check that incorrect input shapes are detected by these methods.
-#
-
-
-def test_elites_with_measures_wrong_shape(data):
-    with pytest.raises(ValueError):
-        data.archive.elites_with_measures([data.behavior_values[:-1]])
-
-
-def test_elites_with_measures_single_wrong_shape(data):
-    with pytest.raises(ValueError):
-        data.archive.elites_with_measures_single(data.behavior_values[:-1])
-
-
-def test_index_of_wrong_shape(data):
-    with pytest.raises(ValueError):
-        data.archive.index_of([data.behavior_values[:-1]])
-
-
-def test_index_of_single_wrong_shape(data):
-    with pytest.raises(ValueError):
-        data.archive.elites_with_measures_single(data.behavior_values[:-1])
