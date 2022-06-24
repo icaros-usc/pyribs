@@ -69,7 +69,6 @@ from alive_progress import alive_bar
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
                            IsoLineEmitter, OptimizingEmitter)
-from ribs.emitters.rankers import get_ranker
 from ribs.optimizers import Optimizer
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
@@ -168,15 +167,15 @@ def create_optimizer(algorithm, dim, seed):
     elif algorithm in ["cma_me_imp", "cma_me_imp_mu"]:
         if algorithm == "cma_me_imp":
             selection_rule = "filter"
-            ranker = get_ranker("2imp")
+            ranker_str = "2imp"
         else:
             selection_rule = "mu"
-            ranker = get_ranker("imp")
+            ranker_str = "imp"
         emitters = [
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
                                      0.5,
-                                     ranker,
+                                     ranker_str,
                                      batch_size=batch_size,
                                      selection_rule=selection_rule,
                                      seed=s) for s in emitter_seeds
@@ -184,15 +183,15 @@ def create_optimizer(algorithm, dim, seed):
     elif algorithm in ["cma_me_rd", "cma_me_rd_mu"]:
         if algorithm == "cma_me_rd":
             selection_rule = "filter"
-            ranker = get_ranker("2rd")
+            ranker_str = "2rd"
         else:
             selection_rule = "mu"
-            ranker = get_ranker("rd")
+            ranker_str = "rd"
         emitters = [
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
                                      0.5,
-                                     ranker,
+                                     ranker_str,
                                      batch_size=batch_size,
                                      selection_rule=selection_rule,
                                      seed=s) for s in emitter_seeds
@@ -200,16 +199,15 @@ def create_optimizer(algorithm, dim, seed):
     elif algorithm in ["cma_me_opt", "cma_me_opt_mu"]:
         if algorithm == "cma_me_opt":
             selection_rule = "filter"
-            ranker = get_ranker("2obj")
+            ranker_str = "2obj"
         else:
             selection_rule = "mu"
-            ranker = get_ranker("obj")
-            print(ranker)
+            ranker_str = "obj"
         emitters = [
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
                                      0.5,
-                                     ranker,
+                                     ranker_str,
                                      batch_size=batch_size,
                                      seed=s) for s in emitter_seeds
             # OptimizingEmitter(archive,
@@ -223,14 +221,14 @@ def create_optimizer(algorithm, dim, seed):
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
                                      0.5,
-                                     get_ranker("2rd"),
+                                     "2rd",
                                      batch_size=batch_size,
                                      seed=s) for s in emitter_seeds[:7]
         ] + [
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
                                      0.5,
-                                     get_ranker("2imp"),
+                                     "2imp",
                                      batch_size=batch_size,
                                      seed=s) for s in emitter_seeds[7:]
         ]
