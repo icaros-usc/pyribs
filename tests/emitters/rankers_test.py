@@ -4,10 +4,10 @@ import numpy as np
 
 from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
-from ribs.emitters.rankers import (TwoStageImprovementRanker,
-                                   RandomDirectionRanker,
-                                   TwoStageRandomDirectionRanker,
-                                   ObjectiveRanker, TwoStageObjectiveRanker)
+from ribs.emitters.rankers import (ObjectiveRanker, RandomDirectionRanker,
+                                   TwoStageImprovementRanker,
+                                   TwoStageObjectiveRanker,
+                                   TwoStageRandomDirectionRanker)
 
 
 def test_two_stage_improvement_ranker(archive_fixture):
@@ -18,7 +18,7 @@ def test_two_stage_improvement_ranker(archive_fixture):
     # objective_values and behavior_values.
     solutions = emitter.ask()
     objective_values = [0, 1, 3, 6]
-    behavior_values = [[0], [0], [0], [0]]
+    behavior_values = [[0, 0], [0, 0], [0, 0], [0, 0]]
     metadata = []
     statuses = []
     values = []
@@ -108,7 +108,7 @@ def test_objective_ranker(archive_fixture):
 
     solutions = emitter.ask()
     objective_values = [0, 3, 2, 1]
-    behavior_values = [[0], [0], [1], [1]]
+    behavior_values = [[0, 0], [0, 0], [1, 1], [1, 1]]
     metadata = []
     statuses = []
     values = []
@@ -131,12 +131,7 @@ def test_two_stage_objective_ranker(archive_fixture):
 
     solutions = emitter.ask()
     objective_values = [0, 3, 1, 2]
-    behavior_values = [
-        [0],
-        [0],
-        [1],
-        [1],
-    ]
+    behavior_values = [[0, 0], [0, 0], [1, 1], [1, 1]]
     metadata = []
     statuses = []
     values = []
