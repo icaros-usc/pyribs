@@ -167,15 +167,15 @@ def create_optimizer(algorithm, dim, seed):
     elif algorithm in ["cma_me_imp", "cma_me_imp_mu"]:
         if algorithm == "cma_me_imp":
             selection_rule = "filter"
-            ranker_str = "2imp"
+            ranker = "2imp"
         else:
             selection_rule = "mu"
-            ranker_str = "imp"
+            ranker = "imp"
         emitters = [
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
                                      0.5,
-                                     ranker_str,
+                                     ranker,
                                      batch_size=batch_size,
                                      selection_rule=selection_rule,
                                      seed=s) for s in emitter_seeds
@@ -183,15 +183,15 @@ def create_optimizer(algorithm, dim, seed):
     elif algorithm in ["cma_me_rd", "cma_me_rd_mu"]:
         if algorithm == "cma_me_rd":
             selection_rule = "filter"
-            ranker_str = "2rd"
+            ranker = "2rd"
         else:
             selection_rule = "mu"
-            ranker_str = "rd"
+            ranker = "rd"
         emitters = [
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
                                      0.5,
-                                     ranker_str,
+                                     ranker,
                                      batch_size=batch_size,
                                      selection_rule=selection_rule,
                                      seed=s) for s in emitter_seeds
@@ -199,15 +199,15 @@ def create_optimizer(algorithm, dim, seed):
     elif algorithm in ["cma_me_opt", "cma_me_opt_mu"]:
         if algorithm == "cma_me_opt":
             selection_rule = "filter"
-            ranker_str = "2obj"
+            ranker = "2obj"
         else:
             selection_rule = "mu"
-            ranker_str = "obj"
+            ranker = "obj"
         emitters = [
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
                                      0.5,
-                                     ranker_str,
+                                     ranker,
                                      batch_size=batch_size,
                                      seed=s) for s in emitter_seeds
             # OptimizingEmitter(archive,
