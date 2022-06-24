@@ -5,6 +5,7 @@ from collections import OrderedDict
 import numba as nb
 import numpy as np
 
+from ribs._utils import check_measures_batch_shape, check_measures_shape
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
@@ -302,8 +303,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's
             storage arrays.
+        Raises:
+            ValueError: ``measures`` is not of shape (:attr:`behavior_dim`,).
         """
-        return self.index_of(np.asarray(measures)[None])[0]
+        measures = np.asarray(measures)
+        check_measures_shape(measures, self.behavior_dim)
+        return self.index_of(measures[None])[0]
 
     @staticmethod
     @nb.jit(locals={"already_occupied": nb.types.b1}, nopython=True)
@@ -452,8 +457,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 array of coordinates in measure space.
         Returns:
             EliteBatch: See above.
+        Raises:
+            ValueError: ``measures_batch`` is not of shape (batch_size,
+                :attr:`behavior_dim`).
         """
-        index_batch = self.index_of(np.asarray(measures_batch))
+        measures_batch = np.asarray(measures_batch)
+        check_measures_batch_shape(measures_batch, self.behavior_dim)
+
+        index_batch = self.index_of(measures_batch)
         occupied_batch = self._occupied[index_batch]
         expanded_occupied_batch = occupied_batch[:, None]
 
@@ -514,8 +525,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             the fields hold the info of that elite. Otherwise, this method
             returns an :namedtuple:`Elite` filled with the same "empty" values
             described in :meth:`elites_with_measures`.
+        Raises:
+            ValueError: ``measures`` is not of shape (:attr:`behavior_dim`,).
         """
-        elite_batch = self.elites_with_measures([measures])
+        measures = np.asarray(measures)
+        check_measures_shape(measures, self.behavior_dim)
+
+        elite_batch = self.elites_with_measures(measures[None])
         return Elite(
             elite_batch.solution_batch[0],
             elite_batch.objective_batch[0],

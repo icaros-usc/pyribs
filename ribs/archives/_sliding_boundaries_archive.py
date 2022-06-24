@@ -6,6 +6,7 @@ import numba as nb
 import numpy as np
 from sortedcontainers import SortedList
 
+from ribs._utils import check_measures_batch_shape
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._grid_archive import GridArchive
 
@@ -282,9 +283,15 @@ class SlidingBoundariesArchive(ArchiveBase):
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
             the flattened grid coordinates.
+        Raises:
+            ValueError: ``measures_batch`` is not of shape (batch_size,
+                :attr:`behavior_dim`).
         """
+        measures_batch = np.asarray(measures_batch)
+        check_measures_batch_shape(measures_batch, self.behavior_dim)
+
         index_cols = SlidingBoundariesArchive._index_of_numba(
-            np.asarray(measures_batch),
+            measures_batch,
             self.upper_bounds,
             self.lower_bounds,
             self._boundaries,
