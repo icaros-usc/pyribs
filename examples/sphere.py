@@ -68,7 +68,7 @@ from alive_progress import alive_bar
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           IsoLineEmitter, OptimizingEmitter)
+                           IsoLineEmitter)
 from ribs.optimizers import Optimizer
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
