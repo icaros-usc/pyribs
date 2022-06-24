@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 import numba as nb
 import numpy as np
-
+from ribs._utils import check_measures_batch_shape
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
@@ -453,7 +453,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         Returns:
             EliteBatch: See above.
         """
-        index_batch = self.index_of(np.asarray(measures_batch))
+        measures_batch = np.asarray(measures_batch)
+        check_measures_batch_shape(measures_batch, self.behavior_dim)
+
+        index_batch = self.index_of(measures_batch)
         occupied_batch = self._occupied[index_batch]
         expanded_occupied_batch = occupied_batch[:, None]
 
