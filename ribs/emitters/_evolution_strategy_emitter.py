@@ -139,7 +139,7 @@ class EvolutionStrategyEmitter(EmitterBase):
             metadata (numpy.ndarray): 1D object array containing a metadata
                 object for each solution.
         """
-        add_statues = []
+        add_statuses = []
         add_values = []
 
         metadata = itertools.repeat(None) if metadata is None else metadata
@@ -149,7 +149,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         for (sol, obj, beh, meta) in zip(solutions, objective_values,
                                          behavior_values, metadata):
             status, value = self.archive.add(sol, obj, beh, meta)
-            add_statues.append(status)
+            add_statuses.append(status)
             add_values.append(value)
             if bool(status):
                 new_sols += 1
@@ -157,7 +157,8 @@ class EvolutionStrategyEmitter(EmitterBase):
         # Sort the solutions using ranker
         indices = self._ranker.rank(self, self.archive, self._rng, solutions,
                                     objective_values, behavior_values, metadata,
-                                    np.array(add_statues), np.array(add_values))
+                                    np.array(add_statuses),
+                                    np.array(add_values))
 
         # Select the number of parents
         num_parents = (new_sols if self._selection_rule == "filter" else

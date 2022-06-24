@@ -209,6 +209,7 @@ def create_optimizer(algorithm, dim, seed):
                                      0.5,
                                      ranker,
                                      batch_size=batch_size,
+                                     restart_rule="basic",
                                      seed=s) for s in emitter_seeds
             # OptimizingEmitter(archive,
             #                   initial_sol,
