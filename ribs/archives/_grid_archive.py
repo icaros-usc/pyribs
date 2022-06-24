@@ -2,6 +2,7 @@
 import numpy as np
 from numba import jit
 
+from ribs._utils import check_measures_batch_shape
 from ribs.archives._archive_base import ArchiveBase
 
 _EPSILON = 1e-6
@@ -161,9 +162,12 @@ class GridArchive(ArchiveBase):
             numpy.ndarray: (batch_size,) array of integer indices representing
             the flattened grid coordinates.
         """
+        measures_batch = np.asarray(measures_batch)
+        check_measures_batch_shape(measures_batch, self.behavior_dim)
+
         return self.grid_to_int_index(
             self._index_of_numba(
-                np.asarray(measures_batch),
+                measures_batch,
                 self._upper_bounds,
                 self._lower_bounds,
                 self._interval_size,

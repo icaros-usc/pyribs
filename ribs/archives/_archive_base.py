@@ -4,7 +4,8 @@ from collections import OrderedDict
 
 import numba as nb
 import numpy as np
-from ribs._utils import check_measures_batch_shape
+
+from ribs._utils import check_measures_batch_shape, check_measures_shape
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
@@ -303,7 +304,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             int or numpy.integer: Integer index of the measures in the archive's
             storage arrays.
         """
-        return self.index_of(np.asarray(measures)[None])[0]
+        measures = np.asarray(measures)
+        check_measures_shape(measures, self.behavior_dim)
+        return self.index_of(measures[None])[0]
 
     @staticmethod
     @nb.jit(locals={"already_occupied": nb.types.b1}, nopython=True)
@@ -518,7 +521,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             returns an :namedtuple:`Elite` filled with the same "empty" values
             described in :meth:`elites_with_measures`.
         """
-        elite_batch = self.elites_with_measures([measures])
+        measures = np.asarray(measures)
+        check_measures_shape(measures, self.behavior_dim)
+
+        elite_batch = self.elites_with_measures(measures[None])
         return Elite(
             elite_batch.solution_batch[0],
             elite_batch.objective_batch[0],
