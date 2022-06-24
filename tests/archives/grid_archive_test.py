@@ -23,7 +23,7 @@ def assert_archive_elite(archive, solution, objective, measures, grid_indices,
     assert np.isclose(elite.solution, solution).all()
     assert np.isclose(elite.objective, objective).all()
     assert np.isclose(elite.measures, measures).all()
-    assert elite.index == archive.grid_to_int_index(grid_indices)
+    assert elite.index == archive.grid_to_int_index([grid_indices])
     assert elite.metadata == metadata
 
 
