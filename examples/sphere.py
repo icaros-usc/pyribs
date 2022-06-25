@@ -143,8 +143,7 @@ def create_optimizer(algorithm, dim, seed):
         raise ValueError(f"Algorithm `{algorithm}` is not recognized")
 
     # Create emitters. Each emitter needs a different seed, so that they do not
-    # all do the same thing. Note that we already checked whether the algorithm
-    # is valid.
+    # all do the same thing.
     emitter_seeds = [None] * num_emitters if seed is None else np.arange(
         seed, seed + num_emitters)
     if algorithm in ["map_elites", "cvt_map_elites"]:
