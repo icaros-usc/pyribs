@@ -144,87 +144,70 @@ def create_optimizer(algorithm, dim, seed):
         raise ValueError(f"Algorithm `{algorithm}` is not recognized")
 
     # Create emitters. Each emitter needs a different seed, so that they do not
-    # all do the same thing.
-    emitter_seeds = [None] * num_emitters if seed is None else list(
-        range(seed, seed + num_emitters))
+    # all do the same thing. Note that we already checked whether the algorithm
+    # is valid.
+    emitter_seeds = [None] * num_emitters if seed is None else np.arange(
+        seed, seed + num_emitters)
     if algorithm in ["map_elites", "cvt_map_elites"]:
         emitters = [
-            GaussianEmitter(archive,
-                            initial_sol,
-                            0.5,
-                            batch_size=batch_size,
-                            seed=s) for s in emitter_seeds
+            GaussianEmitter(
+                archive,
+                initial_sol,
+                0.5,
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds
         ]
     elif algorithm in ["line_map_elites", "line_cvt_map_elites"]:
         emitters = [
-            IsoLineEmitter(archive,
-                           initial_sol,
-                           iso_sigma=0.1,
-                           line_sigma=0.2,
-                           batch_size=batch_size,
-                           seed=s) for s in emitter_seeds
-        ]
-    elif algorithm in ["cma_me_imp", "cma_me_imp_mu"]:
-        if algorithm == "cma_me_imp":
-            selection_rule = "filter"
-            ranker = "2imp"
-        else:
-            selection_rule = "mu"
-            ranker = "2imp"
-        emitters = [
-            EvolutionStrategyEmitter(archive,
-                                     initial_sol,
-                                     0.5,
-                                     ranker,
-                                     batch_size=batch_size,
-                                     selection_rule=selection_rule,
-                                     seed=s) for s in emitter_seeds
-        ]
-    elif algorithm in ["cma_me_rd", "cma_me_rd_mu"]:
-        if algorithm == "cma_me_rd":
-            selection_rule = "filter"
-            ranker = "2rd"
-        else:
-            selection_rule = "mu"
-            ranker = "rd"
-        emitters = [
-            EvolutionStrategyEmitter(archive,
-                                     initial_sol,
-                                     0.5,
-                                     ranker,
-                                     batch_size=batch_size,
-                                     selection_rule=selection_rule,
-                                     seed=s) for s in emitter_seeds
-        ]
-    elif algorithm in ["cma_me_opt", "cma_me_opt_mu"]:
-        if algorithm == "cma_me_opt":
-            selection_rule = "filter"
-            ranker = "2obj"
-        else:
-            selection_rule = "mu"
-            ranker = "obj"
-        emitters = [
-            EvolutionStrategyEmitter(archive,
-                                     initial_sol,
-                                     0.5,
-                                     ranker,
-                                     batch_size=batch_size,
-                                     restart_rule="basic",
-                                     selection_rule=selection_rule,
-                                     seed=s) for s in emitter_seeds
+            IsoLineEmitter(
+                archive,
+                initial_sol,
+                iso_sigma=0.1,
+                line_sigma=0.2,
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds
         ]
     elif algorithm == "cma_me_mixed":
         emitters = [
             EvolutionStrategyEmitter(
-                archive, initial_sol, 0.5, "2rd", batch_size=batch_size, seed=s)
-            for s in emitter_seeds[:7]
+                archive,
+                initial_sol,
+                0.5,
+                "2rd",
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds[:7]
         ] + [
-            EvolutionStrategyEmitter(archive,
-                                     initial_sol,
-                                     0.5,
-                                     "2imp",
-                                     batch_size=batch_size,
-                                     seed=s) for s in emitter_seeds[7:]
+            EvolutionStrategyEmitter(
+                archive,
+                initial_sol,
+                0.5,
+                "2imp",
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds[7:]
+        ]
+    elif algorithm.startswith("cma_me_"):
+        ranker, selection_rule, restart_rule = {
+            "cma_me_imp": ("2imp", "filter", "no_improvement"),
+            "cma_me_imp_mu": ("2imp", "mu", "no_improvement"),
+            "cma_me_rd": ("2rd", "filter", "no_improvement"),
+            "cma_me_rd_mu": ("2rd", "mu", "no_improvement"),
+            "cma_me_opt": ("opt", "mu", "basic"),
+        }[algorithm]
+        emitters = [
+            EvolutionStrategyEmitter(
+                archive=archive,
+                x0=initial_sol,
+                sigma0=0.5,
+                ranker=ranker,
+                selection_rule=selection_rule,
+                restart_rule=restart_rule,
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds
         ]
 
     return Optimizer(archive, emitters)
