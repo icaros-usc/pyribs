@@ -303,8 +303,8 @@ def get_ranker(name):
     """Constructs and returns a ranker object based on its string name.
 
     ``name`` may be the full name of a ranker, e.g. "ImprovementRanker" or
-    "RandomDirectionRanker". Alternatively, it can be the abbreviated name for a
-    ranker -- the supported abbreviations are:
+    "RandomDirectionRanker". Alternatively, it can be the abbreviated name 
+    for a ranker -- the supported abbreviations are:
 
     * ``imp``: :class:`ImprovementRanker`
     * ``2imp``: :class:`TwoStageImprovementRanker`
@@ -316,8 +316,8 @@ def get_ranker(name):
     Args:
         name (str): Full or abbreviated name of the ranker.
     Returns:
-        A ranker object.
+        The corresponding ranker class.
     """
     if name in _NAME_TO_RANKER_MAP:
-        return _NAME_TO_RANKER_MAP[name]()
+        return _NAME_TO_RANKER_MAP[name]
     raise ValueError(f"Could not find ranker with name {name}")

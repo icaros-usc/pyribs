@@ -21,12 +21,17 @@ class EvolutionStrategyEmitter(EmitterBase):
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
-        ranker (ribs.emitters.rankers.RankerBase or str): The Ranker object
-            defines how the generated solutions are ranked and what to do on
-            restart. If passing in the full or abbreviated name of the ranker,
-            the corresponding ranker will be created in the constructor.
-        evolution_strategy (EvolutionStrategy): The evolution strategy to use
-            :class:`ribs.emitter.opt.CMAEvolutionStrategy`
+        sigma0 (float): Initial step size.
+        selection_rule ("mu" or "filter"): Method for selecting solutions in
+            CMA-ES. With "mu" selection, the first half of the solutions will be
+            selected, while in "filter", any solutions that were added to the
+            archive will be selected.
+        ranker (Callable or str): A callable that will Rankers that defines how
+            solutions are ranked. This could be a lambda function that returns
+            a Ranker object, a class that inherits from :class:`RankerBase`,
+            etc. If passing in the full or abbreviated name of the ranker,
+            the corresponding ranker class will be parsed with
+            :meth:`ribs.emitters.rankers.get_ranker`.
         restart_rule ("no_improvement" or "basic"): Method to use when checking
             for restart. With "basic", only the default CMA-ES convergence rules
             will be used, while with "no_improvement", the emitter will restart
@@ -80,8 +85,17 @@ class EvolutionStrategyEmitter(EmitterBase):
                                         self.archive.dtype)
         self.opt.reset(self._x0)
 
-        self._ranker = ranker if isinstance(ranker,
-                                            RankerBase) else get_ranker(ranker)
+        # Handling ranker initiation
+        if isinstance(ranker, str):
+            # get_ranker returns a subclass of RankerBase
+            ranker = get_ranker(ranker)
+        if callable(ranker):
+            self._ranker = ranker()
+            if not isinstance(self._ranker, RankerBase):
+                raise ValueError("Callable " + ranker +
+                                 " did not return a instance of RankerBase.")
+        else:
+            raise ValueError(ranker + " is not one of [Callable, str]")
         self._ranker.reset(self, archive, self._rng)
 
         self._batch_size = self.opt.batch_size
