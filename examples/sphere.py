@@ -195,7 +195,7 @@ def create_optimizer(algorithm, dim, seed):
             "cma_me_imp_mu": ("2imp", "mu", "no_improvement"),
             "cma_me_rd": ("2rd", "filter", "no_improvement"),
             "cma_me_rd_mu": ("2rd", "mu", "no_improvement"),
-            "cma_me_opt": ("opt", "mu", "basic"),
+            "cma_me_opt": ("obj", "mu", "basic"),
         }[algorithm]
         emitters = [
             EvolutionStrategyEmitter(
