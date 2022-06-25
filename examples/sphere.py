@@ -170,7 +170,7 @@ def create_optimizer(algorithm, dim, seed):
             ranker = "2imp"
         else:
             selection_rule = "mu"
-            ranker = "imp"
+            ranker = "2imp"
         emitters = [
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
@@ -210,16 +210,14 @@ def create_optimizer(algorithm, dim, seed):
                                      ranker,
                                      batch_size=batch_size,
                                      restart_rule="basic",
+                                     selection_rule=selection_rule,
                                      seed=s) for s in emitter_seeds
         ]
     elif algorithm == "cma_me_mixed":
         emitters = [
-            EvolutionStrategyEmitter(archive,
-                                     initial_sol,
-                                     0.5,
-                                     "2rd",
-                                     batch_size=batch_size,
-                                     seed=s) for s in emitter_seeds[:7]
+            EvolutionStrategyEmitter(
+                archive, initial_sol, 0.5, "2rd", batch_size=batch_size, seed=s)
+            for s in emitter_seeds[:7]
         ] + [
             EvolutionStrategyEmitter(archive,
                                      initial_sol,
