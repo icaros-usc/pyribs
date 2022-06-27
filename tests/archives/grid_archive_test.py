@@ -120,6 +120,37 @@ def test_add_without_overwrite(data):
                          data.grid_indices, data.metadata)
 
 
+def test_add_batch_all_new(data):
+    add_statuses, add_values = data.archive.add_batch(
+        # 4 solutions of arbitrary value.
+        solution_batch=[[1, 2, 3]] * 4,
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective_batch=[0, 0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+    )
+    assert np.all(add_statuses == 2)
+    assert np.all(add_values == [0, 0, 0, 1])
+
+    # TODO: Test the archive properties e.g. stats and whether it has elites.
+
+
+def test_add_batch_none_inserted(data):
+    add_statuses, add_values = data.archive_with_elite.add_batch(
+        # 4 solutions of arbitrary value.
+        solution_batch=[[1, 2, 3]] * 4,
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective_batch=[data.objective_value - 1 for _ in range(4)],
+        measures_batch=[data.behavior_values for _ in range(4)],
+    )
+
+    # All solutions were inserted into the same cell as the elite already in the
+    # archive and had objective value 1 less.
+    assert np.all(add_statuses == 0)
+    assert np.all(add_values == [-1, -1, -1, -1])
+
+
 def test_grid_to_int_index(data):
     assert (data.archive.grid_to_int_index([data.grid_indices
                                            ])[0] == data.int_index)

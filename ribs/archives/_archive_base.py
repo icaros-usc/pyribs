@@ -386,33 +386,37 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                   previously in the archive
                 - ``NEW`` -> the objective value passed in
         """
-        self._state["add"] += 1
-        solution = np.asarray(solution)
-        behavior_values = np.asarray(behavior_values)
-        objective_value = self.dtype(objective_value)
+        #  self._state["add"] += 1
+        #  solution = np.asarray(solution)
+        #  behavior_values = np.asarray(behavior_values)
+        #  objective_value = self.dtype(objective_value)
 
-        index = self.index_of(behavior_values[None])[0]
-        old_objective = self._objective_values[index]
-        was_inserted, already_occupied = self._add_numba(
-            index, solution, objective_value, behavior_values, self._occupied,
-            self._solutions, self._objective_values, self._behavior_values)
+        #  index = self.index_of(behavior_values[None])[0]
+        #  old_objective = self._objective_values[index]
+        #  was_inserted, already_occupied = self._add_numba(
+        #      index, solution, objective_value, behavior_values, self._occupied,
+        #      self._solutions, self._objective_values, self._behavior_values)
 
-        if was_inserted:
-            self._metadata[index] = metadata
+        #  if was_inserted:
+        #      self._metadata[index] = metadata
 
-        if was_inserted and not already_occupied:
-            self._add_occupied_index(index)
-            status = AddStatus.NEW
-            value = objective_value
-            self._stats_update(self.dtype(0.0), objective_value)
-        elif was_inserted and already_occupied:
-            status = AddStatus.IMPROVE_EXISTING
-            value = objective_value - old_objective
-            self._stats_update(old_objective, objective_value)
-        else:
-            status = AddStatus.NOT_ADDED
-            value = objective_value - old_objective
-        return status, value
+        #  if was_inserted and not already_occupied:
+        #      self._add_occupied_index(index)
+        #      status = AddStatus.NEW
+        #      value = objective_value
+        #      self._stats_update(self.dtype(0.0), objective_value)
+        #  elif was_inserted and already_occupied:
+        #      status = AddStatus.IMPROVE_EXISTING
+        #      value = objective_value - old_objective
+        #      self._stats_update(old_objective, objective_value)
+        #  else:
+        #      status = AddStatus.NOT_ADDED
+        #      value = objective_value - old_objective
+        #  return status, value
+
+        status, value = self.add_batch([solution], [objective_value],
+                                       [behavior_values], [metadata])
+        return status[0], value[0]
 
     def add_batch(self,
                   solution_batch,
@@ -456,16 +460,21 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         solution_batch = np.asarray(solution_batch)
         measures_batch = np.asarray(measures_batch)
         index_batch = self.index_of(measures_batch)
+        metadata_batch = (np.empty(index_batch.size, dtype=object) if
+                          metadata_batch is None else np.asarray(metadata_batch,
+                                                                 dtype=object))
 
         # TODO: Shape checks.
 
         objective_batch = np.asarray(objective_batch, self.dtype)
-        old_objective_batch = self._objective_values[index_batch]
+        # Copy old objectives since we will be modifying the objectives storage.
+        old_objective_batch = np.copy(self._objective_values[index_batch])
 
         already_occupied = self._occupied[index_batch]
-        is_new = np.logical_not(already_occupied)
-        improve_existing = np.logical_and(objective_batch > old_objective_batch,
-                                          already_occupied)
+        is_new = ~already_occupied
+        improve_existing = (objective_batch >
+                            old_objective_batch) & already_occupied
+        old_objective_batch[is_new] = 0.0
 
         # Set add_statuses and add_values -- these differ from what is actually
         # inserted into the archive since there may be conflicts within the
@@ -474,77 +483,71 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         add_statuses[is_new] = 2
         add_statuses[improve_existing] = 1
 
+        # Since we set the new solutions in the old objective batch to have
+        # value 0.0, the add_values for new solutions are correct here.
         add_values = objective_batch - old_objective_batch
-        add_values[is_new] = objective_batch[is_new]
-
-        # TODO: Handle metadata.
-        # TODO: Update stats -- only account for solutions that are actually
-        # added. The old objective can be tricky because it needs to be 0 for
-        # new solutions.
 
         # Retrieve indices of solutions that should be inserted into the
         # archive. First, we get the argmax for each archive index -- we use a
         # fill_value of -1 to indicate archive indices which were not covered in
         # the batch.
-        can_insert = np.logical_or(is_new, improve_existing)
-        # TODO: There is a bug somewhere here -- the archive has too many black
-        # dots.
-        argmax = aggregate(index_batch[can_insert],
-                           objective_batch[can_insert],
-                           func="argmax",
-                           fill_value=-1)
-        should_insert = argmax[argmax != -1]
-        insert_indices = index_batch[should_insert]
+        can_insert = is_new | improve_existing
 
-        self._objective_values[insert_indices] = objective_batch[should_insert]
-        self._behavior_values[insert_indices] = measures_batch[should_insert]
-        self._solutions[insert_indices] = solution_batch[should_insert]
-        self._metadata[insert_indices] = metadata_batch[should_insert]
+        # Return early if we cannot insert anything -- continuing would actually
+        # throw a ValueError in aggregate() since index_batch[can_insert] would
+        # be empty.
+        if not np.any(can_insert):
+            return add_statuses, add_values
 
-        self._occupied[insert_indices] = True
-        # TODO: Should only count new solutions that were inserted.
-        n_new = np.sum(is_new)
+        # Note that the length of argmax is only max(index_batch[can_insert]),
+        # rather than the total number of grid cells. However, this is okay
+        # because we only want to find the indices of the solutions in
+        # should_insert.
+        archive_argmax = aggregate(index_batch[can_insert],
+                                   objective_batch[can_insert],
+                                   func="argmax",
+                                   fill_value=-1)
+        should_insert = archive_argmax[archive_argmax != -1]
+
+        # Indices in the archive where we should insert a solution.
+        archive_indices = index_batch[should_insert]
+
+        inserted_objectives = objective_batch[should_insert]
+        self._objective_values[archive_indices] = inserted_objectives
+        self._behavior_values[archive_indices] = measures_batch[should_insert]
+        self._solutions[archive_indices] = solution_batch[should_insert]
+        self._metadata[archive_indices] = metadata_batch[should_insert]
+        self._occupied[archive_indices] = True
+
+        # Only counts new solutions that were inserted.
+        is_new_and_inserted = is_new[should_insert]
+        n_new = np.sum(is_new_and_inserted)
         self._occupied_indices[self._num_occupied:self._num_occupied +
-                               n_new] = index_batch[is_new]
+                               n_new] = (index_batch[should_insert]
+                                         [is_new_and_inserted])
         self._num_occupied += n_new
 
+        # Update stats -- only account for solutions that are actually added.
+        # The old objective can be tricky because it needs to be 0 for new
+        # solutions.
+
+        # Since we set the new solutions in the old objective batch to have
+        # value 0.0, the objectives for new solutions are added in properly
+        # here.
+        new_qd_score = (
+            self._stats.qd_score +
+            np.sum(inserted_objectives - old_objective_batch[should_insert]))
+        max_new_obj = np.max(inserted_objectives)
+        self._stats = ArchiveStats(
+            num_elites=len(self),
+            coverage=self.dtype(len(self) / self.cells),
+            qd_score=new_qd_score,
+            obj_max=max_new_obj if self._stats.obj_max is None else max(
+                self._stats.obj_max, max_new_obj),
+            obj_mean=new_qd_score / self.dtype(len(self)),
+        )
+
         return add_statuses, add_values
-
-        # TODO: Retrieve the indices that should be set.
-        #  new_indices = aggregate(index_batch, objective_batch, func="argmax")
-
-        #  if (not already_occupied or
-        #          objective_values[new_index] < new_objective_value):
-        #      # Track this index if it has not been seen before -- important that
-        #      # we do this before inserting the solution.
-        #      if not already_occupied:
-        #          occupied[new_index] = True
-
-        #      # Insert into the archive.
-        #      objective_values[new_index] = new_objective_value
-        #      behavior_values[new_index] = new_behavior_values
-        #      solutions[new_index] = new_solution
-
-        #      return True, already_occupied
-
-        #  return False, already_occupied
-
-        #  if was_inserted:
-        #      self._metadata[index] = metadata
-
-        #  if was_inserted and not already_occupied:
-        #      self._add_occupied_index(index)
-        #      status = AddStatus.NEW
-        #      value = objective_value
-        #      self._stats_update(self.dtype(0.0), objective_value)
-        #  elif was_inserted and already_occupied:
-        #      status = AddStatus.IMPROVE_EXISTING
-        #      value = objective_value - old_objective
-        #      self._stats_update(old_objective, objective_value)
-        #  else:
-        #      status = AddStatus.NOT_ADDED
-        #      value = objective_value - old_objective
-        #  return status, value
 
     def elites_with_measures(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
