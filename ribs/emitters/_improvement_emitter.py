@@ -3,7 +3,6 @@ import itertools
 
 import numpy as np
 
-from ribs.archives import AddStatus
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import CMAEvolutionStrategy
 
@@ -150,20 +149,12 @@ class ImprovementEmitter(EmitterBase):
         ranking_data = []
         new_sols = 0
         metadata = itertools.repeat(None) if metadata is None else metadata
-        for i, (sol, obj, beh, meta) in enumerate(
-                zip(solutions, objective_values, behavior_values, metadata)):
-            status, value = self.archive.add(sol, obj, beh, meta)
-            ranking_data.append((status, value, i))
-            if status in (AddStatus.NEW, AddStatus.IMPROVE_EXISTING):
-                new_sols += 1
-        # New solutions sort ahead of improved ones, which sort ahead of ones
-        # that were not added.
-        ranking_data.sort(reverse=True)
-        indices = [d[2] for d in ranking_data]
-
+        add_statuses, add_values = self.archive.add_batch(
+            solutions, objective_values, behavior_values, metadata)
+        indices = np.flip(np.lexsort((add_values, add_statuses)))
+        new_sols = np.count_nonzero(add_values)
         num_parents = (new_sols if self._selection_rule == "filter" else
                        self._num_parents)
-
         self.opt.tell(solutions[indices], num_parents)
 
         # Check for reset.
