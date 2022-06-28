@@ -53,9 +53,12 @@ Args:
     rng (numpy.random.Generator): A random number generator.
 
 Returns:
-    tuple(numpy.ndarray, numpy.ndarray): Indices representing a ranking of the
-    solutions and a ndarray of the metrics that this ranker used to rank
-    the solutions.
+    tuple(numpy.ndarray, numpy.ndarray): the first array
+    (shape ``(n,)``) is an array of indices representing a ranking of the
+    solutions and the second array (shape ``(n,)`` or (n, x)``) is an array of
+    metrics that this ranker used to rank the solutions.
+    ``n`` is the number of solutions and ``x`` depends is the number of metric
+    that the rank function used.
 """
 
 _reset_args = """
@@ -124,12 +127,13 @@ class TwoStageImprovementRanker(RankerBase):
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
         # To avoid using an array of tuples, ranking_values is an 2D array
-        # [[value_0, status_0], ..., [value_n, status_n]]
-        ranking_values = np.stack((add_values, add_statuses), axis=-1)
+        # [[status_0, value_0], ..., [status_n, value_n]]
+        ranking_values = np.stack((add_statuses, add_values), axis=-1)
         # New solutions sort ahead of improved ones, which sort ahead of ones
         # that were not added. Note that lexsort sorts the values in ascending
         # order, so we use np.flip to reverse the sorted array.
-        return np.flip(np.lexsort(ranking_values.T)), ranking_values
+        return np.flip(np.lexsort(np.flip(ranking_values,
+                                          axis=-1).T)), ranking_values
 
     rank.__doc__ = f"""
 Generates a list of indices that represents an ordering of solutions.
@@ -229,10 +233,11 @@ class TwoStageRandomDirectionRanker(RankerBase):
         projections = np.dot(measures_batch, self._target_measure_dir)
         # To avoid using an array of tuples, ranking_values is an 2D array
         # [[projection_0, status_0], ..., [projection_n, status_n]]
-        ranking_values = np.stack((projections, add_statuses), axis=-1)
+        ranking_values = np.stack((add_statuses, projections), axis=-1)
         # Sort by whether the solution was added into the archive,
         # followed by projection.
-        return np.flip(np.lexsort(ranking_values.T)), ranking_values
+        return np.flip(np.lexsort(np.flip(ranking_values,
+                                          axis=-1).T)), ranking_values
 
     rank.__doc__ = f"""
 Ranks the soutions first by whether they are added, then by their projection on
@@ -282,10 +287,11 @@ class TwoStageObjectiveRanker(RankerBase):
              measures_batch, metadata, add_statuses, add_values):
         # To avoid using an array of tuples, ranking_values is an 2D array
         # [[objective_0, status_0], ..., [objective_n, status_n]]
-        ranking_values = np.stack((objective_batch, add_statuses), axis=-1)
+        ranking_values = np.stack((add_statuses, objective_batch), axis=-1)
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.
-        return np.flip(np.lexsort(ranking_values.T)), ranking_values
+        return np.flip(np.lexsort(np.flip(ranking_values,
+                                          axis=-1).T)), ranking_values
 
     rank.__doc__ = f"""
 Ranks the soutions based on their objective values, while prioritizing newly
