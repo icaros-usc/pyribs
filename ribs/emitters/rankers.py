@@ -53,7 +53,9 @@ Args:
     rng (numpy.random.Generator): A random number generator.
 
 Returns:
-    Indices representing a ranking of the solutions
+    tuple(numpy.ndarray, numpy.ndarray): Indices representing a ranking of the
+        solutions and a ndarray of the metrics that this ranker used to rank
+        the solutions.
 """
 
 _reset_args = """
@@ -121,10 +123,13 @@ class TwoStageImprovementRanker(RankerBase):
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
+        # To avoid using an array of tuples, ranking_values is an 2D array
+        # [[value_0, status_0], ..., [value_n, status_n]]
+        ranking_values = np.stack((add_values, add_statuses), axis=-1)
         # New solutions sort ahead of improved ones, which sort ahead of ones
         # that were not added. Note that lexsort sorts the values in ascending
         # order, so we use np.flip to reverse the sorted array.
-        return np.flip(np.lexsort((add_values, add_statuses)))
+        return np.flip(np.lexsort(ranking_values.T)), ranking_values
 
     rank.__doc__ = f"""
 Generates a list of indices that represents an ordering of solutions.
@@ -167,7 +172,7 @@ class RandomDirectionRanker(RankerBase):
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
         # Sort only by projection; use np.flip to reverse the order
-        return np.flip(np.argsort(projections))
+        return np.flip(np.argsort(projections)), projections
 
     rank.__doc__ = f"""
 Ranks the soutions based on projection onto a direction in measure space.
@@ -222,9 +227,12 @@ class TwoStageRandomDirectionRanker(RankerBase):
         if not self.target_measure_dir:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
+        # To avoid using an array of tuples, ranking_values is an 2D array
+        # [[projection_0, status_0], ..., [projection_n, status_n]]
+        ranking_values = np.stack((projections, add_statuses), axis=-1)
         # Sort by whether the solution was added into the archive,
         # followed by projection.
-        return np.flip(np.lexsort((add_statuses, projections)))
+        return np.flip(np.lexsort(ranking_values.T)), ranking_values
 
     rank.__doc__ = f"""
 Ranks the soutions first by whether they are added, then by their projection on
@@ -253,7 +261,7 @@ class ObjectiveRanker(RankerBase):
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
         # Sort only by objective value.
-        return np.flip(np.argsort(objective_batch))
+        return np.flip(np.argsort(objective_batch)), objective_batch
 
     rank.__doc__ = f"""
 Ranks the soutions based on their objective values.
@@ -272,12 +280,16 @@ class TwoStageObjectiveRanker(RankerBase):
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
+        # To avoid using an array of tuples, ranking_values is an 2D array
+        # [[objective_0, status_0], ..., [objective_n, status_n]]
+        ranking_values = np.stack((objective_batch, add_statuses), axis=-1)
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.
-        return np.flip(np.lexsort((objective_batch, add_statuses)))
+        return np.flip(np.lexsort(ranking_values.T)), ranking_values
 
     rank.__doc__ = f"""
-Ranks the soutions based on their objective values, while prioritizing newly added solutions.
+Ranks the soutions based on their objective values, while prioritizing newly
+added solutions.
 
 {_rank_args}
     """
@@ -303,8 +315,8 @@ def get_ranker(name):
     """Constructs and returns a ranker object based on its string name.
 
     ``name`` may be the full name of a ranker, e.g. "ImprovementRanker" or
-    "RandomDirectionRanker". Alternatively, it can be the abbreviated name for a
-    ranker -- the supported abbreviations are:
+    "RandomDirectionRanker". Alternatively, it can be the abbreviated name for
+    a ranker -- the supported abbreviations are:
 
     * ``imp``: :class:`ImprovementRanker`
     * ``2imp``: :class:`TwoStageImprovementRanker`
