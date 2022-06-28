@@ -130,8 +130,11 @@ class TwoStageImprovementRanker(RankerBase):
         # [[status_0, value_0], ..., [status_n, value_n]]
         ranking_values = np.stack((add_statuses, add_values), axis=-1)
         # New solutions sort ahead of improved ones, which sort ahead of ones
-        # that were not added. Note that lexsort sorts the values in ascending
-        # order, so we use np.flip to reverse the sorted array.
+        # that were not added.
+        # Since lexsort using the last column/row as the key, we flip the
+        # ranking_values along the last axis so we are sorting statuses
+        # first Note that lexsort sorts the values in ascending order,
+        # so we use np.flip to reverse the sorted array.
         return np.flip(np.lexsort(np.flip(ranking_values,
                                           axis=-1).T)), ranking_values
 
@@ -232,7 +235,7 @@ class TwoStageRandomDirectionRanker(RankerBase):
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
         # To avoid using an array of tuples, ranking_values is an 2D array
-        # [[projection_0, status_0], ..., [projection_n, status_n]]
+        # [[status_0, projection_0], ..., [status_n, projection_n]]
         ranking_values = np.stack((add_statuses, projections), axis=-1)
         # Sort by whether the solution was added into the archive,
         # followed by projection.
@@ -286,7 +289,7 @@ class TwoStageObjectiveRanker(RankerBase):
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
         # To avoid using an array of tuples, ranking_values is an 2D array
-        # [[objective_0, status_0], ..., [objective_n, status_n]]
+        # [[status_0, objective_0], ..., [status_0, objective_n]]
         ranking_values = np.stack((add_statuses, objective_batch), axis=-1)
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.
