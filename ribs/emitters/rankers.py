@@ -54,8 +54,8 @@ Args:
 
 Returns:
     tuple(numpy.ndarray, numpy.ndarray): Indices representing a ranking of the
-        solutions and a ndarray of the metrics that this ranker used to rank
-        the solutions.
+    solutions and a ndarray of the metrics that this ranker used to rank
+    the solutions.
 """
 
 _reset_args = """
