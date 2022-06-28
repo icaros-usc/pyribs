@@ -1,6 +1,4 @@
 """Provides the ImprovementEmitter."""
-import itertools
-
 import numpy as np
 
 from ribs.emitters._emitter_base import EmitterBase
@@ -148,7 +146,7 @@ class ImprovementEmitter(EmitterBase):
         """
         ranking_data = []
         new_sols = 0
-        metadata = itertools.repeat(None) if metadata is None else metadata
+        metadata = None if metadata is None else metadata
         add_statuses, add_values = self.archive.add_batch(
             solutions, objective_values, behavior_values, metadata)
         indices = np.flip(np.lexsort((add_values, add_statuses)))
