@@ -34,10 +34,10 @@ def test_two_stage_improvement_ranker(archive_fixture):
 
     assert (indices == [0, 3, 2, 1]).all()
     assert (ranking_values == [
-        [values[0], statuses[0]],
-        [values[1], statuses[1]],
-        [values[2], statuses[2]],
-        [values[3], statuses[3]],
+        [statuses[0], values[0]],
+        [statuses[1], values[1]],
+        [statuses[2], values[2]],
+        [statuses[3], values[3]],
     ]).all()
 
 
@@ -113,10 +113,10 @@ def test_two_stage_random_direction():
 
     projections = np.dot(behavior_values, [0, 1, 0])
     assert (ranking_values == [
-        [projections[0], statuses[0]],
-        [projections[1], statuses[1]],
-        [projections[2], statuses[2]],
-        [projections[3], statuses[3]],
+        [statuses[0], projections[0]],
+        [statuses[1], projections[1]],
+        [statuses[2], projections[2]],
+        [statuses[3], projections[3]],
     ]).all()
 
 
@@ -168,8 +168,8 @@ def test_two_stage_objective_ranker(archive_fixture):
 
     assert (indices == [2, 0, 1, 3]).all()
     assert (ranking_values == [
-        [objective_values[0], statuses[0]],
-        [objective_values[1], statuses[1]],
-        [objective_values[2], statuses[2]],
-        [objective_values[3], statuses[3]],
+        [statuses[0], objective_values[0]],
+        [statuses[1], objective_values[1]],
+        [statuses[2], objective_values[2]],
+        [statuses[3], objective_values[3]],
     ]).all()
