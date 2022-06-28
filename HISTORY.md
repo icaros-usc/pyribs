@@ -6,6 +6,7 @@
 
 #### API
 
+- **Backwards-incompatible:** Return `ranking_values` from `rank` method (#222)
 - Raise ValueError for incorrect array shapes in archive methods (#219)
 - Add elites_with_measures_single method for getting elite for a single
   solution's measures (#215)
