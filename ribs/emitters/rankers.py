@@ -300,10 +300,10 @@ _NAME_TO_RANKER_MAP = {
 
 
 def get_ranker(name):
-    """Constructs and returns a ranker object based on its string name.
+    """Returns a ranker class based on its name.
 
     ``name`` may be the full name of a ranker, e.g. "ImprovementRanker" or
-    "RandomDirectionRanker". Alternatively, it can be the abbreviated name 
+    "RandomDirectionRanker". Alternatively, it can be the abbreviated name
     for a ranker -- the supported abbreviations are:
 
     * ``imp``: :class:`ImprovementRanker`

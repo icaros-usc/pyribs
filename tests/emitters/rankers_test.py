@@ -99,7 +99,6 @@ def test_two_stage_random_direction():
     indices = ranker.rank(emitter, archive, None, solutions, objective_values,
                           behavior_values, metadata, statuses, values)
 
-    print(statuses)
     assert (indices == [0, 3, 2, 1]).all()
 
 
