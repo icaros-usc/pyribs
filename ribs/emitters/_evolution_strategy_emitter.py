@@ -169,10 +169,12 @@ class EvolutionStrategyEmitter(EmitterBase):
                 new_sols += 1
 
         # Sort the solutions using ranker
-        indices = self._ranker.rank(self, self.archive, self._rng, solutions,
-                                    objective_values, behavior_values, metadata,
-                                    np.array(add_statuses),
-                                    np.array(add_values))
+        indices, ranking_values = self._ranker.rank(self, self.archive,
+                                                    self._rng, solutions,
+                                                    objective_values,
+                                                    behavior_values, metadata,
+                                                    np.array(add_statuses),
+                                                    np.array(add_values))
 
         # Select the number of parents
         num_parents = (new_sols if self._selection_rule == "filter" else
@@ -182,7 +184,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         self.opt.tell(solutions[indices], num_parents)
 
         # Check for reset.
-        if (self.opt.check_stop(objective_values[indices]) or
+        if (self.opt.check_stop(ranking_values[indices]) or
                 self._check_restart(new_sols)):
             new_x0 = self.archive.sample_elites(1).solution_batch[0]
             self.opt.reset(new_x0)
