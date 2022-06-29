@@ -129,7 +129,7 @@ class CVTArchive(ArchiveBase):
             # The default, "auto"/"elkan", allocates a huge array.
             if semantic_version.Version(
                     sklearn.__version__) >= semantic_version.Version("1.1.0"):
-                # In the newer version, "full" has been deprecated in favor of "lloyd".
+                # In the newer versions, "full" has been deprecated in favor of "lloyd".
                 self._k_means_kwargs["algorithm"] = "lloyd"
             else:
                 self._k_means_kwargs["algorithm"] = "full"
