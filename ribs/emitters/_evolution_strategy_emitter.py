@@ -9,44 +9,49 @@ from ribs.emitters.rankers import RankerBase, get_ranker
 
 
 class EvolutionStrategyEmitter(EmitterBase):
-    """Adapts a evolution strategy optimizer towards the objective.
+    """Adapts a distribution of solutions with CMA-ES.
 
     This emitter originates in `Fontaine 2020
-    <https://arxiv.org/abs/1912.02400>`_. Initially, it starts at ``x0`` and
-    uses some evolution strategy (i.e. CMA-ES) to optimize for objective values.
-    After the evolution strategy converges, the emitter restarts the optimizer.
+    <https://arxiv.org/abs/1912.02400>`_. The multivariate Gaussian solution
+    distribution begins at ``x0`` with standard deviation ``sigma0``. Based on
+    how the generated solutions are ranked (see ``ranker``), CMA-ES then adapts
+    the mean and covariance of the distribution.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
-        sigma0 (float): Initial step size.
-        selection_rule ("mu" or "filter"): Method for selecting solutions in
+        sigma0 (float): Initial step size / standard deviation.
+        selection_rule ("mu" or "filter"): Method for selecting parents in
             CMA-ES. With "mu" selection, the first half of the solutions will be
-            selected, while in "filter", any solutions that were added to the
-            archive will be selected.
-        ranker (Callable or str): A callable that will Rankers that defines how
-            solutions are ranked. This could be a lambda function that returns
-            a Ranker object, a class that inherits from :class:`RankerBase`,
-            etc. If passing in the full or abbreviated name of the ranker,
-            the corresponding ranker class will be parsed with
-            :meth:`ribs.emitters.rankers.get_ranker`.
+            selected as parents, while in "filter", any solutions that were
+            added to the archive will be selected.
+        ranker (Callable or str): The ranker is a :class:`RankerBase` object
+            that orders the solutions after they have been evaluated in the
+            environment. This parameter may be a callable (e.g. a class or a
+            lambda function) that takes in no parameters and returns an instance
+            of :class:`RankerBase`, or it may be a full or abbreviated ranker
+            name as described in :meth:`ribs.emitters.rankers.get_ranker`.
         restart_rule ("no_improvement" or "basic"): Method to use when checking
-            for restart. With "basic", only the default CMA-ES convergence rules
-            will be used, while with "no_improvement", the emitter will restart
-            when none of the proposed solutions were added to the archive.
-        bounds (None or array-like): Bounds of the solution space. Solutions are
-            clipped to these bounds. Pass None to indicate there are no bounds.
-            Alternatively, pass an array-like to specify the bounds for each
-            dim. Each element in this array-like can be None to indicate no
-            bound, or a tuple of ``(lower_bound, upper_bound)``, where
-            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
+            for restarts. With "basic", only the default CMA-ES convergence
+            rules will be used, while with "no_improvement", the emitter will
+            restart when none of the proposed solutions were added to the
+            archive.
+        bounds (None or array-like): Bounds of the solution space. As suggested
+            in `Biedrzycki 2020
+            <https://www.sciencedirect.com/science/article/abs/pii/S2210650219301622>`_,
+            solutions are resampled until they fall within these bounds.  Pass
+            None to indicate there are no bounds. Alternatively, pass an
+            array-like to specify the bounds for each dim. Each element in this
+            array-like can be None to indicate no bound, or a tuple of
+            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
+            ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to return in :meth:`ask`. If not
-            passed in, a batch size will automatically be calculated.
+            passed in, a batch size will be automatically calculated using the
+            default CMA-ES rules.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-
     Raises:
         ValueError: If ``restart_rule`` is invalid.
     """
