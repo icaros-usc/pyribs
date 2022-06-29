@@ -110,7 +110,6 @@ def test_two_stage_random_direction():
                                           metadata, statuses, values)
 
     assert (indices == [0, 3, 2, 1]).all()
-
     projections = np.dot(behavior_values, [0, 1, 0])
     assert (ranking_values == [
         [statuses[0], projections[0]],

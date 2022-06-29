@@ -43,13 +43,13 @@ Args:
         object belongs to.
     archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
         when creating and inserting solutions.
+    rng (numpy.random.Generator): A random number generator.
 {_args.solution_batch}
 {_args.objective_batch}
 {_args.measures_batch}
 {_args.metadata}
 {_args.add_statuses}
 {_args.add_values}
-    rng (numpy.random.Generator): A random number generator.
 
 Returns:
     tuple(numpy.ndarray, numpy.ndarray): the first array (shape
@@ -180,7 +180,7 @@ class RandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
-        if not self.target_measure_dir:
+        if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
         # Sort only by projection; use np.flip to reverse the order
@@ -236,7 +236,7 @@ class TwoStageRandomDirectionRanker(RankerBase):
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
-        if not self.target_measure_dir:
+        if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
 
@@ -333,11 +333,11 @@ _NAME_TO_RANKER_MAP = {
 
 
 def get_ranker(name):
-    """Constructs and returns a ranker object based on its string name.
+    """Returns a ranker class based on its name.
 
     ``name`` may be the full name of a ranker, e.g. "ImprovementRanker" or
-    "RandomDirectionRanker". Alternatively, it can be the abbreviated name for
-    a ranker -- the supported abbreviations are:
+    "RandomDirectionRanker". Alternatively, it can be the abbreviated name
+    for a ranker -- the supported abbreviations are:
 
     * ``imp``: :class:`ImprovementRanker`
     * ``2imp``: :class:`TwoStageImprovementRanker`
@@ -349,8 +349,8 @@ def get_ranker(name):
     Args:
         name (str): Full or abbreviated name of the ranker.
     Returns:
-        A ranker object.
+        The corresponding ranker class.
     """
     if name in _NAME_TO_RANKER_MAP:
-        return _NAME_TO_RANKER_MAP[name]()
+        return _NAME_TO_RANKER_MAP[name]
     raise ValueError(f"Could not find ranker with name {name}")
