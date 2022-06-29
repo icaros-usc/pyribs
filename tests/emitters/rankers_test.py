@@ -28,10 +28,17 @@ def test_two_stage_improvement_ranker(archive_fixture):
         values.append(value)
 
     ranker = TwoStageImprovementRanker()
-    indices = ranker.rank(emitter, archive, None, solutions, objective_values,
-                          behavior_values, metadata, statuses, values)
+    indices, ranking_values = ranker.rank(emitter, archive, None, solutions,
+                                          objective_values, behavior_values,
+                                          metadata, statuses, values)
 
     assert (indices == [0, 3, 2, 1]).all()
+    assert (ranking_values == [
+        [statuses[0], values[0]],
+        [statuses[1], values[1]],
+        [statuses[2], values[2]],
+        [statuses[3], values[3]],
+    ]).all()
 
 
 def test_random_direction_ranker():
@@ -44,7 +51,7 @@ def test_random_direction_ranker():
     solutions = emitter.ask()
     objective_values = [0, 1, 2, 3]
     behavior_values = [
-        [1, 0, 0],
+        [0, 0.9, 0],
         [0, 1, 0],
         [0, 0.5, 0.5],
         [0, 0.8, 0.8],
@@ -62,10 +69,12 @@ def test_random_direction_ranker():
     # set the random direction
     ranker.target_measure_dir = [0, 1, 0]
 
-    indices = ranker.rank(emitter, archive, None, solutions, objective_values,
-                          behavior_values, metadata, statuses, values)
+    indices, ranking_values = ranker.rank(emitter, archive, None, solutions,
+                                          objective_values, behavior_values,
+                                          metadata, statuses, values)
 
-    assert (indices == [1, 3, 2, 0]).all()
+    assert (indices == [1, 0, 3, 2]).all()
+    assert (ranking_values == np.dot(behavior_values, [0, 1, 0])).all()
 
 
 def test_two_stage_random_direction():
@@ -78,7 +87,7 @@ def test_two_stage_random_direction():
     solutions = emitter.ask()
     objective_values = [0, 1, 2, 3]
     behavior_values = [
-        [1, 0, 0],
+        [0, 0.9, 0],
         [0, 1, 0],
         [0, 0.5, 0.5],
         [0, 0.8, 0.8],
@@ -96,10 +105,19 @@ def test_two_stage_random_direction():
     # set the random direction
     ranker.target_measure_dir = [0, 1, 0]
 
-    indices = ranker.rank(emitter, archive, None, solutions, objective_values,
-                          behavior_values, metadata, statuses, values)
+    indices, ranking_values = ranker.rank(emitter, archive, None, solutions,
+                                          objective_values, behavior_values,
+                                          metadata, statuses, values)
 
-    assert (indices == [1, 3, 2, 0]).all()
+    assert (indices == [0, 3, 2, 1]).all()
+
+    projections = np.dot(behavior_values, [0, 1, 0])
+    assert (ranking_values == [
+        [statuses[0], projections[0]],
+        [statuses[1], projections[1]],
+        [statuses[2], projections[2]],
+        [statuses[3], projections[3]],
+    ]).all()
 
 
 def test_objective_ranker(archive_fixture):
@@ -119,10 +137,12 @@ def test_objective_ranker(archive_fixture):
 
     ranker = ObjectiveRanker()
 
-    indices = ranker.rank(emitter, archive, None, solutions, objective_values,
-                          behavior_values, metadata, statuses, values)
+    indices, ranking_values = ranker.rank(emitter, archive, None, solutions,
+                                          objective_values, behavior_values,
+                                          metadata, statuses, values)
 
     assert (indices == [1, 2, 3, 0]).all()
+    assert ranking_values == objective_values
 
 
 def test_two_stage_objective_ranker(archive_fixture):
@@ -142,7 +162,14 @@ def test_two_stage_objective_ranker(archive_fixture):
 
     ranker = TwoStageObjectiveRanker()
 
-    indices = ranker.rank(emitter, archive, None, solutions, objective_values,
-                          behavior_values, metadata, statuses, values)
+    indices, ranking_values = ranker.rank(emitter, archive, None, solutions,
+                                          objective_values, behavior_values,
+                                          metadata, statuses, values)
 
     assert (indices == [2, 0, 1, 3]).all()
+    assert (ranking_values == [
+        [statuses[0], objective_values[0]],
+        [statuses[1], objective_values[1]],
+        [statuses[2], objective_values[2]],
+        [statuses[3], objective_values[3]],
+    ]).all()
