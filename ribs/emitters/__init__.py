@@ -9,6 +9,7 @@
 .. autosummary::
     :toctree:
 
+    ribs.emitters.EvolutionStrategyEmitter
     ribs.emitters.GaussianEmitter
     ribs.emitters.IsoLineEmitter
     ribs.emitters.ImprovementEmitter
@@ -22,8 +23,10 @@ from ribs.emitters._improvement_emitter import ImprovementEmitter
 from ribs.emitters._iso_line_emitter import IsoLineEmitter
 from ribs.emitters._optimizing_emitter import OptimizingEmitter
 from ribs.emitters._random_direction_emitter import RandomDirectionEmitter
+from ribs.emitters._evolution_strategy_emitter import EvolutionStrategyEmitter
 
 __all__ = [
+    "EvolutionStrategyEmitter",
     "GaussianEmitter",
     "IsoLineEmitter",
     "ImprovementEmitter",
