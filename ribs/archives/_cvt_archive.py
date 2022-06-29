@@ -76,7 +76,7 @@ class CVTArchive(ArchiveBase):
             ``archive.samples`` will be None. This can be useful when one wishes
             to use the same CVT across experiments for fair comparison.
         k_means_kwargs (dict): kwargs for :func:`~sklearn.cluster.k_means`. By
-            default, we pass in `n_init=1`, `init="random"`, `algorithm="full"`,
+            default, we pass in `n_init=1`, `init="random"`, `algorithm="lloyd"`,
             and `random_state=seed`.
         use_kd_tree (bool): If True, use a k-D tree for finding the closest
             centroid when inserting into the archive. This may result in a
@@ -125,7 +125,7 @@ class CVTArchive(ArchiveBase):
             self._k_means_kwargs["init"] = "random"
         if "algorithm" not in self._k_means_kwargs:
             # The default, "auto"/"elkan", allocates a huge array.
-            self._k_means_kwargs["algorithm"] = "full"
+            self._k_means_kwargs["algorithm"] = "lloyd"
         if "random_state" not in self._k_means_kwargs:
             self._k_means_kwargs["random_state"] = seed
 
