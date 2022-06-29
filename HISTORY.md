@@ -6,7 +6,7 @@
 
 #### API
 
-- Implement the `evolution_strategy_emitter` (#220)
+- Implement `EvolutionStrategyEmitter` (#220)
 - Raise ValueError for incorrect array shapes in archive methods (#219)
 - Add elites_with_measures_single method for getting elite for a single
   solution's measures (#215)
