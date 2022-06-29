@@ -19,6 +19,7 @@ install_requires = [
     "scikit-learn>=0.20.0",  # Primarily used in CVTArchive.
     "scipy>=1.4.0",  # Primarily used in CVTArchive.
     "threadpoolctl>=2.0.0",
+    "semantic-version>=2.10"
 ]
 
 extras_require = {
