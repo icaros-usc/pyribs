@@ -13,17 +13,23 @@ of the solution. Having each BC depend equally on several values in the solution
 space makes the problem more difficult (refer to Fontaine 2020 for more info).
 
 The supported algorithms are:
-- `map_elites`: GridArchive with GaussianEmitter
-- `line_map_elites`: GridArchive with IsoLineEmitter
-- `cvt_map_elites`: CVTArchive with GaussianEmitter
-- `line_cvt_map_elites`: CVTArchive with IsoLineEmitter
-- `cma_me_imp`: GridArchive with ImprovementEmitter
-- `cma_me_imp_mu`: GridArchive with ImprovementEmitter with mu selection rule
-- `cma_me_rd`: GridArchive with RandomDirectionEmitter
-- `cma_me_rd_mu`: GridArchive with RandomDirectionEmitter with mu selection rule
-- `cma_me_opt`: GridArchive with OptimizingEmitter
-- `cma_me_mixed`: GridArchive, and half (7) of the emitter are
-  RandomDirectionEmitter and half (8) are ImprovementEmitter
+- `map_elites`: GridArchive with GaussianEmitter.
+- `line_map_elites`: GridArchive with IsoLineEmitter.
+- `cvt_map_elites`: CVTArchive with GaussianEmitter.
+- `line_cvt_map_elites`: CVTArchive with IsoLineEmitter.
+- `cma_me_imp`: GridArchive with EvolutionStrategyEmitter using
+  TwoStageImprovmentRanker.
+- `cma_me_imp_mu`: GridArchive with EvolutionStrategyEmitter using
+  TwoStageImprovmentRanker and mu selection rule.
+- `cma_me_rd`: GridArchive with EvolutionStrategyRanker using
+  RandomDirectionRanker.
+- `cma_me_rd_mu`: GridArchive with EvolutionStrategyEmitter using
+  TwoStageRandomDirectionRanker and mu selection rule.
+- `cma_me_opt`: GridArchive with EvolutionStrategyEmitter using ObjectiveRanker
+  with mu selection rule.
+- `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, and half (7) of
+  the emitter are using TwoStageRandomDirectionRanker and half (8) are
+  TwoStageImprovementRanker.
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.

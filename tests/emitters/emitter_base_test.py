@@ -4,8 +4,8 @@ import unittest
 import numpy as np
 import pytest
 
-from ribs.emitters import (GaussianEmitter, ImprovementEmitter, IsoLineEmitter,
-                           OptimizingEmitter, RandomDirectionEmitter)
+from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
+                           IsoLineEmitter)
 
 # pylint: disable = redefined-outer-name
 
@@ -29,11 +29,23 @@ def emitter_fixture(request, archive_fixture):
     elif emitter_type == "IsoLineEmitter":
         emitter = IsoLineEmitter(archive, x0, batch_size=batch_size)
     elif emitter_type == "ImprovementEmitter":
-        emitter = ImprovementEmitter(archive, x0, 5, batch_size=batch_size)
+        emitter = EvolutionStrategyEmitter(archive,
+                                           x0,
+                                           5,
+                                           "obj",
+                                           batch_size=batch_size)
     elif emitter_type == "RandomDirectionEmitter":
-        emitter = RandomDirectionEmitter(archive, x0, 5, batch_size=batch_size)
+        emitter = EvolutionStrategyEmitter(archive,
+                                           x0,
+                                           5,
+                                           "obj",
+                                           batch_size=batch_size)
     elif emitter_type == "OptimizingEmitter":
-        emitter = OptimizingEmitter(archive, x0, 5, batch_size=batch_size)
+        emitter = EvolutionStrategyEmitter(archive,
+                                           x0,
+                                           5,
+                                           "obj",
+                                           batch_size=batch_size)
     else:
         raise NotImplementedError(f"Unknown emitter type {emitter_type}")
 

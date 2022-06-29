@@ -12,25 +12,16 @@
     ribs.emitters.EvolutionStrategyEmitter
     ribs.emitters.GaussianEmitter
     ribs.emitters.IsoLineEmitter
-    ribs.emitters.ImprovementEmitter
-    ribs.emitters.RandomDirectionEmitter
-    ribs.emitters.OptimizingEmitter
     ribs.emitters.EmitterBase
 """
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters._gaussian_emitter import GaussianEmitter
-from ribs.emitters._improvement_emitter import ImprovementEmitter
 from ribs.emitters._iso_line_emitter import IsoLineEmitter
-from ribs.emitters._optimizing_emitter import OptimizingEmitter
-from ribs.emitters._random_direction_emitter import RandomDirectionEmitter
 from ribs.emitters._evolution_strategy_emitter import EvolutionStrategyEmitter
 
 __all__ = [
     "EvolutionStrategyEmitter",
     "GaussianEmitter",
     "IsoLineEmitter",
-    "ImprovementEmitter",
-    "RandomDirectionEmitter",
-    "OptimizingEmitter",
     "EmitterBase",
 ]
