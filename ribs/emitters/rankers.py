@@ -21,7 +21,6 @@ result of a descending argsort of the solutions. It will also define a
 from abc import ABC, abstractmethod
 
 import numpy as np
-
 from ribs._docstrings import DocstringComponents, core_args
 
 __all__ = [
@@ -53,12 +52,12 @@ Args:
     rng (numpy.random.Generator): A random number generator.
 
 Returns:
-    tuple(numpy.ndarray, numpy.ndarray): the first array
-    (shape ``(n,)``) is an array of indices representing a ranking of the
-    solutions and the second array (shape ``(n,)`` or (n, x)``) is an array of
-    metrics that this ranker used to rank the solutions.
-    ``n`` is the number of solutions and ``x`` depends is the number of metric
-    that the rank function used.
+    tuple(numpy.ndarray, numpy.ndarray): the first array (shape
+    ``(batch_size,)``) is an array of indices representing a ranking of the
+    solutions and the second array (shape ``(batch_size,)`` or (batch_size,
+    n_values)``) is an array of values that this ranker used to rank the
+    solutions. ``batch_size`` is the number of solutions and ``n_values`` is
+    the number of values that the rank function used.
 """
 
 _reset_args = """
@@ -126,17 +125,23 @@ class TwoStageImprovementRanker(RankerBase):
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
-        # To avoid using an array of tuples, ranking_values is an 2D array
+        # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, value_0], ..., [status_n, value_n]]
         ranking_values = np.stack((add_statuses, add_values), axis=-1)
+
         # New solutions sort ahead of improved ones, which sort ahead of ones
         # that were not added.
-        # Since lexsort using the last column/row as the key, we flip the
-        # ranking_values along the last axis so we are sorting statuses
-        # first Note that lexsort sorts the values in ascending order,
+        #
+        # Since lexsort uses the last column/row as the key, we flip the
+        # ranking_values along the last axis so that we are sorting statuses
+        # first.
+        #
+        # Note that lexsort sorts the values in ascending order,
         # so we use np.flip to reverse the sorted array.
-        return np.flip(np.lexsort(np.flip(ranking_values,
-                                          axis=-1).T)), ranking_values
+        return (
+            np.flip(np.lexsort(np.flip(ranking_values, axis=-1).T)),
+            ranking_values,
+        )
 
     rank.__doc__ = f"""
 Generates a list of indices that represents an ordering of solutions.
@@ -152,7 +157,7 @@ class RandomDirectionRanker(RankerBase):
     This ranker originates in `Fontaine 2020
     <https://arxiv.org/abs/1912.02400>`_ as random direction emitter.
     The solutions are ranked solely based on their projection onto a random
-    direction in measure space.
+    direction in the archive.
 
     To rank the solutions first by whether they were added, and then by
     the projection, refer to
@@ -182,7 +187,7 @@ class RandomDirectionRanker(RankerBase):
         return np.flip(np.argsort(projections)), projections
 
     rank.__doc__ = f"""
-Ranks the soutions based on projection onto a direction in measure space.
+Ranks the solutions based on projection onto a direction in the archive.
 
 {_rank_args}
     """
@@ -193,9 +198,9 @@ Ranks the soutions based on projection onto a direction in measure space.
         unscaled_dir = rng.standard_normal(measure_dim)
         self._target_measure_dir = unscaled_dir * ranges
 
-    # Generates the docstring for reset
+    # Generates the docstring for reset.
     reset.__doc__ = f"""
-Generates a random direction in the archive space.
+Generates a random direction in the archive's measure space.
 
 A random direction is sampled from a standard Gaussian -- since the standard
 Gaussian is isotropic, there is equal probability for any direction. The
@@ -234,17 +239,21 @@ class TwoStageRandomDirectionRanker(RankerBase):
         if not self.target_measure_dir:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
-        # To avoid using an array of tuples, ranking_values is an 2D array
+
+        # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, projection_0], ..., [status_n, projection_n]]
         ranking_values = np.stack((add_statuses, projections), axis=-1)
+
         # Sort by whether the solution was added into the archive,
         # followed by projection.
-        return np.flip(np.lexsort(np.flip(ranking_values,
-                                          axis=-1).T)), ranking_values
+        return (
+            np.flip(np.lexsort(np.flip(ranking_values, axis=-1).T)),
+            ranking_values,
+        )
 
     rank.__doc__ = f"""
-Ranks the soutions first by whether they are added, then by their projection on
-a random direction in measure space.
+Ranks the solutions first by whether they are added, then by their projection
+onto a random direction in the archive.
 
 {_rank_args}
     """
@@ -272,7 +281,7 @@ class ObjectiveRanker(RankerBase):
         return np.flip(np.argsort(objective_batch)), objective_batch
 
     rank.__doc__ = f"""
-Ranks the soutions based on their objective values.
+Ranks the solutions based on their objective values.
 
 {_rank_args}
     """
@@ -288,16 +297,19 @@ class TwoStageObjectiveRanker(RankerBase):
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, metadata, add_statuses, add_values):
-        # To avoid using an array of tuples, ranking_values is an 2D array
+        # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, objective_0], ..., [status_0, objective_n]]
         ranking_values = np.stack((add_statuses, objective_batch), axis=-1)
+
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.
-        return np.flip(np.lexsort(np.flip(ranking_values,
-                                          axis=-1).T)), ranking_values
+        return (
+            np.flip(np.lexsort(np.flip(ranking_values, axis=-1).T)),
+            ranking_values,
+        )
 
     rank.__doc__ = f"""
-Ranks the soutions based on their objective values, while prioritizing newly
+Ranks the solutions based on their objective values, while prioritizing newly
 added solutions.
 
 {_rank_args}
