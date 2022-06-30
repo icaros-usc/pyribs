@@ -126,12 +126,12 @@ class CVTArchive(ArchiveBase):
             # The default, "k-means++", takes very long to init.
             self._k_means_kwargs["init"] = "random"
         if "algorithm" not in self._k_means_kwargs:
-            # The default, "auto"/"elkan", allocates a huge array.
             if semantic_version.Version(
                     sklearn.__version__) >= semantic_version.Version("1.1.0"):
                 # In the newer versions, "full" has been deprecated in favor of "lloyd".
                 self._k_means_kwargs["algorithm"] = "lloyd"
             else:
+                # The default, "auto"/"elkan", allocates a huge array.
                 self._k_means_kwargs["algorithm"] = "full"
         if "random_state" not in self._k_means_kwargs:
             self._k_means_kwargs["random_state"] = seed
