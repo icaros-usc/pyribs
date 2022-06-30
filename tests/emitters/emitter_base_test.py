@@ -32,19 +32,19 @@ def emitter_fixture(request, archive_fixture):
         emitter = EvolutionStrategyEmitter(archive,
                                            x0,
                                            5,
-                                           "obj",
+                                           "2imp",
                                            batch_size=batch_size)
     elif emitter_type == "RandomDirectionEmitter":
         emitter = EvolutionStrategyEmitter(archive,
                                            x0,
                                            5,
-                                           "obj",
+                                           "2rd",
                                            batch_size=batch_size)
     elif emitter_type == "OptimizingEmitter":
         emitter = EvolutionStrategyEmitter(archive,
                                            x0,
                                            5,
-                                           "obj",
+                                           "2obj",
                                            batch_size=batch_size)
     else:
         raise NotImplementedError(f"Unknown emitter type {emitter_type}")

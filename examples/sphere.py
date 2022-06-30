@@ -27,7 +27,7 @@ The supported algorithms are:
   TwoStageRandomDirectionRanker and mu selection rule.
 - `cma_me_opt`: GridArchive with EvolutionStrategyEmitter using ObjectiveRanker
   with mu selection rule.
-- `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, and half (7) of
+- `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, where half (7) of
   the emitter are using TwoStageRandomDirectionRanker and half (8) are
   TwoStageImprovementRanker.
 
