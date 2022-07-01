@@ -129,12 +129,13 @@ class GridArchive(ArchiveBase):
         See index_of() for usage.
         """
         # Adding epsilon accounts for floating point precision errors from
-        # transforming measures. We then cast to int32 to get integer indices.
+        # transforming measures. We then cast to int32 to obtain integer
+        # indices.
         grid_indices_batch = ((dims *
                                (measures_batch - lower_bounds) + epsilon) /
                               interval_size).astype(np.int32)
         # Clip indices to the archive dimensions (for example, for 20 cells, we
-        # want indices to be from 0 to 19).
+        # want indices to run from 0 to 19).
         grid_indices_batch = np.minimum(np.maximum(grid_indices_batch, 0),
                                         dims - 1)
         return grid_indices_batch
