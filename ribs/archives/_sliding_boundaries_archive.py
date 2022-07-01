@@ -10,8 +10,6 @@ from ribs._utils import check_measures_batch_shape
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._grid_archive import GridArchive
 
-_EPSILON = 1e-6
-
 
 class SolutionBuffer:
     """An internal class that stores relevant data to re-add after remapping.
@@ -116,6 +114,11 @@ class SlidingBoundariesArchive(ArchiveBase):
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
             ``dims``.
+        epsilon (float): Due to floating point precision errors, we add a small
+            epsilon when computing the archive indices in the :meth:`index_of`
+            method -- refer to the implementation `here
+            <../_modules/ribs/archives/_sliding_boundaries_archive.html#SlidingBoundariesArchive.index_of>`_.
+            Pass this parameter to configure that epsilon.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
@@ -132,6 +135,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                  solution_dim,
                  dims,
                  ranges,
+                 epsilon=1e-9,
                  seed=None,
                  dtype=np.float64,
                  remap_frequency=100,
@@ -154,6 +158,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
         self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
         self._interval_size = self._upper_bounds - self._lower_bounds
+        self._epsilon = self.dtype(epsilon)
 
         # Specifics for sliding boundaries.
         self._remap_frequency = remap_frequency
@@ -198,6 +203,12 @@ class SlidingBoundariesArchive(ArchiveBase):
         return self._interval_size
 
     @property
+    def epsilon(self):
+        """:attr:`dtype`: Epsilon for computing archive indices. Refer to
+        the documentation for this class."""
+        return self._epsilon
+
+    @property
     def remap_frequency(self):
         """int: Frequency of remapping. Archive will remap once after
         ``remap_frequency`` number of solutions has been found.
@@ -233,18 +244,15 @@ class SlidingBoundariesArchive(ArchiveBase):
     @staticmethod
     @nb.jit(nopython=True)
     def _index_of_numba(measures_batch, upper_bounds, lower_bounds, boundaries,
-                        dims):
+                        dims, epsilon):
         """Numba helper for index_of().
 
         See index_of() for usage.
         """
-        measures_batch = np.minimum(
-            np.maximum(measures_batch + _EPSILON, lower_bounds),
-            upper_bounds - _EPSILON)
         idx_cols = []
         for boundary, dim, measures_col in zip(boundaries, dims,
                                                measures_batch.T):
-            idx_col = np.searchsorted(boundary[:dim], measures_col)
+            idx_col = np.searchsorted(boundary[:dim], measures_col + epsilon)
             idx_cols.append(np.maximum(0, idx_col - 1))
         return idx_cols
 
@@ -292,10 +300,11 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         index_cols = SlidingBoundariesArchive._index_of_numba(
             measures_batch,
-            self.upper_bounds,
-            self.lower_bounds,
+            self._upper_bounds,
+            self._lower_bounds,
             self._boundaries,
             self._dims,
+            self._epsilon,
         )
 
         # We cannot use `grid_to_int_index` since that takes in an array of
