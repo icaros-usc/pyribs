@@ -1,6 +1,7 @@
 """Tests for the GridArchive."""
 import numpy as np
 import pytest
+
 from ribs.archives import AddStatus, GridArchive
 
 from .conftest import get_archive_data
