@@ -1,6 +1,7 @@
 """Contains the GridArchive."""
 import numpy as np
 from numba import jit
+
 from ribs._utils import check_measures_batch_shape
 from ribs.archives._archive_base import ArchiveBase
 
