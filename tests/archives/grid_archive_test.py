@@ -145,11 +145,15 @@ def test_int_to_grid_index_wrong_shape(data):
 def test_values_go_to_correct_bin(dtype):
     """Bins tend to be a bit fuzzy at the edges due to floating point precision
     errors."""
-    archive = GridArchive(solution_dim=0,
-                          dims=[10],
-                          ranges=[(0, 0.1)],
-                          epsilon=1e-6,
-                          dtype=dtype)
+    archive = GridArchive(
+        solution_dim=0,
+        dims=[10],
+        ranges=[(0, 0.1)],
+        # In this case, a big epsilon is needed to make things work. The default
+        # of 1e-9 is too small.
+        epsilon=1e-6,
+        dtype=dtype,
+    )
 
     # Going below the lower bound still lands you in the first bin.
     assert archive.index_of_single([-0.01]) == 0
