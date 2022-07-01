@@ -252,7 +252,10 @@ class SlidingBoundariesArchive(ArchiveBase):
         idx_cols = []
         for boundary, dim, measures_col in zip(boundaries, dims,
                                                measures_batch.T):
-            idx_col = np.searchsorted(boundary[:dim], measures_col + epsilon)
+            idx_col = np.searchsorted(boundary[:dim], measures_col)
+            # The maximum index returned by searchsorted is `dim`, and since we
+            # subtract 1, the max will be dim - 1 which is within the range of
+            # the archive indices.
             idx_cols.append(np.maximum(0, idx_col - 1))
         return idx_cols
 
