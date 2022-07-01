@@ -156,7 +156,7 @@ def test_values_go_to_correct_bin(dtype):
         dtype=dtype,
     )
 
-    # Going below the lower bound still lands you in the first bin.
+    # Values below the lower bound land in the first bin.
     assert archive.index_of_single([-0.01]) == 0
 
     assert archive.index_of_single([0.0]) == 0
@@ -170,5 +170,6 @@ def test_values_go_to_correct_bin(dtype):
     assert archive.index_of_single([0.08]) == 8
     assert archive.index_of_single([0.09]) == 9
 
-    # Upper bound goes in last bin.
+    # Upper bound and above belong in last bin.
     assert archive.index_of_single([0.1]) == 9
+    assert archive.index_of_single([0.11]) == 9
