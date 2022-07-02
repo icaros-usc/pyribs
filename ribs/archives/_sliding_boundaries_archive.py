@@ -135,7 +135,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                  solution_dim,
                  dims,
                  ranges,
-                 epsilon=1e-9,
+                 epsilon=1e-6,
                  seed=None,
                  dtype=np.float64,
                  remap_frequency=100,

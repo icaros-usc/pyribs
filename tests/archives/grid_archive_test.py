@@ -145,13 +145,12 @@ def test_int_to_grid_index_wrong_shape(data):
                          ids=["float64", "float32"])
 def test_values_go_to_correct_bin(dtype):
     """Bins tend to be a bit fuzzy at the edges due to floating point precision
-    errors."""
+    errors, so this test checks if we can get everything to land in the correct
+    bin."""
     archive = GridArchive(
         solution_dim=0,
         dims=[10],
         ranges=[(0, 0.1)],
-        # In this case, a big epsilon is needed to make things work. The default
-        # of 1e-9 is too small.
         epsilon=1e-6,
         dtype=dtype,
     )
