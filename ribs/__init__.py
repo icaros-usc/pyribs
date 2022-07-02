@@ -4,11 +4,10 @@ __author__ = "ICAROS Lab pyribs Team"
 __email__ = "team@pyribs.org"
 __version__ = "0.4.0"
 
-from ribs import archives, emitters, factory, optimizers
+from ribs import archives, emitters, optimizers
 
 __all__ = [
     "archives",
     "emitters",
     "optimizers",
-    "factory",
 ]

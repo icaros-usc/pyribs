@@ -19,7 +19,6 @@ api/ribs.archives
 api/ribs.emitters
 api/ribs.emitters.rankers
 api/ribs.optimizers
-api/ribs.factory
 api/ribs.visualize
 ```
 
