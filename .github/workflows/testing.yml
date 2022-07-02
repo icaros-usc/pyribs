@@ -40,7 +40,6 @@ jobs:
       - name: Test core
         run: >
           pytest tests/archives tests/emitters tests/optimizers
-          tests/factory_test.py
   pin:
     runs-on: ubuntu-latest
     steps:
@@ -56,7 +55,6 @@ jobs:
       - name: Test core
         run: >
           pytest tests/archives tests/emitters tests/optimizers
-          tests/factory_test.py
       - name: Install extras deps
         run: pip install -r pinned_reqs/extras_visualize.txt
       - name: Test extras
