@@ -5,8 +5,6 @@ from numba import jit
 from ribs._utils import check_measures_batch_shape
 from ribs.archives._archive_base import ArchiveBase
 
-_EPSILON = 1e-6
-
 
 class GridArchive(ArchiveBase):
     """An archive that divides each dimension into uniformly-sized cells.
@@ -30,6 +28,11 @@ class GridArchive(ArchiveBase):
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
             ``dims``.
+        epsilon (float): Due to floating point precision errors, we add a small
+            epsilon when computing the archive indices in the :meth:`index_of`
+            method -- refer to the implementation `here
+            <../_modules/ribs/archives/_grid_archive.html#GridArchive.index_of>`_.
+            Pass this parameter to configure that epsilon.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
@@ -39,8 +42,14 @@ class GridArchive(ArchiveBase):
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
-    def __init__(self, solution_dim, dims, ranges, seed=None, dtype=np.float64):
-        self._dims = np.array(dims)
+    def __init__(self,
+                 solution_dim,
+                 dims,
+                 ranges,
+                 epsilon=1e-6,
+                 seed=None,
+                 dtype=np.float64):
+        self._dims = np.array(dims, dtype=np.int32)
         if len(self._dims) != len(ranges):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
                              f"(length {len(ranges)}) must be the same length")
@@ -58,6 +67,7 @@ class GridArchive(ArchiveBase):
         self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
         self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
         self._interval_size = self._upper_bounds - self._lower_bounds
+        self._epsilon = self.dtype(epsilon)
 
         self._boundaries = []
         for dim, lower_bound, upper_bound in zip(self._dims, self._lower_bounds,
@@ -87,6 +97,12 @@ class GridArchive(ArchiveBase):
         return self._interval_size
 
     @property
+    def epsilon(self):
+        """:attr:`dtype`: Epsilon for computing archive indices. Refer to
+        the documentation for this class."""
+        return self._epsilon
+
+    @property
     def boundaries(self):
         """list of numpy.ndarray: The boundaries of the cells in each dimension.
 
@@ -106,25 +122,23 @@ class GridArchive(ArchiveBase):
 
     @staticmethod
     @jit(nopython=True)
-    def _index_of_numba(measures_batch, upper_bounds, lower_bounds,
-                        interval_size, dims):
+    def _index_of_numba(measures_batch, lower_bounds, interval_size, dims,
+                        epsilon):
         """Numba helper for index_of().
 
         See index_of() for usage.
         """
-        # Adding epsilon to measures accounts for floating point precision
-        # errors from transforming measures. Subtracting epsilon from
-        # upper_bounds ensures we do not have indices outside the grid.
-        measures_batch = np.minimum(
-            np.maximum(measures_batch + _EPSILON, lower_bounds),
-            upper_bounds - _EPSILON)
-
-        grid_indices_batch = (measures_batch -
-                              lower_bounds) / interval_size * dims
-
-        # Casting to int is necessary for rounding down since grid_indices_batch
-        # is currently float.
-        return grid_indices_batch.astype(np.int32)
+        # Adding epsilon accounts for floating point precision errors from
+        # transforming measures. We then cast to int32 to obtain integer
+        # indices.
+        grid_indices_batch = ((dims *
+                               (measures_batch - lower_bounds) + epsilon) /
+                              interval_size).astype(np.int32)
+        # Clip indices to the archive dimensions (for example, for 20 cells, we
+        # want indices to run from 0 to 19).
+        grid_indices_batch = np.minimum(np.maximum(grid_indices_batch, 0),
+                                        dims - 1)
+        return grid_indices_batch
 
     def index_of(self, measures_batch):
         """Returns archive indices for the given batch of measures.
@@ -171,10 +185,10 @@ class GridArchive(ArchiveBase):
         return self.grid_to_int_index(
             self._index_of_numba(
                 measures_batch,
-                self._upper_bounds,
                 self._lower_bounds,
                 self._interval_size,
                 self._dims,
+                self._epsilon,
             ))
 
     def grid_to_int_index(self, grid_index_batch):
