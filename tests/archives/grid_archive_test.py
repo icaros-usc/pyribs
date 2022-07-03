@@ -170,3 +170,36 @@ def test_int_to_grid_index(data):
 def test_int_to_grid_index_wrong_shape(data):
     with pytest.raises(ValueError):
         data.archive.int_to_grid_index(data.int_index)
+
+
+@pytest.mark.parametrize("dtype", [np.float64, np.float32],
+                         ids=["float64", "float32"])
+def test_values_go_to_correct_bin(dtype):
+    """Bins tend to be a bit fuzzy at the edges due to floating point precision
+    errors, so this test checks if we can get everything to land in the correct
+    bin."""
+    archive = GridArchive(
+        solution_dim=0,
+        dims=[10],
+        ranges=[(0, 0.1)],
+        epsilon=1e-6,
+        dtype=dtype,
+    )
+
+    # Values below the lower bound land in the first bin.
+    assert archive.index_of_single([-0.01]) == 0
+
+    assert archive.index_of_single([0.0]) == 0
+    assert archive.index_of_single([0.01]) == 1
+    assert archive.index_of_single([0.02]) == 2
+    assert archive.index_of_single([0.03]) == 3
+    assert archive.index_of_single([0.04]) == 4
+    assert archive.index_of_single([0.05]) == 5
+    assert archive.index_of_single([0.06]) == 6
+    assert archive.index_of_single([0.07]) == 7
+    assert archive.index_of_single([0.08]) == 8
+    assert archive.index_of_single([0.09]) == 9
+
+    # Upper bound and above belong in last bin.
+    assert archive.index_of_single([0.1]) == 9
+    assert archive.index_of_single([0.11]) == 9
