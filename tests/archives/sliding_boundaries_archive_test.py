@@ -41,13 +41,15 @@ def test_attributes_correctly_constructed(data):
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
 def test_add_to_archive(data, use_list):
     if use_list:
-        status, value = data.archive.add(list(data.solution),
-                                         data.objective_value,
-                                         list(data.behavior_values),
-                                         data.metadata)
+        status, value = data.archive.add_single(list(data.solution),
+                                                data.objective_value,
+                                                list(data.behavior_values),
+                                                data.metadata)
     else:
-        status, value = data.archive.add(data.solution, data.objective_value,
-                                         data.behavior_values, data.metadata)
+        status, value = data.archive.add_single(data.solution,
+                                                data.objective_value,
+                                                data.behavior_values,
+                                                data.metadata)
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective_value)
@@ -62,10 +64,10 @@ def test_add_and_overwrite(data):
     arbitrary_metadata = {"foobar": 12}
     high_objective_value = data.objective_value + 1.0
 
-    status, value = data.archive_with_elite.add(arbitrary_sol,
-                                                high_objective_value,
-                                                data.behavior_values,
-                                                arbitrary_metadata)
+    status, value = data.archive_with_elite.add_single(arbitrary_sol,
+                                                       high_objective_value,
+                                                       data.behavior_values,
+                                                       arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective_value - data.objective_value)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol,
@@ -79,10 +81,10 @@ def test_add_without_overwrite(data):
     arbitrary_metadata = {"foobar": 12}
     low_objective_value = data.objective_value - 1.0
 
-    status, value = data.archive_with_elite.add(arbitrary_sol,
-                                                low_objective_value,
-                                                data.behavior_values,
-                                                arbitrary_metadata)
+    status, value = data.archive_with_elite.add_single(arbitrary_sol,
+                                                       low_objective_value,
+                                                       data.behavior_values,
+                                                       arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective_value - data.objective_value)
     assert_archive_elite(data.archive_with_elite, data.solution,
@@ -116,13 +118,13 @@ def test_initial_remap():
                 obj = 2
 
             # Solutions are same as BCs.
-            archive.add([x, y], obj, [x, y])
+            archive.add_single([x, y], obj, [x, y])
 
     # There are 199 entries because the last entry has not been inserted.
     assert len(archive) == 199
 
     # Buffer should now have 231 entries; hence it remaps.
-    archive.add([-1, -2], 1, [-1, -2])
+    archive.add_single([-1, -2], 1, [-1, -2])
     expected_bcs.append((-1, -2))
 
     assert len(archive) == 200
@@ -142,8 +144,8 @@ def test_initial_remap():
 
 def test_add_to_archive_with_full_buffer(data):
     for _ in range(data.archive.buffer_capacity + 1):
-        data.archive.add(data.solution, data.objective_value,
-                         data.behavior_values, data.metadata)
+        data.archive.add_single(data.solution, data.objective_value,
+                                data.behavior_values, data.metadata)
 
     # After adding the same elite multiple times, there should only be one
     # elite, and it should be at (0, 0).
@@ -154,8 +156,8 @@ def test_add_to_archive_with_full_buffer(data):
     # because the behavior values are clipped to the boundaries before being
     # inserted.
     arbitrary_metadata = {"foobar": 12}
-    data.archive.add(2 * data.solution, 2 * data.objective_value,
-                     2 * data.behavior_values, arbitrary_metadata)
+    data.archive.add_single(2 * data.solution, 2 * data.objective_value,
+                            2 * data.behavior_values, arbitrary_metadata)
     assert_archive_elite(data.archive, 2 * data.solution,
                          2 * data.objective_value, 2 * data.behavior_values,
                          (0, 0), arbitrary_metadata)
@@ -169,7 +171,7 @@ def test_adds_solutions_from_old_archive():
 
     for x in np.linspace(-1, 1, 11):
         for y in np.linspace(-2, 2, 21):
-            archive.add([x, y], 2, [x, y])
+            archive.add_single([x, y], 2, [x, y])
 
     assert len(archive) == 200
 
@@ -178,7 +180,7 @@ def test_adds_solutions_from_old_archive():
     # cleared from the buffer since the buffer only has capacity 200.
     for x in np.linspace(-1, 1, 11):
         for y in np.linspace(-2, 2, 21):
-            archive.add([x, y], 1, [x, y])
+            archive.add_single([x, y], 1, [x, y])
 
     assert len(archive) == 200
 
