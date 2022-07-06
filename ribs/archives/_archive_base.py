@@ -364,51 +364,55 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         batch end up in the same cell, we only keep the solution with the
         highest objective.
 
+        .. note:: The indices of all args should ``correspond`` to each other,
+            i.e. ``solution_batch[i]``, ``objective_batch[i]``,
+            ``measures_batch[i]``, and ``metadata_batch[i]`` should be the
+            solution parameters, objective, measures, and metadata for solution
+            ``i``.
+
         Args:
             solution_batch (array-like): (batch_size, :attr:`solution_dim`)
-                array of solution parameters. Note that the indices of all these
-                args should ``correspond`` to each other, i.e.
-                ``solution_batch[i]``, ``objective_batch[i]``,
-                ``measures_batch[i]``, and ``metadata_batch[i]`` should be the
-                solution parameters, objective, measures, and metadata for
-                solution ``i``.
+                array of solution parameters.
             objective_batch (array-like): (batch_size,) array with objective
                 function evaluations of the solutions.
             measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
                 array with measure space coordinates of all the solutions.
-            metadata (array-like): (batch_size,) array of Python objects
+            metadata_batch (array-like): (batch_size,) array of Python objects
                 representing metadata for the solution. For instance, this could
                 be a dict with several properties.
         Returns:
-            tuple: 2-element tuple of ``add_statuses`` and ``add_values`` which
-            describe the result of the add operation. These outputs are
+            tuple: 2-element tuple of ``status_batch`` and ``value_batch`` which
+            describes the result of the add operation. These outputs are
             particularly useful for algorithms such as CMA-ME.
 
-            - **add_statuses** (array of int): An array of integers which
-              represent the "status" obtained when attempting to insert each
-              solution in the batch. Each item has the following possible
-              values:
+            - **status_batch** (:class:`numpy.ndarray` of :class:`int`): An
+              array of integers which represent the "status" obtained when
+              attempting to insert each solution in the batch. Each item has the
+              following possible values:
 
               - ``0``: The solution was not added to the archive.
               - ``1``: The solution improved the objective value of a cell
                 which was already in the archive.
               - ``2``: The solution discovered a new cell in the archive.
 
-              **Note that all statuses (and values below) are computed with
-              respect to the *current* archive.** For example, if two solutions
-              both introduce the same new archive cell, then both will be marked
-              with ``2``. An alternative implementation could depend on the
-              order of the solutions in the batch -- for example, if we have two
-              solutions ``a`` and ``b`` which introduce the same new cell in the
-              archive, ``a`` could be inserted first with status ``2``, and
-              ``b`` could be inserted second with status ``1`` because it
-              improves upon ``a``.
+              .. note:: All statuses (and values below) are computed with
+                  respect to the *current* archive. For example, if two
+                  solutions both introduce the same new archive cell, then both
+                  will be marked with ``2``.
 
-              To convert this to a more semantic format, cast all statuses to
-              :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
-              add_statuses]``
+                  The alternative is to depend on the order of the solutions in
+                  the batch -- for example, if we have two solutions ``a`` and
+                  ``b`` which introduce the same new cell in the archive, ``a``
+                  could be inserted first with status ``2``, and ``b`` could be
+                  inserted second with status ``1`` because it improves upon
+                  ``a``. However, our implementation does **not** do this.
 
-            - **value** (:attr:`dtype`): The meaning of this value depends on
+              To convert statuses to a more semantic format, cast all statuses
+              to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
+              add_statuses]``.
+
+            - **value_batch** (:attr:`dtype`): An array with values for each
+              solution in the batch. The meaning of each ``value`` depends on
               the value of ``status``:
 
               - ``NOT_ADDED`` -> the "negative improvement," i.e. objective
