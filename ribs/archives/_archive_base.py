@@ -6,7 +6,7 @@ import numba as nb
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import check_measures_batch_shape, check_measures_shape
+from ribs._utils import check_1d_shape, check_batch_shape
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
@@ -311,7 +311,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             ValueError: ``measures`` is not of shape (:attr:`behavior_dim`,).
         """
         measures = np.asarray(measures)
-        check_measures_shape(measures, self.behavior_dim)
+        check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
         return self.index_of(measures[None])[0]
 
     @staticmethod
@@ -425,6 +425,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 of the elite previously in the archive.
               - ``2`` (new cell): The value is just the objective of the
                 solution.
+        Raises:
+            ValueError: The array arguments do not match their specified shapes.
         """
         self._state["add"] += 1
         solution_batch = np.asarray(solution_batch)
@@ -625,7 +627,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_measures_batch_shape(measures_batch, self.behavior_dim)
+        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+                          "measure_dim")
 
         index_batch = self.index_of(measures_batch)
         occupied_batch = self._occupied[index_batch]
@@ -692,7 +695,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             ValueError: ``measures`` is not of shape (:attr:`behavior_dim`,).
         """
         measures = np.asarray(measures)
-        check_measures_shape(measures, self.behavior_dim)
+        check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
 
         elite_batch = self.elites_with_measures(measures[None])
         return Elite(

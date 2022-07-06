@@ -6,7 +6,7 @@ import numba as nb
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs._utils import check_measures_batch_shape
+from ribs._utils import check_batch_shape
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._grid_archive import GridArchive
 
@@ -305,7 +305,8 @@ class SlidingBoundariesArchive(ArchiveBase):
                 :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_measures_batch_shape(measures_batch, self.behavior_dim)
+        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+                          "measure_dim")
 
         index_cols = SlidingBoundariesArchive._index_of_numba(
             measures_batch,
