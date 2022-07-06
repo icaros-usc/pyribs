@@ -352,109 +352,74 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied_indices[self._num_occupied] = index
         self._num_occupied += 1
 
-    def add(self, solution, objective_value, behavior_values, metadata=None):
-        """Attempts to insert a new solution into the archive.
-
-        The solution is only inserted if it has a higher ``objective_value``
-        than the elite previously in the corresponding cell.
-
-        Args:
-            solution (array-like): Parameters of the solution.
-            objective_value (float): Objective function evaluation of the
-                solution.
-            behavior_values (array-like): Coordinates in behavior space of the
-                solution.
-            metadata (object): Any Python object representing metadata for the
-                solution. For instance, this could be a dict with several
-                properties.
-        Returns:
-            tuple: 2-element tuple describing the result of the add operation.
-            These outputs are particularly useful for algorithms such as CMA-ME.
-
-                **status** (:class:`AddStatus`): See :class:`AddStatus`.
-
-                **value** (:attr:`dtype`): The meaning of this value depends on
-                the value of ``status``:
-
-                - ``NOT_ADDED`` -> the "negative improvement," i.e. objective
-                  value of solution passed in minus objective value of the
-                  solution still in the archive (this value is negative because
-                  the solution did not have a high enough objective value to be
-                  added to the archive)
-                - ``IMPROVE_EXISTING`` -> the "improvement," i.e. objective
-                  value of solution passed in minus objective value of solution
-                  previously in the archive
-                - ``NEW`` -> the objective value passed in
-        """
-        #  self._state["add"] += 1
-        #  solution = np.asarray(solution)
-        #  behavior_values = np.asarray(behavior_values)
-        #  objective_value = self.dtype(objective_value)
-
-        #  index = self.index_of(behavior_values[None])[0]
-        #  old_objective = self._objective_values[index]
-        #  was_inserted, already_occupied = self._add_numba(
-        #      index, solution, objective_value, behavior_values, self._occupied,
-        #      self._solutions, self._objective_values, self._behavior_values)
-
-        #  if was_inserted:
-        #      self._metadata[index] = metadata
-
-        #  if was_inserted and not already_occupied:
-        #      self._add_occupied_index(index)
-        #      status = AddStatus.NEW
-        #      value = objective_value
-        #      self._stats_update(self.dtype(0.0), objective_value)
-        #  elif was_inserted and already_occupied:
-        #      status = AddStatus.IMPROVE_EXISTING
-        #      value = objective_value - old_objective
-        #      self._stats_update(old_objective, objective_value)
-        #  else:
-        #      status = AddStatus.NOT_ADDED
-        #      value = objective_value - old_objective
-        #  return status, value
-
-        status, value = self.add_batch([solution], [objective_value],
-                                       [behavior_values], [metadata])
-        return status[0], value[0]
-
-    def add_batch(self,
-                  solution_batch,
-                  objective_batch,
-                  measures_batch,
-                  metadata_batch=None):
+    def add(self,
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            metadata_batch=None):
         """Inserts a batch of solutions into the archive.
 
-        Each solution is only inserted if it has a higher ``objective_value``
-        than the elite previously in the corresponding cell.
+        Each solution is only inserted if it has a higher objective than the
+        elite previously in the corresponding cell. If multiple solutions in the
+        batch end up in the same cell, we only keep the solution with the
+        highest objective.
 
         Args:
-            solution (array-like): Parameters of the solution.
-            objective_value (float): Objective function evaluation of the
-                solution.
-            behavior_values (array-like): Coordinates in behavior space of the
-                solution.
-            metadata (object): Any Python object representing metadata for the
-                solution. For instance, this could be a dict with several
-                properties.
+            solution_batch (array-like): (batch_size, :attr:`solution_dim`)
+                array of solution parameters. Note that the indices of all these
+                args should ``correspond`` to each other, i.e.
+                ``solution_batch[i]``, ``objective_batch[i]``,
+                ``measures_batch[i]``, and ``metadata_batch[i]`` should be the
+                solution parameters, objective, measures, and metadata for
+                solution ``i``.
+            objective_batch (array-like): (batch_size,) array with objective
+                function evaluations of the solutions.
+            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+                array with measure space coordinates of all the solutions.
+            metadata (array-like): (batch_size,) array of Python objects
+                representing metadata for the solution. For instance, this could
+                be a dict with several properties.
         Returns:
-            tuple: 2-element tuple describing the result of the add operation.
-            These outputs are particularly useful for algorithms such as CMA-ME.
+            tuple: 2-element tuple of ``add_statuses`` and ``add_values`` which
+            describe the result of the add operation. These outputs are
+            particularly useful for algorithms such as CMA-ME.
 
-                **status** (:class:`AddStatus`): See :class:`AddStatus`.
+            - **add_statuses** (array of int): An array of integers which
+              represent the "status" obtained when attempting to insert each
+              solution in the batch. Each item has the following possible
+              values:
 
-                **value** (:attr:`dtype`): The meaning of this value depends on
-                the value of ``status``:
+              - ``0``: The solution was not added to the archive.
+              - ``1``: The solution improved the objective value of a cell
+                which was already in the archive.
+              - ``2``: The solution discovered a new cell in the archive.
 
-                - ``NOT_ADDED`` -> the "negative improvement," i.e. objective
-                  value of solution passed in minus objective value of the
-                  solution still in the archive (this value is negative because
-                  the solution did not have a high enough objective value to be
-                  added to the archive)
-                - ``IMPROVE_EXISTING`` -> the "improvement," i.e. objective
-                  value of solution passed in minus objective value of solution
-                  previously in the archive
-                - ``NEW`` -> the objective value passed in
+              **Note that all statuses (and values below) are computed with
+              respect to the *current* archive.** For example, if two solutions
+              both introduce the same new archive cell, then both will be marked
+              with ``2``. An alternative implementation could depend on the
+              order of the solutions in the batch -- for example, if we have two
+              solutions ``a`` and ``b`` which introduce the same new cell in the
+              archive, ``a`` could be inserted first with status ``2``, and
+              ``b`` could be inserted second with status ``1`` because it
+              improves upon ``a``.
+
+              To convert this to a more semantic format, cast all statuses to
+              :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
+              add_statuses]``
+
+            - **value** (:attr:`dtype`): The meaning of this value depends on
+              the value of ``status``:
+
+              - ``NOT_ADDED`` -> the "negative improvement," i.e. objective
+                value of solution passed in minus objective value of the
+                solution still in the archive (this value is negative because
+                the solution did not have a high enough objective value to be
+                added to the archive)
+              - ``IMPROVE_EXISTING`` -> the "improvement," i.e. objective
+                value of solution passed in minus objective value of solution
+                previously in the archive
+              - ``NEW`` -> the objective value passed in
         """
         self._state["add"] += 1
         solution_batch = np.asarray(solution_batch)
@@ -465,6 +430,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                                                  dtype=object))
 
         # TODO: Shape checks.
+        # TODO: Note that we switched from single to batch in new pyribs.
 
         objective_batch = np.asarray(objective_batch, self.dtype)
         # Copy old objectives since we will be modifying the objectives storage.
@@ -548,6 +514,77 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         )
 
         return add_statuses, add_values
+
+    def add_single(self,
+                   solution,
+                   objective_value,
+                   behavior_values,
+                   metadata=None):
+        """Attempts to insert a new solution into the archive.
+
+        The solution is only inserted if it has a higher ``objective_value``
+        than the elite previously in the corresponding cell.
+
+        Args:
+            solution (array-like): Parameters of the solution.
+            objective_value (float): Objective function evaluation of the
+                solution.
+            behavior_values (array-like): Coordinates in behavior space of the
+                solution.
+            metadata (object): Any Python object representing metadata for the
+                solution. For instance, this could be a dict with several
+                properties.
+        Returns:
+            tuple: 2-element tuple describing the result of the add operation.
+            These outputs are particularly useful for algorithms such as CMA-ME.
+
+                **status** (:class:`AddStatus`): See :class:`AddStatus`.
+
+                **value** (:attr:`dtype`): The meaning of this value depends on
+                the value of ``status``:
+
+                - ``NOT_ADDED`` -> the "negative improvement," i.e. objective
+                  value of solution passed in minus objective value of the
+                  solution still in the archive (this value is negative because
+                  the solution did not have a high enough objective value to be
+                  added to the archive)
+                - ``IMPROVE_EXISTING`` -> the "improvement," i.e. objective
+                  value of solution passed in minus objective value of solution
+                  previously in the archive
+                - ``NEW`` -> the objective value passed in
+        """
+        #  self._state["add"] += 1
+        #  solution = np.asarray(solution)
+        #  behavior_values = np.asarray(behavior_values)
+        #  objective_value = self.dtype(objective_value)
+
+        #  index = self.index_of(behavior_values[None])[0]
+        #  old_objective = self._objective_values[index]
+        #  was_inserted, already_occupied = self._add_numba(
+        #      index, solution, objective_value, behavior_values, self._occupied,
+        #      self._solutions, self._objective_values, self._behavior_values)
+
+        #  if was_inserted:
+        #      self._metadata[index] = metadata
+
+        #  if was_inserted and not already_occupied:
+        #      self._add_occupied_index(index)
+        #      status = AddStatus.NEW
+        #      value = objective_value
+        #      self._stats_update(self.dtype(0.0), objective_value)
+        #  elif was_inserted and already_occupied:
+        #      status = AddStatus.IMPROVE_EXISTING
+        #      value = objective_value - old_objective
+        #      self._stats_update(old_objective, objective_value)
+        #  else:
+        #      status = AddStatus.NOT_ADDED
+        #      value = objective_value - old_objective
+        #  return status, value
+
+        # TODO: Implement this better.
+        status, value = self.add([solution], [objective_value],
+                                 [behavior_values], [metadata])
+        return status[0], value[0]
 
     def elites_with_measures(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
