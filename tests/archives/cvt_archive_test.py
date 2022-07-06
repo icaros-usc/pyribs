@@ -73,15 +73,17 @@ def test_custom_centroids_bad_shape(use_kd_tree):
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
-def test_add_to_archive(data, use_list):
+def test_add_single_to_archive(data, use_list):
     if use_list:
-        status, value = data.archive.add(list(data.solution),
-                                         data.objective_value,
-                                         list(data.behavior_values),
-                                         data.metadata)
+        status, value = data.archive.add_single(list(data.solution),
+                                                data.objective_value,
+                                                list(data.behavior_values),
+                                                data.metadata)
     else:
-        status, value = data.archive.add(data.solution, data.objective_value,
-                                         data.behavior_values, data.metadata)
+        status, value = data.archive.add_single(data.solution,
+                                                data.objective_value,
+                                                data.behavior_values,
+                                                data.metadata)
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective_value)
@@ -90,16 +92,16 @@ def test_add_to_archive(data, use_list):
                          data.centroid, data.metadata)
 
 
-def test_add_and_overwrite(data):
+def test_add_single_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     high_objective_value = data.objective_value + 1.0
 
-    status, value = data.archive_with_elite.add(arbitrary_sol,
-                                                high_objective_value,
-                                                data.behavior_values,
-                                                arbitrary_metadata)
+    status, value = data.archive_with_elite.add_single(arbitrary_sol,
+                                                       high_objective_value,
+                                                       data.behavior_values,
+                                                       arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective_value - data.objective_value)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol,
@@ -107,16 +109,16 @@ def test_add_and_overwrite(data):
                          data.centroid, arbitrary_metadata)
 
 
-def test_add_without_overwrite(data):
+def test_add_single_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     low_objective_value = data.objective_value - 1.0
 
-    status, value = data.archive_with_elite.add(arbitrary_sol,
-                                                low_objective_value,
-                                                data.behavior_values,
-                                                arbitrary_metadata)
+    status, value = data.archive_with_elite.add_single(arbitrary_sol,
+                                                       low_objective_value,
+                                                       data.behavior_values,
+                                                       arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective_value - data.objective_value)
     assert_archive_elite(data.archive_with_elite, data.solution,
