@@ -134,7 +134,8 @@ def get_archive_data(name, dtype=np.float64):
         grid_indices = (6, 11)
         int_index = 131
 
-    archive_with_elite.add(solution, objective_value, behavior_values, metadata)
+    archive_with_elite.add_single(solution, objective_value, behavior_values,
+                                  metadata)
     return ArchiveFixtureData(
         archive,
         archive_with_elite,
