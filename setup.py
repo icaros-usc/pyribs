@@ -15,7 +15,6 @@ install_requires = [
     "numpy_groupies>=0.9.16",  # Supports Python 3.7 and up.
     "numba>=0.51.0",
     "pandas>=1.0.0",
-    "toml>=0.10.0",
     "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
     "scikit-learn>=0.20.0",  # Primarily used in CVTArchive.
     "scipy>=1.4.0",  # Primarily used in CVTArchive.
