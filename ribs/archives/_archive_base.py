@@ -537,43 +537,29 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             metadata (object): Python object representing metadata for the
                 solution. For instance, this could be a dict with several
                 properties.
+
+                .. warning:: Due to how NumPy's :func:`~numpy.asarray`
+                    automatically converts array-like objects to arrays, passing
+                    array-like objects as metadata may lead to unexpected
+                    behavior. If you are not familiar with our implementation,
+                    we suggest using a dict for metadata.
         Returns:
             tuple: 2-element tuple of (status, value) describing the result of
             the add operation. Refer to :meth:`add` for the meaning of the
             status and value.
         """
-        #  self._state["add"] += 1
-        #  solution = np.asarray(solution)
-        #  behavior_values = np.asarray(behavior_values)
-        #  objective_value = self.dtype(objective_value)
+        solution = np.asarray(solution)
+        objective = np.asarray(objective, dtype=self.dtype)  # 0-dim array.
+        measures = np.asarray(measures)
 
-        #  index = self.index_of(behavior_values[None])[0]
-        #  old_objective = self._objective_values[index]
-        #  was_inserted, already_occupied = self._add_numba(
-        #      index, solution, objective_value, behavior_values, self._occupied,
-        #      self._solutions, self._objective_values, self._behavior_values)
+        check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
+        check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
 
-        #  if was_inserted:
-        #      self._metadata[index] = metadata
-
-        #  if was_inserted and not already_occupied:
-        #      self._add_occupied_index(index)
-        #      status = AddStatus.NEW
-        #      value = objective_value
-        #      self._stats_update(self.dtype(0.0), objective_value)
-        #  elif was_inserted and already_occupied:
-        #      status = AddStatus.IMPROVE_EXISTING
-        #      value = objective_value - old_objective
-        #      self._stats_update(old_objective, objective_value)
-        #  else:
-        #      status = AddStatus.NOT_ADDED
-        #      value = objective_value - old_objective
-        #  return status, value
-
-        # TODO: Implement this better.
-        status, value = self.add([solution], [objective_value],
-                                 [behavior_values], [metadata])
-        return status[0], value[0]
+        status_batch, value_batch = self.add(solution[None],
+                                             np.array([objective]),
+                                             measures[None],
+                                             np.array([metadata], dtype=object))
+        return (status_batch[0], value_batch[0])
 
     def elites_with_measures(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
