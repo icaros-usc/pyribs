@@ -15,14 +15,14 @@ def benchmark_data_10k():
     - The number of values (10k)
     - 10k random solutions in the range (-1,1) in each dim
     - 10k random objective values drawn from the standard normal distribution
-    - 10k random behavior values in the range (-1,1) in each dim
+    - 10k random measures in the range (-1,1) in each dim
     """
     rng = np.random.default_rng(42)
     n_vals = 10_000
-    solutions = rng.uniform(-1, 1, (n_vals, 10))
-    objective_values = rng.standard_normal(n_vals)
-    behavior_values = rng.uniform(-1, 1, (n_vals, 2))
-    return n_vals, solutions, objective_values, behavior_values
+    solution_batch = rng.uniform(-1, 1, (n_vals, 10))
+    objective_batch = rng.standard_normal(n_vals)
+    measures_batch = rng.uniform(-1, 1, (n_vals, 2))
+    return n_vals, solution_batch, objective_batch, measures_batch
 
 
 @pytest.fixture(params=[False, True], ids=["brute_force", "kd_tree"])
