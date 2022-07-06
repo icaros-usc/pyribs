@@ -154,6 +154,17 @@ class Optimizer:
         self._check_length("behavior_values", behavior_values)
         self._check_length("metadata", metadata)
 
+        # Add solutions to the archive.
+        add_statuses = []
+        add_values = []
+        for (sol, obj, beh, meta) in zip(self._solutions, objective_values,
+                                         behavior_values, metadata):
+            status, value = self.archive.add(sol, obj, beh, meta)
+            add_statuses.append(status)
+            add_values.append(value)
+        add_statuses = np.asarray(add_statuses)
+        add_values = np.asarray(add_values)
+
         # Limit OpenBLAS to single thread. This is typically faster than
         # multithreading because our data is too small.
         with threadpool_limits(limits=1, user_api="blas"):
@@ -163,5 +174,6 @@ class Optimizer:
                 end = pos + n
                 emitter.tell(self._solutions[pos:end],
                              objective_values[pos:end],
-                             behavior_values[pos:end], metadata[pos:end])
+                             behavior_values[pos:end], metadata[pos:end],
+                             add_statuses[pos:end], add_values[pos:end])
                 pos = end
