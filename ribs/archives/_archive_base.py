@@ -364,8 +364,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         batch end up in the same cell, we only keep the solution with the
         highest objective.
 
-        .. note:: The indices of all args should ``correspond`` to each other,
-            i.e. ``solution_batch[i]``, ``objective_batch[i]``,
+        .. note:: The indices of all arguments should "correspond" to each
+            other, i.e. ``solution_batch[i]``, ``objective_batch[i]``,
             ``measures_batch[i]``, and ``metadata_batch[i]`` should be the
             solution parameters, objective, measures, and metadata for solution
             ``i``.
@@ -381,8 +381,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 representing metadata for the solution. For instance, this could
                 be a dict with several properties.
         Returns:
-            tuple: 2-element tuple of ``status_batch`` and ``value_batch`` which
-            describes the result of the add operation. These outputs are
+            tuple: 2-element tuple of (status_batch, value_batch) which
+            describes the results of the additions. These outputs are
             particularly useful for algorithms such as CMA-ME.
 
             - **status_batch** (:class:`numpy.ndarray` of :class:`int`): An
@@ -395,7 +395,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 which was already in the archive.
               - ``2``: The solution discovered a new cell in the archive.
 
-              .. note:: All statuses (and values below) are computed with
+              .. note:: All statuses (and values, below) are computed with
                   respect to the *current* archive. For example, if two
                   solutions both introduce the same new archive cell, then both
                   will be marked with ``2``.
@@ -409,21 +409,22 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
               To convert statuses to a more semantic format, cast all statuses
               to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
-              add_statuses]``.
+              status_batch]``.
 
             - **value_batch** (:attr:`dtype`): An array with values for each
               solution in the batch. The meaning of each ``value`` depends on
-              the value of ``status``:
+              the corresponding ``status``:
 
-              - ``NOT_ADDED`` -> the "negative improvement," i.e. objective
-                value of solution passed in minus objective value of the
-                solution still in the archive (this value is negative because
-                the solution did not have a high enough objective value to be
-                added to the archive)
-              - ``IMPROVE_EXISTING`` -> the "improvement," i.e. objective
-                value of solution passed in minus objective value of solution
-                previously in the archive
-              - ``NEW`` -> the objective value passed in
+              - ``0`` (not added): The value is the "negative improvement," i.e.
+                the objective of the solution passed in minus the objective of
+                the elite still in the archive (this value is negative because
+                the solution did not have a high enough objective to be added to
+                the archive).
+              - ``1`` (improve existing cell): The value is the "improvement,"
+                i.e. the objective of the solution passed in minus the objective
+                of the elite previously in the archive.
+              - ``2`` (new cell): The value is just the objective of the
+                solution.
         """
         self._state["add"] += 1
         solution_batch = np.asarray(solution_batch)
@@ -445,6 +446,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         improve_existing = (objective_batch >
                             old_objective_batch) & already_occupied
         old_objective_batch[is_new] = 0.0
+
+        # TODO: Rename to status_batch and value_batch
 
         # Set add_statuses and add_values -- these differ from what is actually
         # inserted into the archive since there may be conflicts within the
@@ -519,43 +522,23 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         return add_statuses, add_values
 
-    def add_single(self,
-                   solution,
-                   objective_value,
-                   behavior_values,
-                   metadata=None):
-        """Attempts to insert a new solution into the archive.
+    def add_single(self, solution, objective, measures, metadata=None):
+        """Inserts a single solution into the archive.
 
         The solution is only inserted if it has a higher ``objective_value``
         than the elite previously in the corresponding cell.
 
         Args:
             solution (array-like): Parameters of the solution.
-            objective_value (float): Objective function evaluation of the
-                solution.
-            behavior_values (array-like): Coordinates in behavior space of the
-                solution.
-            metadata (object): Any Python object representing metadata for the
+            objective (float): Objective function evaluation of the solution.
+            measures (array-like): Coordinates in measure space of the solution.
+            metadata (object): Python object representing metadata for the
                 solution. For instance, this could be a dict with several
                 properties.
         Returns:
-            tuple: 2-element tuple describing the result of the add operation.
-            These outputs are particularly useful for algorithms such as CMA-ME.
-
-                **status** (:class:`AddStatus`): See :class:`AddStatus`.
-
-                **value** (:attr:`dtype`): The meaning of this value depends on
-                the value of ``status``:
-
-                - ``NOT_ADDED`` -> the "negative improvement," i.e. objective
-                  value of solution passed in minus objective value of the
-                  solution still in the archive (this value is negative because
-                  the solution did not have a high enough objective value to be
-                  added to the archive)
-                - ``IMPROVE_EXISTING`` -> the "improvement," i.e. objective
-                  value of solution passed in minus objective value of solution
-                  previously in the archive
-                - ``NEW`` -> the objective value passed in
+            tuple: 2-element tuple of (status, value) describing the result of
+            the add operation. Refer to :meth:`add` for the meaning of the
+            status and value.
         """
         #  self._state["add"] += 1
         #  solution = np.asarray(solution)
