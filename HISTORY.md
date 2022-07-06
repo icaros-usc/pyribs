@@ -7,7 +7,7 @@
 #### API
 
 - Make epsilon configurable in archives (#226)
-- **Backwards-incompatible:** Remove ribs.factory (#225)
+- **Backwards-incompatible:** Remove ribs.factory (#225,#228)
 - **Backwards-incompatible:** Replaced `ImprovementEmitter`, `RandomDirectionEmitter`, and `OptimizingEmitter` with `EvolutionStrategyEmitter` (#220, #223)
 - Raise ValueError for incorrect array shapes in archive methods (#219)
 - Add elites_with_measures_single method for getting elite for a single
