@@ -49,15 +49,17 @@ def test_properties_are_correct(data):
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
-def test_add_to_archive(data, use_list):
+def test_add_single_to_archive(data, use_list):
     if use_list:
-        status, value = data.archive.add(list(data.solution),
-                                         data.objective_value,
-                                         list(data.behavior_values),
-                                         data.metadata)
+        status, value = data.archive.add_single(list(data.solution),
+                                                data.objective_value,
+                                                list(data.behavior_values),
+                                                data.metadata)
     else:
-        status, value = data.archive.add(data.solution, data.objective_value,
-                                         data.behavior_values, data.metadata)
+        status, value = data.archive.add_single(data.solution,
+                                                data.objective_value,
+                                                data.behavior_values,
+                                                data.metadata)
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective_value)
@@ -66,36 +68,36 @@ def test_add_to_archive(data, use_list):
                          data.grid_indices, data.metadata)
 
 
-def test_add_with_low_behavior_val(data):
+def test_add_single_with_low_behavior_val(data):
     behavior_values = np.array([-2, -3])
     indices = (0, 0)
-    status, _ = data.archive.add(data.solution, data.objective_value,
-                                 behavior_values, data.metadata)
+    status, _ = data.archive.add_single(data.solution, data.objective_value,
+                                        behavior_values, data.metadata)
     assert status
     assert_archive_elite(data.archive, data.solution, data.objective_value,
                          behavior_values, indices, data.metadata)
 
 
-def test_add_with_high_behavior_val(data):
+def test_add_single_with_high_behavior_val(data):
     behavior_values = np.array([2, 3])
     indices = (9, 19)
-    status, _ = data.archive.add(data.solution, data.objective_value,
-                                 behavior_values, data.metadata)
+    status, _ = data.archive.add_single(data.solution, data.objective_value,
+                                        behavior_values, data.metadata)
     assert status
     assert_archive_elite(data.archive, data.solution, data.objective_value,
                          behavior_values, indices, data.metadata)
 
 
-def test_add_and_overwrite(data):
+def test_add_single_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     high_objective_value = data.objective_value + 1.0
 
-    status, value = data.archive_with_elite.add(arbitrary_sol,
-                                                high_objective_value,
-                                                data.behavior_values,
-                                                arbitrary_metadata)
+    status, value = data.archive_with_elite.add_single(arbitrary_sol,
+                                                       high_objective_value,
+                                                       data.behavior_values,
+                                                       arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective_value - data.objective_value)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol,
@@ -103,16 +105,16 @@ def test_add_and_overwrite(data):
                          data.grid_indices, arbitrary_metadata)
 
 
-def test_add_without_overwrite(data):
+def test_add_single_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     low_objective_value = data.objective_value - 1.0
 
-    status, value = data.archive_with_elite.add(arbitrary_sol,
-                                                low_objective_value,
-                                                data.behavior_values,
-                                                arbitrary_metadata)
+    status, value = data.archive_with_elite.add_single(arbitrary_sol,
+                                                       low_objective_value,
+                                                       data.behavior_values,
+                                                       arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective_value - data.objective_value)
     assert_archive_elite(data.archive_with_elite, data.solution,
@@ -121,7 +123,7 @@ def test_add_without_overwrite(data):
 
 
 def test_add_batch_all_new(data):
-    add_statuses, add_values = data.archive.add_batch(
+    status_batch, value_batch = data.archive.add(
         # 4 solutions of arbitrary value.
         solution_batch=[[1, 2, 3]] * 4,
         # The first two solutions end up in separate cells, and the next two end
@@ -129,14 +131,14 @@ def test_add_batch_all_new(data):
         objective_batch=[0, 0, 0, 1],
         measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
     )
-    assert np.all(add_statuses == 2)
-    assert np.all(add_values == [0, 0, 0, 1])
+    assert np.all(status_batch == 2)
+    assert np.all(value_batch == [0, 0, 0, 1])
 
     # TODO: Test the archive properties e.g. stats and whether it has elites.
 
 
 def test_add_batch_none_inserted(data):
-    add_statuses, add_values = data.archive_with_elite.add_batch(
+    status_batch, value_batch = data.archive_with_elite.add(
         # 4 solutions of arbitrary value.
         solution_batch=[[1, 2, 3]] * 4,
         # The first two solutions end up in separate cells, and the next two end
@@ -147,8 +149,8 @@ def test_add_batch_none_inserted(data):
 
     # All solutions were inserted into the same cell as the elite already in the
     # archive and had objective value 1 less.
-    assert np.all(add_statuses == 0)
-    assert np.all(add_values == [-1, -1, -1, -1])
+    assert np.all(status_batch == 0)
+    assert np.all(value_batch == [-1, -1, -1, -1])
 
 
 def test_grid_to_int_index(data):
