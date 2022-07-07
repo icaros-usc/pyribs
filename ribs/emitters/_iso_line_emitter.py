@@ -1,4 +1,5 @@
 """Provides the IsoLineEmitter."""
+import itertools
 
 import numpy as np
 from numba import jit
@@ -148,7 +149,13 @@ class IsoLineEmitter(EmitterBase):
         return self._ask_clip_helper(solutions, self.lower_bounds,
                                      self.upper_bounds)
 
-    def tell(self, solutions, objective_values, behavior_values, add_statuses, add_values, metadata=None):
+    def tell(self,
+             solutions,
+             objective_values,
+             behavior_values,
+             status_batch,
+             value_batch,
+             metadata=None):
         """Inserts entries into the archive.
 
         This base class implementation (in :class:`~ribs.emitters.EmitterBase`)
@@ -164,11 +171,12 @@ class IsoLineEmitter(EmitterBase):
                 function value of each solution.
             behavior_values (numpy.ndarray): ``(n, <behavior space dimension>)``
                 array with the behavior space coordinates of each solution.
-            add_statuses (numpy.ndarray): 1D array of :class:`ribs.archive.AddStatus`
-                returned by a series of calls to archive's :meth:`add()` method.
-            add_values  (numpy.ndarray): 1D array of floats returned by a series of
-                calls to archive's :meth:`add()` method. For what these floats
-                represent, refer to :meth:`ribs.archives.add()`
+            status_batch (numpy.ndarray): 1D array of
+                :class:`ribs.archive.AddStatus` returned by a series of calls to
+                archive's :meth:`add()` method.
+            value_batch (numpy.ndarray): 1D array of floats returned by a series
+                of calls to archive's :meth:`add()` method. For what these
+                floats represent, refer to :meth:`ribs.archives.add()`.
             metadata (numpy.ndarray): 1D object array containing a metadata
                 object for each solution.
         """

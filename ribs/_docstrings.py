@@ -86,12 +86,12 @@ core_args = dict(emitter="""
     metadata (numpy.ndarray): 1D object array containing a metadata
         object for each solution.
     """,
-                 add_statuses="""
-    add_statuses (numpy.ndarray): 1D array of :class:`ribs.archive.AddStatus`
+                 status_batch="""
+    status_batch (numpy.ndarray): 1D array of :class:`ribs.archive.AddStatus`
         returned by a series of calls to archive's :meth:`add()` method.
     """,
-                 add_values="""
-    add_values  (numpy.ndarray): 1D array of floats returned by a series of
+                 value_batch="""
+    value_batch  (numpy.ndarray): 1D array of floats returned by a series of
         calls to archive's :meth:`add()` method. For what these floats
         represent, refer to :meth:`ribs.archives.add()`
     """,
