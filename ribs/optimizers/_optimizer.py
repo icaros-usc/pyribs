@@ -119,7 +119,7 @@ class Optimizer:
                 "the number of solutions output by ask()) but has length "
                 f"{len(array)}")
 
-    def tell(self, objective_values, behavior_values, metadata=None):
+    def tell(self, objective_values, measures_values, metadata=None):
         """Returns info for solutions from :meth:`ask`.
 
         .. note:: The objective values, behavior values, and metadata must be in
@@ -131,7 +131,7 @@ class Optimizer:
         Args:
             objective_values ((n_solutions,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
-            behavior_values ((n_solutions, behavior_dm) array): Each row of
+            measures_values ((n_solutions, behavior_dm) array): Each row of
                 this array contains a solution's coordinates in behavior space.
             metadata ((n_solutions,) array): Each entry of this array contains
                 an object holding metadata for a solution.
@@ -146,20 +146,20 @@ class Optimizer:
         self._asked = False
 
         objective_values = np.asarray(objective_values)
-        behavior_values = np.asarray(behavior_values)
+        measures_values = np.asarray(measures_values)
         metadata = (np.empty(len(self._solutions), dtype=object)
                     if metadata is None else np.asarray(metadata, dtype=object))
 
         self._check_length("objective_values", objective_values)
-        self._check_length("behavior_values", behavior_values)
+        self._check_length("measures_values", measures_values)
         self._check_length("metadata", metadata)
 
         # Add solutions to the archive.
         status_batch = []
         value_batch = []
-        for (sol, obj, beh, meta) in zip(self._solutions, objective_values,
-                                         behavior_values, metadata):
-            status, value = self.archive.add(sol, obj, beh, meta)
+        for (sol, obj, mea, meta) in zip(self._solutions, objective_values,
+                                         measures_values, metadata):
+            status, value = self.archive.add(sol, obj, mea, meta)
             status_batch.append(status)
             value_batch.append(value)
         status_batch = np.asarray(status_batch)
@@ -174,6 +174,6 @@ class Optimizer:
                 end = pos + n
                 emitter.tell(self._solutions[pos:end],
                              objective_values[pos:end],
-                             behavior_values[pos:end], metadata[pos:end],
+                             measures_values[pos:end], metadata[pos:end],
                              status_batch[pos:end], value_batch[pos:end])
                 pos = end

@@ -35,7 +35,19 @@ def test_dtypes(dtype):
 
     # Try running with the negative sphere function for a few iterations.
     for _ in range(10):
-        sols = emitter.ask()
-        objs = -np.sum(np.square(sols), axis=1)
-        bcs = sols[:, :2]
-        emitter.tell(sols, objs, bcs)
+        solutions = emitter.ask()
+        objective_values = -np.sum(np.square(solutions), axis=1)
+        measure_values = solutions[:, :2]
+
+        # Add solutions to the archive.
+        status_batch = []
+        value_batch = []
+        for (sol, obj, beh) in zip(solutions, objective_values, measure_values):
+            status, value = archive.add(sol, obj, beh)
+            status_batch.append(status)
+            value_batch.append(value)
+        status_batch = np.asarray(status_batch)
+        value_batch = np.asarray(value_batch)
+
+        emitter.tell(solutions, objective_values, measure_values, status_batch,
+                     value_batch)

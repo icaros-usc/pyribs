@@ -140,7 +140,7 @@ class EvolutionStrategyEmitter(EmitterBase):
     def tell(self,
              solutions,
              objective_values,
-             behavior_values,
+             measures_values,
              status_batch,
              values_batch,
              metadata=None):
@@ -159,8 +159,8 @@ class EvolutionStrategyEmitter(EmitterBase):
                 emitter's :meth:`ask()` method.
             objective_values (numpy.ndarray): 1D array containing the objective
                 function value of each solution.
-            behavior_values (numpy.ndarray): ``(n, <behavior space dimension>)``
-                array with the behavior space coordinates of each solution.
+            measures_values (numpy.ndarray): ``(n, <measure space dimension>)``
+                array with the measure space coordinates of each solution.
             status_batch (numpy.ndarray): 1D array of
                 :class:`ribs.archive.AddStatus` returned by a series of calls to
                 archive's :meth:`add()` method.
@@ -179,7 +179,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         indices, ranking_values = self._ranker.rank(self, self.archive,
                                                     self._rng, solutions,
                                                     objective_values,
-                                                    behavior_values, metadata,
+                                                    measures_values, metadata,
                                                     status_batch, values_batch)
 
         # Select the number of parents
