@@ -9,7 +9,7 @@ class Optimizer:
     To use this class, first create an archive and list of emitters for the
     QD algorithm. Then, construct the Optimizer with these arguments. Finally,
     repeatedly call :meth:`ask` to collect solutions to analyze, and return the
-    objective values and behavior values of those solutions **in the same
+    objective values and measures values of those solutions **in the same
     order** using :meth:`tell`.
 
     As all solutions go into the same archive, the  emitters passed in must emit
@@ -119,46 +119,46 @@ class Optimizer:
                 "the number of solutions output by ask()) but has length "
                 f"{len(array)}")
 
-    def tell(self, objective_values, measures_values, metadata=None):
+    def tell(self, objective_batch, measures_batch, metadata=None):
         """Returns info for solutions from :meth:`ask`.
 
-        .. note:: The objective values, behavior values, and metadata must be in
+        .. note:: The objective batch, measures batch, and metadata must be in
             the same order as the solutions created by :meth:`ask`; i.e.
-            ``objective_values[i]``, ``behavior_values[i]``, and ``metadata[i]``
-            should be the objective value, behavior values, and metadata for
+            ``objective_batch[i]``, ``measures_batch[i]``, and ``metadata[i]``
+            should be the objective batch, measures batch, and metadata for
             ``solutions[i]``.
 
         Args:
-            objective_values ((n_solutions,) array): Each entry of this array
+            objective_batch ((n_solutions,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
-            measures_values ((n_solutions, behavior_dm) array): Each row of
-                this array contains a solution's coordinates in behavior space.
+            measures_batch ((n_solutions, measures_dm) array): Each row of
+                this array contains a solution's coordinates in measure space.
             metadata ((n_solutions,) array): Each entry of this array contains
                 an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
-            ValueError: ``objective_values``, ``behavior_values``, or
+            ValueError: ``objective_batch``, ``measures_batch``, or
                 ``metadata`` has the wrong shape.
         """
         if not self._asked:
             raise RuntimeError("tell() was called without calling ask().")
         self._asked = False
 
-        objective_values = np.asarray(objective_values)
-        measures_values = np.asarray(measures_values)
+        objective_batch = np.asarray(objective_batch)
+        measures_batch = np.asarray(measures_batch)
         metadata = (np.empty(len(self._solutions), dtype=object)
                     if metadata is None else np.asarray(metadata, dtype=object))
 
-        self._check_length("objective_values", objective_values)
-        self._check_length("measures_values", measures_values)
+        self._check_length("objective_values", objective_batch)
+        self._check_length("measures_values", measures_batch)
         self._check_length("metadata", metadata)
 
         # Add solutions to the archive.
         status_batch = []
         value_batch = []
-        for (sol, obj, mea, meta) in zip(self._solutions, objective_values,
-                                         measures_values, metadata):
+        for (sol, obj, mea, meta) in zip(self._solutions, objective_batch,
+                                         measures_batch, metadata):
             status, value = self.archive.add(sol, obj, mea, meta)
             status_batch.append(status)
             value_batch.append(value)
@@ -173,7 +173,7 @@ class Optimizer:
             for emitter, n in zip(self._emitters, self._num_emitted):
                 end = pos + n
                 emitter.tell(self._solutions[pos:end],
-                             objective_values[pos:end],
-                             measures_values[pos:end], metadata[pos:end],
+                             objective_batch[pos:end],
+                             measures_batch[pos:end], metadata[pos:end],
                              status_batch[pos:end], value_batch[pos:end])
                 pos = end
