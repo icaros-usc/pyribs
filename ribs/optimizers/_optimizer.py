@@ -64,7 +64,7 @@ class Optimizer:
         # ask() or tell().
         self._asked = False
         # The last set of solutions returned by ask().
-        self._solutions = []
+        self._solution_batch = []
         # The number of solutions created by each emitter.
         self._num_emitted = [None for _ in self._emitters]
 
@@ -97,29 +97,29 @@ class Optimizer:
             raise RuntimeError("ask() was called twice in a row.")
         self._asked = True
 
-        self._solutions = []
+        self._solution_batch = []
 
         # Limit OpenBLAS to single thread. This is typically faster than
         # multithreading because our data is too small.
         with threadpool_limits(limits=1, user_api="blas"):
             for i, emitter in enumerate(self._emitters):
                 emitter_sols = emitter.ask()
-                self._solutions.append(emitter_sols)
+                self._solution_batch.append(emitter_sols)
                 self._num_emitted[i] = len(emitter_sols)
 
-        self._solutions = np.concatenate(self._solutions, axis=0)
-        return self._solutions
+        self._solution_batch = np.concatenate(self._solution_batch, axis=0)
+        return self._solution_batch
 
     def _check_length(self, name, array):
         """Raises a ValueError if array does not have the same length as the
         solutions."""
-        if len(array) != len(self._solutions):
+        if len(array) != len(self._solution_batch):
             raise ValueError(
-                f"{name} should have length {len(self._solutions)} (this is "
-                "the number of solutions output by ask()) but has length "
-                f"{len(array)}")
+                f"{name} should have length {len(self._solution_batch)} "
+                "(this is the number of solutions output by ask()) but "
+                f"has length {len(array)}")
 
-    def tell(self, objective_batch, measures_batch, metadata=None):
+    def tell(self, objective_batch, measures_batch, metadata_batch=None):
         """Returns info for solutions from :meth:`ask`.
 
         .. note:: The objective batch, measures batch, and metadata must be in
@@ -147,18 +147,19 @@ class Optimizer:
 
         objective_batch = np.asarray(objective_batch)
         measures_batch = np.asarray(measures_batch)
-        metadata = (np.empty(len(self._solutions), dtype=object)
-                    if metadata is None else np.asarray(metadata, dtype=object))
+        metadata_batch = (np.empty(len(self._solution_batch), dtype=object) if
+                          metadata_batch is None else np.asarray(metadata_batch,
+                                                                 dtype=object))
 
-        self._check_length("objective_values", objective_batch)
-        self._check_length("measures_values", measures_batch)
-        self._check_length("metadata", metadata)
+        self._check_length("objective_batch", objective_batch)
+        self._check_length("measures_batch", measures_batch)
+        self._check_length("metadata_batch", metadata_batch)
 
         # Add solutions to the archive.
         status_batch = []
         value_batch = []
-        for (sol, obj, mea, meta) in zip(self._solutions, objective_batch,
-                                         measures_batch, metadata):
+        for (sol, obj, mea, meta) in zip(self._solution_batch, objective_batch,
+                                         measures_batch, metadata_batch):
             status, value = self.archive.add(sol, obj, mea, meta)
             status_batch.append(status)
             value_batch.append(value)
@@ -172,8 +173,8 @@ class Optimizer:
             pos = 0
             for emitter, n in zip(self._emitters, self._num_emitted):
                 end = pos + n
-                emitter.tell(self._solutions[pos:end],
-                             objective_batch[pos:end],
-                             measures_batch[pos:end], metadata[pos:end],
-                             status_batch[pos:end], value_batch[pos:end])
+                emitter.tell(self._solution_batch[pos:end],
+                             objective_batch[pos:end], measures_batch[pos:end],
+                             status_batch[pos:end], value_batch[pos:end],
+                             metadata_batch[pos:end])
                 pos = end

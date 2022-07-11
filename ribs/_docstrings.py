@@ -83,17 +83,19 @@ core_args = dict(emitter="""
         array with the measure space coordinates of each solution.
     """,
                  metadata="""
-    metadata (numpy.ndarray): 1D object array containing a metadata
+    metadata_batch (numpy.ndarray): 1D object array containing a metadata
         object for each solution.
     """,
                  status_batch="""
-    status_batch (numpy.ndarray): 1D array of :class:`ribs.archive.AddStatus`
-        returned by a series of calls to archive's :meth:`add()` method.
+    status_batch (numpy.ndarray): An array of integer statuses
+        returned by a series of calls to archive's :meth:`add()`
+        method or by a single call to archive's :meth:`add_batch()`.
     """,
                  value_batch="""
     value_batch  (numpy.ndarray): 1D array of floats returned by a series of
-        calls to archive's :meth:`add()` method. For what these floats
-        represent, refer to :meth:`ribs.archives.add()`
+        calls to archive's :meth:`add()` method or by a single call to
+        archive's :meth:`add_batch()`. For what these floats represent,
+        refer to :meth:`ribs.archives.add()`.
     """,
                  seed="""
     seed (int): Value to seed the random number generator. Set to None to
