@@ -1,6 +1,4 @@
 """Provides the GaussianEmitter."""
-import itertools
-
 import numpy as np
 from numba import jit
 

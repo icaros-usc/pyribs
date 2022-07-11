@@ -1,6 +1,4 @@
 """Provides the IsoLineEmitter."""
-import itertools
-
 import numpy as np
 from numba import jit
 
