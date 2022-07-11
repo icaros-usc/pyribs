@@ -13,21 +13,46 @@ def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
 
     np.random.seed(0)
 
-    objective_values = np.random.rand(batch_size)
-    behavior_values = np.random.rand(batch_size, 2)
+    objective_batch = np.random.rand(batch_size)
+    measures_batch = np.random.rand(batch_size, 2)
 
     # Let numba compile.
     temp_sol = emitter.ask()
-    emitter.tell(temp_sol, objective_values, behavior_values)
+
+    # Add solutions to the archive.
+    # TODO Replace with add_batch
+    status_batch = []
+    value_batch = []
+    for (sol, obj, mea) in zip(temp_sol, objective_batch, measures_batch):
+        status, value = archive.add(sol, obj, mea)
+        status_batch.append(status)
+        value_batch.append(value)
+    status_batch = np.asarray(status_batch)
+    value_batch = np.asarray(value_batch)
+
+    emitter.tell(temp_sol, objective_batch, measures_batch, status_batch,
+                 value_batch)
 
     obj_vals = np.random.rand(n, batch_size)
     behavior_vals = np.random.rand(n, batch_size, 2)
 
     def ask_and_tell():
         for i in range(n):
-            solutions = emitter.ask()
-            objective_values = obj_vals[i]
-            behavior_values = behavior_vals[i]
-            emitter.tell(solutions, objective_values, behavior_values)
+            solution_batch = emitter.ask()
+            objective_batch = obj_vals[i]
+            measure_batch = behavior_vals[i]
+            # Add solutions to the archive.
+            # TODO Replace with add_batch
+            status_batch = []
+            value_batch = []
+            for (sol, obj, mea) in zip(solution_batch, objective_batch,
+                                       measures_batch):
+                status, value = archive.add(sol, obj, mea)
+                status_batch.append(status)
+                value_batch.append(value)
+            status_batch = np.asarray(status_batch)
+            value_batch = np.asarray(value_batch)
+            emitter.tell(solution_batch, objective_batch, measure_batch,
+                         status_batch, value_batch)
 
     benchmark(ask_and_tell)
