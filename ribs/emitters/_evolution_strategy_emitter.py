@@ -137,7 +137,13 @@ class EvolutionStrategyEmitter(EmitterBase):
             return num_parents == 0
         return False
 
-    def tell(self, solutions, objective_values, behavior_values, metadata=None):
+    def tell(self,
+             solutions,
+             objective_values,
+             measures_values,
+             status_batch,
+             values_batch,
+             metadata=None):
         """Gives the emitter results from evaluating solutions.
 
         As we insert solutions into the archive, we record the solutions'
@@ -153,33 +159,28 @@ class EvolutionStrategyEmitter(EmitterBase):
                 emitter's :meth:`ask()` method.
             objective_values (numpy.ndarray): 1D array containing the objective
                 function value of each solution.
-            behavior_values (numpy.ndarray): ``(n, <behavior space dimension>)``
-                array with the behavior space coordinates of each solution.
+            measures_values (numpy.ndarray): ``(n, <measure space dimension>)``
+                array with the measure space coordinates of each solution.
+            status_batch (numpy.ndarray): 1D array of
+                :class:`ribs.archive.AddStatus` returned by a series of calls to
+                archive's :meth:`add()` method.
+            value_batch (numpy.ndarray): 1D array of floats returned by a series
+                of calls to archive's :meth:`add()` method. For what these
+                floats represent, refer to :meth:`ribs.archives.add()`.
             metadata (numpy.ndarray): 1D object array containing a metadata
                 object for each solution.
         """
-        add_statuses = []
-        add_values = []
-
         metadata = itertools.repeat(None) if metadata is None else metadata
 
-        # Add solutions to the archive.
-        new_sols = 0
-        for (sol, obj, beh, meta) in zip(solutions, objective_values,
-                                         behavior_values, metadata):
-            status, value = self.archive.add(sol, obj, beh, meta)
-            add_statuses.append(status)
-            add_values.append(value)
-            if bool(status):
-                new_sols += 1
+        # Count number of new solutions
+        new_sols = status_batch.astype(bool).sum()
 
         # Sort the solutions using ranker
         indices, ranking_values = self._ranker.rank(self, self.archive,
                                                     self._rng, solutions,
                                                     objective_values,
-                                                    behavior_values, metadata,
-                                                    np.array(add_statuses),
-                                                    np.array(add_values))
+                                                    measures_values, metadata,
+                                                    status_batch, values_batch)
 
         # Select the number of parents
         num_parents = (new_sols if self._selection_rule == "filter" else

@@ -33,12 +33,12 @@ class FakeArchive(ArchiveBase):
             behavior_dim=behavior_dim,
         )
 
-    def add(self, solution, objective_value, behavior_values, metadata=None):
-        return True
+    def add(self, solution, objective, measures, metadata=None):
+        return (0, 0)
 
     @jit(nopython=True)
-    def index_of(self, behavior_values):
-        return np.full_like(behavior_values, 0)
+    def index_of(self, measures):
+        return np.full_like(measures, 0)
 
     def as_pandas(self):
         return pd.Dataframe()
