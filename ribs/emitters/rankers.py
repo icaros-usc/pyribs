@@ -21,6 +21,7 @@ result of a descending argsort of the solutions. It will also define a
 from abc import ABC, abstractmethod
 
 import numpy as np
+
 from ribs._docstrings import DocstringComponents, core_args
 
 __all__ = [
@@ -48,8 +49,8 @@ Args:
 {_args.objective_batch}
 {_args.measures_batch}
 {_args.metadata}
-{_args.add_statuses}
-{_args.add_values}
+{_args.status_batch}
+{_args.value_batch}
 
 Returns:
     tuple(numpy.ndarray, numpy.ndarray): the first array (shape
@@ -83,7 +84,7 @@ class RankerBase(ABC):
 
     @abstractmethod
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values):
+             measures_batch, metadata, status_batch, value_batch):
         # pylint: disable=missing-function-docstring
         pass
 
@@ -124,10 +125,10 @@ class TwoStageImprovementRanker(RankerBase):
     """
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values):
+             measures_batch, metadata, status_batch, value_batch):
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, value_0], ..., [status_n, value_n]]
-        ranking_values = np.stack((add_statuses, add_values), axis=-1)
+        ranking_values = np.stack((status_batch, value_batch), axis=-1)
 
         # New solutions sort ahead of improved ones, which sort ahead of ones
         # that were not added.
@@ -179,7 +180,7 @@ class RandomDirectionRanker(RankerBase):
         self._target_measure_dir = value
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values):
+             measures_batch, metadata, status_batch, value_batch):
         if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
@@ -235,14 +236,14 @@ class TwoStageRandomDirectionRanker(RankerBase):
         self._target_measure_dir = value
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values):
+             measures_batch, metadata, status_batch, value_batch):
         if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(measures_batch, self._target_measure_dir)
 
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, projection_0], ..., [status_n, projection_n]]
-        ranking_values = np.stack((add_statuses, projections), axis=-1)
+        ranking_values = np.stack((status_batch, projections), axis=-1)
 
         # Sort by whether the solution was added into the archive,
         # followed by projection.
@@ -276,7 +277,7 @@ class ObjectiveRanker(RankerBase):
     """
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values):
+             measures_batch, metadata, status_batch, value_batch):
         # Sort only by objective value.
         return np.flip(np.argsort(objective_batch)), objective_batch
 
@@ -296,10 +297,10 @@ class TwoStageObjectiveRanker(RankerBase):
     """
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, metadata, add_statuses, add_values):
+             measures_batch, metadata, status_batch, value_batch):
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, objective_0], ..., [status_0, objective_n]]
-        ranking_values = np.stack((add_statuses, objective_batch), axis=-1)
+        ranking_values = np.stack((status_batch, objective_batch), axis=-1)
 
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.

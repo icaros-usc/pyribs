@@ -37,9 +37,9 @@ class FakeArchive(ArchiveBase):
         return True, 0.0
 
     @jit(nopython=True)
-    def index_of(self, behavior_values):
-        return np.zeros_like(behavior_values, dtype=np.int32)
-
+    def index_of(self, measures):
+        return np.zeros_like(measures, dtype=np.int32)
+        
 
 @pytest.fixture
 def fake_archive_fixture():
