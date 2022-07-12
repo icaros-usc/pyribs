@@ -165,11 +165,11 @@ class IsoLineEmitter(EmitterBase):
             behavior_batch (numpy.ndarray): ``(n, <behavior space dimension>)``
                 array with the behavior space coordinates of each solution.
             status_batch (numpy.ndarray): An array of integer statuses
-                returned by a series of calls to archive's :meth:`add()`
-                method or by a single call to archive's :meth:`add_batch()`.
+                returned by a series of calls to archive's :meth:`add_single()`
+                method or by a single call to archive's :meth:`add()`.
             value_batch  (numpy.ndarray): 1D array of floats returned by a
-                series of calls to archive's :meth:`add()` method or by a single
-                call to archive's :meth:`add_batch()`. For what these floats
+                series of calls to archive's :meth:`add_single()` method or by a
+                single call to archive's :meth:`add()`. For what these floats
                 represent, refer to :meth:`ribs.archives.add()`.
             metadata_batch (numpy.ndarray): 1D object array containing a
                 metadata object for each solution.
