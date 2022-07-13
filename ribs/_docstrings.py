@@ -1,13 +1,11 @@
-"""This provides the common docstrings that are used throughout the project"""
+"""This provides the common docstrings that are used throughout the project."""
 
 import re
 
 
 class DocstringComponents:
-    """
-    Adapted from
-    https://github.com/mwaskom/seaborn/blob/9d8ce6ad4ab213994f0bc84d0c46869df7be0b49/seaborn/_docstrings.py
-    """
+    """Adapted from https://github.com/mwaskom/seaborn/blob/9d8ce6ad4ab213994f0b
+    c84d0c46869df7be0b49/seaborn/_docstrings.py."""
     regexp = re.compile(r"\n((\n|.)+)\n\s*", re.MULTILINE)
 
     def __init__(self, comp_dict, strip_whitespace=True):
@@ -82,7 +80,7 @@ core_args = dict(emitter="""
     measures_batch (numpy.ndarray): ``(n, <measure space dimension>)``
         array with the measure space coordinates of each solution.
     """,
-                 metadata="""
+                 metadata_batch="""
     metadata_batch (numpy.ndarray): 1D object array containing a metadata
         object for each solution.
     """,
