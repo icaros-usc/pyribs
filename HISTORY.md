@@ -6,6 +6,7 @@
 
 #### API
 
+- `emitter.tell` now takes in `status_batch` and `value_batch` (#227)
 - Make epsilon configurable in archives (#226)
 - **Backwards-incompatible:** Remove ribs.factory (#225,#228)
 - **Backwards-incompatible:** Replaced `ImprovementEmitter`, `RandomDirectionEmitter`, and `OptimizingEmitter` with `EvolutionStrategyEmitter` (#220, #223)

@@ -1,4 +1,5 @@
 """Tests that should work for all emitters."""
+import itertools
 import unittest
 
 import numpy as np
@@ -89,7 +90,21 @@ def test_tell_inserts_into_archive(emitter_fixture, tell_metadata):
         metadata = None
         expected_metadata = np.full(batch_size, None)
 
-    emitter.tell(solutions, objective_values, behavior_values, metadata)
+    metadata = itertools.repeat(None) if metadata is None else metadata
+
+    # Add solutions to the archive.
+    status_batch = []
+    value_batch = []
+    for (sol, obj, beh, meta) in zip(solutions, objective_values,
+                                     behavior_values, metadata):
+        status, value = archive.add(sol, obj, beh, meta)
+        status_batch.append(status)
+        value_batch.append(value)
+    status_batch = np.asarray(status_batch)
+    value_batch = np.asarray(value_batch)
+
+    emitter.tell(solutions, objective_values, behavior_values, status_batch,
+                 value_batch, metadata)
 
     # Check all values are inserted. Only behavior values, objectives, and
     # metadata are known; solutions may vary.

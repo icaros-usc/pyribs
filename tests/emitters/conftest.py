@@ -2,7 +2,6 @@
 import numpy as np
 import pytest
 from numba import jit
-
 from ribs.archives import ArchiveBase, GridArchive
 
 
@@ -33,12 +32,14 @@ class FakeArchive(ArchiveBase):
         )
 
     def add(self, solution, objective, measures, metadata=None):
-        # pylint: disable = unused-argument
-        return True, 0.0
+        return (0, 0)
 
     @jit(nopython=True)
-    def index_of(self, behavior_values):
-        return np.zeros_like(behavior_values, dtype=np.int32)
+    def index_of(self, measures):
+        return np.full_like(measures, 0)
+
+    def as_pandas(self):
+        return pd.Dataframe()
 
 
 @pytest.fixture
