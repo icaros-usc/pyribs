@@ -27,9 +27,9 @@ optimization library). In contrast to other QD libraries, this library is
 "bare-bones," meaning pyribs (like [pycma](https://pypi.org/project/cma/))
 focuses solely on optimizing fixed-dimensional continuous domains. Focusing
 solely on this one commonly-occurring problem allows us to optimize the library
-for performance as well as simplicity of use. For applications of QD on discrete
-domains, we recommend using [qdpy](https://gitlab.com/leo.cazenille/qdpy/) or
-[sferes](https://github.com/sferes2/sferes2).
+for performance as well as ease of use. Refer to the list of
+[additional QD libraries](#additional-qd-libraries) if you need greater
+performance or have additional use cases.
 
 A user of pyribs selects three components that meet the needs of their
 application:
@@ -195,6 +195,17 @@ USC.
 We thank [Amy K. Hoover](http://amykhoover.com/) and
 [Julian Togelius](http://julian.togelius.com/) for their contributions deriving
 the CMA-ME algorithm.
+
+## Additional QD Libraries
+
+- [QDax](https://github.com/adaptive-intelligent-robotics/QDax): Implementations
+  of QD algorithms in JAX -- suitable if you want to run entire QD algorithms on
+  hardware accelerators in a matter of minutes, and particularly useful if you
+  need to interface with Brax environments.
+- [qdpy](https://gitlab.com/leo.cazenille/qdpy/): Python implementations of a
+  wide variety of QD algorithms.
+- [sferes](https://github.com/sferes2/sferes2): Contains C++ implementations of
+  QD algorithms; can also handle discrete domains.
 
 ## License
 
