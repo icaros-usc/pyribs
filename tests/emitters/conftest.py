@@ -32,14 +32,12 @@ class FakeArchive(ArchiveBase):
         )
 
     def add(self, solution, objective, measures, metadata=None):
-        return (0, 0)
+        # pylint: disable = unused-argument
+        return True, 0.0
 
     @jit(nopython=True)
     def index_of(self, measures):
-        return np.full_like(measures, 0)
-
-    def as_pandas(self):
-        return pd.Dataframe()
+        return np.zeros_like(measures, dtype=np.int32)
 
 
 @pytest.fixture
