@@ -207,6 +207,28 @@ the CMA-ME algorithm.
 - [sferes](https://github.com/sferes2/sferes2): Contains C++ implementations of
   QD algorithms; can also handle discrete domains.
 
+## Users
+
+pyribs is used in the following labs, publications, and software:
+
+### Labs
+
+- [ICAROS Lab, University of Southern California](http://icaros.usc.edu/)
+- [Game Innovation Lab, New York University](https://game.engineering.nyu.edu)
+- [Jacob Schrum, Southwestern University](https://github.com/schrum2/PyribsForGameGAN)
+
+### Publications
+
+- https://dl.acm.org/doi/abs/10.1145/3520304.3534003
+
+### Software
+
+- [YAHPO Gym](https://github.com/slds-lmu/qdo_yahpo)
+
+See the
+[GitHub dependency graph](https://github.com/icaros-usc/pyribs/network/dependents)
+for the public GitHub repositories which depend on pyribs.
+
 ## License
 
 pyribs is released under the
