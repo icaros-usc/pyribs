@@ -6,6 +6,7 @@
 
 #### API
 
+- Allow adding solutions one at a time in optimizer (#233)
 - **Backwards-incompatible:** Implement batch addition in archives (#221)
   - `add` now adds a batch of solutions to the archive
   - `add_single` adds a single solution
