@@ -69,21 +69,26 @@ def test_ask_fails_when_called_twice(optimizer_fixture):
         optimizer.ask()
 
 
+@pytest.mark.parametrize("add_mode", ["batch", "single"],
+                         ids=["batch_add", "single_add"])
 @pytest.mark.parametrize("tell_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
-def test_tell_inserts_solutions_into_archive(optimizer_fixture, tell_metadata):
-    optimizer, _, num_solutions = optimizer_fixture
-    _ = optimizer.ask()  # Ignore the actual values of the solutions.
-    measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
-    metadata = ([f"metadata_{i}" for i in range(num_solutions)]
-                if tell_metadata else None)
-    expected_metadata = metadata if tell_metadata else [None] * num_solutions
+def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
+    batch_size = 4
+    archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
+    emitters = [GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=batch_size)]
+    optimizer = Optimizer(archive, emitters, add_mode=add_mode)
 
+    measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
+    metadata = ([f"metadata_{i}" for i in range(batch_size)]
+                if tell_metadata else None)
+    expected_metadata = metadata if tell_metadata else [None] * batch_size
+
+    _ = optimizer.ask()  # Ignore the actual values of the solutions.
     # We pass in 4 solutions with unique behavior values, so all should go into
     # the archive.
-    optimizer.tell(np.ones(num_solutions), measures_batch, metadata)
+    optimizer.tell(np.ones(batch_size), measures_batch, metadata)
 
-    batch_size = len(optimizer.archive)
     assert_archive_elite_batch(
         archive=optimizer.archive,
         batch_size=batch_size,
@@ -93,27 +98,30 @@ def test_tell_inserts_solutions_into_archive(optimizer_fixture, tell_metadata):
     )
 
 
+@pytest.mark.parametrize("add_mode", ["batch", "single"],
+                         ids=["batch_add", "single_add"])
 @pytest.mark.parametrize("tell_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
-def test_tell_inserts_solutions_with_multiple_emitters(tell_metadata):
+def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):
     archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
     emitters = [
         GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1),
         GaussianEmitter(archive, [0.5, 0.5], 1, batch_size=2),
         GaussianEmitter(archive, [-0.5, -0.5], 1, batch_size=3),
     ]
-    optimizer = Optimizer(archive, emitters)
-
-    _ = optimizer.ask()
-    measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0],
-                      [0.0, 0.0], [0.0, 1.0]]
-    metadata = [f"metadata_{i}" for i in range(6)] if tell_metadata else None
-    expected_metadata = metadata if tell_metadata else [None] * 6
+    optimizer = Optimizer(archive, emitters, add_mode=add_mode)
 
     # The sum of all the emitters' batch sizes is 6.
-    optimizer.tell(np.ones(6), measures_batch, metadata)
-
     batch_size = 6
+    measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0],
+                      [0.0, 0.0], [0.0, 1.0]]
+    metadata = [f"metadata_{i}" for i in range(batch_size)
+               ] if tell_metadata else None
+    expected_metadata = metadata if tell_metadata else [None] * batch_size
+
+    _ = optimizer.ask()
+    optimizer.tell(np.ones(batch_size), measures_batch, metadata)
+
     assert_archive_elite_batch(
         archive=optimizer.archive,
         batch_size=batch_size,
