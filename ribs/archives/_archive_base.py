@@ -341,6 +341,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             metadata_batch (array-like): (batch_size,) array of Python objects
                 representing metadata for the solution. For instance, this could
                 be a dict with several properties.
+
+                .. warning:: Due to how NumPy's :func:`~numpy.asarray`
+                    automatically converts array-like objects to arrays, passing
+                    array-like objects as metadata may lead to unexpected
+                    behavior. However, the metadata may be a dict or other
+                    object which *contains* arrays, i.e. ``metadata_batch``
+                    could be an array of dicts which contain arrays.
         Returns:
             tuple: 2-element tuple of (status_batch, value_batch) which
             describes the results of the additions. These outputs are
@@ -408,8 +415,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         # TODO: Check 1D shape of objectives and metadata.
         # TODO: Note that we switched from single to batch in new pyribs.
-        # TODO: Copy metadata warning from add_single
-        # about arrays as metadata?
         # TODO: Test for wrong shapes.
 
         ## Step 2: Compute status_batch and value_batch ##
@@ -533,8 +538,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 .. warning:: Due to how NumPy's :func:`~numpy.asarray`
                     automatically converts array-like objects to arrays, passing
                     array-like objects as metadata may lead to unexpected
-                    behavior. If you are not familiar with our implementation,
-                    we suggest using a dict for metadata.
+                    behavior. However, the metadata may be a dict or other
+                    object which *contains* arrays.
         Returns:
             tuple: 2-element tuple of (status, value) describing the result of
             the add operation. Refer to :meth:`add` for the meaning of the
