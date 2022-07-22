@@ -61,7 +61,7 @@ def test_degenerate_gauss_emits_x0(archive_fixture):
 def test_degenerate_gauss_emits_parent(archive_fixture):
     archive, x0 = archive_fixture
     emitter = IsoLineEmitter(archive, x0, iso_sigma=0, batch_size=2)
-    archive.add(x0, 1, np.array([0, 0]))
+    archive.add_single(x0, 1, np.array([0, 0]))
 
     solutions = emitter.ask()
 
@@ -71,8 +71,8 @@ def test_degenerate_gauss_emits_parent(archive_fixture):
 def test_degenerate_gauss_emits_along_line(archive_fixture):
     archive, x0 = archive_fixture
     emitter = IsoLineEmitter(archive, x0, iso_sigma=0, batch_size=100)
-    archive.add(np.array([0, 0, 0, 0]), 1, np.array([0, 0]))
-    archive.add(np.array([10, 0, 0, 0]), 1, np.array([1, 1]))
+    archive.add_single(np.array([0, 0, 0, 0]), 1, np.array([0, 0]))
+    archive.add_single(np.array([10, 0, 0, 0]), 1, np.array([1, 1]))
 
     solutions = emitter.ask()
 

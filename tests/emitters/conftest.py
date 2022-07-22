@@ -2,6 +2,7 @@
 import numpy as np
 import pytest
 from numba import jit
+
 from ribs.archives import ArchiveBase, GridArchive
 
 
@@ -31,7 +32,11 @@ class FakeArchive(ArchiveBase):
             behavior_dim=behavior_dim,
         )
 
-    def add(self, solution, objective, measures, metadata=None):
+    def add(self,
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            metadata_batch=None):
         # pylint: disable = unused-argument
         return True, 0.0
 

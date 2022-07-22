@@ -19,41 +19,24 @@ def benchmark_ask_tell_100k(benchmark, fake_archive_fixture):
 
     # Let numba compile.
     temp_sol = emitter.ask()
-
-    # Add solutions to the archive.
-    # TODO Replace with add_batch
-    status_batch = []
-    value_batch = []
-    for (sol, obj, mea) in zip(temp_sol, objective_batch, measures_batch):
-        status, value = archive.add(sol, obj, mea)
-        status_batch.append(status)
-        value_batch.append(value)
-    status_batch = np.asarray(status_batch)
-    value_batch = np.asarray(value_batch)
-
+    status_batch, value_batch = archive.add(temp_sol, objective_batch,
+                                            measures_batch)
     emitter.tell(temp_sol, objective_batch, measures_batch, status_batch,
                  value_batch)
 
-    obj_vals = np.random.rand(n, batch_size)
-    behavior_vals = np.random.rand(n, batch_size, 2)
+    all_objective_batch = np.random.rand(n, batch_size)
+    all_measures_batch = np.random.rand(n, batch_size, 2)
 
     def ask_and_tell():
         for i in range(n):
             solution_batch = emitter.ask()
-            objective_batch = obj_vals[i]
-            measure_batch = behavior_vals[i]
-            # Add solutions to the archive.
-            # TODO Replace with add_batch
-            status_batch = []
-            value_batch = []
-            for (sol, obj, mea) in zip(solution_batch, objective_batch,
-                                       measures_batch):
-                status, value = archive.add(sol, obj, mea)
-                status_batch.append(status)
-                value_batch.append(value)
-            status_batch = np.asarray(status_batch)
-            value_batch = np.asarray(value_batch)
-            emitter.tell(solution_batch, objective_batch, measure_batch,
+            objective_batch = all_objective_batch[i]
+            measures_batch = all_measures_batch[i]
+
+            status_batch, value_batch = archive.add(solution_batch,
+                                                    objective_batch,
+                                                    measures_batch)
+            emitter.tell(solution_batch, objective_batch, measures_batch,
                          status_batch, value_batch)
 
     benchmark(ask_and_tell)
