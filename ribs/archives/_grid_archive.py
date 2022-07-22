@@ -1,6 +1,5 @@
 """Contains the GridArchive."""
 import numpy as np
-from numba import jit
 
 from ribs._utils import check_batch_shape, check_is_1d
 from ribs.archives._archive_base import ArchiveBase
@@ -120,26 +119,6 @@ class GridArchive(ArchiveBase):
         """
         return self._boundaries
 
-    @staticmethod
-    @jit(nopython=True)
-    def _index_of_numba(measures_batch, lower_bounds, interval_size, dims,
-                        epsilon):
-        """Numba helper for index_of().
-
-        See index_of() for usage.
-        """
-        # Adding epsilon accounts for floating point precision errors from
-        # transforming measures. We then cast to int32 to obtain integer
-        # indices.
-        grid_indices_batch = ((dims *
-                               (measures_batch - lower_bounds) + epsilon) /
-                              interval_size).astype(np.int32)
-        # Clip indices to the archive dimensions (for example, for 20 cells, we
-        # want indices to run from 0 to 19).
-        grid_indices_batch = np.minimum(np.maximum(grid_indices_batch, 0),
-                                        dims - 1)
-        return grid_indices_batch
-
     def index_of(self, measures_batch):
         """Returns archive indices for the given batch of measures.
 
@@ -183,14 +162,19 @@ class GridArchive(ArchiveBase):
         check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
                           "measure_dim")
 
-        return self.grid_to_int_index(
-            self._index_of_numba(
-                measures_batch,
-                self._lower_bounds,
-                self._interval_size,
-                self._dims,
-                self._epsilon,
-            ))
+        # Adding epsilon accounts for floating point precision errors from
+        # transforming measures. We then cast to int32 to obtain integer
+        # indices.
+        grid_index_batch = (
+            (self._dims *
+             (measures_batch - self._lower_bounds) + self._epsilon) /
+            self._interval_size).astype(np.int32)
+
+        # Clip indices to the archive dimensions (for example, for 20 cells, we
+        # want indices to run from 0 to 19).
+        grid_index_batch = np.clip(grid_index_batch, 0, self._dims - 1)
+
+        return self.grid_to_int_index(grid_index_batch)
 
     def grid_to_int_index(self, grid_index_batch):
         """Converts a batch of grid indices into a batch of integer indices.
