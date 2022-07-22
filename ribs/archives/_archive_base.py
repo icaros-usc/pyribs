@@ -322,8 +322,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         Each solution is only inserted if it has a higher objective than the
         elite previously in the corresponding cell. If multiple solutions in the
         batch end up in the same cell, we only keep the solution with the
-        highest objective. If multiple solutions tie for the highest objective
-        in the same cell, the inserted solution is chosen uniformly at random.
+        highest objective.
 
         .. note:: The indices of all arguments should "correspond" to each
             other, i.e. ``solution_batch[i]``, ``objective_batch[i]``,
@@ -449,18 +448,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         if not np.any(can_insert):
             return status_batch, value_batch
 
-        shuffle_idx = self._rng.permutation(np.sum(can_insert))
-
-        # Select only solutions that can be inserted into the archive. We
-        # purposely shuffle everything so that if there is a tie for the highest
-        # objective in any cell, the tie is randomly broken. We perform the
-        # shuffling here, before aggregate() chooses the solutions to insert.
-        solution_batch_can = solution_batch[can_insert][shuffle_idx]
-        objective_batch_can = objective_batch[can_insert][shuffle_idx]
-        measures_batch_can = measures_batch[can_insert][shuffle_idx]
-        index_batch_can = index_batch[can_insert][shuffle_idx]
-        metadata_batch_can = metadata_batch[can_insert][shuffle_idx]
-        old_objective_batch_can = old_objective_batch[can_insert][shuffle_idx]
+        # Select only solutions that can be inserted into the archive.
+        solution_batch_can = solution_batch[can_insert]
+        objective_batch_can = objective_batch[can_insert]
+        measures_batch_can = measures_batch[can_insert]
+        index_batch_can = index_batch[can_insert]
+        metadata_batch_can = metadata_batch[can_insert]
+        old_objective_batch_can = old_objective_batch[can_insert]
 
         # Retrieve indices of solutions that should be inserted into the
         # archive. Currently, multiple solutions may be inserted at each
@@ -494,7 +488,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._occupied[index_batch_insert] = True
 
         # Mark new indices as occupied.
-        is_new_and_inserted = is_new[can_insert][shuffle_idx][should_insert]
+        is_new_and_inserted = is_new[can_insert][should_insert]
         n_new = np.sum(is_new_and_inserted)
         self._occupied_indices[self._num_occupied:self._num_occupied +
                                n_new] = (
