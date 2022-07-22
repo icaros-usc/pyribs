@@ -121,7 +121,7 @@ def grid_archive_1d():
     """Deterministically created GridArchive with 1 BC."""
     # The archive must be low-res enough that we can tell if the number of cells
     # is correct, yet high-res enough that we can see different colors.
-    archive = GridArchive(solution_dim=2, dims=[10], ranges=[(-1, 1)], seed=42)
+    archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1, 1)], seed=42)
     add_uniform_sphere_1d(archive, (-1, 1))
     return archive
 
