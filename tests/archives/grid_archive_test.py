@@ -27,6 +27,31 @@ def assert_archive_elite(archive, solution, objective, measures, grid_indices,
     assert elite.metadata == metadata
 
 
+def assert_archive_elite_batch(archive, solution_batch, objective_batch,
+                               measures_batch, grid_indices_batch,
+                               metadata_batch):
+    """Asserts that the archive contains a batch of elites."""
+    # Access the archive data and sort it by index.
+    archive_df = archive.as_pandas(include_solutions=True,
+                                   include_metadata=True)
+    archive_df.sort_values("index", inplace=True)
+
+    # Reorder all the batches by sorting by index.
+    index_batch = archive.grid_to_int_index(grid_indices_batch)
+    sort_idx = np.argsort(index_batch)
+    solution_batch = np.asarray(solution_batch)[sort_idx]
+    objective_batch = np.asarray(objective_batch)[sort_idx]
+    measures_batch = np.asarray(measures_batch)[sort_idx]
+    index_batch = index_batch[sort_idx]
+    metadata_batch = np.asarray(metadata_batch)[sort_idx]
+
+    assert np.isclose(archive_df.batch_solutions(), solution_batch).all()
+    assert np.isclose(archive_df.batch_objectives(), objective_batch).all()
+    assert np.isclose(archive_df.batch_behaviors(), measures_batch).all()
+    assert (archive_df.batch_indices() == index_batch).all()
+    assert (archive_df.batch_metadata() == metadata_batch).all()
+
+
 def test_fails_on_dim_mismatch():
     with pytest.raises(ValueError):
         GridArchive(
@@ -131,26 +156,100 @@ def test_add_batch_all_new(data):
         objective_batch=[0, 0, 0, 1],
         measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
     )
-    assert np.all(status_batch == 2)
-    assert np.all(value_batch == [0, 0, 0, 1])
+    assert (status_batch == 2).all()
+    assert np.isclose(value_batch, [0, 0, 0, 1]).all()
 
-    # TODO: Test the archive properties e.g. stats and whether it has elites.
+    assert_archive_elite_batch(
+        archive=data.archive,
+        solution_batch=[[1, 2, 3]] * 3,
+        objective_batch=[0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
+        metadata_batch=[None, None, None],
+    )
 
 
 def test_add_batch_none_inserted(data):
     status_batch, value_batch = data.archive_with_elite.add(
-        # 4 solutions of arbitrary value.
         solution_batch=[[1, 2, 3]] * 4,
-        # The first two solutions end up in separate cells, and the next two end
-        # up in the same cell.
         objective_batch=[data.objective_value - 1 for _ in range(4)],
         measures_batch=[data.behavior_values for _ in range(4)],
     )
 
     # All solutions were inserted into the same cell as the elite already in the
     # archive and had objective value 1 less.
-    assert np.all(status_batch == 0)
-    assert np.all(value_batch == [-1, -1, -1, -1])
+    assert (status_batch == 0).all()
+    assert np.isclose(value_batch, -1.0).all()
+
+    assert_archive_elite_batch(
+        archive=data.archive,
+        solution_batch=[data.solution],
+        objective_batch=[data.objective_value],
+        measures_batch=[data.behavior_values],
+        grid_indices_batch=[data.grid_indices],
+        metadata_batch=[data.metadata],
+    )
+
+
+def test_add_batch_with_improvement(data):
+    status_batch, value_batch = data.archive_with_elite.add(
+        solution_batch=[[1, 2, 3]] * 4,
+        objective_batch=[data.objective_value + 1 for _ in range(4)],
+        measures_batch=[data.behavior_values for _ in range(4)],
+    )
+
+    # All solutions were inserted into the same cell as the elite already in the
+    # archive and had objective value 1 greater.
+    assert (status_batch == 1).all()
+    assert np.isclose(value_batch, 1.0).all()
+
+    assert_archive_elite_batch(
+        archive=data.archive,
+        solution_batch=[[1, 2, 3]],
+        objective_batch=[data.objective_value + 1],
+        measures_batch=[data.behavior_values],
+        grid_indices_batch=[data.grid_indices],
+        metadata_batch=[None],
+    )
+
+
+def test_add_batch_mixed_statuses(data):
+    status_batch, value_batch = data.archive_with_elite.add(
+        solution_batch=[[1, 2, 3]] * 6,
+        objective_batch=[
+            # Not added.
+            data.objective_value - 1.0,
+            # Not added.
+            data.objective_value - 2.0,
+            # Improve but not added.
+            data.objective_value + 1.0,
+            # Improve and added since it has higher objective.
+            data.objective_value + 2.0,
+            # New but not added.
+            1.0,
+            # New and added.
+            2.0,
+        ],
+        measures_batch=[
+            data.behavior_values,
+            data.behavior_values,
+            data.behavior_values,
+            data.behavior_values,
+            [0, 0],
+            [0, 0],
+        ],
+    )
+    assert (status_batch == [0, 0, 1, 1, 2, 2]).all()
+    assert np.isclose(value_batch, [-1, -2, 1, 2, 1, 2]).all()
+
+    assert_archive_elite_batch(
+        archive=data.archive_with_elite,
+        solution_batch=[[1, 2, 3]] * 2,
+        objective_batch=[data.objective_value + 2.0, 2.0],
+        measures_batch=[data.behavior_values, [0, 0]],
+        grid_indices_batch=[data.grid_indices, [5, 10]],
+        metadata_batch=[None, None],
+    )
 
 
 def test_grid_to_int_index(data):
