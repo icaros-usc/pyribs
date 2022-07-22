@@ -330,6 +330,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             solution parameters, objective, measures, and metadata for solution
             ``i``.
 
+        .. note:: In cases where multiple solutions end up in the same cell and
+            tie for the highest objective, we offer no guarantees on which
+            solution will be inserted into the archive.
+
         Args:
             solution_batch (array-like): (batch_size, :attr:`solution_dim`)
                 array of solution parameters.
