@@ -286,6 +286,71 @@ def test_add_batch_mixed_statuses(data):
     )
 
 
+def test_add_single_wrong_shapes(data):
+    with pytest.raises(ValueError):
+        data.archive.add_single(
+            solution=[1, 1],  # 2D instead of 3D solution.
+            objective=0,
+            measures=[0, 0],
+        )
+    with pytest.raises(ValueError):
+        data.archive.add_single(
+            solution=[0, 0, 0],
+            objective=0,
+            measures=[1, 1, 1],  # 3D instead of 2D measures.
+        )
+
+
+def test_add_batch_wrong_shapes(data):
+    with pytest.raises(ValueError):
+        data.archive.add(
+            solution_batch=[[1, 1]],  # 2D instead of 3D solution.
+            objective_batch=[0],
+            measures_batch=[[0, 0]],
+        )
+    with pytest.raises(ValueError):
+        data.archive.add(
+            solution_batch=[[0, 0, 0]],
+            objective_batch=[[1]],  # Array instead of scalar objective.
+            measures_batch=[[0, 0]],
+        )
+    with pytest.raises(ValueError):
+        data.archive.add(
+            solution_batch=[[0, 0, 0]],
+            objective_batch=[0],
+            measures_batch=[[1, 1, 1]],  # 3D instead of 2D measures.
+        )
+    with pytest.raises(ValueError):
+        data.archive.add(
+            solution_batch=[[0, 0, 0]],
+            objective_batch=[0],
+            measures_batch=[[0, 0]],
+            metadata_batch=[],  # Metadata is empty but should have entries.
+        )
+
+
+def test_add_batch_wrong_batch_size(data):
+    with pytest.raises(ValueError):
+        data.archive.add(
+            solution_batch=[[0, 0, 0]],
+            objective_batch=[1, 1],  # 2 objectives.
+            measures_batch=[[0, 0, 0]],
+        )
+    with pytest.raises(ValueError):
+        data.archive.add(
+            solution_batch=[[0, 0, 0]],
+            objective_batch=[0, 0],
+            measures_batch=[[1, 1, 1], [1, 1, 1]],  # 2 measures.
+        )
+    with pytest.raises(ValueError):
+        data.archive.add(
+            solution_batch=[[0, 0, 0]],
+            objective_batch=[0, 0],
+            measures_batch=[[0, 0, 0]],
+            metadata_batch=[None, None],  # 2 metadata.
+        )
+
+
 def test_grid_to_int_index(data):
     assert (data.archive.grid_to_int_index([data.grid_indices
                                            ])[0] == data.int_index)

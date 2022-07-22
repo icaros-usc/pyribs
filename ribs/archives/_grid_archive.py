@@ -2,7 +2,7 @@
 import numpy as np
 from numba import jit
 
-from ribs._utils import check_batch_shape
+from ribs._utils import check_batch_shape, check_is_1d
 from ribs.archives._archive_base import ArchiveBase
 
 
@@ -228,9 +228,7 @@ class GridArchive(ArchiveBase):
             ValueError: ``int_index_batch`` is not of shape (batch_size,).
         """
         int_index_batch = np.asarray(int_index_batch)
-        if int_index_batch.ndim != 1:
-            raise ValueError("Expected int_index_batch to be a 1D array "
-                             f"but it had shape {int_index_batch.shape}")
+        check_is_1d(int_index_batch, "int_index_batch")
 
         return np.asarray(np.unravel_index(
             int_index_batch,

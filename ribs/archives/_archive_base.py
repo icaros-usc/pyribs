@@ -5,7 +5,8 @@ from collections import OrderedDict
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import check_1d_shape, check_batch_shape
+from ribs._utils import (check_1d_shape, check_batch_shape, check_is_1d,
+                         check_solution_batch_dim)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._elite import Elite, EliteBatch
@@ -312,6 +313,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
         return self.index_of(measures[None])[0]
 
+    _ADD_WARNING = ("Note that starting in pyribs 0.5.0, add() takes in a "
+                    "batch of solutions unlike in pyribs 0.4.0, where add() "
+                    "only took in a single solution.")
+
     def add(self,
             solution_batch,
             objective_batch,
@@ -404,21 +409,27 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         ## Step 1: Validate input. ##
 
         solution_batch = np.asarray(solution_batch)
+        check_batch_shape(solution_batch, "solution_batch", self.solution_dim,
+                          "solution_dim", self._ADD_WARNING)
+        batch_size = solution_batch.shape[0]
+
         objective_batch = np.asarray(objective_batch, self.dtype)
-        batch_size = objective_batch.size
+        check_is_1d(objective_batch, "objective_batch", self._ADD_WARNING)
+        check_solution_batch_dim(objective_batch, "objective_batch", batch_size,
+                                 self._ADD_WARNING)
+
         measures_batch = np.asarray(measures_batch)
+        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+                          "measure_dim", self._ADD_WARNING)
+        check_solution_batch_dim(measures_batch, "measures_batch", batch_size,
+                                 self._ADD_WARNING)
+
         metadata_batch = (np.empty(batch_size, dtype=object) if
                           metadata_batch is None else np.asarray(metadata_batch,
                                                                  dtype=object))
-
-        check_batch_shape(solution_batch, "solution_batch", self.solution_dim,
-                          "solution_dim")
-        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
-                          "measure_dim")
-
-        # TODO: Check 1D shape of objectives and metadata.
-        # TODO: Note that we switched from single to batch in new pyribs.
-        # TODO: Test for wrong shapes.
+        check_is_1d(metadata_batch, "metadata_batch", self._ADD_WARNING)
+        check_solution_batch_dim(metadata_batch, "metadata_batch", batch_size,
+                                 self._ADD_WARNING)
 
         ## Step 2: Compute status_batch and value_batch ##
 
