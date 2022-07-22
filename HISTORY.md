@@ -6,6 +6,9 @@
 
 #### API
 
+- **Backwards-incompatible:** Implement batch addition in archives (#221)
+  - `add` now adds a batch of solutions to the archive
+  - `add_single` adds a single solution
 - `emitter.tell` now takes in `status_batch` and `value_batch` (#227)
 - Make epsilon configurable in archives (#226)
 - **Backwards-incompatible:** Remove ribs.factory (#225,#228)
