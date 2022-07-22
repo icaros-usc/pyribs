@@ -329,16 +329,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         batch end up in the same cell, we only keep the solution with the
         highest objective.
 
+        .. note:: In cases where multiple solutions end up in the same cell and
+            tie for the highest objective, the solution that appears first in
+            the batch will be inserted into the archive. We do not expect ties
+            to occur frequently since objectives are continuous.
+
         .. note:: The indices of all arguments should "correspond" to each
             other, i.e. ``solution_batch[i]``, ``objective_batch[i]``,
             ``measures_batch[i]``, and ``metadata_batch[i]`` should be the
             solution parameters, objective, measures, and metadata for solution
             ``i``.
-
-        .. note:: In cases where multiple solutions end up in the same cell and
-            tie for the highest objective, the solution that appears first in
-            the batch will be inserted into the archive. We do not expect ties
-            to occur frequently since objectives are continuous.
 
         Args:
             solution_batch (array-like): (batch_size, :attr:`solution_dim`)
