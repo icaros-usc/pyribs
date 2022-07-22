@@ -286,6 +286,44 @@ def test_add_batch_mixed_statuses(data):
     )
 
 
+def test_add_batch_first_solution_wins_in_ties(data):
+    status_batch, value_batch = data.archive_with_elite.add(
+        solution_batch=[
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9],
+            [10, 11, 12],
+        ],
+        objective_batch=[
+            # Ties for improvement.
+            data.objective_value + 1.0,
+            data.objective_value + 1.0,
+            # Ties for new solution.
+            3.0,
+            3.0,
+        ],
+        measures_batch=[
+            data.behavior_values,
+            data.behavior_values,
+            [0, 0],
+            [0, 0],
+        ],
+    )
+    assert (status_batch == [1, 1, 2, 2]).all()
+    assert np.isclose(value_batch, [1, 1, 3, 3]).all()
+
+    assert_archive_elite_batch(
+        archive=data.archive_with_elite,
+        batch_size=2,
+        # The first and third solution should be inserted since they come first.
+        solution_batch=[[1, 2, 3], [7, 8, 9]],
+        objective_batch=[data.objective_value + 1.0, 3.0],
+        measures_batch=[data.behavior_values, [0, 0]],
+        metadata_batch=[None, None],
+        grid_indices_batch=[data.grid_indices, [5, 10]],
+    )
+
+
 def test_add_single_wrong_shapes(data):
     with pytest.raises(ValueError):
         data.archive.add_single(

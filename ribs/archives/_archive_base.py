@@ -336,8 +336,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             ``i``.
 
         .. note:: In cases where multiple solutions end up in the same cell and
-            tie for the highest objective, we offer no guarantees on which
-            solution will be inserted into the archive.
+            tie for the highest objective, the solution that appears first in
+            the batch will be inserted into the archive. We do not expect ties
+            to occur frequently since objectives are continuous.
 
         Args:
             solution_batch (array-like): (batch_size, :attr:`solution_dim`)
@@ -490,6 +491,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # max(index_batch[can_insert]), rather than the total number of grid
         # cells. However, this is okay because we only need the indices of the
         # solutions, which we store in should_insert.
+        #
+        # aggregate() always chooses the first item if there are ties, so the
+        # first elite will be inserted if there is a tie. See their default
+        # numpy implementation for more info:
+        # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
         archive_argmax = aggregate(index_batch_can,
                                    objective_batch_can,
                                    func="argmax",
