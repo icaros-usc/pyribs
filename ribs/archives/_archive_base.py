@@ -326,13 +326,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         Each solution is only inserted if it has a higher objective than the
         elite previously in the corresponding cell. If multiple solutions in the
-        batch end up in the same cell, we only keep the solution with the
-        highest objective.
-
-        .. note:: In cases where multiple solutions end up in the same cell and
-            tie for the highest objective, the solution that appears first in
-            the batch will be inserted into the archive. We do not expect ties
-            to occur frequently since objectives are continuous.
+        batch end up in the same cell, we only insert the solution with the
+        highest objective. If multiple solutions end up in the same cell and tie
+        for the highest objective, we insert the solution that appears first in
+        the batch.
 
         .. note:: The indices of all arguments should "correspond" to each
             other, i.e. ``solution_batch[i]``, ``objective_batch[i]``,
@@ -372,17 +369,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 which was already in the archive.
               - ``2``: The solution discovered a new cell in the archive.
 
-              .. note:: All statuses (and values, below) are computed with
-                  respect to the *current* archive. For example, if two
-                  solutions both introduce the same new archive cell, then both
-                  will be marked with ``2``.
+              All statuses (and values, below) are computed with respect to the
+              *current* archive. For example, if two solutions both introduce
+              the same new archive cell, then both will be marked with ``2``.
 
-                  The alternative is to depend on the order of the solutions in
-                  the batch -- for example, if we have two solutions ``a`` and
-                  ``b`` which introduce the same new cell in the archive, ``a``
-                  could be inserted first with status ``2``, and ``b`` could be
-                  inserted second with status ``1`` because it improves upon
-                  ``a``. However, our implementation does **not** do this.
+              The alternative is to depend on the order of the solutions in the
+              batch -- for example, if we have two solutions ``a`` and ``b``
+              which introduce the same new cell in the archive, ``a`` could be
+              inserted first with status ``2``, and ``b`` could be inserted
+              second with status ``1`` because it improves upon ``a``. However,
+              our implementation does **not** do this.
 
               To convert statuses to a more semantic format, cast all statuses
               to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
