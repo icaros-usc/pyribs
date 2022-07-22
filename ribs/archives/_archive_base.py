@@ -390,6 +390,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """
         self._state["add"] += 1
 
+        ## Step 1: Validate input. ##
+
         solution_batch = np.asarray(solution_batch)
         objective_batch = np.asarray(objective_batch, self.dtype)
         batch_size = objective_batch.size
@@ -409,6 +411,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # about arrays as metadata?
         # TODO: Test for wrong shapes.
 
+        ## Step 2: Compute status_batch and value_batch ##
+
         # Retrieve indices.
         index_batch = self.index_of(measures_batch)
 
@@ -421,16 +425,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         is_new = ~already_occupied
         improve_existing = (objective_batch >
                             old_objective_batch) & already_occupied
-
-        # Set status_batch and value_batch.
         status_batch = np.zeros(batch_size, dtype=np.int32)
         status_batch[is_new] = 2
         status_batch[improve_existing] = 1
 
-        # Since we set the new solutions in the old objective batch to have
+        # Since we set the new solutions in old_objective_batch to have
         # value 0.0, the values for new solutions are correct here.
         old_objective_batch[is_new] = 0.0
         value_batch = objective_batch - old_objective_batch
+
+        ## Step 3: Insert solutions into archive. ##
 
         # Return early if we cannot insert anything -- continuing would actually
         # throw a ValueError in aggregate() since index_batch[can_insert] would
@@ -439,8 +443,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         if not np.any(can_insert):
             return status_batch, value_batch
 
-        # Filter out the solutions that cannot be inserted as we no longer care
-        # about them.
+        # Select only solutions that can be inserted into the archive.
         solution_batch_can = solution_batch[can_insert]
         objective_batch_can = objective_batch[can_insert]
         measures_batch_can = measures_batch[can_insert]
@@ -448,74 +451,54 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         metadata_batch_can = metadata_batch[can_insert]
         old_objective_batch_can = old_objective_batch[can_insert]
 
-        #  print("measures_batch:", measures_batch)
-        #  print("index_batch:", index_batch)
-        #  print("objective_batch:", objective_batch)
-        #  print("index,objective:")
-        #  tmp = list(zip(index_batch, objective_batch))
-        #  for x in tmp:
-        #      print(x)
-
         # Retrieve indices of solutions that should be inserted into the
-        # archive. First, we get the argmax for each archive index -- we use a
-        # fill_value of -1 to indicate archive indices which were not covered in
-        # the batch.
+        # archive. Currently, multiple solutions may be inserted at each
+        # archive index, but we only want to insert the maximum among these
+        # solutions. Thus, we obtain the argmax for each archive index.
         #
-        # Note that the length of archive_argmax is only
+        # We use a fill_value of -1 to indicate archive indices which were not
+        # covered in the batch. Note that the length of archive_argmax is only
         # max(index_batch[can_insert]), rather than the total number of grid
-        # cells. However, this is okay because we only want to find the indices
-        # of the solutions in should_insert.
+        # cells. However, this is okay because we only need the indices of the
+        # solutions, which we store in should_insert.
         archive_argmax = aggregate(index_batch_can,
                                    objective_batch_can,
                                    func="argmax",
                                    fill_value=-1)
-        #  print("archive_argmax:", archive_argmax)
         should_insert = archive_argmax[archive_argmax != -1]
-        #  print("should_insert:", should_insert)
 
-        # A list/array of unique indices in the archive where we should insert a
-        # solution.
-        archive_indices = index_batch_can[should_insert]
-        #  print("archive_indices:", archive_indices)
+        # Select only solutions that will be inserted into the archive.
+        solution_batch_insert = solution_batch_can[should_insert]
+        objective_batch_insert = objective_batch_can[should_insert]
+        measures_batch_insert = measures_batch_can[should_insert]
+        index_batch_insert = index_batch_can[should_insert]
+        metadata_batch_insert = metadata_batch_can[should_insert]
+        old_objective_batch_insert = old_objective_batch_can[should_insert]
 
-        #  print("unique:", len(set(archive_indices)))
-        #  print("actual:", len(archive_indices))
-        assert len(set(archive_indices)) == len(archive_indices)
+        # Set archive storage.
+        self._objective_values[index_batch_insert] = objective_batch_insert
+        self._behavior_values[index_batch_insert] = measures_batch_insert
+        self._solutions[index_batch_insert] = solution_batch_insert
+        self._metadata[index_batch_insert] = metadata_batch_insert
+        self._occupied[index_batch_insert] = True
 
-        inserted_objectives = objective_batch_can[should_insert]
-        self._objective_values[archive_indices] = inserted_objectives
-        self._behavior_values[archive_indices] = measures_batch_can[
-            should_insert]
-        self._solutions[archive_indices] = solution_batch_can[should_insert]
-        self._metadata[archive_indices] = metadata_batch_can[should_insert]
-        self._occupied[archive_indices] = True
-
-        # TODO: Double check below
-
-        # Only counts new solutions that were inserted.
+        # Mark new indices as occupied.
         is_new_and_inserted = is_new[can_insert][should_insert]
         n_new = np.sum(is_new_and_inserted)
-        #  print("n_new", n_new)
-        #  print("len occupied indices", len(self._occupied_indices))
-        #  print("len new occupied",
-        #        len(index_batch[should_insert][is_new_and_inserted]))
-        #  print("new occupied", index_batch[should_insert][is_new_and_inserted])
         self._occupied_indices[self._num_occupied:self._num_occupied +
-                               n_new] = (index_batch_can[should_insert]
-                                         [is_new_and_inserted])
+                               n_new] = (
+                                   index_batch_insert[is_new_and_inserted])
         self._num_occupied += n_new
 
-        # Update stats -- only account for solutions that are actually added.
-        # The old objective can be tricky because it needs to be 0 for new
-        # solutions.
+        ## Step 4: Update archive stats. ##
 
         # Since we set the new solutions in the old objective batch to have
         # value 0.0, the objectives for new solutions are added in properly
         # here.
-        new_qd_score = (self._stats.qd_score +
-                        np.sum(inserted_objectives -
-                               old_objective_batch_can[should_insert]))
-        max_new_obj = np.max(inserted_objectives)
+        new_qd_score = (
+            self._stats.qd_score +
+            np.sum(objective_batch_insert - old_objective_batch_insert))
+        max_new_obj = np.max(objective_batch_insert)
         self._stats = ArchiveStats(
             num_elites=len(self),
             coverage=self.dtype(len(self) / self.cells),
