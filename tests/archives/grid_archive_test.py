@@ -27,16 +27,21 @@ def assert_archive_elite(archive, solution, objective, measures, grid_indices,
     assert elite.metadata == metadata
 
 
-def assert_archive_elite_batch(archive, solution_batch, objective_batch,
-                               measures_batch, metadata_batch,
-                               grid_indices_batch):
+def assert_archive_elite_batch(
+    archive,
+    batch_size,
+    solution_batch=None,
+    objective_batch=None,
+    measures_batch=None,
+    metadata_batch=None,
+    grid_indices_batch=None,
+):
     """Asserts that the archive contains a batch of elites.
 
-    grid_indices_batch is optional.
+    Any of the batch items may be excluded by setting to None.
     """
     archive_df = archive.as_pandas(include_solutions=True,
                                    include_metadata=True)
-    batch_size = len(solution_batch)
 
     # Check the number of solutions.
     assert len(archive_df) == batch_size
@@ -59,19 +64,20 @@ def assert_archive_elite_batch(archive, solution_batch, objective_batch,
             if archive_covered[j]:
                 continue
 
-            solution_match = np.isclose(archive_solution_batch[j],
-                                        solution_batch[i]).all()
-            objective_match = np.isclose(archive_objective_batch[j],
-                                         objective_batch[i])
-            measures_match = np.isclose(archive_measures_batch[j],
-                                        measures_batch[i]).all()
-            index_match = (grid_indices_batch is not None and
+            solution_match = (solution_batch is None or np.isclose(
+                archive_solution_batch[j], solution_batch[i]).all())
+            objective_match = (objective_batch is None or np.isclose(
+                archive_objective_batch[j], objective_batch[i]))
+            measures_match = (measures_batch is None or np.isclose(
+                archive_measures_batch[j], measures_batch[i]).all())
+            index_match = (grid_indices_batch is None or
                            archive_index_batch[j] == index_batch[i])
-            metadata_match = archive_metadata_batch[j] == metadata_batch[i]
+            metadata_match = (metadata_batch is None or
+                              archive_metadata_batch[j] == metadata_batch[i])
 
             if (solution_match and objective_match and measures_match and
                     index_match and metadata_match):
-                archive_covered[i] = True
+                archive_covered[j] = True
 
     assert np.all(archive_covered)
 
@@ -185,6 +191,7 @@ def test_add_batch_all_new(data):
 
     assert_archive_elite_batch(
         archive=data.archive,
+        batch_size=3,
         solution_batch=[[1, 2, 3]] * 3,
         objective_batch=[0, 0, 1],
         measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
@@ -207,6 +214,7 @@ def test_add_batch_none_inserted(data):
 
     assert_archive_elite_batch(
         archive=data.archive_with_elite,
+        batch_size=1,
         solution_batch=[data.solution],
         objective_batch=[data.objective_value],
         measures_batch=[data.behavior_values],
@@ -229,6 +237,7 @@ def test_add_batch_with_improvement(data):
 
     assert_archive_elite_batch(
         archive=data.archive_with_elite,
+        batch_size=1,
         solution_batch=[[1, 2, 3]],
         objective_batch=[data.objective_value + 1],
         measures_batch=[data.behavior_values],
@@ -268,6 +277,7 @@ def test_add_batch_mixed_statuses(data):
 
     assert_archive_elite_batch(
         archive=data.archive_with_elite,
+        batch_size=2,
         solution_batch=[[1, 2, 3]] * 2,
         objective_batch=[data.objective_value + 2.0, 2.0],
         measures_batch=[data.behavior_values, [0, 0]],
