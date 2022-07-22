@@ -28,28 +28,52 @@ def assert_archive_elite(archive, solution, objective, measures, grid_indices,
 
 
 def assert_archive_elite_batch(archive, solution_batch, objective_batch,
-                               measures_batch, grid_indices_batch,
-                               metadata_batch):
-    """Asserts that the archive contains a batch of elites."""
-    # Access the archive data and sort it by index.
+                               measures_batch, metadata_batch,
+                               grid_indices_batch):
+    """Asserts that the archive contains a batch of elites.
+
+    grid_indices_batch is optional.
+    """
     archive_df = archive.as_pandas(include_solutions=True,
                                    include_metadata=True)
-    archive_df.sort_values("index", inplace=True)
+    batch_size = len(solution_batch)
 
-    # Reorder all the batches by sorting by index.
-    index_batch = archive.grid_to_int_index(grid_indices_batch)
-    sort_idx = np.argsort(index_batch)
-    solution_batch = np.asarray(solution_batch)[sort_idx]
-    objective_batch = np.asarray(objective_batch)[sort_idx]
-    measures_batch = np.asarray(measures_batch)[sort_idx]
-    index_batch = index_batch[sort_idx]
-    metadata_batch = np.asarray(metadata_batch)[sort_idx]
+    # Check the number of solutions.
+    assert len(archive_df) == batch_size
 
-    assert np.isclose(archive_df.batch_solutions(), solution_batch).all()
-    assert np.isclose(archive_df.batch_objectives(), objective_batch).all()
-    assert np.isclose(archive_df.batch_behaviors(), measures_batch).all()
-    assert (archive_df.batch_indices() == index_batch).all()
-    assert (archive_df.batch_metadata() == metadata_batch).all()
+    if grid_indices_batch is not None:
+        index_batch = archive.grid_to_int_index(grid_indices_batch)
+
+    archive_solution_batch = archive_df.batch_solutions()
+    archive_objective_batch = archive_df.batch_objectives()
+    archive_measures_batch = archive_df.batch_behaviors()
+    archive_index_batch = archive_df.batch_indices()
+    archive_metadata_batch = archive_df.batch_metadata()
+
+    # Enforce a one-to-one correspondence between entries in the archive and in
+    # the provided input -- see
+    # https://www.geeksforgeeks.org/check-two-unsorted-array-duplicates-allowed-elements/
+    archive_covered = [False for _ in range(batch_size)]
+    for i in range(batch_size):
+        for j in range(len(archive_df)):
+            if archive_covered[j]:
+                continue
+
+            solution_match = np.isclose(archive_solution_batch[j],
+                                        solution_batch[i]).all()
+            objective_match = np.isclose(archive_objective_batch[j],
+                                         objective_batch[i])
+            measures_match = np.isclose(archive_measures_batch[j],
+                                        measures_batch[i]).all()
+            index_match = (grid_indices_batch is not None and
+                           archive_index_batch[j] == index_batch[i])
+            metadata_match = archive_metadata_batch[j] == metadata_batch[i]
+
+            if (solution_match and objective_match and measures_match and
+                    index_match and metadata_match):
+                archive_covered[i] = True
+
+    assert np.all(archive_covered)
 
 
 def test_fails_on_dim_mismatch():
@@ -164,8 +188,8 @@ def test_add_batch_all_new(data):
         solution_batch=[[1, 2, 3]] * 3,
         objective_batch=[0, 0, 1],
         measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
-        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
         metadata_batch=[None, None, None],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
     )
 
 
@@ -182,12 +206,12 @@ def test_add_batch_none_inserted(data):
     assert np.isclose(value_batch, -1.0).all()
 
     assert_archive_elite_batch(
-        archive=data.archive,
+        archive=data.archive_with_elite,
         solution_batch=[data.solution],
         objective_batch=[data.objective_value],
         measures_batch=[data.behavior_values],
-        grid_indices_batch=[data.grid_indices],
         metadata_batch=[data.metadata],
+        grid_indices_batch=[data.grid_indices],
     )
 
 
@@ -204,12 +228,12 @@ def test_add_batch_with_improvement(data):
     assert np.isclose(value_batch, 1.0).all()
 
     assert_archive_elite_batch(
-        archive=data.archive,
+        archive=data.archive_with_elite,
         solution_batch=[[1, 2, 3]],
         objective_batch=[data.objective_value + 1],
         measures_batch=[data.behavior_values],
-        grid_indices_batch=[data.grid_indices],
         metadata_batch=[None],
+        grid_indices_batch=[data.grid_indices],
     )
 
 
@@ -247,8 +271,8 @@ def test_add_batch_mixed_statuses(data):
         solution_batch=[[1, 2, 3]] * 2,
         objective_batch=[data.objective_value + 2.0, 2.0],
         measures_batch=[data.behavior_values, [0, 0]],
-        grid_indices_batch=[data.grid_indices, [5, 10]],
         metadata_batch=[None, None],
+        grid_indices_batch=[data.grid_indices, [5, 10]],
     )
 
 
