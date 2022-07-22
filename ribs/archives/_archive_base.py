@@ -242,25 +242,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._stats = ArchiveStats(0, self.dtype(0.0), self.dtype(0.0), None,
                                    None)
 
-    def _stats_update(self, old_objective_batch, new_objective_batch):
-        """Updates the archive stats when the batch of old objectives is
-        replaced by the batch of new objectives.
-
-        A new namedtuple is created so that stats which have been collected
-        previously do not change.
-        """
-        new_qd_score = self._stats.qd_score + np.sum(new_objective_batch -
-                                                     old_objective_batch)
-        max_new_obj = np.max(new_objective_batch)
-        self._stats = ArchiveStats(
-            num_elites=len(self),
-            coverage=self.dtype(len(self) / self.cells),
-            qd_score=new_qd_score,
-            obj_max=max_new_obj if self._stats.obj_max is None else max(
-                self._stats.obj_max, max_new_obj),
-            obj_mean=new_qd_score / self.dtype(len(self)),
-        )
-
     def clear(self):
         """Removes all elites from the archive.
 
