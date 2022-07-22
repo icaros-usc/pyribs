@@ -415,21 +415,30 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         objective_batch = np.asarray(objective_batch, self.dtype)
         check_is_1d(objective_batch, "objective_batch", self._ADD_WARNING)
-        check_solution_batch_dim(objective_batch, "objective_batch", batch_size,
-                                 self._ADD_WARNING)
+        check_solution_batch_dim(objective_batch,
+                                 "objective_batch",
+                                 batch_size,
+                                 is_1d=True,
+                                 extra_msg=self._ADD_WARNING)
 
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
                           "measure_dim", self._ADD_WARNING)
-        check_solution_batch_dim(measures_batch, "measures_batch", batch_size,
-                                 self._ADD_WARNING)
+        check_solution_batch_dim(measures_batch,
+                                 "measures_batch",
+                                 batch_size,
+                                 is_1d=False,
+                                 extra_msg=self._ADD_WARNING)
 
         metadata_batch = (np.empty(batch_size, dtype=object) if
                           metadata_batch is None else np.asarray(metadata_batch,
                                                                  dtype=object))
         check_is_1d(metadata_batch, "metadata_batch", self._ADD_WARNING)
-        check_solution_batch_dim(metadata_batch, "metadata_batch", batch_size,
-                                 self._ADD_WARNING)
+        check_solution_batch_dim(metadata_batch,
+                                 "metadata_batch",
+                                 batch_size,
+                                 is_1d=True,
+                                 extra_msg=self._ADD_WARNING)
 
         ## Step 2: Compute status_batch and value_batch ##
 

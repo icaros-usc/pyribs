@@ -37,11 +37,15 @@ def check_is_1d(array, array_name, extra_msg=""):
                          f"shape {array.shape}.{_format_extra_msg(extra_msg)}")
 
 
-def check_solution_batch_dim(array, array_name, batch_size, extra_msg=""):
+def check_solution_batch_dim(array,
+                             array_name,
+                             batch_size,
+                             is_1d=False,
+                             extra_msg=""):
     """Checks the batch dimension of an array with respect to solution_batch."""
     if array.shape[0] != batch_size:
         raise ValueError(f"{array_name} does not match the batch dimension of "
                          "solution_batch -- since solution_batch has shape "
-                         f"({batch_size}, ...), {array_name} should have shape "
-                         f"({batch_size}, ...), but it has shape "
-                         f"{array.shape}.{_format_extra_msg(extra_msg)}")
+                         f"({batch_size}, ..), {array_name} should have shape "
+                         f"({batch_size},{'' if is_1d else ' ..'}), but it has "
+                         f"shape {array.shape}.{_format_extra_msg(extra_msg)}")
