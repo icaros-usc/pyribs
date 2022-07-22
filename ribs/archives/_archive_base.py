@@ -407,7 +407,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         # TODO: Check 1D shape of objectives and metadata.
         # TODO: Note that we switched from single to batch in new pyribs.
-        # TODO: Copy metadata warning from... (idk where???) maybe for warning
+        # TODO: Copy metadata warning from add_single
         # about arrays as metadata?
         # TODO: Test for wrong shapes.
 
