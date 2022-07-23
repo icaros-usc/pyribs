@@ -49,8 +49,8 @@ def _retrieve_cmap(cmap):
 
 def _validate_heatmap_visual_args(aspect, cbar, square, behavior_dim,
                                   valid_dims, error_msg_behavior_dim):
-    """
-    Helper function to validate arguments passed to `*_archive_heatmap` plotting functions
+    """Helper function to validate arguments passed to `*_archive_heatmap`
+    plotting functions.
 
     Args:
         valid_dims (list[int]): all specified valid archive dimensions that may be plotted into heatmaps
@@ -77,7 +77,7 @@ def _validate_heatmap_visual_args(aspect, cbar, square, behavior_dim,
 
 
 def _set_cbar(t, ax, cbar, cbar_kwargs):
-    """Sets cbar on the Axes given cbar arg"""
+    """Sets cbar on the Axes given cbar arg."""
     cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
     if cbar == "auto":
         ax.figure.colorbar(t, ax=ax, **cbar_kwargs)
@@ -204,7 +204,7 @@ def grid_archive_heatmap(archive,
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        objectives = archive.as_pandas().batch_objectives()
+        objectives = archive.as_pandas().objective_batch()
         vmin = np.min(objectives) if vmin is None else vmin
         vmax = np.max(objectives) if vmax is None else vmax
         t = ax.pcolormesh(x_bounds,
@@ -246,7 +246,7 @@ def grid_archive_heatmap(archive,
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        objectives = archive.as_pandas().batch_objectives()
+        objectives = archive.as_pandas().objective_batch()
         vmin = np.min(objectives) if vmin is None else vmin
         vmax = np.max(objectives) if vmax is None else vmax
         t = ax.pcolormesh(x_bounds,
@@ -715,8 +715,8 @@ def parallel_axes_plot(archive,
     norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
     if sort_archive:
         df.sort_values("objective", inplace=True)
-    objectives = df.batch_objectives()
-    ys = df.batch_behaviors()[:, cols]
+    objectives = df.objective_batch()
+    ys = df.measures_batch()[:, cols]
     y_ranges = upper_bounds - lower_bounds
 
     # Transform all data to be in the first axis coordinates.
