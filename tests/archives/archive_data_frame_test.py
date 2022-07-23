@@ -10,24 +10,26 @@ from ribs.archives import ArchiveDataFrame
 @pytest.fixture
 def data():
     """Data for an archive."""
-    solutions = np.arange(5).reshape(5, 1)
-    objectives = 2 * np.arange(5)
-    behaviors = 3 * np.arange(5).reshape(5, 1)
-    indices = 4 * np.arange(5, dtype=int)
-    metadata = [{"a": 1}, {"b": 2}, {"c": 3}, {"d": 4}, {"e": 5}]
-    return solutions, objectives, behaviors, indices, metadata
+    solution_batch = np.arange(5).reshape(5, 1)
+    objective_batch = 2 * np.arange(5)
+    measures_batch = 3 * np.arange(5).reshape(5, 1)
+    index_batch = 4 * np.arange(5, dtype=int)
+    metadata_batch = [{"a": 1}, {"b": 2}, {"c": 3}, {"d": 4}, {"e": 5}]
+    return (solution_batch, objective_batch, measures_batch, index_batch,
+            metadata_batch)
 
 
 @pytest.fixture
 def df(data):
-    """Mimics the ArchiveDataFrame an as_pandas method would generate."""
-    solutions, objectives, behaviors, indices, metadata = data
+    """Mimics the ArchiveDataFrame which an as_pandas method would generate."""
+    (solution_batch, objective_batch, measures_batch, index_batch,
+     metadata_batch) = data
     return ArchiveDataFrame({
-        "index": indices,
-        "objective": objectives,
-        "behavior_0": behaviors[:, 0],
-        "solution_0": solutions[:, 0],
-        "metadata": metadata,
+        "index": index_batch,
+        "objective": objective_batch,
+        "measure_0": measures_batch[:, 0],
+        "solution_0": solution_batch[:, 0],
+        "metadata": metadata_batch,
     })
 
 
@@ -42,29 +44,30 @@ def test_iterelites(data, df):
 
 
 def test_batch_methods(data, df):
-    solutions, objectives, behaviors, indices, metadata = data
-    assert np.isclose(df.batch_solutions(), solutions).all()
-    assert np.isclose(df.batch_objectives(), objectives).all()
-    assert np.isclose(df.batch_behaviors(), behaviors).all()
-    assert (df.batch_indices() == indices).all()
-    assert (df.batch_metadata() == metadata).all()
+    (solution_batch, objective_batch, measures_batch, index_batch,
+     metadata_batch) = data
+    assert np.isclose(df.solution_batch(), solution_batch).all()
+    assert np.isclose(df.objective_batch(), objective_batch).all()
+    assert np.isclose(df.measures_batch(), measures_batch).all()
+    assert (df.index_batch() == index_batch).all()
+    assert (df.metadata_batch() == metadata_batch).all()
 
 
 @pytest.mark.parametrize(
     "remove",
-    ["index", "objective", "behavior_0", "metadata", "solution_0"],
-    ids=["indices", "objectives", "behaviors", "metadata", "solutions"],
+    ["index", "objective", "measure_0", "metadata", "solution_0"],
+    ids=["index", "objective", "measures", "metadata", "solutions"],
 )
 def test_batch_methods_can_be_none(df, remove):
     """Removes a column so that the corresponding batch method returns None."""
     del df[remove]
 
     method = {
-        "solution_0": df.batch_solutions,
-        "objective": df.batch_objectives,
-        "behavior_0": df.batch_behaviors,
-        "index": df.batch_indices,
-        "metadata": df.batch_metadata,
+        "solution_0": df.solution_batch,
+        "objective": df.objective_batch,
+        "measure_0": df.measures_batch,
+        "index": df.index_batch,
+        "metadata": df.metadata_batch,
     }[remove]
 
     assert method() is None
