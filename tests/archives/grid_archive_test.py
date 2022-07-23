@@ -49,11 +49,11 @@ def assert_archive_elite_batch(
     if grid_indices_batch is not None:
         index_batch = archive.grid_to_int_index(grid_indices_batch)
 
-    archive_solution_batch = archive_df.batch_solutions()
-    archive_objective_batch = archive_df.batch_objectives()
-    archive_measures_batch = archive_df.batch_behaviors()
-    archive_index_batch = archive_df.batch_indices()
-    archive_metadata_batch = archive_df.batch_metadata()
+    archive_solution_batch = archive_df.solution_batch()
+    archive_objective_batch = archive_df.objective_batch()
+    archive_measures_batch = archive_df.measures_batch()
+    archive_index_batch = archive_df.index_batch()
+    archive_metadata_batch = archive_df.metadata_batch()
 
     # Enforce a one-to-one correspondence between entries in the archive and in
     # the provided input -- see
