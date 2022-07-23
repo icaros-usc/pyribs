@@ -3,17 +3,17 @@
 In CVTArchive, we use a k-D tree to identify the cell by finding the nearest
 centroid to a solution in behavior space. Though a k-D tree is theoretically
 more efficient than brute force, constant factors mean that brute force can be
-faster than k-D tree for smaller numbers of centroids / cells. In this script, we
-want to increase the number of cells in the archive and see when the k-D tree
+faster than k-D tree for smaller numbers of centroids / cells. In this script,
+we want to increase the number of cells in the archive and see when the k-D tree
 becomes faster than brute force.
 
 In this experiment, we construct archives with 10, 50, 100, 500, 1k, 5k, 10k,
 100k cells in the behavior space of [(-1, 1), (-1, 1)] and 100k samples (except
-for 10k cells, where we use 200k samples so that the CVT generation does not drop
-a cluster). In each archive, we then time how long it takes to add 100k random
-solutions sampled u.a.r. from the behavior space. We run each experiment with
-brute force and with the k-D tree, 5 times each, and take the minimum runtime
-(see https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
+for 10k cells, where we use 200k samples so that the CVT generation does not
+drop a cluster). In each archive, we then time how long it takes to add 100k
+random solutions sampled u.a.r. from the behavior space. We run each experiment
+with brute force and with the k-D tree, 5 times each, and take the minimum
+runtime (see https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
 
 Usage:
     python cvt_add.py
@@ -81,15 +81,15 @@ def main():
 
     # Pre-made solutions to insert.
     n_vals = 100_000
-    solutions = np.random.uniform(-1, 1, (n_vals, 10))
-    objective_values = np.random.randn(n_vals)
-    behavior_values = np.random.uniform(-1, 1, (n_vals, 2))
+    solution_batch = np.random.uniform(-1, 1, (n_vals, 10))
+    objective_batch = np.random.randn(n_vals)
+    measures_batch = np.random.uniform(-1, 1, (n_vals, 2))
 
     # Set up these archives so we can use the same centroids across all
     # experiments for a certain number of cells (and also save time).
     ref_archives = {
         cells: CVTArchive(
-            solution_dim=solutions.shape[1],
+            solution_dim=solution_batch.shape[1],
             cells=cells,
             ranges=[(-1, 1), (-1, 1)],
             # Use 200k cells to avoid dropping clusters.
@@ -99,7 +99,7 @@ def main():
 
     def setup(cells, use_kd_tree):
         nonlocal archive
-        archive = CVTArchive(solution_dim=solutions.shape[1],
+        archive = CVTArchive(solution_dim=solution_batch.shape[1],
                              cells=cells,
                              ranges=[(-1, 1), (-1, 1)],
                              custom_centroids=ref_archives[cells].centroids,
@@ -107,8 +107,7 @@ def main():
 
     def add_100k_entries():
         nonlocal archive
-        for i in range(n_vals):
-            archive.add(solutions[i], objective_values[i], behavior_values[i])
+        archive.add(solution_batch, objective_batch, measures_batch)
 
     # Run the timing.
     brute_force_t = []
