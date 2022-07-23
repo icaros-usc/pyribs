@@ -30,8 +30,8 @@ class ArchiveDataFrame(pd.DataFrame):
         To iterate through every :class:`Elite`, use::
 
             for elite in df.iterelites():
-                elite.sol
-                elite.obj
+                elite.solution
+                elite.objective
                 ...
 
         There are also methods to access the solutions, objectives, etc. of
@@ -86,7 +86,7 @@ class ArchiveDataFrame(pd.DataFrame):
         """Iterator which outputs every :class:`Elite` in the ArchiveDataFrame.
 
         Data which is unavailable will be turned into None. For example, if
-        there are no solution columns, then ``elite.sol`` will be None.
+        there are no solution columns, then ``elite.solution`` will be None.
         """
         solution_batch = self.solution_batch()
         objective_batch = self.objective_batch()
@@ -134,14 +134,14 @@ class ArchiveDataFrame(pd.DataFrame):
             copy=True) if "objective" in self else None
 
     def measures_batch(self):
-        """Array with behavior values of all elites.
+        """Array with measures of all elites.
 
-        None if there are no behavior values in the ``ArchiveDataFrame``.
+        None if there are no measures in the ``ArchiveDataFrame``.
 
         Returns:
-            (n, behavior_dim) numpy.ndarray: See above.
+            (n, measure_dim) numpy.ndarray: See above.
         """
-        cols = [c for c in self if c.startswith("behavior_")]
+        cols = [c for c in self if c.startswith("measure_")]
         return self[cols].to_numpy(copy=True) if cols else None
 
     def index_batch(self):
