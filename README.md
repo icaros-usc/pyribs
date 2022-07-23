@@ -220,31 +220,12 @@ pyribs users include:
 - [Jacob Schrum (Southwestern University)](https://github.com/schrum2/PyribsForGameGAN)
 - [Lenia Research](https://lenia.world)
 
-pyribs has been included in the following publications:
+### Publications
 
-<!-- Chronological order. -->
+For the list of publications which use pyribs, refer to our
+[Google Scholar entry](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=16246392515630874608).
 
-1. M. C. Fontaine, S. Nikolaidis. "Differentiable Quality Diversity." NeurIPS
-   2021 (Oral).
-   [[Link]](https://proceedings.neurips.cc/paper/2021/hash/532923f11ac97d3e7cb0130315b067dc-Abstract.html)
-1. B. Tjanaka, M. C. Fontaine, J. Togelius, S. Nikolaidis. "Approximating
-   Gradients for Differentiable Quality Diversity in Reinforcement Learning."
-   GECCO 2022. [[Link]](https://dqd-rl.github.io)
-1. S. Earle, J. Snider, M. Fontaine, S. Nikolaidis, J. Togelius. "Illuminating
-   Diverse Neural Cellular Automata for Level Generation." GECCO 2022.
-   [[Link]](https://dl.acm.org/doi/10.1145/3512290.3528754)
-1. B. Lim, M. Allard, L. Grillotti, A. Cully. "Accelerated Quality-Diversity for
-   Robotics through Massive Parallelism." GECCO 2022.
-   [[Link]](https://arxiv.org/abs/2202.01258)
-1. L. Schneider, F. Pfisterer, J. Thomas, B. Bischl. "A collection of quality
-   diversity optimization problems derived from hyperparameter optimization of
-   machine learning models." QD Benchmark Workshop @ GECCO 2022.
-   [[Link]](https://dl.acm.org/doi/abs/10.1145/3520304.3534003)
-   - This publications also released
-     [YAHPO Gym](https://github.com/slds-lmu/qdo_yahpo)
-1. V. Bhatt*, B. Tjanaka*, M. C. Fontaine\*, S. Nikolaidis. "Deep Surrogate
-   Assisted Generation of Environments." Preprint, 2022.
-   [[Link]](https://arxiv.org/abs/2206.04199)
+### Software
 
 See the
 [GitHub dependency graph](https://github.com/icaros-usc/pyribs/network/dependents)
