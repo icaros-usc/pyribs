@@ -214,6 +214,7 @@ pyribs users include:
 <!-- Alphabetical order -->
 
 - [Adam Gaier (Autodesk Research)](https://scholar.google.com/citations?user=GGyARB8AAAAJ)
+- [Chair of Statistical Learning and Data Science (LMU Munich)](https://www.slds.stat.uni-muenchen.de/)
 - [Game Innovation Lab (New York University)](https://game.engineering.nyu.edu)
 - [ganyariya (University of Tsukuba)](https://github.com/ganyariya/mario_pytorch)
 - [ICAROS Lab (University of Southern California)](http://icaros.usc.edu/)
