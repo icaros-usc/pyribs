@@ -7,18 +7,17 @@ faster than k-D tree for smaller numbers of centroids / cells. In this script,
 we want to increase the number of cells in the archive and see when the k-D tree
 becomes faster than brute force.
 
-In this experiment, we construct archives with 10, 50, 100, 500, 1k, 5k, 10k,
-100k cells in the behavior space of [(-1, 1), (-1, 1)] and 100k samples (except
-for 10k cells, where we use 200k samples so that the CVT generation does not
-drop a cluster). In each archive, we then time how long it takes to add 100k
-random solutions sampled u.a.r. from the behavior space. We run each experiment
-with brute force and with the k-D tree, 5 times each, and take the minimum
-runtime (see https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
+In this experiment, we construct archives with 10, 50, 100, 500, 1k cells in the
+behavior space of [(-1, 1), (-1, 1)] and 100k samples.  In each archive, we then
+time how long it takes to add 100k random solutions sampled u.a.r. from the
+behavior space. We run each experiment with brute force and with the k-D tree, 5
+times each, and take the minimum runtime (see
+https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
 
 Usage:
     python cvt_add.py
 
-This script will run for a while (~30 min) and produce two outputs. The first is
+This script will run for a few minutes and produce two outputs. The first is
 cvt_add_times.json, which holds the raw times. The second is cvt_add_plot.png,
 which is a plot of the times with respect to number of cells.
 
@@ -77,7 +76,7 @@ def plot_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_plot.png"):
 def main():
     """Creates archives, times insertion into them, and plots results."""
     archive = None
-    n_cells = [10, 50, 100, 500, 1_000, 5_000, 10_000, 100_000]
+    n_cells = [10, 50, 100, 500, 1_000]
 
     # Pre-made solutions to insert.
     n_vals = 100_000
@@ -92,7 +91,8 @@ def main():
             solution_dim=solution_batch.shape[1],
             cells=cells,
             ranges=[(-1, 1), (-1, 1)],
-            # Use 200k cells to avoid dropping clusters.
+            # Use 200k cells to avoid dropping clusters. However, note that we
+            # no longer test with 10k cells.
             samples=n_vals if cells != 10_000 else 200_000,
             use_kd_tree=False) for cells in n_cells
     }
