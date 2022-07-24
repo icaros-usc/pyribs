@@ -64,8 +64,8 @@ def plot_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_plot.png"):
     fig.tight_layout()
     ax.set_title(
         "Runtime to insert 1k batches of 100 2D entries\ninto CVTArchive")
-    ax.set_xlabel("Archive cells (log scale)")
-    ax.set_ylabel("Time (s) (log scale)")
+    ax.set_xlabel("log(number of cells in archive)")
+    ax.set_ylabel("log(time) (s)")
     ax.set_yscale("log")
     ax.semilogx(n_cells, brute_force_t, "-o", label="Brute Force", c="#304FFE")
     ax.semilogx(n_cells, kd_tree_t, "-x", label="k-D Tree", c="#e62020")
