@@ -23,9 +23,10 @@ class CVTArchive(ArchiveBase):
     the closest centroid in measure space (using Euclidean distance). For
     k-means clustering, we use :func:`sklearn.cluster.k_means`.
 
-    By default, finding the closest centroid is done in roughly O(log cells)
-    time using :class:`scipy.spatial.cKDTree`. To switch to brute force, which
-    takes O(cells) time, pass ``use_kd_tree=False``.
+    By default, finding the closest centroid is done in roughly
+    O(log(number of cells)) time using :class:`scipy.spatial.cKDTree`. To switch
+    to brute force, which takes O(number of cells) time, pass
+    ``use_kd_tree=False``.
 
     To compare the performance of using the k-D tree vs brute force, we ran
     benchmarks where we inserted 100k solutions into a 2D archive with varying
