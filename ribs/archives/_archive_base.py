@@ -294,7 +294,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
         return self.index_of(measures[None])[0]
 
-    _ADD_WARNING = ("Note that starting in pyribs 0.5.0, add() takes in a "
+    _ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() takes in a "
                     "batch of solutions unlike in pyribs 0.4.0, where add() "
                     "only took in a single solution.")
 
