@@ -8,13 +8,20 @@
 
 - Rename methods in ArchiveDataFrame and rename as_pandas behavior columns
   (#236)
+- Re-run CVTArchive benchmarks and update CVTArchive (#235)
+  - **Backwards-incompatible:** `use_kd_tree` now defaults to True since the k-D
+    tree is always faster than brute force in benchmarks.
+- Allow adding solutions one at a time in optimizer (#233)
+- Minimize numba usage (#232)
 - **Backwards-incompatible:** Implement batch addition in archives (#221)
   - `add` now adds a batch of solutions to the archive
   - `add_single` adds a single solution
 - `emitter.tell` now takes in `status_batch` and `value_batch` (#227)
 - Make epsilon configurable in archives (#226)
 - **Backwards-incompatible:** Remove ribs.factory (#225,#228)
-- **Backwards-incompatible:** Replaced `ImprovementEmitter`, `RandomDirectionEmitter`, and `OptimizingEmitter` with `EvolutionStrategyEmitter` (#220, #223)
+- **Backwards-incompatible:** Replaced `ImprovementEmitter`,
+  `RandomDirectionEmitter`, and `OptimizingEmitter` with
+  `EvolutionStrategyEmitter` (#220, #223)
 - Raise ValueError for incorrect array shapes in archive methods (#219)
 - Add elites_with_measures_single method for getting elite for a single
   solution's measures (#215)

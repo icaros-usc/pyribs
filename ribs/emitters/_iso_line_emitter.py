@@ -1,6 +1,5 @@
 """Provides the IsoLineEmitter."""
 import numpy as np
-from numba import jit
 
 from ribs.emitters._emitter_base import EmitterBase
 
@@ -98,18 +97,6 @@ class IsoLineEmitter(EmitterBase):
         """int: Number of solutions to return in :meth:`ask`."""
         return self._batch_size
 
-    @staticmethod
-    @jit(nopython=True)
-    def _ask_solutions_numba(parents, iso_gaussian, line_gaussian, directions):
-        """Numba helper for calculating solutions."""
-        return parents + iso_gaussian + line_gaussian * directions
-
-    @staticmethod
-    @jit(nopython=True)
-    def _ask_clip_helper(solutions, lower_bounds, upper_bounds):
-        """Numba version of clip."""
-        return np.minimum(np.maximum(solutions, lower_bounds), upper_bounds)
-
     def ask(self):
         """Generates ``batch_size`` solutions.
 
@@ -139,14 +126,9 @@ class IsoLineEmitter(EmitterBase):
                 scale=self._line_sigma,
                 size=(self._batch_size, 1),
             ).astype(self.archive.dtype)
+            solution_batch = parents + iso_gaussian + line_gaussian * directions
 
-            solution_batch = self._ask_solutions_numba(np.asarray(parents),
-                                                       iso_gaussian,
-                                                       line_gaussian,
-                                                       np.asarray(directions))
-
-        return self._ask_clip_helper(solution_batch, self.lower_bounds,
-                                     self.upper_bounds)
+        return np.clip(solution_batch, self.lower_bounds, self.upper_bounds)
 
     def tell(self,
              solution_batch,

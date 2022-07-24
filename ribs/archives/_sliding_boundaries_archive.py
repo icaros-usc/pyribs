@@ -2,6 +2,7 @@
 
 from collections import deque
 
+# TODO: Remove numba.
 import numba as nb
 import numpy as np
 from sortedcontainers import SortedList
