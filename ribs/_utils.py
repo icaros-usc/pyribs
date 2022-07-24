@@ -4,6 +4,8 @@
 def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
     """Checks that the array has shape (batch_size, dim).
 
+    `batch_size` can be any value.
+
     `array` must be a numpy array, and `dim` must be an int.
     """
     if array.ndim != 2 or array.shape[1] != dim:
