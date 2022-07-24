@@ -28,16 +28,16 @@ class CVTArchive(ArchiveBase):
     ``use_kd_tree=False``.
 
     To compare the performance of using the k-D tree vs brute force, we ran
-    benchmarks where we inserted 100k solutions into a 2D archive with varying
-    numbers of cells. We took the minimum over 5 runs for each data point, as
-    recommended in the docs for :meth:`timeit.Timer.repeat`.  Note the
+    benchmarks where we inserted 1k batches of 100 solutions into a 2D archive
+    with varying numbers of cells. We took the minimum over 5 runs for each data
+    point, as recommended in the docs for :meth:`timeit.Timer.repeat`.  Note the
     logarithmic scales. This plot was generated on a reasonably modern laptop.
 
     .. image:: ../_static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
 
-    Across all archive sizes, using the k-D tree is faster than using brute
-    force. Thus, **we recommend always using he k-D tree.** See
+    Across almost all numbers of cells, using the k-D tree is faster than using
+    brute force. Thus, **we recommend always using he k-D tree.** See
     `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.

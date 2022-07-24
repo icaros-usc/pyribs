@@ -4,14 +4,14 @@ In CVTArchive, we use a k-D tree to identify the cell by finding the nearest
 centroid to a solution in behavior space. Though a k-D tree is theoretically
 more efficient than brute force, constant factors mean that brute force can be
 faster than k-D tree for smaller numbers of centroids / cells. In this script,
-we want to increase the number of cells in the archive and see when the k-D tree
-becomes faster than brute force.
+we increase the number of cells in the archive and see when the k-D tree becomes
+faster than brute force.
 
 In this experiment, we construct archives with 10, 50, 100, 500, 1k cells in the
 behavior space of [(-1, 1), (-1, 1)] and 100k samples.  In each archive, we then
-time how long it takes to add 100k random solutions sampled u.a.r. from the
-behavior space. We run each experiment with brute force and with the k-D tree, 5
-times each, and take the minimum runtime (see
+time how long it takes to add 1k batches of 100 random solutions sampled u.a.r.
+from the behavior space. We run each experiment with brute force and with the
+k-D tree, 5 times each, and take the minimum runtime (see
 https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
 
 Usage:
@@ -62,12 +62,13 @@ def plot_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_plot.png"):
     """Plots the results to the given file."""
     fig, ax = plt.subplots(figsize=(4, 4))
     fig.tight_layout()
-    ax.set_title("Runtime to insert 100k 2D entries into CVTArchive")
-    ax.set_xlabel("Archive cells")
-    ax.set_ylabel("Time (s)")
+    ax.set_title(
+        "Runtime to insert 1k batches of 100 2D entries\ninto CVTArchive")
+    ax.set_xlabel("Archive cells (log scale)")
+    ax.set_ylabel("Time (s) (log scale)")
     ax.set_yscale("log")
     ax.semilogx(n_cells, brute_force_t, "-o", label="Brute Force", c="#304FFE")
-    ax.semilogx(n_cells, kd_tree_t, "-o", label="k-D Tree", c="#e62020")
+    ax.semilogx(n_cells, kd_tree_t, "-x", label="k-D Tree", c="#e62020")
     ax.grid(True, which="major", linestyle="--", linewidth=1)
     ax.legend(loc="upper left")
     fig.savefig(filename, bbox_inches="tight", dpi=120)
@@ -79,35 +80,41 @@ def main():
     n_cells = [10, 50, 100, 500, 1_000]
 
     # Pre-made solutions to insert.
-    n_vals = 100_000
-    solution_batch = np.random.uniform(-1, 1, (n_vals, 10))
-    objective_batch = np.random.randn(n_vals)
-    measures_batch = np.random.uniform(-1, 1, (n_vals, 2))
+    n_batches = 1_000
+    batch_size = 100
+    all_solution_batch = np.random.uniform(-1, 1, (n_batches, batch_size, 10))
+    all_objective_batch = np.random.standard_normal((n_batches, batch_size))
+    all_measures_batch = np.random.uniform(-1, 1, (n_batches, batch_size, 2))
 
     # Set up these archives so we can use the same centroids across all
     # experiments for a certain number of cells (and also save time).
     ref_archives = {
         cells: CVTArchive(
-            solution_dim=solution_batch.shape[1],
+            solution_dim=all_solution_batch.shape[2],
             cells=cells,
             ranges=[(-1, 1), (-1, 1)],
             # Use 200k cells to avoid dropping clusters. However, note that we
             # no longer test with 10k cells.
-            samples=n_vals if cells != 10_000 else 200_000,
+            samples=100_000 if cells != 10_000 else 200_000,
             use_kd_tree=False) for cells in n_cells
     }
 
     def setup(cells, use_kd_tree):
         nonlocal archive
-        archive = CVTArchive(solution_dim=solution_batch.shape[1],
+        archive = CVTArchive(solution_dim=all_solution_batch.shape[2],
                              cells=cells,
                              ranges=[(-1, 1), (-1, 1)],
                              custom_centroids=ref_archives[cells].centroids,
                              use_kd_tree=use_kd_tree)
 
-    def add_100k_entries():
+    def add_entries():
         nonlocal archive
-        archive.add(solution_batch, objective_batch, measures_batch)
+        for i in range(n_batches):
+            archive.add(
+                all_solution_batch[i],
+                all_objective_batch[i],
+                all_measures_batch[i],
+            )
 
     # Run the timing.
     brute_force_t = []
@@ -119,7 +126,7 @@ def main():
                   f"Method: {'k-D Tree' if use_kd_tree else 'Brute Force'}")
             setup_func = partial(setup, cells, use_kd_tree)
             res_t = min(
-                timeit.repeat(add_100k_entries, setup_func, repeat=5, number=1))
+                timeit.repeat(add_entries, setup_func, repeat=5, number=1))
             print(f"Time: {res_t} s")
 
             if use_kd_tree:
