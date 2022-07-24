@@ -2,11 +2,11 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
-import numba as nb
 import numpy as np
+from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import check_measures_batch_shape, check_measures_shape
-from ribs.archives._add_status import AddStatus
+from ribs._utils import (check_1d_shape, check_batch_shape, check_is_1d,
+                         check_solution_batch_dim)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._elite import Elite, EliteBatch
@@ -242,22 +242,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._stats = ArchiveStats(0, self.dtype(0.0), self.dtype(0.0), None,
                                    None)
 
-    def _stats_update(self, old_obj, new_obj):
-        """Updates the archive stats when old_obj is replaced by new_obj.
-
-        A new namedtuple is created so that stats which have been collected
-        previously do not change.
-        """
-        new_qd_score = self._stats.qd_score + new_obj - old_obj
-        self._stats = ArchiveStats(
-            num_elites=len(self),
-            coverage=self.dtype(len(self) / self.cells),
-            qd_score=new_qd_score,
-            obj_max=new_obj if self._stats.obj_max is None else max(
-                self._stats.obj_max, new_obj),
-            obj_mean=new_qd_score / self.dtype(len(self)),
-        )
-
     def clear(self):
         """Removes all elites from the archive.
 
@@ -307,108 +291,273 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             ValueError: ``measures`` is not of shape (:attr:`behavior_dim`,).
         """
         measures = np.asarray(measures)
-        check_measures_shape(measures, self.behavior_dim)
+        check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
         return self.index_of(measures[None])[0]
 
-    @staticmethod
-    @nb.jit(locals={"already_occupied": nb.types.b1}, nopython=True)
-    def _add_numba(new_index, new_solution, new_objective_value,
-                   new_behavior_values, occupied, solutions, objective_values,
-                   behavior_values):
-        """Numba helper for inserting solutions into the archive.
+    _ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() takes in a "
+                    "batch of solutions unlike in pyribs 0.4.0, where add() "
+                    "only took in a single solution.")
 
-        See add() for usage.
+    def add(self,
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            metadata_batch=None):
+        """Inserts a batch of solutions into the archive.
 
+        Each solution is only inserted if it has a higher objective than the
+        elite previously in the corresponding cell. If multiple solutions in the
+        batch end up in the same cell, we only insert the solution with the
+        highest objective. If multiple solutions end up in the same cell and tie
+        for the highest objective, we insert the solution that appears first in
+        the batch.
+
+        .. note:: The indices of all arguments should "correspond" to each
+            other, i.e. ``solution_batch[i]``, ``objective_batch[i]``,
+            ``measures_batch[i]``, and ``metadata_batch[i]`` should be the
+            solution parameters, objective, measures, and metadata for solution
+            ``i``.
+
+        Args:
+            solution_batch (array-like): (batch_size, :attr:`solution_dim`)
+                array of solution parameters.
+            objective_batch (array-like): (batch_size,) array with objective
+                function evaluations of the solutions.
+            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+                array with measure space coordinates of all the solutions.
+            metadata_batch (array-like): (batch_size,) array of Python objects
+                representing metadata for the solution. For instance, this could
+                be a dict with several properties.
+
+                .. warning:: Due to how NumPy's :func:`~numpy.asarray`
+                    automatically converts array-like objects to arrays, passing
+                    array-like objects as metadata may lead to unexpected
+                    behavior. However, the metadata may be a dict or other
+                    object which *contains* arrays, i.e. ``metadata_batch``
+                    could be an array of dicts which contain arrays.
         Returns:
-            was_inserted (bool): Whether the new values were inserted into the
-                archive.
-            already_occupied (bool): Whether the index was occupied prior
-                to this call; i.e. this is True only if there was already an
-                item at the index.
+            tuple: 2-element tuple of (status_batch, value_batch) which
+            describes the results of the additions. These outputs are
+            particularly useful for algorithms such as CMA-ME.
+
+            - **status_batch** (:class:`numpy.ndarray` of :class:`int`): An
+              array of integers which represent the "status" obtained when
+              attempting to insert each solution in the batch. Each item has the
+              following possible values:
+
+              - ``0``: The solution was not added to the archive.
+              - ``1``: The solution improved the objective value of a cell
+                which was already in the archive.
+              - ``2``: The solution discovered a new cell in the archive.
+
+              All statuses (and values, below) are computed with respect to the
+              *current* archive. For example, if two solutions both introduce
+              the same new archive cell, then both will be marked with ``2``.
+
+              The alternative is to depend on the order of the solutions in the
+              batch -- for example, if we have two solutions ``a`` and ``b``
+              which introduce the same new cell in the archive, ``a`` could be
+              inserted first with status ``2``, and ``b`` could be inserted
+              second with status ``1`` because it improves upon ``a``. However,
+              our implementation does **not** do this.
+
+              To convert statuses to a more semantic format, cast all statuses
+              to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
+              status_batch]``.
+
+            - **value_batch** (:attr:`dtype`): An array with values for each
+              solution in the batch. The meaning of each ``value`` depends on
+              the corresponding ``status``:
+
+              - ``0`` (not added): The value is the "negative improvement," i.e.
+                the objective of the solution passed in minus the objective of
+                the elite still in the archive (this value is negative because
+                the solution did not have a high enough objective to be added to
+                the archive).
+              - ``1`` (improve existing cell): The value is the "improvement,"
+                i.e. the objective of the solution passed in minus the objective
+                of the elite previously in the archive.
+              - ``2`` (new cell): The value is just the objective of the
+                solution.
+        Raises:
+            ValueError: The array arguments do not match their specified shapes.
         """
-        already_occupied = occupied[new_index]
-        if (not already_occupied or
-                objective_values[new_index] < new_objective_value):
-            # Track this index if it has not been seen before -- important that
-            # we do this before inserting the solution.
-            if not already_occupied:
-                occupied[new_index] = True
+        self._state["add"] += 1
 
-            # Insert into the archive.
-            objective_values[new_index] = new_objective_value
-            behavior_values[new_index] = new_behavior_values
-            solutions[new_index] = new_solution
+        ## Step 1: Validate input. ##
 
-            return True, already_occupied
+        solution_batch = np.asarray(solution_batch)
+        check_batch_shape(solution_batch, "solution_batch", self.solution_dim,
+                          "solution_dim", self._ADD_WARNING)
+        batch_size = solution_batch.shape[0]
 
-        return False, already_occupied
+        objective_batch = np.asarray(objective_batch, self.dtype)
+        check_is_1d(objective_batch, "objective_batch", self._ADD_WARNING)
+        check_solution_batch_dim(objective_batch,
+                                 "objective_batch",
+                                 batch_size,
+                                 is_1d=True,
+                                 extra_msg=self._ADD_WARNING)
 
-    def _add_occupied_index(self, index):
-        """Tracks a new occupied index."""
-        self._occupied_indices[self._num_occupied] = index
-        self._num_occupied += 1
+        measures_batch = np.asarray(measures_batch)
+        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+                          "measure_dim", self._ADD_WARNING)
+        check_solution_batch_dim(measures_batch,
+                                 "measures_batch",
+                                 batch_size,
+                                 is_1d=False,
+                                 extra_msg=self._ADD_WARNING)
 
-    def add(self, solution, objective_value, behavior_values, metadata=None):
-        """Attempts to insert a new solution into the archive.
+        metadata_batch = (np.empty(batch_size, dtype=object) if
+                          metadata_batch is None else np.asarray(metadata_batch,
+                                                                 dtype=object))
+        check_is_1d(metadata_batch, "metadata_batch", self._ADD_WARNING)
+        check_solution_batch_dim(metadata_batch,
+                                 "metadata_batch",
+                                 batch_size,
+                                 is_1d=True,
+                                 extra_msg=self._ADD_WARNING)
+
+        ## Step 2: Compute status_batch and value_batch ##
+
+        # Retrieve indices.
+        index_batch = self.index_of(measures_batch)
+
+        # Copy old objectives since we will be modifying the objectives storage.
+        old_objective_batch = np.copy(self._objective_values[index_batch])
+
+        # Compute the statuses -- these are all boolean arrays of length
+        # batch_size.
+        already_occupied = self._occupied[index_batch]
+        is_new = ~already_occupied
+        improve_existing = (objective_batch >
+                            old_objective_batch) & already_occupied
+        status_batch = np.zeros(batch_size, dtype=np.int32)
+        status_batch[is_new] = 2
+        status_batch[improve_existing] = 1
+
+        # Since we set the new solutions in old_objective_batch to have
+        # value 0.0, the values for new solutions are correct here.
+        old_objective_batch[is_new] = 0.0
+        value_batch = objective_batch - old_objective_batch
+
+        ## Step 3: Insert solutions into archive. ##
+
+        # Return early if we cannot insert anything -- continuing would actually
+        # throw a ValueError in aggregate() since index_batch[can_insert] would
+        # be empty.
+        can_insert = is_new | improve_existing
+        if not np.any(can_insert):
+            return status_batch, value_batch
+
+        # Select only solutions that can be inserted into the archive.
+        solution_batch_can = solution_batch[can_insert]
+        objective_batch_can = objective_batch[can_insert]
+        measures_batch_can = measures_batch[can_insert]
+        index_batch_can = index_batch[can_insert]
+        metadata_batch_can = metadata_batch[can_insert]
+        old_objective_batch_can = old_objective_batch[can_insert]
+
+        # Retrieve indices of solutions that should be inserted into the
+        # archive. Currently, multiple solutions may be inserted at each
+        # archive index, but we only want to insert the maximum among these
+        # solutions. Thus, we obtain the argmax for each archive index.
+        #
+        # We use a fill_value of -1 to indicate archive indices which were not
+        # covered in the batch. Note that the length of archive_argmax is only
+        # max(index_batch[can_insert]), rather than the total number of grid
+        # cells. However, this is okay because we only need the indices of the
+        # solutions, which we store in should_insert.
+        #
+        # aggregate() always chooses the first item if there are ties, so the
+        # first elite will be inserted if there is a tie. See their default
+        # numpy implementation for more info:
+        # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
+        archive_argmax = aggregate(index_batch_can,
+                                   objective_batch_can,
+                                   func="argmax",
+                                   fill_value=-1)
+        should_insert = archive_argmax[archive_argmax != -1]
+
+        # Select only solutions that will be inserted into the archive.
+        solution_batch_insert = solution_batch_can[should_insert]
+        objective_batch_insert = objective_batch_can[should_insert]
+        measures_batch_insert = measures_batch_can[should_insert]
+        index_batch_insert = index_batch_can[should_insert]
+        metadata_batch_insert = metadata_batch_can[should_insert]
+        old_objective_batch_insert = old_objective_batch_can[should_insert]
+
+        # Set archive storage.
+        self._objective_values[index_batch_insert] = objective_batch_insert
+        self._behavior_values[index_batch_insert] = measures_batch_insert
+        self._solutions[index_batch_insert] = solution_batch_insert
+        self._metadata[index_batch_insert] = metadata_batch_insert
+        self._occupied[index_batch_insert] = True
+
+        # Mark new indices as occupied.
+        is_new_and_inserted = is_new[can_insert][should_insert]
+        n_new = np.sum(is_new_and_inserted)
+        self._occupied_indices[self._num_occupied:self._num_occupied +
+                               n_new] = (
+                                   index_batch_insert[is_new_and_inserted])
+        self._num_occupied += n_new
+
+        ## Step 4: Update archive stats. ##
+
+        # Since we set the new solutions in the old objective batch to have
+        # value 0.0, the objectives for new solutions are added in properly
+        # here.
+        new_qd_score = (
+            self._stats.qd_score +
+            np.sum(objective_batch_insert - old_objective_batch_insert))
+        max_new_obj = np.max(objective_batch_insert)
+        self._stats = ArchiveStats(
+            num_elites=len(self),
+            coverage=self.dtype(len(self) / self.cells),
+            qd_score=new_qd_score,
+            obj_max=max_new_obj if self._stats.obj_max is None else max(
+                self._stats.obj_max, max_new_obj),
+            obj_mean=new_qd_score / self.dtype(len(self)),
+        )
+
+        return status_batch, value_batch
+
+    def add_single(self, solution, objective, measures, metadata=None):
+        """Inserts a single solution into the archive.
 
         The solution is only inserted if it has a higher ``objective_value``
         than the elite previously in the corresponding cell.
 
         Args:
             solution (array-like): Parameters of the solution.
-            objective_value (float): Objective function evaluation of the
-                solution.
-            behavior_values (array-like): Coordinates in behavior space of the
-                solution.
-            metadata (object): Any Python object representing metadata for the
+            objective (float): Objective function evaluation of the solution.
+            measures (array-like): Coordinates in measure space of the solution.
+            metadata (object): Python object representing metadata for the
                 solution. For instance, this could be a dict with several
                 properties.
+
+                .. warning:: Due to how NumPy's :func:`~numpy.asarray`
+                    automatically converts array-like objects to arrays, passing
+                    array-like objects as metadata may lead to unexpected
+                    behavior. However, the metadata may be a dict or other
+                    object which *contains* arrays.
         Returns:
-            tuple: 2-element tuple describing the result of the add operation.
-            These outputs are particularly useful for algorithms such as CMA-ME.
-
-                **status** (:class:`AddStatus`): See :class:`AddStatus`.
-
-                **value** (:attr:`dtype`): The meaning of this value depends on
-                the value of ``status``:
-
-                - ``NOT_ADDED`` -> the "negative improvement," i.e. objective
-                  value of solution passed in minus objective value of the
-                  solution still in the archive (this value is negative because
-                  the solution did not have a high enough objective value to be
-                  added to the archive)
-                - ``IMPROVE_EXISTING`` -> the "improvement," i.e. objective
-                  value of solution passed in minus objective value of solution
-                  previously in the archive
-                - ``NEW`` -> the objective value passed in
+            tuple: 2-element tuple of (status, value) describing the result of
+            the add operation. Refer to :meth:`add` for the meaning of the
+            status and value.
         """
-        self._state["add"] += 1
         solution = np.asarray(solution)
-        behavior_values = np.asarray(behavior_values)
-        objective_value = self.dtype(objective_value)
+        objective = np.asarray(objective, dtype=self.dtype)  # 0-dim array.
+        measures = np.asarray(measures)
 
-        index = self.index_of(behavior_values[None])[0]
-        old_objective = self._objective_values[index]
-        was_inserted, already_occupied = self._add_numba(
-            index, solution, objective_value, behavior_values, self._occupied,
-            self._solutions, self._objective_values, self._behavior_values)
+        check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
+        check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
 
-        if was_inserted:
-            self._metadata[index] = metadata
-
-        if was_inserted and not already_occupied:
-            self._add_occupied_index(index)
-            status = AddStatus.NEW
-            value = objective_value
-            self._stats_update(self.dtype(0.0), objective_value)
-        elif was_inserted and already_occupied:
-            status = AddStatus.IMPROVE_EXISTING
-            value = objective_value - old_objective
-            self._stats_update(old_objective, objective_value)
-        else:
-            status = AddStatus.NOT_ADDED
-            value = objective_value - old_objective
-        return status, value
+        status_batch, value_batch = self.add(solution[None],
+                                             np.array([objective]),
+                                             measures[None],
+                                             np.array([metadata], dtype=object))
+        return (status_batch[0], value_batch[0])
 
     def elites_with_measures(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
@@ -462,7 +611,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_measures_batch_shape(measures_batch, self.behavior_dim)
+        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+                          "measure_dim")
 
         index_batch = self.index_of(measures_batch)
         occupied_batch = self._occupied[index_batch]
@@ -529,7 +679,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             ValueError: ``measures`` is not of shape (:attr:`behavior_dim`,).
         """
         measures = np.asarray(measures)
-        check_measures_shape(measures, self.behavior_dim)
+        check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
 
         elite_batch = self.elites_with_measures(measures[None])
         return Elite(

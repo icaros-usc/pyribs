@@ -1,7 +1,4 @@
 """Tests that should work for all emitters."""
-import itertools
-import unittest
-
 import numpy as np
 import pytest
 
@@ -66,54 +63,9 @@ def test_ask_emits_correct_num_sols(emitter_fixture):
 
 def test_ask_emits_correct_num_sols_on_nonempty_archive(emitter_fixture):
     archive, emitter, batch_size, x0 = emitter_fixture
-    archive.add(x0, 1, np.array([0, 0]))
+    archive.add_single(x0, 1, np.array([0, 0]))
     solutions = emitter.ask()
     assert solutions.shape == (batch_size, len(x0))
-
-
-#
-# tell()
-#
-
-
-@pytest.mark.parametrize("tell_metadata", [True, False],
-                         ids=["metadata", "no_metadata"])
-def test_tell_inserts_into_archive(emitter_fixture, tell_metadata):
-    archive, emitter, batch_size, _ = emitter_fixture
-    solutions = emitter.ask()
-    objective_values = np.full(batch_size, 1.)
-    behavior_values = np.array([[-1, -1], [0, 0], [1, 1]])
-    if tell_metadata:
-        metadata = np.full(batch_size, {"metadata_key": 42})
-        expected_metadata = metadata
-    else:
-        metadata = None
-        expected_metadata = np.full(batch_size, None)
-
-    metadata = itertools.repeat(None) if metadata is None else metadata
-
-    # Add solutions to the archive.
-    status_batch = []
-    value_batch = []
-    for (sol, obj, beh, meta) in zip(solutions, objective_values,
-                                     behavior_values, metadata):
-        status, value = archive.add(sol, obj, beh, meta)
-        status_batch.append(status)
-        value_batch.append(value)
-    status_batch = np.asarray(status_batch)
-    value_batch = np.asarray(value_batch)
-
-    emitter.tell(solutions, objective_values, behavior_values, status_batch,
-                 value_batch, metadata)
-
-    # Check all values are inserted. Only behavior values, objectives, and
-    # metadata are known; solutions may vary.
-    archive_data = archive.as_pandas(include_metadata=True)
-    archive_beh = (
-        archive_data.loc[:, ["behavior_0", "behavior_1"]].to_numpy().tolist())
-    unittest.TestCase().assertCountEqual(behavior_values.tolist(), archive_beh)
-    assert (archive_data["objective"] == objective_values).all()
-    assert (archive_data["metadata"].to_numpy() == expected_metadata).all()
 
 
 #

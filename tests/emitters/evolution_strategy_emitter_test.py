@@ -1,4 +1,4 @@
-"""Tests for EvolutionStrategyEmitter"""
+"""Tests for EvolutionStrategyEmitter."""
 import numpy as np
 import pytest
 
@@ -39,16 +39,7 @@ def test_dtypes(dtype):
         objective_batch = -np.sum(np.square(solution_batch), axis=1)
         measures_batch = solution_batch[:, :2]
 
-        # Add solutions to the archive.
-        status_batch = []
-        value_batch = []
-        for (sol, obj, beh) in zip(solution_batch, objective_batch,
-                                   measures_batch):
-            status, value = archive.add(sol, obj, beh)
-            status_batch.append(status)
-            value_batch.append(value)
-        status_batch = np.asarray(status_batch)
-        value_batch = np.asarray(value_batch)
-
+        status_batch, value_batch = archive.add(solution_batch, objective_batch,
+                                                measures_batch)
         emitter.tell(solution_batch, objective_batch, measures_batch,
                      status_batch, value_batch)

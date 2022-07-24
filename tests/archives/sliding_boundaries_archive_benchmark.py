@@ -1,9 +1,11 @@
 """Benchmarks for the SlidingBoundariesArchive."""
 import numpy as np
+import pytest
 
 from ribs.archives import SlidingBoundariesArchive
 
 
+@pytest.mark.skip
 def benchmark_add_10k(benchmark, benchmark_data_10k):
     n, solutions, objective_values, behavior_values = benchmark_data_10k
 
@@ -25,6 +27,7 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
     benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
 
 
+@pytest.mark.skip
 def benchmark_as_pandas_2048_elements(benchmark):
     # TODO (btjanaka): Make this size smaller so that we do a remap.
     archive = SlidingBoundariesArchive(10, [32, 64], [(-1, 1), (-2, 2)],

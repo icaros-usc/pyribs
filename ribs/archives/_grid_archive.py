@@ -2,7 +2,7 @@
 import numpy as np
 from numba import jit
 
-from ribs._utils import check_measures_batch_shape
+from ribs._utils import check_batch_shape, check_is_1d
 from ribs.archives._archive_base import ArchiveBase
 
 
@@ -180,7 +180,8 @@ class GridArchive(ArchiveBase):
                 :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_measures_batch_shape(measures_batch, self.behavior_dim)
+        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+                          "measure_dim")
 
         return self.grid_to_int_index(
             self._index_of_numba(
@@ -206,9 +207,8 @@ class GridArchive(ArchiveBase):
                 :attr:`behavior_dim`)
         """
         grid_index_batch = np.asarray(grid_index_batch)
-        check_measures_batch_shape(grid_index_batch,
-                                   self.behavior_dim,
-                                   name="grid_index_batch")
+        check_batch_shape(grid_index_batch, "grid_index_batch",
+                          self.behavior_dim, "measure_dim")
 
         return np.ravel_multi_index(grid_index_batch.T,
                                     self._dims).astype(np.int32)
@@ -228,9 +228,7 @@ class GridArchive(ArchiveBase):
             ValueError: ``int_index_batch`` is not of shape (batch_size,).
         """
         int_index_batch = np.asarray(int_index_batch)
-        if len(int_index_batch.shape) != 1:
-            raise ValueError("Expected int_index_batch to be a 1D array "
-                             f"but it had shape {int_index_batch.shape}")
+        check_is_1d(int_index_batch, "int_index_batch")
 
         return np.asarray(np.unravel_index(
             int_index_batch,

@@ -52,8 +52,9 @@ def test_add_during_iteration():
     data = get_archive_data("GridArchive")
     with pytest.raises(RuntimeError):
         for _ in data.archive_with_elite:
-            data.archive_with_elite.add(data.solution, data.objective_value + 1,
-                                        data.behavior_values)
+            data.archive_with_elite.add_single(data.solution,
+                                               data.objective_value + 1,
+                                               data.behavior_values)
 
 
 def test_clear_during_iteration():
@@ -68,8 +69,9 @@ def test_clear_and_add_during_iteration():
     with pytest.raises(RuntimeError):
         for _ in data.archive_with_elite:
             data.archive_with_elite.clear()
-            data.archive_with_elite.add(data.solution, data.objective_value + 1,
-                                        data.behavior_values)
+            data.archive_with_elite.add_single(data.solution,
+                                               data.objective_value + 1,
+                                               data.behavior_values)
 
 
 #
@@ -92,9 +94,9 @@ def test_stats_multiple_add():
     archive = GridArchive(solution_dim=3,
                           dims=[10, 20],
                           ranges=[(-1, 1), (-2, 2)])
-    archive.add([1, 2, 3], 1.0, [0, 0])
-    archive.add([1, 2, 3], 2.0, [0.25, 0.25])
-    archive.add([1, 2, 3], 3.0, [-0.25, -0.25])
+    archive.add_single([1, 2, 3], 1.0, [0, 0])
+    archive.add_single([1, 2, 3], 2.0, [0.25, 0.25])
+    archive.add_single([1, 2, 3], 3.0, [-0.25, -0.25])
 
     assert archive.stats.num_elites == 3
     assert np.isclose(archive.stats.coverage, 3 / 200)
@@ -107,10 +109,11 @@ def test_stats_add_and_overwrite():
     archive = GridArchive(solution_dim=3,
                           dims=[10, 20],
                           ranges=[(-1, 1), (-2, 2)])
-    archive.add([1, 2, 3], 1.0, [0, 0])
-    archive.add([1, 2, 3], 2.0, [0.25, 0.25])
-    archive.add([1, 2, 3], 3.0, [-0.25, -0.25])
-    archive.add([1, 2, 3], 5.0, [0.25, 0.25])  # Overwrites the second add().
+    archive.add_single([1, 2, 3], 1.0, [0, 0])
+    archive.add_single([1, 2, 3], 2.0, [0.25, 0.25])
+    archive.add_single([1, 2, 3], 3.0, [-0.25, -0.25])
+    archive.add_single([1, 2, 3], 5.0,
+                       [0.25, 0.25])  # Overwrites the second add.
 
     assert archive.stats.num_elites == 3
     assert np.isclose(archive.stats.coverage, 3 / 200)

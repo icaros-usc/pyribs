@@ -47,7 +47,7 @@ def test_degenerate_gauss_emits_x0(archive_fixture):
 def test_degenerate_gauss_emits_parent(archive_fixture):
     archive, x0 = archive_fixture
     parent_sol = x0 * 5
-    archive.add(parent_sol, 1, np.array([0, 0]))
+    archive.add_single(parent_sol, 1, np.array([0, 0]))
     emitter = GaussianEmitter(archive, x0, 0, batch_size=2)
 
     # All solutions should be generated "around" the single parent solution in

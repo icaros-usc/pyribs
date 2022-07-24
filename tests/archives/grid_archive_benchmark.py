@@ -5,21 +5,21 @@ from ribs.archives import GridArchive
 
 
 def benchmark_add_10k(benchmark, benchmark_data_10k):
-    n, solutions, objective_values, behavior_values = benchmark_data_10k
+    _, solution_batch, objective_batch, measures_batch = benchmark_data_10k
 
     def setup():
-        archive = GridArchive(solution_dim=solutions.shape[1],
+        archive = GridArchive(solution_dim=solution_batch.shape[1],
                               dims=(64, 64),
                               ranges=[(-1, 1), (-1, 1)])
 
         # Let numba compile.
-        archive.add(solutions[0], objective_values[0], behavior_values[0])
+        archive.add_single(solution_batch[0], objective_batch[0],
+                           measures_batch[0])
 
         return (archive,), {}
 
     def add_10k(archive):
-        for i in range(n):
-            archive.add(solutions[i], objective_values[i], behavior_values[i])
+        archive.add(solution_batch, objective_batch, measures_batch)
 
     benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
 
@@ -29,13 +29,19 @@ def benchmark_as_pandas_2025_items(benchmark):
     archive = GridArchive(solution_dim=10,
                           dims=(dim, dim),
                           ranges=[(-1, 1), (-1, 1)])
-
-    for x in np.linspace(-1, 1, dim):
-        for y in np.linspace(-1, 1, dim):
-            sol = np.random.random(10)
-            sol[0] = x
-            sol[1] = y
-            archive.add(sol, 1.0, np.array([x, y]))
+    xxs, yys = np.meshgrid(
+        np.linspace(-1, 1, dim),
+        np.linspace(-1, 1, dim),
+    )
+    xxs, yys = xxs.ravel(), yys.ravel()
+    archive.add(
+        solution_batch=np.stack(
+            (xxs, yys, *np.random.random((8, dim * dim))),
+            axis=1,
+        ),
+        objective_batch=np.ones(dim * dim),
+        measures_batch=np.stack((xxs, yys), axis=1),
+    )
 
     # Archive should be full.
     assert len(archive) == dim * dim

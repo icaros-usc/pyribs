@@ -6,7 +6,7 @@ import numba as nb
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs._utils import check_measures_batch_shape
+from ribs._utils import check_batch_shape
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._grid_archive import GridArchive
 
@@ -305,7 +305,8 @@ class SlidingBoundariesArchive(ArchiveBase):
                 :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_measures_batch_shape(measures_batch, self.behavior_dim)
+        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+                          "measure_dim")
 
         index_cols = SlidingBoundariesArchive._index_of_numba(
             measures_batch,
@@ -380,22 +381,19 @@ class SlidingBoundariesArchive(ArchiveBase):
             status, value = ArchiveBase.add(self, sol, obj, beh, meta)
         return status, value
 
+    # TODO: Update this method to take in batches.
     def add(self, solution, objective_value, behavior_values, metadata=None):
-        """Attempts to insert a new solution into the archive.
+        """Inserts a batch of solutions into the archive.
 
         This method remaps the archive after every :attr:`remap_frequency`
         solutions are added. Remapping involves changing the boundaries of the
-        archive to the percentage marks of the behavior values stored in the
-        buffer and re-adding all of the solutions stored in the buffer `and` the
-        current archive.
+        archive to the percentage marks of the measures stored in the buffer and
+        re-adding all of the solutions stored in the buffer `and` the current
+        archive.
 
-        Args:
-            solution (array-like): See :meth:`ArchiveBase.add`
-            objective_value (float): See :meth:`ArchiveBase.add`
-            behavior_values (array-like): See :meth:`ArchiveBase.add`
-            behavior_values (object): See :meth:`ArchiveBase.add`
-        Returns:
-            See :meth:`ArchiveBase.add`
+        See :meth:`ArchiveBase.add` for arguments and return values. Note that
+        return values are computed with respect to the *current* archive, i.e.
+        before doing any remapping.
         """
         solution = np.asarray(solution)
         behavior_values = np.asarray(behavior_values)

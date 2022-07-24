@@ -6,6 +6,8 @@ from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
 from ribs.optimizers import Optimizer
 
+from ..archives.grid_archive_test import assert_archive_elite_batch
+
 # pylint: disable = redefined-outer-name
 
 
@@ -81,13 +83,14 @@ def test_tell_inserts_solutions_into_archive(optimizer_fixture, tell_metadata):
     # the archive.
     optimizer.tell(np.ones(num_solutions), measures_batch, metadata)
 
-    # Note: This assumes elite data is in order of insertion, which may change
-    # in the future.
-    assert len(optimizer.archive) == num_solutions
-    df = optimizer.archive.as_pandas(include_metadata=True)
-    assert (df.batch_behaviors() == measures_batch).all()
-    assert (df.batch_objectives() == np.ones(num_solutions)).all()
-    assert (df.batch_metadata() == expected_metadata).all()
+    batch_size = len(optimizer.archive)
+    assert_archive_elite_batch(
+        archive=optimizer.archive,
+        batch_size=batch_size,
+        objective_batch=np.ones(batch_size),
+        measures_batch=measures_batch,
+        metadata_batch=expected_metadata,
+    )
 
 
 @pytest.mark.parametrize("tell_metadata", [True, False],
@@ -110,13 +113,14 @@ def test_tell_inserts_solutions_with_multiple_emitters(tell_metadata):
     # The sum of all the emitters' batch sizes is 6.
     optimizer.tell(np.ones(6), measures_batch, metadata)
 
-    # Note: This assumes elite data is in order of insertion, which may change
-    # in the future.
-    assert len(optimizer.archive) == 6
-    df = optimizer.archive.as_pandas(include_metadata=True)
-    assert (df.batch_behaviors() == measures_batch).all()
-    assert (df.batch_objectives() == np.ones(6)).all()
-    assert (df.batch_metadata() == expected_metadata).all()
+    batch_size = 6
+    assert_archive_elite_batch(
+        archive=optimizer.archive,
+        batch_size=batch_size,
+        objective_batch=np.ones(batch_size),
+        measures_batch=measures_batch,
+        metadata_batch=expected_metadata,
+    )
 
 
 def test_tell_fails_when_ask_not_called(optimizer_fixture):

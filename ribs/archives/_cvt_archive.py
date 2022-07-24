@@ -6,7 +6,7 @@ from numba import jit
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from sklearn.cluster import k_means
 
-from ribs._utils import check_measures_batch_shape
+from ribs._utils import check_batch_shape
 from ribs.archives._archive_base import ArchiveBase
 
 
@@ -78,8 +78,8 @@ class CVTArchive(ArchiveBase):
             ``archive.samples`` will be None. This can be useful when one wishes
             to use the same CVT across experiments for fair comparison.
         k_means_kwargs (dict): kwargs for :func:`~sklearn.cluster.k_means`. By
-            default, we pass in `n_init=1`, `init="random"`, `algorithm="lloyd"`,
-            and `random_state=seed`.
+            default, we pass in `n_init=1`, `init="random"`,
+            `algorithm="lloyd"`, and `random_state=seed`.
         use_kd_tree (bool): If True, use a k-D tree for finding the closest
             centroid when inserting into the archive. This may result in a
             speedup for larger dimensions.
@@ -128,7 +128,8 @@ class CVTArchive(ArchiveBase):
         if "algorithm" not in self._k_means_kwargs:
             if semantic_version.Version(
                     sklearn.__version__) >= semantic_version.Version("1.1.0"):
-                # In the newer versions, "full" has been deprecated in favor of "lloyd".
+                # In the newer versions, "full" has been deprecated in favor of
+                # "lloyd".
                 self._k_means_kwargs["algorithm"] = "lloyd"
             else:
                 # The default, "auto"/"elkan", allocates a huge array.
@@ -251,7 +252,8 @@ class CVTArchive(ArchiveBase):
                 :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_measures_batch_shape(measures_batch, self.behavior_dim)
+        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+                          "measure_dim")
 
         if self._use_kd_tree:
             return np.asarray(

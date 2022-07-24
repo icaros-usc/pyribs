@@ -1,27 +1,48 @@
 """Miscellaneous internal utilities."""
 
 
-def check_measures_batch_shape(measures_batch,
-                               measure_dim,
-                               name="measures_batch"):
-    """Checks the shape of a batch of measures.
+def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
+    """Checks that the array has shape (batch_size, dim).
 
-    `measures_batch` must be a numpy array.
+    `batch_size` can be any value.
+
+    `array` must be a numpy array, and `dim` must be an int.
     """
-    shape = measures_batch.shape
-    if len(shape) != 2 or shape[1] != measure_dim:
-        raise ValueError(f"Expected {name} to be a 2D array with shape "
-                         f"(batch_size, {measure_dim}) (i.e. shape "
-                         f"(batch_size, measure_dim)) but it had shape {shape}")
+    if array.ndim != 2 or array.shape[1] != dim:
+        raise ValueError(f"Expected {array_name} to be a 2D array with shape "
+                         f"(batch_size, {dim}) (i.e. shape "
+                         f"(batch_size, {dim_name})) but it had shape "
+                         f"{array.shape}.{extra_msg}")
 
 
-def check_measures_shape(measures, measure_dim, name="measures"):
-    """Checks the shape of a 1D vector of measures.
+def check_1d_shape(array, array_name, dim, dim_name, extra_msg=""):
+    """Checks that the array has shape (dim,).
 
-    `measures` must be a numpy array.
+    `array` must be a numpy array, and `dim` must be an int.
     """
-    shape = measures.shape
-    if len(shape) != 1 or shape[0] != measure_dim:
-        raise ValueError(f"Expected {name} to be a 1D array with shape "
-                         f"({measure_dim},) (i.e. shape (measure_dim,)) "
-                         f"but it had shape {shape}")
+    if array.ndim != 1 or array.shape[0] != dim:
+        raise ValueError(
+            f"Expected {array_name} to be a 1D array with shape "
+            f"({dim},) (i.e. shape ({dim_name},)) but it had shape "
+            f"{array.shape}.{extra_msg}")
+
+
+def check_is_1d(array, array_name, extra_msg=""):
+    """Checks that an array is 1D."""
+    if array.ndim != 1:
+        raise ValueError(f"Expected {array_name} to be a 1D array but it had "
+                         f"shape {array.shape}.{extra_msg}")
+
+
+def check_solution_batch_dim(array,
+                             array_name,
+                             batch_size,
+                             is_1d=False,
+                             extra_msg=""):
+    """Checks the batch dimension of an array with respect to solution_batch."""
+    if array.shape[0] != batch_size:
+        raise ValueError(f"{array_name} does not match the batch dimension of "
+                         "solution_batch -- since solution_batch has shape "
+                         f"({batch_size}, ..), {array_name} should have shape "
+                         f"({batch_size},{'' if is_1d else ' ..'}), but it has "
+                         f"shape {array.shape}.{extra_msg}")
