@@ -1,6 +1,5 @@
 """Provides the GaussianEmitter."""
 import numpy as np
-from numba import jit
 
 from ribs.emitters._emitter_base import EmitterBase
 
@@ -92,13 +91,6 @@ class GaussianEmitter(EmitterBase):
         """int: Number of solutions to return in :meth:`ask`."""
         return self._batch_size
 
-    @staticmethod
-    @jit(nopython=True)
-    def _ask_clip_helper(parents, noise, lower_bounds, upper_bounds):
-        """Numba equivalent of np.clip."""
-        return np.minimum(np.maximum(parents + noise, lower_bounds),
-                          upper_bounds)
-
     def ask(self):
         """Creates solutions by adding Gaussian noise to elites in the archive.
 
@@ -125,8 +117,7 @@ class GaussianEmitter(EmitterBase):
             size=(self._batch_size, self.solution_dim),
         ).astype(self.archive.dtype)
 
-        return self._ask_clip_helper(parents, noise, self.lower_bounds,
-                                     self.upper_bounds)
+        return np.clip(parents + noise, self.lower_bounds, self.upper_bounds)
 
     def tell(self,
              solution_batch,
