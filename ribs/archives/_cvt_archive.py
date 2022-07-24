@@ -10,44 +10,44 @@ from ribs.archives._archive_base import ArchiveBase
 
 
 class CVTArchive(ArchiveBase):
-    """An archive that divides the entire behavior space into a fixed number of
+    """An archive that divides the entire measure space into a fixed number of
     cells.
 
     This archive originates in `Vassiliades 2018
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
-    Tesselation (CVT) to divide an n-dimensional behavior space into k cell. The
-    CVT is created by sampling points uniformly from the n-dimensional behavior
-    space and using k-means clustering to identify k centroids. When items are
-    inserted into the archive, we identify their cell by identifying the closest
-    centroid in behavior space (using Euclidean distance). For k-means
-    clustering, we use :func:`sklearn.cluster.k_means`.
+    Tesselation (CVT) to divide an n-dimensional measure space into k cells.
+    The CVT is created by sampling points uniformly from the n-dimensional
+    measure space and using k-means clustering to identify k centroids. When
+    items are inserted into the archive, we identify their cell by identifying
+    the closest centroid in measure space (using Euclidean distance). For
+    k-means clustering, we use :func:`sklearn.cluster.k_means`.
 
-    Finding the closest centroid is done in O(cells) time (i.e. brute force) by
-    default. If ``use_kd_tree`` is True, it can be done in roughly O(log cells)
-    time using :class:`scipy.spatial.cKDTree`. However, using the k-D tree
-    lowers performance for small numbers of cells. The following plot compares
-    the runtime of brute force vs k-D tree when inserting 100k samples into a 2D
-    archive with varying numbers of cells (we took the minimum over 5 runs for
-    each data point, as recommended in the docs for :meth:`timeit.Timer.repeat`.
-    Note the logarithmic scales. This plot was generated on a reasonably modern
-    laptop.
+    By default, finding the closest centroid is done in roughly
+    O(log(number of cells)) time using :class:`scipy.spatial.cKDTree`. To switch
+    to brute force, which takes O(number of cells) time, pass
+    ``use_kd_tree=False``.
+
+    To compare the performance of using the k-D tree vs brute force, we ran
+    benchmarks where we inserted 1k batches of 100 solutions into a 2D archive
+    with varying numbers of cells. We took the minimum over 5 runs for each data
+    point, as recommended in the docs for :meth:`timeit.Timer.repeat`.  Note the
+    logarithmic scales. This plot was generated on a reasonably modern laptop.
 
     .. image:: ../_static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
 
-    Archives with at least 5k cells seem to have faster insertion when using a
-    k-D tree than when using brute force, so **we recommend setting**
-    ``use_kd_tree`` **if the** ``CVTArchive`` **has at least 5k cells**. See
+    Across almost all numbers of cells, using the k-D tree is faster than using
+    brute force. Thus, **we recommend always using he k-D tree.** See
     `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
 
     Finally, if running multiple experiments, it may be beneficial to use the
     same centroids across each experiment. Doing so can keep experiments
-    consistent and reduce execution time. To do this, either 1) construct custom
-    centroids and pass them in via the ``custom_centroids`` argument, or 2)
-    access the centroids created in the first archive with :attr:`centroids` and
-    pass them into ``custom_centroids`` when constructing archives for
+    consistent and reduce execution time. To do this, either (1) construct
+    custom centroids and pass them in via the ``custom_centroids`` argument, or
+    (2) access the centroids created in the first archive with :attr:`centroids`
+    and pass them into ``custom_centroids`` when constructing archives for
     subsequent experiments.
 
     Args:
@@ -55,7 +55,7 @@ class CVTArchive(ArchiveBase):
         cells (int): The number of cells to use in the archive, equivalent to
             the number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
-            dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
+            dimension of the measure space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds :math:`[-1,1]`
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
@@ -63,15 +63,15 @@ class CVTArchive(ArchiveBase):
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
-            and behavior values. We only support ``"f"`` / :class:`np.float32`
+            and measure values. We only support ``"f"`` / :class:`np.float32`
             and ``"d"`` / :class:`np.float64`.
         samples (int or array-like): If it is an int, this specifies the number
             of samples to generate when creating the CVT. Otherwise, this must
-            be a (num_samples, behavior_dim) array where samples[i] is a sample
+            be a (num_samples, measure_dim) array where samples[i] is a sample
             to use when creating the CVT. It can be useful to pass in custom
-            samples when there are restrictions on what samples in the behavior
+            samples when there are restrictions on what samples in the measure
             space are (physically) possible.
-        custom_centroids (array-like): If passed in, this (cells, behavior_dim)
+        custom_centroids (array-like): If passed in, this (cells, measure_dim)
             array will be used as the centroids of the CVT instead of generating
             new ones. In this case, ``samples`` will be ignored, and
             ``archive.samples`` will be None. This can be useful when one wishes
@@ -80,8 +80,8 @@ class CVTArchive(ArchiveBase):
             default, we pass in `n_init=1`, `init="random"`,
             `algorithm="lloyd"`, and `random_state=seed`.
         use_kd_tree (bool): If True, use a k-D tree for finding the closest
-            centroid when inserting into the archive. This may result in a
-            speedup for larger dimensions.
+            centroid when inserting into the archive. If False, brute force will
+            be used instead.
         ckdtree_kwargs (dict): kwargs for :class:`~scipy.spatial.cKDTree`. By
             default, we do not pass in any kwargs.
     Raises:
@@ -98,7 +98,7 @@ class CVTArchive(ArchiveBase):
                  samples=100_000,
                  custom_centroids=None,
                  k_means_kwargs=None,
-                 use_kd_tree=False,
+                 use_kd_tree=True,
                  ckdtree_kwargs=None):
 
         ArchiveBase.__init__(
