@@ -30,33 +30,33 @@ class ArchiveDataFrame(pd.DataFrame):
         To iterate through every :class:`Elite`, use::
 
             for elite in df.iterelites():
-                elite.sol
-                elite.obj
+                elite.solution
+                elite.objective
                 ...
 
         There are also methods to access the solutions, objectives, etc. of
         all elites in the archive. For instance, the following is an array
-        where entry ``i`` contains the behavior values of the ``i``'th elite in
-        the DataFrame::
+        where entry ``i`` contains the measures of the ``i``'th elite in the
+        DataFrame::
 
-            df.batch_behaviors()
+            df.measures_batch()
 
     .. warning::
 
-        Accessing ``batch`` methods (e.g. :meth:`batch_behaviors`) always
-        creates a copy, so the following will copy the behaviors 3 times::
+        Accessing ``batch`` methods (e.g. :meth:`measures_batch`) always
+        creates a copy, so the following will copy the measures 3 times::
 
-            df.batch_behaviors()[0]
-            df.batch_behaviors().mean()
-            df.batch_behaviors().median()
+            df.measures_batch()[0]
+            df.measures_batch().mean()
+            df.measures_batch().median()
 
         **Thus, if you need to use the method several times, we recommend
         storing it first, like so**::
 
-            behaviors = df.batch_behaviors()
-            behaviors[0]
-            behaviors.mean()
-            behaviors.median()
+            measures_batch = df.measures_batch()
+            measures_batch[0]
+            measures_batch.mean()
+            measures_batch.median()
 
     .. note::
 
@@ -70,9 +70,9 @@ class ArchiveDataFrame(pd.DataFrame):
     .. note::
 
         All the ``batch`` methods "align" with each other -- i.e.
-        ``batch_behaviors()[i]`` corresponds to ``batch_indices()[i]``,
-        ``batch_metadata()[i]``, ``batch_objectives()[i]``, and
-        ``batch_solutions()[i]``.
+        ``measures_batch()[i]`` corresponds to ``index_batch()[i]``,
+        ``metadata_batch()[i]``, ``objective_batch()[i]``, and
+        ``solution_batch()[i]``.
     """
 
     def __init__(self, *args, **kwargs):
@@ -86,75 +86,31 @@ class ArchiveDataFrame(pd.DataFrame):
         """Iterator which outputs every :class:`Elite` in the ArchiveDataFrame.
 
         Data which is unavailable will be turned into None. For example, if
-        there are no solution columns, then ``elite.sol`` will be None.
+        there are no solution columns, then ``elite.solution`` will be None.
         """
-        batch_solutions = self.batch_solutions()
-        batch_objectives = self.batch_objectives()
-        batch_behaviors = self.batch_behaviors()
-        batch_indices = self.batch_indices()
-        batch_metadata = self.batch_metadata()
+        solution_batch = self.solution_batch()
+        objective_batch = self.objective_batch()
+        measures_batch = self.measures_batch()
+        index_batch = self.index_batch()
+        metadata_batch = self.metadata_batch()
 
         none_array = np.empty(len(self), dtype=object)
 
         return map(
             lambda e: Elite(e[0], e[1], e[2], e[3], e[4]),
             zip(
-                none_array if batch_solutions is None else batch_solutions,
-                none_array if batch_objectives is None else batch_objectives,
-                none_array if batch_behaviors is None else batch_behaviors,
-                none_array if batch_indices is None else batch_indices,
-                none_array if batch_metadata is None else batch_metadata,
+                none_array if solution_batch is None else solution_batch,
+                none_array if objective_batch is None else objective_batch,
+                none_array if measures_batch is None else measures_batch,
+                none_array if index_batch is None else index_batch,
+                none_array if metadata_batch is None else metadata_batch,
             ),
         )
 
     # Note: The slices for batch methods cannot be pre-computed because the
     # DataFrame columns might change in-place, e.g. when a column is deleted.
 
-    def batch_behaviors(self):
-        """Array with behavior values of all elites.
-
-        None if there are no behavior values in the ``ArchiveDataFrame``.
-
-        Returns:
-            (n, behavior_dim) numpy.ndarray: See above.
-        """
-        cols = [c for c in self if c.startswith("behavior_")]
-        return self[cols].to_numpy(copy=True) if cols else None
-
-    def batch_indices(self):
-        """Array with indices of all elites.
-
-        None if there are no indices in the ``ArchiveDataFrame``.
-
-        Returns:
-            (n,) numpy.ndarray: See above.
-        """
-        return self["index"].to_numpy(copy=True) if "index" in self else None
-
-    def batch_metadata(self):
-        """Array with metadata of all elites.
-
-        None if there is no metadata (e.g. if ``include_metadata=False`` in
-        :meth:`~ArchiveBase.as_pandas`).
-
-        Returns:
-            (n,) numpy.ndarray: See above.
-        """
-        return self["metadata"].to_numpy(
-            copy=True) if "metadata" in self else None
-
-    def batch_objectives(self):
-        """Array with objective values of all elites.
-
-        None if there are no objectives in the ``ArchiveDataFrame``.
-
-        Returns:
-            (n,) numpy.ndarray: See above.
-        """
-        return self["objective"].to_numpy(
-            copy=True) if "objective" in self else None
-
-    def batch_solutions(self):
+    def solution_batch(self):
         """Array with solutions of all elites.
 
         None if there are no solutions (e.g. if ``include_solutions=False`` in
@@ -165,3 +121,47 @@ class ArchiveDataFrame(pd.DataFrame):
         """
         cols = [c for c in self if c.startswith("solution_")]
         return self[cols].to_numpy(copy=True) if cols else None
+
+    def objective_batch(self):
+        """Array with objective values of all elites.
+
+        None if there are no objectives in the ``ArchiveDataFrame``.
+
+        Returns:
+            (n,) numpy.ndarray: See above.
+        """
+        return self["objective"].to_numpy(
+            copy=True) if "objective" in self else None
+
+    def measures_batch(self):
+        """Array with measures of all elites.
+
+        None if there are no measures in the ``ArchiveDataFrame``.
+
+        Returns:
+            (n, measure_dim) numpy.ndarray: See above.
+        """
+        cols = [c for c in self if c.startswith("measure_")]
+        return self[cols].to_numpy(copy=True) if cols else None
+
+    def index_batch(self):
+        """Array with indices of all elites.
+
+        None if there are no indices in the ``ArchiveDataFrame``.
+
+        Returns:
+            (n,) numpy.ndarray: See above.
+        """
+        return self["index"].to_numpy(copy=True) if "index" in self else None
+
+    def metadata_batch(self):
+        """Array with metadata of all elites.
+
+        None if there is no metadata (e.g. if ``include_metadata=False`` in
+        :meth:`~ArchiveBase.as_pandas`).
+
+        Returns:
+            (n,) numpy.ndarray: See above.
+        """
+        return self["metadata"].to_numpy(
+            copy=True) if "metadata" in self else None

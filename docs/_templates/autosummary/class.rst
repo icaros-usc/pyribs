@@ -21,11 +21,11 @@
 
    .. autosummary::
    {% if name == "ArchiveDataFrame" %}
-       ~{{ name }}.batch_behaviors
-       ~{{ name }}.batch_indices
-       ~{{ name }}.batch_metadata
-       ~{{ name }}.batch_objectives
-       ~{{ name }}.batch_solutions
+       ~{{ name }}.solution_batch
+       ~{{ name }}.objective_batch
+       ~{{ name }}.measures_batch
+       ~{{ name }}.index_batch
+       ~{{ name }}.metadata_batch
        ~{{ name }}.iterelites
    {% else %}
      {% for item in all_methods %}

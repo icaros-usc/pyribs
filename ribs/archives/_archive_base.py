@@ -741,19 +741,19 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         - 1 column of integers (``np.int32``) for the index, named ``index``.
           See :meth:`index_of` for more info.
         - :attr:`behavior_dim` columns for the behavior characteristics, named
-          ``behavior_0, behavior_1, ...``
+          ``measure_0, measure_1, ...``
         - 1 column for the objective values, named ``objective``
-        - :attr:`solution_dim` columns for the solution vectors, named
+        - :attr:`solution_dim` columns for the solution parameters, named
           ``solution_0, solution_1, ...``
         - 1 column for the metadata objects, named ``metadata``
 
         In short, the dataframe looks like this:
 
-        +-------+-------------+------+------------+-------------+-----+----------+
-        | index | behavior_0  | ...  | objective  | solution_0  | ... | metadata |
-        +=======+=============+======+============+=============+=====+==========+
-        |       |             | ...  |            |             | ... |          |
-        +-------+-------------+------+------------+-------------+-----+----------+
+        +-------+------------+------+------------+-------------+-----+----------+
+        | index | measure_0  | ...  | objective  | solution_0  | ... | metadata |
+        +=======+============+======+============+=============+=====+==========+
+        |       |            | ...  |            |             | ... |          |
+        +-------+------------+------+------------+-------------+-----+----------+
 
         Compared to :class:`pandas.DataFrame`, the :class:`ArchiveDataFrame`
         adds methods and attributes which make it easier to manipulate archive
@@ -777,7 +777,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         behavior_values = self._behavior_values[indices]
         for i in range(self._behavior_dim):
-            data[f"behavior_{i}"] = behavior_values[:, i]
+            data[f"measure_{i}"] = behavior_values[:, i]
 
         data["objective"] = self._objective_values[indices]
 
