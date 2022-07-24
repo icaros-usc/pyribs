@@ -9,6 +9,8 @@
 - Re-run CVTArchive benchmarks and update CVTArchive (#235)
   - **Backwards-incompatible:** `use_kd_tree` now defaults to True since the k-D
     tree is always faster than brute force in benchmarks.
+- Allow adding solutions one at a time in optimizer (#233)
+- Minimize numba usage (#232)
 - **Backwards-incompatible:** Implement batch addition in archives (#221)
   - `add` now adds a batch of solutions to the archive
   - `add_single` adds a single solution

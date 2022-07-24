@@ -23,19 +23,28 @@ class Optimizer:
         instances of ``EmitterClass``.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive object, selected from
-            :mod:`ribs.archives`.
+        archive (ribs.archives.ArchiveBase): An archive object, e.g. one
+            selected from :mod:`ribs.archives`.
         emitters (list of ribs.archives.EmitterBase): A list of emitter objects,
-            such as :class:`ribs.emitters.GaussianEmitter`.
+            e.g. :class:`ribs.emitters.GaussianEmitter`.
+        add_mode (str): Indicates how solutions should be added to the archive.
+            The default is "batch", which adds all solutions with one call to
+            :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single"
+            to add the solutions one at a time with
+            :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is
+            included for legacy reasons, as it was the only mode of operation in
+            pyribs 0.4.0 and before. We highly recommend using "batch" mode
+            since it is significantly faster.
     Raises:
         ValueError: The emitters passed in do not have the same solution
             dimensions.
         ValueError: There is no emitter passed in.
         ValueError: The same emitter instance was passed in multiple times. Each
             emitter should be a unique instance (see the warning above).
+        ValueError: Invalid value for `add_mode`.
     """
 
-    def __init__(self, archive, emitters):
+    def __init__(self, archive, emitters, add_mode="batch"):
         if len(emitters) == 0:
             raise ValueError("Pass in at least one emitter to the optimizer.")
 
@@ -57,8 +66,13 @@ class Optimizer:
                     f"Emitter {idx} has dimension {emitter.solution_dim}, "
                     f"while Emitter 0 has dimension {self._solution_dim}")
 
+        if add_mode not in ["single", "batch"]:
+            raise ValueError("add_mode must either be 'batch' or 'single', but "
+                             f"it was '{add_mode}'")
+
         self._archive = archive
         self._emitters = emitters
+        self._add_mode = add_mode
 
         # Keeps track of whether the Optimizer should be receiving a call to
         # ask() or tell().
@@ -156,10 +170,29 @@ class Optimizer:
         self._check_length("metadata_batch", metadata_batch)
 
         # Add solutions to the archive.
-        status_batch, value_batch = self.archive.add(self._solution_batch,
-                                                     objective_batch,
-                                                     measures_batch,
-                                                     metadata_batch)
+        if self._add_mode == "batch":
+            status_batch, value_batch = self.archive.add(
+                self._solution_batch,
+                objective_batch,
+                measures_batch,
+                metadata_batch,
+            )
+        elif self._add_mode == "single":
+            status_batch, value_batch = zip(*[
+                self.archive.add_single(
+                    solution,
+                    objective,
+                    measure,
+                    metadata,
+                ) for solution, objective, measure, metadata in zip(
+                    self._solution_batch,
+                    objective_batch,
+                    measures_batch,
+                    metadata_batch,
+                )
+            ])
+            status_batch = np.asarray(status_batch)
+            value_batch = np.asarray(value_batch)
 
         # Limit OpenBLAS to single thread. This is typically faster than
         # multithreading because our data is too small.

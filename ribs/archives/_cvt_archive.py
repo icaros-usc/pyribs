@@ -2,7 +2,6 @@
 import numpy as np
 import semantic_version
 import sklearn
-from numba import jit
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from sklearn.cluster import k_means
 
@@ -213,22 +212,6 @@ class CVTArchive(ArchiveBase):
         """
         return self._centroids
 
-    @staticmethod
-    @jit(nopython=True)
-    def _brute_force_nn_numba(measures_batch, centroids):
-        """Calculates the nearest centroids to the given batch of measures with
-        brute force."""
-
-        # We want to take the difference between each measure i and all the
-        # centroids.
-        distances = np.expand_dims(measures_batch, axis=1) - centroids
-
-        # Compute the total squared distance -- there is no need to compute the
-        # actual distance with a sqrt.
-        distances = np.sum(np.square(distances), axis=2)
-
-        return distances
-
     def index_of(self, measures_batch):
         """Finds the indices of the centroid closest to the given coordinates in
         measure space.
@@ -260,9 +243,12 @@ class CVTArchive(ArchiveBase):
                 self._centroid_kd_tree.query(measures_batch))[1].astype(
                     np.int32)
 
-        # Older versions of Numba do not support the axis argument for argmin,
-        # so the argmin is done here instead of in `_brute_force_nn_numba`.
-        return np.argmin(
-            self._brute_force_nn_numba(measures_batch, self.centroids),
-            axis=1,
-        ).astype(np.int32)
+        # Brute force distance calculation -- start by taking the difference
+        # between each measure i and all the centroids.
+        distances = np.expand_dims(measures_batch, axis=1) - self.centroids
+
+        # Compute the total squared distance -- no need to compute actual
+        # distance with a sqrt.
+        distances = np.sum(np.square(distances), axis=2)
+
+        return np.argmin(distances, axis=1).astype(np.int32)
