@@ -367,6 +367,19 @@ def test_add_batch_wrong_shapes(data):
         )
 
 
+def test_add_batch_zero_length(data):
+    """Nothing should happen when adding a batch with length 0."""
+    status_batch, value_batch = data.archive.add(
+        solution_batch=np.ones((0, 3)),
+        objective_batch=np.ones((0,)),
+        measures_batch=np.ones((0, 2)),
+    )
+
+    assert len(status_batch) == 0
+    assert len(value_batch) == 0
+    assert len(data.archive) == 0
+
+
 def test_add_batch_wrong_batch_size(data):
     with pytest.raises(ValueError):
         data.archive.add(
