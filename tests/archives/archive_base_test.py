@@ -75,7 +75,7 @@ def test_clear_and_add_during_iteration():
 
 
 #
-# Statistics tests -- just GridArchive for simplicity.
+# Statistics and best elite tests -- just GridArchive for simplicity.
 #
 
 
@@ -120,6 +120,30 @@ def test_stats_add_and_overwrite():
     assert np.isclose(archive.stats.qd_score, 9.0)
     assert np.isclose(archive.stats.obj_max, 5.0)
     assert np.isclose(archive.stats.obj_mean, 3.0)
+
+
+def test_best_elite():
+    archive = GridArchive(solution_dim=3,
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
+
+    # Initial elite is None.
+    assert archive.best_elite is None
+
+    # Add an elite.
+    archive.add_single([1, 2, 3], 1.0, [0, 0])
+
+    assert np.isclose(archive.best_elite.solution, [1, 2, 3]).all()
+    assert np.isclose(archive.best_elite.objective, 1.0).all()
+    assert np.isclose(archive.best_elite.measures, [0, 0]).all()
+
+    # Add an elite into the same cell as the previous elite -- best_elite should
+    # now be overwritten.
+    archive.add_single([4, 5, 6], 2.0, [0, 0])
+
+    assert np.isclose(archive.best_elite.solution, [4, 5, 6]).all()
+    assert np.isclose(archive.best_elite.objective, 2.0).all()
+    assert np.isclose(archive.best_elite.measures, [0, 0]).all()
 
 
 #

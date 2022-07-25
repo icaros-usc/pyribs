@@ -6,6 +6,7 @@
 
 #### API
 
+- Add `best_elite` property for archives (#237)
 - Rename methods in ArchiveDataFrame and rename as_pandas behavior columns
   (#236)
 - Re-run CVTArchive benchmarks and update CVTArchive (#235)
