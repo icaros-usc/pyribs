@@ -158,6 +158,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._stats = None
         self._stats_reset()
 
+        self._best_elite = None
+
         # Tracks archive modifications by counting calls to clear() and add().
         self._state = {"clear": 0, "add": 0}
 
@@ -214,6 +216,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._stats
 
     @property
+    def best_elite(self):
+        """:class:`Elite`: The elite with the highest objective in the archive.
+
+        None if there are no elites in the archive.
+        """
+        return self._best_elite
+
+    @property
     def dtype(self):
         """data-type: The dtype of the solutions, objective values, and behavior
         values."""
@@ -257,6 +267,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._state["add"] = 0
 
         self._stats_reset()
+        self._best_elite = None
 
     @abstractmethod
     def index_of(self, measures_batch):
@@ -510,13 +521,26 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         new_qd_score = (
             self._stats.qd_score +
             np.sum(objective_batch_insert - old_objective_batch_insert))
-        max_new_obj = np.max(objective_batch_insert)
+        max_idx = np.argmax(objective_batch_insert)
+        max_obj_insert = objective_batch_insert[max_idx]
+
+        if self._stats.obj_max is None or max_obj_insert > self._stats.obj_max:
+            new_obj_max = max_obj_insert
+            self._best_elite = Elite(
+                readonly(solution_batch_insert[max_idx]),
+                objective_batch_insert[max_idx],
+                readonly(measures_batch_insert[max_idx]),
+                index_batch_insert[max_idx],
+                metadata_batch_insert[max_idx],
+            )
+        else:
+            new_obj_max = self._stats.obj_max
+
         self._stats = ArchiveStats(
             num_elites=len(self),
             coverage=self.dtype(len(self) / self.cells),
             qd_score=new_qd_score,
-            obj_max=max_new_obj if self._stats.obj_max is None else max(
-                self._stats.obj_max, max_new_obj),
+            obj_max=new_obj_max,
             obj_mean=new_qd_score / self.dtype(len(self)),
         )
 
