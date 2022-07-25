@@ -53,8 +53,9 @@ package in order to use the `\url` command.
 @misc{pyribs,
   title = {pyribs: A bare-bones Python library for quality diversity
            optimization},
-  author = {Bryon Tjanaka and Matthew C. Fontaine and Yulun Zhang and
-            Sam Sommerer and Nathan Dennler and Stefanos Nikolaidis},
+  author = {Bryon Tjanaka and Matthew C. Fontaine and David H. Lee and
+            Trung Tran Minh Vu and Yulun Zhang and Sam Sommerer and
+            Nathan Dennler and Stefanos Nikolaidis},
   year = {2021},
   publisher = {GitHub},
   journal = {GitHub repository},
