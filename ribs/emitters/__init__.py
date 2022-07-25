@@ -9,17 +9,21 @@
 .. autosummary::
     :toctree:
 
+    ribs.emitters.GradientAborescenceEmitter
     ribs.emitters.EvolutionStrategyEmitter
     ribs.emitters.GaussianEmitter
     ribs.emitters.IsoLineEmitter
     ribs.emitters.EmitterBase
 """
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters._gaussian_emitter import GaussianEmitter
-from ribs.emitters._iso_line_emitter import IsoLineEmitter
 from ribs.emitters._evolution_strategy_emitter import EvolutionStrategyEmitter
+from ribs.emitters._gaussian_emitter import GaussianEmitter
+from ribs.emitters._gradient_aborescence_emitter import \
+  GradientAborescenceEmitter
+from ribs.emitters._iso_line_emitter import IsoLineEmitter
 
 __all__ = [
+    "GradientAborescenceEmitter",
     "EvolutionStrategyEmitter",
     "GaussianEmitter",
     "IsoLineEmitter",
