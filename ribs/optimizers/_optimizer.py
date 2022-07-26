@@ -2,6 +2,8 @@
 import numpy as np
 from threadpoolctl import threadpool_limits
 
+from ribs.emitters import GradientAborescenceEmitter
+
 
 class Optimizer:
     """A basic class that composes an archive with multiple emitters.
@@ -77,6 +79,7 @@ class Optimizer:
         # Keeps track of whether the Optimizer should be receiving a call to
         # ask() or tell().
         self._asked = False
+        self._asked_dqd = False
         # The last set of solutions returned by ask().
         self._solution_batch = []
         # The number of solutions created by each emitter.
@@ -93,6 +96,26 @@ class Optimizer:
         """list of ribs.archives.EmitterBase: Emitters for generating solutions
         in this optimizer."""
         return self._emitters
+
+    def ask_dqd(self):
+        if self._asked_dqd:
+            raise RuntimeError("ask_dqd() was called twice in a row.")
+        self._asked_dqd = True
+
+        self._solution_batch = []
+
+        # Limit OpenBLAS to single thread. This is typically faster than
+        # multithreading because our data is too small.
+        with threadpool_limits(limits=1, user_api="blas"):
+            for i, emitter in enumerate(self._emitters):
+                # check if emitter is dqd
+                if isinstance(emitter, GradientAborescenceEmitter):
+                    emitter_sols = emitter.ask_dqd()
+                    self._solution_batch.append(emitter_sols)
+                    self._num_emitted[i] = len(emitter_sols)
+
+        self._solution_batch = np.concatenate(self._solution_batch, axis=0)
+        return self._solution_batch
 
     def ask(self):
         """Generates a batch of solutions by calling ask() on all emitters.
@@ -132,6 +155,81 @@ class Optimizer:
                 f"{name} should have length {len(self._solution_batch)} "
                 "(this is the number of solutions output by ask()) but "
                 f"has length {len(array)}")
+
+    def tell_dqd(self,
+                 jacobian_batch,
+                 objective_batch,
+                 measures_batch,
+                 metadata_batch=None):
+        """Returns info for solutions from :meth:`ask`.
+
+        .. note:: The objective batch, measures batch, and metadata must be in
+            the same order as the solutions created by :meth:`ask`; i.e.
+            ``objective_batch[i]``, ``measures_batch[i]``, and ``metadata[i]``
+            should be the objective batch, measures batch, and metadata for
+            ``solutions[i]``.
+
+        Args:
+            objective_batch ((n_solutions,) array): Each entry of this array
+                contains the objective function evaluation of a solution.
+            measures_batch ((n_solutions, measures_dm) array): Each row of
+                this array contains a solution's coordinates in measure space.
+            metadata ((n_solutions,) array): Each entry of this array contains
+                an object holding metadata for a solution.
+        Raises:
+            RuntimeError: This method is called without first calling
+                :meth:`ask`.
+            ValueError: ``objective_batch``, ``measures_batch``, or
+                ``metadata`` has the wrong shape.
+        """
+        if not self._asked_dqd:
+            raise RuntimeError("tell() was called without calling ask().")
+        self._asked_dqd = False
+
+        objective_batch = np.asarray(objective_batch)
+        measures_batch = np.asarray(measures_batch)
+        metadata_batch = (np.empty(len(self._solution_batch), dtype=object) if
+                          metadata_batch is None else np.asarray(metadata_batch,
+                                                                 dtype=object))
+
+        self._check_length("objective_batch", objective_batch)
+        self._check_length("measures_batch", measures_batch)
+        self._check_length("metadata_batch", metadata_batch)
+
+        # Add solutions to the archive.
+        if self._add_mode == "batch":
+            status_batch, value_batch = self.archive.add(
+                self._solution_batch,
+                objective_batch,
+                measures_batch,
+                metadata_batch,
+            )
+        elif self._add_mode == "single":
+            status_batch, value_batch = zip(*[
+                self.archive.add_single(
+                    solution,
+                    objective,
+                    measure,
+                    metadata,
+                ) for solution, objective, measure, metadata in zip(
+                    self._solution_batch,
+                    objective_batch,
+                    measures_batch,
+                    metadata_batch,
+                )
+            ])
+            status_batch = np.asarray(status_batch)
+            value_batch = np.asarray(value_batch)
+
+        # Limit OpenBLAS to single thread. This is typically faster than
+        # multithreading because our data is too small.
+        with threadpool_limits(limits=1, user_api="blas"):
+            # Keep track of pos because emitters may have different batch sizes.
+            pos = 0
+            for emitter, n in zip(self._emitters, self._num_emitted):
+                end = pos + n
+                emitter.tell_dqd(jacobian_batch[pos:end])
+                pos = end
 
     def tell(self, objective_batch, measures_batch, metadata_batch=None):
         """Returns info for solutions from :meth:`ask`.

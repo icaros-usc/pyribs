@@ -30,6 +30,7 @@ The supported algorithms are:
 - `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, where half (7) of
   the emitter are using TwoStageRandomDirectionRanker and half (8) are
   TwoStageImprovementRanker.
+- `cma_mega`: GridArchive with GradientAborescenceEmitter.
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
@@ -74,21 +75,21 @@ from alive_progress import alive_bar
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           IsoLineEmitter)
+                           GradientAborescenceEmitter, IsoLineEmitter)
 from ribs.optimizers import Optimizer
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
 
-def sphere(sol):
+def sphere(solution_batch):
     """Sphere function evaluation and BCs for a batch of solutions.
 
     Args:
         sol (np.ndarray): (batch_size, dim) array of solutions
     Returns:
-        objs (np.ndarray): (batch_size,) array of objective values
-        bcs (np.ndarray): (batch_size, 2) array of behavior values
+        objective_batch (np.ndarray): (batch_size,) array of objective values
+        measures_batch (np.ndarray): (batch_size, 2) array of measure values
     """
-    dim = sol.shape[1]
+    dim = solution_batch.shape[1]
 
     # Shift the Sphere function so that the optimal value is at x_i = 2.048.
     sphere_shift = 5.12 * 0.4
@@ -96,14 +97,17 @@ def sphere(sol):
     # Normalize the objective to the range [0, 100] where 100 is optimal.
     best_obj = 0.0
     worst_obj = (-5.12 - sphere_shift)**2 * dim
-    raw_obj = np.sum(np.square(sol - sphere_shift), axis=1)
-    objs = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
+    raw_obj = np.sum(np.square(solution_batch - sphere_shift), axis=1)
+    objective_batch = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
 
-    # Calculate BCs.
-    clipped = sol.copy()
+    # Compute gradient of the objective
+    objective_grad = -2 * (solution_batch - sphere_shift)
+
+    # Calculate measures.
+    clipped = solution_batch.copy()
     clip_indices = np.where(np.logical_or(clipped > 5.12, clipped < -5.12))
     clipped[clip_indices] = 5.12 / clipped[clip_indices]
-    bcs = np.concatenate(
+    measures_batch = np.concatenate(
         (
             np.sum(clipped[:, :dim // 2], axis=1, keepdims=True),
             np.sum(clipped[:, dim // 2:], axis=1, keepdims=True),
@@ -111,7 +115,19 @@ def sphere(sol):
         axis=1,
     )
 
-    return objs, bcs
+    # Compute gradient of the measures
+    derivatives = np.ones(solution_batch.shape)
+    derivatives[clip_indices] = -5.12 / np.square(solution_batch[clip_indices])
+
+    mask_0 = np.concatenate((np.ones(dim // 2), np.zeros(dim - dim // 2)))
+    mask_1 = np.concatenate((np.zeros(dim // 2), np.ones(dim - dim // 2)))
+
+    d_measure0 = np.multiply(derivatives, mask_0)
+    d_measure1 = np.multiply(derivatives, mask_1)
+
+    measures_grad = np.stack((d_measure0, d_measure1), axis=1)
+
+    return objective_batch, objective_grad, measures_batch, measures_grad
 
 
 def create_optimizer(algorithm, dim, seed):
@@ -133,7 +149,8 @@ def create_optimizer(algorithm, dim, seed):
     # Create archive.
     if algorithm in [
             "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
+            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed",
+            "cma_mega"
     ]:
         archive = GridArchive(solution_dim=dim,
                               dims=(500, 500),
@@ -213,6 +230,32 @@ def create_optimizer(algorithm, dim, seed):
                 seed=s,
             ) for s in emitter_seeds
         ]
+    elif algorithm == "cma_mega":
+        emitters = [
+            GradientAborescenceEmitter(archive,
+                                       initial_sol,
+                                       sigma0=10.0,
+                                       step_size=1.0,
+                                       grad_opt="gradient_ascent",
+                                       normalize_grad=True,
+                                       selection_rule="mu",
+                                       bounds=None,
+                                       batch_size=batch_size,
+                                       seed=s) for s in emitter_seeds
+        ]
+    elif algorithm == "cma_mega_adam":
+        emitters = [
+            GradientAborescenceEmitter(archive,
+                                       initial_sol,
+                                       sigma0=10.0,
+                                       step_size=0.002,
+                                       grad_opt="adam",
+                                       normalize_grad=True,
+                                       selection_rule="mu",
+                                       bounds=None,
+                                       batch_size=batch_size - 1,
+                                       seed=s) for s in emitter_seeds
+        ]
 
     return Optimizer(archive, emitters)
 
@@ -266,11 +309,17 @@ def sphere_main(algorithm,
             "x": [0],
             "y": [0.0],
         },
+        "Mean QD Score": {
+            "x": [0],
+            "y": [0.0],
+        },
         "Archive Coverage": {
             "x": [0],
             "y": [0.0],
         },
     }
+
+    is_dqd = algorithm in ['cma_mega', 'cma_mega_adam']
 
     non_logging_time = 0.0
     with alive_bar(itrs) as progress:
@@ -278,9 +327,20 @@ def sphere_main(algorithm,
 
         for itr in range(1, itrs + 1):
             itr_start = time.time()
-            sols = optimizer.ask()
-            objs, bcs = sphere(sols)
-            optimizer.tell(objs, bcs)
+
+            if is_dqd:
+                solution_batch = optimizer.ask_dqd()
+                objective_batch, objective_jacobian_batch, measures_batch, measures_jacobian_batch = sphere(
+                    solution_batch)
+                objective_jacobian_batch = np.expand_dims(
+                    objective_jacobian_batch, axis=1)
+                jacobian_batch = np.concatenate(
+                    (objective_jacobian_batch, measures_jacobian_batch), axis=1)
+                optimizer.tell_dqd(jacobian_batch, objective_batch, measures_batch)
+
+            solution_batch = optimizer.ask()
+            objective_batch, _, measure_batch, _ = sphere(solution_batch)
+            optimizer.tell(objective_batch, measure_batch)
             non_logging_time += time.time() - itr_start
             progress()
 
@@ -294,11 +354,14 @@ def sphere_main(algorithm,
                 # Record and display metrics.
                 metrics["QD Score"]["x"].append(itr)
                 metrics["QD Score"]["y"].append(archive.stats.qd_score)
+                metrics["Mean QD Score"]["x"].append(itr)
+                metrics["Mean QD Score"]["y"].append(archive.stats.qd_score / archive.cells)
                 metrics["Archive Coverage"]["x"].append(itr)
                 metrics["Archive Coverage"]["y"].append(archive.stats.coverage)
                 print(f"Iteration {itr} | Archive Coverage: "
                       f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
-                      f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
+                      f"QD Score: {metrics['QD Score']['y'][-1]:.3f} "
+                      f"Mean QD Score: {metrics['Mean QD Score']['y'][-1]:.3f}")
 
                 save_heatmap(archive,
                              str(outdir / f"{name}_heatmap_{itr:05d}.png"))

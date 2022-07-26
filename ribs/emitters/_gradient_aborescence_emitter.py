@@ -78,9 +78,9 @@ class GradientAborescenceEmitter(EmitterBase):
         # Initialize gradient optimizer
         self._grad_opt = None
         if grad_opt == "adam":
-            self._gradient_opt = AdamOpt(self._x0, step_size)
+            self._grad_opt = AdamOpt(self._x0, step_size)
         elif grad_opt == "gradient_ascent":
-            self._gradient_opt = GradientAscentOpt(self._x0, step_size)
+            self._grad_opt = GradientAscentOpt(self._x0, step_size)
         else:
             raise ValueError(f"Invalid Gradient Ascent Optimizer {grad_opt}")
 
@@ -97,9 +97,9 @@ class GradientAborescenceEmitter(EmitterBase):
         self._num_coefficients = archive.behavior_dim + 1
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
-                                        "truncation", opt_seed,
-                                        self.archive.dtype)
+        self.opt = CMAEvolutionStrategy(sigma0, batch_size,
+                                        self._num_coefficients, "truncation",
+                                        opt_seed, self.archive.dtype)
         self.opt.reset(np.zeros(self._num_coefficients))
 
         # Initialize ImprovementRanker.
@@ -121,6 +121,9 @@ class GradientAborescenceEmitter(EmitterBase):
 
     def ask_dqd(self):
         """Samples a new solution from a gradient optimizer.
+
+        **Call :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
+        calling :meth:`ask` and :meth:`tell`.**
 
         Returns:
             a new solution to evalute.
@@ -148,8 +151,8 @@ class GradientAborescenceEmitter(EmitterBase):
         self._grad_coefficients = self.opt.ask(lower_bounds, upper_bounds)
         noise = np.expand_dims(self._grad_coefficients, axis=2)
 
-        return self._gradient_opt.theta + np.sum(
-            np.multiply(self._jacobian, noise), axis=1)
+        return self._grad_opt.theta + np.sum(np.multiply(self._jacobian, noise),
+                                             axis=1)
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
@@ -240,13 +243,14 @@ class GradientAborescenceEmitter(EmitterBase):
         new_mean = np.sum(parents * np.expand_dims(weights, axis=1), axis=0)
 
         # Use the mean to calculate a gradient step and step the optimizer
-        gradient_step = new_mean - self._gradient_opt.theta
-        self._gradient_opt.step(gradient_step)
+        gradient_step = new_mean - self._grad_opt.theta
+        self._grad_opt.step(gradient_step)
 
         # Check for reset.
         if (self.opt.check_stop(ranking_values[indices]) or
                 self._check_restart(new_sols)):
-            self._gradient_opt.reset(self.archive.get_random_elite()[0])
+            new_coeff = self.archive.sample_elites(1).solution_batch[0]
+            self._grad_opt.reset(new_coeff)
             self.opt.reset(np.zeros(self._num_coefficients))
             self._ranker.reset(self, self.archive, self._rng)
             self._restarts += 1
