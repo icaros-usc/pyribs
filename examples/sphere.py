@@ -31,6 +31,7 @@ The supported algorithms are:
   the emitter are using TwoStageRandomDirectionRanker and half (8) are
   TwoStageImprovementRanker.
 - `cma_mega`: GridArchive with GradientAborescenceEmitter.
+- `cma_mega_adam`: GridArchive with GradientAborescenceEmitter using Adam Optimizer.
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
@@ -143,14 +144,14 @@ def create_optimizer(algorithm, dim, seed):
     max_bound = dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     initial_sol = np.zeros(dim)
-    batch_size = 37
+    batch_size = 36
     num_emitters = 15
 
     # Create archive.
     if algorithm in [
             "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
             "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed",
-            "cma_mega"
+            "cma_mega", "cma_mega_adam"
     ]:
         archive = GridArchive(solution_dim=dim,
                               dims=(500, 500),
@@ -241,7 +242,7 @@ def create_optimizer(algorithm, dim, seed):
                                        selection_rule="mu",
                                        bounds=None,
                                        batch_size=batch_size,
-                                       seed=s) for s in emitter_seeds
+                                       seed=emitter_seeds[0])
         ]
     elif algorithm == "cma_mega_adam":
         emitters = [
@@ -254,9 +255,8 @@ def create_optimizer(algorithm, dim, seed):
                                        selection_rule="mu",
                                        bounds=None,
                                        batch_size=batch_size - 1,
-                                       seed=s) for s in emitter_seeds
+                                       seed=emitter_seeds[0])
         ]
-
     return Optimizer(archive, emitters)
 
 
@@ -336,7 +336,8 @@ def sphere_main(algorithm,
                     objective_jacobian_batch, axis=1)
                 jacobian_batch = np.concatenate(
                     (objective_jacobian_batch, measures_jacobian_batch), axis=1)
-                optimizer.tell_dqd(jacobian_batch, objective_batch, measures_batch)
+                optimizer.tell_dqd(jacobian_batch, objective_batch,
+                                   measures_batch)
 
             solution_batch = optimizer.ask()
             objective_batch, _, measure_batch, _ = sphere(solution_batch)
@@ -355,7 +356,8 @@ def sphere_main(algorithm,
                 metrics["QD Score"]["x"].append(itr)
                 metrics["QD Score"]["y"].append(archive.stats.qd_score)
                 metrics["Mean QD Score"]["x"].append(itr)
-                metrics["Mean QD Score"]["y"].append(archive.stats.qd_score / archive.cells)
+                metrics["Mean QD Score"]["y"].append(archive.stats.qd_score /
+                                                     archive.cells)
                 metrics["Archive Coverage"]["x"].append(itr)
                 metrics["Archive Coverage"]["y"].append(archive.stats.coverage)
                 print(f"Iteration {itr} | Archive Coverage: "

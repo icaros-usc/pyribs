@@ -11,11 +11,19 @@ from ribs.emitters.rankers import TwoStageImprovementRanker
 class GradientAborescenceEmitter(EmitterBase):
     """Adapts a distribution of solutions with CMA-ES.
 
-    This emitter originates in `Fontaine 2020
-    <https://arxiv.org/abs/1912.02400>`_. The multivariate Gaussian solution
-    distribution begins at ``x0`` with standard deviation ``sigma0``. Based on
-    how the generated solutions are ranked (see ``ranker``), CMA-ES then adapts
-    the mean and covariance of the distribution.
+    This emitter originates in `Fontaine 2021
+    <https://arxiv.org/abs/2106.03894>`_.
+    This emitter takes advantage of the gradient information of the objective
+    and measures functions, generating new solutions using gradient aborescence
+    parameterized with CMA-ES.
+    The new solutions are first ranked according to the
+    `TwoStageImprovementRanker`. Then, it is used to perform gradient ascent and
+    adapt CMA-ES.
+
+    Note that different from non-gradient emitters, GradientAborescenceEmitter
+    requires call to :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
+    calling :meth:`ask` and :meth:`tell` to communicate the gradient information
+    to the emitter.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -32,6 +40,10 @@ class GradientAborescenceEmitter(EmitterBase):
             rules will be used, while with "no_improvement", the emitter will
             restart when none of the proposed solutions were added to the
             archive.
+        grad_opt ("adam" or "gradient_ascent"): Gradient optimizer to use for
+            the gradient ascent step of the algorithm. Defaults to `adam`.
+        normalize_grad (bool): If true (default), then gradient infomation will
+            be normalized. Otherwise, it will not be normalized.
         bounds (None or array-like): Bounds of the solution space. As suggested
             in `Biedrzycki 2020
             <https://www.sciencedirect.com/science/article/abs/pii/S2210650219301622>`_,
@@ -120,7 +132,7 @@ class GradientAborescenceEmitter(EmitterBase):
         return self._batch_size
 
     def ask_dqd(self):
-        """Samples a new solution from a gradient optimizer.
+        """Samples a new solution from the gradient optimizer.
 
         **Call :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
         calling :meth:`ask` and :meth:`tell`.**
@@ -131,9 +143,8 @@ class GradientAborescenceEmitter(EmitterBase):
         return [self._grad_opt.theta]
 
     def ask(self):
-        """Samples new solutions from a multivariate Gaussian.
-
-        TODO update docstring
+        """Samples new solutions from a gradient aborescence parameterized by a
+        multivariate Gaussian distribution.
 
         The multivariate Gaussian is parameterized by the evolution strategy
         optimizer ``self.opt``.
@@ -164,11 +175,12 @@ class GradientAborescenceEmitter(EmitterBase):
         return False
 
     def tell_dqd(self, jacobian):
-        """Gives the emitter results from evaluating solutions.
+        """Gives the emitter results from evaluating the gradient of
+        the solutions.
 
         args:
             jacobian (numpy.ndarray): Jacobian matrix of the solutions
-                obtained from :meth:`ask_dqd`
+                obtained from :meth:`ask_dqd`.
         """
         if self._normalize_grads:
             # Make this configurable later
@@ -187,12 +199,7 @@ class GradientAborescenceEmitter(EmitterBase):
              metadata_batch=None):
         """Gives the emitter results from evaluating solutions.
 
-        as we insert solutions into the archive, we record the solutions'
-        impact on the fitness of the archive. for example, if the added
-        solution makes an improvement on an existing elite, then we
-        will record ``(addstatus.improved_existing, improvement_value)``
-
-        the solutions are ranked based on the `rank()` function defined by
+        The solutions are ranked based on the `rank()` function defined by
         `self._ranker`.
 
         args:
