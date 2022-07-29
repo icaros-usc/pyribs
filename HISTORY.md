@@ -6,6 +6,7 @@
 
 #### API
 
+- Add `GradientAborescenceEmitter`, which is used to implement CMA-MEGA (#240)
 - Add `best_elite` property for archives (#237)
 - Rename methods in ArchiveDataFrame and rename as_pandas behavior columns
   (#236)
