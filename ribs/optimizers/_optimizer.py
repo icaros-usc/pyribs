@@ -2,7 +2,7 @@
 import numpy as np
 from threadpoolctl import threadpool_limits
 
-from ribs.emitters import GradientAborescenceEmitter
+from ribs.emitters import DQDEmitterBase
 
 
 class Optimizer:
@@ -109,7 +109,7 @@ class Optimizer:
         with threadpool_limits(limits=1, user_api="blas"):
             for i, emitter in enumerate(self._emitters):
                 # check if emitter is dqd
-                if isinstance(emitter, GradientAborescenceEmitter):
+                if isinstance(emitter, DQDEmitterBase):
                     emitter_sols = emitter.ask_dqd()
                     self._solution_batch.append(emitter_sols)
                     self._num_emitted[i] = len(emitter_sols)

@@ -13,9 +13,11 @@
     ribs.emitters.EvolutionStrategyEmitter
     ribs.emitters.GaussianEmitter
     ribs.emitters.IsoLineEmitter
+    ribs.emitters.DQDEmitterBase
     ribs.emitters.EmitterBase
 """
 from ribs.emitters._emitter_base import EmitterBase
+from ribs.emitters._dqd_emitter_base import DQDEmitterBase
 from ribs.emitters._evolution_strategy_emitter import EvolutionStrategyEmitter
 from ribs.emitters._gaussian_emitter import GaussianEmitter
 from ribs.emitters._gradient_aborescence_emitter import \
@@ -27,5 +29,6 @@ __all__ = [
     "EvolutionStrategyEmitter",
     "GaussianEmitter",
     "IsoLineEmitter",
+    "DQDEmitterBase",
     "EmitterBase",
 ]
