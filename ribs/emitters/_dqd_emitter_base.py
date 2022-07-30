@@ -1,38 +1,35 @@
 """Provides DQDEmitterBase."""
 from abc import abstractmethod
 
-import numpy as np
-
-from ribs.emitters import EmitterBase
+from ribs.emitters._emitter_base import EmitterBase
 
 
 class DQDEmitterBase(EmitterBase):
-    """Base class for DQD emitters.
+    """Base class for differentiable quality diversity (DQD) emitters.
 
-    In addition to being an instance of EmitterBase, DQD emitters also implement
+    This class is a special instance of :class:`EmitterBase` which implements
     :meth:`ask_dqd` and :meth:`tell_dqd`. These two functions should be used to
-    communicate gradient information to the emitters. Generally, such as
-    GradientAborescenceEmitter, these functions should be called, in a similar
-    fashion to :meth:`ask` and :meth:`tell`, before calling :meth:`ask`.
+    communicate gradient information to the emitters. The ask and tell functions
+    should now be called in this order: :meth:`ask_dqd`, :meth:`tell_dqd`,
+    :meth:`ask`, :meth:`tell`.
     """
 
     @abstractmethod
     def ask_dqd(self):
-        """Samples a new solution from the gradient optimizer.
-
-        **Call :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
-        calling :meth:`ask` and :meth:`tell`.**
-
-        Returns:
-            a new solution to evalute.
-        """
+        """Generates a ``(batch_size, solution_dim)`` array of solutions for
+        which gradient information must be computed."""
 
     @abstractmethod
     def tell_dqd(self, jacobian):
-        """Gives the emitter results from evaluating the gradient of
-        the solutions.
+        """Gives the emitter results from evaluating the gradient of the
+        solutions.
+
+        See :meth:`tell` for the definitions of the remaining arguments.
 
         Args:
-            jacobian (numpy.ndarray): Jacobian matrix of the solutions
-                obtained from :meth:`ask_dqd`.
+            jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
+                solution_dim)`` array consisting of Jacobian matrices of the
+                solutions obtained from :meth:`ask_dqd`. Each matrix should
+                consist of the objective gradient of the solution followed by
+                the measure gradients.
         """
