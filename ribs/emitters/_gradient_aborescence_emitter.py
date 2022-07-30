@@ -9,21 +9,22 @@ from ribs.emitters.rankers import TwoStageImprovementRanker
 
 
 class GradientAborescenceEmitter(DQDEmitterBase):
-    """Adapts a distribution of solutions with CMA-ES.
+    """Generates solutions with a gradient arborescence, with coefficients
+    parameterized by CMA-ES.
 
     This emitter originates in `Fontaine 2021
     <https://arxiv.org/abs/2106.03894>`_.
-    This emitter takes advantage of the gradient information of the objective
-    and measures functions, generating new solutions using gradient aborescence
-    parameterized with CMA-ES.
-    The new solutions are first ranked according to the
+    It leverages the gradient information of the objective
+    and measure functions, generating new solutions using gradient aborescence
+    with coefficients drawn from a distribution updated by CMA-ES. The new
+    solutions are first ranked according to the
     `TwoStageImprovementRanker`. Then, it is used to perform gradient ascent and
     adapt CMA-ES.
 
-    Note that different from non-gradient emitters, GradientAborescenceEmitter
-    requires call to :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
-    calling :meth:`ask` and :meth:`tell` to communicate the gradient information
-    to the emitter.
+    Note that unlike non-gradient emitters, GradientAborescenceEmitter requires
+    calling :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before calling
+    :meth:`ask` and :meth:`tell` to communicate the gradient information to the
+    emitter.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -175,8 +176,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         return False
 
     def tell_dqd(self, jacobian):
-        """Gives the emitter results from evaluating the gradient of
-        the solutions.
+        """Gives the emitter results from evaluating the gradient of the
+        solutions.
 
         Args:
             jacobian (numpy.ndarray): Jacobian matrix of the solutions
