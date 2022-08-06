@@ -74,6 +74,7 @@
 
 #### Improvements
 
+- Move threadpoolctl from optimizer to CMA-ES (#241)
 - Remove unnecessary emitter benchmarks (#231)
 - Build docs during CI/CD workflow (#211)
 - Drop Python 3.6 and add Python 3.10 support (#181)
