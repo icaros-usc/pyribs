@@ -58,7 +58,6 @@ def test_add_to_archive(data, use_list):
                          data.grid_indices, data.metadata)
 
 
-@pytest.mark.skip
 def test_add_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
@@ -76,7 +75,6 @@ def test_add_and_overwrite(data):
                          data.grid_indices, arbitrary_metadata)
 
 
-@pytest.mark.skip
 def test_add_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
@@ -94,7 +92,6 @@ def test_add_without_overwrite(data):
                          data.grid_indices, data.metadata)
 
 
-@pytest.mark.skip
 def test_initial_remap():
     """Checks that boundaries and entries are correct after initial remap."""
     # remap_frequency is (10 + 1) * (20 + 1)
@@ -145,7 +142,6 @@ def test_initial_remap():
     assert np.isclose(sorted(bcs), sorted(expected_bcs)).all()
 
 
-@pytest.mark.skip
 def test_add_to_archive_with_full_buffer(data):
     for _ in range(data.archive.buffer_capacity + 1):
         data.archive.add_single(data.solution, data.objective_value,
@@ -167,7 +163,6 @@ def test_add_to_archive_with_full_buffer(data):
                          (0, 0), arbitrary_metadata)
 
 
-@pytest.mark.skip
 def test_adds_solutions_from_old_archive():
     """Solutions from previous archive should be inserted during remap."""
     archive = SlidingBoundariesArchive(2, [10, 20], [(-1, 1), (-2, 2)],
