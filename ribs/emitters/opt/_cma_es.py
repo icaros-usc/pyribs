@@ -181,6 +181,8 @@ class CMAEvolutionStrategy:
         )
         return solutions, out_of_bounds
 
+    # Limit OpenBLAS to single thread. This is typically faster than
+    # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
     def ask(self, lower_bounds, upper_bounds):
         """Samples new solutions from the Gaussian distribution.
@@ -252,6 +254,8 @@ class CMAEvolutionStrategy:
         return (cov * (1 - c1a - cmu) + rank_one_update * c1 +
                 rank_mu_update * cmu / (sigma**2))
 
+    # Limit OpenBLAS to single thread. This is typically faster than
+    # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
     def tell(self, solutions, num_parents):
         """Passes the solutions back to the optimizer.
