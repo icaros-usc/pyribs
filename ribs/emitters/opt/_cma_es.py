@@ -5,6 +5,7 @@ https://github.com/CMA-ES/pycma/blob/master/cma/purecma.py
 """
 import numba as nb
 import numpy as np
+from threadpoolctl import threadpool_limits
 
 
 class DecompMatrix:
@@ -180,6 +181,7 @@ class CMAEvolutionStrategy:
         )
         return solutions, out_of_bounds
 
+    @threadpool_limits.wrap(limits=1, user_api="blas")
     def ask(self, lower_bounds, upper_bounds):
         """Samples new solutions from the Gaussian distribution.
 
@@ -250,6 +252,7 @@ class CMAEvolutionStrategy:
         return (cov * (1 - c1a - cmu) + rank_one_update * c1 +
                 rank_mu_update * cmu / (sigma**2))
 
+    @threadpool_limits.wrap(limits=1, user_api="blas")
     def tell(self, solutions, num_parents):
         """Passes the solutions back to the optimizer.
 
