@@ -95,6 +95,25 @@ class Optimizer:
         in this optimizer."""
         return self._emitters
 
+    def _ask_internal(self, is_dqd=False):
+        """Internal method that handles duplicate subroutine between
+        :meth:`ask` and :meth:`ask_dqd`."""
+        self._solution_batch = []
+
+        for i, emitter in enumerate(self._emitters):
+            if is_dqd:
+                if isinstance(emitter, DQDEmitterBase):
+                    emitter_sols = emitter.ask_dqd()
+                else:
+                    continue
+            else:
+                emitter_sols = emitter.ask()
+            self._solution_batch.append(emitter_sols)
+            self._num_emitted[i] = len(emitter_sols)
+
+        self._solution_batch = np.concatenate(self._solution_batch, axis=0)
+        return self._solution_batch
+
     def ask_dqd(self):
         """Generates a batch of solutions by calling ask_dqd() on all DQD
         emitters.
@@ -114,17 +133,7 @@ class Optimizer:
                                self._last_called)
         self._last_called = "ask_dqd"
 
-        self._solution_batch = []
-
-        for i, emitter in enumerate(self._emitters):
-            # check if emitter is dqd
-            if isinstance(emitter, DQDEmitterBase):
-                emitter_sols = emitter.ask_dqd()
-                self._solution_batch.append(emitter_sols)
-                self._num_emitted[i] = len(emitter_sols)
-
-        self._solution_batch = np.concatenate(self._solution_batch, axis=0)
-        return self._solution_batch
+        return self._ask_internal(is_dqd=True)
 
     def ask(self):
         """Generates a batch of solutions by calling ask() on all emitters.
@@ -144,15 +153,7 @@ class Optimizer:
                                self._last_called)
         self._last_called = "ask"
 
-        self._solution_batch = []
-
-        for i, emitter in enumerate(self._emitters):
-            emitter_sols = emitter.ask()
-            self._solution_batch.append(emitter_sols)
-            self._num_emitted[i] = len(emitter_sols)
-
-        self._solution_batch = np.concatenate(self._solution_batch, axis=0)
-        return self._solution_batch
+        return self._ask_internal()
 
     def _check_length(self, name, array):
         """Raises a ValueError if array does not have the same length as the
@@ -162,6 +163,55 @@ class Optimizer:
                 f"{name} should have length {len(self._solution_batch)} "
                 "(this is the number of solutions output by ask()) but "
                 f"has length {len(array)}")
+
+    def _tell_internal(self,
+                       objective_batch,
+                       measures_batch,
+                       metadata_batch=None):
+        """Internal method that handles duplicate subroutine between
+        :meth:`tell` and :meth:`tell_dqd`."""
+        objective_batch = np.asarray(objective_batch)
+        measures_batch = np.asarray(measures_batch)
+        metadata_batch = (np.empty(len(self._solution_batch), dtype=object) if
+                          metadata_batch is None else np.asarray(metadata_batch,
+                                                                 dtype=object))
+
+        self._check_length("objective_batch", objective_batch)
+        self._check_length("measures_batch", measures_batch)
+        self._check_length("metadata_batch", metadata_batch)
+
+        # Add solutions to the archive.
+        if self._add_mode == "batch":
+            status_batch, value_batch = self.archive.add(
+                self._solution_batch,
+                objective_batch,
+                measures_batch,
+                metadata_batch,
+            )
+        elif self._add_mode == "single":
+            status_batch, value_batch = zip(*[
+                self.archive.add_single(
+                    solution,
+                    objective,
+                    measure,
+                    metadata,
+                ) for solution, objective, measure, metadata in zip(
+                    self._solution_batch,
+                    objective_batch,
+                    measures_batch,
+                    metadata_batch,
+                )
+            ])
+            status_batch = np.asarray(status_batch)
+            value_batch = np.asarray(value_batch)
+
+        return (
+            objective_batch,
+            measures_batch,
+            status_batch,
+            value_batch,
+            metadata_batch,
+        )
 
     def tell_dqd(self,
                  jacobian_batch,
@@ -199,47 +249,24 @@ class Optimizer:
                 "tell_dqd() was called without calling ask_dqd().")
         self._last_called = "tell_dqd"
 
-        objective_batch = np.asarray(objective_batch)
-        measures_batch = np.asarray(measures_batch)
-        metadata_batch = (np.empty(len(self._solution_batch), dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
-
-        self._check_length("objective_batch", objective_batch)
-        self._check_length("measures_batch", measures_batch)
-        self._check_length("metadata_batch", metadata_batch)
-
-        # Add solutions to the archive.
-        if self._add_mode == "batch":
-            status_batch, value_batch = self.archive.add(
-                self._solution_batch,
-                objective_batch,
-                measures_batch,
-                metadata_batch,
-            )
-        elif self._add_mode == "single":
-            status_batch, value_batch = zip(*[
-                self.archive.add_single(
-                    solution,
-                    objective,
-                    measure,
-                    metadata,
-                ) for solution, objective, measure, metadata in zip(
-                    self._solution_batch,
-                    objective_batch,
-                    measures_batch,
-                    metadata_batch,
-                )
-            ])
-            status_batch = np.asarray(status_batch)
-            value_batch = np.asarray(value_batch)
+        (
+            objective_batch,
+            measures_batch,
+            status_batch,
+            value_batch,
+            metadata_batch,
+        ) = self._tell_internal(objective_batch, measures_batch, metadata_batch)
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
         for emitter, n in zip(self._emitters, self._num_emitted):
             if isinstance(emitter, DQDEmitterBase):
                 end = pos + n
-                emitter.tell_dqd(jacobian_batch[pos:end])
+                emitter.tell_dqd(jacobian_batch[pos:end],
+                                 self._solution_batch[pos:end],
+                                 objective_batch[pos:end],
+                                 measures_batch[pos:end], status_batch[pos:end],
+                                 value_batch[pos:end], metadata_batch[pos:end])
                 pos = end
 
     def tell(self, objective_batch, measures_batch, metadata_batch=None):
@@ -268,40 +295,13 @@ class Optimizer:
             raise RuntimeError("tell() was called without calling ask().")
         self._last_called = "tell"
 
-        objective_batch = np.asarray(objective_batch)
-        measures_batch = np.asarray(measures_batch)
-        metadata_batch = (np.empty(len(self._solution_batch), dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
-
-        self._check_length("objective_batch", objective_batch)
-        self._check_length("measures_batch", measures_batch)
-        self._check_length("metadata_batch", metadata_batch)
-
-        # Add solutions to the archive.
-        if self._add_mode == "batch":
-            status_batch, value_batch = self.archive.add(
-                self._solution_batch,
-                objective_batch,
-                measures_batch,
-                metadata_batch,
-            )
-        elif self._add_mode == "single":
-            status_batch, value_batch = zip(*[
-                self.archive.add_single(
-                    solution,
-                    objective,
-                    measure,
-                    metadata,
-                ) for solution, objective, measure, metadata in zip(
-                    self._solution_batch,
-                    objective_batch,
-                    measures_batch,
-                    metadata_batch,
-                )
-            ])
-            status_batch = np.asarray(status_batch)
-            value_batch = np.asarray(value_batch)
+        (
+            objective_batch,
+            measures_batch,
+            status_batch,
+            value_batch,
+            metadata_batch,
+        ) = self._tell_internal(objective_batch, measures_batch, metadata_batch)
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
