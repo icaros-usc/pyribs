@@ -115,15 +115,12 @@ class Optimizer:
 
         self._solution_batch = []
 
-        # Limit OpenBLAS to single thread. This is typically faster than
-        # multithreading because our data is too small.
-        with threadpool_limits(limits=1, user_api="blas"):
-            for i, emitter in enumerate(self._emitters):
-                # check if emitter is dqd
-                if isinstance(emitter, DQDEmitterBase):
-                    emitter_sols = emitter.ask_dqd()
-                    self._solution_batch.append(emitter_sols)
-                    self._num_emitted[i] = len(emitter_sols)
+        for i, emitter in enumerate(self._emitters):
+            # check if emitter is dqd
+            if isinstance(emitter, DQDEmitterBase):
+                emitter_sols = emitter.ask_dqd()
+                self._solution_batch.append(emitter_sols)
+                self._num_emitted[i] = len(emitter_sols)
 
         self._solution_batch = np.concatenate(self._solution_batch, axis=0)
         return self._solution_batch
@@ -235,16 +232,13 @@ class Optimizer:
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
 
-        # Limit OpenBLAS to single thread. This is typically faster than
-        # multithreading because our data is too small.
-        with threadpool_limits(limits=1, user_api="blas"):
-            # Keep track of pos because emitters may have different batch sizes.
-            pos = 0
-            for emitter, n in zip(self._emitters, self._num_emitted):
-                if isinstance(emitter, DQDEmitterBase):
-                    end = pos + n
-                    emitter.tell_dqd(jacobian_batch[pos:end])
-                    pos = end
+        # Keep track of pos because emitters may have different batch sizes.
+        pos = 0
+        for emitter, n in zip(self._emitters, self._num_emitted):
+            if isinstance(emitter, DQDEmitterBase):
+                end = pos + n
+                emitter.tell_dqd(jacobian_batch[pos:end])
+                pos = end
 
     def tell(self, objective_batch, measures_batch, metadata_batch=None):
         """Returns info for solutions from :meth:`ask`.
