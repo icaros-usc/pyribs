@@ -59,7 +59,7 @@ class IsoLineEmitter(EmitterBase):
         self._x0 = np.array(x0, dtype=archive.dtype)
         if self._x0.ndim != 1:
             raise ValueError(
-                f"x0 has shape {x0.shape}, should be 1-dimensional.")
+                f"x0 has shape {self._x0.shape}, should be 1-dimensional.")
 
         self._iso_sigma = archive.dtype(iso_sigma)
         self._sigma0 = self._iso_sigma if sigma0 is None else archive.dtype(
