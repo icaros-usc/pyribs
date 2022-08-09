@@ -78,8 +78,7 @@ class Optimizer:
 
         # Keeps track of whether the Optimizer should be receiving a call to
         # ask() or tell().
-        self._asked = False
-        self._asked_dqd = False
+        self._last_called = None
         # The last set of solutions returned by ask().
         self._solution_batch = []
         # The number of solutions created by each emitter.
@@ -98,9 +97,22 @@ class Optimizer:
         return self._emitters
 
     def ask_dqd(self):
-        if self._asked_dqd:
-            raise RuntimeError("ask_dqd() was called twice in a row.")
-        self._asked_dqd = True
+        """Generates a batch of solutions by calling ask_dqd() on all DQD
+        emitters.
+
+        .. note:: The order of the solutions returned from this method is
+            important, so do not rearrange them.
+
+        Returns:
+            (n_solutions, dim) array: An array of n solutions to evaluate. Each
+            row contains a single solution.
+        Raises:
+            RuntimeError: This method was called without first calling
+                :meth:`tell`.
+        """
+        if self._last_called in ["ask", "ask_dqd"]:
+            raise RuntimeError(self._last_called + "was called twice in a row.")
+        self._last_called = "ask_dqd"
 
         self._solution_batch = []
 
@@ -130,9 +142,9 @@ class Optimizer:
             RuntimeError: This method was called without first calling
                 :meth:`tell`.
         """
-        if self._asked:
-            raise RuntimeError("ask() was called twice in a row.")
-        self._asked = True
+        if self._last_called in ["ask", "ask_dqd"]:
+            raise RuntimeError(self._last_called + "was called twice in a row.")
+        self._last_called = "ask"
 
         self._solution_batch = []
 
@@ -161,15 +173,20 @@ class Optimizer:
                  objective_batch,
                  measures_batch,
                  metadata_batch=None):
-        """Returns info for solutions from :meth:`ask`.
+        """Returns info for solutions from :meth:`ask_dqd`.
 
         .. note:: The objective batch, measures batch, and metadata must be in
-            the same order as the solutions created by :meth:`ask`; i.e.
+            the same order as the solutions created by :meth:`ask_dqd`; i.e.
             ``objective_batch[i]``, ``measures_batch[i]``, and ``metadata[i]``
             should be the objective batch, measures batch, and metadata for
-            ``solutions[i]``.
+            ``solution_batch[i]``.
 
         Args:
+            jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
+                solution_dim)`` array consisting of Jacobian matrices of the
+                solutions obtained from :meth:`ask_dqd`. Each matrix should
+                consist of the objective gradient of the solution followed by
+                the measure gradients.
             objective_batch ((n_solutions,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
             measures_batch ((n_solutions, measures_dm) array): Each row of
@@ -182,9 +199,10 @@ class Optimizer:
             ValueError: ``objective_batch``, ``measures_batch``, or
                 ``metadata`` has the wrong shape.
         """
-        if not self._asked_dqd:
-            raise RuntimeError("tell() was called without calling ask().")
-        self._asked_dqd = False
+        if self._last_called != "ask_dqd":
+            raise RuntimeError(
+                "tell_dqd() was called without calling ask_dqd().")
+        self._last_called = "tell_dqd"
 
         objective_batch = np.asarray(objective_batch)
         measures_batch = np.asarray(measures_batch)
@@ -227,9 +245,10 @@ class Optimizer:
             # Keep track of pos because emitters may have different batch sizes.
             pos = 0
             for emitter, n in zip(self._emitters, self._num_emitted):
-                end = pos + n
-                emitter.tell_dqd(jacobian_batch[pos:end])
-                pos = end
+                if isinstance(emitter, DQDEmitterBase):
+                    end = pos + n
+                    emitter.tell_dqd(jacobian_batch[pos:end])
+                    pos = end
 
     def tell(self, objective_batch, measures_batch, metadata_batch=None):
         """Returns info for solutions from :meth:`ask`.
@@ -253,9 +272,9 @@ class Optimizer:
             ValueError: ``objective_batch``, ``measures_batch``, or
                 ``metadata`` has the wrong shape.
         """
-        if not self._asked:
+        if self._last_called != "ask":
             raise RuntimeError("tell() was called without calling ask().")
-        self._asked = False
+        self._last_called = "tell"
 
         objective_batch = np.asarray(objective_batch)
         measures_batch = np.asarray(measures_batch)

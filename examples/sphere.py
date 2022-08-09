@@ -31,7 +31,12 @@ The supported algorithms are:
   the emitter are using TwoStageRandomDirectionRanker and half (8) are
   TwoStageImprovementRanker.
 - `cma_mega`: GridArchive with GradientAborescenceEmitter.
-- `cma_mega_adam`: GridArchive with GradientAborescenceEmitter using Adam Optimizer.
+- `cma_mega_adam`: GridArchive with GradientAborescenceEmitter using Adam
+  Optimizer.
+
+Note: the settings for `cma_mega` and `cma_mega_adam` is consistent with the
+paper (`Fontaine 2021 <https://arxiv.org/abs/2106.03894>`_) in which these
+algorithms are proposed in.
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
@@ -102,7 +107,7 @@ def sphere(solution_batch):
     objective_batch = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
 
     # Compute gradient of the objective
-    objective_grad = -2 * (solution_batch - sphere_shift)
+    objective_grad_batch = -2 * (solution_batch - sphere_shift)
 
     # Calculate measures.
     clipped = solution_batch.copy()
@@ -123,12 +128,12 @@ def sphere(solution_batch):
     mask_0 = np.concatenate((np.ones(dim // 2), np.zeros(dim - dim // 2)))
     mask_1 = np.concatenate((np.zeros(dim // 2), np.ones(dim - dim // 2)))
 
-    d_measure0 = np.multiply(derivatives, mask_0)
-    d_measure1 = np.multiply(derivatives, mask_1)
+    d_measure0 = derivatives * mask_0
+    d_measure1 = derivatives * mask_1
 
-    measures_grad = np.stack((d_measure0, d_measure1), axis=1)
+    measures_grad_batch = np.stack((d_measure0, d_measure1), axis=1)
 
-    return objective_batch, objective_grad, measures_batch, measures_grad
+    return objective_batch, objective_grad_batch, measures_batch, measures_grad_batch
 
 
 def create_optimizer(algorithm, dim, seed):
@@ -144,14 +149,13 @@ def create_optimizer(algorithm, dim, seed):
     max_bound = dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     initial_sol = np.zeros(dim)
-    batch_size = 36
+    batch_size = 37
     num_emitters = 15
 
     # Create archive.
     if algorithm in [
             "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed",
-            "cma_mega", "cma_mega_adam"
+            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
     ]:
         archive = GridArchive(solution_dim=dim,
                               dims=(500, 500),
@@ -163,6 +167,11 @@ def create_optimizer(algorithm, dim, seed):
                              ranges=bounds,
                              samples=100_000,
                              use_kd_tree=True)
+    elif algorithm in ["cma_mega", "cma_mega_adam"]:
+        archive = GridArchive(solution_dim=dim,
+                              dims=(100, 100),
+                              ranges=bounds,
+                              seed=seed)
     else:
         raise ValueError(f"Algorithm `{algorithm}` is not recognized")
 
@@ -254,7 +263,7 @@ def create_optimizer(algorithm, dim, seed):
                                        normalize_grad=True,
                                        selection_rule="mu",
                                        bounds=None,
-                                       batch_size=batch_size - 1,
+                                       batch_size=batch_size,
                                        seed=emitter_seeds[0])
         ]
     return Optimizer(archive, emitters)
@@ -302,6 +311,10 @@ def sphere_main(algorithm,
     if not outdir.is_dir():
         outdir.mkdir()
 
+    if algorithm in ["cma_mega", "cma_mega_adam"]:
+        dim = 1_000
+        itrs = 10_000
+
     optimizer = create_optimizer(algorithm, dim, seed)
     archive = optimizer.archive
     metrics = {
@@ -309,7 +322,7 @@ def sphere_main(algorithm,
             "x": [0],
             "y": [0.0],
         },
-        "Mean QD Score": {
+        "Normalized QD Score": {
             "x": [0],
             "y": [0.0],
         },
@@ -330,12 +343,12 @@ def sphere_main(algorithm,
 
             if is_dqd:
                 solution_batch = optimizer.ask_dqd()
-                objective_batch, objective_jacobian_batch, measures_batch, measures_jacobian_batch = sphere(
+                objective_batch, objective_grad_batch, measures_batch, measures_grad_batch = sphere(
                     solution_batch)
-                objective_jacobian_batch = np.expand_dims(
-                    objective_jacobian_batch, axis=1)
+                objective_grad_batch = np.expand_dims(objective_grad_batch,
+                                                      axis=1)
                 jacobian_batch = np.concatenate(
-                    (objective_jacobian_batch, measures_jacobian_batch), axis=1)
+                    (objective_grad_batch, measures_grad_batch), axis=1)
                 optimizer.tell_dqd(jacobian_batch, objective_batch,
                                    measures_batch)
 

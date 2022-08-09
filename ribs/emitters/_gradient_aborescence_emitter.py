@@ -5,7 +5,8 @@ import numpy as np
 
 from ribs.emitters._dqd_emitter_base import DQDEmitterBase
 from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
-from ribs.emitters.rankers import TwoStageImprovementRanker
+from ribs.emitters.rankers import (RankerBase, TwoStageImprovementRanker,
+                                   get_ranker)
 
 
 class GradientAborescenceEmitter(DQDEmitterBase):
@@ -32,6 +33,13 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
         sigma0 (float): Initial step size / standard deviation.
+        step_size (float): Step size for the gradient optimizer
+        ranker (Callable or str): The ranker is a :class:`RankerBase` object
+            that orders the solutions after they have been evaluated in the
+            environment. This parameter may be a callable (e.g. a class or a
+            lambda function) that takes in no parameters and returns an instance
+            of :class:`RankerBase`, or it may be a full or abbreviated ranker
+            name as described in :meth:`ribs.emitters.rankers.get_ranker`.
         selection_rule ("mu" or "filter"): Method for selecting parents in
             CMA-ES. With "mu" selection, the first half of the solutions will be
             selected as parents, while in "filter", any solutions that were
@@ -56,18 +64,23 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to return in :meth:`ask`. If not
             passed in, a batch size will be automatically calculated using the
-            default CMA-ES rules.
+            default CMA-ES rules. For GradientAborescenceEmitter in particular,
+            ``batch_size - 1`` solutions will be return via :meth:`ask` and
+            ``1`` solution will be return via :meth:`ask_dqd`.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
         ValueError: If ``restart_rule`` is invalid.
     """
+    # Used to ensure numerical stability when normalizing the gradient
+    _epsilon = 1e-8
 
     def __init__(self,
                  archive,
                  x0,
                  sigma0,
                  step_size,
+                 ranker="2imp",
                  selection_rule="filter",
                  restart_rule="no_improvement",
                  grad_opt="adam",
@@ -79,7 +92,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         self._x0 = np.array(x0, dtype=archive.dtype)
         self._sigma0 = sigma0
         self._normalize_grads = normalize_grad
-        self._jacobian = None
+        self._jacobian_batch = None
         self._grad_coefficients = None
         DQDEmitterBase.__init__(
             self,
@@ -87,6 +100,19 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             len(self._x0),
             bounds,
         )
+
+        # Handle ranker initiation
+        if isinstance(ranker, str):
+            # get_ranker returns a subclass of RankerBase
+            ranker = get_ranker(ranker)
+        if callable(ranker):
+            self._ranker = ranker()
+            if not isinstance(self._ranker, RankerBase):
+                raise ValueError("Callable " + ranker +
+                                 " did not return a instance of RankerBase.")
+        else:
+            raise ValueError(ranker + " is not one of [Callable, str]")
+        self._ranker.reset(self, archive, self._rng)
 
         # Initialize gradient optimizer
         self._grad_opt = None
@@ -110,16 +136,12 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         self._num_coefficients = archive.behavior_dim + 1
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = CMAEvolutionStrategy(sigma0, batch_size,
+        self._batch_size = batch_size - 1 # 1 solution is returned via ask_dqd
+        self.opt = CMAEvolutionStrategy(sigma0, self._batch_size,
                                         self._num_coefficients, "truncation",
                                         opt_seed, self.archive.dtype)
         self.opt.reset(np.zeros(self._num_coefficients))
 
-        # Initialize ImprovementRanker.
-        self._ranker = TwoStageImprovementRanker()
-        self._ranker.reset(self, archive, self._rng)
-
-        self._batch_size = self.opt.batch_size
         self._restarts = 0  # Currently not exposed publicly.
 
     @property
@@ -150,6 +172,9 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         The multivariate Gaussian is parameterized by the evolution strategy
         optimizer ``self.opt``.
 
+        Note that this method returns `batch_size - 1` solution as one solution
+        is returned via ask_dqd.
+
         Returns:
             (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
@@ -163,8 +188,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         self._grad_coefficients = self.opt.ask(lower_bounds, upper_bounds)
         noise = np.expand_dims(self._grad_coefficients, axis=2)
 
-        return self._grad_opt.theta + np.sum(np.multiply(self._jacobian, noise),
-                                             axis=1)
+        return self._grad_opt.theta + np.sum(
+            np.multiply(self._jacobian_batch, noise), axis=1)
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
@@ -175,21 +200,29 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             return num_parents == 0
         return False
 
-    def tell_dqd(self, jacobian):
+    def tell_dqd(self,
+                 jacobian_batch,
+                 solution_batch=None,
+                 objective_batch=None,
+                 measures_batch=None,
+                 status_batch=None,
+                 value_batch=None,
+                 metadata_batch=None):
         """Gives the emitter results from evaluating the gradient of the
         solutions.
 
         Args:
-            jacobian (numpy.ndarray): Jacobian matrix of the solutions
-                obtained from :meth:`ask_dqd`.
+            jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
+                solution_dim)`` array consisting of Jacobian matrices of the
+                solutions obtained from :meth:`ask_dqd`. Each matrix should
+                consist of the objective gradient of the solution followed by
+                the measure gradients.
         """
         if self._normalize_grads:
-            # Make this configurable later
-            epsilon = 1e-8
-            norms = np.linalg.norm(jacobian, axis=2) + epsilon
+            norms = np.linalg.norm(jacobian_batch, axis=2) + self._epsilon
             norms = np.expand_dims(norms, axis=2)
-            jacobian /= norms
-        self._jacobian = jacobian
+            jacobian_batch /= norms
+        self._jacobian_batch = jacobian_batch
 
     def tell(self,
              solution_batch,
@@ -221,7 +254,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             metadata_batch (numpy.ndarray): 1d object array containing a
                 metadata object for each solution.
         """
-        if self._jacobian is None:
+        if self._jacobian_batch is None:
             raise RuntimeError("tell() was called without calling tell_dqd().")
 
         metadata_batch = itertools.repeat(

@@ -20,7 +20,14 @@ class DQDEmitterBase(EmitterBase):
         which gradient information must be computed."""
 
     @abstractmethod
-    def tell_dqd(self, jacobian):
+    def tell_dqd(self,
+                 jacobian_batch,
+                 solution_batch=None,
+                 objective_batch=None,
+                 measures_batch=None,
+                 status_batch=None,
+                 value_batch=None,
+                 metadata_batch=None):
         """Gives the emitter results from evaluating the gradient of the
         solutions.
 
