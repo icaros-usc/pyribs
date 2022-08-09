@@ -111,12 +111,10 @@ class Optimizer:
             self._solution_batch.append(emitter_sols)
             self._num_emitted[i] = len(emitter_sols)
 
+        self._solution_batch = np.concatenate(
+            self._solution_batch, axis=0) if self._solution_batch else np.array(
+                (0, self._solution_dim))
 
-        # TODO might end up with no solutions
-        if not self._solution_batch:
-            return None
-
-        self._solution_batch = np.concatenate(self._solution_batch, axis=0)
         return self._solution_batch
 
     def ask_dqd(self):
