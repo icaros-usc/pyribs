@@ -1,6 +1,5 @@
 """Provides the Optimizer."""
 import numpy as np
-from threadpoolctl import threadpool_limits
 
 from ribs.emitters import DQDEmitterBase
 
@@ -148,13 +147,10 @@ class Optimizer:
 
         self._solution_batch = []
 
-        # Limit OpenBLAS to single thread. This is typically faster than
-        # multithreading because our data is too small.
-        with threadpool_limits(limits=1, user_api="blas"):
-            for i, emitter in enumerate(self._emitters):
-                emitter_sols = emitter.ask()
-                self._solution_batch.append(emitter_sols)
-                self._num_emitted[i] = len(emitter_sols)
+        for i, emitter in enumerate(self._emitters):
+            emitter_sols = emitter.ask()
+            self._solution_batch.append(emitter_sols)
+            self._num_emitted[i] = len(emitter_sols)
 
         self._solution_batch = np.concatenate(self._solution_batch, axis=0)
         return self._solution_batch
@@ -311,15 +307,12 @@ class Optimizer:
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
 
-        # Limit OpenBLAS to single thread. This is typically faster than
-        # multithreading because our data is too small.
-        with threadpool_limits(limits=1, user_api="blas"):
-            # Keep track of pos because emitters may have different batch sizes.
-            pos = 0
-            for emitter, n in zip(self._emitters, self._num_emitted):
-                end = pos + n
-                emitter.tell(self._solution_batch[pos:end],
-                             objective_batch[pos:end], measures_batch[pos:end],
-                             status_batch[pos:end], value_batch[pos:end],
-                             metadata_batch[pos:end])
-                pos = end
+        # Keep track of pos because emitters may have different batch sizes.
+        pos = 0
+        for emitter, n in zip(self._emitters, self._num_emitted):
+            end = pos + n
+            emitter.tell(self._solution_batch[pos:end],
+                         objective_batch[pos:end], measures_batch[pos:end],
+                         status_batch[pos:end], value_batch[pos:end],
+                         metadata_batch[pos:end])
+            pos = end
