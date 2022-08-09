@@ -104,8 +104,6 @@ def test_array_bound_bad_entry_fails(archive_fixture):
 
 
 ### x0 should be 1-dimensional ###
-
-
 @pytest.mark.parametrize(
     "emitter_type", ["GaussianEmitter", "IsoLineEmitter", "ImprovementEmitter"])
 def test_x0_not_1d(emitter_type, archive_fixture):
@@ -119,3 +117,4 @@ def test_x0_not_1d(emitter_type, archive_fixture):
             _ = IsoLineEmitter(archive, x0)
         elif emitter_type == "ImprovementEmitter":
             _ = EvolutionStrategyEmitter(archive, x0, 5, "2imp")
+### END ###
