@@ -136,11 +136,13 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         self._num_coefficients = archive.behavior_dim + 1
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self._batch_size = batch_size - 1 # 1 solution is returned via ask_dqd
-        self.opt = CMAEvolutionStrategy(sigma0, self._batch_size,
+        self.opt = CMAEvolutionStrategy(sigma0, batch_size,
                                         self._num_coefficients, "truncation",
                                         opt_seed, self.archive.dtype)
         self.opt.reset(np.zeros(self._num_coefficients))
+
+        # one solution is returned via ask_dqd
+        self._batch_size = self.opt.batch_size - 2
 
         self._restarts = 0  # Currently not exposed publicly.
 

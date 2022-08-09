@@ -110,7 +110,8 @@ class Optimizer:
                 :meth:`tell`.
         """
         if self._last_called in ["ask", "ask_dqd"]:
-            raise RuntimeError(self._last_called + "was called twice in a row.")
+            raise RuntimeError("ask_dqd cannot be called immediately after " +
+                               self._last_called)
         self._last_called = "ask_dqd"
 
         self._solution_batch = []
@@ -139,7 +140,8 @@ class Optimizer:
                 :meth:`tell`.
         """
         if self._last_called in ["ask", "ask_dqd"]:
-            raise RuntimeError(self._last_called + "was called twice in a row.")
+            raise RuntimeError("ask_dqd cannot be called immediately after " +
+                               self._last_called)
         self._last_called = "ask"
 
         self._solution_batch = []
