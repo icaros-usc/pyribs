@@ -54,10 +54,10 @@ class GaussianEmitter(EmitterBase):
         self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
 
-        if x0.ndim != 1:
-            raise ValueError(
-                f"x0 has shape {x0.shape}, should be 1-dimensional.")
         self._x0 = np.array(x0, dtype=archive.dtype)
+        if self._x0.ndim != 1:
+            raise ValueError(
+                f"x0 has shape {self._x0.shape}, should be 1-dimensional.")
 
         self._sigma = archive.dtype(sigma) if isinstance(
             sigma,

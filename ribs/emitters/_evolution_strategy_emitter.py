@@ -68,10 +68,10 @@ class EvolutionStrategyEmitter(EmitterBase):
                  seed=None):
         self._rng = np.random.default_rng(seed)
 
-        if x0.ndim != 1:
-            raise ValueError(
-                f"x0 has shape {x0.shape}, should be 1-dimensional.")
         self._x0 = np.array(x0, dtype=archive.dtype)
+        if self._x0.ndim != 1:
+            raise ValueError(
+                f"x0 has shape {self._x0.shape}, should be 1-dimensional.")
 
         self._sigma0 = sigma0
         EmitterBase.__init__(
