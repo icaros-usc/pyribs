@@ -131,10 +131,31 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):
     )
 
 
+### TEST WHEN ASK TELL IS PERFORMED OUT-OF-ORDER ###
 def test_tell_fails_when_ask_not_called(optimizer_fixture):
     optimizer, *_ = optimizer_fixture
     with pytest.raises(RuntimeError):
         optimizer.tell(None, None)
+
+def test_tell_fails_when_ask_dqd_not_called(optimizer_fixture):
+    optimizer, *_ = optimizer_fixture
+    with pytest.raises(RuntimeError):
+        optimizer.tell_dqd(None, None, None)
+
+def test_tell_fails_when_ask_tell_mismatch(optimizer_fixture):
+    optimizer, *_ = optimizer_fixture
+
+    _ = optimizer.ask()
+    with pytest.raises(RuntimeError):
+        optimizer.tell_dqd(None, None, None)
+
+def test_tell_fails_when_ask_tell_mismatch_dqd(optimizer_fixture):
+    optimizer, *_ = optimizer_fixture
+
+    _ = optimizer.ask_dqd()
+    with pytest.raises(RuntimeError):
+        optimizer.tell(None, None)
+### END ###
 
 
 @pytest.mark.parametrize("array",

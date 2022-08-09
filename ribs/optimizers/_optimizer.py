@@ -111,6 +111,11 @@ class Optimizer:
             self._solution_batch.append(emitter_sols)
             self._num_emitted[i] = len(emitter_sols)
 
+
+        # TODO might end up with no solutions
+        if not self._solution_batch:
+            return None
+
         self._solution_batch = np.concatenate(self._solution_batch, axis=0)
         return self._solution_batch
 
