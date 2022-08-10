@@ -168,8 +168,8 @@ def create_optimizer(algorithm, dim, seed):
                              samples=100_000,
                              use_kd_tree=True)
     elif algorithm in ["cma_mega", "cma_mega_adam"]:
-        # Note that the archive is smaller to for these algorithms. This is to
-        # be consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
+        # Note that the archive is smaller for these algorithms. This is to be
+        # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
         archive = GridArchive(solution_dim=dim,
                               dims=(100, 100),
                               ranges=bounds,
