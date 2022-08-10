@@ -217,9 +217,9 @@ class Optimizer:
         )
 
     def tell_dqd(self,
-                 jacobian_batch,
                  objective_batch,
                  measures_batch,
+                 jacobian_batch,
                  metadata_batch=None):
         """Returns info for solutions from :meth:`ask_dqd`.
 
@@ -230,15 +230,15 @@ class Optimizer:
             ``solution_batch[i]``.
 
         Args:
+            objective_batch ((n_solutions,) array): Each entry of this array
+                contains the objective function evaluation of a solution.
+            measures_batch ((n_solutions, measures_dm) array): Each row of
+                this array contains a solution's coordinates in measure space.
             jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
                 solution_dim)`` array consisting of Jacobian matrices of the
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
-            objective_batch ((n_solutions,) array): Each entry of this array
-                contains the objective function evaluation of a solution.
-            measures_batch ((n_solutions, measures_dm) array): Each row of
-                this array contains a solution's coordinates in measure space.
             metadata ((n_solutions,) array): Each entry of this array contains
                 an object holding metadata for a solution.
         Raises:
