@@ -67,13 +67,14 @@ class EvolutionStrategyEmitter(EmitterBase):
                  batch_size=None,
                  seed=None):
         self._rng = np.random.default_rng(seed)
-
         self._x0 = np.array(x0, dtype=archive.dtype)
         if self._x0.ndim != 1:
             raise ValueError(
                 f"x0 has shape {self._x0.shape}, should be 1-dimensional.")
+        self._sigma0 = archive.dtype(sigma0) if isinstance(
+            sigma0,
+            (float, np.floating)) else np.array(sigma0, dtype=archive.dtype)
 
-        self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
             archive,
@@ -147,7 +148,7 @@ class EvolutionStrategyEmitter(EmitterBase):
              objective_batch,
              measures_batch,
              status_batch,
-             values_batch,
+             value_batch,
              metadata_batch=None):
         """Gives the emitter results from evaluating solutions.
 
@@ -186,7 +187,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         # Sort the solutions using ranker.
         indices, ranking_values = self._ranker.rank(
             self, self.archive, self._rng, solution_batch, objective_batch,
-            measures_batch, status_batch, values_batch, metadata_batch)
+            measures_batch, status_batch, value_batch, metadata_batch)
 
         # Select the number of parents.
         num_parents = (new_sols if self._selection_rule == "filter" else
