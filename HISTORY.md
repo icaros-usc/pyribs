@@ -6,6 +6,7 @@
 
 #### API
 
+- Extract ranker initialization subroutine in emitter constructor to `get_ranker` (#245)
 - Add `best_elite` property for archives (#237)
 - Rename methods in ArchiveDataFrame and rename as_pandas behavior columns
   (#236)
