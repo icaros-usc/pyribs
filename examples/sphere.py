@@ -312,11 +312,6 @@ def sphere_main(algorithm,
             and saving heatmap.
         seed (int): Seed for the algorithm. By default, there is no seed.
     """
-    name = f"{algorithm}_{dim}"
-    outdir = Path(outdir)
-    if not outdir.is_dir():
-        outdir.mkdir()
-
     if dim is None:
         if algorithm in ["cma_mega", "cma_mega_adam"]:
             dim = 1_000
@@ -334,6 +329,11 @@ def sphere_main(algorithm,
                 "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
         ]:
             itrs = 4500
+
+    name = f"{algorithm}_{dim}"
+    outdir = Path(outdir)
+    if not outdir.is_dir():
+        outdir.mkdir()
 
     is_dqd = algorithm in ['cma_mega', 'cma_mega_adam']
 
