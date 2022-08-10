@@ -133,7 +133,12 @@ def sphere(solution_batch):
 
     measures_grad_batch = np.stack((d_measure0, d_measure1), axis=1)
 
-    return objective_batch, objective_grad_batch, measures_batch, measures_grad_batch
+    return (
+        objective_batch,
+        objective_grad_batch,
+        measures_batch,
+        measures_grad_batch,
+    )
 
 
 def create_optimizer(algorithm, dim, seed):
@@ -243,8 +248,8 @@ def create_optimizer(algorithm, dim, seed):
             ) for s in emitter_seeds
         ]
     elif algorithm == "cma_mega":
-        # Note that only one emitter is used for cma_mega. This is to be consistent
-        # with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
+        # Note that only one emitter is used for cma_mega. This is to be
+        # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
         emitters = [
             GradientAborescenceEmitter(archive,
                                        initial_sol,
@@ -359,8 +364,8 @@ def sphere_main(algorithm,
 
             if is_dqd:
                 solution_batch = optimizer.ask_dqd()
-                objective_batch, objective_grad_batch, measures_batch, measures_grad_batch = sphere(
-                    solution_batch)
+                (objective_batch, objective_grad_batch, measures_batch,
+                 measures_grad_batch) = sphere(solution_batch)
                 objective_grad_batch = np.expand_dims(objective_grad_batch,
                                                       axis=1)
                 jacobian_batch = np.concatenate(
