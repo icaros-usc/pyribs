@@ -95,28 +95,6 @@ class Optimizer:
         in this optimizer."""
         return self._emitters
 
-    def _ask_internal(self, is_dqd=False):
-        """Internal method that handles duplicate subroutine between
-        :meth:`ask` and :meth:`ask_dqd`."""
-        self._solution_batch = []
-
-        for i, emitter in enumerate(self._emitters):
-            if is_dqd:
-                if isinstance(emitter, DQDEmitterBase):
-                    emitter_sols = emitter.ask_dqd()
-                else:
-                    continue
-            else:
-                emitter_sols = emitter.ask()
-            self._solution_batch.append(emitter_sols)
-            self._num_emitted[i] = len(emitter_sols)
-
-        self._solution_batch = np.concatenate(
-            self._solution_batch, axis=0) if self._solution_batch else np.array(
-                (0, self._solution_dim))
-
-        return self._solution_batch
-
     def ask_dqd(self):
         """Generates a batch of solutions by calling ask_dqd() on all DQD
         emitters.
@@ -136,7 +114,16 @@ class Optimizer:
                                self._last_called)
         self._last_called = "ask_dqd"
 
-        return self._ask_internal(is_dqd=True)
+        self._solution_batch = []
+
+        for i, emitter in enumerate(self._emitters):
+            if isinstance(emitter, DQDEmitterBase):
+                emitter_sols = emitter.ask_dqd()
+                self._solution_batch.append(emitter_sols)
+                self._num_emitted[i] = len(emitter_sols)
+
+        self._solution_batch = np.concatenate(self._solution_batch, axis=0)
+        return self._solution_batch
 
     def ask(self):
         """Generates a batch of solutions by calling ask() on all emitters.
@@ -156,7 +143,15 @@ class Optimizer:
                                self._last_called)
         self._last_called = "ask"
 
-        return self._ask_internal()
+        self._solution_batch = []
+
+        for i, emitter in enumerate(self._emitters):
+            emitter_sols = emitter.ask()
+            self._solution_batch.append(emitter_sols)
+            self._num_emitted[i] = len(emitter_sols)
+
+        self._solution_batch = np.concatenate(self._solution_batch, axis=0)
+        return self._solution_batch
 
     def _check_length(self, name, array):
         """Raises a ValueError if array does not have the same length as the
