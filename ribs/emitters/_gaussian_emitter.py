@@ -21,7 +21,7 @@ class GaussianEmitter(EmitterBase):
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
         x0 (array-like): Center of the Gaussian distribution from which to
-            sample solutions when the archive is empty.
+            sample solutions when the archive is empty. Must be 1-dimensional.
         sigma (float or array-like): Standard deviation of the Gaussian
             distribution when the archive is not empty. Note we assume
             the Gaussian is diagonal, so if this argument is an array, it
@@ -53,7 +53,12 @@ class GaussianEmitter(EmitterBase):
                  seed=None):
         self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
+
         self._x0 = np.array(x0, dtype=archive.dtype)
+        if self._x0.ndim != 1:
+            raise ValueError(
+                f"x0 has shape {self._x0.shape}, should be 1-dimensional.")
+
         self._sigma = archive.dtype(sigma) if isinstance(
             sigma,
             (float, np.floating)) else np.array(sigma, dtype=archive.dtype)
