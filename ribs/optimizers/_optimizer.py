@@ -260,10 +260,10 @@ class Optimizer:
         for emitter, n in zip(self._emitters, self._num_emitted):
             if isinstance(emitter, DQDEmitterBase):
                 end = pos + n
-                emitter.tell_dqd(jacobian_batch[pos:end],
-                                 self._solution_batch[pos:end],
+                emitter.tell_dqd(self._solution_batch[pos:end],
                                  objective_batch[pos:end],
-                                 measures_batch[pos:end], status_batch[pos:end],
+                                 measures_batch[pos:end],
+                                 jacobian_batch[pos:end], status_batch[pos:end],
                                  value_batch[pos:end], metadata_batch[pos:end])
                 pos = end
 

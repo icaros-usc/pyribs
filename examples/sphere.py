@@ -34,9 +34,9 @@ The supported algorithms are:
 - `cma_mega_adam`: GridArchive with GradientAborescenceEmitter using Adam
   Optimizer.
 
-Note: the settings for `cma_mega` and `cma_mega_adam` is consistent with the
+Note: the settings for `cma_mega` and `cma_mega_adam` are consistent with the
 paper (`Fontaine 2021 <https://arxiv.org/abs/2106.03894>`_) in which these
-algorithms are proposed in.
+algorithms are proposed.
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
@@ -90,7 +90,7 @@ def sphere(solution_batch):
     """Sphere function evaluation and BCs for a batch of solutions.
 
     Args:
-        sol (np.ndarray): (batch_size, dim) array of solutions
+        solution_batch (np.ndarray): (batch_size, dim) array of solutions
     Returns:
         objective_batch (np.ndarray): (batch_size,) array of objective values
         measures_batch (np.ndarray): (batch_size, 2) array of measure values
@@ -168,6 +168,8 @@ def create_optimizer(algorithm, dim, seed):
                              samples=100_000,
                              use_kd_tree=True)
     elif algorithm in ["cma_mega", "cma_mega_adam"]:
+        # Note that the archive is smaller to for these algorithms. This is to
+        # be consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
         archive = GridArchive(solution_dim=dim,
                               dims=(100, 100),
                               ranges=bounds,
@@ -241,6 +243,8 @@ def create_optimizer(algorithm, dim, seed):
             ) for s in emitter_seeds
         ]
     elif algorithm == "cma_mega":
+        # Note that only one emitter is used for cma_mega. This is to be consistent
+        # with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
         emitters = [
             GradientAborescenceEmitter(archive,
                                        initial_sol,
@@ -254,6 +258,8 @@ def create_optimizer(algorithm, dim, seed):
                                        seed=emitter_seeds[0])
         ]
     elif algorithm == "cma_mega_adam":
+        # Note that only one emitter is used for cma_mega_adam. This is to be
+        # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
         emitters = [
             GradientAborescenceEmitter(archive,
                                        initial_sol,
@@ -290,8 +296,8 @@ def save_heatmap(archive, heatmap_path):
 
 
 def sphere_main(algorithm,
-                dim=20,
-                itrs=4500,
+                dim=None,
+                itrs=None,
                 outdir="sphere_output",
                 log_freq=250,
                 seed=None):
@@ -311,9 +317,25 @@ def sphere_main(algorithm,
     if not outdir.is_dir():
         outdir.mkdir()
 
-    if algorithm in ["cma_mega", "cma_mega_adam"]:
-        dim = 1_000
-        itrs = 10_000
+    if dim is None:
+        if algorithm in ["cma_mega", "cma_mega_adam"]:
+            dim = 1_000
+        elif algorithm in [
+                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
+        ]:
+            dim = 20
+
+    if itrs is None:
+        if algorithm in ["cma_mega", "cma_mega_adam"]:
+            itrs = 10_000
+        elif algorithm in [
+                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
+        ]:
+            itrs = 4500
+
+    is_dqd = algorithm in ['cma_mega', 'cma_mega_adam']
 
     optimizer = create_optimizer(algorithm, dim, seed)
     archive = optimizer.archive
@@ -332,8 +354,6 @@ def sphere_main(algorithm,
         },
     }
 
-    is_dqd = algorithm in ['cma_mega', 'cma_mega_adam']
-
     non_logging_time = 0.0
     with alive_bar(itrs) as progress:
         save_heatmap(archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
@@ -349,8 +369,8 @@ def sphere_main(algorithm,
                                                       axis=1)
                 jacobian_batch = np.concatenate(
                     (objective_grad_batch, measures_grad_batch), axis=1)
-                optimizer.tell_dqd(jacobian_batch, objective_batch,
-                                   measures_batch)
+                optimizer.tell_dqd(objective_batch, measures_batch,
+                                   jacobian_batch)
 
             solution_batch = optimizer.ask()
             objective_batch, _, measure_batch, _ = sphere(solution_batch)
@@ -368,15 +388,15 @@ def sphere_main(algorithm,
                 # Record and display metrics.
                 metrics["QD Score"]["x"].append(itr)
                 metrics["QD Score"]["y"].append(archive.stats.qd_score)
-                metrics["Mean QD Score"]["x"].append(itr)
-                metrics["Mean QD Score"]["y"].append(archive.stats.qd_score /
+                metrics["Normalized QD Score"]["x"].append(itr)
+                metrics["Normalized QD Score"]["y"].append(archive.stats.qd_score /
                                                      archive.cells)
                 metrics["Archive Coverage"]["x"].append(itr)
                 metrics["Archive Coverage"]["y"].append(archive.stats.coverage)
                 print(f"Iteration {itr} | Archive Coverage: "
                       f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
                       f"QD Score: {metrics['QD Score']['y'][-1]:.3f} "
-                      f"Mean QD Score: {metrics['Mean QD Score']['y'][-1]:.3f}")
+                      f"Normalized QD Score: {metrics['Normalized QD Score']['y'][-1]:.3f}")
 
                 save_heatmap(archive,
                              str(outdir / f"{name}_heatmap_{itr:05d}.png"))
