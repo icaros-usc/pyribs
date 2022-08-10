@@ -21,7 +21,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        x0 (np.ndarray): Initial solution.
+        x0 (np.ndarray): Initial solution. Must be 1-dimensional.
         sigma0 (float): Initial step size / standard deviation.
         selection_rule ("mu" or "filter"): Method for selecting parents in
             CMA-ES. With "mu" selection, the first half of the solutions will be
@@ -68,9 +68,13 @@ class EvolutionStrategyEmitter(EmitterBase):
                  seed=None):
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
+        if self._x0.ndim != 1:
+            raise ValueError(
+                f"x0 has shape {self._x0.shape}, should be 1-dimensional.")
         self._sigma0 = archive.dtype(sigma0) if isinstance(
             sigma0,
             (float, np.floating)) else np.array(sigma0, dtype=archive.dtype)
+
         EmitterBase.__init__(
             self,
             archive,

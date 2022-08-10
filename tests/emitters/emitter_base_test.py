@@ -101,3 +101,18 @@ def test_array_bound_bad_entry_fails(archive_fixture):
     bounds[0] = (-1, 0, 1)  # Invalid entry.
     with pytest.raises(ValueError):
         GaussianEmitter(archive, x0, 1, bounds=bounds)
+
+
+@pytest.mark.parametrize(
+    "emitter_type", ["GaussianEmitter", "IsoLineEmitter", "ImprovementEmitter"])
+def test_emitters_fail_when_x0_not_1d(emitter_type, archive_fixture):
+    archive, _ = archive_fixture
+    x0 = [[1], [1]]
+
+    with pytest.raises(ValueError):
+        if emitter_type == "GaussianEmitter":
+            _ = GaussianEmitter(archive, x0, 5)
+        elif emitter_type == "IsoLineEmitter":
+            _ = IsoLineEmitter(archive, x0)
+        elif emitter_type == "ImprovementEmitter":
+            _ = EvolutionStrategyEmitter(archive, x0, 5, "2imp")
