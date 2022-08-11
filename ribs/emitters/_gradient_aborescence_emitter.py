@@ -139,7 +139,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         self.opt.reset(np.zeros(self._num_coefficients))
 
         self._batch_size = self.opt.batch_size
-        self._restarts = 0  # Currently not exposed publicly.
+        self._restarts = 0
 
     @property
     def x0(self):
@@ -155,6 +155,11 @@ class GradientAborescenceEmitter(DQDEmitterBase):
     def batch_size_dqd(self):
         """int: Number of solutions to return in :meth:`ask_dqd`."""
         return 1
+
+    @property
+    def restarts(self):
+        """int: The number of restarts for this emitter."""
+        return self._restarts
 
     def ask_dqd(self):
         """Samples a new solution from the gradient optimizer.
