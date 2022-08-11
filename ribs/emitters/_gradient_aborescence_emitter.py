@@ -5,7 +5,7 @@ import numpy as np
 
 from ribs.emitters._dqd_emitter_base import DQDEmitterBase
 from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
-from ribs.emitters.rankers import RankerBase, _get_ranker
+from ribs.emitters.rankers import _get_ranker
 
 
 class GradientAborescenceEmitter(DQDEmitterBase):
@@ -65,7 +65,9 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         batch_size (int): Number of solutions to return in :meth:`ask`. If not
             passed in, a batch size will be automatically calculated using the
             default CMA-ES rules. Note that `batch_size` **does not** include
-            the number of solutions returned by :meth:`ask_dqd`.
+            the number of solutions returned by :meth:`ask_dqd`, but also note
+            that :meth:`ask_dqd` always returns one solution, i.e. the solution
+            point.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
@@ -120,8 +122,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             raise ValueError(f"Invalid restart_rule {restart_rule}")
         self._restart_rule = restart_rule
 
-        # We have a coefficient for each measures and an extra coefficient
-        # for the objective.
+        # We have a coefficient for each measure and an extra coefficient for
+        # the objective.
         self._num_coefficients = archive.behavior_dim + 1
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
@@ -145,7 +147,11 @@ class GradientAborescenceEmitter(DQDEmitterBase):
 
     @property
     def batch_size_dqd(self):
-        """int: Number of solutions to return in :meth:`ask_dqd`."""
+        """int: Number of solutions to return in :meth:`ask_dqd`.
+
+        This is always 1, as we only return the solution point in
+        :meth:`ask_dqd`.
+        """
         return 1
 
     @property
@@ -295,7 +301,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         # Update Evolution Strategy.
         self.opt.tell(self._grad_coefficients[indices], num_parents)
 
-        # Calculate a new mean in solution space
+        # Calculate a new mean in solution space. These weights are from CMA-ES.
         parents = solution_batch[indices]
         parents = parents[:num_parents]
         weights = (np.log(num_parents + 0.5) -
@@ -303,7 +309,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         weights = weights / np.sum(weights)  # Normalize weights
         new_mean = np.sum(parents * np.expand_dims(weights, axis=1), axis=0)
 
-        # Use the mean to calculate a gradient step and step the optimizer
+        # Use the mean to calculate a gradient step and step the optimizer.
         gradient_step = new_mean - self._grad_opt.theta
         self._grad_opt.step(gradient_step)
 
