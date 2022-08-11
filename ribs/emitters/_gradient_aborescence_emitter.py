@@ -63,7 +63,9 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         batch_size (int): Number of solutions to return in :meth:`ask`. If not
             passed in, a batch size will be automatically calculated using the
             default CMA-ES rules. Note that `batch_size` **does not** include
-            the number of solutions returned by :meth:`ask_dqd`.
+            the number of solutions returned by :meth:`ask_dqd`, but also note
+            that :meth:`ask_dqd` always returns one solution, i.e. the solution
+            point.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
@@ -143,7 +145,11 @@ class GradientAborescenceEmitter(DQDEmitterBase):
 
     @property
     def batch_size_dqd(self):
-        """int: Number of solutions to return in :meth:`ask_dqd`."""
+        """int: Number of solutions to return in :meth:`ask_dqd`.
+
+        This is always 1, as we only return the solution point in
+        :meth:`ask_dqd`.
+        """
         return 1
 
     @property
