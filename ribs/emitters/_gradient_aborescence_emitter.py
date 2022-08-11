@@ -294,7 +294,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         # Update Evolution Strategy.
         self.opt.tell(self._grad_coefficients[indices], num_parents)
 
-        # Calculate a new mean in solution space
+        # Calculate a new mean in solution space. These weights are from CMA-ES.
         parents = solution_batch[indices]
         parents = parents[:num_parents]
         weights = (np.log(num_parents + 0.5) -
@@ -302,7 +302,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         weights = weights / np.sum(weights)  # Normalize weights
         new_mean = np.sum(parents * np.expand_dims(weights, axis=1), axis=0)
 
-        # Use the mean to calculate a gradient step and step the optimizer
+        # Use the mean to calculate a gradient step and step the optimizer.
         gradient_step = new_mean - self._grad_opt.theta
         self._grad_opt.step(gradient_step)
 
