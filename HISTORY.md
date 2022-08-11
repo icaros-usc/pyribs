@@ -6,7 +6,6 @@
 
 #### API
 
-- Extract ranker initialization subroutine in emitter constructor to `get_ranker` (#245)
 - Specify that `x0` is 1D for all emitters (#244)
 - Add `best_elite` property for archives (#237)
 - Rename methods in ArchiveDataFrame and rename as_pandas behavior columns
@@ -29,7 +28,7 @@
 - Add elites_with_measures_single method for getting elite for a single
   solution's measures (#215)
 - Introduced the Ranker object, which is responsible for ranking the solutions
-  based on different objectives (#209, #222)
+  based on different objectives (#209, #222, #245)
 - Add index_of_single method for getting index of measures for one solution
   (#214)
 - **Backwards-incompatible:** Replace elite_with_behavior with batched
