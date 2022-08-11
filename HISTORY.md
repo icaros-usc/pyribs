@@ -30,7 +30,7 @@
 - Add elites_with_measures_single method for getting elite for a single
   solution's measures (#215)
 - Introduced the Ranker object, which is responsible for ranking the solutions
-  based on different objectives (#209, #222)
+  based on different objectives (#209, #222, #245)
 - Add index_of_single method for getting index of measures for one solution
   (#214)
 - **Backwards-incompatible:** Replace elite_with_behavior with batched

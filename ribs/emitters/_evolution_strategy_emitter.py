@@ -5,7 +5,7 @@ import numpy as np
 
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import CMAEvolutionStrategy
-from ribs.emitters.rankers import RankerBase, get_ranker
+from ribs.emitters.rankers import RankerBase, _get_ranker
 
 
 class EvolutionStrategyEmitter(EmitterBase):
@@ -95,17 +95,7 @@ class EvolutionStrategyEmitter(EmitterBase):
                                         self.archive.dtype)
         self.opt.reset(self._x0)
 
-        # Handling ranker initiation
-        if isinstance(ranker, str):
-            # get_ranker returns a subclass of RankerBase
-            ranker = get_ranker(ranker)
-        if callable(ranker):
-            self._ranker = ranker()
-            if not isinstance(self._ranker, RankerBase):
-                raise ValueError("Callable " + ranker +
-                                 " did not return a instance of RankerBase.")
-        else:
-            raise ValueError(ranker + " is not one of [Callable, str]")
+        self._ranker = _get_ranker(ranker)
         self._ranker.reset(self, archive, self._rng)
 
         self._batch_size = self.opt.batch_size
