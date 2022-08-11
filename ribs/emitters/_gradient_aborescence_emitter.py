@@ -32,6 +32,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         x0 (np.ndarray): Initial solution.
         sigma0 (float): Initial step size / standard deviation.
         step_size (float): Step size for the gradient optimizer
+        epsilon (float): Due to floating point precision errors, we add a small
+            epsilon when computing the norm.
         ranker (Callable or str): The ranker is a :class:`RankerBase` object
             that orders the solutions after they have been evaluated in the
             environment. This parameter may be a callable (e.g. a class or a
@@ -69,8 +71,6 @@ class GradientAborescenceEmitter(DQDEmitterBase):
     Raises:
         ValueError: If ``restart_rule`` is invalid.
     """
-    # Used to ensure numerical stability when normalizing the gradient
-    _epsilon = 1e-8
 
     def __init__(self,
                  archive,
@@ -84,7 +84,9 @@ class GradientAborescenceEmitter(DQDEmitterBase):
                  normalize_grad=True,
                  bounds=None,
                  batch_size=None,
+                 epsilon=1e-8,
                  seed=None):
+        self._epsilon = epsilon
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
         self._sigma0 = sigma0
@@ -151,6 +153,11 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         """int: The number of restarts for this emitter."""
         return self._restarts
 
+    @property
+    def epsilon(self):
+        """int: The epsilon added to avoid floating-point precision error."""
+        return self._epsilon
+
     def ask_dqd(self):
         """Samples a new solution from the gradient optimizer.
 
@@ -160,7 +167,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         Returns:
             a new solution to evaluate.
         """
-        return [self._grad_opt.theta]
+        return self._grad_opt.theta[None]
 
     def ask(self):
         """Samples new solutions from a gradient aborescence parameterized by a
