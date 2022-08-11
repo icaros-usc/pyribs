@@ -5,8 +5,7 @@ import numpy as np
 
 from ribs.emitters._dqd_emitter_base import DQDEmitterBase
 from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
-from ribs.emitters.rankers import (RankerBase, TwoStageImprovementRanker,
-                                   get_ranker)
+from ribs.emitters.rankers import RankerBase, get_ranker
 
 
 class GradientAborescenceEmitter(DQDEmitterBase):
@@ -14,13 +13,12 @@ class GradientAborescenceEmitter(DQDEmitterBase):
     parameterized by CMA-ES.
 
     This emitter originates in `Fontaine 2021
-    <https://arxiv.org/abs/2106.03894>`_.
-    It leverages the gradient information of the objective
-    and measure functions, generating new solutions using gradient aborescence
-    with coefficients drawn from a distribution updated by CMA-ES. The new
-    solutions are first ranked according to the
-    `TwoStageImprovementRanker`. Then, it is used to perform gradient ascent and
-    adapt CMA-ES.
+    <https://arxiv.org/abs/2106.03894>`_. It leverages the gradient information
+    of the objective and measure functions, generating new solutions around a
+    "solution point" using gradient aborescence with coefficients drawn from a
+    Gaussian distribution. Based on how the solutions are ranked after being
+    inserted into the archive (see ``ranker``), the solution point is updated
+    with gradient ascent, and the distribution is updated with CMA-ES.
 
     Note that unlike non-gradient emitters, GradientAborescenceEmitter requires
     calling :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before calling
