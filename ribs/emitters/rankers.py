@@ -365,8 +365,8 @@ def _get_ranker(klass):
         ranker = klass()
         if not isinstance(ranker, RankerBase):
             raise ValueError(
-                f"Callable {klass} did not return a instance of RankerBase.")
+                f"Callable {klass} did not return an instance of RankerBase.")
         return ranker
     raise ValueError(
-        f"{klass} is neither a Callable nor the full or abbreviated name of a valid ranker."
+        f"{klass} is neither a callable nor the full or abbreviated name of a valid ranker."
     )
