@@ -120,8 +120,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             raise ValueError(f"Invalid restart_rule {restart_rule}")
         self._restart_rule = restart_rule
 
-        # We have a coefficient for each measures and an extra coefficient
-        # for the objective.
+        # We have a coefficient for each measure and an extra coefficient for
+        # the objective.
         self._num_coefficients = archive.behavior_dim + 1
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
