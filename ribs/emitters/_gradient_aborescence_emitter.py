@@ -5,7 +5,7 @@ import numpy as np
 
 from ribs.emitters._dqd_emitter_base import DQDEmitterBase
 from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
-from ribs.emitters.rankers import RankerBase, _get_ranker
+from ribs.emitters.rankers import _get_ranker
 
 
 class GradientAborescenceEmitter(DQDEmitterBase):
