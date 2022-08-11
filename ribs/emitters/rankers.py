@@ -359,14 +359,14 @@ def _get_ranker(klass):
         The corresponding ranker class.
     """
     if isinstance(klass, str):
-        if klass in _NAME_TO_RANKER_MAP:  # pylint: disable=consider-using-get
-            klass = _NAME_TO_RANKER_MAP[klass]
+        if klass in _NAME_TO_RANKER_MAP:
+            return _NAME_TO_RANKER_MAP[klass]()
+        raise ValueError(f"`{klass}` is not the full or abbreviated "
+                         "name of a valid ranker")
     if callable(klass):
         ranker = klass()
-        if not isinstance(ranker, RankerBase):
-            raise ValueError(
-                f"Callable {klass} did not return an instance of RankerBase.")
-        return ranker
-    raise ValueError(
-        f"{klass} is neither a callable nor the full or abbreviated name of a valid ranker."
-    )
+        if isinstance(ranker, RankerBase):
+            return ranker
+        raise ValueError(f"Callable `{klass}` did not return an instance "
+                         "of RankerBase.")
+    raise ValueError(f"`{klass}` is neither a callable nor a string")
