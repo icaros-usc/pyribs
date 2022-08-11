@@ -251,31 +251,31 @@ def create_optimizer(algorithm, dim, seed):
         # Note that only one emitter is used for cma_mega. This is to be
         # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
         emitters = [
-            GradientAborescenceEmitter(archive,
-                                       initial_sol,
-                                       sigma0=10.0,
-                                       step_size=1.0,
-                                       grad_opt="gradient_ascent",
-                                       normalize_grad=True,
-                                       selection_rule="mu",
-                                       bounds=None,
-                                       batch_size=batch_size,
-                                       seed=emitter_seeds[0])
+            GradientAborescenceEmitter(
+                archive,
+                initial_sol,
+                sigma0=10.0,
+                step_size=1.0,
+                grad_opt="gradient_ascent",
+                selection_rule="mu",
+                bounds=None,
+                batch_size=batch_size - 1,  # 1 solution is returned by ask_dqd
+                seed=emitter_seeds[0])
         ]
     elif algorithm == "cma_mega_adam":
         # Note that only one emitter is used for cma_mega_adam. This is to be
         # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
         emitters = [
-            GradientAborescenceEmitter(archive,
-                                       initial_sol,
-                                       sigma0=10.0,
-                                       step_size=0.002,
-                                       grad_opt="adam",
-                                       normalize_grad=True,
-                                       selection_rule="mu",
-                                       bounds=None,
-                                       batch_size=batch_size,
-                                       seed=emitter_seeds[0])
+            GradientAborescenceEmitter(
+                archive,
+                initial_sol,
+                sigma0=10.0,
+                step_size=0.002,
+                grad_opt="adam",
+                selection_rule="mu",
+                bounds=None,
+                batch_size=batch_size - 1,  # 1 solution is returned by ask_dqd
+                seed=emitter_seeds[0])
         ]
     return Optimizer(archive, emitters)
 
