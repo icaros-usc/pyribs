@@ -124,7 +124,7 @@ class Optimizer:
 
         # In case the emitters didn't return any solutions
         self._solution_batch = np.concatenate(
-            self._solution_batch, axis=0) if self._solution_batch else np.array(
+            self._solution_batch, axis=0) if self._solution_batch else np.empty(
                 (0, self._solution_dim))
         return self._solution_batch
 
@@ -155,7 +155,7 @@ class Optimizer:
 
         # In case the emitters didn't return any solutions
         self._solution_batch = np.concatenate(
-            self._solution_batch, axis=0) if self._solution_batch else np.array(
+            self._solution_batch, axis=0) if self._solution_batch else np.empty(
                 (0, self._solution_dim))
         return self._solution_batch
 
