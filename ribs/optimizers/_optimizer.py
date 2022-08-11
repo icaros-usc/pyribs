@@ -224,11 +224,12 @@ class Optimizer:
                  metadata_batch=None):
         """Returns info for solutions from :meth:`ask_dqd`.
 
-        .. note:: The objective batch, measures batch, and metadata batch must
-            be in the same order as the solutions created by :meth:`ask_dqd`;
-            i.e.  ``objective_batch[i]``, ``measures_batch[i]``, and
-            ``metadata_batch[i]`` should be the objective, measures, and
-            metadata for ``solution_batch[i]``.
+        .. note:: The objective batch, measures batch, jacobian batch, and
+            metadata batch must be in the same order as the solutions created by
+            :meth:`ask_dqd`; i.e.  ``objective_batch[i]``,
+            ``measures_batch[i]``, ``jacobian_batch[i]``, and
+            ``metadata_batch[i]`` should be the objective, measures, jacobian,
+            and metadata for ``solution_batch[i]``.
 
         Args:
             objective_batch ((n_solutions,) array): Each entry of this array
@@ -276,11 +277,11 @@ class Optimizer:
     def tell(self, objective_batch, measures_batch, metadata_batch=None):
         """Returns info for solutions from :meth:`ask`.
 
-        .. note:: The objective batch, measures batch, and metadata must be in
-            the same order as the solutions created by :meth:`ask`; i.e.
-            ``objective_batch[i]``, ``measures_batch[i]``, and ``metadata[i]``
-            should be the objective batch, measures batch, and metadata for
-            ``solutions[i]``.
+        .. note:: The objective batch, measures batch, and metadata batch must
+            be in the same order as the solutions created by :meth:`ask_dqd`;
+            i.e.  ``objective_batch[i]``, ``measures_batch[i]``, and
+            ``metadata_batch[i]`` should be the objective, measures, and
+            metadata for ``solution_batch[i]``.
 
         Args:
             objective_batch ((n_solutions,) array): Each entry of this array
