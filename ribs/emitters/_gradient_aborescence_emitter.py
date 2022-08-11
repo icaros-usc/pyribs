@@ -154,6 +154,11 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         """int: Number of solutions to return in :meth:`ask`."""
         return self._batch_size
 
+    @property
+    def batch_size_dqd(self):
+        """int: Number of solutions to return in :meth:`ask_dqd`."""
+        return 1
+
     def ask_dqd(self):
         """Samples a new solution from the gradient optimizer.
 
@@ -161,7 +166,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         calling :meth:`ask` and :meth:`tell`.**
 
         Returns:
-            a new solution to evalute.
+            a new solution to evaluate.
         """
         return [self._grad_opt.theta]
 
