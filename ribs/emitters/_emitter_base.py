@@ -106,7 +106,7 @@ class EmitterBase(ABC):
              status_batch,
              value_batch,
              metadata_batch=None):
-        """Inserts entries into the archive.
+        """Gives the emitter results from evaluating solutions.
 
         This base class implementation (in :class:`~ribs.emitters.EmitterBase`)
         needs to be overriden.
