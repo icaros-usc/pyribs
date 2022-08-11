@@ -346,16 +346,9 @@ _NAME_TO_RANKER_MAP = {
 def _get_ranker(klass):
     """Returns a ranker class based on its name.
 
-    ``name`` may be the full name of a ranker, e.g. "ImprovementRanker" or
-    "RandomDirectionRanker". Alternatively, it can be the abbreviated name
-    for a ranker -- the supported abbreviations are:
-
-    * ``imp``: :class:`ImprovementRanker`
-    * ``2imp``: :class:`TwoStageImprovementRanker`
-    * ``rd``: :class:`RandomDirectionRanker`
-    * ``2rd``: :class:`TwoStageRandomDirectionRanker`
-    * ``obj``: :class:`ObjectiveRanker`
-    * ``2obj``: :class:`TwoStageObjectiveRanker`
+    ``klass`` can be a reference to the class of the ranker, the full name of
+    a ranker, e.g. "ImprovementRanker", or the abbreviated name for a ranker
+    such as "imp".
 
     Args:
         klass (Callable or str): This parameter may either be a callable (e.g.
