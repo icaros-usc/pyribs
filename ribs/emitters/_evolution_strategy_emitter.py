@@ -156,13 +156,12 @@ class EvolutionStrategyEmitter(EmitterBase):
              metadata_batch=None):
         """Gives the emitter results from evaluating solutions.
 
-        As we insert solutions into the archive, we record the solutions'
-        impact on the fitness of the archive. For example, if the added
-        solution makes an improvement on an existing elite, then we
-        will record ``(AddStatus.IMPROVED_EXISTING, improvement_value)``
-
         The solutions are ranked based on the `rank()` function defined by
-        `self._ranker`.
+        `self._ranker`. Then, the ranked solutions are passed to CMA-ES for
+        adaptation.
+
+        This function also checks for restart condition and restarts CMA-ES
+        when needed.
 
         Args:
             solution_batch (numpy.ndarray): (batch_size, :attr:`solution_dim`)
