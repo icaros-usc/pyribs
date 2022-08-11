@@ -359,7 +359,8 @@ def _get_ranker(klass):
         The corresponding ranker class.
     """
     if isinstance(klass, str):
-        klass = _NAME_TO_RANKER_MAP.get(klass)
+        if klass in _NAME_TO_RANKER_MAP: # pylint: disable=consider-using-get
+            klass = _NAME_TO_RANKER_MAP[klass]
     if callable(klass):
         ranker = klass()
         if not isinstance(ranker, RankerBase):
