@@ -224,11 +224,11 @@ class Optimizer:
                  metadata_batch=None):
         """Returns info for solutions from :meth:`ask_dqd`.
 
-        .. note:: The objective batch, measures batch, and metadata must be in
-            the same order as the solutions created by :meth:`ask_dqd`; i.e.
-            ``objective_batch[i]``, ``measures_batch[i]``, and ``metadata[i]``
-            should be the objective batch, measures batch, and metadata for
-            ``solution_batch[i]``.
+        .. note:: The objective batch, measures batch, and metadata batch must
+            be in the same order as the solutions created by :meth:`ask_dqd`;
+            i.e.  ``objective_batch[i]``, ``measures_batch[i]``, and
+            ``metadata_batch[i]`` should be the objective, measures, and
+            metadata for ``solution_batch[i]``.
 
         Args:
             objective_batch ((n_solutions,) array): Each entry of this array
@@ -240,8 +240,8 @@ class Optimizer:
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
-            metadata ((n_solutions,) array): Each entry of this array contains
-                an object holding metadata for a solution.
+            metadata_batch ((n_solutions,) array): Each entry of this array
+                contains an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
