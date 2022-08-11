@@ -109,7 +109,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         self._ranker.reset(self, archive, self._rng)
 
         self._batch_size = self.opt.batch_size
-        self._restarts = 0  # Currently not exposed publicly.
+        self._restarts = 0
 
     @property
     def x0(self):
@@ -120,6 +120,11 @@ class EvolutionStrategyEmitter(EmitterBase):
     def batch_size(self):
         """int: Number of solutions to return in :meth:`ask`."""
         return self._batch_size
+
+    @property
+    def restarts(self):
+        """int: The number of restarts for this emitter."""
+        return self._restarts
 
     def ask(self):
         """Samples new solutions from a multivariate Gaussian.

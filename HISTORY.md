@@ -7,6 +7,7 @@
 #### API
 
 - Update emitter `tell()` docstrings to no longer say "Inserts entries into archive" (#247)
+- Expose `emitter.restarts` as a property (#248)
 - Specify that `x0` is 1D for all emitters (#244)
 - Add `best_elite` property for archives (#237)
 - Rename methods in ArchiveDataFrame and rename as_pandas behavior columns
