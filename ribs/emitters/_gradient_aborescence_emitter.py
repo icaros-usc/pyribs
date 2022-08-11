@@ -5,7 +5,7 @@ import numpy as np
 
 from ribs.emitters._dqd_emitter_base import DQDEmitterBase
 from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
-from ribs.emitters.rankers import RankerBase, get_ranker
+from ribs.emitters.rankers import RankerBase, _get_ranker
 
 
 class GradientAborescenceEmitter(DQDEmitterBase):
@@ -98,17 +98,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             bounds,
         )
 
-        # Handle ranker initiation
-        if isinstance(ranker, str):
-            # get_ranker returns a subclass of RankerBase
-            ranker = get_ranker(ranker)
-        if callable(ranker):
-            self._ranker = ranker()
-            if not isinstance(self._ranker, RankerBase):
-                raise ValueError("Callable " + ranker +
-                                 " did not return a instance of RankerBase.")
-        else:
-            raise ValueError(ranker + " is not one of [Callable, str]")
+        self._ranker = _get_ranker(ranker)
         self._ranker.reset(self, archive, self._rng)
 
         # Initialize gradient optimizer
