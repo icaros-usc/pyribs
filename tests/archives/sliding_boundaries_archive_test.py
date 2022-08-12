@@ -101,7 +101,7 @@ def test_initial_remap():
     # Buffer should have 230 entries after this (since the first entry is
     # skipped).
     first = True
-    expected_bcs = []
+    expected_measures = []
     for ix, x in enumerate(np.linspace(-1, 1, 11)):
         for iy, y in enumerate(np.linspace(-2, 2, 21)):
             if first:
@@ -113,10 +113,10 @@ def test_initial_remap():
             if ix == 9 or iy == 19:
                 obj = 1
             else:
-                expected_bcs.append((x, y))
+                expected_measures.append((x, y))
                 obj = 2
 
-            # Solutions are same as BCs.
+            # Solutions are same as measures.
             archive.add_single([x, y], obj, [x, y])
 
     # There are 199 entries because the last entry has not been inserted.
@@ -124,7 +124,7 @@ def test_initial_remap():
 
     # Buffer should now have 231 entries; hence it remaps.
     archive.add_single([-1, -2], 1, [-1, -2])
-    expected_bcs.append((-1, -2))
+    expected_measures.append((-1, -2))
 
     assert len(archive) == 200
 
@@ -133,12 +133,12 @@ def test_initial_remap():
     assert np.isclose(archive.boundaries[0], np.linspace(-1, 1, 11)).all()
     assert np.isclose(archive.boundaries[1], np.linspace(-2, 2, 21)).all()
 
-    # Check that all the BCs are as expected.
-    pandas_bcs = archive.as_pandas(include_solutions=False)[[
+    # Check that all the measures are as expected.
+    pandas_measures = archive.as_pandas(include_solutions=False)[[
         "measures_0", "measures_1"
     ]]
-    bcs = list(pandas_bcs.itertuples(name=None, index=False))
-    assert np.isclose(sorted(bcs), sorted(expected_bcs)).all()
+    measures = list(pandas_measures.itertuples(name=None, index=False))
+    assert np.isclose(sorted(measures), sorted(expected_measures)).all()
 
 
 @pytest.mark.skip
@@ -176,8 +176,8 @@ def test_adds_solutions_from_old_archive():
 
     assert len(archive) == 200
 
-    # Archive gets remapped again, but it should maintain the same BCs since
-    # solutions are the same. All the high-performing solutions should be
+    # Archive gets remapped again, but it should maintain the same measures
+    # since solutions are the same. All the high-performing solutions should be
     # cleared from the buffer since the buffer only has capacity 200.
     for x in np.linspace(-1, 1, 11):
         for y in np.linspace(-2, 2, 21):
