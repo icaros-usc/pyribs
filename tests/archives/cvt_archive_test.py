@@ -31,7 +31,7 @@ def assert_archive_elite(archive, solution, objective, measures, centroid,
 
 
 def test_samples_bad_shape(use_kd_tree):
-    # The behavior space is 2D but samples are 3D.
+    # The measure space is 2D but samples are 3D.
     with pytest.raises(ValueError):
         CVTArchive(solution_dim=0,
                    cells=10,
@@ -76,19 +76,19 @@ def test_custom_centroids_bad_shape(use_kd_tree):
 def test_add_single_to_archive(data, use_list):
     if use_list:
         status, value = data.archive.add_single(list(data.solution),
-                                                data.objective_value,
-                                                list(data.behavior_values),
+                                                data.objective,
+                                                list(data.measures),
                                                 data.metadata)
     else:
         status, value = data.archive.add_single(data.solution,
-                                                data.objective_value,
-                                                data.behavior_values,
+                                                data.objective,
+                                                data.measures,
                                                 data.metadata)
 
     assert status == AddStatus.NEW
-    assert np.isclose(value, data.objective_value)
+    assert np.isclose(value, data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective_value, data.behavior_values,
+                         data.objective, data.measures,
                          data.centroid, data.metadata)
 
 
@@ -96,16 +96,16 @@ def test_add_single_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
-    high_objective_value = data.objective_value + 1.0
+    high_objective = data.objective + 1.0
 
     status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       high_objective_value,
-                                                       data.behavior_values,
+                                                       high_objective,
+                                                       data.measures,
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
-    assert np.isclose(value, high_objective_value - data.objective_value)
+    assert np.isclose(value, high_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective_value, data.behavior_values,
+                         high_objective, data.measures,
                          data.centroid, arbitrary_metadata)
 
 
@@ -113,14 +113,14 @@ def test_add_single_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
-    low_objective_value = data.objective_value - 1.0
+    low_objective = data.objective - 1.0
 
     status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       low_objective_value,
-                                                       data.behavior_values,
+                                                       low_objective,
+                                                       data.measures,
                                                        arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective_value - data.objective_value)
+    assert np.isclose(value, low_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective_value, data.behavior_values,
+                         data.objective, data.measures,
                          data.centroid, data.metadata)

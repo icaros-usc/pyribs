@@ -176,21 +176,21 @@ def test_emitter_returns_no_solutions(scheduler_fixtures):
 
 
 @pytest.mark.parametrize("array",
-                         ["objective_values", "measures_batch", "metadata"])
+                         ["objective_batch", "measures_batch", "metadata"])
 def test_tell_fails_with_wrong_shapes(scheduler_fixtures, array):
     scheduler, _, num_solutions = scheduler_fixtures
     _ = scheduler.ask()  # Ignore the actual values of the solutions.
 
-    objective_values = np.ones(num_solutions)
+    objective_batch = np.ones(num_solutions)
     measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
     metadata = [f"metadata_{i}" for i in range(num_solutions)]
 
     # Each condition makes a certain array have the wrong shape by excluding the
     # last element.
     with pytest.raises(ValueError):
-        if array == "objective_values":
-            scheduler.tell(objective_values[:-1], measures_batch, metadata)
+        if array == "objective_batch":
+            scheduler.tell(objective_batch[:-1], measures_batch, metadata)
         elif array == "measures_batch":
-            scheduler.tell(objective_values, measures_batch[:-1], metadata)
+            scheduler.tell(objective_batch, measures_batch[:-1], metadata)
         elif array == "metadata":
-            scheduler.tell(objective_values, measures_batch, metadata[:-1])
+            scheduler.tell(objective_batch, measures_batch, metadata[:-1])

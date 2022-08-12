@@ -42,20 +42,17 @@ def test_attributes_correctly_constructed(data):
 def test_add_to_archive(data, use_list):
     if use_list:
         status, value = data.archive.add_single(list(data.solution),
-                                                data.objective_value,
-                                                list(data.behavior_values),
+                                                data.objective,
+                                                list(data.measures),
                                                 data.metadata)
     else:
-        status, value = data.archive.add_single(data.solution,
-                                                data.objective_value,
-                                                data.behavior_values,
-                                                data.metadata)
+        status, value = data.archive.add_single(data.solution, data.objective,
+                                                data.measures, data.metadata)
 
     assert status == AddStatus.NEW
-    assert np.isclose(value, data.objective_value)
-    assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective_value, data.behavior_values,
-                         data.grid_indices, data.metadata)
+    assert np.isclose(value, data.objective)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices, data.metadata)
 
 
 @pytest.mark.skip
@@ -63,17 +60,16 @@ def test_add_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
-    high_objective_value = data.objective_value + 1.0
+    high_objective = data.objective + 1.0
 
     status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       high_objective_value,
-                                                       data.behavior_values,
+                                                       high_objective,
+                                                       data.measures,
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
-    assert np.isclose(value, high_objective_value - data.objective_value)
-    assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective_value, data.behavior_values,
-                         data.grid_indices, arbitrary_metadata)
+    assert np.isclose(value, high_objective - data.objective)
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
+                         data.measures, data.grid_indices, arbitrary_metadata)
 
 
 @pytest.mark.skip
@@ -81,17 +77,17 @@ def test_add_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
-    low_objective_value = data.objective_value - 1.0
+    low_objective = data.objective - 1.0
 
     status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       low_objective_value,
-                                                       data.behavior_values,
+                                                       low_objective,
+                                                       data.measures,
                                                        arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective_value - data.objective_value)
+    assert np.isclose(value, low_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective_value, data.behavior_values,
-                         data.grid_indices, data.metadata)
+                         data.objective, data.measures, data.grid_indices,
+                         data.metadata)
 
 
 @pytest.mark.skip
@@ -139,7 +135,7 @@ def test_initial_remap():
 
     # Check that all the BCs are as expected.
     pandas_bcs = archive.as_pandas(include_solutions=False)[[
-        "behavior_0", "behavior_1"
+        "measures_0", "measures_1"
     ]]
     bcs = list(pandas_bcs.itertuples(name=None, index=False))
     assert np.isclose(sorted(bcs), sorted(expected_bcs)).all()
@@ -148,23 +144,23 @@ def test_initial_remap():
 @pytest.mark.skip
 def test_add_to_archive_with_full_buffer(data):
     for _ in range(data.archive.buffer_capacity + 1):
-        data.archive.add_single(data.solution, data.objective_value,
-                                data.behavior_values, data.metadata)
+        data.archive.add_single(data.solution, data.objective,
+                                data.measures, data.metadata)
 
     # After adding the same elite multiple times, there should only be one
     # elite, and it should be at (0, 0).
-    assert_archive_elite(data.archive, data.solution, data.objective_value,
-                         data.behavior_values, (0, 0), data.metadata)
+    assert_archive_elite(data.archive, data.solution, data.objective,
+                         data.measures, (0, 0), data.metadata)
 
     # Even if another elite is added, it should still go to the same cell
-    # because the behavior values are clipped to the boundaries before being
+    # because the measures are clipped to the boundaries before being
     # inserted.
     arbitrary_metadata = {"foobar": 12}
-    data.archive.add_single(2 * data.solution, 2 * data.objective_value,
-                            2 * data.behavior_values, arbitrary_metadata)
+    data.archive.add_single(2 * data.solution, 2 * data.objective,
+                            2 * data.measures, arbitrary_metadata)
     assert_archive_elite(data.archive, 2 * data.solution,
-                         2 * data.objective_value, 2 * data.behavior_values,
-                         (0, 0), arbitrary_metadata)
+                         2 * data.objective, 2 * data.measures, (0, 0),
+                         arbitrary_metadata)
 
 
 @pytest.mark.skip

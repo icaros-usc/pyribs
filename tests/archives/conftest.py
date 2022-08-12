@@ -38,11 +38,11 @@ def use_kd_tree(request):
 ArchiveFixtureData = namedtuple(
     "ArchiveFixtureData",
     [
-        "archive",  # An empty archive with 2D behavior space.
-        "archive_with_elite",  # 2D behavior space with one elite.
+        "archive",  # An empty archive with 2D measure space.
+        "archive_with_elite",  # 2D measure space with one elite.
         "solution",  # A solution.
-        "objective_value",  # Float objective value.
-        "behavior_values",  # 2D behavior values for the solution.
+        "objective",  # Float objective value.
+        "measures",  # 2D measures for the solution.
         "metadata",  # Metadata object for the solution.
         "grid_indices",  # Index for GridArchive and SlidingBoundariesArchive.
         "int_index",  # Integer index corresponding to grid_indices.
@@ -64,16 +64,16 @@ def get_archive_data(name, dtype=np.float64):
 
     The archives vary, but there will always be an empty 2D archive, as well as
     a 2D archive with a single solution added to it. This solution will have a
-    value of [1, 2, 3], its objective value will be 1.0, and its behavior values
-    will be [0.25, 0.25].
+    value of [1, 2, 3], its objective value will be 1.0, and its measures will
+    be [0.25, 0.25].
 
     The name is the name of an archive to create. It should come from
     ARCHIVE_NAMES.
     """
     # Characteristics of a single solution to insert into archive_with_elite.
     solution = np.array([1, 2, 3])
-    objective_value = 1.0
-    behavior_values = np.array([0.25, 0.25])
+    objective = 1.0
+    measures = np.array([0.25, 0.25])
     metadata = {"metadata_key": 42}
     grid_indices = None
     int_index = None
@@ -134,14 +134,13 @@ def get_archive_data(name, dtype=np.float64):
         grid_indices = (6, 11)
         int_index = 131
 
-    archive_with_elite.add_single(solution, objective_value, behavior_values,
-                                  metadata)
+    archive_with_elite.add_single(solution, objective, measures, metadata)
     return ArchiveFixtureData(
         archive,
         archive_with_elite,
         solution,
-        objective_value,
-        behavior_values,
+        objective,
+        measures,
         metadata,
         grid_indices,
         int_index,
