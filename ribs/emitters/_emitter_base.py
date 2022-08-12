@@ -96,7 +96,7 @@ class EmitterBase(ABC):
 
     @abstractmethod
     def ask(self):
-        """Generates an ``(n, solution_dim)`` array of solutions."""
+        """Generates a ``(batch_size, solution_dim)`` array of solutions."""
 
     @abstractmethod
     def tell(self,
