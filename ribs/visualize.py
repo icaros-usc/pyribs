@@ -47,14 +47,16 @@ def _retrieve_cmap(cmap):
     return cmap
 
 
-def _validate_heatmap_visual_args(aspect, cbar, square, behavior_dim,
-                                  valid_dims, error_msg_behavior_dim):
+def _validate_heatmap_visual_args(aspect, cbar, square, measure_dim,
+                                  valid_dims, error_msg_measure_dim):
     """Helper function to validate arguments passed to `*_archive_heatmap`
     plotting functions.
 
     Args:
-        valid_dims (list[int]): all specified valid archive dimensions that may be plotted into heatmaps
-        error_msg_behavior_dim (str): Error message in ValueError if archive dimension plotting is not supported
+        valid_dims (list[int]): All specified valid archive dimensions that may
+            be plotted into heatmaps.
+        error_msg_measure_dim (str): Error message in ValueError if archive
+            dimension plotting is not supported.
 
     Raises:
         ValueError: if validity checks for heatmap args fail
@@ -68,8 +70,8 @@ def _validate_heatmap_visual_args(aspect, cbar, square, behavior_dim,
             "The argument 'square' is deprecated and will not be "
             "supported in future versions. Use 'aspect' to set the "
             "heatmap's aspect ratio instead")
-    if behavior_dim not in valid_dims:
-        raise ValueError(error_msg_behavior_dim)
+    if measure_dim not in valid_dims:
+        raise ValueError(error_msg_measure_dim)
     if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
         raise ValueError(
             f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
@@ -96,7 +98,7 @@ def grid_archive_heatmap(archive,
                          cbar="auto",
                          pcm_kwargs=None,
                          cbar_kwargs=None):
-    """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D behavior
+    """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D measure
     space.
 
     Essentially, we create a grid of cells and shade each cell with a color
@@ -122,8 +124,8 @@ def grid_archive_heatmap(archive,
             >>> for x in np.linspace(-1, 1, 100):
             ...     for y in np.linspace(-1, 1, 100):
             ...         archive.add(solution=np.array([x,y]),
-            ...                     objective_value=-(x**2 + y**2),
-            ...                     behavior_values=np.array([x,y]))
+            ...                     objective=-(x**2 + y**2),
+            ...                     measure=np.array([x,y]))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> grid_archive_heatmap(archive)
@@ -168,11 +170,11 @@ def grid_archive_heatmap(archive,
         ValueError: The archive's dimension must be 1D or 2D.
     """
     _validate_heatmap_visual_args(
-        aspect, cbar, square, archive.behavior_dim, [1, 2],
+        aspect, cbar, square, archive.measure_dim, [1, 2],
         "Heatmaps can only be plotted for 1D or 2D GridArchive")
     if aspect is None:
         # Handles default aspects for different dims.
-        if archive.behavior_dim == 1:
+        if archive.measure_dim == 1:
             aspect = 0.5
         else:
             aspect = "auto"
@@ -180,7 +182,7 @@ def grid_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
 
-    if archive.behavior_dim == 1:
+    if archive.measure_dim == 1:
         # Retrieve data from archive. There should be only 2 bounds; upper and lower since its 1D
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
@@ -214,7 +216,7 @@ def grid_archive_heatmap(archive,
                           vmin=vmin,
                           vmax=vmax,
                           **pcm_kwargs)
-    elif archive.behavior_dim == 2:
+    elif archive.measure_dim == 2:
         # Retrieve data from archive.
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
@@ -275,7 +277,7 @@ def cvt_archive_heatmap(archive,
                         vmax=None,
                         cbar="auto",
                         cbar_kwargs=None):
-    """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 2D behavior
+    """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 2D measure
     space.
 
     Essentially, we create a Voronoi diagram and shade in each cell with a
@@ -302,8 +304,8 @@ def cvt_archive_heatmap(archive,
             >>> for x in np.linspace(-1, 1, 100):
             ...     for y in np.linspace(-1, 1, 100):
             ...         archive.add(solution=np.array([x,y]),
-            ...                     objective_value=-(x**2 + y**2),
-            ...                     behavior_values=np.array([x,y]))
+            ...                     objective=-(x**2 + y**2),
+            ...                     measures=np.array([x,y]))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_heatmap(archive)
@@ -350,7 +352,7 @@ def cvt_archive_heatmap(archive,
         ValueError: The archive is not 2D.
     """
     _validate_heatmap_visual_args(
-        aspect, cbar, square, archive.behavior_dim, [2],
+        aspect, cbar, square, archive.measure_dim, [2],
         "Heatmaps can only be plotted for 1D or 2D CVTArchive")
     if aspect is None:
         aspect = "auto"
@@ -444,7 +446,7 @@ def sliding_boundaries_archive_heatmap(archive,
                                        vmin=None,
                                        vmax=None):
     """Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with
-    2D behavior space.
+    2D measure space.
 
     Since the boundaries of :class:`ribs.archives.SlidingBoundariesArchive` are
     dynamic, we plot the heatmap as a scatter plot, in which each marker is an
@@ -469,8 +471,8 @@ def sliding_boundaries_archive_heatmap(archive,
             ...     x, y = rng.uniform((-1, -1), (1, 1))
             ...     archive.add(
             ...         solution=np.array([x,y]),
-            ...         objective_value=-(x**2 + y**2),
-            ...         behavior_values=np.array([x, y]),
+            ...         objective=-(x**2 + y**2),
+            ...         measures=np.array([x, y]),
             ...     )
             >>> # Plot heatmaps of the archive.
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
@@ -510,7 +512,7 @@ def sliding_boundaries_archive_heatmap(archive,
     Raises:
         ValueError: The archive is not 2D.
     """
-    if archive.behavior_dim != 2:
+    if archive.measure_dim != 2:
         raise ValueError("Cannot plot heatmap for non-2D archive.")
 
     df = archive.as_pandas()
@@ -519,18 +521,18 @@ def sliding_boundaries_archive_heatmap(archive,
     cmap = _retrieve_cmap(cmap)
 
     # Retrieve data from archive.
-    behaviors = df.batch_behaviors()
-    x = behaviors[:, 0]
-    y = behaviors[:, 1]
+    measures_batch = df.batch_behaviors()
+    x = measures_batch[:, 0]
+    y = measures_batch[:, 1]
     x_boundary = archive.boundaries[0]
     y_boundary = archive.boundaries[1]
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
 
     if transpose_measures:
-        # Since the archive is 2D, transpose by swapping the x and y behavior
-        # values and boundaries and by flipping the bounds (the bounds are
-        # arrays of length 2).
+        # Since the archive is 2D, transpose by swapping the x and y measures
+        # and boundaries and by flipping the bounds (the bounds are arrays of
+        # length 2).
         x, y = y, x
         x_boundary, y_boundary = y_boundary, x_boundary
         lower_bounds = np.flip(lower_bounds)
@@ -576,25 +578,25 @@ def parallel_axes_plot(archive,
                        sort_archive=False,
                        cbar_orientation='horizontal',
                        cbar_pad=0.1):
-    """Visualizes archive elites in behavior space with a parallel axes plot.
+    """Visualizes archive elites in measure space with a parallel axes plot.
 
-    This visualization is meant to show the coverage of the behavior space at a
-    glance. Each axis represents one behavioral dimension, and each line in the
+    This visualization is meant to show the coverage of the measure space at a
+    glance. Each axis represents one measure dimension, and each line in the
     diagram represents one elite in the archive. Three main things are evident
     from this plot:
 
-    - **Behavior space coverage,** as determined by the amount of the axis that
+    - **measure space coverage,** as determined by the amount of the axis that
       has lines passing through it. If the lines are passing through all parts
       of the axis, then there is likely good coverage for that measure.
 
     - **Correlation between neighboring measures.** In the below example, we see
-      perfect correlation between ``behavior_0`` and ``behavior_1``, since none
+      perfect correlation between ``measures_0`` and ``measures_1``, since none
       of the lines cross each other. We also see the perfect negative
-      correlation between ``behavior_3`` and ``behavior_4``, indicated by the
+      correlation between ``measures_3`` and ``measures_4``, indicated by the
       crossing of all lines at a single point.
 
-    - **Whether certain values of the behavior dimensions affect the objective
-      value strongly.** In the below example, we see ``behavior_2`` has many
+    - **Whether certain values of the measure dimensions affect the objective
+      value strongly.** In the below example, we see ``measures_2`` has many
       elites with high objective near zero. This is more visible when
       ``sort_archive`` is passed in, as elites with higher objective values
       will be plotted on top of individuals with lower objective values.
@@ -617,8 +619,8 @@ def parallel_axes_plot(archive,
             ...         for z in np.linspace(-1, 1, 100):
             ...             archive.add(
             ...                 solution=np.array([x,y,z]),
-            ...                 objective_value=-(x**2 + y**2 + z**2),
-            ...                 behavior_values=np.array([0.5*x,x,y,z,-0.5*z]),
+            ...                 objective=-(x**2 + y**2 + z**2),
+            ...                 measures=np.array([0.5*x,x,y,z,-0.5*z]),
             ...             )
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
@@ -637,7 +639,7 @@ def parallel_axes_plot(archive,
             ``(int, str)`` where the int specifies the measure index and the str
             specifies a name for the measure (e.g. ``[(1, "y-value"), (2,
             "z-value"), (0, "x-value")]``). The order specified does not need
-            to have the same number of elements as the number of behaviors in
+            to have the same number of elements as the number of measures in
             the archive, e.g. ``[1, 3]`` or ``[1, 2, 3, 2]``.
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a
@@ -676,8 +678,8 @@ def parallel_axes_plot(archive,
 
     # If there is no order specified, plot in increasing numerical order.
     if measure_order is None:
-        cols = np.arange(archive.behavior_dim)
-        axis_labels = [f"behavior_{i}" for i in range(archive.behavior_dim)]
+        cols = np.arange(archive.measure_dim)
+        axis_labels = [f"measures_{i}" for i in range(archive.measure_dim)]
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
 
@@ -687,7 +689,7 @@ def parallel_axes_plot(archive,
         # Check for errors in specification.
         if all(isinstance(measure, int) for measure in measure_order):
             cols = np.array(measure_order)
-            axis_labels = [f"behavior_{i}" for i in cols]
+            axis_labels = [f"measures_{i}" for i in cols]
         elif all(
                 len(measure) == 2 and isinstance(measure[0], int) and
                 isinstance(measure[1], str) for measure in measure_order):
@@ -697,12 +699,12 @@ def parallel_axes_plot(archive,
             raise TypeError("measure_order must be a list of ints or a list of"
                             "tuples in the form (int, str)")
 
-        if np.max(cols) >= archive.behavior_dim:
-            raise ValueError(f"Invalid Behavior: requested behavior index "
+        if np.max(cols) >= archive.measure_dim:
+            raise ValueError(f"Invalid Measures: requested measures index "
                              f"{np.max(cols)}, but archive only has "
-                             f"{archive.behavior_dim} behaviors.")
+                             f"{archive.measure_dim} measures.")
         if any(measure < 0 for measure in cols):
-            raise ValueError("Invalid Behavior: requested a negative behavior"
+            raise ValueError("Invalid Measures: requested a negative measure"
                              " index.")
 
         # Find the indices of the requested order.

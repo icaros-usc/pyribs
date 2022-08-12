@@ -201,7 +201,7 @@ def test_cells_correct(data):
 
 
 def test_behavior_dim_correct(data):
-    assert data.archive.behavior_dim == len(data.behavior_values)
+    assert data.archive.measure_dim == len(data.behavior_values)
 
 
 def test_solution_dim_correct(data):

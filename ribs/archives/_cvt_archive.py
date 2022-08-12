@@ -146,27 +146,27 @@ class CVTArchive(ArchiveBase):
                 # Validate shape of custom samples. These are ignored when
                 # `custom_centroids` is provided.
                 samples = np.asarray(samples, dtype=self.dtype)
-                if samples.shape[1] != self._behavior_dim:
+                if samples.shape[1] != self._measure_dim:
                     raise ValueError(
                         f"Samples has shape {samples.shape} but must be of "
-                        f"shape (n_samples, len(ranges)={self._behavior_dim})")
+                        f"shape (n_samples, len(ranges)={self._measure_dim})")
             self._samples = samples
             self._centroids = None
         else:
             # Validate shape of `custom_centroids` when they are provided.
             custom_centroids = np.asarray(custom_centroids, dtype=self.dtype)
-            if custom_centroids.shape != (cells, self._behavior_dim):
+            if custom_centroids.shape != (cells, self._measure_dim):
                 raise ValueError(
                     f"custom_centroids has shape {custom_centroids.shape} but "
                     f"must be of shape (cells={cells}, len(ranges)="
-                    f"{self._behavior_dim})")
+                    f"{self._measure_dim})")
             self._centroids = custom_centroids
             self._samples = None
         if self._centroids is None:
             self._samples = self._rng.uniform(
                 self._lower_bounds,
                 self._upper_bounds,
-                size=(self._samples, self._behavior_dim),
+                size=(self._samples, self._measure_dim),
             ).astype(self.dtype) if isinstance(self._samples,
                                                int) else self._samples
 
@@ -235,7 +235,7 @@ class CVTArchive(ArchiveBase):
                 :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
 
         if self._use_kd_tree:

@@ -47,8 +47,8 @@ class ArchiveIterator:
         self.iter_idx += 1
         return Elite(
             self.archive._solutions[idx],
-            self.archive._objective_values[idx],
-            self.archive._behavior_values[idx],
+            self.archive._objective[idx],
+            self.archive._measures[idx],
             idx,
             self.archive._metadata[idx],
         )
@@ -64,25 +64,25 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     any additional metadata associated with the solution (object). In this
     class, the container is implemented with separate numpy arrays that share
     common dimensions. Using the ``solution_dim``, ``cells`, and
-    ``behavior_dim`` arguments in ``__init__``, these arrays are as follows:
+    ``measure_dim`` arguments in ``__init__``, these arrays are as follows:
 
-    +------------------------+----------------------------+
-    | Name                   |  Shape                     |
-    +========================+============================+
-    | ``_occupied``          |  ``(cells,)``              |
-    +------------------------+----------------------------+
-    | ``_solutions``         |  ``(cells, solution_dim)`` |
-    +------------------------+----------------------------+
-    | ``_objective_values``  |  ``(cells,)``              |
-    +------------------------+----------------------------+
-    | ``_behavior_values``   |  ``(cells, behavior_dim)`` |
-    +------------------------+----------------------------+
-    | ``_metadata``          |  ``(cells,)``              |
-    +------------------------+----------------------------+
+    +------------------------+------------------------------+
+    | Name                   |  Shape                       |
+    +========================+==============================+
+    | ``_occupied``          |  ``(cells,)``                |
+    +------------------------+------------------------------+
+    | ``_solution_batch``    |  ``(cells, solution_dim)``   |
+    +------------------------+------------------------------+
+    | ``_objective_batch``   |  ``(cells,)``                |
+    +------------------------+------------------------------+
+    | ``_measures_batch``    |  ``(cells, measures_batch)`` |
+    +------------------------+------------------------------+
+    | ``_metadata``          |  ``(cells,)``                |
+    +------------------------+------------------------------+
 
     All of these arrays are accessed via a common integer index. If we have
-    index ``i``, we access its solution at ``_solutions[i]``, its behavior
-    values at ``_behavior_values[i]``, etc.
+    index ``i``, we access its solution at ``_solutions[i]``, its measures at
+    ``_measures[i]``, etc.
 
     Thus, child classes typically override the following methods:
 
@@ -100,26 +100,26 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         solution_dim (int): Dimension of the solution space.
         cells (int): Number of cells in the archive. This is used to create the
             numpy arrays described above for storing archive info.
-        behavior_dim (int): The dimension of the behavior space.
+        measure_dim (int): The dimension of the measure space.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-        dtype (str or data-type): Data type of the solutions, objective values,
-            and behavior values. We only support ``"f"`` / ``np.float32`` and
-            ``"d"`` / ``np.float64``.
+        dtype (str or data-type): Data type of the solutions, objective, and
+            measures. We only support ``"f"`` / ``np.float32`` and ``"d"``
+            / ``np.float64``.
     Attributes:
         _solution_dim (int): See ``solution_dim`` arg.
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
         _cells (int): See ``cells`` arg.
-        _behavior_dim (int): See ``behavior_dim`` arg.
+        _measure_dim (int): See ``measure_dim`` arg.
         _occupied (numpy.ndarray): Bool array storing whether each cell in the
             archive is occupied.
         _solutions (numpy.ndarray): Float array storing the solutions
             themselves.
-        _objective_values (numpy.ndarray): Float array storing the objective
-            value of each solution.
-        _behavior_values (numpy.ndarray): Float array storing the behavior
-            space coordinates of each solution.
+        _objective (numpy.ndarray): Float array storing the objective value of
+            each solution.
+        _measures (numpy.ndarray): Float array storing the measure space
+            coordinates of each solution.
         _metadata (numpy.ndarray): Object array storing the metadata associated
             with each solution.
         _occupied_indices (numpy.ndarray): A ``(cells,)`` array of integer
@@ -133,7 +133,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def __init__(self,
                  solution_dim,
                  cells,
-                 behavior_dim,
+                 measures_dim,
                  seed=None,
                  dtype=np.float64):
 
@@ -141,7 +141,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._solution_dim = solution_dim
         self._rng = np.random.default_rng(seed)
         self._cells = cells
-        self._behavior_dim = behavior_dim
+        self._measure_dim = measures_dim
         self._dtype = self._parse_dtype(dtype)
 
         self._num_occupied = 0
@@ -151,8 +151,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._solutions = np.empty((self._cells, solution_dim),
                                    dtype=self.dtype)
         self._objective_values = np.empty(self._cells, dtype=self.dtype)
-        self._behavior_values = np.empty((self._cells, self._behavior_dim),
-                                         dtype=self.dtype)
+        self._measures = np.empty((self._cells, self._measure_dim),
+                                  dtype=self.dtype)
         self._metadata = np.empty(self._cells, dtype=object)
 
         self._stats = None
@@ -198,9 +198,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._num_occupied == 0
 
     @property
-    def behavior_dim(self):
-        """int: Dimensionality of the behavior space."""
-        return self._behavior_dim
+    def measure_dim(self):
+        """int: Dimensionality of the measure space."""
+        return self._measure_dim
 
     @property
     def solution_dim(self):
@@ -225,7 +225,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     @property
     def dtype(self):
-        """data-type: The dtype of the solutions, objective values, and behavior
+        """data-type: The dtype of the solutions, objective values, and measure
         values."""
         return self._dtype
 
@@ -277,7 +277,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         solution, consider using :meth:`index_of_single`.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of coordinates in measure space.
         Returns:
             (numpy.ndarray): (batch_size,) array with the indices of the
@@ -293,16 +293,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         of the box" <https://idioms.thefreedictionary.com/Out-of-the-Box>`_).
 
         Args:
-            measures (array-like): (:attr:`behavior_dim`,) array of measures for
+            measures (array-like): (:attr:`measure_dim`,) array of measures for
                 a single solution.
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's
             storage arrays.
         Raises:
-            ValueError: ``measures`` is not of shape (:attr:`behavior_dim`,).
+            ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
         """
         measures = np.asarray(measures)
-        check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
+        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
         return self.index_of(measures[None])[0]
 
     _ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() takes in a "
@@ -334,7 +334,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 array of solution parameters.
             objective_batch (array-like): (batch_size,) array with objective
                 function evaluations of the solutions.
-            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array with measure space coordinates of all the solutions.
             metadata_batch (array-like): (batch_size,) array of Python objects
                 representing metadata for the solution. For instance, this could
@@ -343,7 +343,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 .. warning:: Due to how NumPy's :func:`~numpy.asarray`
                     automatically converts array-like objects to arrays, passing
                     array-like objects as metadata may lead to unexpected
-                    behavior. However, the metadata may be a dict or other
+                    measure. However, the metadata may be a dict or other
                     object which *contains* arrays, i.e. ``metadata_batch``
                     could be an array of dicts which contain arrays.
         Returns:
@@ -411,7 +411,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                  extra_msg=self._ADD_WARNING)
 
         measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim", self._ADD_WARNING)
         check_solution_batch_dim(measures_batch,
                                  "measures_batch",
@@ -500,7 +500,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         # Set archive storage.
         self._objective_values[index_batch_insert] = objective_batch_insert
-        self._behavior_values[index_batch_insert] = measures_batch_insert
+        self._measures[index_batch_insert] = measures_batch_insert
         self._solutions[index_batch_insert] = solution_batch_insert
         self._metadata[index_batch_insert] = metadata_batch_insert
         self._occupied[index_batch_insert] = True
@@ -563,7 +563,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 .. warning:: Due to how NumPy's :func:`~numpy.asarray`
                     automatically converts array-like objects to arrays, passing
                     array-like objects as metadata may lead to unexpected
-                    behavior. However, the metadata may be a dict or other
+                    measure. However, the metadata may be a dict or other
                     object which *contains* arrays.
         Returns:
             tuple: 2-element tuple of (status, value) describing the result of
@@ -575,7 +575,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         measures = np.asarray(measures)
 
         check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
-        check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
+        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
 
         status_batch, value_batch = self.add(solution[None],
                                              np.array([objective]),
@@ -626,16 +626,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         consider using :meth:`elites_with_measures_single`.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of coordinates in measure space.
         Returns:
             EliteBatch: See above.
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
-                :attr:`behavior_dim`).
+                :attr:`measure_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
 
         index_batch = self.index_of(measures_batch)
@@ -663,9 +663,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             measures_batch=readonly(
                 np.where(
                     expanded_occupied_batch,
-                    self._behavior_values[index_batch],
+                    self._measures[index_batch],
                     # And here it is a measures array of np.nan.
-                    np.full(self._behavior_dim, np.nan),
+                    np.full(self._measure_dim, np.nan),
                 )),
             index_batch=readonly(
                 np.where(
@@ -692,7 +692,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         single :namedtuple:`Elite`.
 
         Args:
-            measures (array-like): (:attr:`behavior_dim`,) array of measures.
+            measures (array-like): (:attr:`measure_dim`,) array of measures.
         Returns:
             If there is an elite with measures in the same cell as the measures
             specified, then this method returns an :namedtuple:`Elite` where all
@@ -700,10 +700,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             returns an :namedtuple:`Elite` filled with the same "empty" values
             described in :meth:`elites_with_measures`.
         Raises:
-            ValueError: ``measures`` is not of shape (:attr:`behavior_dim`,).
+            ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
         """
         measures = np.asarray(measures)
-        check_1d_shape(measures, "measures", self.behavior_dim, "measure_dim")
+        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
 
         elite_batch = self.elites_with_measures(measures[None])
         return Elite(
@@ -750,7 +750,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return EliteBatch(
             readonly(self._solutions[selected_indices]),
             readonly(self._objective_values[selected_indices]),
-            readonly(self._behavior_values[selected_indices]),
+            readonly(self._measures[selected_indices]),
             readonly(selected_indices),
             readonly(self._metadata[selected_indices]),
         )
@@ -764,7 +764,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         - 1 column of integers (``np.int32``) for the index, named ``index``.
           See :meth:`index_of` for more info.
-        - :attr:`behavior_dim` columns for the behavior characteristics, named
+        - :attr:`measure_dim` columns for the measures, named
           ``measure_0, measure_1, ...``
         - 1 column for the objective values, named ``objective``
         - :attr:`solution_dim` columns for the solution parameters, named
@@ -792,16 +792,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 be representable in a CSV.
         Returns:
             ArchiveDataFrame: See above.
-        """ # pylint: disable = line-too-long
+        """  # pylint: disable = line-too-long
         data = OrderedDict()
         indices = self._occupied_indices[:self._num_occupied]
 
         # Copy indices so we do not overwrite.
         data["index"] = np.copy(indices)
 
-        behavior_values = self._behavior_values[indices]
-        for i in range(self._behavior_dim):
-            data[f"measure_{i}"] = behavior_values[:, i]
+        measures = self._measures[indices]
+        for i in range(self._measure_dim):
+            data[f"measure_{i}"] = measures[:, i]
 
         data["objective"] = self._objective_values[indices]
 

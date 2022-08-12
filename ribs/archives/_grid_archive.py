@@ -159,7 +159,7 @@ class GridArchive(ArchiveBase):
                 :attr:`behavior_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
 
         # Adding epsilon accounts for floating point precision errors from
@@ -192,7 +192,7 @@ class GridArchive(ArchiveBase):
         """
         grid_index_batch = np.asarray(grid_index_batch)
         check_batch_shape(grid_index_batch, "grid_index_batch",
-                          self.behavior_dim, "measure_dim")
+                          self.measure_dim, "measure_dim")
 
         return np.ravel_multi_index(grid_index_batch.T,
                                     self._dims).astype(np.int32)
