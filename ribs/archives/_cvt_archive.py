@@ -105,7 +105,7 @@ class CVTArchive(ArchiveBase):
             self,
             solution_dim=solution_dim,
             cells=cells,
-            behavior_dim=len(ranges),
+            measure_dim=len(ranges),
             seed=seed,
             dtype=dtype,
         )
@@ -186,17 +186,17 @@ class CVTArchive(ArchiveBase):
 
     @property
     def lower_bounds(self):
-        """(behavior_dim,) numpy.ndarray: Lower bound of each dimension."""
+        """(measure_dim,) numpy.ndarray: Lower bound of each dimension."""
         return self._lower_bounds
 
     @property
     def upper_bounds(self):
-        """(behavior_dim,) numpy.ndarray: Upper bound of each dimension."""
+        """(measure_dim,) numpy.ndarray: Upper bound of each dimension."""
         return self._upper_bounds
 
     @property
     def samples(self):
-        """(num_samples, behavior_dim) numpy.ndarray: The samples used in
+        """(num_samples, measure_dim) numpy.ndarray: The samples used in
         creating the CVT.
 
         May be None until :meth:`initialize` is called.
@@ -205,7 +205,7 @@ class CVTArchive(ArchiveBase):
 
     @property
     def centroids(self):
-        """(n_centroids, behavior_dim) numpy.ndarray: The centroids used in the
+        """(n_centroids, measure_dim) numpy.ndarray: The centroids used in the
         CVT.
 
         None until :meth:`initialize` is called.
@@ -225,14 +225,14 @@ class CVTArchive(ArchiveBase):
         force, depending on the value of ``use_kd_tree`` in the constructor.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of centroid indices
             corresponding to each measure space coordinate.
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
-                :attr:`behavior_dim`).
+                :attr:`measure_dim`).
         """
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self.measure_dim,

@@ -149,7 +149,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             self,
             solution_dim=solution_dim,
             cells=np.product(self._dims),
-            measures_dim=len(self._dims),
+            measure_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
         )
@@ -183,22 +183,22 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     @property
     def dims(self):
-        """(measures_dim,) numpy.ndarray: Number of cells in each dimension."""
+        """(measure_dim,) numpy.ndarray: Number of cells in each dimension."""
         return self._dims
 
     @property
     def lower_bounds(self):
-        """(measures_dim,) numpy.ndarray: Lower bound of each dimension."""
+        """(measure_dim,) numpy.ndarray: Lower bound of each dimension."""
         return self._lower_bounds
 
     @property
     def upper_bounds(self):
-        """(measures_dim,) numpy.ndarray: Upper bound of each dimension."""
+        """(measure_dim,) numpy.ndarray: Upper bound of each dimension."""
         return self._upper_bounds
 
     @property
     def interval_size(self):
-        """(measures_dim,) numpy.ndarray: The size of each dim (upper_bounds -
+        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds -
         lower_bounds)."""
         return self._interval_size
 
@@ -295,14 +295,14 @@ class SlidingBoundariesArchive(ArchiveBase):
         See :attr:`boundaries` for more info.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measures_dim`)
+            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
             the flattened grid coordinates.
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
-                :attr:`measures_dim`).
+                :attr:`measure_dim`).
         """
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self._measure_dim,

@@ -46,9 +46,9 @@ class ArchiveIterator:
         idx = self.archive._occupied_indices[self.iter_idx]
         self.iter_idx += 1
         return Elite(
-            self.archive._solutions[idx],
-            self.archive._objective[idx],
-            self.archive._measures[idx],
+            self.archive._solution_batch[idx],
+            self.archive._objective_batch[idx],
+            self.archive._measures_batch[idx],
             idx,
             self.archive._metadata[idx],
         )
@@ -133,7 +133,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def __init__(self,
                  solution_dim,
                  cells,
-                 measures_dim,
+                 measure_dim,
                  seed=None,
                  dtype=np.float64):
 
@@ -141,17 +141,17 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._solution_dim = solution_dim
         self._rng = np.random.default_rng(seed)
         self._cells = cells
-        self._measure_dim = measures_dim
+        self._measure_dim = measure_dim
         self._dtype = self._parse_dtype(dtype)
 
         self._num_occupied = 0
         self._occupied = np.zeros(self._cells, dtype=bool)
         self._occupied_indices = np.empty(self._cells, dtype=np.int32)
 
-        self._solutions = np.empty((self._cells, solution_dim),
+        self._solution_batch = np.empty((self._cells, solution_dim),
                                    dtype=self.dtype)
-        self._objective_values = np.empty(self._cells, dtype=self.dtype)
-        self._measures = np.empty((self._cells, self._measure_dim),
+        self._objective_batch = np.empty(self._cells, dtype=self.dtype)
+        self._measures_batch = np.empty((self._cells, self._measure_dim),
                                   dtype=self.dtype)
         self._metadata = np.empty(self._cells, dtype=object)
 
@@ -435,7 +435,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         index_batch = self.index_of(measures_batch)
 
         # Copy old objectives since we will be modifying the objectives storage.
-        old_objective_batch = np.copy(self._objective_values[index_batch])
+        old_objective_batch = np.copy(self._objective_batch[index_batch])
 
         # Compute the statuses -- these are all boolean arrays of length
         # batch_size.
@@ -499,9 +499,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         old_objective_batch_insert = old_objective_batch_can[should_insert]
 
         # Set archive storage.
-        self._objective_values[index_batch_insert] = objective_batch_insert
-        self._measures[index_batch_insert] = measures_batch_insert
-        self._solutions[index_batch_insert] = solution_batch_insert
+        self._objective_batch[index_batch_insert] = objective_batch_insert
+        self._measures_batch[index_batch_insert] = measures_batch_insert
+        self._solution_batch[index_batch_insert] = solution_batch_insert
         self._metadata[index_batch_insert] = metadata_batch_insert
         self._occupied[index_batch_insert] = True
 
@@ -549,7 +549,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def add_single(self, solution, objective, measures, metadata=None):
         """Inserts a single solution into the archive.
 
-        The solution is only inserted if it has a higher ``objective_value``
+        The solution is only inserted if it has a higher ``objective``
         than the elite previously in the corresponding cell.
 
         Args:
@@ -650,20 +650,20 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 # consisting of np.nan).
                 np.where(
                     expanded_occupied_batch,
-                    self._solutions[index_batch],
+                    self._solution_batch[index_batch],
                     np.full(self._solution_dim, np.nan),
                 )),
             objective_batch=readonly(
                 np.where(
                     occupied_batch,
-                    self._objective_values[index_batch],
+                    self._objective_batch[index_batch],
                     # Here the alternative is just a scalar np.nan.
                     np.nan,
                 )),
             measures_batch=readonly(
                 np.where(
                     expanded_occupied_batch,
-                    self._measures[index_batch],
+                    self._measures_batch[index_batch],
                     # And here it is a measures array of np.nan.
                     np.full(self._measure_dim, np.nan),
                 )),
@@ -748,9 +748,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         selected_indices = self._occupied_indices[random_indices]
 
         return EliteBatch(
-            readonly(self._solutions[selected_indices]),
-            readonly(self._objective_values[selected_indices]),
-            readonly(self._measures[selected_indices]),
+            readonly(self._solution_batch[selected_indices]),
+            readonly(self._objective_batch[selected_indices]),
+            readonly(self._measures_batch[selected_indices]),
             readonly(selected_indices),
             readonly(self._metadata[selected_indices]),
         )
@@ -799,14 +799,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Copy indices so we do not overwrite.
         data["index"] = np.copy(indices)
 
-        measures = self._measures[indices]
+        measures = self._measures_batch[indices]
         for i in range(self._measure_dim):
             data[f"measure_{i}"] = measures[:, i]
 
-        data["objective"] = self._objective_values[indices]
+        data["objective"] = self._objective_batch[indices]
 
         if include_solutions:
-            solutions = self._solutions[indices]
+            solutions = self._solution_batch[indices]
             for i in range(self._solution_dim):
                 data[f"solution_{i}"] = solutions[:, i]
 
