@@ -190,7 +190,7 @@ def test_tell_fails_with_wrong_shapes(scheduler_fixtures, array):
     with pytest.raises(ValueError):
         if array == "objective_values":
             scheduler.tell(objective_values[:-1], measures_batch, metadata)
-        elif array == "behavior_values":
+        elif array == "measures_batch":
             scheduler.tell(objective_values, measures_batch[:-1], metadata)
         elif array == "metadata":
             scheduler.tell(objective_values, measures_batch, metadata[:-1])
