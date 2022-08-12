@@ -47,8 +47,8 @@ def _retrieve_cmap(cmap):
     return cmap
 
 
-def _validate_heatmap_visual_args(aspect, cbar, square, measure_dim,
-                                  valid_dims, error_msg_measure_dim):
+def _validate_heatmap_visual_args(aspect, cbar, square, measure_dim, valid_dims,
+                                  error_msg_measure_dim):
     """Helper function to validate arguments passed to `*_archive_heatmap`
     plotting functions.
 
@@ -139,10 +139,10 @@ def grid_archive_heatmap(archive,
         archive (GridArchive): A 2D :class:`~ribs.archives.GridArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
             If ``None``, the current axis will be used.
-        transpose_measures (bool): By default, the first measure in the archive will
-            appear along the x-axis, and the second will be along the y-axis.
-            To switch this behavior (i.e. to transpose the axes), set this to
-            ``True``.
+        transpose_measures (bool): By default, the first measure in the archive
+            will appear along the x-axis, and the second will be along the
+            y-axis. To switch this behavior (i.e. to transpose the axes), set
+            this to ``True``.
         cmap (str, list, matplotlib.colors.Colormap): The colormap to use when
             plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
@@ -492,10 +492,10 @@ def sliding_boundaries_archive_heatmap(archive,
             :class:`~ribs.archives.SlidingBoundariesArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
             If ``None``, the current axis will be used.
-        transpose_measures (bool): By default, the first measure in the archive will
-            appear along the x-axis, and the second will be along the y-axis.
-            To switch this behavior (i.e. to transpose the axes), set this to
-            ``True``.
+        transpose_measures (bool): By default, the first measure in the archive
+            will appear along the x-axis, and the second will be along the
+            y-axis. To switch this behavior (i.e. to transpose the axes), set
+            this to ``True``.
         cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
             plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
