@@ -131,10 +131,48 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):
     )
 
 
+### TESTS FOR OUT-OF-ORDER ASK-TELL ###
+
+
 def test_tell_fails_when_ask_not_called(optimizer_fixture):
     optimizer, *_ = optimizer_fixture
     with pytest.raises(RuntimeError):
         optimizer.tell(None, None)
+
+
+def test_tell_fails_when_ask_dqd_not_called(optimizer_fixture):
+    optimizer, *_ = optimizer_fixture
+    with pytest.raises(RuntimeError):
+        optimizer.tell_dqd(None, None, None)
+
+
+def test_tell_fails_when_ask_tell_mismatch(optimizer_fixture):
+    optimizer, *_ = optimizer_fixture
+
+    _ = optimizer.ask()
+    with pytest.raises(RuntimeError):
+        optimizer.tell_dqd(None, None, None)
+
+
+def test_tell_fails_when_ask_tell_mismatch_dqd(optimizer_fixture):
+    optimizer, *_ = optimizer_fixture
+
+    _ = optimizer.ask_dqd()
+    with pytest.raises(RuntimeError):
+        optimizer.tell(None, None)
+
+
+### END ###
+
+
+def test_emitter_returns_no_solutions(optimizer_fixture):
+    optimizer, solution_dim, _ = optimizer_fixture
+
+    # Should not return anything since there are no DQD emitters
+    solution_batch = optimizer.ask_dqd()
+
+    assert not np.any(solution_batch)
+    assert solution_batch.shape == (0, solution_dim)
 
 
 @pytest.mark.parametrize("array",

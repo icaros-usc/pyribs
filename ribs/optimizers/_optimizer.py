@@ -1,6 +1,8 @@
 """Provides the Optimizer."""
 import numpy as np
 
+from ribs.emitters import DQDEmitterBase
+
 
 class Optimizer:
     """A basic class that composes an archive with multiple emitters.
@@ -75,7 +77,7 @@ class Optimizer:
 
         # Keeps track of whether the Optimizer should be receiving a call to
         # ask() or tell().
-        self._asked = False
+        self._last_called = None
         # The last set of solutions returned by ask().
         self._solution_batch = []
         # The number of solutions created by each emitter.
@@ -93,6 +95,39 @@ class Optimizer:
         in this optimizer."""
         return self._emitters
 
+    def ask_dqd(self):
+        """Generates a batch of solutions by calling ask_dqd() on all DQD
+        emitters.
+
+        .. note:: The order of the solutions returned from this method is
+            important, so do not rearrange them.
+
+        Returns:
+            (n_solutions, dim) array: An array of n solutions to evaluate. Each
+            row contains a single solution.
+        Raises:
+            RuntimeError: This method was called without first calling
+                :meth:`tell`.
+        """
+        if self._last_called in ["ask", "ask_dqd"]:
+            raise RuntimeError("ask_dqd cannot be called immediately after " +
+                               self._last_called)
+        self._last_called = "ask_dqd"
+
+        self._solution_batch = []
+
+        for i, emitter in enumerate(self._emitters):
+            if isinstance(emitter, DQDEmitterBase):
+                emitter_sols = emitter.ask_dqd()
+                self._solution_batch.append(emitter_sols)
+                self._num_emitted[i] = len(emitter_sols)
+
+        # In case the emitters didn't return any solutions
+        self._solution_batch = np.concatenate(
+            self._solution_batch, axis=0) if self._solution_batch else np.empty(
+                (0, self._solution_dim))
+        return self._solution_batch
+
     def ask(self):
         """Generates a batch of solutions by calling ask() on all emitters.
 
@@ -106,9 +141,10 @@ class Optimizer:
             RuntimeError: This method was called without first calling
                 :meth:`tell`.
         """
-        if self._asked:
-            raise RuntimeError("ask() was called twice in a row.")
-        self._asked = True
+        if self._last_called in ["ask", "ask_dqd"]:
+            raise RuntimeError("ask_dqd cannot be called immediately after " +
+                               self._last_called)
+        self._last_called = "ask"
 
         self._solution_batch = []
 
@@ -117,7 +153,10 @@ class Optimizer:
             self._solution_batch.append(emitter_sols)
             self._num_emitted[i] = len(emitter_sols)
 
-        self._solution_batch = np.concatenate(self._solution_batch, axis=0)
+        # In case the emitters didn't return any solutions
+        self._solution_batch = np.concatenate(
+            self._solution_batch, axis=0) if self._solution_batch else np.empty(
+                (0, self._solution_dim))
         return self._solution_batch
 
     def _check_length(self, name, array):
@@ -129,32 +168,12 @@ class Optimizer:
                 "(this is the number of solutions output by ask()) but "
                 f"has length {len(array)}")
 
-    def tell(self, objective_batch, measures_batch, metadata_batch=None):
-        """Returns info for solutions from :meth:`ask`.
-
-        .. note:: The objective batch, measures batch, and metadata must be in
-            the same order as the solutions created by :meth:`ask`; i.e.
-            ``objective_batch[i]``, ``measures_batch[i]``, and ``metadata[i]``
-            should be the objective batch, measures batch, and metadata for
-            ``solutions[i]``.
-
-        Args:
-            objective_batch ((n_solutions,) array): Each entry of this array
-                contains the objective function evaluation of a solution.
-            measures_batch ((n_solutions, measures_dm) array): Each row of
-                this array contains a solution's coordinates in measure space.
-            metadata ((n_solutions,) array): Each entry of this array contains
-                an object holding metadata for a solution.
-        Raises:
-            RuntimeError: This method is called without first calling
-                :meth:`ask`.
-            ValueError: ``objective_batch``, ``measures_batch``, or
-                ``metadata`` has the wrong shape.
-        """
-        if not self._asked:
-            raise RuntimeError("tell() was called without calling ask().")
-        self._asked = False
-
+    def _tell_internal(self,
+                       objective_batch,
+                       measures_batch,
+                       metadata_batch=None):
+        """Internal method that handles duplicate subroutine between
+        :meth:`tell` and :meth:`tell_dqd`."""
         objective_batch = np.asarray(objective_batch)
         measures_batch = np.asarray(measures_batch)
         metadata_batch = (np.empty(len(self._solution_batch), dtype=object) if
@@ -189,6 +208,105 @@ class Optimizer:
             ])
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
+
+        return (
+            objective_batch,
+            measures_batch,
+            status_batch,
+            value_batch,
+            metadata_batch,
+        )
+
+    def tell_dqd(self,
+                 objective_batch,
+                 measures_batch,
+                 jacobian_batch,
+                 metadata_batch=None):
+        """Returns info for solutions from :meth:`ask_dqd`.
+
+        .. note:: The objective batch, measures batch, jacobian batch, and
+            metadata batch must be in the same order as the solutions created by
+            :meth:`ask_dqd`; i.e.  ``objective_batch[i]``,
+            ``measures_batch[i]``, ``jacobian_batch[i]``, and
+            ``metadata_batch[i]`` should be the objective, measures, jacobian,
+            and metadata for ``solution_batch[i]``.
+
+        Args:
+            objective_batch ((n_solutions,) array): Each entry of this array
+                contains the objective function evaluation of a solution.
+            measures_batch ((n_solutions, measures_dm) array): Each row of
+                this array contains a solution's coordinates in measure space.
+            jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
+                solution_dim)`` array consisting of Jacobian matrices of the
+                solutions obtained from :meth:`ask_dqd`. Each matrix should
+                consist of the objective gradient of the solution followed by
+                the measure gradients.
+            metadata_batch ((n_solutions,) array): Each entry of this array
+                contains an object holding metadata for a solution.
+        Raises:
+            RuntimeError: This method is called without first calling
+                :meth:`ask`.
+            ValueError: ``objective_batch``, ``measures_batch``, or
+                ``metadata`` has the wrong shape.
+        """
+        if self._last_called != "ask_dqd":
+            raise RuntimeError(
+                "tell_dqd() was called without calling ask_dqd().")
+        self._last_called = "tell_dqd"
+
+        (
+            objective_batch,
+            measures_batch,
+            status_batch,
+            value_batch,
+            metadata_batch,
+        ) = self._tell_internal(objective_batch, measures_batch, metadata_batch)
+
+        # Keep track of pos because emitters may have different batch sizes.
+        pos = 0
+        for emitter, n in zip(self._emitters, self._num_emitted):
+            if isinstance(emitter, DQDEmitterBase):
+                end = pos + n
+                emitter.tell_dqd(self._solution_batch[pos:end],
+                                 objective_batch[pos:end],
+                                 measures_batch[pos:end],
+                                 jacobian_batch[pos:end], status_batch[pos:end],
+                                 value_batch[pos:end], metadata_batch[pos:end])
+                pos = end
+
+    def tell(self, objective_batch, measures_batch, metadata_batch=None):
+        """Returns info for solutions from :meth:`ask`.
+
+        .. note:: The objective batch, measures batch, and metadata batch must
+            be in the same order as the solutions created by :meth:`ask_dqd`;
+            i.e.  ``objective_batch[i]``, ``measures_batch[i]``, and
+            ``metadata_batch[i]`` should be the objective, measures, and
+            metadata for ``solution_batch[i]``.
+
+        Args:
+            objective_batch ((n_solutions,) array): Each entry of this array
+                contains the objective function evaluation of a solution.
+            measures_batch ((n_solutions, measures_dm) array): Each row of
+                this array contains a solution's coordinates in measure space.
+            metadata ((n_solutions,) array): Each entry of this array contains
+                an object holding metadata for a solution.
+        Raises:
+            RuntimeError: This method is called without first calling
+                :meth:`ask`.
+            ValueError: ``objective_batch``, ``measures_batch``, or
+                ``metadata`` has the wrong shape.
+        """
+        if self._last_called != "ask":
+            raise RuntimeError("tell() was called without calling ask().")
+        self._last_called = "tell"
+
+        (
+            objective_batch,
+            measures_batch,
+            status_batch,
+            value_batch,
+            metadata_batch,
+        ) = self._tell_internal(objective_batch, measures_batch, metadata_batch)
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0

@@ -30,6 +30,13 @@ The supported algorithms are:
 - `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, where half (7) of
   the emitter are using TwoStageRandomDirectionRanker and half (8) are
   TwoStageImprovementRanker.
+- `cma_mega`: GridArchive with GradientAborescenceEmitter.
+- `cma_mega_adam`: GridArchive with GradientAborescenceEmitter using Adam
+  Optimizer.
+
+Note: the settings for `cma_mega` and `cma_mega_adam` are consistent with the
+paper (`Fontaine 2021 <https://arxiv.org/abs/2106.03894>`_) in which these
+algorithms are proposed.
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
@@ -74,21 +81,21 @@ from alive_progress import alive_bar
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           IsoLineEmitter)
+                           GradientAborescenceEmitter, IsoLineEmitter)
 from ribs.optimizers import Optimizer
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
 
-def sphere(sol):
+def sphere(solution_batch):
     """Sphere function evaluation and BCs for a batch of solutions.
 
     Args:
-        sol (np.ndarray): (batch_size, dim) array of solutions
+        solution_batch (np.ndarray): (batch_size, dim) array of solutions
     Returns:
-        objs (np.ndarray): (batch_size,) array of objective values
-        bcs (np.ndarray): (batch_size, 2) array of behavior values
+        objective_batch (np.ndarray): (batch_size,) array of objective values
+        measures_batch (np.ndarray): (batch_size, 2) array of measure values
     """
-    dim = sol.shape[1]
+    dim = solution_batch.shape[1]
 
     # Shift the Sphere function so that the optimal value is at x_i = 2.048.
     sphere_shift = 5.12 * 0.4
@@ -96,14 +103,17 @@ def sphere(sol):
     # Normalize the objective to the range [0, 100] where 100 is optimal.
     best_obj = 0.0
     worst_obj = (-5.12 - sphere_shift)**2 * dim
-    raw_obj = np.sum(np.square(sol - sphere_shift), axis=1)
-    objs = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
+    raw_obj = np.sum(np.square(solution_batch - sphere_shift), axis=1)
+    objective_batch = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
 
-    # Calculate BCs.
-    clipped = sol.copy()
+    # Compute gradient of the objective
+    objective_grad_batch = -2 * (solution_batch - sphere_shift)
+
+    # Calculate measures.
+    clipped = solution_batch.copy()
     clip_indices = np.where(np.logical_or(clipped > 5.12, clipped < -5.12))
     clipped[clip_indices] = 5.12 / clipped[clip_indices]
-    bcs = np.concatenate(
+    measures_batch = np.concatenate(
         (
             np.sum(clipped[:, :dim // 2], axis=1, keepdims=True),
             np.sum(clipped[:, dim // 2:], axis=1, keepdims=True),
@@ -111,7 +121,24 @@ def sphere(sol):
         axis=1,
     )
 
-    return objs, bcs
+    # Compute gradient of the measures
+    derivatives = np.ones(solution_batch.shape)
+    derivatives[clip_indices] = -5.12 / np.square(solution_batch[clip_indices])
+
+    mask_0 = np.concatenate((np.ones(dim // 2), np.zeros(dim - dim // 2)))
+    mask_1 = np.concatenate((np.zeros(dim // 2), np.ones(dim - dim // 2)))
+
+    d_measure0 = derivatives * mask_0
+    d_measure1 = derivatives * mask_1
+
+    measures_grad_batch = np.stack((d_measure0, d_measure1), axis=1)
+
+    return (
+        objective_batch,
+        objective_grad_batch,
+        measures_batch,
+        measures_grad_batch,
+    )
 
 
 def create_optimizer(algorithm, dim, seed):
@@ -145,6 +172,13 @@ def create_optimizer(algorithm, dim, seed):
                              ranges=bounds,
                              samples=100_000,
                              use_kd_tree=True)
+    elif algorithm in ["cma_mega", "cma_mega_adam"]:
+        # Note that the archive is smaller for these algorithms. This is to be
+        # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
+        archive = GridArchive(solution_dim=dim,
+                              dims=(100, 100),
+                              ranges=bounds,
+                              seed=seed)
     else:
         raise ValueError(f"Algorithm `{algorithm}` is not recognized")
 
@@ -213,7 +247,36 @@ def create_optimizer(algorithm, dim, seed):
                 seed=s,
             ) for s in emitter_seeds
         ]
-
+    elif algorithm == "cma_mega":
+        # Note that only one emitter is used for cma_mega. This is to be
+        # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
+        emitters = [
+            GradientAborescenceEmitter(
+                archive,
+                initial_sol,
+                sigma0=10.0,
+                step_size=1.0,
+                grad_opt="gradient_ascent",
+                selection_rule="mu",
+                bounds=None,
+                batch_size=batch_size - 1,  # 1 solution is returned by ask_dqd
+                seed=emitter_seeds[0])
+        ]
+    elif algorithm == "cma_mega_adam":
+        # Note that only one emitter is used for cma_mega_adam. This is to be
+        # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
+        emitters = [
+            GradientAborescenceEmitter(
+                archive,
+                initial_sol,
+                sigma0=10.0,
+                step_size=0.002,
+                grad_opt="adam",
+                selection_rule="mu",
+                bounds=None,
+                batch_size=batch_size - 1,  # 1 solution is returned by ask_dqd
+                seed=emitter_seeds[0])
+        ]
     return Optimizer(archive, emitters)
 
 
@@ -238,8 +301,8 @@ def save_heatmap(archive, heatmap_path):
 
 
 def sphere_main(algorithm,
-                dim=20,
-                itrs=4500,
+                dim=None,
+                itrs=None,
                 outdir="sphere_output",
                 log_freq=250,
                 seed=None):
@@ -254,10 +317,30 @@ def sphere_main(algorithm,
             and saving heatmap.
         seed (int): Seed for the algorithm. By default, there is no seed.
     """
+    if dim is None:
+        if algorithm in ["cma_mega", "cma_mega_adam"]:
+            dim = 1_000
+        elif algorithm in [
+                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
+        ]:
+            dim = 20
+
+    if itrs is None:
+        if algorithm in ["cma_mega", "cma_mega_adam"]:
+            itrs = 10_000
+        elif algorithm in [
+                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
+        ]:
+            itrs = 4500
+
     name = f"{algorithm}_{dim}"
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
+
+    is_dqd = algorithm in ['cma_mega', 'cma_mega_adam']
 
     optimizer = create_optimizer(algorithm, dim, seed)
     archive = optimizer.archive
@@ -278,9 +361,21 @@ def sphere_main(algorithm,
 
         for itr in range(1, itrs + 1):
             itr_start = time.time()
-            sols = optimizer.ask()
-            objs, bcs = sphere(sols)
-            optimizer.tell(objs, bcs)
+
+            if is_dqd:
+                solution_batch = optimizer.ask_dqd()
+                (objective_batch, objective_grad_batch, measures_batch,
+                 measures_grad_batch) = sphere(solution_batch)
+                objective_grad_batch = np.expand_dims(objective_grad_batch,
+                                                      axis=1)
+                jacobian_batch = np.concatenate(
+                    (objective_grad_batch, measures_grad_batch), axis=1)
+                optimizer.tell_dqd(objective_batch, measures_batch,
+                                   jacobian_batch)
+
+            solution_batch = optimizer.ask()
+            objective_batch, _, measure_batch, _ = sphere(solution_batch)
+            optimizer.tell(objective_batch, measure_batch)
             non_logging_time += time.time() - itr_start
             progress()
 
