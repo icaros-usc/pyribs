@@ -103,7 +103,7 @@ class EvolutionStrategyEmitter(EmitterBase):
 
     @property
     def x0(self):
-        """numpy.ndarray: Initial solution for the optimizer."""
+        """numpy.ndarray: Initial solution for the scheduler."""
         return self._x0
 
     @property
@@ -120,7 +120,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         """Samples new solutions from a multivariate Gaussian.
 
         The multivariate Gaussian is parameterized by the evolution strategy
-        optimizer ``self.opt``.
+        scheduler ``self.opt``.
 
         Returns:
             (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
@@ -129,9 +129,9 @@ class EvolutionStrategyEmitter(EmitterBase):
         return self.opt.ask(self.lower_bounds, self.upper_bounds)
 
     def _check_restart(self, num_parents):
-        """Emitter-side checks for restarting the optimizer.
+        """Emitter-side checks for restarting the scheduler.
 
-        The optimizer also has its own checks.
+        The scheduler also has its own checks.
         """
         if self._restart_rule == "no_improvement":
             return num_parents == 0

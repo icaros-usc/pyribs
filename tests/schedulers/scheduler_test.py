@@ -1,10 +1,10 @@
-"""Tests for the Optimizer."""
+"""Tests for the scheduler."""
 import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
-from ribs.optimizers import Optimizer
+from ribs.schedulers import Scheduler
 
 from ..archives.grid_archive_test import assert_archive_elite_batch
 
@@ -12,15 +12,15 @@ from ..archives.grid_archive_test import assert_archive_elite_batch
 
 
 @pytest.fixture
-def optimizer_fixture():
-    """Returns an Optimizer with GridArchive and one GaussianEmitter."""
+def scheduler_fixtures():
+    """Returns an Scheduler with GridArchive and one GaussianEmitter."""
     solution_dim = 2
     num_solutions = 4
     archive = GridArchive(solution_dim, [100, 100], [(-1, 1), (-1, 1)])
     emitters = [
         GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=num_solutions)
     ]
-    return Optimizer(archive, emitters), solution_dim, num_solutions
+    return Scheduler(archive, emitters), solution_dim, num_solutions
 
 
 def test_init_fails_with_no_emitters():
@@ -28,7 +28,7 @@ def test_init_fails_with_no_emitters():
     archive = GridArchive(10, [100, 100], [(-1, 1), (-1, 1)])
     emitters = []
     with pytest.raises(ValueError):
-        Optimizer(archive, emitters)
+        Scheduler(archive, emitters)
 
 
 def test_init_fails_on_non_unique_emitter_instances():
@@ -41,7 +41,7 @@ def test_init_fails_on_non_unique_emitter_instances():
     emitters = [GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1)] * 5
 
     with pytest.raises(ValueError):
-        Optimizer(archive, emitters)
+        Scheduler(archive, emitters)
 
 
 def test_init_fails_with_mismatched_emitters():
@@ -53,20 +53,20 @@ def test_init_fails_with_mismatched_emitters():
         GaussianEmitter(archive, [0.0, 0.0, 0.0], 1),
     ]
     with pytest.raises(ValueError):
-        Optimizer(archive, emitters)
+        Scheduler(archive, emitters)
 
 
-def test_ask_returns_correct_solution_shape(optimizer_fixture):
-    optimizer, solution_dim, num_solutions = optimizer_fixture
-    solutions = optimizer.ask()
+def test_ask_returns_correct_solution_shape(scheduler_fixtures):
+    scheduler, solution_dim, num_solutions = scheduler_fixtures
+    solutions = scheduler.ask()
     assert solutions.shape == (num_solutions, solution_dim)
 
 
-def test_ask_fails_when_called_twice(optimizer_fixture):
-    optimizer, *_ = optimizer_fixture
+def test_ask_fails_when_called_twice(scheduler_fixtures):
+    scheduler, *_ = scheduler_fixtures
     with pytest.raises(RuntimeError):
-        optimizer.ask()
-        optimizer.ask()
+        scheduler.ask()
+        scheduler.ask()
 
 
 @pytest.mark.parametrize("add_mode", ["batch", "single"],
@@ -77,20 +77,20 @@ def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
     batch_size = 4
     archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
     emitters = [GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=batch_size)]
-    optimizer = Optimizer(archive, emitters, add_mode=add_mode)
+    scheduler = Scheduler(archive, emitters, add_mode=add_mode)
 
     measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
     metadata = ([f"metadata_{i}" for i in range(batch_size)]
                 if tell_metadata else None)
     expected_metadata = metadata if tell_metadata else [None] * batch_size
 
-    _ = optimizer.ask()  # Ignore the actual values of the solutions.
+    _ = scheduler.ask()  # Ignore the actual values of the solutions.
     # We pass in 4 solutions with unique behavior values, so all should go into
     # the archive.
-    optimizer.tell(np.ones(batch_size), measures_batch, metadata)
+    scheduler.tell(np.ones(batch_size), measures_batch, metadata)
 
     assert_archive_elite_batch(
-        archive=optimizer.archive,
+        archive=scheduler.archive,
         batch_size=batch_size,
         objective_batch=np.ones(batch_size),
         measures_batch=measures_batch,
@@ -109,7 +109,7 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):
         GaussianEmitter(archive, [0.5, 0.5], 1, batch_size=2),
         GaussianEmitter(archive, [-0.5, -0.5], 1, batch_size=3),
     ]
-    optimizer = Optimizer(archive, emitters, add_mode=add_mode)
+    scheduler = Scheduler(archive, emitters, add_mode=add_mode)
 
     # The sum of all the emitters' batch sizes is 6.
     batch_size = 6
@@ -119,11 +119,11 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):
                ] if tell_metadata else None
     expected_metadata = metadata if tell_metadata else [None] * batch_size
 
-    _ = optimizer.ask()
-    optimizer.tell(np.ones(batch_size), measures_batch, metadata)
+    _ = scheduler.ask()
+    scheduler.tell(np.ones(batch_size), measures_batch, metadata)
 
     assert_archive_elite_batch(
-        archive=optimizer.archive,
+        archive=scheduler.archive,
         batch_size=batch_size,
         objective_batch=np.ones(batch_size),
         measures_batch=measures_batch,
@@ -134,42 +134,42 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):
 ### TESTS FOR OUT-OF-ORDER ASK-TELL ###
 
 
-def test_tell_fails_when_ask_not_called(optimizer_fixture):
-    optimizer, *_ = optimizer_fixture
+def test_tell_fails_when_ask_not_called(scheduler_fixtures):
+    scheduler, *_ = scheduler_fixtures
     with pytest.raises(RuntimeError):
-        optimizer.tell(None, None)
+        scheduler.tell(None, None)
 
 
-def test_tell_fails_when_ask_dqd_not_called(optimizer_fixture):
-    optimizer, *_ = optimizer_fixture
+def test_tell_fails_when_ask_dqd_not_called(scheduler_fixtures):
+    scheduler, *_ = scheduler_fixtures
     with pytest.raises(RuntimeError):
-        optimizer.tell_dqd(None, None, None)
+        scheduler.tell_dqd(None, None, None)
 
 
-def test_tell_fails_when_ask_tell_mismatch(optimizer_fixture):
-    optimizer, *_ = optimizer_fixture
+def test_tell_fails_when_ask_tell_mismatch(scheduler_fixtures):
+    scheduler, *_ = scheduler_fixtures
 
-    _ = optimizer.ask()
+    _ = scheduler.ask()
     with pytest.raises(RuntimeError):
-        optimizer.tell_dqd(None, None, None)
+        scheduler.tell_dqd(None, None, None)
 
 
-def test_tell_fails_when_ask_tell_mismatch_dqd(optimizer_fixture):
-    optimizer, *_ = optimizer_fixture
+def test_tell_fails_when_ask_tell_mismatch_dqd(scheduler_fixtures):
+    scheduler, *_ = scheduler_fixtures
 
-    _ = optimizer.ask_dqd()
+    _ = scheduler.ask_dqd()
     with pytest.raises(RuntimeError):
-        optimizer.tell(None, None)
+        scheduler.tell(None, None)
 
 
 ### END ###
 
 
-def test_emitter_returns_no_solutions(optimizer_fixture):
-    optimizer, solution_dim, _ = optimizer_fixture
+def test_emitter_returns_no_solutions(scheduler_fixtures):
+    scheduler, solution_dim, _ = scheduler_fixtures
 
     # Should not return anything since there are no DQD emitters
-    solution_batch = optimizer.ask_dqd()
+    solution_batch = scheduler.ask_dqd()
 
     assert not np.any(solution_batch)
     assert solution_batch.shape == (0, solution_dim)
@@ -177,9 +177,9 @@ def test_emitter_returns_no_solutions(optimizer_fixture):
 
 @pytest.mark.parametrize("array",
                          ["objective_values", "behavior_values", "metadata"])
-def test_tell_fails_with_wrong_shapes(optimizer_fixture, array):
-    optimizer, _, num_solutions = optimizer_fixture
-    _ = optimizer.ask()  # Ignore the actual values of the solutions.
+def test_tell_fails_with_wrong_shapes(scheduler_fixtures, array):
+    scheduler, _, num_solutions = scheduler_fixtures
+    _ = scheduler.ask()  # Ignore the actual values of the solutions.
 
     objective_values = np.ones(num_solutions)
     measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
@@ -189,8 +189,8 @@ def test_tell_fails_with_wrong_shapes(optimizer_fixture, array):
     # last element.
     with pytest.raises(ValueError):
         if array == "objective_values":
-            optimizer.tell(objective_values[:-1], measures_batch, metadata)
+            scheduler.tell(objective_values[:-1], measures_batch, metadata)
         elif array == "behavior_values":
-            optimizer.tell(objective_values, measures_batch[:-1], metadata)
+            scheduler.tell(objective_values, measures_batch[:-1], metadata)
         elif array == "metadata":
-            optimizer.tell(objective_values, measures_batch, metadata[:-1])
+            scheduler.tell(objective_values, measures_batch, metadata[:-1])

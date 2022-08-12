@@ -37,8 +37,8 @@ application:
 - An **Archive** saves the best representatives generated within behavior space.
 - **Emitters** control how new candidate solutions are generated and affect if
   the algorithm prioritizes quality or diversity.
-- An **Optimizer** joins the **Archive** and **Emitters** together and acts as a
-  scheduling algorithm for emitters. The **Optimizer** provides an interface for
+- An **Scheduler** joins the **Archive** and **Emitters** together and acts as a
+  scheduling algorithm for emitters. The **Scheduler** provides an interface for
   requesting new candidate solutions and telling the algorithm how candidates
   performed.
 
@@ -94,14 +94,14 @@ algorithm, we first create:
 - An **ImprovementEmitter**, which starts from the search point **0** in 10
   dimensional space and a Gaussian sampling distribution with standard deviation
   0.1.
-- An **Optimizer** that combines the archive and emitter together.
+- An **Scheduler** that combines the archive and emitter together.
 
 After initializing the components, we optimize (pyribs maximizes) the negative
 10-D Sphere function for 1000 iterations. Users of
 [pycma](https://pypi.org/project/cma/) will be familiar with the ask-tell
-interface (which pyribs adopted). First, the user must `ask` the optimizer for
+interface (which pyribs adopted). First, the user must `ask` the scheduler for
 new candidate solutions. After evaluating the solution, they `tell` the
-optimizer the objective value and behavior characteristics (BCs) of each
+scheduler the objective value and behavior characteristics (BCs) of each
 candidate solution. The algorithm then populates the archive and makes decisions
 on where to sample solutions next. Our toy example uses the first two parameters
 of the search space as BCs.
@@ -111,19 +111,19 @@ import numpy as np
 
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
-from ribs.optimizers import Optimizer
+from ribs.scheduler import Scheduler
 
 archive = GridArchive(solution_dim=len([0.0] * 10), dims=[20, 20], ranges=[(-1, 1), (-1, 1)])
 emitters = [ImprovementEmitter(archive, [0.0] * 10, 0.1)]
-optimizer = Optimizer(archive, emitters)
+scheduler = Scheduler(archive, emitters)
 
 for itr in range(1000):
-    solutions = optimizer.ask()
+    solutions = scheduler.ask()
 
     objectives = -np.sum(np.square(solutions), axis=1)
     bcs = solutions[:, :2]
 
-    optimizer.tell(objectives, bcs)
+    scheduler.tell(objectives, bcs)
 ```
 
 To visualize this archive with matplotlib, we then use the

@@ -82,7 +82,7 @@ from alive_progress import alive_bar
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
                            GradientAborescenceEmitter, IsoLineEmitter)
-from ribs.optimizers import Optimizer
+from ribs.schedulers import Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
 
@@ -141,15 +141,15 @@ def sphere(solution_batch):
     )
 
 
-def create_optimizer(algorithm, dim, seed):
-    """Creates an optimizer based on the algorithm name.
+def create_scheduler(algorithm, dim, seed):
+    """Creates an scheduler based on the algorithm name.
 
     Args:
         algorithm (str): Name of the algorithm passed into sphere_main.
         dim (int): Dimensionality of the sphere function.
         seed (int): Main seed or the various components.
     Returns:
-        Optimizer: A ribs Optimizer for running the algorithm.
+        scheduler: A ribs scheduler for running the algorithm.
     """
     max_bound = dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
@@ -277,7 +277,7 @@ def create_optimizer(algorithm, dim, seed):
                 batch_size=batch_size - 1,  # 1 solution is returned by ask_dqd
                 seed=emitter_seeds[0])
         ]
-    return Optimizer(archive, emitters)
+    return Scheduler(archive, emitters)
 
 
 def save_heatmap(archive, heatmap_path):
@@ -342,8 +342,8 @@ def sphere_main(algorithm,
 
     is_dqd = algorithm in ['cma_mega', 'cma_mega_adam']
 
-    optimizer = create_optimizer(algorithm, dim, seed)
-    archive = optimizer.archive
+    scheduler = create_scheduler(algorithm, dim, seed)
+    archive = scheduler.archive
     metrics = {
         "QD Score": {
             "x": [0],
@@ -363,19 +363,19 @@ def sphere_main(algorithm,
             itr_start = time.time()
 
             if is_dqd:
-                solution_batch = optimizer.ask_dqd()
+                solution_batch = scheduler.ask_dqd()
                 (objective_batch, objective_grad_batch, measures_batch,
                  measures_grad_batch) = sphere(solution_batch)
                 objective_grad_batch = np.expand_dims(objective_grad_batch,
                                                       axis=1)
                 jacobian_batch = np.concatenate(
                     (objective_grad_batch, measures_grad_batch), axis=1)
-                optimizer.tell_dqd(objective_batch, measures_batch,
+                scheduler.tell_dqd(objective_batch, measures_batch,
                                    jacobian_batch)
 
-            solution_batch = optimizer.ask()
+            solution_batch = scheduler.ask()
             objective_batch, _, measure_batch, _ = sphere(solution_batch)
-            optimizer.tell(objective_batch, measure_batch)
+            scheduler.tell(objective_batch, measure_batch)
             non_logging_time += time.time() - itr_start
             progress()
 
