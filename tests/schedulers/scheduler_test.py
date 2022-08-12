@@ -85,7 +85,7 @@ def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
     expected_metadata = metadata if tell_metadata else [None] * batch_size
 
     _ = scheduler.ask()  # Ignore the actual values of the solutions.
-    # We pass in 4 solutions with unique behavior values, so all should go into
+    # We pass in 4 solutions with unique measures, so all should go into
     # the archive.
     scheduler.tell(np.ones(batch_size), measures_batch, metadata)
 
@@ -176,7 +176,7 @@ def test_emitter_returns_no_solutions(scheduler_fixtures):
 
 
 @pytest.mark.parametrize("array",
-                         ["objective_values", "behavior_values", "metadata"])
+                         ["objective_values", "measures_batch", "metadata"])
 def test_tell_fails_with_wrong_shapes(scheduler_fixtures, array):
     scheduler, _, num_solutions = scheduler_fixtures
     _ = scheduler.ask()  # Ignore the actual values of the solutions.

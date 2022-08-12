@@ -141,7 +141,7 @@ def grid_archive():
 
 @pytest.fixture(scope="module")
 def long_grid_archive():
-    """Same as above, but the behavior space is longer in one direction."""
+    """Same as above, but the measure space is longer in one direction."""
     archive = GridArchive(solution_dim=2,
                           dims=[10, 10],
                           ranges=[(-2, 2), (-1, 1)],
@@ -152,7 +152,7 @@ def long_grid_archive():
 
 @pytest.fixture(scope="module")
 def three_d_grid_archive():
-    """Deterministic archive, but there are three behavior axes of different
+    """Deterministic archive, but there are three measure axes of different
     sizes, and some of the axes are not totally filled."""
     archive = GridArchive(solution_dim=3,
                           dims=[10, 10, 10],
@@ -177,7 +177,7 @@ def cvt_archive():
 
 @pytest.fixture(scope="module")
 def long_cvt_archive():
-    """Same as above, but the behavior space is longer in one direction."""
+    """Same as above, but the measure space is longer in one direction."""
     archive = CVTArchive(solution_dim=2,
                          cells=100,
                          ranges=[(-2, 2), (-1, 1)],
@@ -201,7 +201,7 @@ def sliding_archive():
 
 @pytest.fixture(scope="module")
 def long_sliding_archive():
-    """Same as above, but the behavior space is longer in one direction."""
+    """Same as above, but the measure space is longer in one direction."""
     archive = SlidingBoundariesArchive(solution_dim=2,
                                        dims=[10, 20],
                                        ranges=[(-2, 2), (-1, 1)],

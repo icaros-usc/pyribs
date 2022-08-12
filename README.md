@@ -10,16 +10,22 @@ algorithm and implements the _Rapid Illumination of Behavior Space (RIBS)_
 redesign of MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
 
+> In the field of quality diversity optimization, behavior characteristics
+> (BCs) and measures both refer to features of a solution. For consistency, we
+> will use "measures" for the features of a solution and use "measure
+> functions" for the functions that take a solution as input and gives
+> a measure as output.
+
 ## Overview
 
 ![Types of Optimization](readme_assets/optimization_types.png)
 
 [Quality diversity (QD) optimization](https://arxiv.org/abs/2012.04322) is a
 subfield of optimization where solutions generated cover every point in a
-behavior space while simultaneously maximizing (or minimizing) a single
+measure space while simultaneously maximizing (or minimizing) a single
 objective. QD algorithms within the MAP-Elites family of QD algorithms produce
 heatmaps (archives) as output where each cell contains the best discovered
-representative of a region in behavior space.
+representative of a region in measure space.
 
 While many QD libraries exist, this particular library aims to be the QD analog
 to the [pycma](https://pypi.org/project/cma/) library (a single objective
@@ -34,7 +40,7 @@ performance or have additional use cases.
 A user of pyribs selects three components that meet the needs of their
 application:
 
-- An **Archive** saves the best representatives generated within behavior space.
+- An **Archive** saves the best representatives generated within measure space.
 - **Emitters** control how new candidate solutions are generated and affect if
   the algorithm prioritizes quality or diversity.
 - An **Scheduler** joins the **Archive** and **Emitters** together and acts as a
@@ -101,10 +107,10 @@ After initializing the components, we optimize (pyribs maximizes) the negative
 [pycma](https://pypi.org/project/cma/) will be familiar with the ask-tell
 interface (which pyribs adopted). First, the user must `ask` the scheduler for
 new candidate solutions. After evaluating the solution, they `tell` the
-scheduler the objective value and behavior characteristics (BCs) of each
+scheduler the objective value and measures of each
 candidate solution. The algorithm then populates the archive and makes decisions
 on where to sample solutions next. Our toy example uses the first two parameters
-of the search space as BCs.
+of the search space as measures.
 
 ```python
 import numpy as np
@@ -121,9 +127,9 @@ for itr in range(1000):
     solutions = scheduler.ask()
 
     objectives = -np.sum(np.square(solutions), axis=1)
-    bcs = solutions[:, :2]
+    measures = solutions[:, :2]
 
-    scheduler.tell(objectives, bcs)
+    scheduler.tell(objectives, measures)
 ```
 
 To visualize this archive with matplotlib, we then use the

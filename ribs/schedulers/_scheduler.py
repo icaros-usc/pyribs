@@ -10,8 +10,8 @@ class Scheduler:
     To use this class, first create an archive and list of emitters for the
     QD algorithm. Then, construct the Scheduler with these arguments. Finally,
     repeatedly call :meth:`ask` to collect solutions to analyze, and return the
-    objective values and measures values of those solutions **in the same
-    order** using :meth:`tell`.
+    objective and measures of those solutions **in the same order** using
+    :meth:`tell`.
 
     As all solutions go into the same archive, the  emitters passed in must emit
     solutions with the same dimension (that is, their ``solution_dim`` attribute
