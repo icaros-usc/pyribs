@@ -103,7 +103,7 @@ class Scheduler:
             important, so do not rearrange them.
 
         Returns:
-            (n_solutions, dim) array: An array of n solutions to evaluate. Each
+            (batch_size, dim) array: An array of n solutions to evaluate. Each
             row contains a single solution.
         Raises:
             RuntimeError: This method was called without first calling
@@ -135,7 +135,7 @@ class Scheduler:
             important, so do not rearrange them.
 
         Returns:
-            (n_solutions, dim) array: An array of n solutions to evaluate. Each
+            (batch_size, dim) array: An array of n solutions to evaluate. Each
             row contains a single solution.
         Raises:
             RuntimeError: This method was called without first calling
@@ -232,16 +232,16 @@ class Scheduler:
             and metadata for ``solution_batch[i]``.
 
         Args:
-            objective_batch ((n_solutions,) array): Each entry of this array
+            objective_batch ((batch_size,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
-            measures_batch ((n_solutions, measures_dm) array): Each row of
+            measures_batch ((batch_size, measures_dm) array): Each row of
                 this array contains a solution's coordinates in measure space.
             jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
                 solution_dim)`` array consisting of Jacobian matrices of the
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
-            metadata_batch ((n_solutions,) array): Each entry of this array
+            metadata_batch ((batch_size,) array): Each entry of this array
                 contains an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
@@ -284,11 +284,11 @@ class Scheduler:
             metadata for ``solution_batch[i]``.
 
         Args:
-            objective_batch ((n_solutions,) array): Each entry of this array
+            objective_batch ((batch_size,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
-            measures_batch ((n_solutions, measures_dm) array): Each row of
+            measures_batch ((batch_size, measures_dm) array): Each row of
                 this array contains a solution's coordinates in measure space.
-            metadata ((n_solutions,) array): Each entry of this array contains
+            metadata ((batch_size,) array): Each entry of this array contains
                 an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
