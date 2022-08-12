@@ -32,8 +32,6 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         x0 (np.ndarray): Initial solution.
         sigma0 (float): Initial step size / standard deviation.
         step_size (float): Step size for the gradient optimizer
-        epsilon (float): Due to floating point precision errors, we add a small
-            epsilon when computing the norm.
         ranker (Callable or str): The ranker is a :class:`RankerBase` object
             that orders the solutions after they have been evaluated in the
             environment. This parameter may be a callable (e.g. a class or a
@@ -68,6 +66,11 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             the number of solutions returned by :meth:`ask_dqd`, but also note
             that :meth:`ask_dqd` always returns one solution, i.e. the solution
             point.
+        epsilon (float): For numerical stability, we add a small epsilon when
+            normalizing gradients in :meth:`tell_dqd` -- refer to the
+            implementation `here
+            <../_modules/ribs/emitters/_gradient_aborescence_emitter.html#GradientAborescenceEmitter.tell_dqd>`_.
+            Pass this parameter to configure that epsilon.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
@@ -161,7 +164,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
 
     @property
     def epsilon(self):
-        """int: The epsilon added to avoid floating-point precision error."""
+        """int: The epsilon added for numerical stability when normalizing
+        gradients in :meth:`tell_dqd`."""
         return self._epsilon
 
     def ask_dqd(self):
@@ -245,8 +249,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
                 metadata object for each solution.
         """
         if self._normalize_grads:
-            norms = np.linalg.norm(jacobian_batch, axis=2) + self._epsilon
-            norms = np.expand_dims(norms, axis=2)
+            norms = (np.linalg.norm(jacobian_batch, axis=2, keepdims=True) +
+                     self._epsilon)
             jacobian_batch /= norms
         self._jacobian_batch = jacobian_batch
 
