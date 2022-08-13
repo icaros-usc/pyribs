@@ -57,7 +57,7 @@ class GridArchive(ArchiveBase):
             self,
             solution_dim=solution_dim,
             cells=np.product(self._dims),
-            behavior_dim=len(self._dims),
+            measure_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
         )
@@ -76,22 +76,22 @@ class GridArchive(ArchiveBase):
 
     @property
     def dims(self):
-        """(behavior_dim,) numpy.ndarray: Number of cells in each dimension."""
+        """(measure_dim,) numpy.ndarray: Number of cells in each dimension."""
         return self._dims
 
     @property
     def lower_bounds(self):
-        """(behavior_dim,) numpy.ndarray: Lower bound of each dimension."""
+        """(measure_dim,) numpy.ndarray: Lower bound of each dimension."""
         return self._lower_bounds
 
     @property
     def upper_bounds(self):
-        """(behavior_dim,) numpy.ndarray: Upper bound of each dimension."""
+        """(measure_dim,) numpy.ndarray: Upper bound of each dimension."""
         return self._upper_bounds
 
     @property
     def interval_size(self):
-        """(behavior_dim,) numpy.ndarray: The size of each dim (upper_bounds -
+        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds -
         lower_bounds)."""
         return self._interval_size
 
@@ -149,17 +149,17 @@ class GridArchive(ArchiveBase):
         See :attr:`boundaries` for more info.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
             the flattened grid coordinates.
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
-                :attr:`behavior_dim`).
+                :attr:`measure_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
 
         # Adding epsilon accounts for floating point precision errors from
@@ -182,17 +182,17 @@ class GridArchive(ArchiveBase):
         Refer to :meth:`index_of` for more info.
 
         Args:
-            grid_index_batch (array-like): (batch_size, :attr:`behavior_dim`)
+            grid_index_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of indices in the archive grid.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices.
         Raises:
             ValueError: ``grid_index_batch`` is not of shape (batch_size,
-                :attr:`behavior_dim`)
+                :attr:`measure_dim`)
         """
         grid_index_batch = np.asarray(grid_index_batch)
         check_batch_shape(grid_index_batch, "grid_index_batch",
-                          self.behavior_dim, "measure_dim")
+                          self.measure_dim, "measure_dim")
 
         return np.ravel_multi_index(grid_index_batch.T,
                                     self._dims).astype(np.int32)
@@ -206,7 +206,7 @@ class GridArchive(ArchiveBase):
             int_index_batch (array-like): (batch_size,) array of integer
                 indices such as those output by :meth:`index_of`.
         Returns:
-            numpy.ndarray: (batch_size, :attr:`behavior_dim`) array of indices
+            numpy.ndarray: (batch_size, :attr:`measure_dim`) array of indices
             in the archive grid.
         Raises:
             ValueError: ``int_index_batch`` is not of shape (batch_size,).
