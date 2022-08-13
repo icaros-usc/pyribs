@@ -347,9 +347,9 @@ class SlidingBoundariesArchive(ArchiveBase):
             # Add solutions from buffer.
             status, value = ArchiveBase.add_single(self, solution, objective,
                                                    measures, metadata)
+        # TODO: Should return batch?
         return status, value
 
-    # TODO: Update this method to take in batches.
     def add(self,
             solution_batch,
             objective_batch,
@@ -367,9 +367,10 @@ class SlidingBoundariesArchive(ArchiveBase):
         return values are computed with respect to the *current* archive, i.e.
         before doing any remapping.
         """
-        solution = np.asarray(solution)
-        behavior_values = np.asarray(behavior_values)
+        solution_batch = np.asarray(solution_batch)
+        measures_batch = np.asarray(measures_batch)
 
+        # TODO: Batch addition.
         self._buffer.add(solution, objective_value, behavior_values, metadata)
         self._total_num_sol += 1
 
