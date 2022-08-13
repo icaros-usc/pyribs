@@ -39,8 +39,8 @@ def test_iteration():
     data = get_archive_data("GridArchive")
     for elite in data.archive_with_elite:
         assert np.isclose(elite.solution, data.solution).all()
-        assert np.isclose(elite.objective, data.objective_value)
-        assert np.isclose(elite.measures, data.behavior_values).all()
+        assert np.isclose(elite.objective, data.objective)
+        assert np.isclose(elite.measures, data.measures).all()
         assert elite.index == data.archive_with_elite.grid_to_int_index(
             [data.grid_indices])[0]
         assert elite.metadata == data.metadata
@@ -53,8 +53,8 @@ def test_add_during_iteration():
     with pytest.raises(RuntimeError):
         for _ in data.archive_with_elite:
             data.archive_with_elite.add_single(data.solution,
-                                               data.objective_value + 1,
-                                               data.behavior_values)
+                                               data.objective + 1,
+                                               data.measures)
 
 
 def test_clear_during_iteration():
@@ -70,8 +70,8 @@ def test_clear_and_add_during_iteration():
         for _ in data.archive_with_elite:
             data.archive_with_elite.clear()
             data.archive_with_elite.add_single(data.solution,
-                                               data.objective_value + 1,
-                                               data.behavior_values)
+                                               data.objective + 1,
+                                               data.measures)
 
 
 #
@@ -153,18 +153,18 @@ def test_best_elite():
 
 def test_index_of_wrong_shape(data):
     with pytest.raises(ValueError):
-        data.archive.index_of([data.behavior_values[:-1]])
+        data.archive.index_of([data.measures[:-1]])
 
 
 # Only test on GridArchive.
 def test_index_of_single():
     data = get_archive_data("GridArchive")
-    assert data.archive.index_of_single(data.behavior_values) == data.int_index
+    assert data.archive.index_of_single(data.measures) == data.int_index
 
 
 def test_index_of_single_wrong_shape(data):
     with pytest.raises(ValueError):
-        data.archive.elites_with_measures_single(data.behavior_values[:-1])
+        data.archive.elites_with_measures_single(data.measures[:-1])
 
 
 #
@@ -200,8 +200,8 @@ def test_cells_correct(data):
     assert data.archive.cells == data.cells
 
 
-def test_behavior_dim_correct(data):
-    assert data.archive.behavior_dim == len(data.behavior_values)
+def test_measure_dim_correct(data):
+    assert data.archive.measure_dim == len(data.measures)
 
 
 def test_solution_dim_correct(data):
@@ -217,23 +217,22 @@ def test_basic_stats(data):
 
     assert data.archive_with_elite.stats.num_elites == 1
     assert data.archive_with_elite.stats.coverage == 1 / data.cells
-    assert data.archive_with_elite.stats.qd_score == data.objective_value
-    assert data.archive_with_elite.stats.obj_max == data.objective_value
-    assert data.archive_with_elite.stats.obj_mean == data.objective_value
+    assert data.archive_with_elite.stats.qd_score == data.objective
+    assert data.archive_with_elite.stats.obj_max == data.objective
+    assert data.archive_with_elite.stats.obj_mean == data.objective
 
 
 def test_elites_with_measures_gets_correct_elite(data):
-    elite_batch = data.archive_with_elite.elites_with_measures(
-        [data.behavior_values])
+    elite_batch = data.archive_with_elite.elites_with_measures([data.measures])
     assert np.all(elite_batch.solution_batch[0] == data.solution)
-    assert elite_batch.objective_batch[0] == data.objective_value
-    assert np.all(elite_batch.measures_batch[0] == data.behavior_values)
+    assert elite_batch.objective_batch[0] == data.objective
+    assert np.all(elite_batch.measures_batch[0] == data.measures)
     # Avoid checking elite_batch.idx since the meaning varies by archive.
     assert elite_batch.metadata_batch[0] == data.metadata
 
 
 def test_elites_with_measures_empty_values(data):
-    elite_batch = data.archive.elites_with_measures([data.behavior_values])
+    elite_batch = data.archive.elites_with_measures([data.measures])
     assert np.all(np.isnan(elite_batch.solution_batch[0]))
     assert np.isnan(elite_batch.objective_batch)
     assert np.all(np.isnan(elite_batch.measures_batch[0]))
@@ -243,21 +242,20 @@ def test_elites_with_measures_empty_values(data):
 
 def test_elites_with_measures_wrong_shape(data):
     with pytest.raises(ValueError):
-        data.archive.elites_with_measures([data.behavior_values[:-1]])
+        data.archive.elites_with_measures([data.measures[:-1]])
 
 
 def test_elites_with_measures_single_gets_correct_elite(data):
-    elite = data.archive_with_elite.elites_with_measures_single(
-        data.behavior_values)
+    elite = data.archive_with_elite.elites_with_measures_single(data.measures)
     assert np.all(elite.solution == data.solution)
-    assert elite.objective == data.objective_value
-    assert np.all(elite.measures == data.behavior_values)
+    assert elite.objective == data.objective
+    assert np.all(elite.measures == data.measures)
     # Avoid checking elite.idx since the meaning varies by archive.
     assert elite.metadata == data.metadata
 
 
 def test_elites_with_measures_single_empty_values(data):
-    elite = data.archive.elites_with_measures_single(data.behavior_values)
+    elite = data.archive.elites_with_measures_single(data.measures)
     assert np.all(np.isnan(elite.solution))
     assert np.isnan(elite.objective)
     assert np.all(np.isnan(elite.measures))
@@ -267,14 +265,14 @@ def test_elites_with_measures_single_empty_values(data):
 
 def test_elites_with_measures_single_wrong_shape(data):
     with pytest.raises(ValueError):
-        data.archive.elites_with_measures_single(data.behavior_values[:-1])
+        data.archive.elites_with_measures_single(data.measures[:-1])
 
 
 def test_sample_elites_gets_single_elite(data):
     elite_batch = data.archive_with_elite.sample_elites(2)
     assert np.all(elite_batch.solution_batch == data.solution)
-    assert np.all(elite_batch.objective_batch == data.objective_value)
-    assert np.all(elite_batch.measures_batch == data.behavior_values)
+    assert np.all(elite_batch.objective_batch == data.objective)
+    assert np.all(elite_batch.measures_batch == data.measures)
     # Avoid checking elite.idx since the meaning varies by archive.
     assert np.all(elite_batch.metadata_batch == data.metadata)
 
@@ -297,7 +295,7 @@ def test_as_pandas(name, with_elite, include_solutions, include_metadata,
     data = get_archive_data(name, dtype)
 
     # Set up expected columns and data types.
-    measure_cols = [f"measure_{i}" for i in range(len(data.behavior_values))]
+    measure_cols = [f"measure_{i}" for i in range(len(data.measures))]
     expected_cols = ["index"] + measure_cols + ["objective"]
     expected_dtypes = [np.int32, *[dtype for _ in measure_cols], dtype]
     if include_solutions:
@@ -332,7 +330,7 @@ def test_as_pandas(name, with_elite, include_solutions, include_metadata,
             assert df.loc[0, "index"] == data.archive.grid_to_int_index(
                 [data.grid_indices])[0]
 
-        expected_data = [*data.behavior_values, data.objective_value]
+        expected_data = [*data.measures, data.objective]
         if include_solutions:
             expected_data += list(data.solution)
         if include_metadata:

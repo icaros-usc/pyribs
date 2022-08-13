@@ -127,7 +127,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
 
         # We have a coefficient for each measure and an extra coefficient for
         # the objective.
-        self._num_coefficients = archive.behavior_dim + 1
+        self._num_coefficients = archive.measure_dim + 1
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
         self.opt = CMAEvolutionStrategy(sigma0, batch_size,
