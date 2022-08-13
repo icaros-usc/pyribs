@@ -85,29 +85,29 @@ class SlidingBoundariesArchive(ArchiveBase):
     This archive is the container described in `Fontaine 2019
     <https://arxiv.org/abs/1904.10656>`_. Just like the
     :class:`~ribs.archives.GridArchive`, it can be visualized as an
-    n-dimensional grid in the behavior space that is divided into a certain
+    n-dimensional grid in the measure space that is divided into a certain
     number of cells in each dimension. Internally, this archive stores a buffer
     with the ``buffer_capacity`` most recent solutions and uses them to
-    determine the boundaries of the behavior characteristics along each
-    dimension. After every ``remap_frequency`` solutions are inserted, the
-    archive remaps the boundaries based on the solutions in the buffer.
+    determine the boundaries of each dimension of the measure space. After every
+    ``remap_frequency`` solutions are inserted, the archive remaps the
+    boundaries based on the solutions in the buffer.
 
     Initially, the archive has no solutions, so it cannot automatically
     calculate the boundaries. Thus, until the first remap, this archive divides
-    the behavior space defined by ``ranges`` into equally sized cells.
+    the measure space defined by ``ranges`` into equally sized cells.
 
     Overall, this archive attempts to make the distribution of the space
     illuminated by the archive more accurately match the true distribution of
-    the behavior characteristics when they are not uniformly distributed.
+    the measures when they are not uniformly distributed.
 
     Args:
         solution_dim (int): Dimension of the solution space.
-        dims (array-like): Number of cells in each dimension of the behavior
+        dims (array-like): Number of cells in each dimension of the measure
             space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions
             with 20, 30, and 40 cells. (The number of dimensions is implicitly
             defined in the length of this argument).
         ranges (array-like of (float, float)): `Initial` upper and lower bound
-            of each dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
+            of each dimension of the measure space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds :math:`[-1,1]`
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
@@ -239,29 +239,6 @@ class SlidingBoundariesArchive(ArchiveBase):
             bound[:dim + 1] for bound, dim in zip(self._boundaries, self._dims)
         ]
 
-    @staticmethod
-    def _index_of_numba(measures_batch, upper_bounds, lower_bounds, boundaries,
-                        dims, epsilon):
-        """Numba helper for index_of().
-
-        See index_of() for usage.
-        """
-        # Clip measures_batch + epsilon to the range
-        # [lower_bounds, upper_bounds - epsilon].
-        measures_batch = np.minimum(
-            np.maximum(measures_batch + epsilon, lower_bounds),
-            upper_bounds - epsilon)
-
-        idx_cols = []
-        for boundary, dim, measures_col in zip(boundaries, dims,
-                                               measures_batch.T):
-            idx_col = np.searchsorted(boundary[:dim], measures_col)
-            # The maximum index returned by searchsorted is `dim`, and since we
-            # subtract 1, the max will be dim - 1 which is within the range of
-            # the archive indices.
-            idx_cols.append(np.maximum(0, idx_col - 1))
-        return idx_cols
-
     def index_of(self, measures_batch):
         """Returns archive indices for the given batch of measures.
 
@@ -305,14 +282,20 @@ class SlidingBoundariesArchive(ArchiveBase):
         check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
 
-        index_cols = SlidingBoundariesArchive._index_of_numba(
-            measures_batch,
-            self._upper_bounds,
-            self._lower_bounds,
-            self._boundaries,
-            self._dims,
-            self._epsilon,
-        )
+        # Clip measures_batch + epsilon to the range
+        # [lower_bounds, upper_bounds - epsilon].
+        measures_batch = np.minimum(
+            np.maximum(measures_batch + self._epsilon, self._lower_bounds),
+            self._upper_bounds - self._epsilon)
+
+        idx_cols = []
+        for boundary, dim, measures_col in zip(self._boundaries, self._dims,
+                                               measures_batch.T):
+            idx_col = np.searchsorted(boundary[:dim], measures_col)
+            # The maximum index returned by searchsorted is `dim`, and since we
+            # subtract 1, the max will be dim - 1 which is within the range of
+            # the archive indices.
+            idx_cols.append(np.maximum(0, idx_col - 1))
 
         # We cannot use `grid_to_int_index` since that takes in an array of
         # indices, not index columns.
@@ -320,7 +303,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         # pylint seems to think that ravel_multi_index returns a list and thus
         # has no astype method.
         # pylint: disable = no-member
-        return np.ravel_multi_index(index_cols, self._dims).astype(np.int32)
+        return np.ravel_multi_index(idx_cols, self._dims).astype(np.int32)
 
     # Copy these methods from GridArchive.
     int_to_grid_index = GridArchive.int_to_grid_index
