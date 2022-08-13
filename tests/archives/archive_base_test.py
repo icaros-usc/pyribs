@@ -223,8 +223,7 @@ def test_basic_stats(data):
 
 
 def test_elites_with_measures_gets_correct_elite(data):
-    elite_batch = data.archive_with_elite.elites_with_measures(
-        [data.measures])
+    elite_batch = data.archive_with_elite.elites_with_measures([data.measures])
     assert np.all(elite_batch.solution_batch[0] == data.solution)
     assert elite_batch.objective_batch[0] == data.objective
     assert np.all(elite_batch.measures_batch[0] == data.measures)
@@ -247,8 +246,7 @@ def test_elites_with_measures_wrong_shape(data):
 
 
 def test_elites_with_measures_single_gets_correct_elite(data):
-    elite = data.archive_with_elite.elites_with_measures_single(
-        data.measures)
+    elite = data.archive_with_elite.elites_with_measures_single(data.measures)
     assert np.all(elite.solution == data.solution)
     assert elite.objective == data.objective
     assert np.all(elite.measures == data.measures)
