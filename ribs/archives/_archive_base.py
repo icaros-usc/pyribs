@@ -46,11 +46,11 @@ class ArchiveIterator:
         idx = self.archive._occupied_indices[self.iter_idx]
         self.iter_idx += 1
         return Elite(
-            self.archive._solutions[idx],
-            self.archive._objective_values[idx],
-            self.archive._behavior_values[idx],
+            self.archive._solution_arr[idx],
+            self.archive._objective_arr[idx],
+            self.archive._measures_arr[idx],
             idx,
-            self.archive._metadata[idx],
+            self.archive._metadata_arr[idx],
         )
 
 
@@ -63,26 +63,26 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     (float), (4) measure space coordinates of the solution (1D array), and (5)
     any additional metadata associated with the solution (object). In this
     class, the container is implemented with separate numpy arrays that share
-    common dimensions. Using the ``solution_dim``, ``cells`, and
-    ``measure_dim`` arguments in ``__init__``, these arrays are as follows:
+    common dimensions. Using the ``solution_dim``, ``cells`, and ``measure_dim``
+    arguments in ``__init__``, these arrays are as follows:
 
     +------------------------+----------------------------+
     | Name                   |  Shape                     |
     +========================+============================+
-    | ``_occupied``          |  ``(cells,)``              |
+    | ``_occupied_arr``      |  ``(cells,)``              |
     +------------------------+----------------------------+
-    | ``_solutions``         |  ``(cells, solution_dim)`` |
+    | ``_solution_arr``      |  ``(cells, solution_dim)`` |
     +------------------------+----------------------------+
-    | ``_objective_values``  |  ``(cells,)``              |
+    | ``_objective_arr``     |  ``(cells,)``              |
     +------------------------+----------------------------+
-    | ``_behavior_values``   |  ``(cells, measure_dim)`` |
+    | ``_measures_arr``      |  ``(cells, measure_dim)``  |
     +------------------------+----------------------------+
-    | ``_metadata``          |  ``(cells,)``              |
+    | ``_metadata_arr``      |  ``(cells,)``              |
     +------------------------+----------------------------+
 
     All of these arrays are accessed via a common integer index. If we have
-    index ``i``, we access its solution at ``_solutions[i]``, its behavior
-    values at ``_behavior_values[i]``, etc.
+    index ``i``, we access its solution at ``_solution_arr[i]``, its measure
+    values at ``_measures_arr[i]``, etc.
 
     Thus, child classes typically override the following methods:
 
@@ -100,32 +100,32 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         solution_dim (int): Dimension of the solution space.
         cells (int): Number of cells in the archive. This is used to create the
             numpy arrays described above for storing archive info.
-        measure_dim (int): The dimension of the behavior space.
+        measure_dim (int): The dimension of the measure space.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-        dtype (str or data-type): Data type of the solutions, objective values,
-            and behavior values. We only support ``"f"`` / ``np.float32`` and
-            ``"d"`` / ``np.float64``.
+        dtype (str or data-type): Data type of the solutions, objectives,
+            and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
+            ``np.float64``.
     Attributes:
         _solution_dim (int): See ``solution_dim`` arg.
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
         _cells (int): See ``cells`` arg.
         _measure_dim (int): See ``measure_dim`` arg.
-        _occupied (numpy.ndarray): Bool array storing whether each cell in the
-            archive is occupied.
-        _solutions (numpy.ndarray): Float array storing the solutions
+        _occupied_arr (numpy.ndarray): Bool array storing whether each cell in
+            the archive is occupied.
+        _solution_arr (numpy.ndarray): Float array storing the solutions
             themselves.
-        _objective_values (numpy.ndarray): Float array storing the objective
-            value of each solution.
-        _behavior_values (numpy.ndarray): Float array storing the behavior
-            space coordinates of each solution.
-        _metadata (numpy.ndarray): Object array storing the metadata associated
-            with each solution.
+        _objective_arr (numpy.ndarray): Float array storing the objective value
+            of each solution.
+        _measures_arr (numpy.ndarray): Float array storing the measure space
+            coordinates of each solution.
+        _metadata_arr (numpy.ndarray): Object array storing the metadata
+            associated with each solution.
         _occupied_indices (numpy.ndarray): A ``(cells,)`` array of integer
             (``np.int32``) indices that are occupied in the archive. This could
             be a list, but for efficiency, we make it a fixed-size array, where
-            only the first ``_num_occupied`` entries will be valid.
+            only the first ``_num_occupied`` entries are valid.
         _num_occupied (int): Number of elites currently in the archive. This is
             used to index into ``_occupied_indices``.
     """
@@ -145,15 +145,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._dtype = self._parse_dtype(dtype)
 
         self._num_occupied = 0
-        self._occupied = np.zeros(self._cells, dtype=bool)
+        self._occupied_arr = np.zeros(self._cells, dtype=bool)
         self._occupied_indices = np.empty(self._cells, dtype=np.int32)
 
-        self._solutions = np.empty((self._cells, solution_dim),
-                                   dtype=self.dtype)
-        self._objective_values = np.empty(self._cells, dtype=self.dtype)
-        self._behavior_values = np.empty((self._cells, self._measure_dim),
-                                         dtype=self.dtype)
-        self._metadata = np.empty(self._cells, dtype=object)
+        self._solution_arr = np.empty((self._cells, solution_dim),
+                                      dtype=self.dtype)
+        self._objective_arr = np.empty(self._cells, dtype=self.dtype)
+        self._measures_arr = np.empty((self._cells, self._measure_dim),
+                                      dtype=self.dtype)
+        self._metadata_arr = np.empty(self._cells, dtype=object)
 
         self._stats = None
         self._stats_reset()
@@ -199,7 +199,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     @property
     def measure_dim(self):
-        """int: Dimensionality of the behavior space."""
+        """int: Dimensionality of the measure space."""
         return self._measure_dim
 
     @property
@@ -225,8 +225,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     @property
     def dtype(self):
-        """data-type: The dtype of the solutions, objective values, and behavior
-        values."""
+        """data-type: The dtype of the solutions, objective, and measures."""
         return self._dtype
 
     def __len__(self):
@@ -257,11 +256,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         After this method is called, the archive will be :attr:`empty`.
         """
-        # Only ``self._occupied_indices`` and ``self._occupied`` are cleared, as
-        # a cell can have arbitrary values when its index is marked as
-        # unoccupied.
+        # Only ``self._occupied_indices`` and ``self._occupied_arr`` are
+        # cleared, as a cell can have arbitrary values when its index is marked
+        # as unoccupied.
         self._num_occupied = 0
-        self._occupied.fill(False)
+        self._occupied_arr.fill(False)
 
         self._state["clear"] += 1
         self._state["add"] = 0
@@ -435,11 +434,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         index_batch = self.index_of(measures_batch)
 
         # Copy old objectives since we will be modifying the objectives storage.
-        old_objective_batch = np.copy(self._objective_values[index_batch])
+        old_objective_batch = np.copy(self._objective_arr[index_batch])
 
         # Compute the statuses -- these are all boolean arrays of length
         # batch_size.
-        already_occupied = self._occupied[index_batch]
+        already_occupied = self._occupied_arr[index_batch]
         is_new = ~already_occupied
         improve_existing = (objective_batch >
                             old_objective_batch) & already_occupied
@@ -499,11 +498,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         old_objective_batch_insert = old_objective_batch_can[should_insert]
 
         # Set archive storage.
-        self._objective_values[index_batch_insert] = objective_batch_insert
-        self._behavior_values[index_batch_insert] = measures_batch_insert
-        self._solutions[index_batch_insert] = solution_batch_insert
-        self._metadata[index_batch_insert] = metadata_batch_insert
-        self._occupied[index_batch_insert] = True
+        self._objective_arr[index_batch_insert] = objective_batch_insert
+        self._measures_arr[index_batch_insert] = measures_batch_insert
+        self._solution_arr[index_batch_insert] = solution_batch_insert
+        self._metadata_arr[index_batch_insert] = metadata_batch_insert
+        self._occupied_arr[index_batch_insert] = True
 
         # Mark new indices as occupied.
         is_new_and_inserted = is_new[can_insert][should_insert]
@@ -639,31 +638,31 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                           "measure_dim")
 
         index_batch = self.index_of(measures_batch)
-        occupied_batch = self._occupied[index_batch]
+        occupied_batch = self._occupied_arr[index_batch]
         expanded_occupied_batch = occupied_batch[:, None]
 
         return EliteBatch(
             solution_batch=readonly(
                 # For each occupied_batch[i], this np.where selects
-                # self._solutions[index_batch][i] if occupied_batch[i] is True.
-                # Otherwise, it uses the alternate value (a solution array
-                # consisting of np.nan).
+                # self._solution_arr[index_batch][i] if occupied_batch[i] is
+                # True. Otherwise, it uses the alternate value (a solution
+                # array consisting of np.nan).
                 np.where(
                     expanded_occupied_batch,
-                    self._solutions[index_batch],
+                    self._solution_arr[index_batch],
                     np.full(self._solution_dim, np.nan),
                 )),
             objective_batch=readonly(
                 np.where(
                     occupied_batch,
-                    self._objective_values[index_batch],
+                    self._objective_arr[index_batch],
                     # Here the alternative is just a scalar np.nan.
                     np.nan,
                 )),
             measures_batch=readonly(
                 np.where(
                     expanded_occupied_batch,
-                    self._behavior_values[index_batch],
+                    self._measures_arr[index_batch],
                     # And here it is a measures array of np.nan.
                     np.full(self._measure_dim, np.nan),
                 )),
@@ -678,7 +677,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             metadata_batch=readonly(
                 np.where(
                     occupied_batch,
-                    self._metadata[index_batch],
+                    self._metadata_arr[index_batch],
                     None,
                 )),
         )
@@ -748,11 +747,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         selected_indices = self._occupied_indices[random_indices]
 
         return EliteBatch(
-            readonly(self._solutions[selected_indices]),
-            readonly(self._objective_values[selected_indices]),
-            readonly(self._behavior_values[selected_indices]),
+            readonly(self._solution_arr[selected_indices]),
+            readonly(self._objective_arr[selected_indices]),
+            readonly(self._measures_arr[selected_indices]),
             readonly(selected_indices),
-            readonly(self._metadata[selected_indices]),
+            readonly(self._metadata_arr[selected_indices]),
         )
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
@@ -764,9 +763,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         - 1 column of integers (``np.int32``) for the index, named ``index``.
           See :meth:`index_of` for more info.
-        - :attr:`measure_dim` columns for the behavior characteristics, named
-          ``measure_0, measure_1, ...``
-        - 1 column for the objective values, named ``objective``
+        - :attr:`measure_dim` columns for the measures, named ``measure_0,
+          measure_1, ...``
+        - 1 column for the objectives, named ``objective``
         - :attr:`solution_dim` columns for the solution parameters, named
           ``solution_0, solution_1, ...``
         - 1 column for the metadata objects, named ``metadata``
@@ -799,19 +798,19 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Copy indices so we do not overwrite.
         data["index"] = np.copy(indices)
 
-        behavior_values = self._behavior_values[indices]
+        measures_batch = self._measures_arr[indices]
         for i in range(self._measure_dim):
-            data[f"measure_{i}"] = behavior_values[:, i]
+            data[f"measure_{i}"] = measures_batch[:, i]
 
-        data["objective"] = self._objective_values[indices]
+        data["objective"] = self._objective_arr[indices]
 
         if include_solutions:
-            solutions = self._solutions[indices]
+            solutions = self._solution_arr[indices]
             for i in range(self._solution_dim):
                 data[f"solution_{i}"] = solutions[:, i]
 
         if include_metadata:
-            data["metadata"] = self._metadata[indices]
+            data["metadata"] = self._metadata_arr[indices]
 
         return ArchiveDataFrame(
             data,

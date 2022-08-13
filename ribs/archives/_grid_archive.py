@@ -34,9 +34,9 @@ class GridArchive(ArchiveBase):
             Pass this parameter to configure that epsilon.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-        dtype (str or data-type): Data type of the solutions, objective values,
-            and behavior values. We only support ``"f"`` / :class:`np.float32`
-            and ``"d"`` / :class:`np.float64`.
+        dtype (str or data-type): Data type of the solutions, objectives,
+            and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
+            ``np.float64``.
     Raises:
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """

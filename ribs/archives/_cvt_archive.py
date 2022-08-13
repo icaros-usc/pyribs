@@ -62,9 +62,9 @@ class CVTArchive(ArchiveBase):
             ``dims``.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
-        dtype (str or data-type): Data type of the solutions, objective values,
-            and measure values. We only support ``"f"`` / :class:`np.float32`
-            and ``"d"`` / :class:`np.float64`.
+        dtype (str or data-type): Data type of the solutions, objectives,
+            and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
+            ``np.float64``.
         samples (int or array-like): If it is an int, this specifies the number
             of samples to generate when creating the CVT. Otherwise, this must
             be a (num_samples, measure_dim) array where samples[i] is a sample
