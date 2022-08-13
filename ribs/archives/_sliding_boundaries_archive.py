@@ -63,7 +63,7 @@ class SolutionBuffer:
         return len(self._queue) >= self._buffer_capacity
 
     @property
-    def sorted_measures_batch(self):
+    def sorted_measures(self):
         """(measure_dim, self.size) numpy.ndarray: Sorted measures of each
         dimension."""
         return np.array(self._measure_lists, dtype=np.float64)
@@ -309,59 +309,52 @@ class SlidingBoundariesArchive(ArchiveBase):
     int_to_grid_index = GridArchive.int_to_grid_index
     grid_to_int_index = GridArchive.grid_to_int_index
 
-    @staticmethod
-    def _remap_numba_helper(sorted_bc, buffer_size, boundaries, measure_dim,
-                            dims):
-        """Numba helper for _remap().
-
-        See _remap() for usage.
-        """
-        for i in range(measure_dim):
-            for j in range(dims[i]):
-                sample_idx = int(j * buffer_size / dims[i])
-                boundaries[i][j] = sorted_bc[i][sample_idx]
-            # Set the upper bound to be the greatest BC.
-            boundaries[i][dims[i]] = sorted_bc[i][-1]
-
     def _remap(self):
         """Remaps the archive.
 
         The boundaries are relocated to the percentage marks of the distribution
         of solutions stored in the archive.
 
-        Also re-adds all of the solutions to the archive.
+        Also re-adds all of the solutions in the buffer and the previous archive
+        to the archive.
 
         Returns:
             tuple: The result of calling :meth:`ArchiveBase.add` on the last
             item in the buffer.
         """
-        # Sort all behavior values along the axis of each bc.
-        sorted_bc = self._buffer.sorted_measures_batch
+        # Sort each measure along its dimension.
+        sorted_measures = self._buffer.sorted_measures
 
-        # Calculate new boundaries.
-        SlidingBoundariesArchive._remap_numba_helper(sorted_bc,
-                                                     self._buffer.size,
-                                                     self._boundaries,
-                                                     self._measure_dim,
-                                                     self.dims)
+        # TODO: Can this be sped up?
+        for i in range(self._measure_dim):
+            for j in range(self.dims[i]):
+                sample_idx = int(j * self._buffer.size / self.dims[i])
+                self._boundaries[i][j] = sorted_measures[i][sample_idx]
+            # Set the upper bound to be the greatest BC.
+            self._boundaries[i][self.dims[i]] = sorted_measures[i][-1]
 
         indices = self._occupied_indices[:self._num_occupied]
-        old_sols = self._solutions[indices].copy()
-        old_objs = self._objective_values[indices].copy()
-        old_behs = self._behavior_values[indices].copy()
-        old_metas = self._metadata[indices].copy()
+        old_solution_batch = self._solution_arr[indices].copy()
+        old_objective_batch = self._objective_arr[indices].copy()
+        old_measures_batch = self._measures_arr[indices].copy()
+        old_metadata_batch = self._metadata_arr[indices].copy()
 
         self.clear()
-        for sol, obj, beh, meta in zip(old_sols, old_objs, old_behs, old_metas):
-            # Add solutions from old archive.
-            status, value = ArchiveBase.add(self, sol, obj, beh, meta)
-        for sol, obj, beh, meta in self._buffer:
+        ArchiveBase.add(self, old_solution_batch, old_objective_batch,
+                        old_measures_batch, old_metadata_batch)
+        # TODO: Can this be batched?
+        for solution, objective, measures, metadata in self._buffer:
             # Add solutions from buffer.
-            status, value = ArchiveBase.add(self, sol, obj, beh, meta)
+            status, value = ArchiveBase.add_single(self, solution, objective,
+                                                   measures, metadata)
         return status, value
 
     # TODO: Update this method to take in batches.
-    def add(self, solution, objective_value, behavior_values, metadata=None):
+    def add(self,
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            metadata_batch=None):
         """Inserts a batch of solutions into the archive.
 
         This method remaps the archive after every :attr:`remap_frequency`
