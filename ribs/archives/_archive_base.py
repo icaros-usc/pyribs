@@ -816,3 +816,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             data,
             copy=False,  # Fancy indexing above already results in copying.
         )
+
+    def cqd_score(self):
+        pass
