@@ -5,7 +5,7 @@ import numpy as np
 
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import CMAEvolutionStrategy
-from ribs.emitters.rankers import RankerBase, get_ranker
+from ribs.emitters.rankers import RankerBase, _get_ranker
 
 
 class EvolutionStrategyEmitter(EmitterBase):
@@ -21,7 +21,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        x0 (np.ndarray): Initial solution.
+        x0 (np.ndarray): Initial solution. Must be 1-dimensional.
         sigma0 (float): Initial step size / standard deviation.
         selection_rule ("mu" or "filter"): Method for selecting parents in
             CMA-ES. With "mu" selection, the first half of the solutions will be
@@ -67,7 +67,12 @@ class EvolutionStrategyEmitter(EmitterBase):
                  batch_size=None,
                  seed=None):
         self._rng = np.random.default_rng(seed)
+
         self._x0 = np.array(x0, dtype=archive.dtype)
+        if self._x0.ndim != 1:
+            raise ValueError(
+                f"x0 has shape {self._x0.shape}, should be 1-dimensional.")
+
         self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
@@ -90,21 +95,11 @@ class EvolutionStrategyEmitter(EmitterBase):
                                         self.archive.dtype)
         self.opt.reset(self._x0)
 
-        # Handling ranker initiation
-        if isinstance(ranker, str):
-            # get_ranker returns a subclass of RankerBase
-            ranker = get_ranker(ranker)
-        if callable(ranker):
-            self._ranker = ranker()
-            if not isinstance(self._ranker, RankerBase):
-                raise ValueError("Callable " + ranker +
-                                 " did not return a instance of RankerBase.")
-        else:
-            raise ValueError(ranker + " is not one of [Callable, str]")
+        self._ranker = _get_ranker(ranker)
         self._ranker.reset(self, archive, self._rng)
 
         self._batch_size = self.opt.batch_size
-        self._restarts = 0  # Currently not exposed publicly.
+        self._restarts = 0
 
     @property
     def x0(self):
@@ -115,6 +110,11 @@ class EvolutionStrategyEmitter(EmitterBase):
     def batch_size(self):
         """int: Number of solutions to return in :meth:`ask`."""
         return self._batch_size
+
+    @property
+    def restarts(self):
+        """int: The number of restarts for this emitter."""
+        return self._restarts
 
     def ask(self):
         """Samples new solutions from a multivariate Gaussian.
@@ -146,13 +146,12 @@ class EvolutionStrategyEmitter(EmitterBase):
              metadata_batch=None):
         """Gives the emitter results from evaluating solutions.
 
-        As we insert solutions into the archive, we record the solutions'
-        impact on the fitness of the archive. For example, if the added
-        solution makes an improvement on an existing elite, then we
-        will record ``(AddStatus.IMPROVED_EXISTING, improvement_value)``
-
         The solutions are ranked based on the `rank()` function defined by
-        `self._ranker`.
+        `self._ranker`. Then, the ranked solutions are passed to CMA-ES for
+        adaptation.
+
+        This function also checks for restart condition and restarts CMA-ES
+        when needed.
 
         Args:
             solution_batch (numpy.ndarray): (batch_size, :attr:`solution_dim`)

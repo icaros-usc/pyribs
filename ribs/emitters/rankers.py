@@ -6,10 +6,21 @@ The ``Ranker`` object will define the :meth:`rank` method which returns the
 result of a descending argsort of the solutions. It will also define a
 :meth:`reset` method which resets the internal state of the object.
 
+When specifying which ranker to use for each emitter, one could either pass in
+the full name of a ranker, e.g. "ImprovementRanker", or the abbreviated name of
+a ranker, e.g. "imp".
+The supported abbreviations are:
+
+* ``imp``: :class:`ImprovementRanker`
+* ``2imp``: :class:`TwoStageImprovementRanker`
+* ``rd``: :class:`RandomDirectionRanker`
+* ``2rd``: :class:`TwoStageRandomDirectionRanker`
+* ``obj``: :class:`ObjectiveRanker`
+* ``2obj``: :class:`TwoStageObjectiveRanker`
+
 .. autosummary::
     :toctree:
 
-    ribs.emitters.rankers.get_ranker
     ribs.emitters.rankers.ImprovementRanker
     ribs.emitters.rankers.TwoStageImprovementRanker
     ribs.emitters.rankers.RandomDirectionRanker
@@ -25,7 +36,6 @@ import numpy as np
 from ribs._docstrings import DocstringComponents, core_args
 
 __all__ = [
-    "get_ranker",
     "ImprovementRanker",
     "TwoStageImprovementRanker",
     "RandomDirectionRanker",
@@ -333,25 +343,30 @@ _NAME_TO_RANKER_MAP = {
 }
 
 
-def get_ranker(name):
+def _get_ranker(klass):
     """Returns a ranker class based on its name.
 
-    ``name`` may be the full name of a ranker, e.g. "ImprovementRanker" or
-    "RandomDirectionRanker". Alternatively, it can be the abbreviated name
-    for a ranker -- the supported abbreviations are:
-
-    * ``imp``: :class:`ImprovementRanker`
-    * ``2imp``: :class:`TwoStageImprovementRanker`
-    * ``rd``: :class:`RandomDirectionRanker`
-    * ``2rd``: :class:`TwoStageRandomDirectionRanker`
-    * ``obj``: :class:`ObjectiveRanker`
-    * ``2obj``: :class:`TwoStageObjectiveRanker`
+    ``klass`` can be a reference to the class of the ranker, the full name of
+    a ranker, e.g. "ImprovementRanker", or the abbreviated name for a ranker
+    such as "imp".
 
     Args:
-        name (str): Full or abbreviated name of the ranker.
+        klass (Callable or str): This parameter may either be a callable (e.g.
+            a class or a lambda function) that takes in no parameters and
+            returns an instance of :class:`RankerBase`, or it may be a full or
+            abbreviated ranker name.
     Returns:
         The corresponding ranker class.
     """
-    if name in _NAME_TO_RANKER_MAP:
-        return _NAME_TO_RANKER_MAP[name]
-    raise ValueError(f"Could not find ranker with name {name}")
+    if isinstance(klass, str):
+        if klass in _NAME_TO_RANKER_MAP:
+            return _NAME_TO_RANKER_MAP[klass]()
+        raise ValueError(f"`{klass}` is not the full or abbreviated "
+                         "name of a valid ranker")
+    if callable(klass):
+        ranker = klass()
+        if isinstance(ranker, RankerBase):
+            return ranker
+        raise ValueError(f"Callable `{klass}` did not return an instance "
+                         "of RankerBase.")
+    raise ValueError(f"`{klass}` is neither a callable nor a string")

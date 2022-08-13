@@ -154,7 +154,7 @@ class CMAEvolutionStrategy:
             return True
 
         # Area of distribution too small.
-        area = self.sigma * np.sqrt(max(self.cov.eigenvalues))
+        area = self.sigma * np.sqrt(np.max(self.cov.eigenvalues))
         if area < 1e-11:
             return True
 
@@ -231,7 +231,7 @@ class CMAEvolutionStrategy:
                        np.log(np.arange(1, num_parents + 1)))
             total_weights = np.sum(weights)
             weights = weights / total_weights
-            mueff = np.sum(weights)**2 / np.sum(weights**2)
+            mueff = total_weights**2 / np.sum(weights**2)
         elif self.weight_rule == "active":
             weights = None
 
