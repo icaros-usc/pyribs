@@ -93,16 +93,16 @@ def test_add_single_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
-    high_objective_value = data.objective + 1.0
+    high_objective = data.objective + 1.0
 
     status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       high_objective_value,
+                                                       high_objective,
                                                        data.measures,
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
-    assert np.isclose(value, high_objective_value - data.objective)
+    assert np.isclose(value, high_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective_value, data.measures, data.centroid,
+                         high_objective, data.measures, data.centroid,
                          arbitrary_metadata)
 
 
@@ -110,13 +110,13 @@ def test_add_single_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
-    low_objective_value = data.objective - 1.0
+    low_objective = data.objective - 1.0
 
     status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       low_objective_value,
+                                                       low_objective,
                                                        data.measures,
                                                        arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective_value - data.objective)
+    assert np.isclose(value, low_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
                          data.measures, data.centroid, data.metadata)
