@@ -2,8 +2,6 @@
 
 from collections import deque
 
-# TODO: Remove numba.
-import numba as nb
 import numpy as np
 from sortedcontainers import SortedList
 
@@ -16,17 +14,17 @@ class SolutionBuffer:
     """An internal class that stores relevant data to re-add after remapping.
 
     Maintains two data structures:
-    - Queue storing the buffer_capacity last entries (solution + objective value
-      + behavior values + metadata). When new items are inserted, the oldest
-      ones are popped.
-    - Sorted lists with the sorted behavior values in each dimension. Behavior
-      values are removed from theses lists when they are removed from the queue.
+    - Queue storing the buffer_capacity last entries (solution + objective +
+      measures + metadata). When new items are inserted, the oldest ones are
+      popped.
+    - Sorted lists with the sorted measures in each dimension. Measures are
+      removed from these lists when they are removed from the queue.
     """
 
-    def __init__(self, buffer_capacity, behavior_dim):
+    def __init__(self, buffer_capacity, measure_dim):
         self._buffer_capacity = buffer_capacity
         self._queue = deque()
-        self._bc_lists = [SortedList() for _ in range(behavior_dim)]
+        self._measure_lists = [SortedList() for _ in range(measure_dim)]
         self._iter_idx = 0
 
     def __iter__(self):
@@ -42,34 +40,33 @@ class SolutionBuffer:
         self._iter_idx += 1
         return result
 
-    def add(self, solution, objective_value, behavior_values, metadata=None):
+    def add(self, solution, objective, measures, metadata=None):
         """Inserts a new entry.
 
         Pops the oldest if it is full.
         """
         if self.full():
             # Remove item from the deque.
-            _, _, bc_deleted, _ = self._queue.popleft()
+            _, _, measure_deleted, _ = self._queue.popleft()
             # Remove bc from sorted lists.
-            for i, bc in enumerate(bc_deleted):
-                self._bc_lists[i].remove(bc)
+            for i, m in enumerate(measure_deleted):
+                self._measure_lists[i].remove(m)
 
-        self._queue.append(
-            (solution, objective_value, behavior_values, metadata))
+        self._queue.append((solution, objective, measures, metadata))
 
-        # Add bc to sorted lists.
-        for i, bc in enumerate(behavior_values):
-            self._bc_lists[i].add(bc)
+        # Add measures to sorted lists.
+        for i, m in enumerate(measures):
+            self._measure_lists[i].add(m)
 
     def full(self):
         """Whether buffer is full."""
         return len(self._queue) >= self._buffer_capacity
 
     @property
-    def sorted_behavior_values(self):
-        """(behavior_dim, self.size) numpy.ndarray: Sorted behavior values of
-        each dimension."""
-        return np.array(self._bc_lists, dtype=np.float64)
+    def sorted_measures_batch(self):
+        """(measure_dim, self.size) numpy.ndarray: Sorted measures of each
+        dimension."""
+        return np.array(self._measure_lists, dtype=np.float64)
 
     @property
     def size(self):
@@ -243,7 +240,6 @@ class SlidingBoundariesArchive(ArchiveBase):
         ]
 
     @staticmethod
-    @nb.jit(nopython=True)
     def _index_of_numba(measures_batch, upper_bounds, lower_bounds, boundaries,
                         dims, epsilon):
         """Numba helper for index_of().
@@ -331,7 +327,6 @@ class SlidingBoundariesArchive(ArchiveBase):
     grid_to_int_index = GridArchive.grid_to_int_index
 
     @staticmethod
-    @nb.jit(nopython=True)
     def _remap_numba_helper(sorted_bc, buffer_size, boundaries, behavior_dim,
                             dims):
         """Numba helper for _remap().
@@ -358,7 +353,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             item in the buffer.
         """
         # Sort all behavior values along the axis of each bc.
-        sorted_bc = self._buffer.sorted_behavior_values
+        sorted_bc = self._buffer.sorted_measures_batch
 
         # Calculate new boundaries.
         SlidingBoundariesArchive._remap_numba_helper(sorted_bc,
