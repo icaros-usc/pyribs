@@ -10,19 +10,19 @@ class GridArchive(ArchiveBase):
 
     This archive is the container described in `Mouret 2015
     <https://arxiv.org/pdf/1504.04909.pdf>`_. It can be visualized as an
-    n-dimensional grid in the behavior space that is divided into a certain
+    n-dimensional grid in the measure space that is divided into a certain
     number of cells in each dimension. Each cell contains an elite, i.e. a
-    solution that `maximizes` the objective function for the behavior values in
-    that cell.
+    solution that `maximizes` the objective function for the measures in that
+    cell.
 
     Args:
         solution_dim (int): Dimension of the solution space.
         dims (array-like of int): Number of cells in each dimension of the
-            behavior space, e.g. ``[20, 30, 40]`` indicates there should be 3
+            measure space, e.g. ``[20, 30, 40]`` indicates there should be 3
             dimensions with 20, 30, and 40 cells. (The number of dimensions is
             implicitly defined in the length of this argument).
         ranges (array-like of (float, float)): Upper and lower bound of each
-            dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
+            dimension of the measure space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds :math:`[-1,1]`
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
