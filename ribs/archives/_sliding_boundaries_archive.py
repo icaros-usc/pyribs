@@ -23,10 +23,10 @@ class SolutionBuffer:
       values are removed from theses lists when they are removed from the queue.
     """
 
-    def __init__(self, buffer_capacity, behavior_dim):
+    def __init__(self, buffer_capacity, measure_dim):
         self._buffer_capacity = buffer_capacity
         self._queue = deque()
-        self._bc_lists = [SortedList() for _ in range(behavior_dim)]
+        self._bc_lists = [SortedList() for _ in range(measure_dim)]
         self._iter_idx = 0
 
     def __iter__(self):
@@ -67,7 +67,7 @@ class SolutionBuffer:
 
     @property
     def sorted_behavior_values(self):
-        """(behavior_dim, self.size) numpy.ndarray: Sorted behavior values of
+        """(measure_dim, self.size) numpy.ndarray: Sorted behavior values of
         each dimension."""
         return np.array(self._bc_lists, dtype=np.float64)
 
@@ -122,9 +122,9 @@ class SlidingBoundariesArchive(ArchiveBase):
             Pass this parameter to configure that epsilon.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-        dtype (str or data-type): Data type of the solutions, objective values,
-            and behavior values. We only support ``"f"`` / :class:`np.float32`
-            and ``"d"`` / :class:`np.float64`.
+        dtype (str or data-type): Data type of the solutions, objectives,
+            and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
+            ``np.float64``.
         remap_frequency (int): Frequency of remapping. Archive will remap once
             after ``remap_frequency`` number of solutions has been found.
         buffer_capacity (int): Number of solutions to keep in the buffer.
@@ -150,7 +150,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             self,
             solution_dim=solution_dim,
             cells=np.product(self._dims),
-            behavior_dim=len(self._dims),
+            measure_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
         )
@@ -166,7 +166,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         # Allocate an extra entry in each row so we can put the upper bound at
         # the end.
-        self._boundaries = np.full((self._behavior_dim, np.max(self._dims) + 1),
+        self._boundaries = np.full((self._measure_dim, np.max(self._dims) + 1),
                                    np.nan,
                                    dtype=self.dtype)
 
@@ -177,29 +177,29 @@ class SlidingBoundariesArchive(ArchiveBase):
                                                         upper_bound, dim + 1)
 
         # Create buffer.
-        self._buffer = SolutionBuffer(buffer_capacity, self._behavior_dim)
+        self._buffer = SolutionBuffer(buffer_capacity, self._measure_dim)
 
         # Total number of solutions encountered.
         self._total_num_sol = 0
 
     @property
     def dims(self):
-        """(behavior_dim,) numpy.ndarray: Number of cells in each dimension."""
+        """(measure_dim,) numpy.ndarray: Number of cells in each dimension."""
         return self._dims
 
     @property
     def lower_bounds(self):
-        """(behavior_dim,) numpy.ndarray: Lower bound of each dimension."""
+        """(measure_dim,) numpy.ndarray: Lower bound of each dimension."""
         return self._lower_bounds
 
     @property
     def upper_bounds(self):
-        """(behavior_dim,) numpy.ndarray: Upper bound of each dimension."""
+        """(measure_dim,) numpy.ndarray: Upper bound of each dimension."""
         return self._upper_bounds
 
     @property
     def interval_size(self):
-        """(behavior_dim,) numpy.ndarray: The size of each dim (upper_bounds -
+        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds -
         lower_bounds)."""
         return self._interval_size
 
@@ -296,17 +296,17 @@ class SlidingBoundariesArchive(ArchiveBase):
         See :attr:`boundaries` for more info.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`behavior_dim`)
+            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
             the flattened grid coordinates.
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
-                :attr:`behavior_dim`).
+                :attr:`measure_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.behavior_dim,
+        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
 
         index_cols = SlidingBoundariesArchive._index_of_numba(
@@ -332,13 +332,13 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     @staticmethod
     @nb.jit(nopython=True)
-    def _remap_numba_helper(sorted_bc, buffer_size, boundaries, behavior_dim,
+    def _remap_numba_helper(sorted_bc, buffer_size, boundaries, measure_dim,
                             dims):
         """Numba helper for _remap().
 
         See _remap() for usage.
         """
-        for i in range(behavior_dim):
+        for i in range(measure_dim):
             for j in range(dims[i]):
                 sample_idx = int(j * buffer_size / dims[i])
                 boundaries[i][j] = sorted_bc[i][sample_idx]
@@ -364,7 +364,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         SlidingBoundariesArchive._remap_numba_helper(sorted_bc,
                                                      self._buffer.size,
                                                      self._boundaries,
-                                                     self._behavior_dim,
+                                                     self._measure_dim,
                                                      self.dims)
 
         indices = self._occupied_indices[:self._num_occupied]

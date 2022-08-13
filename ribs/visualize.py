@@ -47,14 +47,14 @@ def _retrieve_cmap(cmap):
     return cmap
 
 
-def _validate_heatmap_visual_args(aspect, cbar, square, behavior_dim,
-                                  valid_dims, error_msg_behavior_dim):
+def _validate_heatmap_visual_args(aspect, cbar, square, measure_dim, valid_dims,
+                                  error_msg_measure_dim):
     """Helper function to validate arguments passed to `*_archive_heatmap`
     plotting functions.
 
     Args:
         valid_dims (list[int]): all specified valid archive dimensions that may be plotted into heatmaps
-        error_msg_behavior_dim (str): Error message in ValueError if archive dimension plotting is not supported
+        error_msg_measure_dim (str): Error message in ValueError if archive dimension plotting is not supported
 
     Raises:
         ValueError: if validity checks for heatmap args fail
@@ -68,8 +68,8 @@ def _validate_heatmap_visual_args(aspect, cbar, square, behavior_dim,
             "The argument 'square' is deprecated and will not be "
             "supported in future versions. Use 'aspect' to set the "
             "heatmap's aspect ratio instead")
-    if behavior_dim not in valid_dims:
-        raise ValueError(error_msg_behavior_dim)
+    if measure_dim not in valid_dims:
+        raise ValueError(error_msg_measure_dim)
     if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
         raise ValueError(
             f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
@@ -168,11 +168,11 @@ def grid_archive_heatmap(archive,
         ValueError: The archive's dimension must be 1D or 2D.
     """
     _validate_heatmap_visual_args(
-        aspect, cbar, square, archive.behavior_dim, [1, 2],
+        aspect, cbar, square, archive.measure_dim, [1, 2],
         "Heatmaps can only be plotted for 1D or 2D GridArchive")
     if aspect is None:
         # Handles default aspects for different dims.
-        if archive.behavior_dim == 1:
+        if archive.measure_dim == 1:
             aspect = 0.5
         else:
             aspect = "auto"
@@ -180,7 +180,7 @@ def grid_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
 
-    if archive.behavior_dim == 1:
+    if archive.measure_dim == 1:
         # Retrieve data from archive. There should be only 2 bounds; upper and lower since its 1D
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
@@ -214,7 +214,7 @@ def grid_archive_heatmap(archive,
                           vmin=vmin,
                           vmax=vmax,
                           **pcm_kwargs)
-    elif archive.behavior_dim == 2:
+    elif archive.measure_dim == 2:
         # Retrieve data from archive.
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
@@ -350,7 +350,7 @@ def cvt_archive_heatmap(archive,
         ValueError: The archive is not 2D.
     """
     _validate_heatmap_visual_args(
-        aspect, cbar, square, archive.behavior_dim, [2],
+        aspect, cbar, square, archive.measure_dim, [2],
         "Heatmaps can only be plotted for 1D or 2D CVTArchive")
     if aspect is None:
         aspect = "auto"
@@ -510,7 +510,7 @@ def sliding_boundaries_archive_heatmap(archive,
     Raises:
         ValueError: The archive is not 2D.
     """
-    if archive.behavior_dim != 2:
+    if archive.measure_dim != 2:
         raise ValueError("Cannot plot heatmap for non-2D archive.")
 
     df = archive.as_pandas()
@@ -676,8 +676,8 @@ def parallel_axes_plot(archive,
 
     # If there is no order specified, plot in increasing numerical order.
     if bc_order is None:
-        cols = np.arange(archive.behavior_dim)
-        axis_labels = [f"behavior_{i}" for i in range(archive.behavior_dim)]
+        cols = np.arange(archive.measure_dim)
+        axis_labels = [f"behavior_{i}" for i in range(archive.measure_dim)]
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
 
@@ -696,10 +696,10 @@ def parallel_axes_plot(archive,
             raise TypeError("bc_order must be a list of ints or a list of"
                             "tuples in the form (int, str)")
 
-        if np.max(cols) >= archive.behavior_dim:
+        if np.max(cols) >= archive.measure_dim:
             raise ValueError(f"Invalid Behavior: requested behavior index "
                              f"{np.max(cols)}, but archive only has "
-                             f"{archive.behavior_dim} behaviors.")
+                             f"{archive.measure_dim} behaviors.")
         if any(bc < 0 for bc in cols):
             raise ValueError("Invalid Behavior: requested a negative behavior"
                              " index.")
