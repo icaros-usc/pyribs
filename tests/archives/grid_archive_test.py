@@ -107,74 +107,70 @@ def test_properties_are_correct(data):
 def test_add_single_to_archive(data, use_list):
     if use_list:
         status, value = data.archive.add_single(list(data.solution),
-                                                data.objective_value,
-                                                list(data.behavior_values),
+                                                data.objective,
+                                                list(data.measures),
                                                 data.metadata)
     else:
-        status, value = data.archive.add_single(data.solution,
-                                                data.objective_value,
-                                                data.behavior_values,
-                                                data.metadata)
+        status, value = data.archive.add_single(data.solution, data.objective,
+                                                data.measures, data.metadata)
 
     assert status == AddStatus.NEW
-    assert np.isclose(value, data.objective_value)
-    assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective_value, data.behavior_values,
-                         data.grid_indices, data.metadata)
+    assert np.isclose(value, data.objective)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices, data.metadata)
 
 
-def test_add_single_with_low_behavior_val(data):
-    behavior_values = np.array([-2, -3])
+def test_add_single_with_low_measures(data):
+    measures = np.array([-2, -3])
     indices = (0, 0)
-    status, _ = data.archive.add_single(data.solution, data.objective_value,
-                                        behavior_values, data.metadata)
+    status, _ = data.archive.add_single(data.solution, data.objective, measures,
+                                        data.metadata)
     assert status
-    assert_archive_elite(data.archive, data.solution, data.objective_value,
-                         behavior_values, indices, data.metadata)
+    assert_archive_elite(data.archive, data.solution, data.objective, measures,
+                         indices, data.metadata)
 
 
-def test_add_single_with_high_behavior_val(data):
-    behavior_values = np.array([2, 3])
+def test_add_single_with_high_measures(data):
+    measures = np.array([2, 3])
     indices = (9, 19)
-    status, _ = data.archive.add_single(data.solution, data.objective_value,
-                                        behavior_values, data.metadata)
+    status, _ = data.archive.add_single(data.solution, data.objective, measures,
+                                        data.metadata)
     assert status
-    assert_archive_elite(data.archive, data.solution, data.objective_value,
-                         behavior_values, indices, data.metadata)
+    assert_archive_elite(data.archive, data.solution, data.objective, measures,
+                         indices, data.metadata)
 
 
 def test_add_single_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
-    high_objective_value = data.objective_value + 1.0
+    high_objective_value = data.objective + 1.0
 
     status, value = data.archive_with_elite.add_single(arbitrary_sol,
                                                        high_objective_value,
-                                                       data.behavior_values,
+                                                       data.measures,
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
-    assert np.isclose(value, high_objective_value - data.objective_value)
+    assert np.isclose(value, high_objective_value - data.objective)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective_value, data.behavior_values,
-                         data.grid_indices, arbitrary_metadata)
+                         high_objective_value, data.measures, data.grid_indices,
+                         arbitrary_metadata)
 
 
 def test_add_single_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
-    low_objective_value = data.objective_value - 1.0
+    low_objective_value = data.objective - 1.0
 
     status, value = data.archive_with_elite.add_single(arbitrary_sol,
                                                        low_objective_value,
-                                                       data.behavior_values,
+                                                       data.measures,
                                                        arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective_value - data.objective_value)
-    assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective_value, data.behavior_values,
-                         data.grid_indices, data.metadata)
+    assert np.isclose(value, low_objective_value - data.objective)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices, data.metadata)
 
 
 def test_add_batch_all_new(data):
@@ -203,8 +199,8 @@ def test_add_batch_all_new(data):
 def test_add_batch_none_inserted(data):
     status_batch, value_batch = data.archive_with_elite.add(
         solution_batch=[[1, 2, 3]] * 4,
-        objective_batch=[data.objective_value - 1 for _ in range(4)],
-        measures_batch=[data.behavior_values for _ in range(4)],
+        objective_batch=[data.objective - 1 for _ in range(4)],
+        measures_batch=[data.measures for _ in range(4)],
     )
 
     # All solutions were inserted into the same cell as the elite already in the
@@ -216,8 +212,8 @@ def test_add_batch_none_inserted(data):
         archive=data.archive_with_elite,
         batch_size=1,
         solution_batch=[data.solution],
-        objective_batch=[data.objective_value],
-        measures_batch=[data.behavior_values],
+        objective_batch=[data.objective],
+        measures_batch=[data.measures],
         metadata_batch=[data.metadata],
         grid_indices_batch=[data.grid_indices],
     )
@@ -226,8 +222,8 @@ def test_add_batch_none_inserted(data):
 def test_add_batch_with_improvement(data):
     status_batch, value_batch = data.archive_with_elite.add(
         solution_batch=[[1, 2, 3]] * 4,
-        objective_batch=[data.objective_value + 1 for _ in range(4)],
-        measures_batch=[data.behavior_values for _ in range(4)],
+        objective_batch=[data.objective + 1 for _ in range(4)],
+        measures_batch=[data.measures for _ in range(4)],
     )
 
     # All solutions were inserted into the same cell as the elite already in the
@@ -239,8 +235,8 @@ def test_add_batch_with_improvement(data):
         archive=data.archive_with_elite,
         batch_size=1,
         solution_batch=[[1, 2, 3]],
-        objective_batch=[data.objective_value + 1],
-        measures_batch=[data.behavior_values],
+        objective_batch=[data.objective + 1],
+        measures_batch=[data.measures],
         metadata_batch=[None],
         grid_indices_batch=[data.grid_indices],
     )
@@ -251,23 +247,23 @@ def test_add_batch_mixed_statuses(data):
         solution_batch=[[1, 2, 3]] * 6,
         objective_batch=[
             # Not added.
-            data.objective_value - 1.0,
+            data.objective - 1.0,
             # Not added.
-            data.objective_value - 2.0,
+            data.objective - 2.0,
             # Improve but not added.
-            data.objective_value + 1.0,
+            data.objective + 1.0,
             # Improve and added since it has higher objective.
-            data.objective_value + 2.0,
+            data.objective + 2.0,
             # New but not added.
             1.0,
             # New and added.
             2.0,
         ],
         measures_batch=[
-            data.behavior_values,
-            data.behavior_values,
-            data.behavior_values,
-            data.behavior_values,
+            data.measures,
+            data.measures,
+            data.measures,
+            data.measures,
             [0, 0],
             [0, 0],
         ],
@@ -279,8 +275,8 @@ def test_add_batch_mixed_statuses(data):
         archive=data.archive_with_elite,
         batch_size=2,
         solution_batch=[[1, 2, 3]] * 2,
-        objective_batch=[data.objective_value + 2.0, 2.0],
-        measures_batch=[data.behavior_values, [0, 0]],
+        objective_batch=[data.objective + 2.0, 2.0],
+        measures_batch=[data.measures, [0, 0]],
         metadata_batch=[None, None],
         grid_indices_batch=[data.grid_indices, [5, 10]],
     )
@@ -296,15 +292,15 @@ def test_add_batch_first_solution_wins_in_ties(data):
         ],
         objective_batch=[
             # Ties for improvement.
-            data.objective_value + 1.0,
-            data.objective_value + 1.0,
+            data.objective + 1.0,
+            data.objective + 1.0,
             # Ties for new solution.
             3.0,
             3.0,
         ],
         measures_batch=[
-            data.behavior_values,
-            data.behavior_values,
+            data.measures,
+            data.measures,
             [0, 0],
             [0, 0],
         ],
@@ -317,8 +313,8 @@ def test_add_batch_first_solution_wins_in_ties(data):
         batch_size=2,
         # The first and third solution should be inserted since they come first.
         solution_batch=[[1, 2, 3], [7, 8, 9]],
-        objective_batch=[data.objective_value + 1.0, 3.0],
-        measures_batch=[data.behavior_values, [0, 0]],
+        objective_batch=[data.objective + 1.0, 3.0],
+        measures_batch=[data.measures, [0, 0]],
         metadata_batch=[None, None],
         grid_indices_batch=[data.grid_indices, [5, 10]],
     )

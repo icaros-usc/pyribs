@@ -42,20 +42,17 @@ def test_attributes_correctly_constructed(data):
 def test_add_to_archive(data, use_list):
     if use_list:
         status, value = data.archive.add_single(list(data.solution),
-                                                data.objective_value,
-                                                list(data.behavior_values),
+                                                data.objective,
+                                                list(data.measures),
                                                 data.metadata)
     else:
-        status, value = data.archive.add_single(data.solution,
-                                                data.objective_value,
-                                                data.behavior_values,
-                                                data.metadata)
+        status, value = data.archive.add_single(data.solution, data.objective,
+                                                data.measures, data.metadata)
 
     assert status == AddStatus.NEW
-    assert np.isclose(value, data.objective_value)
-    assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective_value, data.behavior_values,
-                         data.grid_indices, data.metadata)
+    assert np.isclose(value, data.objective)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices, data.metadata)
 
 
 @pytest.mark.skip
@@ -63,17 +60,17 @@ def test_add_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
-    high_objective_value = data.objective_value + 1.0
+    high_objective_value = data.objective + 1.0
 
     status, value = data.archive_with_elite.add_single(arbitrary_sol,
                                                        high_objective_value,
-                                                       data.behavior_values,
+                                                       data.measures,
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
-    assert np.isclose(value, high_objective_value - data.objective_value)
+    assert np.isclose(value, high_objective_value - data.objective)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective_value, data.behavior_values,
-                         data.grid_indices, arbitrary_metadata)
+                         high_objective_value, data.measures, data.grid_indices,
+                         arbitrary_metadata)
 
 
 @pytest.mark.skip
@@ -81,17 +78,16 @@ def test_add_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
-    low_objective_value = data.objective_value - 1.0
+    low_objective_value = data.objective - 1.0
 
     status, value = data.archive_with_elite.add_single(arbitrary_sol,
                                                        low_objective_value,
-                                                       data.behavior_values,
+                                                       data.measures,
                                                        arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective_value - data.objective_value)
-    assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective_value, data.behavior_values,
-                         data.grid_indices, data.metadata)
+    assert np.isclose(value, low_objective_value - data.objective)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices, data.metadata)
 
 
 @pytest.mark.skip
@@ -105,7 +101,7 @@ def test_initial_remap():
     # Buffer should have 230 entries after this (since the first entry is
     # skipped).
     first = True
-    expected_bcs = []
+    expected_measures = []
     for ix, x in enumerate(np.linspace(-1, 1, 11)):
         for iy, y in enumerate(np.linspace(-2, 2, 21)):
             if first:
@@ -117,10 +113,10 @@ def test_initial_remap():
             if ix == 9 or iy == 19:
                 obj = 1
             else:
-                expected_bcs.append((x, y))
+                expected_measures.append((x, y))
                 obj = 2
 
-            # Solutions are same as BCs.
+            # Solutions are same as measures.
             archive.add_single([x, y], obj, [x, y])
 
     # There are 199 entries because the last entry has not been inserted.
@@ -128,7 +124,7 @@ def test_initial_remap():
 
     # Buffer should now have 231 entries; hence it remaps.
     archive.add_single([-1, -2], 1, [-1, -2])
-    expected_bcs.append((-1, -2))
+    expected_measures.append((-1, -2))
 
     assert len(archive) == 200
 
@@ -137,34 +133,32 @@ def test_initial_remap():
     assert np.isclose(archive.boundaries[0], np.linspace(-1, 1, 11)).all()
     assert np.isclose(archive.boundaries[1], np.linspace(-2, 2, 21)).all()
 
-    # Check that all the BCs are as expected.
-    pandas_bcs = archive.as_pandas(include_solutions=False)[[
-        "behavior_0", "behavior_1"
+    # Check that all the measures are as expected.
+    pandas_measures = archive.as_pandas(include_solutions=False)[[
+        "measures_0", "measure_1"
     ]]
-    bcs = list(pandas_bcs.itertuples(name=None, index=False))
-    assert np.isclose(sorted(bcs), sorted(expected_bcs)).all()
+    measures = list(pandas_measures.itertuples(name=None, index=False))
+    assert np.isclose(sorted(measures), sorted(expected_measures)).all()
 
 
 @pytest.mark.skip
 def test_add_to_archive_with_full_buffer(data):
     for _ in range(data.archive.buffer_capacity + 1):
-        data.archive.add_single(data.solution, data.objective_value,
-                                data.behavior_values, data.metadata)
+        data.archive.add_single(data.solution, data.objective, data.measures,
+                                data.metadata)
 
     # After adding the same elite multiple times, there should only be one
     # elite, and it should be at (0, 0).
-    assert_archive_elite(data.archive, data.solution, data.objective_value,
-                         data.behavior_values, (0, 0), data.metadata)
+    assert_archive_elite(data.archive, data.solution, data.objective,
+                         data.measures, (0, 0), data.metadata)
 
     # Even if another elite is added, it should still go to the same cell
-    # because the behavior values are clipped to the boundaries before being
-    # inserted.
+    # because the measures are clipped to the boundaries before being inserted.
     arbitrary_metadata = {"foobar": 12}
-    data.archive.add_single(2 * data.solution, 2 * data.objective_value,
-                            2 * data.behavior_values, arbitrary_metadata)
-    assert_archive_elite(data.archive, 2 * data.solution,
-                         2 * data.objective_value, 2 * data.behavior_values,
-                         (0, 0), arbitrary_metadata)
+    data.archive.add_single(2 * data.solution, 2 * data.objective,
+                            2 * data.measures, arbitrary_metadata)
+    assert_archive_elite(data.archive, 2 * data.solution, 2 * data.objective,
+                         2 * data.measures, (0, 0), arbitrary_metadata)
 
 
 @pytest.mark.skip
@@ -180,8 +174,8 @@ def test_adds_solutions_from_old_archive():
 
     assert len(archive) == 200
 
-    # Archive gets remapped again, but it should maintain the same BCs since
-    # solutions are the same. All the high-performing solutions should be
+    # Archive gets remapped again, but it should maintain the same measures
+    # since solutions are the same. All the high-performing solutions should be
     # cleared from the buffer since the buffer only has capacity 200.
     for x in np.linspace(-1, 1, 11):
         for y in np.linspace(-2, 2, 21):

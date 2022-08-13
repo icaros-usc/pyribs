@@ -7,22 +7,23 @@ from ribs.archives import SlidingBoundariesArchive
 
 @pytest.mark.skip
 def benchmark_add_10k(benchmark, benchmark_data_10k):
-    n, solutions, objective_values, behavior_values = benchmark_data_10k
+    n, solution_batch, objective_batch, measures_batch = benchmark_data_10k
 
     def setup():
-        archive = SlidingBoundariesArchive(solutions.shape[1], [10, 20],
+        archive = SlidingBoundariesArchive(solution_batch.shape[1], [10, 20],
                                            [(-1, 1), (-2, 2)],
                                            remap_frequency=100,
                                            buffer_capacity=1000)
 
         # Let numba compile.
-        archive.add(solutions[0], objective_values[0], behavior_values[0])
+        archive.add(solution_batch[0], objective_batch[0], measures_batch[0])
 
         return (archive,), {}
 
     def add_10k(archive):
         for i in range(n):
-            archive.add(solutions[i], objective_values[i], behavior_values[i])
+            archive.add(solution_batch[i], objective_batch[i],
+                        measures_batch[i])
 
     benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
 
