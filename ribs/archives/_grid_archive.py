@@ -222,6 +222,7 @@ class GridArchive(ArchiveBase):
     # TODO: Documentation -- talk about what the score is
     # TODO: Allow custom thetas
     # TODO: Memory issues with distance calculation (applies to CVTArchive too)
+    # -- is np.linalg.norm an option here?
     def cqd_score(self,
                   iterations,
                   n_target_points,
