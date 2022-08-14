@@ -218,3 +218,60 @@ class GridArchive(ArchiveBase):
             int_index_batch,
             self._dims,
         )).T.astype(np.int32)
+
+    # TODO: Documentation
+    # TODO: Testing
+    # TODO: Allow custom points
+    # TODO: Allow custom thetas
+    # TODO: Memory issues with distance calculation
+    def cqd_score(self, iterations, n_target_points, n_thetas, objective_min,
+                  objective_max):
+        """Computes the CQD score of the archive.
+
+        The Continuous Quality Diversity (CQD) score was introduced in
+        `Kent 2022 <https://dl.acm.org/doi/10.1145/3520304.3534018>`_.
+
+        Args:
+            iterations (int): Number of times to compute the CQD score.
+            n_target_points (int): Number of target points to generate.
+        """
+        delta_max = np.linalg.norm(self.lower_bounds, self.upper_bounds)
+
+        indices = self._occupied_indices[:self._num_occupied]
+        measures_batch = self._measures_arr[indices]
+        objective_batch = self._objective_arr[indices]
+
+        norm_objectives = objective_batch / (objective_max - objective_min)
+
+        scores = []
+
+        for _ in range(iterations):
+            target_points = self._rng.uniform(
+                low=self.lower_bounds,
+                high=self.upper_bounds,
+                size=(n_target_points, self.measure_dim),
+            )
+
+            # Brute force distance calculation -- start by taking the difference
+            # between each measure i and all the target points.
+            distances = np.expand_dims(measures_batch, axis=1) - target_points
+
+            # (len(archive), n_target_points) array of distances.
+            distances = np.sqrt(np.sum(np.square(distances), axis=2))
+
+            norm_distances = distances / delta_max
+
+            score = 0.0
+            for theta in np.linspace(0, 1, n_thetas):
+                # Known as omega in the paper -- a (len(archive),
+                # n_target_points) array.
+                values = norm_objectives - theta * norm_distances
+
+                # (n_target_points,) array.
+                max_values_per_target = np.max(values, axis=0)
+
+                score += np.sum(max_values_per_target)
+
+            scores.append(score)
+
+        return np.mean(scores)
