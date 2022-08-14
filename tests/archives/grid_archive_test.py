@@ -152,9 +152,8 @@ def test_add_single_and_overwrite(data):
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective, data.measures, data.grid_indices,
-                         arbitrary_metadata)
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
+                         data.measures, data.grid_indices, arbitrary_metadata)
 
 
 def test_add_single_without_overwrite(data):
@@ -450,3 +449,48 @@ def test_values_go_to_correct_bin(dtype):
     # Upper bound and above belong in last bin.
     assert archive.index_of_single([0.1]) == 9
     assert archive.index_of_single([0.11]) == 9
+
+
+def test_cqd_score_with_one_elite():
+    archive = GridArchive(2, [10, 10], [(-1, 1), (-1, 1)])
+    archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
+
+    score = archive.cqd_score(
+        iterations=1,
+        n_target_points=1,
+        n_thetas=2,
+        objective_min=0.0,
+        objective_max=1.0,
+        # With this target point, the solution above at [0, 0] has a normalized
+        # distance of 0.5, since it is halfway between the archive bounds of
+        # (-1, -1) and (1, 1).
+        force_target_points=np.array([[[1.0, 1.0]]]),
+    )
+
+    # For theta=0, the score should be 1.0 - 0 * 0.5 = 1.0
+    # For theta=1, the score should be 1.0 - 1 * 0.5 = 0.5
+    assert np.isclose(score, 1.0 + 0.5)
+
+
+def test_cqd_score_with_two_elites():
+    archive = GridArchive(2, [10, 10], [(-1, 1), (-1, 1)])
+    archive.add_single([4.0, 4.0], 0.25, [0.0, 0.0])  # Elite 1.
+    archive.add_single([4.0, 4.0], 0.0, [1.0, 1.0])  # Elite 2.
+
+    score = archive.cqd_score(
+        iterations=1,
+        n_target_points=1,
+        n_thetas=2,
+        objective_min=0.0,
+        objective_max=1.0,
+        # With this target point, Elite 1 at [0, 0] has a normalized distance of
+        # 0.5, since it is halfway between the archive bounds of (-1, -1) and
+        # (1, 1).
+        #
+        # Elite 2 has a normalized distance of 0, since it is exactly at [1, 1].
+        force_target_points=np.array([[[1.0, 1.0]]]),
+    )
+
+    # For theta=0, the score should be max(0.25 - 0 * 0.5, 0 - 0 * 0) = 0.25
+    # For theta=1, the score should be max(0.25 - 1 * 0.5, 0 - 1 * 0) = 0
+    assert np.isclose(score, 0.25 + 0)

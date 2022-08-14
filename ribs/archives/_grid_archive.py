@@ -219,13 +219,16 @@ class GridArchive(ArchiveBase):
             self._dims,
         )).T.astype(np.int32)
 
-    # TODO: Documentation
-    # TODO: Testing
-    # TODO: Allow custom points
+    # TODO: Documentation -- talk about what the score is
     # TODO: Allow custom thetas
-    # TODO: Memory issues with distance calculation
-    def cqd_score(self, iterations, n_target_points, n_thetas, objective_min,
-                  objective_max):
+    # TODO: Memory issues with distance calculation (applies to CVTArchive too)
+    def cqd_score(self,
+                  iterations,
+                  n_target_points,
+                  n_thetas,
+                  objective_min,
+                  objective_max,
+                  force_target_points=None):
         """Computes the CQD score of the archive.
 
         The Continuous Quality Diversity (CQD) score was introduced in
@@ -234,8 +237,16 @@ class GridArchive(ArchiveBase):
         Args:
             iterations (int): Number of times to compute the CQD score.
             n_target_points (int): Number of target points to generate.
+            n_thetas (int): Number of theta values over which to compute the
+                score (the values are distributed evenly over the range [0,1].
+            objective_min (float): Minimum objective value, used when
+                normalizing the objectives.
+            objective_max (float): Maximum objective value, used when
+                normalizing the objectives.
+            force_target_points: Pass in this (iterations, n_target_points,
+                measure_dim) array to force selection of the target points.
         """
-        delta_max = np.linalg.norm(self.lower_bounds, self.upper_bounds)
+        delta_max = np.linalg.norm(self.upper_bounds - self.lower_bounds)
 
         indices = self._occupied_indices[:self._num_occupied]
         measures_batch = self._measures_arr[indices]
@@ -245,19 +256,26 @@ class GridArchive(ArchiveBase):
 
         scores = []
 
-        for _ in range(iterations):
-            target_points = self._rng.uniform(
-                low=self.lower_bounds,
-                high=self.upper_bounds,
-                size=(n_target_points, self.measure_dim),
-            )
+        # TODO: Check shape of force_target_points.
+
+        for itr in range(iterations):
+            # Sample random target points.
+            if force_target_points is None:
+                target_points = self._rng.uniform(
+                    low=self.lower_bounds,
+                    high=self.upper_bounds,
+                    size=(n_target_points, self.measure_dim),
+                )
+            else:
+                target_points = force_target_points[itr]
 
             # Brute force distance calculation -- start by taking the difference
             # between each measure i and all the target points.
             distances = np.expand_dims(measures_batch, axis=1) - target_points
 
             # (len(archive), n_target_points) array of distances.
-            distances = np.sqrt(np.sum(np.square(distances), axis=2))
+            #  distances = np.sqrt(np.sum(np.square(distances), axis=2))
+            distances = np.linalg.norm(distances, axis=2)
 
             norm_distances = distances / delta_max
 
@@ -265,7 +283,7 @@ class GridArchive(ArchiveBase):
             for theta in np.linspace(0, 1, n_thetas):
                 # Known as omega in the paper -- a (len(archive),
                 # n_target_points) array.
-                values = norm_objectives - theta * norm_distances
+                values = norm_objectives[:, None] - theta * norm_distances
 
                 # (n_target_points,) array.
                 max_values_per_target = np.max(values, axis=0)
