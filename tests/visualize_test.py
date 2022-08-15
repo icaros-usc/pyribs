@@ -248,10 +248,10 @@ def test_heatmap_fails_on_unsupported_dims(archive_type):
 
 
 @pytest.mark.parametrize("archive_type", ["grid"]
-                         )  # TODO: impl + test for cvt and sliding show heatmap
+                        )  # TODO: impl + test for cvt and sliding show heatmap
 @pytest.mark.parametrize("invalid_arg_cbar",
                          ["None", 3.2, True, (3.2, None), [3.2, None]]
-                         )  # some random but invalid inputs
+                        )  # some random but invalid inputs
 def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
     archive = {
         "grid":
@@ -281,10 +281,10 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
 
 
 @pytest.mark.parametrize("archive_type", ["grid"]
-                         )  # TODO: impl + test for cvt and sliding show heatmap
+                        )  # TODO: impl + test for cvt and sliding show heatmap
 @pytest.mark.parametrize("invalid_arg_aspect",
                          ["None", True, (3.2, None), [3.2, None]]
-                         )  # some random but invalid inputs
+                        )  # some random but invalid inputs
 def test_heatmap_fails_on_invalid_aspect_option(archive_type,
                                                 invalid_arg_aspect):
     archive = {
@@ -493,8 +493,8 @@ def test_heatmap_long_transpose__cvt(long_cvt_archive):
                   extensions=["png"])
 def test_heatmap_long_transpose__sliding(long_sliding_archive):
     plt.figure(figsize=(8, 6))
-    sliding_boundaries_archive_heatmap(
-        long_sliding_archive, transpose_measures=True)
+    sliding_boundaries_archive_heatmap(long_sliding_archive,
+                                       transpose_measures=True)
 
 
 @image_comparison(baseline_images=["grid_archive_heatmap_with_limits"],
