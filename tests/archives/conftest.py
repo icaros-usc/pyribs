@@ -135,6 +135,7 @@ def get_archive_data(name, dtype=np.float64):
         int_index = 131
 
     archive_with_elite.add_single(solution, objective, measures, metadata)
+
     return ArchiveFixtureData(
         archive,
         archive_with_elite,

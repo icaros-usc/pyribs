@@ -144,8 +144,8 @@ def test_initial_remap():
 @pytest.mark.skip
 def test_add_to_archive_with_full_buffer(data):
     for _ in range(data.archive.buffer_capacity + 1):
-        data.archive.add_single(data.solution, data.objective,
-                                data.measures, data.metadata)
+        data.archive.add_single(data.solution, data.objective, data.measures,
+                                data.metadata)
 
     # After adding the same elite multiple times, there should only be one
     # elite, and it should be at (0, 0).
@@ -161,7 +161,6 @@ def test_add_to_archive_with_full_buffer(data):
     assert_archive_elite(data.archive, 2 * data.solution,
                          2 * data.objective, 2 * data.measures, (0, 0),
                          arbitrary_metadata)
-
 
 @pytest.mark.skip
 def test_adds_solutions_from_old_archive():

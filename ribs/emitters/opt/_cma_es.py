@@ -231,7 +231,9 @@ class CMAEvolutionStrategy:
                        np.log(np.arange(1, num_parents + 1)))
             total_weights = np.sum(weights)
             weights = weights / total_weights
-            mueff = total_weights**2 / np.sum(weights**2)
+            # Note: Since `weights` changes on the line above, np.sum(weights)
+            # is NOT the same as total_weights.
+            mueff = np.sum(weights)**2 / np.sum(weights**2)
         elif self.weight_rule == "active":
             weights = None
 

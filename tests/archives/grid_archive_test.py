@@ -122,7 +122,6 @@ def test_add_single_to_archive(data, use_list):
                          data.objective, data.measures,
                          data.grid_indices, data.metadata)
 
-
 def test_add_single_with_low_measures(data):
     measures = np.array([-2, -3])
     indices = (0, 0)
@@ -132,7 +131,6 @@ def test_add_single_with_low_measures(data):
     assert_archive_elite(data.archive, data.solution, data.objective,
                          measures, indices, data.metadata)
 
-
 def test_add_single_with_high_measures(data):
     measures = np.array([2, 3])
     indices = (9, 19)
@@ -141,7 +139,6 @@ def test_add_single_with_high_measures(data):
     assert status
     assert_archive_elite(data.archive, data.solution, data.objective,
                          measures, indices, data.metadata)
-
 
 def test_add_single_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
@@ -159,7 +156,6 @@ def test_add_single_and_overwrite(data):
                          high_objective, data.measures,
                          data.grid_indices, arbitrary_metadata)
 
-
 def test_add_single_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
@@ -175,7 +171,6 @@ def test_add_single_without_overwrite(data):
     assert_archive_elite(data.archive_with_elite, data.solution,
                          data.objective, data.measures,
                          data.grid_indices, data.metadata)
-
 
 def test_add_batch_all_new(data):
     status_batch, value_batch = data.archive.add(

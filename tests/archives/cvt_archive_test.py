@@ -91,7 +91,6 @@ def test_add_single_to_archive(data, use_list):
                          data.objective, data.measures,
                          data.centroid, data.metadata)
 
-
 def test_add_single_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
@@ -105,9 +104,8 @@ def test_add_single_and_overwrite(data):
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective, data.measures,
-                         data.centroid, arbitrary_metadata)
-
+                         high_objective, data.measures, data.centroid,
+                         arbitrary_metadata)
 
 def test_add_single_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
