@@ -107,10 +107,10 @@ After initializing the components, we optimize (pyribs maximizes) the negative
 [pycma](https://pypi.org/project/cma/) will be familiar with the ask-tell
 interface (which pyribs adopted). First, the user must `ask` the scheduler for
 new candidate solutions. After evaluating the solution, they `tell` the
-scheduler the objective value and measures of each
-candidate solution. The algorithm then populates the archive and makes decisions
-on where to sample solutions next. Our toy example uses the first two parameters
-of the search space as measures.
+scheduler the objectives and measures of each candidate solution. The algorithm
+then populates the archive and makes decisions on where to sample solutions
+next. Our toy example uses the first two parameters of the search space as
+measures.
 
 ```python
 import numpy as np

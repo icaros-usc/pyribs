@@ -3,14 +3,15 @@
 The sphere function in this example is adapted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to
 the range [-5.12, 5.12], and the optimum is moved from [0,..] to [0.4 * 5.12 =
-2.048,..]. Furthermore, the objective values are normalized to the range [0,
+2.048,..]. Furthermore, the objectives are normalized to the range [0,
 100] where 100 is the maximum and corresponds to 0 on the original sphere
 function.
 
-There are two BCs in this example. The first is the sum of the first n/2 clipped
-values of the solution, and the second is the sum of the last n/2 clipped values
-of the solution. Having each BC depend equally on several values in the solution
-space makes the problem more difficult (refer to Fontaine 2020 for more info).
+There are two measures in this example. The first is the sum of the first n/2
+clipped values of the solution, and the second is the sum of the last n/2
+clipped values of the solution. Having each measures depend equally on several
+values in the solution space makes the problem more difficult (refer to
+Fontaine 2020 for more info).
 
 The supported algorithms are:
 - `map_elites`: GridArchive with GaussianEmitter.
@@ -87,13 +88,13 @@ from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
 
 def sphere(solution_batch):
-    """Sphere function evaluation and BCs for a batch of solutions.
+    """Sphere function evaluation and measures for a batch of solutions.
 
     Args:
-        solution_batch (np.ndarray): (batch_size, dim) array of solutions
+        solution_batch (np.ndarray): (batch_size, dim) batch of solutions.
     Returns:
-        objective_batch (np.ndarray): (batch_size,) array of objective values
-        measures_batch (np.ndarray): (batch_size, 2) array of measure values
+        objective_batch (np.ndarray): (batch_size,) batch of objectives.
+        measures_batch (np.ndarray): (batch_size, 2) batch of measures.
     """
     dim = solution_batch.shape[1]
 
