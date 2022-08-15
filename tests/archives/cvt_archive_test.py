@@ -80,16 +80,14 @@ def test_add_single_to_archive(data, use_list):
                                                 list(data.measures),
                                                 data.metadata)
     else:
-        status, value = data.archive.add_single(data.solution,
-                                                data.objective,
-                                                data.measures,
-                                                data.metadata)
+        status, value = data.archive.add_single(data.solution, data.objective,
+                                                data.measures, data.metadata)
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective)
-    assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective, data.measures,
-                         data.centroid, data.metadata)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.centroid, data.metadata)
+
 
 def test_add_single_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
@@ -103,9 +101,9 @@ def test_add_single_and_overwrite(data):
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective, data.measures, data.centroid,
-                         arbitrary_metadata)
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
+                         data.measures, data.centroid, arbitrary_metadata)
+
 
 def test_add_single_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
@@ -119,6 +117,5 @@ def test_add_single_without_overwrite(data):
                                                        arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective, data.measures,
-                         data.centroid, data.metadata)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.centroid, data.metadata)

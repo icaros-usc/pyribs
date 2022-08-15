@@ -147,7 +147,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._num_occupied = 0
         self._occupied_arr = np.zeros(self._cells, dtype=bool)
         self._occupied_indices = np.empty(self._cells, dtype=np.int32)
-        
+
         self._solution_arr = np.empty((self._cells, solution_dim),
                                       dtype=self.dtype)
         self._objective_arr = np.empty(self._cells, dtype=self.dtype)

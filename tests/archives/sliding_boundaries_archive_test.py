@@ -85,9 +85,8 @@ def test_add_without_overwrite(data):
                                                        arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective, data.measures, data.grid_indices,
-                         data.metadata)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices, data.metadata)
 
 
 @pytest.mark.skip
@@ -158,9 +157,9 @@ def test_add_to_archive_with_full_buffer(data):
     arbitrary_metadata = {"foobar": 12}
     data.archive.add_single(2 * data.solution, 2 * data.objective,
                             2 * data.measures, arbitrary_metadata)
-    assert_archive_elite(data.archive, 2 * data.solution,
-                         2 * data.objective, 2 * data.measures, (0, 0),
-                         arbitrary_metadata)
+    assert_archive_elite(data.archive, 2 * data.solution, 2 * data.objective,
+                         2 * data.measures, (0, 0), arbitrary_metadata)
+
 
 @pytest.mark.skip
 def test_adds_solutions_from_old_archive():

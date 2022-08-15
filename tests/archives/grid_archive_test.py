@@ -111,34 +111,34 @@ def test_add_single_to_archive(data, use_list):
                                                 list(data.measures),
                                                 data.metadata)
     else:
-        status, value = data.archive.add_single(data.solution,
-                                                data.objective,
-                                                data.measures,
-                                                data.metadata)
+        status, value = data.archive.add_single(data.solution, data.objective,
+                                                data.measures, data.metadata)
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective)
-    assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective, data.measures,
-                         data.grid_indices, data.metadata)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices, data.metadata)
+
 
 def test_add_single_with_low_measures(data):
     measures = np.array([-2, -3])
     indices = (0, 0)
-    status, _ = data.archive.add_single(data.solution, data.objective,
-                                        measures, data.metadata)
+    status, _ = data.archive.add_single(data.solution, data.objective, measures,
+                                        data.metadata)
     assert status
-    assert_archive_elite(data.archive, data.solution, data.objective,
-                         measures, indices, data.metadata)
+    assert_archive_elite(data.archive, data.solution, data.objective, measures,
+                         indices, data.metadata)
+
 
 def test_add_single_with_high_measures(data):
     measures = np.array([2, 3])
     indices = (9, 19)
-    status, _ = data.archive.add_single(data.solution, data.objective,
-                                        measures, data.metadata)
+    status, _ = data.archive.add_single(data.solution, data.objective, measures,
+                                        data.metadata)
     assert status
-    assert_archive_elite(data.archive, data.solution, data.objective,
-                         measures, indices, data.metadata)
+    assert_archive_elite(data.archive, data.solution, data.objective, measures,
+                         indices, data.metadata)
+
 
 def test_add_single_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
@@ -152,9 +152,9 @@ def test_add_single_and_overwrite(data):
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective, data.measures,
-                         data.grid_indices, arbitrary_metadata)
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
+                         data.measures, data.grid_indices, arbitrary_metadata)
+
 
 def test_add_single_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
@@ -168,9 +168,9 @@ def test_add_single_without_overwrite(data):
                                                        arbitrary_metadata)
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, data.solution,
-                         data.objective, data.measures,
-                         data.grid_indices, data.metadata)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices, data.metadata)
+
 
 def test_add_batch_all_new(data):
     status_batch, value_batch = data.archive.add(
@@ -399,7 +399,7 @@ def test_add_batch_wrong_batch_size(data):
 
 def test_grid_to_int_index(data):
     assert (data.archive.grid_to_int_index([data.grid_indices
-                                            ])[0] == data.int_index)
+                                           ])[0] == data.int_index)
 
 
 def test_grid_to_int_index_wrong_shape(data):
