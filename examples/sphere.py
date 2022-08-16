@@ -388,16 +388,12 @@ def sphere_main(algorithm,
             metrics["QD Score"]["y"].append(archive.stats.qd_score)
             metrics["Archive Coverage"]["x"].append(itr)
             metrics["Archive Coverage"]["y"].append(archive.stats.coverage)
-            print(f"Iteration {itr} | Archive Coverage: "
-                  f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
-                  f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
+            progress_bar.write(
+                f"Iteration {itr} | Archive Coverage: "
+                f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
+                f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
             save_heatmap(archive, str(outdir / f"{name}_heatmap_{itr:05d}.png"))
-
-        progress_bar.set_description(
-            f"Iteration {itr} | Archive Coverage: "
-            f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
-            f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
     # Plot metrics.
     print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")
