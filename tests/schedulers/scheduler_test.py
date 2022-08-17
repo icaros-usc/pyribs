@@ -1,4 +1,4 @@
-"""Tests for the scheduler."""
+"""Tests for the Scheduler."""
 import numpy as np
 import pytest
 
@@ -12,8 +12,8 @@ from ..archives.grid_archive_test import assert_archive_elite_batch
 
 
 @pytest.fixture
-def scheduler_fixtures():
-    """Returns an Scheduler with GridArchive and one GaussianEmitter."""
+def scheduler_fixture():
+    """Returns a Scheduler with GridArchive and one GaussianEmitter."""
     solution_dim = 2
     num_solutions = 4
     archive = GridArchive(solution_dim, [100, 100], [(-1, 1), (-1, 1)])
@@ -56,8 +56,8 @@ def test_init_fails_with_mismatched_emitters():
         Scheduler(archive, emitters)
 
 
-def test_ask_returns_correct_solution_shape(scheduler_fixtures):
-    scheduler, solution_dim, num_solutions = scheduler_fixtures
+def test_ask_returns_correct_solution_shape(scheduler_fixture):
+    scheduler, solution_dim, num_solutions = scheduler_fixture
     solutions = scheduler.ask()
     assert solutions.shape == (num_solutions, solution_dim)
 
