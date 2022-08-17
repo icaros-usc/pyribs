@@ -2,7 +2,6 @@
 from enum import IntEnum
 
 
-# TODO Remove this class
 class AddStatus(IntEnum):
     """A status returned by the :meth:`~ArchiveBase.add` method in an archive.
 
