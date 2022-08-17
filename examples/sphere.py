@@ -9,7 +9,7 @@ function.
 
 There are two measures in this example. The first is the sum of the first n/2
 clipped values of the solution, and the second is the sum of the last n/2
-clipped values of the solution. Having each measures depend equally on several
+clipped values of the solution. Having each measure depend equally on several
 values in the solution space makes the problem more difficult (refer to
 Fontaine 2020 for more info).
 
