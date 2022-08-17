@@ -149,9 +149,9 @@ def create_optimizer(seed, n_emitters, sigma0, batch_size):
     archive = GridArchive(
         solution_dim=initial_model.size,
         dims=[50, 50],  # 50 cells in each dimension.
-        ranges=[(-1.0, 1.0), (-3.0, 0.0)],  # (-1, 1) for x-pos and (-3, 0) for y-vel.
-        seed=seed
-    )
+        # (-1, 1) for x-pos and (-3, 0) for y-vel.
+        ranges=[(-1.0, 1.0), (-3.0, 0.0)],
+        seed=seed)
 
     # If we create the emitters with identical seeds, they will all output the
     # same initial solutions. The algorithm should still work -- eventually, the
@@ -206,39 +206,39 @@ def run_search(client, optimizer, env_seed, iterations, log_freq):
     }
 
     start_time = time.time()
-    with alive_bar(iterations) as progress:
-        for itr in range(1, iterations + 1):
-            # Request models from the optimizer.
-            sols = optimizer.ask()
+    progress_bar = tqdm(range(1, iterations + 1))
 
-            # Evaluate the models and record the objectives and BCs.
-            objs, bcs = [], []
+    for itr in progress_bar:
+        # Request models from the optimizer.
+        sols = optimizer.ask()
 
-            # Ask the Dask client to distribute the simulations among the Dask
-            # workers, then gather the results of the simulations.
-            futures = client.map(lambda model: simulate(model, env_seed), sols)
-            results = client.gather(futures)
+        # Evaluate the models and record the objectives and BCs.
+        objs, bcs = [], []
 
-            # Process the results.
-            for obj, impact_x_pos, impact_y_vel in results:
-                objs.append(obj)
-                bcs.append([impact_x_pos, impact_y_vel])
+        # Ask the Dask client to distribute the simulations among the Dask
+        # workers, then gather the results of the simulations.
+        futures = client.map(lambda model: simulate(model, env_seed), sols)
+        results = client.gather(futures)
 
-            # Send the results back to the optimizer.
-            optimizer.tell(objs, bcs)
+        # Process the results.
+        for obj, impact_x_pos, impact_y_vel in results:
+            objs.append(obj)
+            bcs.append([impact_x_pos, impact_y_vel])
 
-            # Logging.
-            progress()
-            if itr % log_freq == 0 or itr == iterations:
-                elapsed_time = time.time() - start_time
-                metrics["Max Score"]["x"].append(itr)
-                metrics["Max Score"]["y"].append(
-                    optimizer.archive.stats.obj_max)
-                metrics["Archive Size"]["x"].append(itr)
-                metrics["Archive Size"]["y"].append(len(optimizer.archive))
-                print(f"> {itr} itrs completed after {elapsed_time:.2f} s")
-                print(f"  - Max Score: {metrics['Max Score']['y'][-1]}")
-                print(f"  - Archive Size: {metrics['Archive Size']['y'][-1]}")
+        # Send the results back to the optimizer.
+        optimizer.tell(objs, bcs)
+
+        # Logging.
+        if itr % log_freq == 0 or itr == iterations:
+            elapsed_time = time.time() - start_time
+            metrics["Max Score"]["x"].append(itr)
+            metrics["Max Score"]["y"].append(optimizer.archive.stats.obj_max)
+            metrics["Archive Size"]["x"].append(itr)
+            metrics["Archive Size"]["y"].append(len(optimizer.archive))
+            progress_bar.write(
+                f"> {itr} itrs completed after {elapsed_time:.2f} s",
+                f"  - Max Score: {metrics['Max Score']['y'][-1]}",
+                f"  - Archive Size: {metrics['Archive Size']['y'][-1]}")
 
     return metrics
 
