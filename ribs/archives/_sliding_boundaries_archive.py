@@ -16,17 +16,17 @@ class SolutionBuffer:
     """An internal class that stores relevant data to re-add after remapping.
 
     Maintains two data structures:
-    - Queue storing the buffer_capacity last entries (solution + objective
-      + measures + metadata). When new items are inserted, the oldest ones are
-      popped.
-    - Sorted lists with the sorted measures in each dimension. Measures are
-      removed from theses lists when they are removed from the queue.
+    - Queue storing the buffer_capacity last entries (solution + objective value
+      + behavior values + metadata). When new items are inserted, the oldest
+      ones are popped.
+    - Sorted lists with the sorted behavior values in each dimension. Behavior
+      values are removed from theses lists when they are removed from the queue.
     """
 
     def __init__(self, buffer_capacity, measure_dim):
         self._buffer_capacity = buffer_capacity
         self._queue = deque()
-        self._measures_lists = [SortedList() for _ in range(measure_dim)]
+        self._bc_lists = [SortedList() for _ in range(measure_dim)]
         self._iter_idx = 0
 
     def __iter__(self):
@@ -42,33 +42,34 @@ class SolutionBuffer:
         self._iter_idx += 1
         return result
 
-    def add(self, solution, objective, measures, metadata=None):
+    def add(self, solution, objective_value, behavior_values, metadata=None):
         """Inserts a new entry.
 
         Pops the oldest if it is full.
         """
         if self.full():
             # Remove item from the deque.
-            _, _, measures_deleted, _ = self._queue.popleft()
-            # Remove measures from sorted lists.
-            for i, mea in enumerate(measures_deleted):
-                self._measures_lists[i].remove(mea)
+            _, _, bc_deleted, _ = self._queue.popleft()
+            # Remove bc from sorted lists.
+            for i, bc in enumerate(bc_deleted):
+                self._bc_lists[i].remove(bc)
 
-        self._queue.append((solution, objective, measures, metadata))
+        self._queue.append(
+            (solution, objective_value, behavior_values, metadata))
 
-        # Add measures to sorted lists.
-        for i, mea in enumerate(measures):
-            self._measures_lists[i].add(mea)
+        # Add bc to sorted lists.
+        for i, bc in enumerate(behavior_values):
+            self._bc_lists[i].add(bc)
 
     def full(self):
         """Whether buffer is full."""
         return len(self._queue) >= self._buffer_capacity
 
     @property
-    def measures_sorted(self):
-        """(measure_dim, self.size) numpy.ndarray: Sorted measures of each
-        dimension."""
-        return np.array(self._measures_lists, dtype=np.float64)
+    def sorted_behavior_values(self):
+        """(measure_dim, self.size) numpy.ndarray: Sorted behavior values of
+        each dimension."""
+        return np.array(self._bc_lists, dtype=np.float64)
 
     @property
     def size(self):
@@ -87,29 +88,29 @@ class SlidingBoundariesArchive(ArchiveBase):
     This archive is the container described in `Fontaine 2019
     <https://arxiv.org/abs/1904.10656>`_. Just like the
     :class:`~ribs.archives.GridArchive`, it can be visualized as an
-    n-dimensional grid in the measure space that is divided into a certain
+    n-dimensional grid in the behavior space that is divided into a certain
     number of cells in each dimension. Internally, this archive stores a buffer
     with the ``buffer_capacity`` most recent solutions and uses them to
-    determine the boundaries of the measures along each dimension. After every
-    ``remap_frequency`` solutions are inserted, the archive remaps the
-    boundaries based on the solutions in the buffer.
+    determine the boundaries of the behavior characteristics along each
+    dimension. After every ``remap_frequency`` solutions are inserted, the
+    archive remaps the boundaries based on the solutions in the buffer.
 
     Initially, the archive has no solutions, so it cannot automatically
     calculate the boundaries. Thus, until the first remap, this archive divides
-    the measure space defined by ``ranges`` into equally sized cells.
+    the behavior space defined by ``ranges`` into equally sized cells.
 
     Overall, this archive attempts to make the distribution of the space
     illuminated by the archive more accurately match the true distribution of
-    the measures when they are not uniformly distributed.
+    the behavior characteristics when they are not uniformly distributed.
 
     Args:
         solution_dim (int): Dimension of the solution space.
-        dims (array-like): Number of cells in each dimension of the measure
+        dims (array-like): Number of cells in each dimension of the behavior
             space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions
             with 20, 30, and 40 cells. (The number of dimensions is implicitly
             defined in the length of this argument).
         ranges (array-like of (float, float)): `Initial` upper and lower bound
-            of each dimension of the measure space, e.g. ``[(-1, 1), (-2, 2)]``
+            of each dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
             indicates the first dimension should have bounds :math:`[-1,1]`
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
@@ -305,7 +306,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                 :attr:`measure_dim`).
         """
         measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self._measure_dim,
+        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
 
         index_cols = SlidingBoundariesArchive._index_of_numba(
@@ -329,11 +330,10 @@ class SlidingBoundariesArchive(ArchiveBase):
     int_to_grid_index = GridArchive.int_to_grid_index
     grid_to_int_index = GridArchive.grid_to_int_index
 
-    # TODO remove numba
     @staticmethod
     @nb.jit(nopython=True)
-    def _remap_numba_helper(measures_sorted, buffer_size, boundaries,
-                            measure_dim, dims):
+    def _remap_numba_helper(sorted_bc, buffer_size, boundaries, measure_dim,
+                            dims):
         """Numba helper for _remap().
 
         See _remap() for usage.
@@ -341,9 +341,9 @@ class SlidingBoundariesArchive(ArchiveBase):
         for i in range(measure_dim):
             for j in range(dims[i]):
                 sample_idx = int(j * buffer_size / dims[i])
-                boundaries[i][j] = measures_sorted[i][sample_idx]
-            # Set the upper bound to be the largest measures.
-            boundaries[i][dims[i]] = measures_sorted[i][-1]
+                boundaries[i][j] = sorted_bc[i][sample_idx]
+            # Set the upper bound to be the greatest BC.
+            boundaries[i][dims[i]] = sorted_bc[i][-1]
 
     def _remap(self):
         """Remaps the archive.
@@ -357,20 +357,20 @@ class SlidingBoundariesArchive(ArchiveBase):
             tuple: The result of calling :meth:`ArchiveBase.add` on the last
             item in the buffer.
         """
-        # Sort all measures along the axis of each measures.
-        measures_sorted = self._buffer.measures_sorted
+        # Sort all behavior values along the axis of each bc.
+        sorted_bc = self._buffer.sorted_behavior_values
 
         # Calculate new boundaries.
-        SlidingBoundariesArchive._remap_numba_helper(measures_sorted,
+        SlidingBoundariesArchive._remap_numba_helper(sorted_bc,
                                                      self._buffer.size,
                                                      self._boundaries,
                                                      self._measure_dim,
                                                      self.dims)
 
         indices = self._occupied_indices[:self._num_occupied]
-        old_sols = self._solution_batch[indices].copy()
-        old_objs = self._objective_batch[indices].copy()
-        old_meas = self._measure_batch[indices].copy()
+        old_sols = self._solutions[indices].copy()
+        old_objs = self._objective_values[indices].copy()
+        old_behs = self._behavior_values[indices].copy()
         old_metas = self._metadata[indices].copy()
 
         self.clear()
@@ -383,7 +383,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         return status, value
 
     # TODO: Update this method to take in batches.
-    def add(self, solution, objective, measures, metadata=None):
+    def add(self, solution, objective_value, behavior_values, metadata=None):
         """Inserts a batch of solutions into the archive.
 
         This method remaps the archive after every :attr:`remap_frequency`
@@ -397,9 +397,9 @@ class SlidingBoundariesArchive(ArchiveBase):
         before doing any remapping.
         """
         solution = np.asarray(solution)
-        measures = np.asarray(measures)
+        behavior_values = np.asarray(behavior_values)
 
-        self._buffer.add(solution, objective, measures, metadata)
+        self._buffer.add(solution, objective_value, behavior_values, metadata)
         self._total_num_sol += 1
 
         if self._total_num_sol % self._remap_frequency == 0:
@@ -410,6 +410,6 @@ class SlidingBoundariesArchive(ArchiveBase):
                 bound[dim] for bound, dim in zip(self._boundaries, self._dims)
             ])
         else:
-            status, value = ArchiveBase.add(self, solution, objective, measures,
-                                            metadata)
+            status, value = ArchiveBase.add(self, solution, objective_value,
+                                            behavior_values, metadata)
         return status, value
