@@ -143,7 +143,7 @@ def sphere(solution_batch):
 
 
 def create_scheduler(algorithm, dim, seed):
-    """Creates an scheduler based on the algorithm name.
+    """Creates a scheduler based on the algorithm name.
 
     Args:
         algorithm (str): Name of the algorithm passed into sphere_main.
