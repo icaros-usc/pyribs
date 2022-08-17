@@ -791,7 +791,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 be representable in a CSV.
         Returns:
             ArchiveDataFrame: See above.
-        """  # pylint: disable = line-too-long
+        """ # pylint: disable = line-too-long
         data = OrderedDict()
         indices = self._occupied_indices[:self._num_occupied]
 
