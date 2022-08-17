@@ -16,7 +16,9 @@ class AddStatus(IntEnum):
 
     Example:
 
-        Check the status of an add operation as follows::
+        Check the status of an add operation as follows (note that these
+        examples use :meth:`~ArchiveBase.add_single` rather than
+        :meth:`~ArchiveBase.add`)::
 
             from ribs.archives import AddStatus
             status, _ = archive.add_single(solution, objective, measures)
