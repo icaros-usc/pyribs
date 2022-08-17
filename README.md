@@ -10,22 +10,19 @@ algorithm and implements the _Rapid Illumination of Behavior Space (RIBS)_
 redesign of MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
 
-> In the field of quality diversity optimization, behavior characteristics
-> (BCs) and measures both refer to features of a solution. For consistency, we
-> will use "measures" for the features of a solution and use "measure
-> functions" for the functions that take a solution as input and gives
-> a measure as output.
-
 ## Overview
 
 ![Types of Optimization](readme_assets/optimization_types.png)
 
 [Quality diversity (QD) optimization](https://arxiv.org/abs/2012.04322) is a
 subfield of optimization where solutions generated cover every point in a
-measure space while simultaneously maximizing (or minimizing) a single
-objective. QD algorithms within the MAP-Elites family of QD algorithms produce
+_measure_ space while simultaneously maximizing (or minimizing) a single
+_objective_. QD algorithms within the MAP-Elites family of QD algorithms produce
 heatmaps (archives) as output where each cell contains the best discovered
 representative of a region in measure space.
+
+> In the QD literature, measure function outputs have also been referred to as
+> "behavior characteristics," "behavior descriptors," or "feature descriptors."
 
 While many QD libraries exist, this particular library aims to be the QD analog
 to the [pycma](https://pypi.org/project/cma/) library (a single objective
@@ -43,7 +40,7 @@ application:
 - An **Archive** saves the best representatives generated within measure space.
 - **Emitters** control how new candidate solutions are generated and affect if
   the algorithm prioritizes quality or diversity.
-- An **Scheduler** joins the **Archive** and **Emitters** together and acts as a
+- A **Scheduler** joins the **Archive** and **Emitters** together and acts as a
   scheduling algorithm for emitters. The **Scheduler** provides an interface for
   requesting new candidate solutions and telling the algorithm how candidates
   performed.
@@ -100,7 +97,11 @@ algorithm, we first create:
 - An **ImprovementEmitter**, which starts from the search point **0** in 10
   dimensional space and a Gaussian sampling distribution with standard deviation
   0.1.
+<<<<<<< HEAD
 - An **Scheduler** that combines the archive and emitter together.
+=======
+- A **Scheduler** that combines the archive and emitter together.
+>>>>>>> master
 
 After initializing the components, we optimize (pyribs maximizes) the negative
 10-D Sphere function for 1000 iterations. Users of

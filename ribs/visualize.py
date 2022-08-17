@@ -679,7 +679,7 @@ def parallel_axes_plot(archive,
     # If there is no order specified, plot in increasing numerical order.
     if measure_order is None:
         cols = np.arange(archive.measure_dim)
-        axis_labels = [f"measures_{i}" for i in range(archive.measure_dim)]
+        axis_labels = [f"measure_{i}" for i in range(archive.measure_dim)]
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
 
@@ -689,7 +689,7 @@ def parallel_axes_plot(archive,
         # Check for errors in specification.
         if all(isinstance(measure, int) for measure in measure_order):
             cols = np.array(measure_order)
-            axis_labels = [f"measures_{i}" for i in cols]
+            axis_labels = [f"measure_{i}" for i in cols]
         elif all(
                 len(measure) == 2 and isinstance(measure[0], int) and
                 isinstance(measure[1], str) for measure in measure_order):

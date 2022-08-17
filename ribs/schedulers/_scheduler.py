@@ -234,7 +234,7 @@ class Scheduler:
         Args:
             objective_batch ((batch_size,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
-            measures_batch ((batch_size, measures_dm) array): Each row of
+            measures_batch ((batch_size, measure_dim) array): Each row of
                 this array contains a solution's coordinates in measure space.
             jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
                 solution_dim)`` array consisting of Jacobian matrices of the

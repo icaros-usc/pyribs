@@ -1,4 +1,4 @@
-"""Tests for the scheduler."""
+"""Tests for the Scheduler."""
 import numpy as np
 import pytest
 
@@ -12,8 +12,8 @@ from ..archives.grid_archive_test import assert_archive_elite_batch
 
 
 @pytest.fixture
-def scheduler_fixtures():
-    """Returns an Scheduler with GridArchive and one GaussianEmitter."""
+def scheduler_fixture():
+    """Returns a Scheduler with GridArchive and one GaussianEmitter."""
     solution_dim = 2
     num_solutions = 4
     archive = GridArchive(solution_dim, [100, 100], [(-1, 1), (-1, 1)])
@@ -56,14 +56,14 @@ def test_init_fails_with_mismatched_emitters():
         Scheduler(archive, emitters)
 
 
-def test_ask_returns_correct_solution_shape(scheduler_fixtures):
-    scheduler, solution_dim, num_solutions = scheduler_fixtures
+def test_ask_returns_correct_solution_shape(scheduler_fixture):
+    scheduler, solution_dim, num_solutions = scheduler_fixture
     solutions = scheduler.ask()
     assert solutions.shape == (num_solutions, solution_dim)
 
 
-def test_ask_fails_when_called_twice(scheduler_fixtures):
-    scheduler, *_ = scheduler_fixtures
+def test_ask_fails_when_called_twice(scheduler_fixture):
+    scheduler, *_ = scheduler_fixture
     with pytest.raises(RuntimeError):
         scheduler.ask()
         scheduler.ask()
@@ -134,28 +134,28 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):
 ### TESTS FOR OUT-OF-ORDER ASK-TELL ###
 
 
-def test_tell_fails_when_ask_not_called(scheduler_fixtures):
-    scheduler, *_ = scheduler_fixtures
+def test_tell_fails_when_ask_not_called(scheduler_fixture):
+    scheduler, *_ = scheduler_fixture
     with pytest.raises(RuntimeError):
         scheduler.tell(None, None)
 
 
-def test_tell_fails_when_ask_dqd_not_called(scheduler_fixtures):
-    scheduler, *_ = scheduler_fixtures
+def test_tell_fails_when_ask_dqd_not_called(scheduler_fixture):
+    scheduler, *_ = scheduler_fixture
     with pytest.raises(RuntimeError):
         scheduler.tell_dqd(None, None, None)
 
 
-def test_tell_fails_when_ask_tell_mismatch(scheduler_fixtures):
-    scheduler, *_ = scheduler_fixtures
+def test_tell_fails_when_ask_tell_mismatch(scheduler_fixture):
+    scheduler, *_ = scheduler_fixture
 
     _ = scheduler.ask()
     with pytest.raises(RuntimeError):
         scheduler.tell_dqd(None, None, None)
 
 
-def test_tell_fails_when_ask_tell_mismatch_dqd(scheduler_fixtures):
-    scheduler, *_ = scheduler_fixtures
+def test_tell_fails_when_ask_tell_mismatch_dqd(scheduler_fixture):
+    scheduler, *_ = scheduler_fixture
 
     _ = scheduler.ask_dqd()
     with pytest.raises(RuntimeError):
@@ -165,8 +165,8 @@ def test_tell_fails_when_ask_tell_mismatch_dqd(scheduler_fixtures):
 ### END ###
 
 
-def test_emitter_returns_no_solutions(scheduler_fixtures):
-    scheduler, solution_dim, _ = scheduler_fixtures
+def test_emitter_returns_no_solutions(scheduler_fixture):
+    scheduler, solution_dim, _ = scheduler_fixture
 
     # Should not return anything since there are no DQD emitters
     solution_batch = scheduler.ask_dqd()
@@ -177,8 +177,8 @@ def test_emitter_returns_no_solutions(scheduler_fixtures):
 
 @pytest.mark.parametrize("array",
                          ["objective_batch", "measures_batch", "metadata"])
-def test_tell_fails_with_wrong_shapes(scheduler_fixtures, array):
-    scheduler, _, num_solutions = scheduler_fixtures
+def test_tell_fails_with_wrong_shapes(scheduler_fixture, array):
+    scheduler, _, num_solutions = scheduler_fixture
     _ = scheduler.ask()  # Ignore the actual values of the solutions.
 
     objective_batch = np.ones(num_solutions)

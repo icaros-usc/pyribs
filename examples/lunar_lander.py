@@ -53,7 +53,6 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from alive_progress import alive_bar
 from dask.distributed import Client, LocalCluster
 
 from ribs.archives import GridArchive
@@ -139,7 +138,11 @@ def create_scheduler(seed, n_emitters, sigma0, batch_size):
     See lunar_lander_main() for description of args.
 
     Returns:
+<<<<<<< HEAD
         A pyribs scheduler set up for CMA-ME (i.e. it has EvolutionStrategyEmitter's
+=======
+        A pyribs scheduler set up for CMA-ME (i.e. it has ImprovementEmitter's
+>>>>>>> master
         and a GridArchive).
     """
     env = gym.make("LunarLander-v2")

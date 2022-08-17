@@ -6,8 +6,8 @@
 
 #### API
 
-- Fix all Examples and Turtorials (#253)
-- Rename fields and update documentation in archive code (#249, #250)
+- Fix all examples and tutorials (#253)
+- Rename fields and update documentation (#249, #250)
   - **Backwards-incompatible:** rename `Optimizer` to `Scheduler`
   - **Backwards-incompatible:** rename `objective_value` to `objective`
   - **Backwards-incompatible:** rename `behavior_value`/`bcs` to `measures`
