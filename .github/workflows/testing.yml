@@ -39,7 +39,7 @@ jobs:
         run: pip install .[dev]
       - name: Test core
         run: >
-          pytest tests/archives tests/emitters tests/optimizers
+          pytest tests/archives tests/emitters tests/schedulers
   pin:
     runs-on: ubuntu-latest
     steps:
@@ -54,7 +54,7 @@ jobs:
         run: pip install -r pinned_reqs/install.txt .[dev]
       - name: Test core
         run: >
-          pytest tests/archives tests/emitters tests/optimizers
+          pytest tests/archives tests/emitters tests/schedulers
       - name: Install extras deps
         run: pip install -r pinned_reqs/extras_visualize.txt
       - name: Test extras

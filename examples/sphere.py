@@ -3,14 +3,15 @@
 The sphere function in this example is adapted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to
 the range [-5.12, 5.12], and the optimum is moved from [0,..] to [0.4 * 5.12 =
-2.048,..]. Furthermore, the objective values are normalized to the range [0,
+2.048,..]. Furthermore, the objectives are normalized to the range [0,
 100] where 100 is the maximum and corresponds to 0 on the original sphere
 function.
 
-There are two BCs in this example. The first is the sum of the first n/2 clipped
-values of the solution, and the second is the sum of the last n/2 clipped values
-of the solution. Having each BC depend equally on several values in the solution
-space makes the problem more difficult (refer to Fontaine 2020 for more info).
+There are two measures in this example. The first is the sum of the first n/2
+clipped values of the solution, and the second is the sum of the last n/2
+clipped values of the solution. Having each measure depend equally on several
+values in the solution space makes the problem more difficult (refer to
+Fontaine 2020 for more info).
 
 The supported algorithms are:
 - `map_elites`: GridArchive with GaussianEmitter.
@@ -82,18 +83,18 @@ from alive_progress import alive_bar
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
                            GradientAborescenceEmitter, IsoLineEmitter)
-from ribs.optimizers import Optimizer
+from ribs.schedulers import Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
 
 def sphere(solution_batch):
-    """Sphere function evaluation and BCs for a batch of solutions.
+    """Sphere function evaluation and measures for a batch of solutions.
 
     Args:
-        solution_batch (np.ndarray): (batch_size, dim) array of solutions
+        solution_batch (np.ndarray): (batch_size, dim) batch of solutions.
     Returns:
-        objective_batch (np.ndarray): (batch_size,) array of objective values
-        measures_batch (np.ndarray): (batch_size, 2) array of measure values
+        objective_batch (np.ndarray): (batch_size,) batch of objectives.
+        measures_batch (np.ndarray): (batch_size, 2) batch of measures.
     """
     dim = solution_batch.shape[1]
 
@@ -141,15 +142,15 @@ def sphere(solution_batch):
     )
 
 
-def create_optimizer(algorithm, dim, seed):
-    """Creates an optimizer based on the algorithm name.
+def create_scheduler(algorithm, dim, seed):
+    """Creates a scheduler based on the algorithm name.
 
     Args:
         algorithm (str): Name of the algorithm passed into sphere_main.
         dim (int): Dimensionality of the sphere function.
         seed (int): Main seed or the various components.
     Returns:
-        Optimizer: A ribs Optimizer for running the algorithm.
+        scheduler: A ribs scheduler for running the algorithm.
     """
     max_bound = dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
@@ -277,7 +278,7 @@ def create_optimizer(algorithm, dim, seed):
                 batch_size=batch_size - 1,  # 1 solution is returned by ask_dqd
                 seed=emitter_seeds[0])
         ]
-    return Optimizer(archive, emitters)
+    return Scheduler(archive, emitters)
 
 
 def save_heatmap(archive, heatmap_path):
@@ -342,8 +343,8 @@ def sphere_main(algorithm,
 
     is_dqd = algorithm in ['cma_mega', 'cma_mega_adam']
 
-    optimizer = create_optimizer(algorithm, dim, seed)
-    archive = optimizer.archive
+    scheduler = create_scheduler(algorithm, dim, seed)
+    archive = scheduler.archive
     metrics = {
         "QD Score": {
             "x": [0],
@@ -363,19 +364,19 @@ def sphere_main(algorithm,
             itr_start = time.time()
 
             if is_dqd:
-                solution_batch = optimizer.ask_dqd()
+                solution_batch = scheduler.ask_dqd()
                 (objective_batch, objective_grad_batch, measures_batch,
                  measures_grad_batch) = sphere(solution_batch)
                 objective_grad_batch = np.expand_dims(objective_grad_batch,
                                                       axis=1)
                 jacobian_batch = np.concatenate(
                     (objective_grad_batch, measures_grad_batch), axis=1)
-                optimizer.tell_dqd(objective_batch, measures_batch,
+                scheduler.tell_dqd(objective_batch, measures_batch,
                                    jacobian_batch)
 
-            solution_batch = optimizer.ask()
+            solution_batch = scheduler.ask()
             objective_batch, _, measure_batch, _ = sphere(solution_batch)
-            optimizer.tell(objective_batch, measure_batch)
+            scheduler.tell(objective_batch, measure_batch)
             non_logging_time += time.time() - itr_start
             progress()
 

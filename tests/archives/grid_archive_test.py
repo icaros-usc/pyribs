@@ -85,7 +85,7 @@ def assert_archive_elite_batch(
 def test_fails_on_dim_mismatch():
     with pytest.raises(ValueError):
         GridArchive(
-            solution_dim=10,  #arbitrary
+            solution_dim=10,  # arbitrary
             dims=[10] * 2,  # 2D space here.
             ranges=[(-1, 1)] * 3,  # But 3D space here.
         )
@@ -152,9 +152,8 @@ def test_add_single_and_overwrite(data):
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective, data.measures, data.grid_indices,
-                         arbitrary_metadata)
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
+                         data.measures, data.grid_indices, arbitrary_metadata)
 
 
 def test_add_single_without_overwrite(data):

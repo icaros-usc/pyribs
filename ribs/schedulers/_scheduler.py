@@ -1,17 +1,17 @@
-"""Provides the Optimizer."""
+"""Provides the Scheduler."""
 import numpy as np
 
 from ribs.emitters import DQDEmitterBase
 
 
-class Optimizer:
+class Scheduler:
     """A basic class that composes an archive with multiple emitters.
 
     To use this class, first create an archive and list of emitters for the
-    QD algorithm. Then, construct the Optimizer with these arguments. Finally,
+    QD algorithm. Then, construct the Scheduler with these arguments. Finally,
     repeatedly call :meth:`ask` to collect solutions to analyze, and return the
-    objective values and measures values of those solutions **in the same
-    order** using :meth:`tell`.
+    objective and measures of those solutions **in the same order** using
+    :meth:`tell`.
 
     As all solutions go into the same archive, the  emitters passed in must emit
     solutions with the same dimension (that is, their ``solution_dim`` attribute
@@ -47,7 +47,7 @@ class Optimizer:
 
     def __init__(self, archive, emitters, add_mode="batch"):
         if len(emitters) == 0:
-            raise ValueError("Pass in at least one emitter to the optimizer.")
+            raise ValueError("Pass in at least one emitter to the scheduler.")
 
         emitter_ids = set(id(e) for e in emitters)
         if len(emitter_ids) != len(emitters):
@@ -75,7 +75,7 @@ class Optimizer:
         self._emitters = emitters
         self._add_mode = add_mode
 
-        # Keeps track of whether the Optimizer should be receiving a call to
+        # Keeps track of whether the scheduler should be receiving a call to
         # ask() or tell().
         self._last_called = None
         # The last set of solutions returned by ask().
@@ -86,13 +86,13 @@ class Optimizer:
     @property
     def archive(self):
         """ribs.archives.ArchiveBase: Archive for storing solutions found in
-        this optimizer."""
+        this scheduler."""
         return self._archive
 
     @property
     def emitters(self):
         """list of ribs.archives.EmitterBase: Emitters for generating solutions
-        in this optimizer."""
+        in this scheduler."""
         return self._emitters
 
     def ask_dqd(self):
@@ -103,7 +103,7 @@ class Optimizer:
             important, so do not rearrange them.
 
         Returns:
-            (n_solutions, dim) array: An array of n solutions to evaluate. Each
+            (batch_size, dim) array: An array of n solutions to evaluate. Each
             row contains a single solution.
         Raises:
             RuntimeError: This method was called without first calling
@@ -135,7 +135,7 @@ class Optimizer:
             important, so do not rearrange them.
 
         Returns:
-            (n_solutions, dim) array: An array of n solutions to evaluate. Each
+            (batch_size, dim) array: An array of n solutions to evaluate. Each
             row contains a single solution.
         Raises:
             RuntimeError: This method was called without first calling
@@ -232,16 +232,16 @@ class Optimizer:
             and metadata for ``solution_batch[i]``.
 
         Args:
-            objective_batch ((n_solutions,) array): Each entry of this array
+            objective_batch ((batch_size,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
-            measures_batch ((n_solutions, measures_dm) array): Each row of
+            measures_batch ((batch_size, measure_dim) array): Each row of
                 this array contains a solution's coordinates in measure space.
             jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
                 solution_dim)`` array consisting of Jacobian matrices of the
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
-            metadata_batch ((n_solutions,) array): Each entry of this array
+            metadata_batch ((batch_size,) array): Each entry of this array
                 contains an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
@@ -284,11 +284,11 @@ class Optimizer:
             metadata for ``solution_batch[i]``.
 
         Args:
-            objective_batch ((n_solutions,) array): Each entry of this array
+            objective_batch ((batch_size,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
-            measures_batch ((n_solutions, measures_dm) array): Each row of
+            measures_batch ((batch_size, measures_dm) array): Each row of
                 this array contains a solution's coordinates in measure space.
-            metadata ((n_solutions,) array): Each entry of this array contains
+            metadata ((batch_size,) array): Each entry of this array contains
                 an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling

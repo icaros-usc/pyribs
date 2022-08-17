@@ -548,7 +548,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def add_single(self, solution, objective, measures, metadata=None):
         """Inserts a single solution into the archive.
 
-        The solution is only inserted if it has a higher ``objective_value``
+        The solution is only inserted if it has a higher ``objective``
         than the elite previously in the corresponding cell.
 
         Args:

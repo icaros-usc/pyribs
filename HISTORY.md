@@ -6,8 +6,12 @@
 
 #### API
 
-- Rename fields and update documentation in archive code (#250)
-  - **Backwards-incompatible:** `behavior_dim` in archives is not `measure_dim`
+- Rename fields and update documentation (#249, #250)
+  - **Backwards-incompatible:** rename `Optimizer` to `Scheduler`
+  - **Backwards-incompatible:** rename `objective_value` to `objective`
+  - **Backwards-incompatible:** rename `behavior_value`/`bcs` to `measures`
+  - **Backwards-incompatible:** `behavior_dim` in archives is now `measure_dim`
+  - Rename `n_solutions` to `batch_size` in `Scheduler`.
 - Add `GradientAborescenceEmitter`, which is used to implement CMA-MEGA (#240)
 - Update emitter `tell()` docstrings to no longer say "Inserts entries into archive" (#247)
 - Expose `emitter.restarts` as a property (#248)

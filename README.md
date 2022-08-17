@@ -16,10 +16,13 @@ redesign of MAP-Elites detailed in the paper
 
 [Quality diversity (QD) optimization](https://arxiv.org/abs/2012.04322) is a
 subfield of optimization where solutions generated cover every point in a
-behavior space while simultaneously maximizing (or minimizing) a single
-objective. QD algorithms within the MAP-Elites family of QD algorithms produce
+_measure_ space while simultaneously maximizing (or minimizing) a single
+_objective_. QD algorithms within the MAP-Elites family of QD algorithms produce
 heatmaps (archives) as output where each cell contains the best discovered
-representative of a region in behavior space.
+representative of a region in measure space.
+
+> In the QD literature, measure function outputs have also been referred to as
+> "behavior characteristics," "behavior descriptors," or "feature descriptors."
 
 While many QD libraries exist, this particular library aims to be the QD analog
 to the [pycma](https://pypi.org/project/cma/) library (a single objective
@@ -34,11 +37,11 @@ performance or have additional use cases.
 A user of pyribs selects three components that meet the needs of their
 application:
 
-- An **Archive** saves the best representatives generated within behavior space.
+- An **Archive** saves the best representatives generated within measure space.
 - **Emitters** control how new candidate solutions are generated and affect if
   the algorithm prioritizes quality or diversity.
-- An **Optimizer** joins the **Archive** and **Emitters** together and acts as a
-  scheduling algorithm for emitters. The **Optimizer** provides an interface for
+- A **Scheduler** joins the **Archive** and **Emitters** together and acts as a
+  scheduling algorithm for emitters. The **Scheduler** provides an interface for
   requesting new candidate solutions and telling the algorithm how candidates
   performed.
 
@@ -94,36 +97,36 @@ algorithm, we first create:
 - An **ImprovementEmitter**, which starts from the search point **0** in 10
   dimensional space and a Gaussian sampling distribution with standard deviation
   0.1.
-- An **Optimizer** that combines the archive and emitter together.
+- A **Scheduler** that combines the archive and emitter together.
 
 After initializing the components, we optimize (pyribs maximizes) the negative
 10-D Sphere function for 1000 iterations. Users of
 [pycma](https://pypi.org/project/cma/) will be familiar with the ask-tell
-interface (which pyribs adopted). First, the user must `ask` the optimizer for
+interface (which pyribs adopted). First, the user must `ask` the scheduler for
 new candidate solutions. After evaluating the solution, they `tell` the
-optimizer the objective value and behavior characteristics (BCs) of each
-candidate solution. The algorithm then populates the archive and makes decisions
-on where to sample solutions next. Our toy example uses the first two parameters
-of the search space as BCs.
+scheduler the objectives and measures of each candidate solution. The algorithm
+then populates the archive and makes decisions on where to sample solutions
+next. Our toy example uses the first two parameters of the search space as
+measures.
 
 ```python
 import numpy as np
 
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
-from ribs.optimizers import Optimizer
+from ribs.scheduler import Scheduler
 
 archive = GridArchive(solution_dim=len([0.0] * 10), dims=[20, 20], ranges=[(-1, 1), (-1, 1)])
 emitters = [ImprovementEmitter(archive, [0.0] * 10, 0.1)]
-optimizer = Optimizer(archive, emitters)
+scheduler = Scheduler(archive, emitters)
 
 for itr in range(1000):
-    solutions = optimizer.ask()
+    solutions = scheduler.ask()
 
     objectives = -np.sum(np.square(solutions), axis=1)
-    bcs = solutions[:, :2]
+    measures = solutions[:, :2]
 
-    optimizer.tell(objectives, bcs)
+    scheduler.tell(objectives, measures)
 ```
 
 To visualize this archive with matplotlib, we then use the
