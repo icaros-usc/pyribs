@@ -42,11 +42,12 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             CMA-ES. With "mu" selection, the first half of the solutions will be
             selected as parents, while in "filter", any solutions that were
             added to the archive will be selected.
-        restart_rule ("no_improvement" or "basic"): Method to use when checking
-            for restarts. With "basic", only the default CMA-ES convergence
-            rules will be used, while with "no_improvement", the emitter will
-            restart when none of the proposed solutions were added to the
-            archive.
+        restart_rule (int, "no_improvement", and "basic"): Method to use when
+            checking for restarts. If given an integer, then the emitter will
+            restart after this many iterations. With "basic", only the default
+            CMA-ES convergence rules will be used, while with "no_improvement",
+            the emitter will restart when none of the proposed solutions were
+            added to the archive.
         grad_opt ("adam" or "gradient_ascent"): Gradient optimizer to use for
             the gradient ascent step of the algorithm. Defaults to `adam`.
         normalize_grad (bool): If true (default), then gradient infomation will
@@ -121,7 +122,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             raise ValueError(f"Invalid selection_rule {selection_rule}")
         self._selection_rule = selection_rule
 
-        if restart_rule not in ["basic", "no_improvement"]:
+        if restart_rule not in ["basic", "no_improvement"] and isinstance(
+                restart_rule, int):
             raise ValueError(f"Invalid restart_rule {restart_rule}")
         self._restart_rule = restart_rule
 
@@ -137,6 +139,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
 
         self._batch_size = self.opt.batch_size
         self._restarts = 0
+        self._itrs = 0
 
     @property
     def x0(self):
@@ -161,6 +164,11 @@ class GradientAborescenceEmitter(DQDEmitterBase):
     def restarts(self):
         """int: The number of restarts for this emitter."""
         return self._restarts
+
+    @property
+    def itrs(self):
+        """int: The number of iterations for this emitter."""
+        return self._itrs
 
     @property
     def epsilon(self):
@@ -210,6 +218,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
 
         The optimizer also has its own checks.
         """
+        if isinstance(self._restart_rule, int):
+            return self._itrs % self._restart_rule == 0
         if self._restart_rule == "no_improvement":
             return num_parents == 0
         return False
@@ -284,6 +294,9 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             metadata_batch (numpy.ndarray): 1d object array containing a
                 metadata object for each solution.
         """
+        # Increase iteration counter.
+        self._itrs += 1
+
         if self._jacobian_batch is None:
             raise RuntimeError("tell() was called without calling tell_dqd().")
 
