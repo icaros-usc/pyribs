@@ -77,7 +77,7 @@ from pathlib import Path
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
-from tqdm import tqdm
+from tqdm import trange
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
@@ -358,7 +358,7 @@ def sphere_main(algorithm,
     non_logging_time = 0.0
     save_heatmap(archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
 
-    progress_bar = tqdm(range(1, itrs + 1))
+    progress_bar = trange(1, itrs + 1)
     for itr in progress_bar:
         itr_start = time.time()
 

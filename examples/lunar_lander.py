@@ -53,7 +53,7 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from alive_progress import alive_bar
+from tqdm import trange
 from dask.distributed import Client, LocalCluster
 
 from ribs.archives import GridArchive
@@ -206,9 +206,9 @@ def run_search(client, optimizer, env_seed, iterations, log_freq):
     }
 
     start_time = time.time()
-    progress_bar = tqdm(range(1, iterations + 1))
+    pbar = trange(1, iterations + 1)
 
-    for itr in progress_bar:
+    for itr in pbar:
         # Request models from the optimizer.
         sols = optimizer.ask()
 
@@ -235,7 +235,7 @@ def run_search(client, optimizer, env_seed, iterations, log_freq):
             metrics["Max Score"]["y"].append(optimizer.archive.stats.obj_max)
             metrics["Archive Size"]["x"].append(itr)
             metrics["Archive Size"]["y"].append(len(optimizer.archive))
-            progress_bar.write(
+            pbar.write(
                 f"> {itr} itrs completed after {elapsed_time:.2f} s",
                 f"  - Max Score: {metrics['Max Score']['y'][-1]}",
                 f"  - Archive Size: {metrics['Archive Size']['y'][-1]}")
