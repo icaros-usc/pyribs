@@ -134,6 +134,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                  solution_dim,
                  cells,
                  measure_dim,
+                 learning_rate=1.0,
+                 threshold_min=0.0,
                  seed=None,
                  dtype=np.float64):
 
@@ -154,6 +156,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._measures_arr = np.empty((self._cells, self._measure_dim),
                                       dtype=self.dtype)
         self._metadata_arr = np.empty(self._cells, dtype=object)
+
+        # For CMA-MAE
+        self._learning_rate = learning_rate
+        self._threshold_min = threshold_min
+        self._threshold_arr = np.empty(self._cells, dtype=self.dtype)
 
         self._stats = None
         self._stats_reset()
@@ -434,22 +441,22 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         index_batch = self.index_of(measures_batch)
 
         # Copy old objectives since we will be modifying the objectives storage.
-        old_objective_batch = np.copy(self._objective_arr[index_batch])
+        old_objective_arr = np.copy(self._objective_arr[index_batch])
 
         # Compute the statuses -- these are all boolean arrays of length
         # batch_size.
         already_occupied = self._occupied_arr[index_batch]
         is_new = ~already_occupied
         improve_existing = (objective_batch >
-                            old_objective_batch) & already_occupied
+                            old_objective_arr) & already_occupied
         status_batch = np.zeros(batch_size, dtype=np.int32)
         status_batch[is_new] = 2
         status_batch[improve_existing] = 1
 
         # Since we set the new solutions in old_objective_batch to have
         # value 0.0, the values for new solutions are correct here.
-        old_objective_batch[is_new] = 0.0
-        value_batch = objective_batch - old_objective_batch
+        old_objective_arr[is_new] = 0.0
+        value_batch = objective_batch - old_objective_arr
 
         ## Step 3: Insert solutions into archive. ##
 
@@ -466,7 +473,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         measures_batch_can = measures_batch[can_insert]
         index_batch_can = index_batch[can_insert]
         metadata_batch_can = metadata_batch[can_insert]
-        old_objective_batch_can = old_objective_batch[can_insert]
+        old_objective_batch_can = old_objective_arr[can_insert]
 
         # Retrieve indices of solutions that should be inserted into the
         # archive. Currently, multiple solutions may be inserted at each
@@ -569,18 +576,67 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             the add operation. Refer to :meth:`add` for the meaning of the
             status and value.
         """
+        self._state["add"] += 1
+
         solution = np.asarray(solution)
         objective = np.asarray(objective, dtype=self.dtype)  # 0-dim array.
         measures = np.asarray(measures)
+        index = self.index_of_single(measures)
 
         check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
 
-        status_batch, value_batch = self.add(solution[None],
-                                             np.array([objective]),
-                                             measures[None],
-                                             np.array([metadata], dtype=object))
-        return (status_batch[0], value_batch[0])
+        old_objective = self._objective_arr[index]
+
+        was_occupied = self._occupied_arr[index]
+        if not was_occupied or self._objective_arr[index] < objective:
+            # Set this index to "occupied" -- important that we do this before
+            # inserting the solution.
+            self._occupied_arr[index] = True
+
+            # Insert into the archive.
+            self._objective_arr[index] = objective
+            self._measures_arr[index] = measures
+            self._solution_arr[index] = solution
+            self._metadata[index] = metadata
+
+            if was_occupied:
+                status = 1  # IMPROVE_EXISTING
+                value = objective - old_objective
+            else:
+                # Tracks a new occupied index.
+                self._occupied_indices[self._num_occupied] = index
+                self._num_occupied += 1
+                status = 2  # NEW
+                value = objective_value
+
+            # Update archive stats.
+            new_qd_score = self._stats.qd_score + value
+
+            if self._stats.obj_max is None or objective > self._stats.obj_max:
+                new_obj_max = objective
+                self._best_elite = Elite(
+                    readonly(solution),
+                    objective,
+                    readonly(measures),
+                    index,
+                    metadata,
+                )
+            else:
+                new_obj_max = self._stats.obj_max
+
+            self._stats = ArchiveStats(
+                num_elites=len(self),
+                coverage=self.dtype(len(self) / self.cells),
+                qd_score=new_qd_score,
+                obj_max=new_obj_max,
+                obj_mean=new_qd_score / self.dtype(len(self)),
+            )
+        else:
+            status = 0  # NOT_ADDED
+            value = objective_value - old_objective
+
+        return status, value
 
     def elites_with_measures(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
@@ -791,7 +847,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 be representable in a CSV.
         Returns:
             ArchiveDataFrame: See above.
-        """ # pylint: disable = line-too-long
+        """  # pylint: disable = line-too-long
         data = OrderedDict()
         indices = self._occupied_indices[:self._num_occupied]
 
