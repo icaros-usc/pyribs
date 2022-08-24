@@ -35,10 +35,11 @@ class EvolutionStrategyEmitter(EmitterBase):
             name as described in :meth:`ribs.emitters.rankers.get_ranker`.
         restart_rule (int, "no_improvement", and "basic"): Method to use when
             checking for restarts. If given an integer, then the emitter will
-            restart after this many iterations. With "basic", only the default
-            CMA-ES convergence rules will be used, while with "no_improvement",
-            the emitter will restart when none of the proposed solutions were
-            added to the archive.
+            restart after this many iterations, where each iteration is a call
+            to :meth:`tell`. With "basic", only the default CMA-ES convergence
+            rules will be used, while with "no_improvement", the emitter will
+            restart when none of the proposed solutions were added to the
+            archive.
         bounds (None or array-like): Bounds of the solution space. As suggested
             in `Biedrzycki 2020
             <https://www.sciencedirect.com/science/article/abs/pii/S2210650219301622>`_,
@@ -87,10 +88,10 @@ class EvolutionStrategyEmitter(EmitterBase):
             raise ValueError(f"Invalid selection_rule {selection_rule}")
         self._selection_rule = selection_rule
 
-        if restart_rule not in ["basic", "no_improvement"] and isinstance(
-                restart_rule, int):
-            raise ValueError(f"Invalid restart_rule {restart_rule}")
         self._restart_rule = restart_rule
+        if restart_rule not in ["basic", "no_improvement"] and isinstance(
+                restart_rule, (int, np.integer)):
+            raise ValueError(f"Invalid restart_rule {restart_rule}")
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
         self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
@@ -122,7 +123,8 @@ class EvolutionStrategyEmitter(EmitterBase):
 
     @property
     def itrs(self):
-        """int: The number of iterations for this emitter."""
+        """int: The number of iterations for this emitter, where each iteration
+        is a call to :meth:`tell`."""
         return self._itrs
 
     def ask(self):
@@ -142,11 +144,13 @@ class EvolutionStrategyEmitter(EmitterBase):
 
         The optimizer also has its own checks.
         """
-        if isinstance(self._restart_rule, int):
+        if isinstance(self._restart_rule, (int, np.integer)):
             return self._itrs % self._restart_rule == 0
-        if self._restart_rule == "no_improvement":
+        elif self._restart_rule == "no_improvement":
             return num_parents == 0
-        return False
+        elif self._restart_rule == "basic":
+            return False
+        raise ValueError(f"Invalid restart_rule {self._restart_rule}")
 
     def tell(self,
              solution_batch,
