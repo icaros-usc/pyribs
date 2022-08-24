@@ -584,12 +584,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._state["add"] += 1
 
         solution = np.asarray(solution)
-        objective = np.asarray(objective, dtype=self.dtype)  # 0-dim array.
-        print(objective.dtype)
+        objective = self.dtype(objective)
         measures = np.asarray(measures)
         index = self.index_of_single(measures)
-
-        print(objective.dtype)
 
         check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
@@ -627,8 +624,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         if status:
             # Update archive stats.
             if status == 2:
-                old_objective = 0
+                old_objective = self.dtype(0.0)
             new_qd_score = self._stats.qd_score + (objective - old_objective)
+            print(type(objective))
+            print(type(objective - old_objective))
+            print(type(self._stats.qd_score + objective - old_objective))
 
             if self._stats.obj_max is None or objective > self._stats.obj_max:
                 new_obj_max = objective
