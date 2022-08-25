@@ -44,10 +44,11 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             added to the archive will be selected.
         restart_rule (int, "no_improvement", and "basic"): Method to use when
             checking for restarts. If given an integer, then the emitter will
-            restart after this many iterations. With "basic", only the default
-            CMA-ES convergence rules will be used, while with "no_improvement",
-            the emitter will restart when none of the proposed solutions were
-            added to the archive.
+            restart after this many iterations, where each iteration is a call
+            to :meth:`tell`. With "basic", only the default CMA-ES convergence
+            rules will be used, while with "no_improvement", the emitter will
+            restart when none of the proposed solutions were added to the
+            archive.
         grad_opt ("adam" or "gradient_ascent"): Gradient optimizer to use for
             the gradient ascent step of the algorithm. Defaults to `adam`.
         normalize_grad (bool): If true (default), then gradient infomation will
