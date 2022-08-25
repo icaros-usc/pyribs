@@ -626,9 +626,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             if status == 2:
                 old_objective = self.dtype(0.0)
             new_qd_score = self._stats.qd_score + (objective - old_objective)
-            print(type(objective))
-            print(type(objective - old_objective))
-            print(type(self._stats.qd_score + objective - old_objective))
 
             if self._stats.obj_max is None or objective > self._stats.obj_max:
                 new_obj_max = objective
