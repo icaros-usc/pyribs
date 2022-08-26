@@ -263,6 +263,30 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._stats = ArchiveStats(0, self.dtype(0.0), self.dtype(0.0), None,
                                    None)
 
+    def _sum_geometric_series(self, a, r, n):
+        """Compute the sum of a geometric series."""
+        if r == 1.0:
+            return a
+        return (a * (1 - pow(r, n))) / (1 - r)
+
+    def _compute_new_thresholds(self, old_threshold_batch,
+                                objective_batch_insert):
+        """Update thresholds.
+
+            Args:
+                old_threshold_batch (np.ndarray): The threshold of the cells before updating.
+                objective_batch_insert (np.ndarray): The objective values of
+                    the solution that is inserted into the archive.
+            Returns:
+                A batch of new thresholds.
+        """
+        k = len(objective_batch_insert)
+        geometric_sum = self._sum_geometric_series(1, 1.0 - self._learning_rate,
+                                                   k)
+        return (self._learning_rate * np.sum(objective_batch_insert) *
+                geometric_sum / k) + (old_threshold_batch *
+                                      (1.0 - self._learning_rate)**k)
+
     def clear(self):
         """Removes all elites from the archive.
 
@@ -447,21 +471,22 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         # Copy old objectives since we will be modifying the objectives storage.
         old_objective_arr = np.copy(self._objective_arr[index_batch])
+        old_threshold_arr = np.copy(self._threshold_arr[index_batch])
 
         # Compute the statuses -- these are all boolean arrays of length
         # batch_size.
         already_occupied = self._occupied_arr[index_batch]
         is_new = ~already_occupied
         improve_existing = (objective_batch >
-                            old_objective_arr) & already_occupied
+                            old_threshold_arr) & already_occupied
         status_batch = np.zeros(batch_size, dtype=np.int32)
         status_batch[is_new] = 2
         status_batch[improve_existing] = 1
 
         # Since we set the new solutions in old_objective_batch to have
         # value 0.0, the values for new solutions are correct here.
-        old_objective_arr[is_new] = 0.0
-        value_batch = objective_batch - old_objective_arr
+        old_threshold_arr[is_new] = 0.0
+        value_batch = objective_batch - old_threshold_arr
 
         ## Step 3: Insert solutions into archive. ##
 
@@ -479,6 +504,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         index_batch_can = index_batch[can_insert]
         metadata_batch_can = metadata_batch[can_insert]
         old_objective_batch_can = old_objective_arr[can_insert]
+        old_threshold_batch_can = old_threshold_arr[can_insert]
 
         # Retrieve indices of solutions that should be inserted into the
         # archive. Currently, multiple solutions may be inserted at each
@@ -508,6 +534,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         index_batch_insert = index_batch_can[should_insert]
         metadata_batch_insert = metadata_batch_can[should_insert]
         old_objective_batch_insert = old_objective_batch_can[should_insert]
+        old_threshold_batch_insert = old_threshold_batch_can[should_insert]
+
+        # Update the thresholds.
+        self._threshold_arr[index_batch_insert] = self._compute_new_thresholds(
+            old_threshold_batch_insert, objective_batch_insert)
 
         # Set archive storage.
         self._objective_arr[index_batch_insert] = objective_batch_insert
@@ -602,9 +633,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             # inserting the solution.
             self._occupied_arr[index] = True
 
-            # Update the threshold for this cell by the learning rate if the threshold will increase.
-            self._threshold_arr[index] = old_threshold * \
-                (1.0 - self._learning_rate) + objective * self._learning_rate
+            # Update the threshold.
+            # self._threshold_arr[index] = old_threshold * \
+            #     (1.0 - self._learning_rate) + objective * self._learning_rate
+            self._threshold_arr[index] = self._compute_new_thresholds(
+                np.array([old_threshold]), np.array([objective]))
 
             # Insert into the archive.
             self._objective_arr[index] = objective
