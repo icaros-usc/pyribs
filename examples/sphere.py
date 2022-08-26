@@ -34,13 +34,18 @@ The supported algorithms are:
 - `cma_mega`: GridArchive with GradientAborescenceEmitter.
 - `cma_mega_adam`: GridArchive with GradientAborescenceEmitter using Adam
   Optimizer.
-
-Note: the settings for `cma_mega` and `cma_mega_adam` are consistent with the
-paper (`Fontaine 2021 <https://arxiv.org/abs/2106.03894>`_) in which these
-algorithms are proposed.
+- `cma_mae`: GridArchive (learning_rate = 0.01) with EvolutionStrategyEmitter.
+- `cma_maega`: GridArchive (learning_rate = 0.01) with GradientAborescenceEmitter.
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
+
+Exceptions:
+    - `cma_mega` and `cma_mega_adam` uses only one emitter and runs for 10,000
+      iterations. This is to be consistent with the paper (`Fontaine 2021
+      <https://arxiv.org/abs/2106.03894>`_) in which these algorithms were
+      proposed.
+    - `cma_mae` and `cma_maega`
 
 Note that the CVTArchive in this example uses 10,000 cells, as opposed to the
 250,000 (500x500) in the GridArchive, so it is not fair to directly compare
@@ -180,6 +185,15 @@ def create_scheduler(algorithm, dim, seed):
                               dims=(100, 100),
                               ranges=bounds,
                               seed=seed)
+    elif algorithm in ["cma_mae", "cma_maega"]:
+        # Note that the archive is smaller for these algorithms. This is to be
+        # consistent with Fontaine 2022 <https://arxiv.org/abs/2205.10752>.
+        archive = GridArchive(solution_dim=dim,
+                              dims=(100, 100),
+                              ranges=bounds,
+                              learning_rate=0.01,
+                              threshold_min=0,
+                              seed=seed)
     else:
         raise ValueError(f"Algorithm `{algorithm}` is not recognized")
 
@@ -278,6 +292,31 @@ def create_scheduler(algorithm, dim, seed):
                 batch_size=batch_size - 1,  # 1 solution is returned by ask_dqd
                 seed=emitter_seeds[0])
         ]
+    elif algorithm == "cma_mae":
+        emitters = [
+            EvolutionStrategyEmitter(
+                archive=archive,
+                x0=initial_sol,
+                sigma0=0.5,
+                ranker="2imp",
+                selection_rule="mu",
+                restart_rule="basic",
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds
+        ]
+    elif algorithm in ["cma_maega"]:
+        emitters = [
+            GradientAborescenceEmitter(archive,
+                                       initial_sol,
+                                       sigma0=10.0,
+                                       step_size=1.0,
+                                       grad_opt="gradient_ascent",
+                                       restart_rule="basic",
+                                       bounds=None,
+                                       batch_size=batch_size,
+                                       seed=s) for s in emitter_seeds
+        ]
     return Scheduler(archive, emitters)
 
 
@@ -318,17 +357,21 @@ def sphere_main(algorithm,
             and saving heatmap.
         seed (int): Seed for the algorithm. By default, there is no seed.
     """
+    # Use default dim for each algorithm.
     if dim is None:
         if algorithm in ["cma_mega", "cma_mega_adam"]:
             dim = 1_000
+        if algorithm in ["cma_mae", "cma_maega"]:
+            dim = 100
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
                 "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
         ]:
             dim = 20
 
+    # Use default itrs for each algorithm.
     if itrs is None:
-        if algorithm in ["cma_mega", "cma_mega_adam"]:
+        if algorithm in ["cma_mega", "cma_mega_adam", "cma_mae", "cma_maega"]:
             itrs = 10_000
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",

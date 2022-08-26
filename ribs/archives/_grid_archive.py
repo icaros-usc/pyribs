@@ -32,6 +32,9 @@ class GridArchive(ArchiveBase):
             method -- refer to the implementation `here
             <../_modules/ribs/archives/_grid_archive.html#GridArchive.index_of>`_.
             Pass this parameter to configure that epsilon.
+        learning_rate (float): The learning rate of the archive. Described in
+            `Fontaine 2022 <https://arxiv.org/abs/2205.10752>`_.
+        threshold_min (float): The default threshold value for all the cells.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objectives,
@@ -45,6 +48,8 @@ class GridArchive(ArchiveBase):
                  solution_dim,
                  dims,
                  ranges,
+                 learning_rate=1.0,
+                 threshold_min=0.0,
                  epsilon=1e-6,
                  seed=None,
                  dtype=np.float64):
@@ -58,6 +63,8 @@ class GridArchive(ArchiveBase):
             solution_dim=solution_dim,
             cells=np.product(self._dims),
             measure_dim=len(self._dims),
+            learning_rate=learning_rate,
+            threshold_min=threshold_min,
             seed=seed,
             dtype=dtype,
         )
