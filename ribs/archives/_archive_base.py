@@ -634,8 +634,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             self._occupied_arr[index] = True
 
             # Update the threshold.
-            # self._threshold_arr[index] = old_threshold * \
-            #     (1.0 - self._learning_rate) + objective * self._learning_rate
             self._threshold_arr[index] = self._compute_new_thresholds(
                 np.array([old_threshold]), np.array([objective]))
 

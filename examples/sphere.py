@@ -147,7 +147,12 @@ def sphere(solution_batch):
     )
 
 
-def create_scheduler(algorithm, dim, seed):
+def create_scheduler(algorithm,
+                     solution_dims,
+                     archive_dims,
+                     learning_rate,
+                     use_result_archive=True,
+                     seed=None):
     """Creates a scheduler based on the algorithm name.
 
     Args:
@@ -157,45 +162,33 @@ def create_scheduler(algorithm, dim, seed):
     Returns:
         scheduler: A ribs scheduler for running the algorithm.
     """
-    max_bound = dim / 2 * 5.12
+    max_bound = solution_dims / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
-    initial_sol = np.zeros(dim)
+    initial_sol = np.zeros(solution_dims)
     batch_size = 37
     num_emitters = 15
 
     # Create archive.
-    if algorithm in [
-            "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
-    ]:
-        archive = GridArchive(solution_dim=dim,
-                              dims=(500, 500),
-                              ranges=bounds,
-                              seed=seed)
-    elif algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
-        archive = CVTArchive(solution_dim=dim,
+    if algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
+        archive = CVTArchive(solution_dim=solution_dims,
                              cells=10_000,
                              ranges=bounds,
                              samples=100_000,
                              use_kd_tree=True)
-    elif algorithm in ["cma_mega", "cma_mega_adam"]:
-        # Note that the archive is smaller for these algorithms. This is to be
-        # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
-        archive = GridArchive(solution_dim=dim,
-                              dims=(100, 100),
+    else:
+        archive = GridArchive(solution_dim=solution_dims,
+                              dims=archive_dims,
                               ranges=bounds,
-                              seed=seed)
-    elif algorithm in ["cma_mae", "cma_maega"]:
-        # Note that the archive is smaller for these algorithms. This is to be
-        # consistent with Fontaine 2022 <https://arxiv.org/abs/2205.10752>.
-        archive = GridArchive(solution_dim=dim,
-                              dims=(100, 100),
-                              ranges=bounds,
-                              learning_rate=0.01,
+                              learning_rate=learning_rate,
                               threshold_min=0,
                               seed=seed)
-    else:
-        raise ValueError(f"Algorithm `{algorithm}` is not recognized")
+
+    # Create result archive.
+    if use_result_archive:
+        result_archive = GridArchive(solution_dim=solution_dims,
+                                     dims=archive_dims,
+                                     ranges=bounds,
+                                     seed=seed)
 
     # Create emitters. Each emitter needs a different seed, so that they do not
     # all do the same thing.
@@ -317,7 +310,12 @@ def create_scheduler(algorithm, dim, seed):
                                        batch_size=batch_size,
                                        seed=s) for s in emitter_seeds
         ]
-    return Scheduler(archive, emitters)
+    return Scheduler(
+        archive,
+        emitters,
+        result_archive,
+        add_mode="single"
+    )
 
 
 def save_heatmap(archive, heatmap_path):
@@ -343,6 +341,8 @@ def save_heatmap(archive, heatmap_path):
 def sphere_main(algorithm,
                 dim=None,
                 itrs=None,
+                archive_dims=None,
+                learning_rate=None,
                 outdir="sphere_output",
                 log_freq=250,
                 seed=None):
@@ -350,7 +350,7 @@ def sphere_main(algorithm,
 
     Args:
         algorithm (str): Name of the algorithm.
-        dim (int): Dimensionality of solutions.
+        dim (int): Dimensionality of the sphere function.
         itrs (int): Iterations to run.
         outdir (str): Directory to save output.
         log_freq (int): Number of iterations to wait before recording metrics
@@ -361,7 +361,7 @@ def sphere_main(algorithm,
     if dim is None:
         if algorithm in ["cma_mega", "cma_mega_adam"]:
             dim = 1_000
-        if algorithm in ["cma_mae", "cma_maega"]:
+        elif algorithm in ["cma_mae", "cma_maega"]:
             dim = 100
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
@@ -379,14 +379,41 @@ def sphere_main(algorithm,
         ]:
             itrs = 4500
 
+    # Use default archive_dim for each algorithm.
+    if archive_dims is None:
+        if algorithm in ["cma_mega", "cma_mega_adam", "cma_mae", "cma_maega"]:
+            archive_dims = (100, 100)
+        elif algorithm in [
+                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
+        ]:
+            archive_dims = (500, 500)
+
+    # Use default learning_rate for each algorithm.
+    if learning_rate is None:
+        if algorithm in ["cma_mae", "cma_maega"]:
+            learning_rate = 0.01
+        elif algorithm in [
+                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed",
+                "cma_mega", "cma_mega_adam"
+        ]:
+            learning_rate = 1.0
+
     name = f"{algorithm}_{dim}"
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
 
-    is_dqd = algorithm in ['cma_mega', 'cma_mega_adam']
+    is_dqd = algorithm in ["cma_mega", "cma_mega_adam"]
+    use_result_archive = algorithm in ["cma_mae", "cma_maega"]
 
-    scheduler = create_scheduler(algorithm, dim, seed)
+    scheduler = create_scheduler(algorithm,
+                                 dim,
+                                 archive_dims,
+                                 learning_rate,
+                                 use_result_archive=use_result_archive,
+                                 seed=seed)
     archive = scheduler.archive
     metrics = {
         "QD Score": {
@@ -426,15 +453,22 @@ def sphere_main(algorithm,
             # Logging and output.
             final_itr = itr == itrs
             if itr % log_freq == 0 or final_itr:
+                result_archive = scheduler.result_archive
+
+                # Save a full archive for analysis
+                df = result_archive.as_pandas(include_solutions=final_itr)
+                df.to_pickle(str(outdir / f"{name}_archive_{itr:08d}.pkl"))
+
                 if final_itr:
                     archive.as_pandas(include_solutions=final_itr).to_csv(
                         outdir / f"{name}_archive.csv")
 
                 # Record and display metrics.
                 metrics["QD Score"]["x"].append(itr)
-                metrics["QD Score"]["y"].append(archive.stats.qd_score)
+                metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
                 metrics["Archive Coverage"]["x"].append(itr)
-                metrics["Archive Coverage"]["y"].append(archive.stats.coverage)
+                metrics["Archive Coverage"]["y"].append(
+                    result_archive.stats.coverage)
                 print(f"Iteration {itr} | Archive Coverage: "
                       f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
                       f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")

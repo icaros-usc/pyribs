@@ -36,6 +36,10 @@ class Scheduler:
             included for legacy reasons, as it was the only mode of operation in
             pyribs 0.4.0 and before. We highly recommend using "batch" mode
             since it is significantly faster.
+        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
+            CMA-MAE, the archive does not store all the best-performing
+            solutions. The `result_archive` is a secondary archive where we can
+            store all the best-performing solutions.
     Raises:
         ValueError: The emitters passed in do not have the same solution
             dimensions.
@@ -45,7 +49,11 @@ class Scheduler:
         ValueError: Invalid value for `add_mode`.
     """
 
-    def __init__(self, archive, emitters, add_mode="batch"):
+    def __init__(self,
+                 archive,
+                 emitters,
+                 result_archive=None,
+                 add_mode="batch"):
         if len(emitters) == 0:
             raise ValueError("Pass in at least one emitter to the scheduler.")
 
@@ -75,6 +83,8 @@ class Scheduler:
         self._emitters = emitters
         self._add_mode = add_mode
 
+        self._result_archive = result_archive
+
         # Keeps track of whether the scheduler should be receiving a call to
         # ask() or tell().
         self._last_called = None
@@ -94,6 +104,16 @@ class Scheduler:
         """list of ribs.archives.EmitterBase: Emitters for generating solutions
         in this scheduler."""
         return self._emitters
+
+    @property
+    def result_archive(self):
+        """ribs.archives.ArchiveBase: Another archive for storing solutions
+        found in this optimizer.
+        If `result_archive` was not passed to the constructor, this property is
+        the same as :attr:`archive`.
+        """
+        return (self._archive
+                if self._result_archive is None else self._result_archive)
 
     def ask_dqd(self):
         """Generates a batch of solutions by calling ask_dqd() on all DQD
@@ -208,6 +228,11 @@ class Scheduler:
             ])
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
+
+        # Add solution to result_archive
+        if self._result_archive is not None:
+            self._result_archive.add(self._solution_batch, objective_batch,
+                                     measures_batch, metadata_batch)
 
         return (
             objective_batch,
