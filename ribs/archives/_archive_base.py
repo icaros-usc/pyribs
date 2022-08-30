@@ -622,8 +622,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
 
+        # Note that when learning_rate = 1.0, old_threshold === old_objective. 
         old_objective = self._objective_arr[index]
-        # Note that when learning_rate = 1.0, this is equivalent to old_objective
         old_threshold = self._threshold_arr[index]
 
         was_occupied = self._occupied_arr[index]
@@ -634,8 +634,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             self._occupied_arr[index] = True
 
             # Update the threshold.
-            self._threshold_arr[index] = self._compute_new_thresholds(
-                np.array([old_threshold]), np.array([objective]))
+            if old_threshold < objective:
+                # self._threshold_arr[index] = old_threshold * \
+                #     (1.0 - self._learning_rate) + objective * self._learning_rate
+                self._threshold_arr[index] = self._compute_new_thresholds(
+                    np.array([old_threshold]), np.array([objective]))
 
             # Insert into the archive.
             self._objective_arr[index] = objective
@@ -651,7 +654,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 self._num_occupied += 1
                 status = 2  # NEW
 
-        value = objective - old_threshold
         if status:
             # Update archive stats.
             if status == 2:
@@ -678,7 +680,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 obj_mean=new_qd_score / self.dtype(len(self)),
             )
 
-        return status, value
+        return status, self.dtype(objective - old_threshold)
 
     def elites_with_measures(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures

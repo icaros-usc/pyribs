@@ -291,7 +291,7 @@ def create_scheduler(algorithm,
                 archive=archive,
                 x0=initial_sol,
                 sigma0=0.5,
-                ranker="2imp",
+                ranker="imp",
                 selection_rule="mu",
                 restart_rule="basic",
                 batch_size=batch_size,
@@ -310,12 +310,7 @@ def create_scheduler(algorithm,
                                        batch_size=batch_size,
                                        seed=s) for s in emitter_seeds
         ]
-    return Scheduler(
-        archive,
-        emitters,
-        result_archive,
-        add_mode="single"
-    )
+    return Scheduler(archive, emitters, result_archive, add_mode="single")
 
 
 def save_heatmap(archive, heatmap_path):
