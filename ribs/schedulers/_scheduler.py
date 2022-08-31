@@ -142,7 +142,7 @@ class Scheduler:
                 self._solution_batch.append(emitter_sols)
                 self._num_emitted[i] = len(emitter_sols)
 
-        # In case the emitters didn't return any solutions
+        # In case the emitters didn't return any solutions.
         self._solution_batch = np.concatenate(
             self._solution_batch, axis=0) if self._solution_batch else np.empty(
                 (0, self._solution_dim))
@@ -173,7 +173,7 @@ class Scheduler:
             self._solution_batch.append(emitter_sols)
             self._num_emitted[i] = len(emitter_sols)
 
-        # In case the emitters didn't return any solutions
+        # In case the emitters didn't return any solutions.
         self._solution_batch = np.concatenate(
             self._solution_batch, axis=0) if self._solution_batch else np.empty(
                 (0, self._solution_dim))
@@ -229,12 +229,10 @@ class Scheduler:
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
 
-        # Add solution to result_archive
+        # Add solutions to result_archive.
         if self._result_archive is not None:
-            for sol, obj, mea, meta in zip(self._solution_batch,
-                                           objective_batch, measures_batch,
-                                           metadata_batch):
-                self._result_archive.add_single(sol, obj, mea, meta)
+            self._result_archive.add(self._solution_batch, objective_batch,
+                                     measures_batch, metadata_batch)
 
         return (
             objective_batch,
