@@ -171,6 +171,7 @@ def create_scheduler(algorithm,
     initial_sol = np.zeros(solution_dims)
     batch_size = 37
     num_emitters = 15
+    mode = "batch"
 
     # Create archive.
     if algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
@@ -317,9 +318,9 @@ def create_scheduler(algorithm,
         ]
 
     print(
-        f"Created Scheduler for {algorithm} with learning rate {learning_rate}, "
+        f"Created Scheduler for {algorithm} with learning rate {learning_rate} and add mode {mode}, "
         f"using solution dims {solution_dims} and archive dims {archive_dims}.")
-    return Scheduler(archive, emitters, result_archive, add_mode="single")
+    return Scheduler(archive, emitters, result_archive, add_mode=mode)
 
 
 def save_heatmap(archive, heatmap_path):
@@ -433,8 +434,9 @@ def sphere_main(algorithm,
 
     non_logging_time = 0.0
     with alive_bar(itrs) as progress:
-        save_heatmap(archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
-        save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{0:05d}_result.png"))
+        save_heatmap(archive, str(outdir / f"{name}_heatmap_{0:05d}_main.png"))
+        save_heatmap(result_archive,
+                     str(outdir / f"{name}_heatmap_{0:05d}_result.png"))
 
         for itr in range(1, itrs + 1):
             itr_start = time.time()
@@ -460,10 +462,6 @@ def sphere_main(algorithm,
             # Logging and output.
             final_itr = itr == itrs
             if itr % log_freq == 0 or final_itr:
-                # Save a full archive for analysis
-                # df = result_archive.as_pandas(include_solutions=final_itr)
-                # df.to_pickle(str(outdir / f"{name}_archive_{itr:08d}.pkl"))
-
                 if final_itr:
                     result_archive.as_pandas(
                         include_solutions=final_itr).to_csv(
@@ -480,7 +478,7 @@ def sphere_main(algorithm,
                       f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
                 save_heatmap(archive,
-                             str(outdir / f"{name}_heatmap_{itr:05d}.png"))
+                             str(outdir / f"{name}_heatmap_{itr:05d}_main.png"))
 
                 # Save result_archive
                 save_heatmap(

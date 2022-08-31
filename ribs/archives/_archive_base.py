@@ -525,13 +525,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Group the objectives that can be inserted into the archive by cell index.
         objective_batch_by_cell, group_by_index = groupby(
             objective_batch_can, index_batch_can)
-        old_threshold_batch = self._threshold_arr[group_by_index]
 
         # Update the thresholds.
-        for objective_batch, old_threshold in zip(objective_batch_by_cell,
-                                                  old_threshold_batch):
-            self._threshold_arr[group_by_index] = self._compute_new_thresholds(
-                old_threshold, objective_batch)
+        for objective_batch, index in zip(objective_batch_by_cell,
+                                          group_by_index):
+            self._threshold_arr[index] = self._compute_new_thresholds(
+                self._threshold_arr[index], objective_batch)
 
         # Retrieve indices of solutions that should be inserted into the
         # archive. Currently, multiple solutions may be inserted at each
