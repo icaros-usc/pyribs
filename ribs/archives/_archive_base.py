@@ -486,6 +486,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         # Since we set the new solutions in old_objective_batch to have
         # value 0.0, the values for new solutions are correct here.
+        old_objective_arr[is_new] = 0.0
         old_threshold_arr[is_new] = 0.0
         value_batch = objective_batch - old_threshold_arr
 

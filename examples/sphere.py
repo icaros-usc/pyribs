@@ -406,11 +406,11 @@ def sphere_main(algorithm,
             learning_rate = 1.0
 
     name = f"{algorithm}_{dim}"
-    outdir = Path(outdir)
+    outdir = Path(outdir + "_" + algorithm)
     if not outdir.is_dir():
         outdir.mkdir()
 
-    is_dqd = algorithm in ["cma_mega", "cma_mega_adam"]
+    is_dqd = algorithm in ["cma_mega", "cma_mega_adam", "cma_maega"]
     use_result_archive = algorithm in ["cma_mae", "cma_maega"]
 
     scheduler = create_scheduler(algorithm,
@@ -419,7 +419,6 @@ def sphere_main(algorithm,
                                  learning_rate,
                                  use_result_archive=use_result_archive,
                                  seed=seed)
-    archive = scheduler.archive
     result_archive = scheduler.result_archive
     metrics = {
         "QD Score": {
@@ -434,9 +433,8 @@ def sphere_main(algorithm,
 
     non_logging_time = 0.0
     with alive_bar(itrs) as progress:
-        save_heatmap(archive, str(outdir / f"{name}_heatmap_{0:05d}_main.png"))
         save_heatmap(result_archive,
-                     str(outdir / f"{name}_heatmap_{0:05d}_result.png"))
+                     str(outdir / f"{name}_heatmap_{0:05d}.png"))
 
         for itr in range(1, itrs + 1):
             itr_start = time.time()
@@ -477,13 +475,9 @@ def sphere_main(algorithm,
                       f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
                       f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
-                save_heatmap(archive,
-                             str(outdir / f"{name}_heatmap_{itr:05d}_main.png"))
-
                 # Save result_archive
-                save_heatmap(
-                    result_archive,
-                    str(outdir / f"{name}_heatmap_{itr:05d}_result.png"))
+                save_heatmap(result_archive,
+                             str(outdir / f"{name}_heatmap_{itr:05d}.png"))
 
     # Plot metrics.
     print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")
