@@ -231,8 +231,10 @@ class Scheduler:
 
         # Add solution to result_archive
         if self._result_archive is not None:
-            self._result_archive.add(self._solution_batch, objective_batch,
-                                     measures_batch, metadata_batch)
+            for sol, obj, mea, meta in zip(self._solution_batch,
+                                           objective_batch, measures_batch,
+                                           metadata_batch):
+                self._result_archive.add_single(sol, obj, mea, meta)
 
         return (
             objective_batch,

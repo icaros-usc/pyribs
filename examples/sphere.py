@@ -157,10 +157,14 @@ def create_scheduler(algorithm,
 
     Args:
         algorithm (str): Name of the algorithm passed into sphere_main.
-        dim (int): Dimensionality of the sphere function.
+        solution_dims (int): Dimensionality of the sphere function.
+        archive_dims (int): Dimensionality of the archive.
+        learning_rate (float): Learning rate of archive.
+        use_result_archive (bool): Whether to use a separate archive to store
+            the results.
         seed (int): Main seed or the various components.
     Returns:
-        scheduler: A ribs scheduler for running the algorithm.
+        ribs.schedulers.Scheduler: A ribs scheduler for running the algorithm.
     """
     max_bound = solution_dims / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
@@ -184,6 +188,7 @@ def create_scheduler(algorithm,
                               seed=seed)
 
     # Create result archive.
+    result_archive = None
     if use_result_archive:
         result_archive = GridArchive(solution_dim=solution_dims,
                                      dims=archive_dims,
@@ -310,6 +315,10 @@ def create_scheduler(algorithm,
                                        batch_size=batch_size,
                                        seed=s) for s in emitter_seeds
         ]
+
+    print(
+        f"Created Scheduler for {algorithm} with learning rate {learning_rate}, "
+        f"using solution dims {solution_dims} and archive dims {archive_dims}.")
     return Scheduler(archive, emitters, result_archive, add_mode="single")
 
 
@@ -410,6 +419,7 @@ def sphere_main(algorithm,
                                  use_result_archive=use_result_archive,
                                  seed=seed)
     archive = scheduler.archive
+    result_archive = scheduler.result_archive
     metrics = {
         "QD Score": {
             "x": [0],
@@ -424,6 +434,7 @@ def sphere_main(algorithm,
     non_logging_time = 0.0
     with alive_bar(itrs) as progress:
         save_heatmap(archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
+        save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{0:05d}_result.png"))
 
         for itr in range(1, itrs + 1):
             itr_start = time.time()
@@ -440,23 +451,23 @@ def sphere_main(algorithm,
                                    jacobian_batch)
 
             solution_batch = scheduler.ask()
-            objective_batch, _, measure_batch, _ = sphere(solution_batch)
-            scheduler.tell(objective_batch, measure_batch)
+            objective_batch, _, measures_batch, _ = sphere(solution_batch)
+
+            scheduler.tell(objective_batch, measures_batch)
             non_logging_time += time.time() - itr_start
             progress()
 
             # Logging and output.
             final_itr = itr == itrs
             if itr % log_freq == 0 or final_itr:
-                result_archive = scheduler.result_archive
-
                 # Save a full archive for analysis
-                df = result_archive.as_pandas(include_solutions=final_itr)
-                df.to_pickle(str(outdir / f"{name}_archive_{itr:08d}.pkl"))
+                # df = result_archive.as_pandas(include_solutions=final_itr)
+                # df.to_pickle(str(outdir / f"{name}_archive_{itr:08d}.pkl"))
 
                 if final_itr:
-                    archive.as_pandas(include_solutions=final_itr).to_csv(
-                        outdir / f"{name}_archive.csv")
+                    result_archive.as_pandas(
+                        include_solutions=final_itr).to_csv(
+                            outdir / f"{name}_archive.csv")
 
                 # Record and display metrics.
                 metrics["QD Score"]["x"].append(itr)
@@ -470,6 +481,11 @@ def sphere_main(algorithm,
 
                 save_heatmap(archive,
                              str(outdir / f"{name}_heatmap_{itr:05d}.png"))
+
+                # Save result_archive
+                save_heatmap(
+                    result_archive,
+                    str(outdir / f"{name}_heatmap_{itr:05d}_result.png"))
 
     # Plot metrics.
     print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")
