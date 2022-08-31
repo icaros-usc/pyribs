@@ -79,6 +79,9 @@ class Scheduler:
             raise ValueError("add_mode must either be 'batch' or 'single', but "
                              f"it was '{add_mode}'")
 
+        if archive is result_archive:
+            raise ValueError("archive has same id as result_archive")
+
         self._archive = archive
         self._emitters = emitters
         self._add_mode = add_mode
@@ -212,27 +215,29 @@ class Scheduler:
                 measures_batch,
                 metadata_batch,
             )
+
+            # Add solutions to result_archive.
+            if self._result_archive is not None:
+                self._result_archive.add(self._solution_batch, objective_batch,
+                                         measures_batch, metadata_batch)
         elif self._add_mode == "single":
-            status_batch, value_batch = zip(*[
-                self.archive.add_single(
-                    solution,
-                    objective,
-                    measure,
-                    metadata,
-                ) for solution, objective, measure, metadata in zip(
-                    self._solution_batch,
-                    objective_batch,
-                    measures_batch,
-                    metadata_batch,
-                )
-            ])
+            status_batch = []
+            value_batch = []
+            for solution, objective, measure, metadata in zip(
+                    self._solution_batch, objective_batch, measures_batch,
+                    metadata_batch):
+                status, value = self.archive.add_single(solution, objective,
+                                                        measure, metadata)
+                status_batch.append(status)
+                value_batch.append(value)
+
+                # Add solutions to result_archive.
+                if self._result_archive is not None:
+                    self._result_archive.add(self._solution_batch,
+                                             objective_batch, measures_batch,
+                                             metadata_batch)
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
-
-        # Add solutions to result_archive.
-        if self._result_archive is not None:
-            self._result_archive.add(self._solution_batch, objective_batch,
-                                     measures_batch, metadata_batch)
 
         return (
             objective_batch,

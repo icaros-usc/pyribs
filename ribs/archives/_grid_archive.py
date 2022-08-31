@@ -49,7 +49,7 @@ class GridArchive(ArchiveBase):
                  dims,
                  ranges,
                  learning_rate=1.0,
-                 threshold_min=0.0,
+                 threshold_min=-np.inf,
                  epsilon=1e-6,
                  seed=None,
                  dtype=np.float64):

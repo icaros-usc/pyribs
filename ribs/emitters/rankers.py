@@ -125,10 +125,6 @@ class ImprovementRanker(RankerBase):
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
              measures_batch, status_batch, value_batch, metadata_batch):
-        # To avoid using an array of tuples, ranking_values is a 2D array
-        # [[status_0, value_0], ..., [status_n, value_n]]
-        ranking_values = np.stack((status_batch, value_batch), axis=-1)
-
         # Note that lexsort sorts the values in ascending order,
         # so we use np.flip to reverse the sorted array.
         return np.flip(np.argsort(value_batch)), value_batch

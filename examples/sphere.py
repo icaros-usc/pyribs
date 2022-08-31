@@ -34,23 +34,25 @@ The supported algorithms are:
 - `cma_mega`: GridArchive with GradientAborescenceEmitter.
 - `cma_mega_adam`: GridArchive with GradientAborescenceEmitter using Adam
   Optimizer.
-- `cma_mae`: GridArchive (learning_rate = 0.01) with EvolutionStrategyEmitter.
-- `cma_maega`: GridArchive (learning_rate = 0.01) with GradientAborescenceEmitter.
+- `cma_mae`: GridArchive (learning_rate = 0.01) with EvolutionStrategyEmitter
+  using ImprovementRanker.
+- `cma_maega`: GridArchive (learning_rate = 0.01) with
+  GradientAborescenceEmitter using ImprovementRanker.
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
 
-Exceptions:
-    - `cma_mega` and `cma_mega_adam` uses only one emitter and runs for 10,000
+Notes:
+    - `cma_mega` and `cma_mega_adam` use only one emitter and run for 10,000
       iterations. This is to be consistent with the paper (`Fontaine 2021
       <https://arxiv.org/abs/2106.03894>`_) in which these algorithms were
       proposed.
-    - `cma_mae` and `cma_maega`
-
-Note that the CVTArchive in this example uses 10,000 cells, as opposed to the
-250,000 (500x500) in the GridArchive, so it is not fair to directly compare
-`cvt_map_elites` and `line_cvt_map_elites` to the other algorithms. However, the
-other algorithms may be fairly compared because they use the same archive.
+    - `cma_mae` and `cma_maega` run for 10,000 iterations as well.
+    - CVTArchive in this example uses 10,000 cells, as opposed to the 250,000
+      (500x500) in the GridArchive, so it is not fair to directly compare
+      `cvt_map_elites` and `line_cvt_map_elites` to the other algorithms.
+      However, the other algorithms may be fairly compared because they use the
+      same archive.
 
 Outputs are saved in the `sphere_output/` directory by default. The archive is
 saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
@@ -148,7 +150,7 @@ def sphere(solution_batch):
 
 
 def create_scheduler(algorithm,
-                     solution_dims,
+                     solution_dim,
                      archive_dims,
                      learning_rate,
                      use_result_archive=True,
@@ -157,7 +159,7 @@ def create_scheduler(algorithm,
 
     Args:
         algorithm (str): Name of the algorithm passed into sphere_main.
-        solution_dims (int): Dimensionality of the sphere function.
+        solution_dim(int): Dimensionality of the sphere function.
         archive_dims (int): Dimensionality of the archive.
         learning_rate (float): Learning rate of archive.
         use_result_archive (bool): Whether to use a separate archive to store
@@ -166,22 +168,22 @@ def create_scheduler(algorithm,
     Returns:
         ribs.schedulers.Scheduler: A ribs scheduler for running the algorithm.
     """
-    max_bound = solution_dims / 2 * 5.12
+    max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
-    initial_sol = np.zeros(solution_dims)
+    initial_sol = np.zeros(solution_dim)
     batch_size = 37
     num_emitters = 15
     mode = "batch"
 
     # Create archive.
     if algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
-        archive = CVTArchive(solution_dim=solution_dims,
+        archive = CVTArchive(solution_dim=solution_dim,
                              cells=10_000,
                              ranges=bounds,
                              samples=100_000,
                              use_kd_tree=True)
     else:
-        archive = GridArchive(solution_dim=solution_dims,
+        archive = GridArchive(solution_dim=solution_dim,
                               dims=archive_dims,
                               ranges=bounds,
                               learning_rate=learning_rate,
@@ -191,7 +193,7 @@ def create_scheduler(algorithm,
     # Create result archive.
     result_archive = None
     if use_result_archive:
-        result_archive = GridArchive(solution_dim=solution_dims,
+        result_archive = GridArchive(solution_dim=solution_dim,
                                      dims=archive_dims,
                                      ranges=bounds,
                                      seed=seed)
@@ -310,6 +312,7 @@ def create_scheduler(algorithm,
                                        initial_sol,
                                        sigma0=10.0,
                                        step_size=1.0,
+                                       ranker="imp",
                                        grad_opt="gradient_ascent",
                                        restart_rule="basic",
                                        bounds=None,
@@ -319,7 +322,7 @@ def create_scheduler(algorithm,
 
     print(
         f"Created Scheduler for {algorithm} with learning rate {learning_rate} and add mode {mode}, "
-        f"using solution dims {solution_dims} and archive dims {archive_dims}.")
+        f"using solution dims {solution_dim} and archive dims {archive_dims}.")
     return Scheduler(archive, emitters, result_archive, add_mode=mode)
 
 
@@ -357,6 +360,8 @@ def sphere_main(algorithm,
         algorithm (str): Name of the algorithm.
         dim (int): Dimensionality of the sphere function.
         itrs (int): Iterations to run.
+        archive_dims (tuple): Dimensionality of the archive.
+        learning_rate (float): The archive learning rate.
         outdir (str): Directory to save output.
         log_freq (int): Number of iterations to wait before recording metrics
             and saving heatmap.

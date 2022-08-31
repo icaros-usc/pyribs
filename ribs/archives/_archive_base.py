@@ -138,7 +138,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                  cells,
                  measure_dim,
                  learning_rate=1.0,
-                 threshold_min=0.0,
+                 threshold_min=-np.inf,
                  seed=None,
                  dtype=np.float64):
 
@@ -471,24 +471,24 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         index_batch = self.index_of(measures_batch)
 
         # Copy old objectives since we will be modifying the objectives storage.
-        old_objective_arr = np.copy(self._objective_arr[index_batch])
-        old_threshold_arr = np.copy(self._threshold_arr[index_batch])
+        old_objective_batch = np.copy(self._objective_arr[index_batch])
+        old_threshold_batch = np.copy(self._threshold_arr[index_batch])
 
         # Compute the statuses -- these are all boolean arrays of length
         # batch_size.
         already_occupied = self._occupied_arr[index_batch]
         is_new = ~already_occupied
         improve_existing = (objective_batch >
-                            old_threshold_arr) & already_occupied
+                            old_threshold_batch) & already_occupied
         status_batch = np.zeros(batch_size, dtype=np.int32)
         status_batch[is_new] = 2
         status_batch[improve_existing] = 1
 
         # Since we set the new solutions in old_objective_batch to have
         # value 0.0, the values for new solutions are correct here.
-        old_objective_arr[is_new] = 0.0
-        old_threshold_arr[is_new] = 0.0
-        value_batch = objective_batch - old_threshold_arr
+        old_objective_batch[is_new] = 0.0
+        old_threshold_batch[is_new] = 0.0
+        value_batch = objective_batch - old_threshold_batch
 
         ## Step 3: Insert solutions into archive. ##
 
@@ -505,7 +505,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         measures_batch_can = measures_batch[can_insert]
         index_batch_can = index_batch[can_insert]
         metadata_batch_can = metadata_batch[can_insert]
-        old_objective_batch_can = old_objective_arr[can_insert]
+        old_objective_batch_can = old_objective_batch[can_insert]
 
         def groupby(a, b):
             # Get argsort indices, to be used to sort a and b in the next steps
@@ -644,7 +644,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
 
-        # Note that when learning_rate = 1.0, old_threshold === old_objective.
+        # Note that when learning_rate = 1.0, old_threshold == old_objective.
         old_objective = self._objective_arr[index]
         old_threshold = self._threshold_arr[index]
 
