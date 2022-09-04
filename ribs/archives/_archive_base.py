@@ -162,10 +162,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         # For CMA-MAE
         self._learning_rate = learning_rate
-        # TODO use np.empty
-        self._threshold_arr = np.full(self._cells,
-                                      threshold_min,
-                                      dtype=self.dtype)
+        self._threshold_min = threshold_min
+        self._threshold_arr = np.empty(self._cells, dtype=self.dtype)
 
         self._stats = None
         self._stats_reset()
@@ -269,24 +267,58 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             return a
         return (a * (1 - pow(r, n))) / (1 - r)
 
-    def _compute_new_thresholds(self, old_threshold, objective_batch_insert):
+    def _compute_new_thresholds(self, threshold_arr, objective_batch,
+                                index_batch, learning_rate):
         """Update thresholds.
 
         Args:
-            old_threshold (float): The threshold of the cells before
-                updating.
-            objective_batch_insert (np.ndarray): 1D array of the objective
-                values of the solution that is inserted into the archive for
-                each cell.
+            threshold_arr (np.ndarray): The threshold of the cells before
+                updating. 1D array.
+            objective_batch (np.ndarray): The objective values of the solution
+                that is inserted into the archive for each cell. 1D array.
+            index_batch (np.ndarray): The archive index of the elements in
+                objective batch.
         Returns:
-            A batch of new thresholds.
+            ``nd.array`` of new thresholds where ``new_threshold_batch[i]`` is
+            the new threshold value at cell ``threshold_update_indices[i]``.
+        Raises:
+            ValueError: ``threshold_arr`` or ``objective_batch`` or
+            ``index_batch`` is empty.
         """
-        k = np.size(objective_batch_insert)
-        geometric_sum = self._sum_geometric_series(1, 1.0 - self._learning_rate,
-                                                   k)
-        return (self._learning_rate * np.sum(objective_batch_insert) *
-                geometric_sum / k) + (old_threshold *
-                                      (1.0 - self._learning_rate)**k)
+        if threshold_arr.size == 0 or objective_batch.size == 0 or index_batch.size == 0:
+            raise ValueError("Cannot compute new thresholds when input array is empty")
+        
+        # Compute the number of objectives inserted into each cell.
+        objective_sizes = aggregate(index_batch,
+                                    objective_batch,
+                                    func="len",
+                                    fill_value=0)
+
+        threshold_update_indices = np.unique(np.where(objective_sizes != 0))
+
+        # Compute the sum of the objectives inserted into each cell.
+        objective_sums = aggregate(index_batch,
+                                   objective_batch,
+                                   func="sum",
+                                   fill_value=np.nan)
+
+        objective_sizes = objective_sizes[threshold_update_indices]
+        objective_sums = objective_sums[threshold_update_indices]
+
+        geometric_sums = np.array([
+            self._sum_geometric_series(1, 1 - learning_rate, k)
+            for k in objective_sizes
+        ])
+
+        a = learning_rate * objective_sums * \
+            (geometric_sums / objective_sizes)
+        b = threshold_arr[threshold_update_indices] * np.power(
+            np.full_like(objective_sizes, 1.0 - learning_rate,
+                         dtype=self.dtype), objective_sizes)
+
+        new_threshold_batch = a + b
+
+        return new_threshold_batch, threshold_update_indices
 
     def clear(self):
         """Removes all elites from the archive.
@@ -487,7 +519,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Since we set the new solutions in old_objective_batch to have
         # value 0.0, the values for new solutions are correct here.
         old_objective_batch[is_new] = 0.0
-        old_threshold_batch[is_new] = 0.0
+        old_threshold_batch[is_new] = self._threshold_min
         value_batch = objective_batch - old_threshold_batch
 
         ## Step 3: Insert solutions into archive. ##
@@ -507,31 +539,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         metadata_batch_can = metadata_batch[can_insert]
         old_objective_batch_can = old_objective_batch[can_insert]
 
-        def groupby(a, b):
-            # Get argsort indices, to be used to sort a and b in the next steps
-            sidx = b.argsort(kind='mergesort')
-            a_sorted = a[sidx]
-            b_sorted = b[sidx]
-
-            # Get the group limit indices (start, stop of groups)
-            cut_idx = np.flatnonzero(np.r_[True, b_sorted[1:] != b_sorted[:-1],
-                                           True])
-
-            # Split input array with those start, stop ones
-            out = np.array(
-                [a_sorted[i:j] for i, j in zip(cut_idx[:-1], cut_idx[1:])],
-                dtype=object)
-            return out, np.unique(b_sorted)
-
-        # Group the objectives that can be inserted into the archive by cell index.
-        objective_batch_by_cell, group_by_index = groupby(
-            objective_batch_can, index_batch_can)
-
         # Update the thresholds.
-        for objective_batch, index in zip(objective_batch_by_cell,
-                                          group_by_index):
-            self._threshold_arr[index] = self._compute_new_thresholds(
-                self._threshold_arr[index], objective_batch)
+        new_thresholds, update_thresholds_indices = self._compute_new_thresholds(
+            self._threshold_arr, objective_batch_can, index_batch_can,
+            self._learning_rate)
+        self._threshold_arr[update_thresholds_indices] = new_thresholds
 
         # Retrieve indices of solutions that should be inserted into the
         # archive. Currently, multiple solutions may be inserted at each
@@ -644,6 +656,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
 
+        if not self._occupied_arr[index]:
+            self._objective_arr[index] = 0
+            self._threshold_arr[index] = self._threshold_min
+
         # Note that when learning_rate = 1.0, old_threshold == old_objective.
         old_objective = self._objective_arr[index]
         old_threshold = self._threshold_arr[index]
@@ -657,8 +673,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
             # Update the threshold.
             if old_threshold < objective:
-                self._threshold_arr[index] = self._compute_new_thresholds(
-                    old_threshold, np.array([objective]))
+                self._threshold_arr[index] = old_threshold * \
+                    (1.0 - self._learning_rate) + \
+                    objective * self._learning_rate
 
             # Insert into the archive.
             self._objective_arr[index] = objective
@@ -676,8 +693,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         if status:
             # Update archive stats.
-            if status == 2:
-                old_objective = self.dtype(0.0)
             new_qd_score = self._stats.qd_score + (objective - old_objective)
 
             if self._stats.obj_max is None or objective > self._stats.obj_max:

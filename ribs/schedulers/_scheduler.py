@@ -233,9 +233,9 @@ class Scheduler:
 
                 # Add solutions to result_archive.
                 if self._result_archive is not None:
-                    self._result_archive.add(self._solution_batch,
-                                             objective_batch, measures_batch,
-                                             metadata_batch)
+                    self._result_archive.add_single(solution,
+                                             objective, measure,
+                                             metadata)
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
 
