@@ -119,6 +119,22 @@ def test_add_single_to_archive(data, use_list):
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
                          data.measures, data.grid_indices, data.metadata)
 
+@pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
+def test_add_single_to_archive_negative(data, use_list):
+    if use_list:
+        status, value = data.archive.add_single(list(data.solution),
+                                                -data.objective,
+                                                list(data.measures),
+                                                data.metadata)
+    else:
+        status, value = data.archive.add_single(data.solution, -data.objective,
+                                                data.measures, data.metadata)
+
+    assert status == AddStatus.NEW
+    assert np.isclose(value, -data.objective)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices, data.metadata)
+
 
 def test_add_single_with_low_measures(data):
     measures = np.array([-2, -3])

@@ -163,7 +163,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # For CMA-MAE
         self._learning_rate = learning_rate
         self._threshold_min = threshold_min
-        self._threshold_arr = np.empty(self._cells, dtype=self.dtype)
+        self._threshold_arr = np.full(self._cells, threshold_min, dtype=self.dtype)
 
         self._stats = None
         self._stats_reset()
@@ -286,8 +286,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             ``index_batch`` is empty.
         """
         if threshold_arr.size == 0 or objective_batch.size == 0 or index_batch.size == 0:
-            raise ValueError("Cannot compute new thresholds when input array is empty")
-        
+            raise ValueError(
+                "Cannot compute new thresholds when input array is empty")
+
         # Compute the number of objectives inserted into each cell.
         objective_sizes = aggregate(index_batch,
                                     objective_batch,
@@ -519,7 +520,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Since we set the new solutions in old_objective_batch to have
         # value 0.0, the values for new solutions are correct here.
         old_objective_batch[is_new] = 0.0
-        old_threshold_batch[is_new] = self._threshold_min
+        old_threshold_batch[is_new] = 0.0
         value_batch = objective_batch - old_threshold_batch
 
         ## Step 3: Insert solutions into archive. ##
@@ -656,23 +657,33 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
 
-        if not self._occupied_arr[index]:
-            self._objective_arr[index] = 0
-            self._threshold_arr[index] = self._threshold_min
-
         # Note that when learning_rate = 1.0, old_threshold == old_objective.
         old_objective = self._objective_arr[index]
         old_threshold = self._threshold_arr[index]
 
+        if not self._occupied_arr[index]:
+            self._threshold_arr[index] = self._threshold_min
+            old_threshold = self.dtype(0.0)
+            old_objective = self.dtype(0.0)
+
         was_occupied = self._occupied_arr[index]
         status = 0  # NOT_ADDED
-        if not was_occupied or old_threshold < objective:
-            # Set this index to "occupied" -- important that we do this before
-            # inserting the solution.
-            self._occupied_arr[index] = True
+        if not was_occupied or self._threshold_arr[index] < objective:
+
+            if was_occupied:
+                status = 1  # IMPROVE_EXISTING
+            else:
+                # Set this index to "occupied" -- important that we do this before
+                # inserting the solution.
+                self._occupied_arr[index] = True
+
+                # Tracks a new occupied index.
+                self._occupied_indices[self._num_occupied] = index
+                self._num_occupied += 1
+                status = 2  # NEW
 
             # Update the threshold.
-            if old_threshold < objective:
+            if self._threshold_arr[index] < objective:
                 self._threshold_arr[index] = old_threshold * \
                     (1.0 - self._learning_rate) + \
                     objective * self._learning_rate
@@ -682,14 +693,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             self._measures_arr[index] = measures
             self._solution_arr[index] = solution
             self._metadata_arr[index] = metadata
-
-            if was_occupied:
-                status = 1  # IMPROVE_EXISTING
-            else:
-                # Tracks a new occupied index.
-                self._occupied_indices[self._num_occupied] = index
-                self._num_occupied += 1
-                status = 2  # NEW
 
         if status:
             # Update archive stats.
