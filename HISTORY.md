@@ -8,6 +8,7 @@
 
 - Implement CMA-MAE archive thresholds (#256)
   - Revive the old implementation of `add_single` removed in (#221)
+  - Add separate tests for `add_single` and `add` with single solution
 - Add restart timer to `EvolutionStrategyEmitter` and `GradientAborescenceEmitter`(#255)
 - Rename fields and update documentation (#249, #250)
   - **Backwards-incompatible:** rename `Optimizer` to `Scheduler`
