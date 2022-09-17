@@ -46,15 +46,21 @@ def test_iteration():
         assert elite.metadata == data.metadata
 
 
-def test_add_during_iteration():
+@pytest.mark.parametrize("add_mode", ["single", "batch"])
+def test_add_during_iteration(add_mode):
     # Even with just one entry, adding during iteration should still raise an
     # error, just like it does in set.
     data = get_archive_data("GridArchive")
     with pytest.raises(RuntimeError):
         for _ in data.archive_with_elite:
-            data.archive_with_elite.add_single(data.solution,
-                                               data.objective + 1,
-                                               data.measures)
+            if add_mode == "single":
+                data.archive_with_elite.add_single(data.solution,
+                                                   data.objective + 1,
+                                                   data.measures)
+            else:
+                data.archive_with_elite.add([data.solution],
+                                            [data.objective + 1],
+                                            [data.measures])
 
 
 def test_clear_during_iteration():
@@ -64,14 +70,20 @@ def test_clear_during_iteration():
             data.archive_with_elite.clear()
 
 
-def test_clear_and_add_during_iteration():
+@pytest.mark.parametrize("add_mode", ["single", "batch"])
+def test_clear_and_add_during_iteration(add_mode):
     data = get_archive_data("GridArchive")
     with pytest.raises(RuntimeError):
         for _ in data.archive_with_elite:
             data.archive_with_elite.clear()
-            data.archive_with_elite.add_single(data.solution,
-                                               data.objective + 1,
-                                               data.measures)
+            if add_mode == "single":
+                data.archive_with_elite.add_single(data.solution,
+                                                   data.objective + 1,
+                                                   data.measures)
+            else:
+                data.archive_with_elite.add([data.solution],
+                                            [data.objective + 1],
+                                            [data.measures])
 
 
 #
@@ -90,13 +102,20 @@ def test_stats_dtype(dtype):
     assert isinstance(data.archive_with_elite.stats.obj_mean, dtype)
 
 
-def test_stats_multiple_add():
+@pytest.mark.parametrize("add_mode", ["single", "batch"])
+def test_stats_multiple_add(add_mode):
     archive = GridArchive(solution_dim=3,
                           dims=[10, 20],
                           ranges=[(-1, 1), (-2, 2)])
-    archive.add_single([1, 2, 3], 1.0, [0, 0])
-    archive.add_single([1, 2, 3], 2.0, [0.25, 0.25])
-    archive.add_single([1, 2, 3], 3.0, [-0.25, -0.25])
+    if add_mode == "single":
+        archive.add_single([1, 2, 3], 1.0, [0, 0])
+        archive.add_single([1, 2, 3], 2.0, [0.25, 0.25])
+        archive.add_single([1, 2, 3], 3.0, [-0.25, -0.25])
+    else:
+        solution_batch = [[1, 2, 3]] * 3
+        objective_batch = [1.0, 2.0, 3.0]
+        measures_batch = [[0, 0], [0.25, 0.25], [-0.25, -0.25]]
+        archive.add(solution_batch, objective_batch, measures_batch)
 
     assert archive.stats.num_elites == 3
     assert np.isclose(archive.stats.coverage, 3 / 200)
@@ -105,15 +124,22 @@ def test_stats_multiple_add():
     assert np.isclose(archive.stats.obj_mean, 2.0)
 
 
-def test_stats_add_and_overwrite():
+@pytest.mark.parametrize("add_mode", ["single", "batch"])
+def test_stats_add_and_overwrite(add_mode):
     archive = GridArchive(solution_dim=3,
                           dims=[10, 20],
                           ranges=[(-1, 1), (-2, 2)])
-    archive.add_single([1, 2, 3], 1.0, [0, 0])
-    archive.add_single([1, 2, 3], 2.0, [0.25, 0.25])
-    archive.add_single([1, 2, 3], 3.0, [-0.25, -0.25])
-    archive.add_single([1, 2, 3], 5.0,
-                       [0.25, 0.25])  # Overwrites the second add.
+    if add_mode == "single":
+        archive.add_single([1, 2, 3], 1.0, [0, 0])
+        archive.add_single([1, 2, 3], 2.0, [0.25, 0.25])
+        archive.add_single([1, 2, 3], 3.0, [-0.25, -0.25])
+        archive.add_single([1, 2, 3], 5.0,
+                           [0.25, 0.25])  # Overwrites the second add.
+    else:
+        solution_batch = [[1, 2, 3]] * 4
+        objective_batch = [1.0, 2.0, 3.0, 5.0]
+        measures_batch = [[0, 0], [0.25, 0.25], [-0.25, -0.25], [0.25, 0.25]]
+        archive.add(solution_batch, objective_batch, measures_batch)
 
     assert archive.stats.num_elites == 3
     assert np.isclose(archive.stats.coverage, 3 / 200)
@@ -122,7 +148,8 @@ def test_stats_add_and_overwrite():
     assert np.isclose(archive.stats.obj_mean, 3.0)
 
 
-def test_best_elite():
+@pytest.mark.parametrize("add_mode", ["single", "batch"])
+def test_best_elite(add_mode):
     archive = GridArchive(solution_dim=3,
                           dims=[10, 20],
                           ranges=[(-1, 1), (-2, 2)])
@@ -131,7 +158,10 @@ def test_best_elite():
     assert archive.best_elite is None
 
     # Add an elite.
-    archive.add_single([1, 2, 3], 1.0, [0, 0])
+    if add_mode == "single":
+        archive.add_single([1, 2, 3], 1.0, [0, 0])
+    else:
+        archive.add([[1, 2, 3]], [1.0], [[0, 0]])
 
     assert np.isclose(archive.best_elite.solution, [1, 2, 3]).all()
     assert np.isclose(archive.best_elite.objective, 1.0).all()
@@ -139,7 +169,10 @@ def test_best_elite():
 
     # Add an elite into the same cell as the previous elite -- best_elite should
     # now be overwritten.
-    archive.add_single([4, 5, 6], 2.0, [0, 0])
+    if add_mode == "single":
+        archive.add_single([4, 5, 6], 2.0, [0, 0])
+    else:
+        archive.add([[4, 5, 6]], [2.0], [[0, 0]])
 
     assert np.isclose(archive.best_elite.solution, [4, 5, 6]).all()
     assert np.isclose(archive.best_elite.objective, 2.0).all()

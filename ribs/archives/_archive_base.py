@@ -163,7 +163,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # For CMA-MAE
         self._learning_rate = learning_rate
         self._threshold_min = threshold_min
-        self._threshold_arr = np.full(self._cells, threshold_min, dtype=self.dtype)
+        self._threshold_arr = np.full(self._cells,
+                                      threshold_min,
+                                      dtype=self.dtype)
 
         self._stats = None
         self._stats_reset()
@@ -313,7 +315,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         a = learning_rate * objective_sums * \
             (geometric_sums / objective_sizes)
-        b = threshold_arr[threshold_update_indices] * np.power(
+
+        old_threshold = np.copy(threshold_arr[threshold_update_indices])
+        old_threshold[old_threshold == -np.inf] = 0
+        b = old_threshold * np.power(
             np.full_like(objective_sizes, 1.0 - learning_rate,
                          dtype=self.dtype), objective_sizes)
 
@@ -517,7 +522,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         status_batch[is_new] = 2
         status_batch[improve_existing] = 1
 
-        # Since we set the new solutions in old_objective_batch to have
+        # Since we set the new solutions in old_threshold_batch to have
         # value 0.0, the values for new solutions are correct here.
         old_objective_batch[is_new] = 0.0
         old_threshold_batch[is_new] = 0.0
@@ -661,15 +666,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         old_objective = self._objective_arr[index]
         old_threshold = self._threshold_arr[index]
 
+        # For new solutions, we set the old_threshold and old_objective to
+        # 0 for computing value.
         if not self._occupied_arr[index]:
-            self._threshold_arr[index] = self._threshold_min
             old_threshold = self.dtype(0.0)
             old_objective = self.dtype(0.0)
 
         was_occupied = self._occupied_arr[index]
         status = 0  # NOT_ADDED
         if not was_occupied or self._threshold_arr[index] < objective:
-
             if was_occupied:
                 status = 1  # IMPROVE_EXISTING
             else:
