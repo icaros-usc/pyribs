@@ -323,6 +323,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                          dtype=self.dtype), objective_sizes)
 
         new_threshold_batch = a + b
+        if np.any(new_threshold_batch == np.nan):
+            raise ValueError(
+                "Computed new threshold to be nan. Please raise an issue at https://github.com/icaros-usc/pyribs/issues.")
 
         return new_threshold_batch, threshold_update_indices
 
