@@ -57,7 +57,7 @@ package in order to use the `\url` command.
   title = {pyribs: A bare-bones Python library for quality diversity
            optimization},
   author = {Bryon Tjanaka and Matthew C. Fontaine and David H. Lee and
-            Trung Tran Minh Vu and Yulun Zhang and Sam Sommerer and
+            Yulun Zhang and Trung Tran Minh Vu and Sam Sommerer and
             Nathan Dennler and Stefanos Nikolaidis},
   year = {2021},
   publisher = {GitHub},
