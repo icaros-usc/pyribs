@@ -375,7 +375,6 @@ def sphere_main(algorithm,
         objective_batch, _, measure_batch, _ = sphere(solution_batch)
         scheduler.tell(objective_batch, measure_batch)
         non_logging_time += time.time() - itr_start
-        progress()
 
         # Logging and output.
         final_itr = itr == itrs
