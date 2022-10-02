@@ -1,7 +1,7 @@
-ribs.optimizers
+ribs.schedulers
 ===============
 
-.. automodule:: ribs.optimizers
+.. automodule:: ribs.schedulers
    :no-members:
    :no-inherited-members:
    :no-special-members:

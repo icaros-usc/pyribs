@@ -15,7 +15,7 @@ with:
 pip install ribs[examples]
 ```
 
-| Name                         | Archive                             | Emitter                                    | Scheduler                           |
-| ---------------------------- | ----------------------------------- | ------------------------------------------ | ----------------------------------- |
-| {doc}`examples/sphere`       | (several)                           | (several)                                  | {class}`~ribs.schedulers.Scheduler` |
-| {doc}`examples/lunar_lander` | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.schedulers.Scheduler` |
+| Name                         | Archive                             | Emitter                                          | Scheduler                           |
+| ---------------------------- | ----------------------------------- | ------------------------------------------------ | ----------------------------------- |
+| {doc}`examples/sphere`       | (several)                           | (several)                                        | {class}`~ribs.schedulers.Scheduler` |
+| {doc}`examples/lunar_lander` | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |

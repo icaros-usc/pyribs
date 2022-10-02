@@ -31,7 +31,7 @@ optimization library). In contrast to other QD libraries, this library is
 focuses solely on optimizing fixed-dimensional continuous domains. Focusing
 solely on this one commonly-occurring problem allows us to optimize the library
 for performance as well as ease of use. Refer to the list of
-[additional QD libraries](#additional-qd-libraries) if you need greater
+[additional QD libraries](#additional-qd-libraries) below if you need greater
 performance or have additional use cases.
 
 A user of pyribs selects three components that meet the needs of their
