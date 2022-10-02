@@ -83,7 +83,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     All of these arrays are accessed via a common integer index. If we have
     index ``i``, we access its solution at ``_solution_arr[i]``, its measure
     values at ``_measures_arr[i]``, etc.
-    
+
     Thus, child classes typically override the following methods:
 
     - ``__init__``: Child classes must invoke this class's ``__init__`` with the
@@ -342,7 +342,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 .. warning:: Due to how NumPy's :func:`~numpy.asarray`
                     automatically converts array-like objects to arrays, passing
                     array-like objects as metadata may lead to unexpected
-                    measure. However, the metadata may be a dict or other
+                    behavior. However, the metadata may be a dict or other
                     object which *contains* arrays, i.e. ``metadata_batch``
                     could be an array of dicts which contain arrays.
         Returns:
@@ -562,7 +562,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 .. warning:: Due to how NumPy's :func:`~numpy.asarray`
                     automatically converts array-like objects to arrays, passing
                     array-like objects as metadata may lead to unexpected
-                    measure. However, the metadata may be a dict or other
+                    behavior. However, the metadata may be a dict or other
                     object which *contains* arrays.
         Returns:
             tuple: 2-element tuple of (status, value) describing the result of
