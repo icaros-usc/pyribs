@@ -2,6 +2,7 @@
 import itertools
 
 import numpy as np
+
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import CMAEvolutionStrategy
 from ribs.emitters.rankers import _get_ranker
