@@ -17,9 +17,9 @@ running locally, make sure to have
 installed. Each notebook contains cell magic that installs the dependencies it
 needs for execution.
 
-| Name                            | Archive                             | Emitter                                    | Scheduler                           |
-| ------------------------------- | ----------------------------------- | ------------------------------------------ | ----------------------------------- |
-| {doc}`tutorials/lunar_lander`   | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.schedulers.Scheduler` |
-| {doc}`tutorials/lsi_mnist`      | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.schedulers.Scheduler` |
-| {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.schedulers.Scheduler` |
-| {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GaussianEmitter`    | {class}`~ribs.schedulers.Scheduler` |
+| Name                            | Archive                             | Emitter                                          | Scheduler                           |
+| ------------------------------- | ----------------------------------- | ------------------------------------------------ | ----------------------------------- |
+| {doc}`tutorials/lunar_lander`   | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
+| {doc}`tutorials/lsi_mnist`      | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
+| {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
+| {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GaussianEmitter`          | {class}`~ribs.schedulers.Scheduler` |
