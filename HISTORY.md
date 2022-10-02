@@ -6,6 +6,7 @@
 
 #### API
 
+- Fix all examples and tutorials (#253)
 - Add restart timer to `EvolutionStrategyEmitter` and `GradientAborescenceEmitter`(#255)
 - Rename fields and update documentation (#249, #250)
   - **Backwards-incompatible:** rename `Optimizer` to `Scheduler`
