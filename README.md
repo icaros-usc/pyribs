@@ -97,11 +97,7 @@ algorithm, we first create:
 - An **ImprovementEmitter**, which starts from the search point **0** in 10
   dimensional space and a Gaussian sampling distribution with standard deviation
   0.1.
-<<<<<<< HEAD
-- An **Scheduler** that combines the archive and emitter together.
-=======
 - A **Scheduler** that combines the archive and emitter together.
->>>>>>> master
 
 After initializing the components, we optimize (pyribs maximizes) the negative
 10-D Sphere function for 1000 iterations. Users of
