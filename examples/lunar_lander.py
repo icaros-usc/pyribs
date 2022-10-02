@@ -53,6 +53,7 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import tqdm
 from dask.distributed import Client, LocalCluster
 
 from ribs.archives import GridArchive
@@ -138,12 +139,8 @@ def create_scheduler(seed, n_emitters, sigma0, batch_size):
     See lunar_lander_main() for description of args.
 
     Returns:
-<<<<<<< HEAD
-        A pyribs scheduler set up for CMA-ME (i.e. it has EvolutionStrategyEmitter's
-=======
-        A pyribs scheduler set up for CMA-ME (i.e. it has ImprovementEmitter's
->>>>>>> master
-        and a GridArchive).
+        A pyribs scheduler set up for CMA-ME (i.e. it has
+        EvolutionStrategyEmitter's and a GridArchive).
     """
     env = gym.make("LunarLander-v2")
     action_dim = env.action_space.n
@@ -211,7 +208,7 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
     }
 
     start_time = time.time()
-    for itr in range(1, iterations + 1):
+    for itr in tqdm.trange(1, iterations + 1):
         # Request models from the scheduler.
         sols = scheduler.ask()
 
@@ -235,8 +232,7 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
         if itr % log_freq == 0 or itr == iterations:
             elapsed_time = time.time() - start_time
             metrics["Max Score"]["x"].append(itr)
-            metrics["Max Score"]["y"].append(
-                scheduler.archive.stats.obj_max)
+            metrics["Max Score"]["y"].append(scheduler.archive.stats.obj_max)
             metrics["Archive Size"]["x"].append(itr)
             metrics["Archive Size"]["y"].append(len(scheduler.archive))
             print(f"> {itr} itrs completed after {elapsed_time:.2f} s")
