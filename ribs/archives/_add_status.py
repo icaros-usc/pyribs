@@ -2,7 +2,6 @@
 from enum import IntEnum
 
 
-# TODO Remove this class
 class AddStatus(IntEnum):
     """A status returned by the :meth:`~ArchiveBase.add` method in an archive.
 
@@ -22,7 +21,7 @@ class AddStatus(IntEnum):
         :meth:`~ArchiveBase.add`)::
 
             from ribs.archives import AddStatus
-            status, _ = archive.add_single(solution_batch, objective_batch, measures_batch)
+            status, _ = archive.add_single(solution, objective, measures)
             if status == AddStatus.NEW:
                 # Do something if the solution made a new elite in the archive.
 
@@ -30,7 +29,7 @@ class AddStatus(IntEnum):
         act like a bool::
 
             from ribs.archives import AddStatus
-            status, _ = archive.add_single(solution_batch, objective_batch, measures_batch)
+            status, _ = archive.add_single(solution, objective, measures)
             if status:
                 # Do something if the solution was added to the archive.
 
