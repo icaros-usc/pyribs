@@ -4,7 +4,6 @@ from collections import OrderedDict
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
-
 from ribs._utils import (check_1d_shape, check_batch_shape, check_is_1d,
                          check_solution_batch_dim)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
@@ -263,12 +262,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._stats = ArchiveStats(0, self.dtype(0.0), self.dtype(0.0), None,
                                    None)
 
-    def _sum_geometric_series(self, a, r, n):
-        """Compute the sum of a geometric series."""
-        if r == 1.0:
-            return a
-        return (a * (1 - pow(r, n))) / (1 - r)
-
     def _compute_new_thresholds(self, threshold_arr, objective_batch,
                                 index_batch, learning_rate):
         """Update thresholds.
@@ -281,51 +274,58 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             index_batch (np.ndarray): The archive index of the elements in
                 objective batch.
         Returns:
-            ``nd.array`` of new thresholds where ``new_threshold_batch[i]`` is
-            the new threshold value at cell ``threshold_update_indices[i]``.
-        Raises:
-            ValueError: ``threshold_arr`` or ``objective_batch`` or
-            ``index_batch`` is empty.
+            `new_threshold_batch` (A self.dtype array of new
+            thresholds) and `threshold_update_indices` (A boolean
+            array indicating which entries in `threshold_arr` should
+            be updated.
         """
-        if threshold_arr.size == 0 or objective_batch.size == 0 or index_batch.size == 0:
-            raise ValueError(
-                "Cannot compute new thresholds when input array is empty")
+        if objective_batch.size == 0 or index_batch.size == 0:
+            return np.array([], dtype=self.dtype), np.array([], dtype=bool)
 
         # Compute the number of objectives inserted into each cell.
         objective_sizes = aggregate(index_batch,
                                     objective_batch,
                                     func="len",
-                                    fill_value=0)
+                                    fill_value=0,
+                                    size=threshold_arr.size)
 
-        threshold_update_indices = np.unique(np.where(objective_sizes != 0))
+        # These indices are with respect to the archive, so we can directly pass
+        # them to threshold_arr.
+        threshold_update_indices = objective_sizes > 0
 
         # Compute the sum of the objectives inserted into each cell.
         objective_sums = aggregate(index_batch,
                                    objective_batch,
                                    func="sum",
-                                   fill_value=np.nan)
+                                   fill_value=np.nan,
+                                   size=threshold_arr.size)
 
+        # Throw away indices that we do not care about.
         objective_sizes = objective_sizes[threshold_update_indices]
         objective_sums = objective_sums[threshold_update_indices]
 
-        geometric_sums = np.array([
-            self._sum_geometric_series(1, 1 - learning_rate, k)
-            for k in objective_sizes
-        ])
+        # Sum of geometric series (1 - learning_rate)^i from i = 0 to i = n - 1
+        # See https://en.wikipedia.org/wiki/Geometric_series#Sum
+        ratio = self.dtype(1.0 - learning_rate)
+        if ratio == 1.0:
+            geometric_sums = objective_sizes
+        else:
+            geometric_sums = (1 - ratio**objective_sizes) / (1 - ratio)
 
-        a = learning_rate * objective_sums * \
-            (geometric_sums / objective_sizes)
+        update = (learning_rate * (objective_sums / objective_sizes) *
+                  geometric_sums)
 
         old_threshold = np.copy(threshold_arr[threshold_update_indices])
+        # TODO: Fix this based on new CMA-ME behavior if needed?
         old_threshold[old_threshold == -np.inf] = 0
-        b = old_threshold * np.power(
-            np.full_like(objective_sizes, 1.0 - learning_rate,
-                         dtype=self.dtype), objective_sizes)
+        prev = old_threshold * ratio**objective_sizes
 
-        new_threshold_batch = a + b
+        new_threshold_batch = prev + update
+        # TODO: When does this happen? Remove if possible.
         if np.any(new_threshold_batch == np.nan):
             raise ValueError(
-                "Computed new threshold to be nan. Please raise an issue at https://github.com/icaros-usc/pyribs/issues.")
+                "Computed new threshold to be nan. Please raise an issue at https://github.com/icaros-usc/pyribs/issues."
+            )
 
         return new_threshold_batch, threshold_update_indices
 
