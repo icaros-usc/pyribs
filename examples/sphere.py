@@ -174,6 +174,10 @@ def create_scheduler(algorithm,
     batch_size = 37
     num_emitters = 15
     mode = "batch"
+    threshold_min = -np.inf  # default
+
+    if algorithm in ["cma_mae", "cma_maega"]:
+        threshold_min = 0
 
     # Create archive.
     if algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
@@ -187,7 +191,7 @@ def create_scheduler(algorithm,
                               dims=archive_dims,
                               ranges=bounds,
                               learning_rate=learning_rate,
-                              threshold_min=0,
+                              threshold_min=threshold_min,
                               seed=seed)
 
     # Create result archive.
@@ -369,9 +373,9 @@ def sphere_main(algorithm,
     """
     # Use default dim for each algorithm.
     if dim is None:
-        if algorithm in ["cma_mega", "cma_mega_adam"]:
+        if algorithm in ["cma_mega", "cma_mega_adam", "cma_maega"]:
             dim = 1_000
-        elif algorithm in ["cma_mae", "cma_maega"]:
+        elif algorithm in ["cma_mae"]:
             dim = 100
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",

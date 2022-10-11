@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
+
 from ribs._utils import (check_1d_shape, check_batch_shape, check_is_1d,
                          check_solution_batch_dim)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
@@ -159,9 +160,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                       dtype=self.dtype)
         self._metadata_arr = np.empty(self._cells, dtype=object)
 
-        # For CMA-MAE
-        self._learning_rate = learning_rate
-        self._threshold_min = threshold_min
+        # threshold min can only be -np.inf if the learning rate is 1.0
+        if learning_rate != 1.0 and threshold_min == -np.inf:
+            raise ValueError(
+                "If learning_rate != 1.0, threshold min cannot be -np.inf (default)."
+            )
+        self._learning_rate = self._dtype(learning_rate)
+        self._threshold_min = self._dtype(threshold_min)
         self._threshold_arr = np.full(self._cells,
                                       threshold_min,
                                       dtype=self.dtype)
@@ -321,11 +326,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         prev = old_threshold * ratio**objective_sizes
 
         new_threshold_batch = prev + update
-        # TODO: When does this happen? Remove if possible.
-        if np.any(new_threshold_batch == np.nan):
-            raise ValueError(
-                "Computed new threshold to be nan. Please raise an issue at https://github.com/icaros-usc/pyribs/issues."
-            )
 
         return new_threshold_batch, threshold_update_indices
 
@@ -528,7 +528,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Since we set the new solutions in old_threshold_batch to have
         # value 0.0, the values for new solutions are correct here.
         old_objective_batch[is_new] = 0.0
-        old_threshold_batch[is_new] = 0.0
+        old_threshold_batch[is_new] = 0.0 if self._threshold_min == -np.inf else self._threshold_min
         value_batch = objective_batch - old_threshold_batch
 
         ## Step 3: Insert solutions into archive. ##
@@ -658,22 +658,23 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._state["add"] += 1
 
         solution = np.asarray(solution)
-        objective = self.dtype(objective)
-        measures = np.asarray(measures)
-        index = self.index_of_single(measures)
-
         check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
+
+        objective = self.dtype(objective)
+
+        measures = np.asarray(measures)
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        index = self.index_of_single(measures)
 
         # Note that when learning_rate = 1.0, old_threshold == old_objective.
         old_objective = self._objective_arr[index]
         old_threshold = self._threshold_arr[index]
 
         # For new solutions, we set the old_threshold and old_objective to
-        # 0 for computing value.
+        # 0 for computing value only if threshold min is not set.
         if not self._occupied_arr[index]:
-            old_threshold = self.dtype(0.0)
-            old_objective = self.dtype(0.0)
+            old_objective = self.dtype(
+                0.0) if old_threshold == -np.inf else self._threshold_min
 
         was_occupied = self._occupied_arr[index]
         status = 0  # NOT_ADDED
@@ -692,7 +693,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
             # Update the threshold.
             if self._threshold_arr[index] < objective:
-                self._threshold_arr[index] = old_threshold * \
+                self._threshold_arr[index] = old_objective * \
                     (1.0 - self._learning_rate) + \
                     objective * self._learning_rate
 
@@ -726,7 +727,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 obj_mean=new_qd_score / self.dtype(len(self)),
             )
 
-        return status, self.dtype(objective - old_threshold)
+        return status, self.dtype(objective - old_objective)
 
     def elites_with_measures(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
