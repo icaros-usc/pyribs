@@ -441,7 +441,7 @@ def sphere_main(algorithm,
     }
 
     non_logging_time = 0.0
-    save_heatmap(archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
+    save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
 
     for itr in tqdm.trange(1, itrs + 1):
         itr_start = time.time()
@@ -464,19 +464,21 @@ def sphere_main(algorithm,
         final_itr = itr == itrs
         if itr % log_freq == 0 or final_itr:
             if final_itr:
-                archive.as_pandas(include_solutions=final_itr).to_csv(
+                result_archive.as_pandas(include_solutions=final_itr).to_csv(
                     outdir / f"{name}_archive.csv")
 
             # Record and display metrics.
             metrics["QD Score"]["x"].append(itr)
-            metrics["QD Score"]["y"].append(archive.stats.qd_score)
+            metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
             metrics["Archive Coverage"]["x"].append(itr)
-            metrics["Archive Coverage"]["y"].append(archive.stats.coverage)
+            metrics["Archive Coverage"]["y"].append(
+                result_archive.stats.coverage)
             print(f"Iteration {itr} | Archive Coverage: "
                   f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
                   f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
-            save_heatmap(archive, str(outdir / f"{name}_heatmap_{itr:05d}.png"))
+            save_heatmap(result_archive,
+                         str(outdir / f"{name}_heatmap_{itr:05d}.png"))
 
     # Plot metrics.
     print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")
