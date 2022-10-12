@@ -275,7 +275,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             threshold_arr (np.ndarray): The threshold of the cells before
                 updating. 1D array.
             objective_batch (np.ndarray): The objective values of the solution
-                that is inserted into the archive for each cell. 1D array.
+                that is inserted into the archive for each cell. 1D array. We
+                assume that the objective values are all higher than the
+                thresholds of their respective cells.
             index_batch (np.ndarray): The archive index of the elements in
                 objective batch.
         Returns:
@@ -528,7 +530,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Since we set the new solutions in old_threshold_batch to have
         # value 0.0, the values for new solutions are correct here.
         old_objective_batch[is_new] = 0.0
-        old_threshold_batch[is_new] = 0.0 if self._threshold_min == -np.inf else self._threshold_min
+        old_threshold_batch[
+            is_new] = 0.0 if self._threshold_min == -np.inf else self._threshold_min
         value_batch = objective_batch - old_threshold_batch
 
         ## Step 3: Insert solutions into archive. ##
