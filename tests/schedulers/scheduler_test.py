@@ -25,7 +25,7 @@ def scheduler_fixture():
 
 @pytest.fixture(params=["single", "batch"])
 def add_mode(request):
-    """Whether to use the KD Tree in CVTArchive."""
+    """Single or batch add."""
     return request.param
 
 
