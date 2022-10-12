@@ -162,9 +162,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         # threshold min can only be -np.inf if the learning rate is 1.0
         if learning_rate != 1.0 and threshold_min == -np.inf:
-            raise ValueError(
-                "If learning_rate != 1.0, threshold min cannot be -np.inf (default)."
-            )
+            raise ValueError("If learning_rate != 1.0, threshold min cannot "
+                             "be -np.inf (default).")
         self._learning_rate = self._dtype(learning_rate)
         self._threshold_min = self._dtype(threshold_min)
         self._threshold_arr = np.full(self._cells,
@@ -531,8 +530,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # will compute the improvement value w.r.t zero. Otherwise, we will
         # use compute w.r.t. threshold_min.
         old_objective_batch[is_new] = self.dtype(0)
-        old_threshold_batch[is_new] = (self.dtype(0) if self._threshold_min == -np.inf
-                                       else self._threshold_min)
+        old_threshold_batch[is_new] = (self.dtype(0) if self._threshold_min
+                                       == -np.inf else self._threshold_min)
         value_batch = objective_batch - old_threshold_batch
 
         ## Step 3: Insert solutions into archive. ##
@@ -664,46 +663,49 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         solution = np.asarray(solution)
         check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
 
+        # TODO: Check for inf and nan in objective and measures.
         objective = self.dtype(objective)
 
         measures = np.asarray(measures)
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
         index = self.index_of_single(measures)
 
-        # Note that when learning_rate = 1.0, old_threshold == old_objective.
+        # Only used for computing QD score.
         old_objective = self._objective_arr[index]
+
+        # Used for computing improvement value.
         old_threshold = self._threshold_arr[index]
 
-        # For new solutions, we set the old_threshold and old_objective to
-        # 0 for computing value only if threshold min is not set.
-        if not self._occupied_arr[index]:
+        # New solutions require special settings for old_objective and
+        # old_threshold.
+        was_occupied = self._occupied_arr[index]
+        if not was_occupied:
             old_objective = self.dtype(0)
-            # If threshold_min is -inf, then we want CMA-ME behavior, which
-            # will compute the improvement value w.r.t zero. Otherwise, we will
-            # use compute w.r.t. threshold_min.
+            # If threshold_min is -inf, then we want CMA-ME behavior, which will
+            # compute the improvement value w.r.t. zero for new solutions.
+            # Otherwise, we will compute w.r.t. threshold_min.
             old_threshold = (self.dtype(0) if self._threshold_min == -np.inf
                              else self._threshold_min)
 
-        was_occupied = self._occupied_arr[index]
         status = 0  # NOT_ADDED
-        if not was_occupied or self._threshold_arr[index] < objective:
+        # In the case where we want CMA-ME behavior, the old threshold is -inf
+        # for new cells, which satisfies this if condition.
+        if self._threshold_arr[index] < objective:
             if was_occupied:
                 status = 1  # IMPROVE_EXISTING
             else:
-                # Set this index to "occupied" -- important that we do this before
-                # inserting the solution.
+                # Set this index to be occupied.
                 self._occupied_arr[index] = True
-
-                # Tracks a new occupied index.
                 self._occupied_indices[self._num_occupied] = index
                 self._num_occupied += 1
+
                 status = 2  # NEW
 
-            # Update the threshold if new objective is greater than the old threshold.
-            if self._threshold_arr[index] < objective:
-                self._threshold_arr[index] = old_threshold * \
-                    (1.0 - self._learning_rate) + \
-                    objective * self._learning_rate
+            # This calculation works in the case where threshold_min is -inf
+            # because old_threshold will be set to 0.0 instead.
+            self._threshold_arr[index] = (old_threshold *
+                                          (1.0 - self._learning_rate) +
+                                          objective * self._learning_rate)
 
             # Insert into the archive.
             self._objective_arr[index] = objective
@@ -718,9 +720,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             if self._stats.obj_max is None or objective > self._stats.obj_max:
                 new_obj_max = objective
                 self._best_elite = Elite(
-                    readonly(solution),
+                    readonly(np.copy(self._solution_arr[index])),
                     objective,
-                    readonly(measures),
+                    readonly(np.copy(self._measures_arr[index])),
                     index,
                     metadata,
                 )
@@ -735,7 +737,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 obj_mean=new_qd_score / self.dtype(len(self)),
             )
 
-        return status, self.dtype(objective - old_objective)
+        return status, objective - old_threshold
 
     def elites_with_measures(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
