@@ -527,11 +527,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         status_batch[is_new] = 2
         status_batch[improve_existing] = 1
 
-        # Since we set the new solutions in old_threshold_batch to have
-        # value 0.0, the values for new solutions are correct here.
-        old_objective_batch[is_new] = 0.0
-        old_threshold_batch[
-            is_new] = 0.0 if self._threshold_min == -np.inf else self._threshold_min
+        # If threshold_min is -inf, then we want CMA-ME behavior, which
+        # will compute the improvement value w.r.t zero. Otherwise, we will
+        # use compute w.r.t. threshold_min.
+        old_objective_batch[is_new] = self.dtype(0)
+        old_threshold_batch[is_new] = (self.dtype(0) if self._threshold_min == -np.inf
+                                       else self._threshold_min)
         value_batch = objective_batch - old_threshold_batch
 
         ## Step 3: Insert solutions into archive. ##
@@ -676,8 +677,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # For new solutions, we set the old_threshold and old_objective to
         # 0 for computing value only if threshold min is not set.
         if not self._occupied_arr[index]:
-            old_objective = (self.dtype(0.0) if old_threshold == -np.inf else
-                             self._threshold_min)
+            old_objective = self.dtype(0)
+            # If threshold_min is -inf, then we want CMA-ME behavior, which
+            # will compute the improvement value w.r.t zero. Otherwise, we will
+            # use compute w.r.t. threshold_min.
+            old_threshold = (self.dtype(0) if self._threshold_min == -np.inf
+                             else self._threshold_min)
 
         was_occupied = self._occupied_arr[index]
         status = 0  # NOT_ADDED
@@ -694,9 +699,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 self._num_occupied += 1
                 status = 2  # NEW
 
-            # Update the threshold.
+            # Update the threshold if new objective is greater than the old threshold.
             if self._threshold_arr[index] < objective:
-                self._threshold_arr[index] = old_objective * \
+                self._threshold_arr[index] = old_threshold * \
                     (1.0 - self._learning_rate) + \
                     objective * self._learning_rate
 
