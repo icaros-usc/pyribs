@@ -31,6 +31,12 @@ def use_kd_tree(request):
     return request.param
 
 
+@pytest.fixture(params=["single", "batch"])
+def add_mode(request):
+    """Whether to use the KD Tree in CVTArchive."""
+    return request.param
+
+
 #
 # Helpers for generating archive data.
 #

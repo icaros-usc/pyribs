@@ -104,7 +104,6 @@ def test_properties_are_correct(data):
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_add_single_to_archive(data, use_list, add_mode):
     solution = data.solution
     objective = data.objective
@@ -129,7 +128,6 @@ def test_add_single_to_archive(data, use_list, add_mode):
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_add_single_to_archive_negative(data, use_list, add_mode):
     solution = data.solution
     objective = -data.objective
@@ -153,7 +151,6 @@ def test_add_single_to_archive_negative(data, use_list, add_mode):
                          data.measures, data.grid_indices, data.metadata)
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_add_single_with_low_measures(data, add_mode):
     measures = np.array([-2, -3])
     indices = (0, 0)
@@ -169,7 +166,6 @@ def test_add_single_with_low_measures(data, add_mode):
                          indices, data.metadata)
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_add_single_with_high_measures(data, add_mode):
     measures = np.array([2, 3])
     indices = (9, 19)
@@ -184,7 +180,6 @@ def test_add_single_with_high_measures(data, add_mode):
                          indices, data.metadata)
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_add_single_and_overwrite(data, add_mode):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
@@ -206,7 +201,6 @@ def test_add_single_and_overwrite(data, add_mode):
                          data.measures, data.grid_indices, arbitrary_metadata)
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_add_single_without_overwrite(data, add_mode):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1

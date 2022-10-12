@@ -46,7 +46,6 @@ def test_iteration():
         assert elite.metadata == data.metadata
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_add_during_iteration(add_mode):
     # Even with just one entry, adding during iteration should still raise an
     # error, just like it does in set.
@@ -70,7 +69,6 @@ def test_clear_during_iteration():
             data.archive_with_elite.clear()
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_clear_and_add_during_iteration(add_mode):
     data = get_archive_data("GridArchive")
     with pytest.raises(RuntimeError):
@@ -102,7 +100,6 @@ def test_stats_dtype(dtype):
     assert isinstance(data.archive_with_elite.stats.obj_mean, dtype)
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_stats_multiple_add(add_mode):
     archive = GridArchive(solution_dim=3,
                           dims=[10, 20],
@@ -124,7 +121,6 @@ def test_stats_multiple_add(add_mode):
     assert np.isclose(archive.stats.obj_mean, 2.0)
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_stats_add_and_overwrite(add_mode):
     archive = GridArchive(solution_dim=3,
                           dims=[10, 20],
@@ -148,7 +144,6 @@ def test_stats_add_and_overwrite(add_mode):
     assert np.isclose(archive.stats.obj_mean, 3.0)
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_best_elite(add_mode):
     archive = GridArchive(solution_dim=3,
                           dims=[10, 20],
