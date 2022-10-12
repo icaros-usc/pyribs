@@ -50,19 +50,6 @@ def test_consistent_single_update(data, learning_rate):
 
 
 @pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
-def test_empty_array_raise(data, learning_rate):
-    archive = data.archive
-
-    threshold_arr = np.array([])
-    objective_batch = np.array([])
-    index_batch = np.array([])
-
-    with pytest.raises(ValueError):
-        archive._compute_new_thresholds(threshold_arr, objective_batch,
-                                        index_batch, learning_rate)
-
-
-@pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
 def test_consistent_multi_update(data, learning_rate):
     archive = data.archive
 

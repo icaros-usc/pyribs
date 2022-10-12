@@ -82,7 +82,8 @@ from pathlib import Path
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
-from alive_progress import alive_bar
+import tqdm
+
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
                            GradientAborescenceEmitter, IsoLineEmitter)
@@ -170,6 +171,10 @@ def create_scheduler(algorithm,
     batch_size = 37
     num_emitters = 15
     mode = "batch"
+    threshold_min = -np.inf  # default
+
+    if algorithm in ["cma_mae", "cma_maega"]:
+        threshold_min = 0
 
     # Create archive.
     if algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
@@ -183,7 +188,7 @@ def create_scheduler(algorithm,
                               dims=archive_dims,
                               ranges=bounds,
                               learning_rate=learning_rate,
-                              threshold_min=0,
+                              threshold_min=threshold_min,
                               seed=seed)
 
     # Create result archive.
@@ -366,9 +371,9 @@ def sphere_main(algorithm,
     """
     # Use default dim for each algorithm.
     if dim is None:
-        if algorithm in ["cma_mega", "cma_mega_adam"]:
+        if algorithm in ["cma_mega", "cma_mega_adam", "cma_maega"]:
             dim = 1_000
-        elif algorithm in ["cma_mae", "cma_maega"]:
+        elif algorithm in ["cma_mae"]:
             dim = 100
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
@@ -434,52 +439,44 @@ def sphere_main(algorithm,
     }
 
     non_logging_time = 0.0
-    with alive_bar(itrs) as progress:
-        save_heatmap(result_archive,
-                     str(outdir / f"{name}_heatmap_{0:05d}.png"))
+    save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
 
-        for itr in range(1, itrs + 1):
-            itr_start = time.time()
+    for itr in tqdm.trange(1, itrs + 1):
+        itr_start = time.time()
 
-            if is_dqd:
-                solution_batch = scheduler.ask_dqd()
-                (objective_batch, objective_grad_batch, measures_batch,
-                 measures_grad_batch) = sphere(solution_batch)
-                objective_grad_batch = np.expand_dims(objective_grad_batch,
-                                                      axis=1)
-                jacobian_batch = np.concatenate(
-                    (objective_grad_batch, measures_grad_batch), axis=1)
-                scheduler.tell_dqd(objective_batch, measures_batch,
-                                   jacobian_batch)
+        if is_dqd:
+            solution_batch = scheduler.ask_dqd()
+            (objective_batch, objective_grad_batch, measures_batch,
+             measures_grad_batch) = sphere(solution_batch)
+            objective_grad_batch = np.expand_dims(objective_grad_batch, axis=1)
+            jacobian_batch = np.concatenate(
+                (objective_grad_batch, measures_grad_batch), axis=1)
+            scheduler.tell_dqd(objective_batch, measures_batch, jacobian_batch)
 
-            solution_batch = scheduler.ask()
-            objective_batch, _, measures_batch, _ = sphere(solution_batch)
+        solution_batch = scheduler.ask()
+        objective_batch, _, measure_batch, _ = sphere(solution_batch)
+        scheduler.tell(objective_batch, measure_batch)
+        non_logging_time += time.time() - itr_start
 
-            scheduler.tell(objective_batch, measures_batch)
-            non_logging_time += time.time() - itr_start
-            progress()
+        # Logging and output.
+        final_itr = itr == itrs
+        if itr % log_freq == 0 or final_itr:
+            if final_itr:
+                result_archive.as_pandas(include_solutions=final_itr).to_csv(
+                    outdir / f"{name}_archive.csv")
 
-            # Logging and output.
-            final_itr = itr == itrs
-            if itr % log_freq == 0 or final_itr:
-                if final_itr:
-                    result_archive.as_pandas(
-                        include_solutions=final_itr).to_csv(
-                            outdir / f"{name}_archive.csv")
+            # Record and display metrics.
+            metrics["QD Score"]["x"].append(itr)
+            metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
+            metrics["Archive Coverage"]["x"].append(itr)
+            metrics["Archive Coverage"]["y"].append(
+                result_archive.stats.coverage)
+            print(f"Iteration {itr} | Archive Coverage: "
+                  f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
+                  f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
-                # Record and display metrics.
-                metrics["QD Score"]["x"].append(itr)
-                metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
-                metrics["Archive Coverage"]["x"].append(itr)
-                metrics["Archive Coverage"]["y"].append(
-                    result_archive.stats.coverage)
-                print(f"Iteration {itr} | Archive Coverage: "
-                      f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
-                      f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
-
-                # Save result_archive
-                save_heatmap(result_archive,
-                             str(outdir / f"{name}_heatmap_{itr:05d}.png"))
+            save_heatmap(result_archive,
+                         str(outdir / f"{name}_heatmap_{itr:05d}.png"))
 
     # Plot metrics.
     print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")

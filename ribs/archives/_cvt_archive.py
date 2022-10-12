@@ -60,6 +60,9 @@ class CVTArchive(ArchiveBase):
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
             ``dims``.
+        learning_rate (float): The learning rate of the archive. Described in
+            `Fontaine 2022 <https://arxiv.org/abs/2205.10752>`_.
+        threshold_min (float): The default threshold value for all the cells.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objectives,
@@ -93,6 +96,8 @@ class CVTArchive(ArchiveBase):
                  solution_dim,
                  cells,
                  ranges,
+                 learning_rate=1.0,
+                 threshold_min=-np.inf,
                  seed=None,
                  dtype=np.float64,
                  samples=100_000,
@@ -106,6 +111,8 @@ class CVTArchive(ArchiveBase):
             solution_dim=solution_dim,
             cells=cells,
             measure_dim=len(ranges),
+            learning_rate=learning_rate,
+            threshold_min=threshold_min,
             seed=seed,
             dtype=dtype,
         )
