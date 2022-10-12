@@ -33,7 +33,7 @@ def calc_expected_threshold(additions, cell_value, learning_rate):
 
 
 @pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
-def test_consistent_single_update(data, learning_rate):
+def test_threshold_update_for_one_cell(data, learning_rate):
     archive = data.archive
 
     threshold_arr = np.array([-3.1])
