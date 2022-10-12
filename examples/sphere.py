@@ -43,16 +43,13 @@ All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
 
 Notes:
-    - `cma_mega` and `cma_mega_adam` use only one emitter and run for 10,000
-      iterations. This is to be consistent with the paper (`Fontaine 2021
-      <https://arxiv.org/abs/2106.03894>`_) in which these algorithms were
-      proposed.
-    - `cma_mae` and `cma_maega` run for 10,000 iterations as well.
-    - CVTArchive in this example uses 10,000 cells, as opposed to the 250,000
-      (500x500) in the GridArchive, so it is not fair to directly compare
-      `cvt_map_elites` and `line_cvt_map_elites` to the other algorithms.
-      However, the other algorithms may be fairly compared because they use the
-      same archive.
+- `cma_mega` and `cma_mega_adam` use only one emitter and run for 10,000
+  iterations. This is to be consistent with the paper (`Fontaine 2021
+  <https://arxiv.org/abs/2106.03894>`_) in which these algorithms were proposed.
+- `cma_mae` and `cma_maega` run for 10,000 iterations as well.
+- CVTArchive in this example uses 10,000 cells, as opposed to the 250,000
+  (500x500) in the GridArchive, so it is not fair to directly compare
+  `cvt_map_elites` and `line_cvt_map_elites` to the other algorithms.
 
 Outputs are saved in the `sphere_output/` directory by default. The archive is
 saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
@@ -86,7 +83,6 @@ import fire
 import matplotlib.pyplot as plt
 import numpy as np
 from alive_progress import alive_bar
-
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
                            GradientAborescenceEmitter, IsoLineEmitter)
