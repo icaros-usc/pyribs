@@ -73,7 +73,6 @@ def test_custom_centroids_bad_shape(use_kd_tree):
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_add_single_to_archive(data, use_list, add_mode):
     solution = data.solution
     objective = data.objective
@@ -97,7 +96,6 @@ def test_add_single_to_archive(data, use_list, add_mode):
                          data.measures, data.centroid, data.metadata)
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_add_single_and_overwrite(data, add_mode):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
@@ -119,7 +117,6 @@ def test_add_single_and_overwrite(data, add_mode):
                          data.measures, data.centroid, arbitrary_metadata)
 
 
-@pytest.mark.parametrize("add_mode", ["single", "batch"])
 def test_add_single_without_overwrite(data, add_mode):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
