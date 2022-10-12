@@ -676,8 +676,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # For new solutions, we set the old_threshold and old_objective to
         # 0 for computing value only if threshold min is not set.
         if not self._occupied_arr[index]:
-            old_objective = self.dtype(
-                0.0) if old_threshold == -np.inf else self._threshold_min
+            old_objective = (self.dtype(0.0) if old_threshold == -np.inf else
+                             self._threshold_min)
 
         was_occupied = self._occupied_arr[index]
         status = 0  # NOT_ADDED
