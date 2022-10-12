@@ -4,6 +4,8 @@ import pytest
 
 from .conftest import get_archive_data
 
+# pylint: disable = redefined-outer-name
+
 
 @pytest.fixture
 def data():
@@ -40,6 +42,7 @@ def test_threshold_update_for_one_cell(data, learning_rate):
     objective_batch = np.array([0.1, 0.3, 0.9, 400.0, 42.0])
     index_batch = np.array([0, 0, 0, 0, 0])
 
+    # pylint: disable = protected-access
     result_test, _ = archive._compute_new_thresholds(threshold_arr,
                                                      objective_batch,
                                                      index_batch, learning_rate)
@@ -50,7 +53,7 @@ def test_threshold_update_for_one_cell(data, learning_rate):
 
 
 @pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
-def test_consistent_multi_update(data, learning_rate):
+def test_threshold_update_for_multiple_cells(data, learning_rate):
     archive = data.archive
 
     update_size = 3
@@ -61,6 +64,7 @@ def test_consistent_multi_update(data, learning_rate):
     objective_batch = np.array(objective * update_size)
     index_batch = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2])
 
+    # pylint: disable = protected-access
     result_test, _ = archive._compute_new_thresholds(threshold_arr,
                                                      objective_batch,
                                                      index_batch, learning_rate)
