@@ -317,8 +317,9 @@ def create_scheduler(algorithm,
         ]
 
     print(
-        f"Created Scheduler for {algorithm} with learning rate {learning_rate} and add mode {mode}, "
-        f"using solution dims {solution_dim} and archive dims {archive_dims}.")
+        f"Created Scheduler for {algorithm} with learning rate {learning_rate} "
+        f"and add mode {mode}, using solution dims {solution_dim} and archive "
+        f"dims {archive_dims}.")
     return Scheduler(archive, emitters, result_archive, add_mode=mode)
 
 
