@@ -128,7 +128,9 @@ def test_add_single_to_archive(data, use_list, add_mode):
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
-def test_add_single_to_archive_negative(data, use_list, add_mode):
+def test_add_single_to_archive_negative_objective(data, use_list, add_mode):
+    """Same as test_add_single_to_archive, but negative objective since there
+    are some weird cases when handling value calculations."""
     solution = data.solution
     objective = -data.objective
     measures = data.measures
