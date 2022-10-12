@@ -29,7 +29,6 @@ def calc_expected_threshold(additions, cell_value, learning_rate):
     f_star = sum(additions)
     term1 = learning_rate * f_star * geom / k
     term2 = cell_value * (1.0 - learning_rate)**k
-    print("truth", term1, term2)
     return term1 + term2
 
 
@@ -41,10 +40,11 @@ def test_consistent_single_update(data, learning_rate):
     objective_batch = np.array([0.1, 0.3, 0.9, 400.0, 42.0])
     index_batch = np.array([0, 0, 0, 0, 0])
 
-    result_test, _ = archive._compute_new_thresholds(threshold_arr, objective_batch,
-                                              index_batch, learning_rate)
+    result_test, _ = archive._compute_new_thresholds(threshold_arr,
+                                                     objective_batch,
+                                                     index_batch, learning_rate)
     result_true = calc_expected_threshold(objective_batch, threshold_arr[0],
-                                      learning_rate)
+                                          learning_rate)
 
     assert pytest.approx(result_test[0]) == result_true
 
