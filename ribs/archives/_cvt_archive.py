@@ -240,6 +240,7 @@ class CVTArchive(ArchiveBase):
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
                 :attr:`measure_dim`).
+            ValueError: ``measures_batch`` has non-finite values (inf or NaN).
         """
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self.measure_dim,

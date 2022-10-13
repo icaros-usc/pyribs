@@ -378,6 +378,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             storage arrays.
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures)
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
@@ -388,6 +389,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                     "batch of solutions unlike in pyribs 0.4.0, where add() "
                     "only took in a single solution.")
 
+    # TODO: Update value_batch documentation here and in add_single.
     def add(self,
             solution_batch,
             objective_batch,
@@ -471,6 +473,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 solution.
         Raises:
             ValueError: The array arguments do not match their specified shapes.
+            ValueError: ``objective_batch`` or ``measures_batch`` has non-finite
+                values (inf or NaN).
         """
         self._state["add"] += 1
 
@@ -656,6 +660,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                     array-like objects as metadata may lead to unexpected
                     behavior. However, the metadata may be a dict or other
                     object which *contains* arrays.
+        Raises:
+            ValueError: The array arguments do not match their specified shapes.
+            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
+                has non-finite values.
         Returns:
             tuple: 2-element tuple of (status, value) describing the result of
             the add operation. Refer to :meth:`add` for the meaning of the
@@ -793,6 +801,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
                 :attr:`measure_dim`).
+            ValueError: ``measures_batch`` has non-finite values (inf or NaN).
         """
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
@@ -862,6 +871,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             described in :meth:`elites_with_measures`.
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures)
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
