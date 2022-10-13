@@ -5,7 +5,7 @@ import sklearn
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from sklearn.cluster import k_means
 
-from ribs._utils import check_batch_shape
+from ribs._utils import check_batch_shape, check_finite
 from ribs.archives._archive_base import ArchiveBase
 
 
@@ -244,6 +244,7 @@ class CVTArchive(ArchiveBase):
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
+        check_finite(measures_batch, "measures_batch")
 
         if self._use_kd_tree:
             return np.asarray(

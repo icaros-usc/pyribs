@@ -5,8 +5,8 @@ from collections import OrderedDict
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import (check_1d_shape, check_batch_shape, check_is_1d,
-                         check_solution_batch_dim)
+from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
+                         check_is_1d, check_solution_batch_dim)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._elite import Elite, EliteBatch
@@ -381,6 +381,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """
         measures = np.asarray(measures)
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
 
     _ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() takes in a "
@@ -472,6 +473,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             ValueError: The array arguments do not match their specified shapes.
         """
         self._state["add"] += 1
+
+        # TODO: Check inf and nan.
 
         ## Step 1: Validate input. ##
 
@@ -663,11 +666,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         solution = np.asarray(solution)
         check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
 
-        # TODO: Check for inf and nan in objective and measures.
         objective = self.dtype(objective)
+        check_finite(objective, "objective")
 
         measures = np.asarray(measures)
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
         index = self.index_of_single(measures)
 
         # Only used for computing QD score.
@@ -793,6 +797,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
+        check_finite(measures_batch, "measures_batch")
 
         index_batch = self.index_of(measures_batch)
         occupied_batch = self._occupied_arr[index_batch]
@@ -860,6 +865,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """
         measures = np.asarray(measures)
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
 
         elite_batch = self.elites_with_measures(measures[None])
         return Elite(

@@ -1,7 +1,7 @@
 """Contains the GridArchive."""
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_is_1d
+from ribs._utils import check_batch_shape, check_finite, check_is_1d
 from ribs.archives._archive_base import ArchiveBase
 
 
@@ -168,6 +168,7 @@ class GridArchive(ArchiveBase):
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
+        check_finite(measures_batch, "measures_batch")
 
         # Adding epsilon accounts for floating point precision errors from
         # transforming measures. We then cast to int32 to obtain integer
