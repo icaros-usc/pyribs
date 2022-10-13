@@ -77,7 +77,7 @@ def get_archive_data(name, dtype=np.float64):
     ARCHIVE_NAMES.
     """
     # Characteristics of a single solution to insert into archive_with_elite.
-    solution = np.array([1, 2, 3])
+    solution = np.array([1., 2., 3.])
     objective = 1.0
     measures = np.array([0.25, 0.25])
     metadata = {"metadata_key": 42}

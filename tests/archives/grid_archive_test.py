@@ -501,3 +501,21 @@ def test_values_go_to_correct_bin(dtype):
     # Upper bound and above belong in last bin.
     assert archive.index_of_single([0.1]) == 9
     assert archive.index_of_single([0.11]) == 9
+
+
+def test_nonfinite_inputs(data):
+    data.solution[0] = np.inf
+    data.measures[0] = np.nan
+
+    with pytest.raises(ValueError):
+        data.archive.add([data.solution], -np.inf, [data.measures])
+    with pytest.raises(ValueError):
+        data.archive.add_single(data.solution, -np.inf, data.measures)
+    with pytest.raises(ValueError):
+        data.archive.elites_with_measures([data.measures])
+    with pytest.raises(ValueError):
+        data.archive.elites_with_measures_single(data.measures)
+    with pytest.raises(ValueError):
+        data.archive.index_of([data.measures])
+    with pytest.raises(ValueError):
+        data.archive.index_of_single(data.measures)
