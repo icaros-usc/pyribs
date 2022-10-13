@@ -54,6 +54,7 @@ class ArchiveIterator:
         )
 
 
+# TODO: Document threshold behavior.
 class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     """Base class for archives.
 
