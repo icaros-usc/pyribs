@@ -161,10 +161,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                       dtype=self.dtype)
         self._metadata_arr = np.empty(self._cells, dtype=object)
 
-        # threshold min can only be -np.inf if the learning rate is 1.
-        if learning_rate != 1.0 and threshold_min == -np.inf:
-            raise ValueError("If learning_rate != 1.0, threshold min cannot "
-                             "be -np.inf (default).")
+        if threshold_min == -np.inf and learning_rate != 1.0:
+            raise ValueError("threshold_min can only be -np.inf if "
+                             "learning_rate is 1.0")
         self._learning_rate = self._dtype(learning_rate)
         self._threshold_min = self._dtype(threshold_min)
         self._threshold_arr = np.full(self._cells,
