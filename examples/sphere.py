@@ -413,7 +413,7 @@ def sphere_main(algorithm,
             learning_rate = 1.0
 
     name = f"{algorithm}_{dim}"
-    outdir = Path(outdir + "_" + algorithm)
+    outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
 
