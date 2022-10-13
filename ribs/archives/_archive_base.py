@@ -647,6 +647,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         The solution is only inserted if it has a higher ``objective``
         than the elite previously in the corresponding cell.
 
+        .. note::
+            To make it more amenable to modifications, this method's
+            implementation is designed to be readable at the cost of
+            performance, e.g., none of its operations are modified. If you need
+            performance, we recommend using :meth:`add`.
+
         Args:
             solution (array-like): Parameters of the solution.
             objective (float): Objective function evaluation of the solution.
