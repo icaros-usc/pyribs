@@ -79,6 +79,22 @@ def test_threshold_update_for_multiple_cells(data, learning_rate):
     assert np.all(np.isclose(result_test, result_true))
 
 
+def test_threshold_update_for_empty_objective_and_index(data):
+    archive = data.archive
+
+    threshold_arr = np.array([-3.1, 0.4, 2.9])
+    objective_batch = np.array([])  # Empty objective.
+    index_batch = np.array([])  # Empty index.
+
+    # pylint: disable = protected-access
+    new_threshold_batch, threshold_update_indices = (
+        archive._compute_new_thresholds(threshold_arr, objective_batch,
+                                        index_batch, 0.1))
+
+    assert new_threshold_batch.size == 0
+    assert threshold_update_indices.size == 0
+
+
 def test_init_learning_rate_and_threshold_min():
     # Setting threshold_min while not setting the learning_rate should not
     # raise an error.

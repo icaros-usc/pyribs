@@ -160,7 +160,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                       dtype=self.dtype)
         self._metadata_arr = np.empty(self._cells, dtype=object)
 
-        # threshold min can only be -np.inf if the learning rate is 1.0
+        # threshold min can only be -np.inf if the learning rate is 1.
         if learning_rate != 1.0 and threshold_min == -np.inf:
             raise ValueError("If learning_rate != 1.0, threshold min cannot "
                              "be -np.inf (default).")
@@ -310,8 +310,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         objective_sizes = objective_sizes[threshold_update_indices]
         objective_sums = objective_sums[threshold_update_indices]
 
-        # Sum of geometric series (1 - learning_rate)^i from i = 0 to i = n - 1
-        # See https://en.wikipedia.org/wiki/Geometric_series#Sum
+        # Sum of geometric series (1 - learning_rate)^i from i = 0 to i = n - 1.
+        # See https://en.wikipedia.org/wiki/Geometric_series#Sum.
         ratio = self.dtype(1.0 - learning_rate)
         if ratio == 1.0:
             geometric_sums = objective_sizes
