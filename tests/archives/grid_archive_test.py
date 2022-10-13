@@ -224,6 +224,50 @@ def test_add_single_without_overwrite(data, add_mode):
                          data.measures, data.grid_indices, data.metadata)
 
 
+def test_add_single_with_threshold_update(add_mode):
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 10],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=-1.0,
+        learning_rate=0.1,
+    )
+    solution = [1, 2, 3]
+    measures = [0.1, 0.1]
+
+    # Add a new solution to the archive.
+    if add_mode == "single":
+        status, value = archive.add_single(solution, 0.0, measures)
+    else:
+        status_batch, value_batch = archive.add([solution], [0.0], [measures])
+        status, value = status_batch[0], value_batch[0]
+
+    assert status == 2  # NEW
+    assert np.isclose(value, 1.0)  # 0.0 - (-1.0)
+
+    # Threshold should now be (1 - 0.1) * -1.0 + 0.1 * 0.0 = -0.9
+
+    # These solutions are below the threshold and should not be inserted.
+    if add_mode == "single":
+        status, value = archive.add_single(solution, -0.95, measures)
+    else:
+        status_batch, value_batch = archive.add([solution], [-0.95], [measures])
+        status, value = status_batch[0], value_batch[0]
+
+    assert status == 0  # NOT_ADDED
+    assert np.isclose(value, -0.05)  # -0.95 - (-0.9)
+
+    # These solutions are above the threshold and should be inserted.
+    if add_mode == "single":
+        status, value = archive.add_single(solution, -0.8, measures)
+    else:
+        status_batch, value_batch = archive.add([solution], [-0.8], [measures])
+        status, value = status_batch[0], value_batch[0]
+
+    assert status == 1  # IMPROVE_EXISTING
+    assert np.isclose(value, 0.1)  # -0.8 - (-0.9)
+
+
 def test_add_batch_all_new(data):
     status_batch, value_batch = data.archive.add(
         # 4 solutions of arbitrary value.
