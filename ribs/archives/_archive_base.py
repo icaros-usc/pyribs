@@ -474,8 +474,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """
         self._state["add"] += 1
 
-        # TODO: Check inf and nan.
-
         ## Step 1: Validate input. ##
 
         solution_batch = np.asarray(solution_batch)
@@ -490,6 +488,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                  batch_size,
                                  is_1d=True,
                                  extra_msg=self._ADD_WARNING)
+        check_finite(objective_batch, "objective_batch")
 
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
@@ -499,6 +498,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                  batch_size,
                                  is_1d=False,
                                  extra_msg=self._ADD_WARNING)
+        check_finite(measures_batch, "measures_batch")
 
         metadata_batch = (np.empty(batch_size, dtype=object) if
                           metadata_batch is None else np.asarray(metadata_batch,
