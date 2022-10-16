@@ -285,6 +285,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             array indicating which entries in `threshold_arr` should
             be updated.
         """
+        # Even though we do this check, it should not be possible to have
+        # empty objective_batch or index_batch in the add() method since
+        # we check that at least one cell is being updated by seeing if
+        # can_insert has any True values.
         if objective_batch.size == 0 or index_batch.size == 0:
             return np.array([], dtype=self.dtype), np.array([], dtype=bool)
 
@@ -321,9 +325,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         update = (learning_rate * (objective_sums / objective_sizes) *
                   geometric_sums)
 
+        # Unlike in add_single, we do not need to worry about
+        # old_threshold having -np.inf here as a result of threshold_min
+        # being -np.inf. This is because the case with threshold_min =
+        # -np.inf is handled separately since we compute the new
+        # threshold based on the max objective in each cell in that case.
         old_threshold = np.copy(threshold_arr[threshold_update_indices])
-        # TODO: Fix this based on new CMA-ME behavior if needed?
-        old_threshold[old_threshold == -np.inf] = 0
         prev = old_threshold * ratio**objective_sizes
 
         new_threshold_batch = prev + update
@@ -533,10 +540,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         status_batch[is_new] = 2
         status_batch[improve_existing] = 1
 
+        # New solutions require special settings for old_objective and
+        # old_threshold.
+        old_objective_batch[is_new] = self.dtype(0)
+
         # If threshold_min is -inf, then we want CMA-ME behavior, which
         # will compute the improvement value w.r.t zero. Otherwise, we will
-        # use compute w.r.t. threshold_min.
-        old_objective_batch[is_new] = self.dtype(0)
+        # compute w.r.t. threshold_min.
         old_threshold_batch[is_new] = (self.dtype(0) if self._threshold_min
                                        == -np.inf else self._threshold_min)
         value_batch = objective_batch - old_threshold_batch
@@ -557,12 +567,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         index_batch_can = index_batch[can_insert]
         metadata_batch_can = metadata_batch[can_insert]
         old_objective_batch_can = old_objective_batch[can_insert]
-
-        # Update the thresholds.
-        new_thresholds, update_thresholds_indices = self._compute_new_thresholds(
-            self._threshold_arr, objective_batch_can, index_batch_can,
-            self._learning_rate)
-        self._threshold_arr[update_thresholds_indices] = new_thresholds
 
         # Retrieve indices of solutions that should be inserted into the
         # archive. Currently, multiple solutions may be inserted at each
@@ -608,6 +612,24 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                    index_batch_insert[is_new_and_inserted])
         self._num_occupied += n_new
 
+        # Update the thresholds.
+        if self._threshold_min == -np.inf:
+            # Here we want regular archive behavior, so the thresholds
+            # should just be the maximum objective.
+            self._threshold_arr[index_batch_insert] = objective_batch_insert
+        else:
+            # Here we compute the batch threshold update described in the
+            # appendix of Fontaine 2022 https://arxiv.org/abs/2205.10752
+            # This computation is based on the mean objective of all
+            # solutions in the batch that could have been inserted into
+            # each cell. This method is separated out to facilitate
+            # testing.
+            (new_thresholds,
+             update_thresholds_indices) = self._compute_new_thresholds(
+                 self._threshold_arr, objective_batch_can, index_batch_can,
+                 self._learning_rate)
+            self._threshold_arr[update_thresholds_indices] = new_thresholds
+
         ## Step 4: Update archive stats. ##
 
         # Since we set the new solutions in the old objective batch to have
@@ -622,9 +644,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         if self._stats.obj_max is None or max_obj_insert > self._stats.obj_max:
             new_obj_max = max_obj_insert
             self._best_elite = Elite(
-                readonly(solution_batch_insert[max_idx]),
+                readonly(np.copy(solution_batch_insert[max_idx])),
                 objective_batch_insert[max_idx],
-                readonly(measures_batch_insert[max_idx]),
+                readonly(np.copy(measures_batch_insert[max_idx])),
                 index_batch_insert[max_idx],
                 metadata_batch_insert[max_idx],
             )
@@ -706,8 +728,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                              else self._threshold_min)
 
         status = 0  # NOT_ADDED
-        # In the case where we want CMA-ME behavior, the old threshold is -inf
-        # for new cells, which satisfies this if condition.
+        # In the case where we want CMA-ME behavior, threshold_arr[index]
+        # is -inf for new cells, which satisfies this if condition.
         if self._threshold_arr[index] < objective:
             if was_occupied:
                 status = 1  # IMPROVE_EXISTING
