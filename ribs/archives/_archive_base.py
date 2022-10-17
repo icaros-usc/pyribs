@@ -337,26 +337,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         objective_sizes = objective_sizes[threshold_update_indices]
         objective_sums = objective_sums[threshold_update_indices]
 
-        # Sum of geometric series (1 - learning_rate)^i from i = 0 to i = n - 1.
-        # See https://en.wikipedia.org/wiki/Geometric_series#Sum.
-        ratio = self.dtype(1.0 - learning_rate)
-        if ratio == 1.0:
-            geometric_sums = objective_sizes
-        else:
-            geometric_sums = (1 - ratio**objective_sizes) / (1 - ratio)
-
-        update = (learning_rate * (objective_sums / objective_sizes) *
-                  geometric_sums)
-
         # Unlike in add_single, we do not need to worry about
         # old_threshold having -np.inf here as a result of threshold_min
         # being -np.inf. This is because the case with threshold_min =
         # -np.inf is handled separately since we compute the new
         # threshold based on the max objective in each cell in that case.
         old_threshold = np.copy(threshold_arr[threshold_update_indices])
-        prev = old_threshold * ratio**objective_sizes
 
-        new_threshold_batch = prev + update
+        ratio = self.dtype(1.0 - learning_rate)**objective_sizes
+        new_threshold_batch = (ratio * old_threshold +
+                               (objective_sums / objective_sizes) * (1 - ratio))
 
         return new_threshold_batch, threshold_update_indices
 
@@ -567,9 +557,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Compute the statuses -- these are all boolean arrays of length
         # batch_size.
         already_occupied = self._occupied_arr[index_batch]
-        is_new = ~already_occupied
-        improve_existing = (objective_batch >
-                            old_threshold_batch) & already_occupied
+        # In the case where we want CMA-ME behavior, threshold_arr[index]
+        # is -inf for new cells, which satisfies the condition for can_be_added.
+        can_be_added = objective_batch > old_threshold_batch
+        is_new = can_be_added & ~already_occupied
+        improve_existing = can_be_added & already_occupied
         status_batch = np.zeros(batch_size, dtype=np.int32)
         status_batch[is_new] = 2
         status_batch[improve_existing] = 1
