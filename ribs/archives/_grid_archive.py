@@ -15,6 +15,11 @@ class GridArchive(ArchiveBase):
     solution that `maximizes` the objective function for the measures in that
     cell.
 
+    .. note:: The idea of archive thresholds was introduced in `Fontaine 2022
+        <https://arxiv.org/abs/2205.10752>`_. Refer to our `CMA-MAE tutorial
+        <../../tutorials/cma_mae.html>`_ for more info on thresholds, including
+        the ``learning_rate`` and ``threshold_min`` parameters.
+
     Args:
         solution_dim (int): Dimension of the solution space.
         dims (array-like of int): Number of cells in each dimension of the
@@ -32,9 +37,8 @@ class GridArchive(ArchiveBase):
             method -- refer to the implementation `here
             <../_modules/ribs/archives/_grid_archive.html#GridArchive.index_of>`_.
             Pass this parameter to configure that epsilon.
-        learning_rate (float): The learning rate of the archive. Described in
-            `Fontaine 2022 <https://arxiv.org/abs/2205.10752>`_.
-        threshold_min (float): The default threshold value for all the cells.
+        learning_rate (float): The learning rate for threshold updates.
+        threshold_min (float): The initial threshold value for all the cells.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objectives,

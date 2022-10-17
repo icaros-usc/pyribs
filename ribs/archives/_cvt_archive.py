@@ -50,6 +50,11 @@ class CVTArchive(ArchiveBase):
     and pass them into ``custom_centroids`` when constructing archives for
     subsequent experiments.
 
+    .. note:: The idea of archive thresholds was introduced in `Fontaine 2022
+        <https://arxiv.org/abs/2205.10752>`_. Refer to our `CMA-MAE tutorial
+        <../../tutorials/cma_mae.html>`_ for more info on thresholds, including
+        the ``learning_rate`` and ``threshold_min`` parameters.
+
     Args:
         solution_dim (int): Dimension of the solution space.
         cells (int): The number of cells to use in the archive, equivalent to
@@ -60,9 +65,8 @@ class CVTArchive(ArchiveBase):
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
             ``dims``.
-        learning_rate (float): The learning rate of the archive. Described in
-            `Fontaine 2022 <https://arxiv.org/abs/2205.10752>`_.
-        threshold_min (float): The default threshold value for all the cells.
+        learning_rate (float): The learning rate for threshold updates.
+        threshold_min (float): The initial threshold value for all the cells.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objectives,

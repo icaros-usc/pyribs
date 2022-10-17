@@ -236,6 +236,14 @@ def test_solution_dim_correct(data):
     assert data.archive.solution_dim == len(data.solution)
 
 
+def test_learning_rate_correct(data):
+    assert data.archive.learning_rate == 1.0  # Default value.
+
+
+def test_threshold_min_correct(data):
+    assert data.archive.threshold_min == -np.inf  # Default value.
+
+
 def test_basic_stats(data):
     assert data.archive.stats.num_elites == 0
     assert data.archive.stats.coverage == 0.0
