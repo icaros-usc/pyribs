@@ -5,7 +5,7 @@ import sklearn
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from sklearn.cluster import k_means
 
-from ribs._utils import check_batch_shape
+from ribs._utils import check_batch_shape, check_finite
 from ribs.archives._archive_base import ArchiveBase
 
 
@@ -50,6 +50,11 @@ class CVTArchive(ArchiveBase):
     and pass them into ``custom_centroids`` when constructing archives for
     subsequent experiments.
 
+    .. note:: The idea of archive thresholds was introduced in `Fontaine 2022
+        <https://arxiv.org/abs/2205.10752>`_. Refer to our `CMA-MAE tutorial
+        <../../tutorials/cma_mae.html>`_ for more info on thresholds, including
+        the ``learning_rate`` and ``threshold_min`` parameters.
+
     Args:
         solution_dim (int): Dimension of the solution space.
         cells (int): The number of cells to use in the archive, equivalent to
@@ -60,6 +65,8 @@ class CVTArchive(ArchiveBase):
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
             ``dims``.
+        learning_rate (float): The learning rate for threshold updates.
+        threshold_min (float): The initial threshold value for all the cells.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objectives,
@@ -93,6 +100,8 @@ class CVTArchive(ArchiveBase):
                  solution_dim,
                  cells,
                  ranges,
+                 learning_rate=1.0,
+                 threshold_min=-np.inf,
                  seed=None,
                  dtype=np.float64,
                  samples=100_000,
@@ -106,6 +115,8 @@ class CVTArchive(ArchiveBase):
             solution_dim=solution_dim,
             cells=cells,
             measure_dim=len(ranges),
+            learning_rate=learning_rate,
+            threshold_min=threshold_min,
             seed=seed,
             dtype=dtype,
         )
@@ -233,10 +244,12 @@ class CVTArchive(ArchiveBase):
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
                 :attr:`measure_dim`).
+            ValueError: ``measures_batch`` has non-finite values (inf or NaN).
         """
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
+        check_finite(measures_batch, "measures_batch")
 
         if self._use_kd_tree:
             return np.asarray(

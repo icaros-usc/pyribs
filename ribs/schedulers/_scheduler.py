@@ -1,6 +1,5 @@
 """Provides the Scheduler."""
 import numpy as np
-
 from ribs.emitters import DQDEmitterBase
 
 
@@ -36,6 +35,10 @@ class Scheduler:
             included for legacy reasons, as it was the only mode of operation in
             pyribs 0.4.0 and before. We highly recommend using "batch" mode
             since it is significantly faster.
+        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
+            CMA-MAE, the archive does not store all the best-performing
+            solutions. The `result_archive` is a secondary archive where we can
+            store all the best-performing solutions.
     Raises:
         ValueError: The emitters passed in do not have the same solution
             dimensions.
@@ -45,7 +48,11 @@ class Scheduler:
         ValueError: Invalid value for `add_mode`.
     """
 
-    def __init__(self, archive, emitters, add_mode="batch"):
+    def __init__(self,
+                 archive,
+                 emitters,
+                 result_archive=None,
+                 add_mode="batch"):
         if len(emitters) == 0:
             raise ValueError("Pass in at least one emitter to the scheduler.")
 
@@ -71,9 +78,17 @@ class Scheduler:
             raise ValueError("add_mode must either be 'batch' or 'single', but "
                              f"it was '{add_mode}'")
 
+        if archive is result_archive:
+            raise ValueError("`archive` has same id as `result_archive` -- "
+                             "Note that `Scheduler.result_archive` already "
+                             "defaults to be the same as `archive` if you pass "
+                             "`result_archive=None`")
+
         self._archive = archive
         self._emitters = emitters
         self._add_mode = add_mode
+
+        self._result_archive = result_archive
 
         # Keeps track of whether the scheduler should be receiving a call to
         # ask() or tell().
@@ -94,6 +109,16 @@ class Scheduler:
         """list of ribs.archives.EmitterBase: Emitters for generating solutions
         in this scheduler."""
         return self._emitters
+
+    @property
+    def result_archive(self):
+        """ribs.archives.ArchiveBase: Another archive for storing solutions
+        found in this optimizer.
+        If `result_archive` was not passed to the constructor, this property is
+        the same as :attr:`archive`.
+        """
+        return (self._archive
+                if self._result_archive is None else self._result_archive)
 
     def ask_dqd(self):
         """Generates a batch of solutions by calling ask_dqd() on all DQD
@@ -122,7 +147,7 @@ class Scheduler:
                 self._solution_batch.append(emitter_sols)
                 self._num_emitted[i] = len(emitter_sols)
 
-        # In case the emitters didn't return any solutions
+        # In case the emitters didn't return any solutions.
         self._solution_batch = np.concatenate(
             self._solution_batch, axis=0) if self._solution_batch else np.empty(
                 (0, self._solution_dim))
@@ -153,7 +178,7 @@ class Scheduler:
             self._solution_batch.append(emitter_sols)
             self._num_emitted[i] = len(emitter_sols)
 
-        # In case the emitters didn't return any solutions
+        # In case the emitters didn't return any solutions.
         self._solution_batch = np.concatenate(
             self._solution_batch, axis=0) if self._solution_batch else np.empty(
                 (0, self._solution_dim))
@@ -192,20 +217,26 @@ class Scheduler:
                 measures_batch,
                 metadata_batch,
             )
+
+            # Add solutions to result_archive.
+            if self._result_archive is not None:
+                self._result_archive.add(self._solution_batch, objective_batch,
+                                         measures_batch, metadata_batch)
         elif self._add_mode == "single":
-            status_batch, value_batch = zip(*[
-                self.archive.add_single(
-                    solution,
-                    objective,
-                    measure,
-                    metadata,
-                ) for solution, objective, measure, metadata in zip(
-                    self._solution_batch,
-                    objective_batch,
-                    measures_batch,
-                    metadata_batch,
-                )
-            ])
+            status_batch = []
+            value_batch = []
+            for solution, objective, measure, metadata in zip(
+                    self._solution_batch, objective_batch, measures_batch,
+                    metadata_batch):
+                status, value = self.archive.add_single(solution, objective,
+                                                        measure, metadata)
+                status_batch.append(status)
+                value_batch.append(value)
+
+                # Add solutions to result_archive.
+                if self._result_archive is not None:
+                    self._result_archive.add_single(solution, objective,
+                                                    measure, metadata)
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
 

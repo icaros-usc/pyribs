@@ -23,6 +23,12 @@ def scheduler_fixture():
     return Scheduler(archive, emitters), solution_dim, num_solutions
 
 
+@pytest.fixture(params=["single", "batch"])
+def add_mode(request):
+    """Single or batch add."""
+    return request.param
+
+
 def test_init_fails_with_no_emitters():
     # arbitrary sol_dim
     archive = GridArchive(10, [100, 100], [(-1, 1), (-1, 1)])
@@ -69,8 +75,6 @@ def test_ask_fails_when_called_twice(scheduler_fixture):
         scheduler.ask()
 
 
-@pytest.mark.parametrize("add_mode", ["batch", "single"],
-                         ids=["batch_add", "single_add"])
 @pytest.mark.parametrize("tell_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
 def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
@@ -98,8 +102,6 @@ def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
     )
 
 
-@pytest.mark.parametrize("add_mode", ["batch", "single"],
-                         ids=["batch_add", "single_add"])
 @pytest.mark.parametrize("tell_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
 def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):

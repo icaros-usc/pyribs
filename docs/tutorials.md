@@ -7,6 +7,7 @@ tutorials/lunar_lander
 tutorials/lsi_mnist
 tutorials/arm_repertoire
 tutorials/fooling_mnist
+tutorials/cma_mae
 ```
 
 Tutorials are Python notebooks with detailed explanations of pyribs usage. They
@@ -23,3 +24,4 @@ needs for execution.
 | {doc}`tutorials/lsi_mnist`      | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
 | {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
 | {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GaussianEmitter`          | {class}`~ribs.schedulers.Scheduler` |
+| {doc}`tutorials/cma_mae`        | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
