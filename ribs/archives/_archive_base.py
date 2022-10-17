@@ -571,8 +571,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         old_objective_batch[is_new] = self.dtype(0)
 
         # If threshold_min is -inf, then we want CMA-ME behavior, which
-        # will compute the improvement value w.r.t zero. Otherwise, we will
-        # compute w.r.t. threshold_min.
+        # will compute the improvement value of new solutions w.r.t zero.
+        # Otherwise, we will compute w.r.t. threshold_min.
         old_threshold_batch[is_new] = (self.dtype(0) if self._threshold_min
                                        == -np.inf else self._threshold_min)
         value_batch = objective_batch - old_threshold_batch
