@@ -149,8 +149,8 @@ class IsoLineEmitter(EmitterBase):
                 emitter's :meth:`ask()` method.
             objective_batch (numpy.ndarray): 1D array containing the objective
                 function value of each solution.
-            behavior_batch (numpy.ndarray): ``(n, <behavior space dimension>)``
-                array with the behavior space coordinates of each solution.
+            measures_batch (numpy.ndarray): ``(n, <measure space dimension>)``
+                array with the measure space coordinates of each solution.
             status_batch (numpy.ndarray): An array of integer statuses
                 returned by a series of calls to archive's :meth:`add_single()`
                 method or by a single call to archive's :meth:`add()`.

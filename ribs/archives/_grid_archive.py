@@ -1,7 +1,7 @@
 """Contains the GridArchive."""
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_is_1d
+from ribs._utils import check_batch_shape, check_finite, check_is_1d
 from ribs.archives._archive_base import ArchiveBase
 
 
@@ -14,6 +14,11 @@ class GridArchive(ArchiveBase):
     number of cells in each dimension. Each cell contains an elite, i.e. a
     solution that `maximizes` the objective function for the measures in that
     cell.
+
+    .. note:: The idea of archive thresholds was introduced in `Fontaine 2022
+        <https://arxiv.org/abs/2205.10752>`_. Refer to our `CMA-MAE tutorial
+        <../../tutorials/cma_mae.html>`_ for more info on thresholds, including
+        the ``learning_rate`` and ``threshold_min`` parameters.
 
     Args:
         solution_dim (int): Dimension of the solution space.
@@ -32,6 +37,8 @@ class GridArchive(ArchiveBase):
             method -- refer to the implementation `here
             <../_modules/ribs/archives/_grid_archive.html#GridArchive.index_of>`_.
             Pass this parameter to configure that epsilon.
+        learning_rate (float): The learning rate for threshold updates.
+        threshold_min (float): The initial threshold value for all the cells.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objectives,
@@ -45,6 +52,8 @@ class GridArchive(ArchiveBase):
                  solution_dim,
                  dims,
                  ranges,
+                 learning_rate=1.0,
+                 threshold_min=-np.inf,
                  epsilon=1e-6,
                  seed=None,
                  dtype=np.float64):
@@ -58,6 +67,8 @@ class GridArchive(ArchiveBase):
             solution_dim=solution_dim,
             cells=np.product(self._dims),
             measure_dim=len(self._dims),
+            learning_rate=learning_rate,
+            threshold_min=threshold_min,
             seed=seed,
             dtype=dtype,
         )
@@ -157,10 +168,12 @@ class GridArchive(ArchiveBase):
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
                 :attr:`measure_dim`).
+            ValueError: ``measures_batch`` has non-finite values (inf or NaN).
         """
         measures_batch = np.asarray(measures_batch)
         check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
                           "measure_dim")
+        check_finite(measures_batch, "measures_batch")
 
         # Adding epsilon accounts for floating point precision errors from
         # transforming measures. We then cast to int32 to obtain integer

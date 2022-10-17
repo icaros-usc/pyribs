@@ -67,9 +67,8 @@ def test_add_and_overwrite(data):
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective, data.measures, data.grid_indices,
-                         arbitrary_metadata)
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
+                         data.measures, data.grid_indices, arbitrary_metadata)
 
 
 def test_add_without_overwrite(data):
@@ -132,7 +131,7 @@ def test_initial_remap():
 
     # Check that all the measures are as expected.
     pandas_measures = archive.as_pandas(include_solutions=False)[[
-        "measures_0", "measure_1"
+        "measure_0", "measure_1"
     ]]
     measures = list(pandas_measures.itertuples(name=None, index=False))
     assert np.isclose(sorted(measures), sorted(expected_measures)).all()
@@ -149,7 +148,8 @@ def test_add_to_archive_with_full_buffer(data):
                          data.measures, (0, 0), data.metadata)
 
     # Even if another elite is added, it should still go to the same cell
-    # because the measures are clipped to the boundaries before being inserted.
+    # because the measures are clipped to the boundaries before being
+    # inserted.
     arbitrary_metadata = {"foobar": 12}
     data.archive.add_single(2 * data.solution, 2 * data.objective,
                             2 * data.measures, arbitrary_metadata)

@@ -1,17 +1,17 @@
 """Compare performance of adding to the CVTArchive with and without k-D tree.
 
 In CVTArchive, we use a k-D tree to identify the cell by finding the nearest
-centroid to a solution in behavior space. Though a k-D tree is theoretically
+centroid to a solution in measure space. Though a k-D tree is theoretically
 more efficient than brute force, constant factors mean that brute force can be
 faster than k-D tree for smaller numbers of centroids / cells. In this script,
 we increase the number of cells in the archive and see when the k-D tree becomes
 faster than brute force.
 
-In this experiment, we construct archives with 10, 50, 100, 500, 1k cells in the
-behavior space of [(-1, 1), (-1, 1)] and 100k samples.  In each archive, we then
-time how long it takes to add 1k batches of 100 random solutions sampled u.a.r.
-from the behavior space. We run each experiment with brute force and with the
-k-D tree, 5 times each, and take the minimum runtime (see
+In this experiment, we construct archives with 10, 50, 100, 500, 1k cells in
+the measure space of [(-1, 1), (-1, 1)] and 100k samples.  In each archive, we
+then time how long it takes to add 1k batches of 100 random solutions sampled
+uniformly at random. from the measure space. We run each experiment with brute
+force and with the k-D tree, 5 times each, and take the minimum runtime (see
 https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
 
 Usage:
