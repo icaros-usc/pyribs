@@ -60,16 +60,20 @@ class GaussianEmitter(EmitterBase):
             raise ValueError(f"x0 has shape {self._x0.shape}, should be"
                              f"1-dimensional.")
 
-        self._sigma = archive.dtype(sigma) if isinstance(
-            sigma,
-            (float, np.floating)) else np.array(sigma, dtype=archive.dtype)
+        if isinstance(sigma, (float, np.floating)):
+            self._sigma = archive.dtype(sigma)
+        else:
+            self._sigma = np.array(sigma, dtype=archive.dtype)
 
-        self._initial_solutions = initial_solutions
-        if self._initial_solutions.shape[1] != archive.solution_dim:
-            raise ValueError(f"initial_solutions have shape"
-                             f"{self._initial_solutions.shape}, 2nd dimension"
-                             f"should be solution_dim"
-                             f"{archive.solution_dim}.")
+        self._initial_solutions = None
+        if initial_solutions is not None:
+            self._initial_solutions = np.array(initial_solutions,
+                                               dtype=archive.dtype)
+            if self._initial_solutions.shape[1] != archive.solution_dim:
+                raise ValueError(
+                    f"initial_solutions have shape"
+                    f"{self._initial_solutions.shape}; 2nd dimension should"
+                    f"be solution_dim {archive.solution_dim}.")
 
         EmitterBase.__init__(
             self,

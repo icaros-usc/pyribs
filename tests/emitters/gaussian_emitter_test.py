@@ -1,5 +1,6 @@
 """Tests for the GaussianEmitter."""
 import numpy as np
+import pytest
 
 from ribs.emitters import GaussianEmitter
 
@@ -7,20 +8,35 @@ from ribs.emitters import GaussianEmitter
 def test_properties_are_correct(archive_fixture):
     archive, x0 = archive_fixture
     sigma = 1
-    sigma0 = 2
-    emitter = GaussianEmitter(archive, x0, sigma, sigma0, batch_size=2)
+    emitter = GaussianEmitter(archive, x0, sigma, batch_size=2)
 
-    assert (emitter.x0 == x0).all()
+    assert np.all(emitter.x0 == x0)
     assert emitter.sigma == sigma
-    assert emitter.sigma0 == sigma0
 
 
-def test_sigma0_is_correct(archive_fixture):
+def test_initial_solutions_are_correct(archive_fixture):
     archive, x0 = archive_fixture
     sigma = 1
-    emitter = GaussianEmitter(archive, x0, sigma)  # sigma0=None
+    initial_solutions = [[0, 1, 2, 3], [-1, -2, -3, -4]]
+    emitter = GaussianEmitter(archive,
+                              x0,
+                              sigma,
+                              initial_solutions=initial_solutions)
 
-    assert emitter.sigma0 == sigma
+    assert np.all(emitter.ask() == initial_solutions)
+
+
+def test_initial_solutions_shape(archive_fixture):
+    archive, x0 = archive_fixture
+    sigma = 1
+    initial_solutions = [[0, 0, 0], [1, 1, 1]]
+
+    # archive.solution_dim = 4
+    with pytest.raises(ValueError):
+        GaussianEmitter(archive,
+                        x0,
+                        sigma,
+                        initial_solutions=initial_solutions)
 
 
 def test_upper_bounds_enforced(archive_fixture):
