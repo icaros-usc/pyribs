@@ -9,19 +9,23 @@ def test_properties_are_correct(archive_fixture):
     archive, x0 = archive_fixture
     iso_sigma = 1
     line_sigma = 2
-    emitter = IsoLineEmitter(archive, x0, iso_sigma, line_sigma, batch_size=2)
+    batch_size = 2
+    emitter = IsoLineEmitter(archive,
+                             x0,
+                             iso_sigma,
+                             line_sigma,
+                             batch_size=batch_size)
 
     assert np.all(emitter.x0 == x0)
     assert emitter.iso_sigma == iso_sigma
     assert emitter.line_sigma == line_sigma
+    assert emitter.batch_size == batch_size
 
 
 def test_initial_solutions_is_correct(archive_fixture):
     archive, x0 = archive_fixture
     initial_solutions = [[0, 1, 2, 3], [-1, -2, -3, -4]]
-    emitter = IsoLineEmitter(archive,
-                             x0,
-                             initial_solutions=initial_solutions)
+    emitter = IsoLineEmitter(archive, x0, initial_solutions=initial_solutions)
 
     assert np.all(emitter.ask() == initial_solutions)
 
@@ -32,9 +36,7 @@ def test_initial_solutions_shape(archive_fixture):
 
     # archive.solution_dim = 4
     with pytest.raises(ValueError):
-        IsoLineEmitter(archive,
-                       x0,
-                       initial_solutions=initial_solutions)
+        IsoLineEmitter(archive, x0, initial_solutions=initial_solutions)
 
 
 def test_upper_bounds_enforced(archive_fixture):

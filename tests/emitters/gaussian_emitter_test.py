@@ -8,10 +8,12 @@ from ribs.emitters import GaussianEmitter
 def test_properties_are_correct(archive_fixture):
     archive, x0 = archive_fixture
     sigma = 1
-    emitter = GaussianEmitter(archive, x0, sigma, batch_size=2)
+    batch_size = 2
+    emitter = GaussianEmitter(archive, x0, sigma, batch_size=batch_size)
 
     assert np.all(emitter.x0 == x0)
     assert emitter.sigma == sigma
+    assert emitter.batch_size == batch_size
 
 
 def test_initial_solutions_are_correct(archive_fixture):
@@ -33,10 +35,7 @@ def test_initial_solutions_shape(archive_fixture):
 
     # archive.solution_dim = 4
     with pytest.raises(ValueError):
-        GaussianEmitter(archive,
-                        x0,
-                        sigma,
-                        initial_solutions=initial_solutions)
+        GaussianEmitter(archive, x0, sigma, initial_solutions=initial_solutions)
 
 
 def test_upper_bounds_enforced(archive_fixture):
