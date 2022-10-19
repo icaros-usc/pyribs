@@ -355,11 +355,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         After this method is called, the archive will be :attr:`empty`.
         """
-        # Only ``self._occupied_indices`` and ``self._occupied_arr`` are
-        # cleared, as a cell can have arbitrary values when its index is marked
-        # as unoccupied.
-        self._num_occupied = 0
+        # Clear ``self._occupied_indices`` and ``self._occupied_arr`` since a
+        # cell can have arbitrary values when its index is marked as unoccupied.
+        self._num_occupied = 0  # Corresponds to clearing _occupied_indices.
         self._occupied_arr.fill(False)
+
+        # We also need to reset thresholds since archive addition is based on
+        # thresholds.
+        self._threshold_arr.fill(self._threshold_min)
 
         self._state["clear"] += 1
         self._state["add"] = 0
