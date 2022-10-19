@@ -26,11 +26,10 @@ class GaussianEmitter(EmitterBase):
             distribution when the archive is not empty. Note we assume
             the Gaussian is diagonal, so if this argument is an array, it
             must be 1D.
-        initial_solutions (array-like): An array of solution to be used when
-            the archive is empty. If this argument is None, then solutions will
-            be sampled from Gaussian distribution centered at `x0` with
-            standard deviation `sigma`. Elements in this array must be of shape
-            ``self.archive.solution_dim``.
+        initial_solutions (array-like): An (n, solution_dim) array of solutions
+            to be used when the archive is empty. If this argument is None, then
+            solutions will be sampled from a Gaussian distribution centered at
+            ``x0`` with standard deviation ``sigma``.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
             Alternatively, pass an array-like to specify the bounds for each
