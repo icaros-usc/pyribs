@@ -269,6 +269,11 @@ def test_add_single_threshold_update(add_mode):
 
 
 def test_add_single_after_clear(data):
+    """After clearing, we should still get the same status and value when adding
+    to the archive.
+
+    https://github.com/icaros-usc/pyribs/pull/260
+    """
     status, value = data.archive.add_single(data.solution, data.objective,
                                             data.measures)
 
@@ -277,8 +282,6 @@ def test_add_single_after_clear(data):
 
     data.archive.clear()
 
-    # After clearing, we should still get the same status and value when adding
-    # to the archive.
     status, value = data.archive.add_single(data.solution, data.objective,
                                             data.measures)
 
