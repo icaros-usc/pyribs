@@ -268,6 +268,27 @@ def test_add_single_threshold_update(add_mode):
     assert np.isclose(value, 0.1)  # -0.8 - (-0.9)
 
 
+def test_add_single_after_clear(data):
+    """After clearing, we should still get the same status and value when adding
+    to the archive.
+
+    https://github.com/icaros-usc/pyribs/pull/260
+    """
+    status, value = data.archive.add_single(data.solution, data.objective,
+                                            data.measures)
+
+    assert status == 2
+    assert value == data.objective
+
+    data.archive.clear()
+
+    status, value = data.archive.add_single(data.solution, data.objective,
+                                            data.measures)
+
+    assert status == 2
+    assert value == data.objective
+
+
 def test_add_single_wrong_shapes(data):
     with pytest.raises(ValueError):
         data.archive.add_single(
