@@ -30,9 +30,11 @@ class IsoLineEmitter(EmitterBase):
             generate solutions when the archive is non-empty.
         line_sigma (float): Scale factor for the line distribution used when
             generating solutions.
-        sigma0 (float): Standard deviation of the isotropic distribution used to
-            generate solutions when the archive is empty. If this argument is
-            None, then ``iso_sigma`` will be used.
+        initial_solutions (array-like): An array of solution to be used when
+            the archive is empty. If this argument is None, then solutions will
+            be sampled from Gaussian distribution centered at `x0` with
+            standard deviation `sigma`. Elements in this array must be of shape
+            ``self.archive.solution_dim``.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
             Alternatively, pass an array-like to specify the bounds for each
@@ -49,7 +51,7 @@ class IsoLineEmitter(EmitterBase):
                  x0,
                  iso_sigma=0.01,
                  line_sigma=0.2,
-                 sigma0=None,
+                 initial_solutions=None,
                  bounds=None,
                  batch_size=64,
                  seed=None):
@@ -62,8 +64,7 @@ class IsoLineEmitter(EmitterBase):
                 f"x0 has shape {self._x0.shape}, should be 1-dimensional.")
 
         self._iso_sigma = archive.dtype(iso_sigma)
-        self._sigma0 = self._iso_sigma if sigma0 is None else archive.dtype(
-            sigma0)
+        self._initial_solutions = initial_solutions
         self._line_sigma = archive.dtype(line_sigma)
 
         EmitterBase.__init__(
@@ -84,12 +85,6 @@ class IsoLineEmitter(EmitterBase):
         """float: Scale factor for the isotropic distribution used to
         generate solutions when the archive is not empty."""
         return self._iso_sigma
-
-    @property
-    def sigma0(self):
-        """float: Scale factor for the isotropic distribution used to
-        generate solutions when the archive is empty."""
-        return self._sigma0
 
     @property
     def line_sigma(self):
@@ -115,23 +110,29 @@ class IsoLineEmitter(EmitterBase):
             solutions to evaluate.
         """
         iso_gaussian = self._rng.normal(
-            scale=self._sigma0 if self.archive.empty else self._iso_sigma,
+            scale=self._iso_sigma,
             size=(self._batch_size, self.solution_dim),
         ).astype(self.archive.dtype)
 
         if self.archive.empty:
-            solution_batch = np.expand_dims(self._x0, axis=0) + iso_gaussian
-        else:
-            parents = self.archive.sample_elites(
-                self._batch_size).solution_batch
-            directions = (
-                self.archive.sample_elites(self._batch_size).solution_batch -
-                parents)
-            line_gaussian = self._rng.normal(
-                scale=self._line_sigma,
-                size=(self._batch_size, 1),
-            ).astype(self.archive.dtype)
-            solution_batch = parents + iso_gaussian + line_gaussian * directions
+            if self._initial_solutions is None:
+                return np.clip(
+                    np.expand_dims(self._x0, axis=0) + iso_gaussian,
+                    self.lower_bounds,
+                    self.upper_bounds,
+                )
+            return np.clip(self._initial_solutions, self.lower_bounds,
+                           self.upper_bounds)
+
+        parents = self.archive.sample_elites(self._batch_size).solution_batch
+        directions = (
+            self.archive.sample_elites(self._batch_size).solution_batch -
+            parents)
+        line_gaussian = self._rng.normal(
+            scale=self._line_sigma,
+            size=(self._batch_size, 1),
+        ).astype(self.archive.dtype)
+        solution_batch = parents + iso_gaussian + line_gaussian * directions
 
         return np.clip(solution_batch, self.lower_bounds, self.upper_bounds)
 
