@@ -100,6 +100,10 @@ class SlidingBoundariesArchive(ArchiveBase):
     illuminated by the archive more accurately match the true distribution of
     the measures when they are not uniformly distributed.
 
+    .. note:: Unlike other archives, this archive does not currently support
+        `thresholds <../../tutorials/cma_mae.html>`_ and batched addition (see
+        :meth:`add`).
+
     Args:
         solution_dim (int): Dimension of the solution space.
         dims (array-like): Number of cells in each dimension of the measure
@@ -143,7 +147,6 @@ class SlidingBoundariesArchive(ArchiveBase):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
                              f"(length {len(ranges)}) must be the same length")
 
-        # TODO: Mention that threshold is not supported.
         ArchiveBase.__init__(
             self,
             solution_dim=solution_dim,
@@ -341,25 +344,57 @@ class SlidingBoundariesArchive(ArchiveBase):
         old_metadata_batch = self._metadata_arr[indices].copy()
 
         self.clear()
-        print(len(self))
-        print(
-            ArchiveBase.add(self, old_solution_batch, old_objective_batch,
-                            old_measures_batch, old_metadata_batch))
-        # TODO: Can this be batched?
+        ArchiveBase.add(self, old_solution_batch, old_objective_batch,
+                        old_measures_batch, old_metadata_batch)
         for solution, objective, measures, metadata in self._buffer:
             # Add solutions from buffer.
             status, value = ArchiveBase.add_single(self, solution, objective,
                                                    measures, metadata)
             print(status, value)
-        # TODO: Should return batch?
         return status, value
 
-    def add_single(self,
-                   solution,
-                   objective_value,
-                   behavior_values,
-                   metadata=None):
+    def add(self,
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            metadata_batch=None):
         """Inserts a batch of solutions into the archive.
+
+        .. note:: Unlike in other archives, this method (currently) is not truly
+            batched; rather, it is implemented by calling :meth:`add_single` on
+            the solutions in the batch, in the order that they are passed in. As
+            such, this method is *not* invariant to the ordering of the
+            solutions in the batch.
+
+        See :meth:`ArchiveBase.add` for arguments and return values.
+        """
+        (
+            batch_size,
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            metadata_batch,
+        ) = self._validate_add_args(
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            metadata_batch,
+        )
+
+        status_batch = np.empty(batch_size, dtype=np.int32)
+        value_batch = np.empty(batch_size, dtype=self.dtype)
+        for i in range(batch_size):
+            status_batch[i], value_batch[i] = self.add_single(
+                solution_batch[i],
+                objective_batch[i],
+                measures_batch[i],
+                metadata_batch[i],
+            )
+
+        return status_batch, value_batch
+
+    def add_single(self, solution, objective, measures, metadata=None):
+        """Inserts a single solution into the archive.
 
         This method remaps the archive after every :attr:`remap_frequency`
         solutions are added. Remapping involves changing the boundaries of the
@@ -367,15 +402,21 @@ class SlidingBoundariesArchive(ArchiveBase):
         re-adding all of the solutions stored in the buffer `and` the current
         archive.
 
-        See :meth:`ArchiveBase.add` for arguments and return values. Note that
-        return values are computed with respect to the *current* archive, i.e.
-        before doing any remapping.
+        See :meth:`ArchiveBase.add_single` for arguments and return values.
         """
-        solution = np.asarray(solution)
-        behavior_values = np.asarray(behavior_values)
+        (
+            solution,
+            objective,
+            measures,
+            metadata,
+        ) = self._validate_add_single_args(
+            solution,
+            objective,
+            measures,
+            metadata,
+        )
 
-        # TODO: Batch addition.
-        self._buffer.add(solution, objective_value, behavior_values, metadata)
+        self._buffer.add(solution, objective, measures, metadata)
         self._total_num_sol += 1
 
         if self._total_num_sol % self._remap_frequency == 0:
@@ -386,7 +427,6 @@ class SlidingBoundariesArchive(ArchiveBase):
                 bound[dim] for bound, dim in zip(self._boundaries, self._dims)
             ])
         else:
-            status, value = ArchiveBase.add_single(self, solution,
-                                                   objective_value,
-                                                   behavior_values, metadata)
+            status, value = ArchiveBase.add_single(self, solution, objective,
+                                                   measures, metadata)
         return status, value
