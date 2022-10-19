@@ -6,6 +6,7 @@
 
 #### API
 
+- Allow custom initialization in IsoLine and Gaussian emitters (#259)
 - Implement CMA-MAE archive thresholds (#256)
   - Revive the old implementation of `add_single` removed in (#221)
   - Add separate tests for `add_single` and `add` with single solution
