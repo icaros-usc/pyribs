@@ -101,7 +101,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     the measures when they are not uniformly distributed.
 
     .. note:: Unlike other archives, this archive does not currently support
-        `thresholds <../../tutorials/cma_mae.html>`_ and batched addition (see
+        `thresholds <../../tutorials/cma_mae.html>`_ or batched addition (see
         :meth:`add`).
 
     Args:
@@ -343,14 +343,41 @@ class SlidingBoundariesArchive(ArchiveBase):
         old_measures_batch = self._measures_arr[indices].copy()
         old_metadata_batch = self._metadata_arr[indices].copy()
 
+        (
+            new_solution_batch,
+            new_objective_batch,
+            new_measures_batch,
+            new_metadata_batch,
+        ) = map(list, zip(*self._buffer))
+
+        # The last solution must be added on its own so that we get an accurate
+        # status and value to return to the user; hence we pop it from all the
+        # batches (note that pop removes the last value and returns it).
+        (
+            last_solution,
+            last_objective,
+            last_measures,
+            last_metadata,
+        ) = (
+            new_solution_batch.pop(),
+            new_objective_batch.pop(),
+            new_measures_batch.pop(),
+            new_metadata_batch.pop(),
+        )
+
         self.clear()
-        ArchiveBase.add(self, old_solution_batch, old_objective_batch,
-                        old_measures_batch, old_metadata_batch)
-        for solution, objective, measures, metadata in self._buffer:
-            # Add solutions from buffer.
-            status, value = ArchiveBase.add_single(self, solution, objective,
-                                                   measures, metadata)
-            print(status, value)
+
+        ArchiveBase.add(
+            self,
+            np.concatenate((old_solution_batch, new_solution_batch)),
+            np.concatenate((old_objective_batch, new_objective_batch)),
+            np.concatenate((old_measures_batch, new_measures_batch)),
+            np.concatenate((old_metadata_batch, new_metadata_batch)),
+        )
+
+        status, value = ArchiveBase.add_single(self, last_solution,
+                                               last_objective, last_measures,
+                                               last_metadata)
         return status, value
 
     def add(self,
