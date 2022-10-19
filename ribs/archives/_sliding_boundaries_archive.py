@@ -143,6 +143,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
                              f"(length {len(ranges)}) must be the same length")
 
+        # TODO: Mention that threshold is not supported.
         ArchiveBase.__init__(
             self,
             solution_dim=solution_dim,
@@ -325,7 +326,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         # Sort each measure along its dimension.
         sorted_measures = self._buffer.sorted_measures
 
-        # TODO: Can this be sped up?
+        # Calculate new boundaries.
         for i in range(self._measure_dim):
             for j in range(self.dims[i]):
                 sample_idx = int(j * self._buffer.size / self.dims[i])
@@ -340,21 +341,24 @@ class SlidingBoundariesArchive(ArchiveBase):
         old_metadata_batch = self._metadata_arr[indices].copy()
 
         self.clear()
-        ArchiveBase.add(self, old_solution_batch, old_objective_batch,
-                        old_measures_batch, old_metadata_batch)
+        print(len(self))
+        print(
+            ArchiveBase.add(self, old_solution_batch, old_objective_batch,
+                            old_measures_batch, old_metadata_batch))
         # TODO: Can this be batched?
         for solution, objective, measures, metadata in self._buffer:
             # Add solutions from buffer.
             status, value = ArchiveBase.add_single(self, solution, objective,
                                                    measures, metadata)
+            print(status, value)
         # TODO: Should return batch?
         return status, value
 
-    def add(self,
-            solution_batch,
-            objective_batch,
-            measures_batch,
-            metadata_batch=None):
+    def add_single(self,
+                   solution,
+                   objective_value,
+                   behavior_values,
+                   metadata=None):
         """Inserts a batch of solutions into the archive.
 
         This method remaps the archive after every :attr:`remap_frequency`
@@ -367,8 +371,8 @@ class SlidingBoundariesArchive(ArchiveBase):
         return values are computed with respect to the *current* archive, i.e.
         before doing any remapping.
         """
-        solution_batch = np.asarray(solution_batch)
-        measures_batch = np.asarray(measures_batch)
+        solution = np.asarray(solution)
+        behavior_values = np.asarray(behavior_values)
 
         # TODO: Batch addition.
         self._buffer.add(solution, objective_value, behavior_values, metadata)
@@ -382,6 +386,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                 bound[dim] for bound, dim in zip(self._boundaries, self._dims)
             ])
         else:
-            status, value = ArchiveBase.add(self, solution, objective_value,
-                                            behavior_values, metadata)
+            status, value = ArchiveBase.add_single(self, solution,
+                                                   objective_value,
+                                                   behavior_values, metadata)
         return status, value
