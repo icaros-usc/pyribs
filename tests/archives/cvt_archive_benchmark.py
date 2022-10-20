@@ -28,7 +28,6 @@ def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
                              samples=20_000,
                              use_kd_tree=use_kd_tree)
 
-        # Let numba compile.
         archive.add_single(solution_batch[0], objective_batch[0],
                            measures_batch[0])
 
