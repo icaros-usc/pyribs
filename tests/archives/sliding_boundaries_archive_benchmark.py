@@ -1,6 +1,5 @@
 """Benchmarks for the SlidingBoundariesArchive."""
 import numpy as np
-import pytest
 
 from ribs.archives import SlidingBoundariesArchive
 
@@ -15,14 +14,13 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
                                            buffer_capacity=1000)
 
         # Let numba compile.
-        archive.add(solution_batch[0], objective_batch[0], measures_batch[0])
+        archive.add_single(solution_batch[0], objective_batch[0],
+                           measures_batch[0])
 
         return (archive,), {}
 
     def add_10k(archive):
-        for i in range(n):
-            archive.add(solution_batch[i], objective_batch[i],
-                        measures_batch[i])
+        archive.add(solution_batch, objective_batch, measures_batch)
 
     benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
 
