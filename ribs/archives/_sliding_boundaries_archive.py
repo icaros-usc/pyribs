@@ -48,7 +48,7 @@ class SolutionBuffer:
         if self.full():
             # Remove item from the deque.
             _, _, measure_deleted, _ = self._queue.popleft()
-            # Remove bc from sorted lists.
+            # Remove measures from sorted lists.
             for i, m in enumerate(measure_deleted):
                 self._measure_lists[i].remove(m)
 
