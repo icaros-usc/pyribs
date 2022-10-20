@@ -13,6 +13,7 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
                                            remap_frequency=100,
                                            buffer_capacity=1000)
 
+        # Let numba compile.
         archive.add_single(solution_batch[0], objective_batch[0],
                            measures_batch[0])
 

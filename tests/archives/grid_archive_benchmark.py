@@ -12,6 +12,7 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
                               dims=(64, 64),
                               ranges=[(-1, 1), (-1, 1)])
 
+        # Let numba compile.
         archive.add_single(solution_batch[0], objective_batch[0],
                            measures_batch[0])
 
