@@ -288,9 +288,9 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         # Clip measures_batch + epsilon to the range
         # [lower_bounds, upper_bounds - epsilon].
-        measures_batch = np.minimum(
-            np.maximum(measures_batch + self._epsilon, self._lower_bounds),
-            self._upper_bounds - self._epsilon)
+        measures_batch = np.clip(measures_batch + self._epsilon,
+                                 self._lower_bounds,
+                                 self._upper_bounds - self._epsilon)
 
         idx_cols = []
         for boundary, dim, measures_col in zip(self._boundaries, self._dims,
