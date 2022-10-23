@@ -1,6 +1,6 @@
 """Tests for the IsoLineEmitter."""
-
 import numpy as np
+import pytest
 
 from ribs.emitters import IsoLineEmitter
 
@@ -9,31 +9,42 @@ def test_properties_are_correct(archive_fixture):
     archive, x0 = archive_fixture
     iso_sigma = 1
     line_sigma = 2
-    sigma0 = 3
+    batch_size = 2
     emitter = IsoLineEmitter(archive,
-                             x0,
                              iso_sigma,
                              line_sigma,
-                             sigma0,
-                             batch_size=2)
+                             x0=x0,
+                             batch_size=batch_size)
 
-    assert (emitter.x0 == x0).all()
+    assert np.all(emitter.x0 == x0)
     assert emitter.iso_sigma == iso_sigma
     assert emitter.line_sigma == line_sigma
-    assert emitter.sigma0 == sigma0
+    assert emitter.batch_size == batch_size
 
 
-def test_sigma0_is_correct(archive_fixture):
+def test_initial_solutions_is_correct(archive_fixture):
     archive, x0 = archive_fixture
-    iso_sigma = 1
-    emitter = IsoLineEmitter(archive, x0, iso_sigma)  # sigma0=None
+    initial_solutions = [[0, 1, 2, 3], [-1, -2, -3, -4]]
+    emitter = IsoLineEmitter(archive,
+                             x0=x0,
+                             initial_solutions=initial_solutions)
 
-    assert emitter.sigma0 == iso_sigma
+    assert np.all(emitter.ask() == initial_solutions)
+
+
+def test_initial_solutions_shape(archive_fixture):
+    archive, x0 = archive_fixture
+    initial_solutions = [[0, 0, 0], [1, 1, 1]]
+
+    # archive.solution_dim = 4
+    with pytest.raises(ValueError):
+        IsoLineEmitter(archive, x0=x0, initial_solutions=initial_solutions)
 
 
 def test_upper_bounds_enforced(archive_fixture):
     archive, _ = archive_fixture
-    emitter = IsoLineEmitter(archive, [2, 2],
+    emitter = IsoLineEmitter(archive,
+                             x0=[2, 2],
                              iso_sigma=0,
                              line_sigma=0,
                              bounds=[(-1, 1)] * 2)
@@ -43,7 +54,8 @@ def test_upper_bounds_enforced(archive_fixture):
 
 def test_lower_bounds_enforced(archive_fixture):
     archive, _ = archive_fixture
-    emitter = IsoLineEmitter(archive, [-2, -2],
+    emitter = IsoLineEmitter(archive,
+                             x0=[-2, -2],
                              iso_sigma=0,
                              line_sigma=0,
                              bounds=[(-1, 1)] * 2)
@@ -53,14 +65,14 @@ def test_lower_bounds_enforced(archive_fixture):
 
 def test_degenerate_gauss_emits_x0(archive_fixture):
     archive, x0 = archive_fixture
-    emitter = IsoLineEmitter(archive, x0, iso_sigma=0, batch_size=2)
+    emitter = IsoLineEmitter(archive, x0=x0, iso_sigma=0, batch_size=2)
     solutions = emitter.ask()
     assert (solutions == np.expand_dims(x0, axis=0)).all()
 
 
 def test_degenerate_gauss_emits_parent(archive_fixture):
     archive, x0 = archive_fixture
-    emitter = IsoLineEmitter(archive, x0, iso_sigma=0, batch_size=2)
+    emitter = IsoLineEmitter(archive, x0=x0, iso_sigma=0, batch_size=2)
     archive.add_single(x0, 1, np.array([0, 0]))
 
     solutions = emitter.ask()
@@ -70,7 +82,7 @@ def test_degenerate_gauss_emits_parent(archive_fixture):
 
 def test_degenerate_gauss_emits_along_line(archive_fixture):
     archive, x0 = archive_fixture
-    emitter = IsoLineEmitter(archive, x0, iso_sigma=0, batch_size=100)
+    emitter = IsoLineEmitter(archive, x0=x0, iso_sigma=0, batch_size=100)
     archive.add_single(np.array([0, 0, 0, 0]), 1, np.array([0, 0]))
     archive.add_single(np.array([10, 0, 0, 0]), 1, np.array([1, 1]))
 

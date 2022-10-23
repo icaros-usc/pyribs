@@ -1,16 +1,20 @@
 """Provides the IsoLineEmitter."""
 import numpy as np
 
+from ribs._utils import check_batch_shape, check_is_1d
 from ribs.emitters._emitter_base import EmitterBase
 
 
 class IsoLineEmitter(EmitterBase):
     """Emits solutions that are nudged towards other archive solutions.
 
-    If the archive is empty, calls to :meth:`ask` will generate solutions from
-    an isotropic Gaussian distribution with mean ``x0`` and standard deviation
-    ``sigma0``. Otherwise, to generate each new solution, the emitter selects
-    a pair of elites :math:`x_i` and :math:`x_j` and samples from
+    If the archive is empty and ``self._initial_solutions`` is set, calls to
+    :meth:`ask` will return ``self._initial_solutions``. If
+    ``self._initial_solutions`` is not set, we draw solutions from an isotropic
+    Gaussian distribution centered at ``self.x0`` with standard deviation
+    ``self.iso_sigma``. Otherwise, each solution is drawn from a distribution
+    centered at a randomly chosen elite with standard deviation
+    ``self.iso_sigma``.
 
     .. math::
 
@@ -24,15 +28,17 @@ class IsoLineEmitter(EmitterBase):
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        x0 (array-like): Center of the Gaussian distribution from which to
-            sample solutions when the archive is empty. Must be 1-dimensional.
         iso_sigma (float): Scale factor for the isotropic distribution used to
-            generate solutions when the archive is non-empty.
+            generate solutions.
         line_sigma (float): Scale factor for the line distribution used when
             generating solutions.
-        sigma0 (float): Standard deviation of the isotropic distribution used to
-            generate solutions when the archive is empty. If this argument is
-            None, then ``iso_sigma`` will be used.
+        x0 (array-like): Center of the Gaussian distribution from which to
+            sample solutions when the archive is empty. Must be 1-dimensional.
+            This argument is ignored if ``initial_solutions`` is set.
+        initial_solutions (array-like): An (n, solution_dim) array of solutions
+            to be used when the archive is empty. If this argument is None, then
+            solutions will be sampled from a Gaussian distribution centered at
+            ``x0`` with standard deviation ``iso_sigma``.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
             Alternatively, pass an array-like to specify the bounds for each
@@ -46,25 +52,32 @@ class IsoLineEmitter(EmitterBase):
 
     def __init__(self,
                  archive,
-                 x0,
                  iso_sigma=0.01,
                  line_sigma=0.2,
-                 sigma0=None,
+                 x0=None,
+                 initial_solutions=None,
                  bounds=None,
                  batch_size=64,
                  seed=None):
         self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
 
-        self._x0 = np.array(x0, dtype=archive.dtype)
-        if self._x0.ndim != 1:
-            raise ValueError(
-                f"x0 has shape {self._x0.shape}, should be 1-dimensional.")
-
         self._iso_sigma = archive.dtype(iso_sigma)
-        self._sigma0 = self._iso_sigma if sigma0 is None else archive.dtype(
-            sigma0)
         self._line_sigma = archive.dtype(line_sigma)
+
+        if x0 is None and initial_solutions is None:
+            raise ValueError("At least one of x0 or initial_solutions must "
+                             "be set.")
+
+        self._x0 = np.array(x0, dtype=archive.dtype)
+        check_is_1d(self._x0, "x0")
+
+        self._initial_solutions = None
+        if initial_solutions is not None:
+            self._initial_solutions = np.asarray(initial_solutions,
+                                                 dtype=archive.dtype)
+            check_batch_shape(self._initial_solutions, "initial_solutions",
+                              archive.solution_dim, "solution_dim")
 
         EmitterBase.__init__(
             self,
@@ -86,12 +99,6 @@ class IsoLineEmitter(EmitterBase):
         return self._iso_sigma
 
     @property
-    def sigma0(self):
-        """float: Scale factor for the isotropic distribution used to
-        generate solutions when the archive is empty."""
-        return self._sigma0
-
-    @property
     def line_sigma(self):
         """float: Scale factor for the line distribution used when generating
         solutions."""
@@ -105,17 +112,25 @@ class IsoLineEmitter(EmitterBase):
     def ask(self):
         """Generates ``batch_size`` solutions.
 
-        If the archive is empty, solutions are drawn from an isotropic Gaussian
-        distribution centered at ``self.x0`` with standard deviation
-        ``self.sigma0``. Otherwise, each solution is drawn as described in
-        this class's docstring with standard deviation ``self.iso_sigma``.
+        If the archive is empty and ``self._initial_solutions`` is set, we
+        return ``self._initial_solutions``. If ``self._initial_solutions`` is
+        not set, we draw solutions from an isotropic Gaussian distribution
+        centered at ``self.x0`` with standard deviation ``self.iso_sigma``.
+        Otherwise, each solution is drawn from a distribution centered at
+        a randomly chosen elite with standard deviation ``self.iso_sigma``.
 
         Returns:
-            ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
-            solutions to evaluate.
+            If the archive is not empty, ``(batch_size, solution_dim)`` array
+            -- contains ``batch_size`` new solutions to evaluate. If the
+            archive is empty, we return ``self._initial_solutions``, which
+            might not have ``batch_size`` solutions.
         """
+        if self.archive.empty and self._initial_solutions is not None:
+            return np.clip(self._initial_solutions, self.lower_bounds,
+                           self.upper_bounds)
+
         iso_gaussian = self._rng.normal(
-            scale=self._sigma0 if self.archive.empty else self._iso_sigma,
+            scale=self._iso_sigma,
             size=(self._batch_size, self.solution_dim),
         ).astype(self.archive.dtype)
 
