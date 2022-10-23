@@ -207,8 +207,8 @@ def create_scheduler(algorithm,
         emitters = [
             GaussianEmitter(
                 archive,
-                initial_sol,
                 0.5,
+                x0=initial_sol,
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds
@@ -217,7 +217,7 @@ def create_scheduler(algorithm,
         emitters = [
             IsoLineEmitter(
                 archive,
-                initial_sol,
+                x0=initial_sol,
                 iso_sigma=0.1,
                 line_sigma=0.2,
                 batch_size=batch_size,

@@ -23,9 +23,9 @@ def emitter_fixture(request, archive_fixture):
     batch_size = 3
 
     if emitter_type == "GaussianEmitter":
-        emitter = GaussianEmitter(archive, x0, 5, batch_size=batch_size)
+        emitter = GaussianEmitter(archive, 5, x0=x0, batch_size=batch_size)
     elif emitter_type == "IsoLineEmitter":
-        emitter = IsoLineEmitter(archive, x0, batch_size=batch_size)
+        emitter = IsoLineEmitter(archive, x0=x0, batch_size=batch_size)
     elif emitter_type == "ImprovementEmitter":
         emitter = EvolutionStrategyEmitter(archive,
                                            x0,
@@ -79,7 +79,7 @@ def test_array_bound_correct(archive_fixture):
     for i in range(len(x0) - 1):
         bounds.append((-i, i))
     bounds.append(None)
-    emitter = GaussianEmitter(archive, x0, 1, bounds=bounds)
+    emitter = GaussianEmitter(archive, 1, x0=x0, bounds=bounds)
 
     lower_bounds = np.concatenate((-np.arange(len(x0) - 1), [-np.inf]))
     upper_bounds = np.concatenate((np.arange(len(x0) - 1), [np.inf]))
@@ -92,7 +92,7 @@ def test_long_array_bound_fails(archive_fixture):
     archive, x0 = archive_fixture
     bounds = [(-1, 1)] * (len(x0) + 1)  # More bounds than solution dims.
     with pytest.raises(ValueError):
-        GaussianEmitter(archive, x0, 1, bounds=bounds)
+        GaussianEmitter(archive, 1, x0=x0, bounds=bounds)
 
 
 def test_array_bound_bad_entry_fails(archive_fixture):
@@ -100,7 +100,7 @@ def test_array_bound_bad_entry_fails(archive_fixture):
     bounds = [(-1, 1)] * len(x0)
     bounds[0] = (-1, 0, 1)  # Invalid entry.
     with pytest.raises(ValueError):
-        GaussianEmitter(archive, x0, 1, bounds=bounds)
+        GaussianEmitter(archive, 1, x0=x0, bounds=bounds)
 
 
 @pytest.mark.parametrize(
@@ -111,8 +111,8 @@ def test_emitters_fail_when_x0_not_1d(emitter_type, archive_fixture):
 
     with pytest.raises(ValueError):
         if emitter_type == "GaussianEmitter":
-            _ = GaussianEmitter(archive, x0, 5)
+            _ = GaussianEmitter(archive, 5, x0=x0)
         elif emitter_type == "IsoLineEmitter":
-            _ = IsoLineEmitter(archive, x0)
+            _ = IsoLineEmitter(archive, x0=x0)
         elif emitter_type == "ImprovementEmitter":
             _ = EvolutionStrategyEmitter(archive, x0, 5, "2imp")

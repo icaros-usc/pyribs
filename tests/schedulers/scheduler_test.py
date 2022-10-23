@@ -18,7 +18,7 @@ def scheduler_fixture():
     num_solutions = 4
     archive = GridArchive(solution_dim, [100, 100], [(-1, 1), (-1, 1)])
     emitters = [
-        GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=num_solutions)
+        GaussianEmitter(archive, 1, x0=[0.0, 0.0], batch_size=num_solutions)
     ]
     return Scheduler(archive, emitters), solution_dim, num_solutions
 
@@ -44,7 +44,7 @@ def test_init_fails_on_non_unique_emitter_instances():
 
     # All emitters are the same instance. This is bad because the same emitter
     # gets called multiple times.
-    emitters = [GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1)] * 5
+    emitters = [GaussianEmitter(archive, 1, x0=[0.0, 0.0], batch_size=1)] * 5
 
     with pytest.raises(ValueError):
         Scheduler(archive, emitters)
@@ -54,9 +54,9 @@ def test_init_fails_with_mismatched_emitters():
     archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
     emitters = [
         # Emits 2D solutions.
-        GaussianEmitter(archive, [0.0, 0.0], 1),
+        GaussianEmitter(archive, 1, x0=[0.0, 0.0]),
         # Mismatch -- emits 3D solutions rather than 2D solutions.
-        GaussianEmitter(archive, [0.0, 0.0, 0.0], 1),
+        GaussianEmitter(archive, 1, x0=[0.0, 0.0, 0.0]),
     ]
     with pytest.raises(ValueError):
         Scheduler(archive, emitters)
@@ -80,7 +80,7 @@ def test_ask_fails_when_called_twice(scheduler_fixture):
 def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
     batch_size = 4
     archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
-    emitters = [GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=batch_size)]
+    emitters = [GaussianEmitter(archive, 1, x0=[0.0, 0.0], batch_size=batch_size)]
     scheduler = Scheduler(archive, emitters, add_mode=add_mode)
 
     measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
@@ -107,9 +107,9 @@ def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
 def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):
     archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
     emitters = [
-        GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1),
-        GaussianEmitter(archive, [0.5, 0.5], 1, batch_size=2),
-        GaussianEmitter(archive, [-0.5, -0.5], 1, batch_size=3),
+        GaussianEmitter(archive, 1, x0=[0.0, 0.0], batch_size=1),
+        GaussianEmitter(archive, 1, x0=[0.5, 0.5], batch_size=2),
+        GaussianEmitter(archive, 1, x0=[-0.5, -0.5], batch_size=3),
     ]
     scheduler = Scheduler(archive, emitters, add_mode=add_mode)
 
