@@ -8,10 +8,13 @@ from ribs.emitters._emitter_base import EmitterBase
 class IsoLineEmitter(EmitterBase):
     """Emits solutions that are nudged towards other archive solutions.
 
-    If the archive is empty, calls to :meth:`ask` will generate solutions from
-    an isotropic Gaussian distribution with mean ``x0`` and standard deviation
-    ``sigma0``. Otherwise, to generate each new solution, the emitter selects
-    a pair of elites :math:`x_i` and :math:`x_j` and samples from
+    If the archive is empty and ``self._initial_solutions`` is set, calls to
+    :meth:`ask` will return ``self._initial_solutions``. If
+    ``self._initial_solutions`` is not set, we draw solutions from an isotropic
+    Gaussian distribution centered at ``self.x0`` with standard deviation
+    ``self.iso_sigma``. Otherwise, each solution is drawn from a distribution
+    centered at a randomly chosen elite with standard deviation
+    ``self.iso_sigma``.
 
     .. math::
 
@@ -31,7 +34,7 @@ class IsoLineEmitter(EmitterBase):
             generating solutions.
         x0 (array-like): Center of the Gaussian distribution from which to
             sample solutions when the archive is empty. Must be 1-dimensional.
-            This argument is irrelevant if ``initial_solutions`` is set.
+            This argument is ignored if ``initial_solutions`` is set.
         initial_solutions (array-like): An (n, solution_dim) array of solutions
             to be used when the archive is empty. If this argument is None, then
             solutions will be sampled from a Gaussian distribution centered at
@@ -71,8 +74,8 @@ class IsoLineEmitter(EmitterBase):
 
         self._initial_solutions = None
         if initial_solutions is not None:
-            self._initial_solutions = np.array(initial_solutions,
-                                               dtype=archive.dtype)
+            self._initial_solutions = np.asarray(initial_solutions,
+                                                 dtype=archive.dtype)
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "solution_dim")
 
@@ -109,14 +112,18 @@ class IsoLineEmitter(EmitterBase):
     def ask(self):
         """Generates ``batch_size`` solutions.
 
-        If the archive is empty, solutions are drawn from an isotropic Gaussian
-        distribution centered at ``self.x0`` with standard deviation
-        ``self.sigma0``. Otherwise, each solution is drawn as described in
-        this class's docstring with standard deviation ``self.iso_sigma``.
+        If the archive is empty and ``self._initial_solutions`` is set, we
+        return ``self._initial_solutions``. If ``self._initial_solutions`` is
+        not set, we draw solutions from an isotropic Gaussian distribution
+        centered at ``self.x0`` with standard deviation ``self.iso_sigma``.
+        Otherwise, each solution is drawn from a distribution centered at
+        a randomly chosen elite with standard deviation ``self.iso_sigma``.
 
         Returns:
-            ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
-            solutions to evaluate.
+            If the archive is not empty, ``(batch_size, solution_dim)`` array
+            -- contains ``batch_size`` new solutions to evaluate. If the
+            archive is empty, we return ``self._initial_solutions``, which
+            might not have ``batch_size`` solutions.
         """
         if self.archive.empty and self._initial_solutions is not None:
             return np.clip(self._initial_solutions, self.lower_bounds,

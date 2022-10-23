@@ -8,11 +8,12 @@ from ribs.emitters._emitter_base import EmitterBase
 class GaussianEmitter(EmitterBase):
     """Emits solutions by adding Gaussian noise to existing archive solutions.
 
-    If the archive is empty, calls to :meth:`ask` will generate solutions from a
-    user-specified Gaussian distribution with mean ``x0`` and standard deviation
-    ``sigma0``. Otherwise, this emitter selects solutions from the archive and
-    generates solutions from a Gaussian distribution centered around each
-    solution with standard deviation ``sigma``.
+    If the archive is empty and ``self._initial_solutions`` is set, calls to
+    :meth:`ask` will return ``self._initial_solutions``. If
+    ``self._initial_solutions`` is not set, we draw from Gaussian distribution
+    centered at ``self.x0`` with standard deviation ``self.sigma``. Otherwise,
+    each solution is drawn from a distribution centered at a randomly chosen
+    elite with standard deviation ``self.sigma``.
 
     This is the classic variation operator presented in `Mouret 2015
     <https://arxiv.org/pdf/1504.04909.pdf>`_.
@@ -26,7 +27,7 @@ class GaussianEmitter(EmitterBase):
             argument is an array, it must be 1D.
         x0 (array-like): Center of the Gaussian distribution from which to
             sample solutions when the archive is empty. Must be 1-dimensional.
-            This argument is irrelevant if ``initial_solutions`` is set.
+            This argument is ignored if ``initial_solutions`` is set.
         initial_solutions (array-like): An (n, solution_dim) array of solutions
             to be used when the archive is empty. If this argument is None, then
             solutions will be sampled from a Gaussian distribution centered at
@@ -66,7 +67,7 @@ class GaussianEmitter(EmitterBase):
 
         self._initial_solutions = None
         if initial_solutions is not None:
-            self._initial_solutions = np.array(initial_solutions,
+            self._initial_solutions = np.asarray(initial_solutions,
                                                dtype=archive.dtype)
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "solution_dim")
