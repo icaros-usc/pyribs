@@ -254,10 +254,10 @@ def create_scheduler(algorithm,
         }[algorithm]
         emitters = [
             EvolutionStrategyEmitter(
-                archive=archive,
-                x0=initial_sol,
-                sigma0=0.5,
-                ranker=ranker,
+                archive,
+                initial_sol,
+                0.5,
+                ranker,
                 selection_rule=selection_rule,
                 restart_rule=restart_rule,
                 batch_size=batch_size,
@@ -297,10 +297,10 @@ def create_scheduler(algorithm,
     elif algorithm == "cma_mae":
         emitters = [
             EvolutionStrategyEmitter(
-                archive=archive,
-                x0=initial_sol,
-                sigma0=0.5,
-                ranker="imp",
+                archive,
+                initial_sol,
+                0.5,
+                "imp",
                 selection_rule="mu",
                 restart_rule="basic",
                 batch_size=batch_size,
@@ -325,7 +325,10 @@ def create_scheduler(algorithm,
         f"Created Scheduler for {algorithm} with learning rate {learning_rate} "
         f"and add mode {mode}, using solution dim {solution_dim} and archive "
         f"dims {archive_dims}.")
-    return Scheduler(archive, emitters, result_archive, add_mode=mode)
+    return Scheduler(archive,
+                     emitters,
+                     result_archive=result_archive,
+                     add_mode=mode)
 
 
 def save_heatmap(archive, heatmap_path):
