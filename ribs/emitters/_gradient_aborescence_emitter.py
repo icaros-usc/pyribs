@@ -84,6 +84,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
                  x0,
                  sigma0,
                  step_size,
+                 *,
                  ranker="2imp",
                  selection_rule="filter",
                  restart_rule="no_improvement",

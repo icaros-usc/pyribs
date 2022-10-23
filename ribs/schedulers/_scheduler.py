@@ -51,6 +51,7 @@ class Scheduler:
     def __init__(self,
                  archive,
                  emitters,
+                 *,
                  result_archive=None,
                  add_mode="batch"):
         if len(emitters) == 0:

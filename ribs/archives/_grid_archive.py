@@ -52,6 +52,7 @@ class GridArchive(ArchiveBase):
                  solution_dim,
                  dims,
                  ranges,
+                 *,
                  learning_rate=1.0,
                  threshold_min=-np.inf,
                  epsilon=1e-6,

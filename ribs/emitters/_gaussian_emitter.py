@@ -48,6 +48,7 @@ class GaussianEmitter(EmitterBase):
     def __init__(self,
                  archive,
                  sigma,
+                 *,
                  x0=None,
                  initial_solutions=None,
                  bounds=None,
@@ -59,8 +60,8 @@ class GaussianEmitter(EmitterBase):
         self._sigma = np.array(sigma, dtype=archive.dtype)
 
         if x0 is None and initial_solutions is None:
-            raise ValueError("At least one of x0 or initial_solutions must "
-                             "be set.")
+            raise ValueError("If initial_solutions is not specified, you must"
+                             "specify an initial solution x0.")
 
         self._x0 = np.array(x0, dtype=archive.dtype)
         check_is_1d(self._x0, "x0")
@@ -68,7 +69,7 @@ class GaussianEmitter(EmitterBase):
         self._initial_solutions = None
         if initial_solutions is not None:
             self._initial_solutions = np.asarray(initial_solutions,
-                                               dtype=archive.dtype)
+                                                 dtype=archive.dtype)
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "solution_dim")
 

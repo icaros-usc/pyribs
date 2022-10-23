@@ -100,6 +100,7 @@ class CVTArchive(ArchiveBase):
                  solution_dim,
                  cells,
                  ranges,
+                 *,
                  learning_rate=1.0,
                  threshold_min=-np.inf,
                  seed=None,

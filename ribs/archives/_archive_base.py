@@ -151,6 +151,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                  solution_dim,
                  cells,
                  measure_dim,
+                 *,
                  learning_rate=1.0,
                  threshold_min=-np.inf,
                  seed=None,
