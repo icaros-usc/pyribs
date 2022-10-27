@@ -8,8 +8,9 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
     n, solution_batch, objective_batch, measures_batch = benchmark_data_10k
 
     def setup():
-        archive = SlidingBoundariesArchive(solution_batch.shape[1], [10, 20],
-                                           [(-1, 1), (-2, 2)],
+        archive = SlidingBoundariesArchive(solution_dim=solution_batch.shape[1],
+                                           dims=[10, 20],
+                                           ranges=[(-1, 1), (-2, 2)],
                                            remap_frequency=100,
                                            buffer_capacity=1000)
 
@@ -27,7 +28,9 @@ def benchmark_add_10k(benchmark, benchmark_data_10k):
 
 def benchmark_as_pandas_2048_elements(benchmark):
     # TODO (btjanaka): Make this size smaller so that we do a remap.
-    archive = SlidingBoundariesArchive(10, [32, 64], [(-1, 1), (-2, 2)],
+    archive = SlidingBoundariesArchive(solution_dim=10,
+                                       dims=[32, 64],
+                                       ranges=[(-1, 1), (-2, 2)],
                                        remap_frequency=20000,
                                        buffer_capacity=20000)
 
