@@ -47,8 +47,8 @@ class GaussianEmitter(EmitterBase):
 
     def __init__(self,
                  archive,
-                 sigma,
                  *,
+                 sigma,
                  x0=None,
                  initial_solutions=None,
                  bounds=None,

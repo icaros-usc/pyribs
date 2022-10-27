@@ -97,10 +97,10 @@ class CVTArchive(ArchiveBase):
     """
 
     def __init__(self,
+                 *,
                  solution_dim,
                  cells,
                  ranges,
-                 *,
                  learning_rate=1.0,
                  threshold_min=-np.inf,
                  seed=None,

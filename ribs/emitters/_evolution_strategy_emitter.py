@@ -61,10 +61,10 @@ class EvolutionStrategyEmitter(EmitterBase):
 
     def __init__(self,
                  archive,
+                 *,
                  x0,
                  sigma0,
                  ranker,
-                 *,
                  selection_rule="filter",
                  restart_rule="no_improvement",
                  bounds=None,

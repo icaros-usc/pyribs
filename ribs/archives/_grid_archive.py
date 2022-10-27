@@ -49,10 +49,10 @@ class GridArchive(ArchiveBase):
     """
 
     def __init__(self,
+                 *,
                  solution_dim,
                  dims,
                  ranges,
-                 *,
                  learning_rate=1.0,
                  threshold_min=-np.inf,
                  epsilon=1e-6,

@@ -134,10 +134,10 @@ class SlidingBoundariesArchive(ArchiveBase):
     """
 
     def __init__(self,
+                 *,
                  solution_dim,
                  dims,
                  ranges,
-                 *,
                  epsilon=1e-6,
                  seed=None,
                  dtype=np.float64,
