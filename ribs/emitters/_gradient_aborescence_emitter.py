@@ -104,8 +104,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         DQDEmitterBase.__init__(
             self,
             archive,
-            len(self._x0),
-            bounds,
+            solution_dim=len(self._x0),
+            bounds=bounds,
         )
 
         self._ranker = _get_ranker(ranker)

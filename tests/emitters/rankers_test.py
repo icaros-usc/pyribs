@@ -63,7 +63,9 @@ def test_two_stage_improvement_ranker(archive_fixture, emitter, rng):
 
 def test_random_direction_ranker(emitter, rng):
     x0 = np.array([1, 2, 3, 4])
-    archive = GridArchive(len(x0), [10, 10, 10], [(-1, 1), (-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=len(x0),
+                          dims=[10, 10, 10],
+                          ranges=[(-1, 1), (-1, 1), (-1, 1)])
     solution_batch = [x0, x0, x0, x0]
     objective_batch = [0, 1, 2, 3]
     measures_batch = [
@@ -89,7 +91,9 @@ def test_random_direction_ranker(emitter, rng):
 
 def test_two_stage_random_direction(emitter, rng):
     x0 = np.array([1, 2, 3, 4])
-    archive = GridArchive(len(x0), [10, 10, 10], [(-1, 1), (-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=len(x0),
+                          dims=[10, 10, 10],
+                          ranges=[(-1, 1), (-1, 1), (-1, 1)])
     solution_batch = [x0, x0, x0, x0]
     objective_batch = [0, 1, 2, 3]
     measures_batch = [
