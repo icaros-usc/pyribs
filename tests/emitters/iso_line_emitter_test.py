@@ -11,8 +11,8 @@ def test_properties_are_correct(archive_fixture):
     line_sigma = 2
     batch_size = 2
     emitter = IsoLineEmitter(archive,
-                             iso_sigma,
-                             line_sigma,
+                             iso_sigma=iso_sigma,
+                             line_sigma=line_sigma,
                              x0=x0,
                              batch_size=batch_size)
 

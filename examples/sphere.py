@@ -207,7 +207,7 @@ def create_scheduler(algorithm,
         emitters = [
             GaussianEmitter(
                 archive,
-                0.5,
+                sigma=0.5,
                 x0=initial_sol,
                 batch_size=batch_size,
                 seed=s,
@@ -228,18 +228,18 @@ def create_scheduler(algorithm,
         emitters = [
             EvolutionStrategyEmitter(
                 archive,
-                initial_sol,
-                0.5,
-                "2rd",
+                x0=initial_sol,
+                sigma0=0.5,
+                ranker="2rd",
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds[:7]
         ] + [
             EvolutionStrategyEmitter(
                 archive,
-                initial_sol,
-                0.5,
-                "2imp",
+                x0=initial_sol,
+                sigma0=0.5,
+                ranker="2imp",
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds[7:]
@@ -254,7 +254,7 @@ def create_scheduler(algorithm,
         }[algorithm]
         emitters = [
             EvolutionStrategyEmitter(
-                archive=archive,
+                archive,
                 x0=initial_sol,
                 sigma0=0.5,
                 ranker=ranker,
@@ -270,7 +270,7 @@ def create_scheduler(algorithm,
         emitters = [
             GradientAborescenceEmitter(
                 archive,
-                initial_sol,
+                x0=initial_sol,
                 sigma0=10.0,
                 step_size=1.0,
                 grad_opt="gradient_ascent",
@@ -285,7 +285,7 @@ def create_scheduler(algorithm,
         emitters = [
             GradientAborescenceEmitter(
                 archive,
-                initial_sol,
+                x0=initial_sol,
                 sigma0=10.0,
                 step_size=0.002,
                 grad_opt="adam",
@@ -297,7 +297,7 @@ def create_scheduler(algorithm,
     elif algorithm == "cma_mae":
         emitters = [
             EvolutionStrategyEmitter(
-                archive=archive,
+                archive,
                 x0=initial_sol,
                 sigma0=0.5,
                 ranker="imp",
@@ -310,7 +310,7 @@ def create_scheduler(algorithm,
     elif algorithm in ["cma_maega"]:
         emitters = [
             GradientAborescenceEmitter(archive,
-                                       initial_sol,
+                                       x0=initial_sol,
                                        sigma0=10.0,
                                        step_size=1.0,
                                        ranker="imp",
@@ -325,7 +325,10 @@ def create_scheduler(algorithm,
         f"Created Scheduler for {algorithm} with learning rate {learning_rate} "
         f"and add mode {mode}, using solution dim {solution_dim} and archive "
         f"dims {archive_dims}.")
-    return Scheduler(archive, emitters, result_archive, add_mode=mode)
+    return Scheduler(archive,
+                     emitters,
+                     result_archive=result_archive,
+                     add_mode=mode)
 
 
 def save_heatmap(archive, heatmap_path):

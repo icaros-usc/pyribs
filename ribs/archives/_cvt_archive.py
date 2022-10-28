@@ -97,6 +97,7 @@ class CVTArchive(ArchiveBase):
     """
 
     def __init__(self,
+                 *,
                  solution_dim,
                  cells,
                  ranges,

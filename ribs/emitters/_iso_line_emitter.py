@@ -52,6 +52,7 @@ class IsoLineEmitter(EmitterBase):
 
     def __init__(self,
                  archive,
+                 *,
                  iso_sigma=0.01,
                  line_sigma=0.2,
                  x0=None,
@@ -82,8 +83,8 @@ class IsoLineEmitter(EmitterBase):
         EmitterBase.__init__(
             self,
             archive,
-            len(self._x0),
-            bounds,
+            solution_dim=len(self._x0),
+            bounds=bounds,
         )
 
     @property

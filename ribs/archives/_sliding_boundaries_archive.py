@@ -134,6 +134,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     """
 
     def __init__(self,
+                 *,
                  solution_dim,
                  dims,
                  ranges,
