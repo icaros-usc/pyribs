@@ -1,7 +1,7 @@
 """Provides the IsoLineEmitter."""
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_is_1d
+from ribs._utils import check_1d_shape, check_batch_shape
 from ribs.emitters._emitter_base import EmitterBase
 
 
@@ -65,32 +65,42 @@ class IsoLineEmitter(EmitterBase):
         self._iso_sigma = archive.dtype(iso_sigma)
         self._line_sigma = archive.dtype(line_sigma)
 
-        if x0 is None and initial_solutions is None:
-            raise ValueError("At least one of x0 or initial_solutions must "
-                             "be set.")
-
-        self._x0 = np.array(x0, dtype=archive.dtype)
-        check_is_1d(self._x0, "x0")
-
+        self._x0 = None
         self._initial_solutions = None
-        if initial_solutions is not None:
+
+        if x0 is None and initial_solutions is None:
+            raise ValueError("If initial_solutions is not specified, you must"
+                             "specify an initial solution x0.")
+
+        if x0 is not None:
+            self._x0 = np.array(x0, dtype=archive.dtype)
+            check_1d_shape(self._x0, "x0", archive.solution_dim,
+                           "archive.solution_dim")
+        elif initial_solutions is not None:
             self._initial_solutions = np.asarray(initial_solutions,
                                                  dtype=archive.dtype)
             check_batch_shape(self._initial_solutions, "initial_solutions",
-                              archive.solution_dim, "solution_dim")
+                              archive.solution_dim, "archive.solution_dim")
 
         EmitterBase.__init__(
             self,
             archive,
-            solution_dim=len(self._x0),
+            solution_dim=archive.solution_dim,
             bounds=bounds,
         )
 
     @property
     def x0(self):
         """numpy.ndarray: Center of the Gaussian distribution from which to
-        sample solutions when the archive is empty."""
+        sample solutions when the archive is empty (if initial_solutions is not
+        set)."""
         return self._x0
+
+    @property
+    def initial_solutions(self):
+        """numpy.ndarray: The initial solutions which are returned when the
+        archive is empty (if x0 is not set)."""
+        return self._initial_solutions
 
     @property
     def iso_sigma(self):
