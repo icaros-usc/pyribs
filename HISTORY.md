@@ -6,7 +6,6 @@
 
 #### API
 
-- Remove `DQDEmitterBase`, move `ask_dqd` and `tell_dqd` to `EmitterBase`(#264)
 - **Backwards-incompatible:** Deprecate positional arguments in constructors (#261)
 - **Backwards-incompatible:** Allow custom initialization in Gaussian and IsoLine emitters (#259)
 - Implement CMA-MAE archive thresholds (#256, #260)
@@ -20,7 +19,7 @@
   - **Backwards-incompatible:** rename `behavior_value`/`bcs` to `measures`
   - **Backwards-incompatible:** `behavior_dim` in archives is now `measure_dim`
   - Rename `n_solutions` to `batch_size` in `Scheduler`.
-- Add `GradientAborescenceEmitter`, which is used to implement CMA-MEGA (#240)
+- Add `GradientAborescenceEmitter`, which is used to implement CMA-MEGA (#240, #264)
 - Update emitter `tell()` docstrings to no longer say "Inserts entries into archive" (#247)
 - Expose `emitter.restarts` as a property (#248)
 - Specify that `x0` is 1D for all emitters (#244)
