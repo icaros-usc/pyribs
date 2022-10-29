@@ -204,17 +204,29 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
         """
-        lower_bounds = np.full(self._num_coefficients,
-                               -np.inf,
-                               dtype=self._archive.dtype)
-        upper_bounds = np.full(self._num_coefficients,
-                               np.inf,
-                               dtype=self._archive.dtype)
-        self._grad_coefficients = self.opt.ask(lower_bounds, upper_bounds)
-        noise = np.expand_dims(self._grad_coefficients, axis=2)
+        coefficient_lower_bounds = np.full(self._num_coefficients,
+                                           -np.inf,
+                                           dtype=self._archive.dtype)
+        coefficient_upper_bounds = np.full(self._num_coefficients,
+                                           np.inf,
+                                           dtype=self._archive.dtype)
 
-        return self._grad_opt.theta + np.sum(
-            np.multiply(self._jacobian_batch, noise), axis=1)
+        lower_bounds = np.expand_dims(self._lower_bounds, axis=0)
+        upper_bounds = np.expand_dims(self._upper_bounds, axis=0)
+
+        solution = None
+        # Sample gradient coefficient from CMA-ES until solution is within
+        # bounds.
+        while (solution is None or np.any(
+                np.logical_or(solution < lower_bounds,
+                              solution > upper_bounds))):
+            self._grad_coefficients = self.opt.ask(coefficient_lower_bounds,
+                                                   coefficient_upper_bounds)
+            noise = np.expand_dims(self._grad_coefficients, axis=2)
+            solution = self._grad_opt.theta + \
+                np.sum(np.multiply(self._jacobian_batch, noise), axis=1)
+
+        return solution
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
