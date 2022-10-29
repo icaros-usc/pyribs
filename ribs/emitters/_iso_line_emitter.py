@@ -8,13 +8,12 @@ from ribs.emitters._emitter_base import EmitterBase
 class IsoLineEmitter(EmitterBase):
     """Emits solutions that are nudged towards other archive solutions.
 
-    If the archive is empty and ``self._initial_solutions`` is set, calls to
+    If the archive is empty and ``self._initial_solutions`` is set, a call to
     :meth:`ask` will return ``self._initial_solutions``. If
     ``self._initial_solutions`` is not set, we draw solutions from an isotropic
     Gaussian distribution centered at ``self.x0`` with standard deviation
-    ``self.iso_sigma``. Otherwise, each solution is drawn from a distribution
-    centered at a randomly chosen elite with standard deviation
-    ``self.iso_sigma``.
+    ``self.iso_sigma``. Otherwise, to generate each new solution, the emitter
+    selects a pair of elites :math:`x_i` and :math:`x_j` and samples from
 
     .. math::
 

@@ -8,9 +8,9 @@ from ribs.emitters._emitter_base import EmitterBase
 class GaussianEmitter(EmitterBase):
     """Emits solutions by adding Gaussian noise to existing archive solutions.
 
-    If the archive is empty and ``self._initial_solutions`` is set, calls to
+    If the archive is empty and ``self._initial_solutions`` is set, a call to
     :meth:`ask` will return ``self._initial_solutions``. If
-    ``self._initial_solutions`` is not set, we draw from Gaussian distribution
+    ``self._initial_solutions`` is not set, we draw from a Gaussian distribution
     centered at ``self.x0`` with standard deviation ``self.sigma``. Otherwise,
     each solution is drawn from a distribution centered at a randomly chosen
     elite with standard deviation ``self.sigma``.
