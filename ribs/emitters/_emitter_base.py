@@ -98,9 +98,10 @@ class EmitterBase(ABC):
 
     def ask(self):
         """Generates a ``(batch_size, solution_dim)`` array of solutions.
-        Returns an empty array if not implemented.
+
+        Returns an empty array by default.
         """
-        return np.empty((0, self.solution_dim))
+        return np.empty((0, self.solution_dim), dtype=self.archive.dtype)
 
     def tell(self,
              solution_batch,
@@ -134,9 +135,12 @@ class EmitterBase(ABC):
 
     def ask_dqd(self):
         """Generates a ``(batch_size, solution_dim)`` array of solutions for
-        which gradient information must be computed, only used for DQD
-        emitters."""
-        return np.empty((0, self.solution_dim))
+        which gradient information must be computed.
+        
+        This method is only used for DQD emitters. The method returns an empty
+        array by default.
+        """
+        return np.empty((0, self.solution_dim), dtype=self.archive.dtype)
 
     def tell_dqd(self,
                  solution_batch,
