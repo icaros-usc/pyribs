@@ -148,6 +148,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     """
 
     def __init__(self,
+                 *,
                  solution_dim,
                  cells,
                  measure_dim,

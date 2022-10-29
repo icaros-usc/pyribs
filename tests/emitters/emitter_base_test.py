@@ -23,26 +23,29 @@ def emitter_fixture(request, archive_fixture):
     batch_size = 3
 
     if emitter_type == "GaussianEmitter":
-        emitter = GaussianEmitter(archive, 5, x0=x0, batch_size=batch_size)
+        emitter = GaussianEmitter(archive,
+                                  sigma=5,
+                                  x0=x0,
+                                  batch_size=batch_size)
     elif emitter_type == "IsoLineEmitter":
         emitter = IsoLineEmitter(archive, x0=x0, batch_size=batch_size)
     elif emitter_type == "ImprovementEmitter":
         emitter = EvolutionStrategyEmitter(archive,
-                                           x0,
-                                           5,
-                                           "2imp",
+                                           x0=x0,
+                                           sigma0=5,
+                                           ranker="2imp",
                                            batch_size=batch_size)
     elif emitter_type == "RandomDirectionEmitter":
         emitter = EvolutionStrategyEmitter(archive,
-                                           x0,
-                                           5,
-                                           "2rd",
+                                           x0=x0,
+                                           sigma0=5,
+                                           ranker="2rd",
                                            batch_size=batch_size)
     elif emitter_type == "OptimizingEmitter":
         emitter = EvolutionStrategyEmitter(archive,
-                                           x0,
-                                           5,
-                                           "2obj",
+                                           x0=x0,
+                                           sigma0=5,
+                                           ranker="2obj",
                                            batch_size=batch_size)
     else:
         raise NotImplementedError(f"Unknown emitter type {emitter_type}")
@@ -79,7 +82,7 @@ def test_array_bound_correct(archive_fixture):
     for i in range(len(x0) - 1):
         bounds.append((-i, i))
     bounds.append(None)
-    emitter = GaussianEmitter(archive, 1, x0=x0, bounds=bounds)
+    emitter = GaussianEmitter(archive, sigma=1, x0=x0, bounds=bounds)
 
     lower_bounds = np.concatenate((-np.arange(len(x0) - 1), [-np.inf]))
     upper_bounds = np.concatenate((np.arange(len(x0) - 1), [np.inf]))
@@ -92,7 +95,7 @@ def test_long_array_bound_fails(archive_fixture):
     archive, x0 = archive_fixture
     bounds = [(-1, 1)] * (len(x0) + 1)  # More bounds than solution dims.
     with pytest.raises(ValueError):
-        GaussianEmitter(archive, 1, x0=x0, bounds=bounds)
+        GaussianEmitter(archive, sigma=1, x0=x0, bounds=bounds)
 
 
 def test_array_bound_bad_entry_fails(archive_fixture):
@@ -100,7 +103,7 @@ def test_array_bound_bad_entry_fails(archive_fixture):
     bounds = [(-1, 1)] * len(x0)
     bounds[0] = (-1, 0, 1)  # Invalid entry.
     with pytest.raises(ValueError):
-        GaussianEmitter(archive, 1, x0=x0, bounds=bounds)
+        GaussianEmitter(archive, sigma=1, x0=x0, bounds=bounds)
 
 
 @pytest.mark.parametrize(
@@ -111,8 +114,11 @@ def test_emitters_fail_when_x0_not_1d(emitter_type, archive_fixture):
 
     with pytest.raises(ValueError):
         if emitter_type == "GaussianEmitter":
-            _ = GaussianEmitter(archive, 5, x0=x0)
+            _ = GaussianEmitter(archive, sigma=5, x0=x0)
         elif emitter_type == "IsoLineEmitter":
             _ = IsoLineEmitter(archive, x0=x0)
         elif emitter_type == "ImprovementEmitter":
-            _ = EvolutionStrategyEmitter(archive, x0, 5, "2imp")
+            _ = EvolutionStrategyEmitter(archive,
+                                         x0=x0,
+                                         sigma0=5,
+                                         ranker="2imp")

@@ -51,6 +51,7 @@ class Scheduler:
     def __init__(self,
                  archive,
                  emitters,
+                 *,
                  result_archive=None,
                  add_mode="batch"):
         if len(emitters) == 0:
@@ -319,8 +320,8 @@ class Scheduler:
                 contains the objective function evaluation of a solution.
             measures_batch ((batch_size, measures_dm) array): Each row of
                 this array contains a solution's coordinates in measure space.
-            metadata ((batch_size,) array): Each entry of this array contains
-                an object holding metadata for a solution.
+            metadata_batch ((batch_size,) array): Each entry of this array
+                contains an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.

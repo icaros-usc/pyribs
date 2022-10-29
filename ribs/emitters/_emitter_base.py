@@ -27,7 +27,7 @@ class EmitterBase(ABC):
             are set to -inf.
     """
 
-    def __init__(self, archive, solution_dim, bounds):
+    def __init__(self, archive, *, solution_dim, bounds):
         self._archive = archive
         self._solution_dim = solution_dim
         (self._lower_bounds,
