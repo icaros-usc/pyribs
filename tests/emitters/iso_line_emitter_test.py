@@ -23,42 +23,45 @@ def test_properties_are_correct(archive_fixture):
 
 
 def test_initial_solutions_is_correct(archive_fixture):
-    archive, x0 = archive_fixture
+    archive, _ = archive_fixture
     initial_solutions = [[0, 1, 2, 3], [-1, -2, -3, -4]]
-    emitter = IsoLineEmitter(archive,
-                             x0=x0,
-                             initial_solutions=initial_solutions)
+    emitter = IsoLineEmitter(archive, initial_solutions=initial_solutions)
 
     assert np.all(emitter.ask() == initial_solutions)
+    assert np.all(emitter.initial_solutions == initial_solutions)
 
 
 def test_initial_solutions_shape(archive_fixture):
-    archive, x0 = archive_fixture
+    archive, _ = archive_fixture
     initial_solutions = [[0, 0, 0], [1, 1, 1]]
 
     # archive.solution_dim = 4
     with pytest.raises(ValueError):
-        IsoLineEmitter(archive, x0=x0, initial_solutions=initial_solutions)
+        IsoLineEmitter(archive, initial_solutions=initial_solutions)
 
 
 def test_upper_bounds_enforced(archive_fixture):
     archive, _ = archive_fixture
-    emitter = IsoLineEmitter(archive,
-                             x0=[2, 2],
-                             iso_sigma=0,
-                             line_sigma=0,
-                             bounds=[(-1, 1)] * 2)
+    emitter = IsoLineEmitter(
+        archive,
+        x0=[2, 2, 2, 2],
+        iso_sigma=0,
+        line_sigma=0,
+        bounds=[(-1, 1)] * 4,
+    )
     sols = emitter.ask()
     assert np.all(sols <= 1)
 
 
 def test_lower_bounds_enforced(archive_fixture):
     archive, _ = archive_fixture
-    emitter = IsoLineEmitter(archive,
-                             x0=[-2, -2],
-                             iso_sigma=0,
-                             line_sigma=0,
-                             bounds=[(-1, 1)] * 2)
+    emitter = IsoLineEmitter(
+        archive,
+        x0=[-2, -2, -2, -2],
+        iso_sigma=0,
+        line_sigma=0,
+        bounds=[(-1, 1)] * 4,
+    )
     sols = emitter.ask()
     assert np.all(sols >= -1)
 
