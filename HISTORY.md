@@ -6,6 +6,7 @@
 
 #### API
 
+- Adhere to solution bounds in GradientAborescenceEmitter (#263)
 - **Backwards-incompatible:** Deprecate positional arguments in constructors (#261)
 - **Backwards-incompatible:** Allow custom initialization in Gaussian and IsoLine emitters (#259)
 - Implement CMA-MAE archive thresholds (#256, #260)
