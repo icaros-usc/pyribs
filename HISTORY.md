@@ -6,6 +6,7 @@
 
 #### API
 
+- Remove `DQDEmitterBase`, move `ask_dqd` and `tell_dqd` to `EmitterBase`(#264)
 - **Backwards-incompatible:** Deprecate positional arguments in constructors (#261)
 - **Backwards-incompatible:** Allow custom initialization in Gaussian and IsoLine emitters (#259)
 - Implement CMA-MAE archive thresholds (#256, #260)
