@@ -22,7 +22,7 @@ The supported algorithms are:
   TwoStageImprovmentRanker.
 - `cma_me_imp_mu`: GridArchive with EvolutionStrategyEmitter using
   TwoStageImprovmentRanker and mu selection rule.
-- `cma_me_rd`: GridArchive with EvolutionStrategyRanker using
+- `cma_me_rd`: GridArchive with EvolutionStrategyEmitter using
   RandomDirectionRanker.
 - `cma_me_rd_mu`: GridArchive with EvolutionStrategyEmitter using
   TwoStageRandomDirectionRanker and mu selection rule.
