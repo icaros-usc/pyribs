@@ -62,6 +62,12 @@ class GaussianEmitter(EmitterBase):
         self._x0 = None
         self._initial_solutions = None
 
+        if x0 is None and initial_solutions is None:
+            raise ValueError("Either x0 or initial_solutions must be provided.")
+        if x0 is not None and initial_solutions is not None:
+            raise ValueError(
+                "x0 and initial_solutions cannot both be provided.")
+
         if x0 is not None:
             self._x0 = np.array(x0, dtype=archive.dtype)
             check_1d_shape(self._x0, "x0", archive.solution_dim,
@@ -71,9 +77,6 @@ class GaussianEmitter(EmitterBase):
                                                  dtype=archive.dtype)
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "archive.solution_dim")
-        else:
-            raise ValueError("If initial_solutions is not specified, you must"
-                             "specify an initial solution x0.")
 
         EmitterBase.__init__(
             self,

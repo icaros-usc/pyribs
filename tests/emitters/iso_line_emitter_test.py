@@ -40,6 +40,19 @@ def test_initial_solutions_shape(archive_fixture):
         IsoLineEmitter(archive, initial_solutions=initial_solutions)
 
 
+def test_neither_x0_nor_initial_solutions_provided(archive_fixture):
+    archive, _ = archive_fixture
+    with pytest.raises(ValueError):
+        IsoLineEmitter(archive)
+
+
+def test_both_x0_and_initial_solutions_provided(archive_fixture):
+    archive, x0 = archive_fixture
+    initial_solutions = [[0, 1, 2, 3], [-1, -2, -3, -4]]
+    with pytest.raises(ValueError):
+        IsoLineEmitter(archive, x0=x0, initial_solutions=initial_solutions)
+
+
 def test_upper_bounds_enforced(archive_fixture):
     archive, _ = archive_fixture
     emitter = IsoLineEmitter(
