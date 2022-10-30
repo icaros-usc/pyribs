@@ -19,7 +19,7 @@
   - **Backwards-incompatible:** rename `behavior_value`/`bcs` to `measures`
   - **Backwards-incompatible:** `behavior_dim` in archives is now `measure_dim`
   - Rename `n_solutions` to `batch_size` in `Scheduler`.
-- Add `GradientAborescenceEmitter`, which is used to implement CMA-MEGA (#240)
+- Add `GradientAborescenceEmitter`, which is used to implement CMA-MEGA (#240, #264)
 - Update emitter `tell()` docstrings to no longer say "Inserts entries into archive" (#247)
 - Expose `emitter.restarts` as a property (#248)
 - Specify that `x0` is 1D for all emitters (#244)

@@ -1,6 +1,5 @@
 """Provides the Scheduler."""
 import numpy as np
-from ribs.emitters import DQDEmitterBase
 
 
 class Scheduler:
@@ -143,10 +142,9 @@ class Scheduler:
         self._solution_batch = []
 
         for i, emitter in enumerate(self._emitters):
-            if isinstance(emitter, DQDEmitterBase):
-                emitter_sols = emitter.ask_dqd()
-                self._solution_batch.append(emitter_sols)
-                self._num_emitted[i] = len(emitter_sols)
+            emitter_sols = emitter.ask_dqd()
+            self._solution_batch.append(emitter_sols)
+            self._num_emitted[i] = len(emitter_sols)
 
         # In case the emitters didn't return any solutions.
         self._solution_batch = np.concatenate(
@@ -297,14 +295,12 @@ class Scheduler:
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
         for emitter, n in zip(self._emitters, self._num_emitted):
-            if isinstance(emitter, DQDEmitterBase):
-                end = pos + n
-                emitter.tell_dqd(self._solution_batch[pos:end],
-                                 objective_batch[pos:end],
-                                 measures_batch[pos:end],
-                                 jacobian_batch[pos:end], status_batch[pos:end],
-                                 value_batch[pos:end], metadata_batch[pos:end])
-                pos = end
+            end = pos + n
+            emitter.tell_dqd(self._solution_batch[pos:end],
+                             objective_batch[pos:end], measures_batch[pos:end],
+                             jacobian_batch[pos:end], status_batch[pos:end],
+                             value_batch[pos:end], metadata_batch[pos:end])
+            pos = end
 
     def tell(self, objective_batch, measures_batch, metadata_batch=None):
         """Returns info for solutions from :meth:`ask`.
