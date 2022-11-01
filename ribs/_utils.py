@@ -1,4 +1,18 @@
 """Miscellaneous internal utilities."""
+import numpy as np
+
+
+def check_finite(x, name):
+    """Checks that x is finite (i.e. not infinity or NaN).
+
+    `x` must be either a scalar or NumPy array.
+    """
+    if not np.all(np.isfinite(x)):
+        if np.isscalar(x):
+            raise ValueError(f"{name} must be finite (infinity "
+                             "and NaN values are not supported).")
+        raise ValueError(f"All elements of {name} must be finite (infinity "
+                         "and NaN values are not supported).")
 
 
 def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):

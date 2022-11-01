@@ -6,15 +6,26 @@
 
 #### API
 
-- Add restart timer to `EvolutionStrategyEmitter` and `GradientAborescenceEmitter`(#255)
+- **Backwards-incompatible:** Deprecate positional arguments in constructors
+  (#261)
+- **Backwards-incompatible:** Allow custom initialization in Gaussian and
+  IsoLine emitters (#259, #265)
+- Implement CMA-MAE archive thresholds (#256, #260)
+  - Revive the old implementation of `add_single` removed in (#221)
+  - Add separate tests for `add_single` and `add` with single solution
+- Fix all examples and tutorials (#253)
+- Add restart timer to `EvolutionStrategyEmitter` and
+  `GradientAborescenceEmitter`(#255)
 - Rename fields and update documentation (#249, #250)
   - **Backwards-incompatible:** rename `Optimizer` to `Scheduler`
   - **Backwards-incompatible:** rename `objective_value` to `objective`
   - **Backwards-incompatible:** rename `behavior_value`/`bcs` to `measures`
   - **Backwards-incompatible:** `behavior_dim` in archives is now `measure_dim`
   - Rename `n_solutions` to `batch_size` in `Scheduler`.
-- Add `GradientAborescenceEmitter`, which is used to implement CMA-MEGA (#240)
-- Update emitter `tell()` docstrings to no longer say "Inserts entries into archive" (#247)
+- Add `GradientAborescenceEmitter`, which is used to implement CMA-MEGA (#240,
+  #264)
+- Update emitter `tell()` docstrings to no longer say "Inserts entries into
+  archive" (#247)
 - Expose `emitter.restarts` as a property (#248)
 - Specify that `x0` is 1D for all emitters (#244)
 - Add `best_elite` property for archives (#237)
@@ -25,12 +36,12 @@
     tree is always faster than brute force in benchmarks.
 - Allow adding solutions one at a time in optimizer (#233)
 - Minimize numba usage (#232)
-- **Backwards-incompatible:** Implement batch addition in archives (#221)
+- **Backwards-incompatible:** Implement batch addition in archives (#221, #242)
   - `add` now adds a batch of solutions to the archive
   - `add_single` adds a single solution
 - `emitter.tell` now takes in `status_batch` and `value_batch` (#227)
 - Make epsilon configurable in archives (#226)
-- **Backwards-incompatible:** Remove ribs.factory (#225,#228)
+- **Backwards-incompatible:** Remove ribs.factory (#225, #228)
 - **Backwards-incompatible:** Replaced `ImprovementEmitter`,
   `RandomDirectionEmitter`, and `OptimizingEmitter` with
   `EvolutionStrategyEmitter` (#220, #223)

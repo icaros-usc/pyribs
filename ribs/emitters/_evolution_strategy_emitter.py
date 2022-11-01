@@ -61,6 +61,7 @@ class EvolutionStrategyEmitter(EmitterBase):
 
     def __init__(self,
                  archive,
+                 *,
                  x0,
                  sigma0,
                  ranker,
@@ -73,15 +74,15 @@ class EvolutionStrategyEmitter(EmitterBase):
 
         self._x0 = np.array(x0, dtype=archive.dtype)
         if self._x0.ndim != 1:
-            raise ValueError(
-                f"x0 has shape {self._x0.shape}, should be 1-dimensional.")
+            raise ValueError(f"x0 has shape {self._x0.shape}, should be"
+                             f"1-dimensional.")
 
         self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
             archive,
-            len(self._x0),
-            bounds,
+            solution_dim=len(self._x0),
+            bounds=bounds,
         )
 
         if selection_rule not in ["mu", "filter"]:
@@ -91,7 +92,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         self._restart_rule = restart_rule
         self._restarts = 0
         self._itrs = 0
-        # Check if the restart_rule is valid.
+        # Check if the restart_rule is valid, discard check_restart result.
         _ = self._check_restart(0)
 
         opt_seed = None if seed is None else self._rng.integers(10_000)

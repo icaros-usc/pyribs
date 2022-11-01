@@ -16,16 +16,29 @@ def scheduler_fixture():
     """Returns a Scheduler with GridArchive and one GaussianEmitter."""
     solution_dim = 2
     num_solutions = 4
-    archive = GridArchive(solution_dim, [100, 100], [(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=solution_dim,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
     emitters = [
-        GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=num_solutions)
+        GaussianEmitter(archive,
+                        sigma=1,
+                        x0=[0.0, 0.0],
+                        batch_size=num_solutions)
     ]
     return Scheduler(archive, emitters), solution_dim, num_solutions
 
 
+@pytest.fixture(params=["single", "batch"])
+def add_mode(request):
+    """Single or batch add."""
+    return request.param
+
+
 def test_init_fails_with_no_emitters():
     # arbitrary sol_dim
-    archive = GridArchive(10, [100, 100], [(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=10,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
     emitters = []
     with pytest.raises(ValueError):
         Scheduler(archive, emitters)
@@ -38,20 +51,9 @@ def test_init_fails_on_non_unique_emitter_instances():
 
     # All emitters are the same instance. This is bad because the same emitter
     # gets called multiple times.
-    emitters = [GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1)] * 5
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=1)
+               ] * 5
 
-    with pytest.raises(ValueError):
-        Scheduler(archive, emitters)
-
-
-def test_init_fails_with_mismatched_emitters():
-    archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
-    emitters = [
-        # Emits 2D solutions.
-        GaussianEmitter(archive, [0.0, 0.0], 1),
-        # Mismatch -- emits 3D solutions rather than 2D solutions.
-        GaussianEmitter(archive, [0.0, 0.0, 0.0], 1),
-    ]
     with pytest.raises(ValueError):
         Scheduler(archive, emitters)
 
@@ -69,14 +71,16 @@ def test_ask_fails_when_called_twice(scheduler_fixture):
         scheduler.ask()
 
 
-@pytest.mark.parametrize("add_mode", ["batch", "single"],
-                         ids=["batch_add", "single_add"])
 @pytest.mark.parametrize("tell_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
 def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
     batch_size = 4
-    archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
-    emitters = [GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=batch_size)]
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
+    emitters = [
+        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)
+    ]
     scheduler = Scheduler(archive, emitters, add_mode=add_mode)
 
     measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
@@ -98,16 +102,16 @@ def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
     )
 
 
-@pytest.mark.parametrize("add_mode", ["batch", "single"],
-                         ids=["batch_add", "single_add"])
 @pytest.mark.parametrize("tell_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
 def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):
-    archive = GridArchive(2, [100, 100], [(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
     emitters = [
-        GaussianEmitter(archive, [0.0, 0.0], 1, batch_size=1),
-        GaussianEmitter(archive, [0.5, 0.5], 1, batch_size=2),
-        GaussianEmitter(archive, [-0.5, -0.5], 1, batch_size=3),
+        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=1),
+        GaussianEmitter(archive, sigma=1, x0=[0.5, 0.5], batch_size=2),
+        GaussianEmitter(archive, sigma=1, x0=[-0.5, -0.5], batch_size=3),
     ]
     scheduler = Scheduler(archive, emitters, add_mode=add_mode)
 

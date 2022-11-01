@@ -31,7 +31,7 @@ optimization library). In contrast to other QD libraries, this library is
 focuses solely on optimizing fixed-dimensional continuous domains. Focusing
 solely on this one commonly-occurring problem allows us to optimize the library
 for performance as well as ease of use. Refer to the list of
-[additional QD libraries](#additional-qd-libraries) if you need greater
+[additional QD libraries](#additional-qd-libraries) below if you need greater
 performance or have additional use cases.
 
 A user of pyribs selects three components that meet the needs of their
@@ -57,7 +57,7 @@ package in order to use the `\url` command.
   title = {pyribs: A bare-bones Python library for quality diversity
            optimization},
   author = {Bryon Tjanaka and Matthew C. Fontaine and David H. Lee and
-            Trung Tran Minh Vu and Yulun Zhang and Sam Sommerer and
+            Yulun Zhang and Trung Tran Minh Vu and Sam Sommerer and
             Nathan Dennler and Stefanos Nikolaidis},
   year = {2021},
   publisher = {GitHub},
@@ -218,6 +218,7 @@ pyribs users include:
 <!-- Alphabetical order -->
 
 - [Adam Gaier (Autodesk Research)](https://scholar.google.com/citations?user=GGyARB8AAAAJ)
+- [Adaptive & Intelligent Robotics Lab (Imperial College London)](https://www.imperial.ac.uk/adaptive-intelligent-robotics)
 - [Chair of Statistical Learning and Data Science (LMU Munich)](https://www.slds.stat.uni-muenchen.de/)
 - [Game Innovation Lab (New York University)](https://game.engineering.nyu.edu)
 - [Giovanni Iacca (University of Trento)](https://sites.google.com/site/giovanniiacca/)

@@ -31,7 +31,7 @@ extras_require = {
         "gym~=0.17.0",  # Strict since different gym may give different results.
         # "Box2D~=2.3.10",  # Used in envs such as Lunar Lander.
         "fire>=0.4.0",
-        "alive-progress>=1.0.0",
+        "tqdm>=4.0.0",
 
         # Dask
         "dask>=2.0.0",

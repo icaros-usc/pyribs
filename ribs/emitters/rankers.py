@@ -117,8 +117,23 @@ Resets the internal state of the ranker.
 
 
 class ImprovementRanker(RankerBase):
-    # TODO Implement this (in another PR)
-    pass
+    """Ranks the solutions based on the improvement in the objective.
+
+    This ranker ranks solutions in a single stage. The solutions are ranked by
+    the improvement "value" described in :meth:`ArchiveBase.add`.
+    """
+
+    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
+             measures_batch, status_batch, value_batch, metadata_batch):
+        # Note that lexsort sorts the values in ascending order,
+        # so we use np.flip to reverse the sorted array.
+        return np.flip(np.argsort(value_batch)), value_batch
+
+    rank.__doc__ = f"""
+Generates a list of indices that represents an ordering of solutions.
+
+{_rank_args}
+    """
 
 
 class TwoStageImprovementRanker(RankerBase):

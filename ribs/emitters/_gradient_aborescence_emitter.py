@@ -3,12 +3,12 @@ import itertools
 
 import numpy as np
 
-from ribs.emitters._dqd_emitter_base import DQDEmitterBase
+from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
 from ribs.emitters.rankers import _get_ranker
 
 
-class GradientAborescenceEmitter(DQDEmitterBase):
+class GradientAborescenceEmitter(EmitterBase):
     """Generates solutions with a gradient arborescence, with coefficients
     parameterized by CMA-ES.
 
@@ -81,6 +81,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
 
     def __init__(self,
                  archive,
+                 *,
                  x0,
                  sigma0,
                  step_size,
@@ -100,17 +101,17 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         self._normalize_grads = normalize_grad
         self._jacobian_batch = None
         self._grad_coefficients = None
-        DQDEmitterBase.__init__(
+        EmitterBase.__init__(
             self,
             archive,
-            len(self._x0),
-            bounds,
+            solution_dim=len(self._x0),
+            bounds=bounds,
         )
 
         self._ranker = _get_ranker(ranker)
         self._ranker.reset(self, archive, self._rng)
 
-        # Initialize gradient optimizer
+        # Initialize gradient optimizer.
         self._grad_opt = None
         if grad_opt == "adam":
             self._grad_opt = AdamOpt(self._x0, step_size)

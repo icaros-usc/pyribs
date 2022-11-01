@@ -9,5 +9,7 @@ from ribs.archives import GridArchive
 def archive_fixture():
     """Provides a simple archive and initial solution."""
     x0 = np.array([1, 2, 3, 4])
-    archive = GridArchive(len(x0), [10, 10], [(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=len(x0),
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
     return archive, x0

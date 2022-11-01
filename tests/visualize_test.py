@@ -387,7 +387,6 @@ def test_heatmap_archive__cvt(cvt_archive):
     cvt_archive_heatmap(cvt_archive)
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap"],
                   remove_text=False,
                   extensions=["png"])
@@ -412,7 +411,6 @@ def test_heatmap_with_custom_axis__cvt(cvt_archive):
     cvt_archive_heatmap(cvt_archive, ax=ax)
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap"],
                   remove_text=False,
                   extensions=["png"])
@@ -437,7 +435,6 @@ def test_heatmap_long__cvt(long_cvt_archive):
     cvt_archive_heatmap(long_cvt_archive)
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap_long"],
                   remove_text=False,
                   extensions=["png"])
@@ -462,7 +459,6 @@ def test_heatmap_long_square__cvt(long_cvt_archive):
     cvt_archive_heatmap(long_cvt_archive, aspect="equal")
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap_long_square"],
                   remove_text=False,
                   extensions=["png"])
@@ -487,7 +483,6 @@ def test_heatmap_long_transpose__cvt(long_cvt_archive):
     cvt_archive_heatmap(long_cvt_archive, transpose_measures=True)
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap_long_transpose"],
                   remove_text=False,
                   extensions=["png"])
@@ -515,7 +510,6 @@ def test_heatmap_with_limits__cvt(cvt_archive):
     cvt_archive_heatmap(cvt_archive, vmin=-1.0, vmax=-0.5)
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap_with_limits"],
                   remove_text=False,
                   extensions=["png"])
@@ -541,7 +535,6 @@ def test_heatmap_listed_cmap__cvt(cvt_archive):
     cvt_archive_heatmap(cvt_archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
 
-@pytest.mark.skip
 @image_comparison(
     baseline_images=["sliding_boundaries_heatmap_with_listed_cmap"],
     remove_text=False,
@@ -568,7 +561,6 @@ def test_heatmap_coolwarm_cmap__cvt(cvt_archive):
     cvt_archive_heatmap(cvt_archive, cmap="coolwarm")
 
 
-@pytest.mark.skip
 @image_comparison(
     baseline_images=["sliding_boundaries_heatmap_with_coolwarm_cmap"],
     remove_text=False,
@@ -595,7 +587,6 @@ def test_grid_archive_with_boundaries(grid_archive):
                          })
 
 
-@pytest.mark.skip
 @image_comparison(
     baseline_images=["sliding_boundaries_heatmap_with_boundaries"],
     remove_text=False,
