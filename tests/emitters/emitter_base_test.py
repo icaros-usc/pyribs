@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           IsoLineEmitter, GradientAborescenceEmitter)
+                           IsoLineEmitter)
 
 # pylint: disable = redefined-outer-name
 

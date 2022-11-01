@@ -197,6 +197,8 @@ class CMAEvolutionStrategy:
                 bounds (and pass np.inf instead of -np.inf).
         """
         self.cov.update_eigensystem(self.current_eval, self.lazy_gap_evals)
+        # TODO replace self.batch_size with batch_size param. Default to
+        # self.batch_size
         solutions = np.empty((self.batch_size, self.solution_dim),
                              dtype=self.dtype)
         transform_mat = self.cov.eigenbasis * np.sqrt(self.cov.eigenvalues)

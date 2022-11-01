@@ -215,19 +215,31 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         lower_bounds = np.expand_dims(self._lower_bounds, axis=0)
         upper_bounds = np.expand_dims(self._upper_bounds, axis=0)
 
-        solution = None
-        # Sample gradient coefficient from CMA-ES until solution is within
-        # bounds.
-        while (solution is None or np.any(
-                np.logical_or(solution < lower_bounds,
-                              solution > upper_bounds))):
+        solution_batch = np.empty((self.batch_size, self.solution_dim),
+                                  dtype=self.opt.dtype)
+
+        # Resampling method for bound constraints -> sample new solutions until
+        # all solutions are within bounds.
+        remaining_indices = np.arange(self.batch_size)
+        while len(remaining_indices) > 0:
             self._grad_coefficients = self.opt.ask(coefficient_lower_bounds,
                                                    coefficient_upper_bounds)
             noise = np.expand_dims(self._grad_coefficients, axis=2)
-            solution = self._grad_opt.theta + \
+            new_solution_batch = self._grad_opt.theta + \
                 np.sum(np.multiply(self._jacobian_batch, noise), axis=1)
 
-        return solution
+            solution_batch[remaining_indices] = new_solution_batch[
+                remaining_indices]
+            out_of_bounds = np.logical_or(solution_batch < lower_bounds,
+                                          solution_batch > upper_bounds)
+
+            # Find indices in remaining_indices that are still out of bounds
+            # (out_of_bounds indicates whether each value in each solution is
+            # out of bounds).
+            out_of_bounds_indices = np.where(np.any(out_of_bounds, axis=1))[0]
+            remaining_indices = remaining_indices[out_of_bounds_indices]
+
+        return solution_batch
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
