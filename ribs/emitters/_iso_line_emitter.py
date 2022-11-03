@@ -1,20 +1,19 @@
 """Provides the IsoLineEmitter."""
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_is_1d
+from ribs._utils import check_1d_shape, check_batch_shape
 from ribs.emitters._emitter_base import EmitterBase
 
 
 class IsoLineEmitter(EmitterBase):
     """Emits solutions that are nudged towards other archive solutions.
 
-    If the archive is empty and ``self._initial_solutions`` is set, calls to
+    If the archive is empty and ``self._initial_solutions`` is set, a call to
     :meth:`ask` will return ``self._initial_solutions``. If
     ``self._initial_solutions`` is not set, we draw solutions from an isotropic
     Gaussian distribution centered at ``self.x0`` with standard deviation
-    ``self.iso_sigma``. Otherwise, each solution is drawn from a distribution
-    centered at a randomly chosen elite with standard deviation
-    ``self.iso_sigma``.
+    ``self.iso_sigma``. Otherwise, to generate each new solution, the emitter
+    selects a pair of elites :math:`x_i` and :math:`x_j` and samples from
 
     .. math::
 
@@ -66,32 +65,44 @@ class IsoLineEmitter(EmitterBase):
         self._iso_sigma = archive.dtype(iso_sigma)
         self._line_sigma = archive.dtype(line_sigma)
 
-        if x0 is None and initial_solutions is None:
-            raise ValueError("At least one of x0 or initial_solutions must "
-                             "be set.")
-
-        self._x0 = np.array(x0, dtype=archive.dtype)
-        check_is_1d(self._x0, "x0")
-
+        self._x0 = None
         self._initial_solutions = None
-        if initial_solutions is not None:
+
+        if x0 is None and initial_solutions is None:
+            raise ValueError("Either x0 or initial_solutions must be provided.")
+        if x0 is not None and initial_solutions is not None:
+            raise ValueError(
+                "x0 and initial_solutions cannot both be provided.")
+
+        if x0 is not None:
+            self._x0 = np.array(x0, dtype=archive.dtype)
+            check_1d_shape(self._x0, "x0", archive.solution_dim,
+                           "archive.solution_dim")
+        elif initial_solutions is not None:
             self._initial_solutions = np.asarray(initial_solutions,
                                                  dtype=archive.dtype)
             check_batch_shape(self._initial_solutions, "initial_solutions",
-                              archive.solution_dim, "solution_dim")
+                              archive.solution_dim, "archive.solution_dim")
 
         EmitterBase.__init__(
             self,
             archive,
-            solution_dim=len(self._x0),
+            solution_dim=archive.solution_dim,
             bounds=bounds,
         )
 
     @property
     def x0(self):
         """numpy.ndarray: Center of the Gaussian distribution from which to
-        sample solutions when the archive is empty."""
+        sample solutions when the archive is empty (if initial_solutions is not
+        set)."""
         return self._x0
+
+    @property
+    def initial_solutions(self):
+        """numpy.ndarray: The initial solutions which are returned when the
+        archive is empty (if x0 is not set)."""
+        return self._initial_solutions
 
     @property
     def iso_sigma(self):
