@@ -48,18 +48,19 @@ def test_dtypes(dtype):
 
 def test_adhere_to_solution_bounds():
     bound = [(-1,1)]
-    archive = GridArchive(solution_dim=10,
-                          dims=[20, 20],
-                          ranges=[(-1.0, 1.0)] * 2)
+    archive = GridArchive(solution_dim=1,
+                          dims=[10],
+                          ranges=[(-1.0, 1.0)])
     emitter = GradientAborescenceEmitter(archive,
-                                         x0=np.zeros(2),
+                                         x0=np.array([0]),
                                          sigma0=1.0,
                                          step_size=1.0,
                                          normalize_grad=False,
-                                         bounds=bound * 2)
+                                         bounds=bound,
+                                         batch_size=3)
 
     # Set jacobian so tell_dqd doesn't crash.
-    jacobian = np.full((7, 3, 2), 1.5)
+    jacobian = np.full((3, 1, 1), 1)
     emitter.tell_dqd([0], [0], [0], jacobian, [0], [0])
 
     # This might take a while because it needs to resample.
