@@ -20,43 +20,61 @@ def test_properties_are_correct(archive_fixture):
 
 
 def test_initial_solutions_are_correct(archive_fixture):
-    archive, x0 = archive_fixture
-    sigma = 1
+    archive, _ = archive_fixture
     initial_solutions = [[0, 1, 2, 3], [-1, -2, -3, -4]]
     emitter = GaussianEmitter(archive,
-                              sigma=sigma,
-                              x0=x0,
+                              sigma=1.0,
                               initial_solutions=initial_solutions)
 
     assert np.all(emitter.ask() == initial_solutions)
+    assert np.all(emitter.initial_solutions == initial_solutions)
 
 
 def test_initial_solutions_shape(archive_fixture):
-    archive, x0 = archive_fixture
-    sigma = 1
+    archive, _ = archive_fixture
     initial_solutions = [[0, 0, 0], [1, 1, 1]]
 
     # archive.solution_dim = 4
     with pytest.raises(ValueError):
+        GaussianEmitter(archive, sigma=1.0, initial_solutions=initial_solutions)
+
+
+def test_neither_x0_nor_initial_solutions_provided(archive_fixture):
+    archive, _ = archive_fixture
+    with pytest.raises(ValueError):
+        GaussianEmitter(archive, sigma=1.0)
+
+
+def test_both_x0_and_initial_solutions_provided(archive_fixture):
+    archive, x0 = archive_fixture
+    initial_solutions = [[0, 1, 2, 3], [-1, -2, -3, -4]]
+    with pytest.raises(ValueError):
         GaussianEmitter(archive,
-                        sigma=sigma,
+                        sigma=1.0,
                         x0=x0,
                         initial_solutions=initial_solutions)
 
 
 def test_upper_bounds_enforced(archive_fixture):
     archive, _ = archive_fixture
-    emitter = GaussianEmitter(archive, sigma=0, x0=[2, 2], bounds=[(-1, 1)] * 2)
+    emitter = GaussianEmitter(
+        archive,
+        sigma=0,
+        x0=[2, 2, 2, 2],
+        bounds=[(-1, 1)] * 4,
+    )
     sols = emitter.ask()
     assert np.all(sols <= 1)
 
 
 def test_lower_bounds_enforced(archive_fixture):
     archive, _ = archive_fixture
-    emitter = GaussianEmitter(archive,
-                              sigma=0,
-                              x0=[-2, -2],
-                              bounds=[(-1, 1)] * 2)
+    emitter = GaussianEmitter(
+        archive,
+        sigma=0,
+        x0=[-2, -2, -2, -2],
+        bounds=[(-1, 1)] * 4,
+    )
     sols = emitter.ask()
     assert np.all(sols >= -1)
 

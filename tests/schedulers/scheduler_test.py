@@ -58,20 +58,6 @@ def test_init_fails_on_non_unique_emitter_instances():
         Scheduler(archive, emitters)
 
 
-def test_init_fails_with_mismatched_emitters():
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)])
-    emitters = [
-        # Emits 2D solutions.
-        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0]),
-        # Mismatch -- emits 3D solutions rather than 2D solutions.
-        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0, 0.0]),
-    ]
-    with pytest.raises(ValueError):
-        Scheduler(archive, emitters)
-
-
 def test_ask_returns_correct_solution_shape(scheduler_fixture):
     scheduler, solution_dim, num_solutions = scheduler_fixture
     solutions = scheduler.ask()
