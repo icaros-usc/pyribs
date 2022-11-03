@@ -226,11 +226,9 @@ class GradientAborescenceEmitter(EmitterBase):
                                                    coefficient_upper_bounds,
                                                    len(remaining_indices))
             noise = np.expand_dims(self._grad_coefficients, axis=2)
-            print("grad", self._grad_coefficients.shape)
-            print("noise", noise.shape)
-            print("jacobian", self._jacobian_batch[remaining_indices])
             new_solution_batch = self._grad_opt.theta + \
-                np.sum(np.multiply(self._jacobian_batch[remaining_indices], noise), axis=1)
+                np.sum(np.multiply(
+                    self._jacobian_batch[remaining_indices], noise), axis=1)
 
             solution_batch[remaining_indices] = new_solution_batch
             out_of_bounds = np.logical_or(solution_batch < lower_bounds,
