@@ -220,7 +220,7 @@ class GradientAborescenceEmitter(EmitterBase):
 
         # Resampling method for bound constraints -> sample new solutions until
         # all solutions are within bounds.
-        remaining_indices = np.arange(self.batch_size)
+        remaining_indices = np.arange(self._batch_size)
         while len(remaining_indices) > 0:
             self._grad_coefficients = self.opt.ask(coefficient_lower_bounds,
                                                    coefficient_upper_bounds,
@@ -229,7 +229,6 @@ class GradientAborescenceEmitter(EmitterBase):
             new_solution_batch = self._grad_opt.theta + \
                 np.sum(np.multiply(
                     self._jacobian_batch[remaining_indices], noise), axis=1)
-
             solution_batch[remaining_indices] = new_solution_batch
             out_of_bounds = np.logical_or(solution_batch < lower_bounds,
                                           solution_batch > upper_bounds)
@@ -237,8 +236,7 @@ class GradientAborescenceEmitter(EmitterBase):
             # Find indices in remaining_indices that are still out of bounds
             # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
-            out_of_bounds_indices = np.where(np.any(out_of_bounds, axis=1))[0]
-            remaining_indices = remaining_indices[out_of_bounds_indices]
+            remaining_indices = np.where(out_of_bounds.flatten())[0]
 
         return solution_batch
 
@@ -281,8 +279,8 @@ class GradientAborescenceEmitter(EmitterBase):
             measures_batch (numpy.ndarray): (batch_size, measure space
                 dimension) array with the measure space coordinates of each
                 solution.
-            jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
-                solution_dim)`` array consisting of Jacobian matrices of the
+            jacobian_batch (numpy.ndarray): (batch_size, 1 + measure_dim,
+                solution_dim) array consisting of Jacobian matrices of the
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
