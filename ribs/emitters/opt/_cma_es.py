@@ -195,14 +195,13 @@ class CMAEvolutionStrategy:
                 indicated unbounded space.
             upper_bounds (float or np.ndarray): Same as above, but for upper
                 bounds (and pass np.inf instead of -np.inf).
-            batch_szie (int): batch size of the sample. Defaults to
+            batch_size (int): batch size of the sample. Defaults to
                 ``self.batch_size``.
         """
         self.cov.update_eigensystem(self.current_eval, self.lazy_gap_evals)
         if batch_size is None:
             batch_size = self.batch_size
-        solutions = np.empty((batch_size, self.solution_dim),
-                             dtype=self.dtype)
+        solutions = np.empty((batch_size, self.solution_dim), dtype=self.dtype)
         transform_mat = self.cov.eigenbasis * np.sqrt(self.cov.eigenvalues)
 
         # Resampling method for bound constraints -> sample new solutions until
