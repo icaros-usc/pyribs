@@ -226,9 +226,8 @@ class GradientAborescenceEmitter(EmitterBase):
                                                    coefficient_upper_bounds,
                                                    len(remaining_indices))
             noise = np.expand_dims(self._grad_coefficients, axis=2)
-            new_solution_batch = self._grad_opt.theta + \
-                np.sum(np.multiply(
-                    self._jacobian_batch[remaining_indices], noise), axis=1)
+            new_solution_batch = (self._grad_opt.theta +
+                                  np.sum(self._jacobian_batch * noise, axis=1))
             solution_batch[remaining_indices] = new_solution_batch
             out_of_bounds = np.logical_or(solution_batch < lower_bounds,
                                           solution_batch > upper_bounds)
@@ -236,7 +235,7 @@ class GradientAborescenceEmitter(EmitterBase):
             # Find indices in remaining_indices that are still out of bounds
             # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
-            remaining_indices = np.where(out_of_bounds.flatten())[0]
+            remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
 
         return solution_batch
 
