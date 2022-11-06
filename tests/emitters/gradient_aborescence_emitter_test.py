@@ -47,11 +47,9 @@ def test_dtypes(dtype):
 
 
 def test_adhere_to_solution_bounds():
-    bound = [(-1,1)]
+    bound = [(-1, 1)]
     batch_size = 3
-    archive = GridArchive(solution_dim=1,
-                          dims=[10],
-                          ranges=[(-1.0, 1.0)])
+    archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
     emitter = GradientAborescenceEmitter(archive,
                                          x0=np.array([0]),
                                          sigma0=1.0,
@@ -61,8 +59,15 @@ def test_adhere_to_solution_bounds():
                                          batch_size=batch_size)
 
     # Set jacobian so tell_dqd doesn't crash.
-    jacobian = np.full((batch_size, 2, 1), 2)
-    emitter.tell_dqd([0], [0], [0], jacobian, [0], [0])
+    jacobian = np.full(
+        (
+            1,  # Only one solution.
+            2,  # Two gradients -- one objective, one measures.
+            1,  # One solution dimension for each gradient.
+        ),
+        2,  # Each value is 2.0.
+    )
+    emitter.tell_dqd([[0]], [0], [[0]], jacobian, [0], [0])
 
     # This might take a while because it needs to resample.
     sol = emitter.ask()

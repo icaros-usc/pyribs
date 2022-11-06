@@ -232,8 +232,8 @@ class GradientAborescenceEmitter(EmitterBase):
             new_solution_batch = (self._grad_opt.theta +
                                   np.sum(self._jacobian_batch * noise, axis=1))
             solution_batch[remaining_indices] = new_solution_batch
-            out_of_bounds = np.logical_or(solution_batch < lower_bounds,
-                                          solution_batch > upper_bounds)
+            out_of_bounds = np.logical_or(new_solution_batch < lower_bounds,
+                                          new_solution_batch > upper_bounds)
 
             # Find indices in remaining_indices that are still out of bounds
             # (out_of_bounds indicates whether each value in each solution is
