@@ -3,6 +3,7 @@ import itertools
 
 import numpy as np
 
+from ribs._utils import check_1d_shape
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
 from ribs.emitters.rankers import _get_ranker
@@ -97,6 +98,8 @@ class GradientAborescenceEmitter(EmitterBase):
         self._epsilon = epsilon
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
+        check_1d_shape(self._x0, "x0", archive.solution_dim,
+                       "archive.solution_dim")
         self._sigma0 = sigma0
         self._normalize_grads = normalize_grad
         self._jacobian_batch = None
@@ -104,7 +107,7 @@ class GradientAborescenceEmitter(EmitterBase):
         EmitterBase.__init__(
             self,
             archive,
-            solution_dim=len(self._x0),
+            solution_dim=archive.solution_dim,
             bounds=bounds,
         )
 

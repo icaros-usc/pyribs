@@ -3,6 +3,7 @@ import itertools
 
 import numpy as np
 
+from ribs._utils import check_1d_shape
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import CMAEvolutionStrategy
 from ribs.emitters.rankers import _get_ranker
@@ -71,17 +72,14 @@ class EvolutionStrategyEmitter(EmitterBase):
                  batch_size=None,
                  seed=None):
         self._rng = np.random.default_rng(seed)
-
         self._x0 = np.array(x0, dtype=archive.dtype)
-        if self._x0.ndim != 1:
-            raise ValueError(f"x0 has shape {self._x0.shape}, should be"
-                             f"1-dimensional.")
-
+        check_1d_shape(self._x0, "x0", archive.solution_dim,
+                       "archive.solution_dim")
         self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
             archive,
-            solution_dim=len(self._x0),
+            solution_dim=archive.solution_dim,
             bounds=bounds,
         )
 
