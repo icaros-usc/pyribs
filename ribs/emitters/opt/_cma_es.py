@@ -184,7 +184,7 @@ class CMAEvolutionStrategy:
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def ask(self, lower_bounds, upper_bounds):
+    def ask(self, lower_bounds, upper_bounds, batch_size=None):
         """Samples new solutions from the Gaussian distribution.
 
         Args:
@@ -195,15 +195,18 @@ class CMAEvolutionStrategy:
                 indicated unbounded space.
             upper_bounds (float or np.ndarray): Same as above, but for upper
                 bounds (and pass np.inf instead of -np.inf).
+            batch_size (int): batch size of the sample. Defaults to
+                ``self.batch_size``.
         """
         self.cov.update_eigensystem(self.current_eval, self.lazy_gap_evals)
-        solutions = np.empty((self.batch_size, self.solution_dim),
-                             dtype=self.dtype)
+        if batch_size is None:
+            batch_size = self.batch_size
+        solutions = np.empty((batch_size, self.solution_dim), dtype=self.dtype)
         transform_mat = self.cov.eigenbasis * np.sqrt(self.cov.eigenvalues)
 
         # Resampling method for bound constraints -> sample new solutions until
         # all solutions are within bounds.
-        remaining_indices = np.arange(self.batch_size)
+        remaining_indices = np.arange(batch_size)
         while len(remaining_indices) > 0:
             unscaled_params = self._rng.normal(
                 0.0,
@@ -218,8 +221,7 @@ class CMAEvolutionStrategy:
             # Find indices in remaining_indices that are still out of bounds
             # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
-            out_of_bounds_indices = np.where(np.any(out_of_bounds, axis=1))[0]
-            remaining_indices = remaining_indices[out_of_bounds_indices]
+            remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
 
         return np.asarray(solutions)
 
