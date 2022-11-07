@@ -3,6 +3,7 @@ import itertools
 
 import numpy as np
 
+from ribs._utils import check_1d_shape
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
 from ribs.emitters.rankers import _get_ranker
@@ -97,6 +98,8 @@ class GradientAborescenceEmitter(EmitterBase):
         self._epsilon = epsilon
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
+        check_1d_shape(self._x0, "x0", archive.solution_dim,
+                       "archive.solution_dim")
         self._sigma0 = sigma0
         self._normalize_grads = normalize_grad
         self._jacobian_batch = None
@@ -104,7 +107,7 @@ class GradientAborescenceEmitter(EmitterBase):
         EmitterBase.__init__(
             self,
             archive,
-            solution_dim=len(self._x0),
+            solution_dim=archive.solution_dim,
             bounds=bounds,
         )
 
@@ -205,17 +208,39 @@ class GradientAborescenceEmitter(EmitterBase):
             (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
         """
-        lower_bounds = np.full(self._num_coefficients,
-                               -np.inf,
-                               dtype=self._archive.dtype)
-        upper_bounds = np.full(self._num_coefficients,
-                               np.inf,
-                               dtype=self._archive.dtype)
-        self._grad_coefficients = self.opt.ask(lower_bounds, upper_bounds)
-        noise = np.expand_dims(self._grad_coefficients, axis=2)
+        coefficient_lower_bounds = np.full(self._num_coefficients,
+                                           -np.inf,
+                                           dtype=self._archive.dtype)
+        coefficient_upper_bounds = np.full(self._num_coefficients,
+                                           np.inf,
+                                           dtype=self._archive.dtype)
 
-        return self._grad_opt.theta + np.sum(
-            np.multiply(self._jacobian_batch, noise), axis=1)
+        lower_bounds = np.expand_dims(self._lower_bounds, axis=0)
+        upper_bounds = np.expand_dims(self._upper_bounds, axis=0)
+
+        solution_batch = np.empty((self.batch_size, self.solution_dim),
+                                  dtype=self.opt.dtype)
+
+        # Resampling method for bound constraints -> sample new solutions until
+        # all solutions are within bounds.
+        remaining_indices = np.arange(self._batch_size)
+        while len(remaining_indices) > 0:
+            self._grad_coefficients = self.opt.ask(coefficient_lower_bounds,
+                                                   coefficient_upper_bounds,
+                                                   len(remaining_indices))
+            noise = np.expand_dims(self._grad_coefficients, axis=2)
+            new_solution_batch = (self._grad_opt.theta +
+                                  np.sum(self._jacobian_batch * noise, axis=1))
+            solution_batch[remaining_indices] = new_solution_batch
+            out_of_bounds = np.logical_or(new_solution_batch < lower_bounds,
+                                          new_solution_batch > upper_bounds)
+
+            # Find indices in remaining_indices that are still out of bounds
+            # (out_of_bounds indicates whether each value in each solution is
+            # out of bounds).
+            remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
+
+        return solution_batch
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
@@ -256,8 +281,8 @@ class GradientAborescenceEmitter(EmitterBase):
             measures_batch (numpy.ndarray): (batch_size, measure space
                 dimension) array with the measure space coordinates of each
                 solution.
-            jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
-                solution_dim)`` array consisting of Jacobian matrices of the
+            jacobian_batch (numpy.ndarray): (batch_size, 1 + measure_dim,
+                solution_dim) array consisting of Jacobian matrices of the
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
