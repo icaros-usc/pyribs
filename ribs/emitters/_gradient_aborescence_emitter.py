@@ -77,7 +77,10 @@ class GradientAborescenceEmitter(EmitterBase):
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
-        ValueError: If ``restart_rule`` is invalid.
+        ValueError: There is an error in x0 or initial_solutions.
+        ValueError: There is an error in the bounds configuration.
+        ValueError: If ``restart_rule``, ``selection_rule``, or ``ranker`` is
+            invalid.
     """
 
     def __init__(self,
