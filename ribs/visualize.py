@@ -47,7 +47,7 @@ def _retrieve_cmap(cmap):
     return cmap
 
 
-def _validate_heatmap_visual_args(aspect, cbar, square, measure_dim, valid_dims,
+def _validate_heatmap_visual_args(aspect, cbar, measure_dim, valid_dims,
                                   error_msg_measure_dim):
     """Helper function to validate arguments passed to `*_archive_heatmap`
     plotting functions.
@@ -65,11 +65,6 @@ def _validate_heatmap_visual_args(aspect, cbar, square, measure_dim, valid_dims,
                                    aspect in ["equal", "auto"]):
         raise ValueError(
             f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float")
-    if square is not None:
-        raise ValueError(
-            "The argument 'square' is deprecated and will not be "
-            "supported in future versions. Use 'aspect' to set the "
-            "heatmap's aspect ratio instead")
     if measure_dim not in valid_dims:
         raise ValueError(error_msg_measure_dim)
     if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
@@ -91,7 +86,6 @@ def grid_archive_heatmap(archive,
                          *,
                          transpose_measures=False,
                          cmap="magma",
-                         square=None,
                          aspect=None,
                          vmin=None,
                          vmax=None,
@@ -148,7 +142,6 @@ def grid_archive_heatmap(archive,
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
-        square (bool): [DEPRECATED]
         aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
             height/width). Defaults to ``'auto'`` for 2D and ``0.5`` for 1D.
             ``'equal'`` is the same as ``aspect=1``.
@@ -170,7 +163,7 @@ def grid_archive_heatmap(archive,
         ValueError: The archive's dimension must be 1D or 2D.
     """
     _validate_heatmap_visual_args(
-        aspect, cbar, square, archive.measure_dim, [1, 2],
+        aspect, cbar, archive.measure_dim, [1, 2],
         "Heatmaps can only be plotted for 1D or 2D GridArchive")
 
     if aspect is None:
@@ -270,7 +263,6 @@ def cvt_archive_heatmap(archive,
                         plot_samples=False,
                         transpose_measures=False,
                         cmap="magma",
-                        square=None,
                         aspect="auto",
                         ms=1,
                         lw=0.5,
@@ -332,7 +324,6 @@ def cvt_archive_heatmap(archive,
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
-        square (bool): [DEPRECATED]
         aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
             height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
             ``aspect=1``.
@@ -354,7 +345,7 @@ def cvt_archive_heatmap(archive,
         ValueError: The archive is not 2D.
     """
     _validate_heatmap_visual_args(
-        aspect, cbar, square, archive.measure_dim, [2],
+        aspect, cbar, archive.measure_dim, [2],
         "Heatmaps can only be plotted for 2D CVTArchive")
 
     if aspect is None:
@@ -444,7 +435,6 @@ def sliding_boundaries_archive_heatmap(archive,
                                        *,
                                        transpose_measures=False,
                                        cmap="magma",
-                                       square=None,
                                        aspect="auto",
                                        ms=None,
                                        boundary_lw=0,
@@ -504,7 +494,6 @@ def sliding_boundaries_archive_heatmap(archive,
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
-        square (bool): [DEPRECATED]
         aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
             height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
             ``aspect=1``.
@@ -526,7 +515,7 @@ def sliding_boundaries_archive_heatmap(archive,
         ValueError: The archive is not 2D.
     """
     _validate_heatmap_visual_args(
-        aspect, cbar, square, archive.measure_dim, [2],
+        aspect, cbar, archive.measure_dim, [2],
         "Heatmaps can only be plotted for 2D SlidingBoundariesArchive")
 
     if aspect is None:
