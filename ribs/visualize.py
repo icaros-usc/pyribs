@@ -73,9 +73,8 @@ def _validate_heatmap_visual_args(aspect, cbar, square, measure_dim, valid_dims,
     if measure_dim not in valid_dims:
         raise ValueError(error_msg_measure_dim)
     if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
-        raise ValueError(
-            f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
-        )
+        raise ValueError(f"Invalid arg cbar={cbar}; must be 'auto', None, "
+                         "or matplotlib.axes.Axes")
 
 
 def _set_cbar(t, ax, cbar, cbar_kwargs):
@@ -173,6 +172,7 @@ def grid_archive_heatmap(archive,
     _validate_heatmap_visual_args(
         aspect, cbar, square, archive.measure_dim, [1, 2],
         "Heatmaps can only be plotted for 1D or 2D GridArchive")
+
     if aspect is None:
         # Handles default aspects for different dims.
         if archive.measure_dim == 1:
@@ -183,33 +183,34 @@ def grid_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
 
+    # Useful to have these data available.
+    df = archive.as_pandas()
+    objective_batch = df.objective_batch()
+
     if archive.measure_dim == 1:
-        # Retrieve data from archive. There should be only 2 bounds; upper and lower since its 1D
+        # Retrieve data from archive. There should be only 2 bounds; upper and
+        # lower, since it is 1D.
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
         x_dim = archive.dims[0]
         x_bounds = archive.boundaries[0]
-        y_bounds = np.array([0, 1])  # by default x-y aspect ratio
+        y_bounds = np.array([0, 1])  # To facilitate default x-y aspect ratio.
 
         # Color for each cell in the heatmap.
         colors = np.full((1, x_dim), np.nan)
-        for elite in archive:
-            # TODO: Do not require calling numpy?
-            idx = np.unravel_index(elite.index, archive.dims)
-            colors[0, idx] = elite.objective
+        grid_index_batch = archive.int_to_grid_index(df.index_batch())
+        colors[0, grid_index_batch[:, 0]] = objective_batch
 
         # Initialize the axis.
         ax = plt.gca() if ax is None else ax
         ax.set_xlim(lower_bounds[0], upper_bounds[0])
 
-        # default to 0.5 to make it look good
         ax.set_aspect(aspect)
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        objectives = archive.as_pandas().objective_batch()
-        vmin = np.min(objectives) if vmin is None else vmin
-        vmax = np.max(objectives) if vmax is None else vmax
+        vmin = np.min(objective_batch) if vmin is None else vmin
+        vmax = np.max(objective_batch) if vmax is None else vmax
         t = ax.pcolormesh(x_bounds,
                           y_bounds,
                           colors,
@@ -227,14 +228,13 @@ def grid_archive_heatmap(archive,
 
         # Color for each cell in the heatmap.
         colors = np.full((y_dim, x_dim), np.nan)
-        for elite in archive:
-            # TODO: Do not require calling numpy?
-            idx = np.unravel_index(elite.index, archive.dims)
-            colors[idx[1], idx[0]] = elite.objective
+        grid_index_batch = archive.int_to_grid_index(df.index_batch())
+        colors[grid_index_batch[:, 1], grid_index_batch[:, 0]] = objective_batch
 
         if transpose_measures:
-            # Since the archive is 2D, transpose by swapping the x and y boundaries
-            # and by flipping the bounds (the bounds are arrays of length 2).
+            # Since the archive is 2D, transpose by swapping the x and y
+            # boundaries and by flipping the bounds (the bounds are arrays of
+            # length 2).
             x_bounds, y_bounds = y_bounds, x_bounds
             lower_bounds = np.flip(lower_bounds)
             upper_bounds = np.flip(upper_bounds)
@@ -249,9 +249,8 @@ def grid_archive_heatmap(archive,
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        objectives = archive.as_pandas().objective_batch()
-        vmin = np.min(objectives) if vmin is None else vmin
-        vmax = np.max(objectives) if vmax is None else vmax
+        vmin = np.min(objective_batch) if vmin is None else vmin
+        vmax = np.max(objective_batch) if vmax is None else vmax
         t = ax.pcolormesh(x_bounds,
                           y_bounds,
                           colors,
@@ -357,6 +356,7 @@ def cvt_archive_heatmap(archive,
     _validate_heatmap_visual_args(
         aspect, cbar, square, archive.measure_dim, [2],
         "Heatmaps can only be plotted for 1D or 2D CVTArchive")
+
     if aspect is None:
         aspect = "auto"
 
