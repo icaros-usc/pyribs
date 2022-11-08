@@ -355,7 +355,7 @@ def cvt_archive_heatmap(archive,
     """
     _validate_heatmap_visual_args(
         aspect, cbar, square, archive.measure_dim, [2],
-        "Heatmaps can only be plotted for 1D or 2D CVTArchive")
+        "Heatmaps can only be plotted for 2D CVTArchive")
 
     if aspect is None:
         aspect = "auto"
@@ -444,11 +444,14 @@ def sliding_boundaries_archive_heatmap(archive,
                                        *,
                                        transpose_measures=False,
                                        cmap="magma",
-                                       square=False,
+                                       square=None,
+                                       aspect="auto",
                                        ms=None,
                                        boundary_lw=0,
                                        vmin=None,
-                                       vmax=None):
+                                       vmax=None,
+                                       cbar="auto",
+                                       cbar_kwargs=None):
     """Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with
     2D measure space.
 
@@ -470,26 +473,22 @@ def sliding_boundaries_archive_heatmap(archive,
             ...                                    ranges=[(-1, 1), (-1, 1)],
             ...                                    seed=42)
             >>> # Populate the archive with the negative sphere function.
-            >>> rng = np.random.default_rng(10)
-            >>> for _ in range(1000):
-            ...     x, y = rng.uniform((-1, -1), (1, 1))
-            ...     archive.add(
-            ...         solution=np.array([x,y]),
-            ...         objective=-(x**2 + y**2),
-            ...         measures=np.array([x, y]),
-            ...     )
+            >>> rng = np.random.default_rng(seed=10)
+            >>> coords = np.clip(rng.standard_normal((1000, 2)), -1.5, 1.5)
+            >>> archive.add(solution_batch=coords,
+            ...             objective_batch=-np.sum(coords**2, axis=1),
+            ...             measures_batch=coords)
             >>> # Plot heatmaps of the archive.
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
             >>> fig.suptitle("Negative sphere function")
             >>> sliding_boundaries_archive_heatmap(archive, ax=ax1,
-            ...                                  boundary_lw=0.5)
+            ...                                    boundary_lw=0.5)
             >>> sliding_boundaries_archive_heatmap(archive, ax=ax2)
             >>> ax1.set_title("With boundaries")
             >>> ax2.set_title("Without boundaries")
             >>> ax1.set(xlabel='x coords', ylabel='y coords')
             >>> ax2.set(xlabel='x coords', ylabel='y coords')
             >>> plt.show()
-
 
     Args:
         archive (SlidingBoundariesArchive): A 2D
@@ -505,7 +504,10 @@ def sliding_boundaries_archive_heatmap(archive,
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
-        square (bool): If ``True``, set the axes aspect ratio to be ``'equal'``.
+        square (bool): [DEPRECATED]
+        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
+            height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
+            ``aspect=1``.
         ms (float): Marker size for the solutions.
         boundary_lw (float): Line width when plotting the boundaries.
             Set to ``0`` to have no boundaries.
@@ -513,18 +515,28 @@ def sliding_boundaries_archive_heatmap(archive,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
             the maximum objective value in the archive is used.
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to
+            ``'auto'`` which displays the colorbar on the archive's current
+            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not
+            displayed. If this is an :class:`~matplotlib.axes.Axes`, displays
+            the colorbar on the specified Axes.
+        cbar_kwargs (dict): Additional kwargs to pass to
+            :func:`~matplotlib.figure.Figure.colorbar`.
     Raises:
         ValueError: The archive is not 2D.
     """
-    if archive.measure_dim != 2:
-        raise ValueError("Cannot plot heatmap for non-2D archive.")
+    _validate_heatmap_visual_args(
+        aspect, cbar, square, archive.measure_dim, [2],
+        "Heatmaps can only be plotted for 2D SlidingBoundariesArchive")
 
-    df = archive.as_pandas()
+    if aspect is None:
+        aspect = "auto"
 
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
 
     # Retrieve data from archive.
+    df = archive.as_pandas()
     measures_batch = df.measures_batch()
     x = measures_batch[:, 0]
     y = measures_batch[:, 1]
@@ -546,15 +558,19 @@ def sliding_boundaries_archive_heatmap(archive,
     ax = plt.gca() if ax is None else ax
     ax.set_xlim(lower_bounds[0], upper_bounds[0])
     ax.set_ylim(lower_bounds[1], upper_bounds[1])
-
-    if square:
-        ax.set_aspect("equal")
+    ax.set_aspect(aspect)
 
     # Create the plot.
-    objectives = df.objective_batch()
-    vmin = np.min(objectives) if vmin is None else vmin
-    vmax = np.max(objectives) if vmax is None else vmax
-    t = ax.scatter(x, y, s=ms, c=objectives, cmap=cmap, vmin=vmin, vmax=vmax)
+    objective_batch = df.objective_batch()
+    vmin = np.min(objective_batch) if vmin is None else vmin
+    vmax = np.max(objective_batch) if vmax is None else vmax
+    t = ax.scatter(x,
+                   y,
+                   s=ms,
+                   c=objective_batch,
+                   cmap=cmap,
+                   vmin=vmin,
+                   vmax=vmax)
     if boundary_lw > 0.0:
         ax.vlines(x_boundary,
                   lower_bounds[0],
@@ -567,8 +583,8 @@ def sliding_boundaries_archive_heatmap(archive,
                   color='k',
                   linewidth=boundary_lw)
 
-    # Create the colorbar.
-    ax.figure.colorbar(t, ax=ax, pad=0.1)
+    # Create color bar.
+    _set_cbar(t, ax, cbar, cbar_kwargs)
 
 
 def parallel_axes_plot(archive,
