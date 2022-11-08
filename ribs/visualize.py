@@ -98,12 +98,12 @@ def grid_archive_heatmap(archive,
                          cbar="auto",
                          pcm_kwargs=None,
                          cbar_kwargs=None):
-    """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D measure
-    space.
+    """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 1D or 2D
+    measure space.
 
-    Essentially, we create a grid of cells and shade each cell with a color
-    corresponding to the objective value of that cell's elite. This method uses
-    :func:`~matplotlib.pyplot.pcolormesh` to generate the grid. For further
+    This function creates a grid of cells and shades each cell with a color
+    corresponding to the objective value of that cell's elite. This function
+    uses :func:`~matplotlib.pyplot.pcolormesh` to generate the grid. For further
     customization, pass extra kwargs to :func:`~matplotlib.pyplot.pcolormesh`
     through the ``pcm_kwargs`` parameter. For instance, to create black
     boundaries of width 0.1, pass in ``pcm_kwargs={"edgecolor": "black",
@@ -121,11 +121,12 @@ def grid_archive_heatmap(archive,
             >>> archive = GridArchive(solution_dim=2,
             ...                       dims=[20, 20],
             ...                       ranges=[(-1, 1), (-1, 1)])
-            >>> for x in np.linspace(-1, 1, 100):
-            ...     for y in np.linspace(-1, 1, 100):
-            ...         archive.add(solution=np.array([x,y]),
-            ...                     objective=-(x**2 + y**2),
-            ...                     measure=np.array([x,y]))
+            >>> x = y = np.linspace(-1, 1, 100)
+            >>> xxs, yys = np.meshgrid(x, y)
+            >>> xxs, yys = xxs.flatten(), yys.flatten()
+            >>> archive.add(solution_batch=np.stack((xxs, yys), axis=1),
+            ...             objective_batch=-(xxs**2 + yys**2),
+            ...             measures_batch=np.stack((xxs, yys), axis=1))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> grid_archive_heatmap(archive)
@@ -133,7 +134,6 @@ def grid_archive_heatmap(archive,
             >>> plt.xlabel("x coords")
             >>> plt.ylabel("y coords")
             >>> plt.show()
-
 
     Args:
         archive (GridArchive): A 2D :class:`~ribs.archives.GridArchive`.
@@ -301,11 +301,12 @@ def cvt_archive_heatmap(archive,
             >>> # Populate the archive with the negative sphere function.
             >>> archive = CVTArchive(solution_dim=2,
             ...                      cells=100, ranges=[(-1, 1), (-1, 1)])
-            >>> for x in np.linspace(-1, 1, 100):
-            ...     for y in np.linspace(-1, 1, 100):
-            ...         archive.add(solution=np.array([x,y]),
-            ...                     objective=-(x**2 + y**2),
-            ...                     measures=np.array([x,y]))
+            >>> x = y = np.linspace(-1, 1, 100)
+            >>> xxs, yys = np.meshgrid(x, y)
+            >>> xxs, yys = xxs.flatten(), yys.flatten()
+            >>> archive.add(solution_batch=np.stack((xxs, yys), axis=1),
+            ...             objective_batch=-(xxs**2 + yys**2),
+            ...             measures_batch=np.stack((xxs, yys), axis=1))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_heatmap(archive)
