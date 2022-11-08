@@ -150,9 +150,9 @@ def grid_archive_heatmap(archive,
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
         square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap.
-            Defaults to ``'auto'`` for 2D and ``0.5`` for 1D. ``'equal'`` is the
-            same as ``aspect=1``.
+        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
+            height/width). Defaults to ``'auto'`` for 2D and ``0.5`` for 1D.
+            ``'equal'`` is the same as ``aspect=1``.
         vmin (float): Minimum objective value to use in the plot. If ``None``,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
@@ -334,8 +334,8 @@ def cvt_archive_heatmap(archive,
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
         square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap.
-            Defaults to ``'auto'`` for 2D. ``'equal'`` is the same as
+        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
+            height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
             ``aspect=1``.
         ms (float): Marker size for both centroids and samples.
         lw (float): Line width when plotting the voronoi diagram.
