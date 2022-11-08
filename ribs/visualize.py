@@ -323,10 +323,10 @@ def cvt_archive_heatmap(archive,
         plot_centroids (bool): Whether to plot the cluster centroids.
         plot_samples (bool): Whether to plot the samples used when generating
             the clusters.
-        transpose_measures (bool): By default, the first measure in the archive will
-            appear along the x-axis, and the second will be along the y-axis. To
-            switch this behavior (i.e. to transpose the axes), set this to
-            ``True``.
+        transpose_measures (bool): By default, the first measure in the archive
+            will appear along the x-axis, and the second will be along the
+            y-axis. To switch this behavior (i.e. to transpose the axes), set
+            this to ``True``.
         cmap (str, list, matplotlib.colors.Colormap): The colormap to use when
             plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
