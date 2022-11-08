@@ -633,12 +633,13 @@ def parallel_axes_plot(archive,
             >>> # Populate the archive with the negative sphere function.
             >>> archive = GridArchive(
             ...               solution_dim=3, dims=[20, 20, 20, 20, 20],
-            ...               ranges=[(-1, 1), (-1, 1), (-1, 1), (-1, 1), (-1, 1)]
+            ...               ranges=[(-1, 1), (-1, 1), (-1, 1),
+            ...                       (-1, 1), (-1, 1)],
             ...           )
             >>> for x in np.linspace(-1, 1, 100):
             ...     for y in np.linspace(0, 1, 100):
             ...         for z in np.linspace(-1, 1, 100):
-            ...             archive.add(
+            ...             archive.add_single(
             ...                 solution=np.array([x,y,z]),
             ...                 objective=-(x**2 + y**2 + z**2),
             ...                 measures=np.array([0.5*x,x,y,z,-0.5*z]),
@@ -751,8 +752,8 @@ def parallel_axes_plot(archive,
         lower_bounds[0])
 
     # Copy the axis for the other measures.
-    axes = [host_ax] + [host_ax.twinx() for i in range(len(cols) - 1)]
-    for i, axis in enumerate(axes):
+    axs = [host_ax] + [host_ax.twinx() for i in range(len(cols) - 1)]
+    for i, axis in enumerate(axs):
         axis.set_ylim(lower_bounds[i], upper_bounds[i])
         axis.spines['top'].set_visible(False)
         axis.spines['bottom'].set_visible(False)
