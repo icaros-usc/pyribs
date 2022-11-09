@@ -47,7 +47,7 @@ def _retrieve_cmap(cmap):
     return cmap
 
 
-def _validate_heatmap_visual_args(aspect, cbar, square, measure_dim, valid_dims,
+def _validate_heatmap_visual_args(aspect, cbar, measure_dim, valid_dims,
                                   error_msg_measure_dim):
     """Helper function to validate arguments passed to `*_archive_heatmap`
     plotting functions.
@@ -65,17 +65,11 @@ def _validate_heatmap_visual_args(aspect, cbar, square, measure_dim, valid_dims,
                                    aspect in ["equal", "auto"]):
         raise ValueError(
             f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float")
-    if square is not None:
-        raise ValueError(
-            "The argument 'square' is deprecated and will not be "
-            "supported in future versions. Use 'aspect' to set the "
-            "heatmap's aspect ratio instead")
     if measure_dim not in valid_dims:
         raise ValueError(error_msg_measure_dim)
     if not (cbar == "auto" or isinstance(cbar, axes.Axes) or cbar is None):
-        raise ValueError(
-            f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
-        )
+        raise ValueError(f"Invalid arg cbar={cbar}; must be 'auto', None, "
+                         "or matplotlib.axes.Axes")
 
 
 def _set_cbar(t, ax, cbar, cbar_kwargs):
@@ -89,21 +83,21 @@ def _set_cbar(t, ax, cbar, cbar_kwargs):
 
 def grid_archive_heatmap(archive,
                          ax=None,
+                         *,
                          transpose_measures=False,
                          cmap="magma",
-                         square=None,
                          aspect=None,
                          vmin=None,
                          vmax=None,
                          cbar="auto",
                          pcm_kwargs=None,
                          cbar_kwargs=None):
-    """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 2D measure
-    space.
+    """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 1D or 2D
+    measure space.
 
-    Essentially, we create a grid of cells and shade each cell with a color
-    corresponding to the objective value of that cell's elite. This method uses
-    :func:`~matplotlib.pyplot.pcolormesh` to generate the grid. For further
+    This function creates a grid of cells and shades each cell with a color
+    corresponding to the objective value of that cell's elite. This function
+    uses :func:`~matplotlib.pyplot.pcolormesh` to generate the grid. For further
     customization, pass extra kwargs to :func:`~matplotlib.pyplot.pcolormesh`
     through the ``pcm_kwargs`` parameter. For instance, to create black
     boundaries of width 0.1, pass in ``pcm_kwargs={"edgecolor": "black",
@@ -121,11 +115,12 @@ def grid_archive_heatmap(archive,
             >>> archive = GridArchive(solution_dim=2,
             ...                       dims=[20, 20],
             ...                       ranges=[(-1, 1), (-1, 1)])
-            >>> for x in np.linspace(-1, 1, 100):
-            ...     for y in np.linspace(-1, 1, 100):
-            ...         archive.add(solution=np.array([x,y]),
-            ...                     objective=-(x**2 + y**2),
-            ...                     measure=np.array([x,y]))
+            >>> x = y = np.linspace(-1, 1, 100)
+            >>> xxs, yys = np.meshgrid(x, y)
+            >>> xxs, yys = xxs.flatten(), yys.flatten()
+            >>> archive.add(solution_batch=np.stack((xxs, yys), axis=1),
+            ...             objective_batch=-(xxs**2 + yys**2),
+            ...             measures_batch=np.stack((xxs, yys), axis=1))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> grid_archive_heatmap(archive)
@@ -133,7 +128,6 @@ def grid_archive_heatmap(archive,
             >>> plt.xlabel("x coords")
             >>> plt.ylabel("y coords")
             >>> plt.show()
-
 
     Args:
         archive (GridArchive): A 2D :class:`~ribs.archives.GridArchive`.
@@ -148,10 +142,9 @@ def grid_archive_heatmap(archive,
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
-        square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap.
-            Defaults to ``'auto'`` for 2D and ``0.5`` for 1D. ``'equal'`` is the
-            same as ``aspect=1``.
+        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
+            height/width). Defaults to ``'auto'`` for 2D and ``0.5`` for 1D.
+            ``'equal'`` is the same as ``aspect=1``.
         vmin (float): Minimum objective value to use in the plot. If ``None``,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
@@ -170,8 +163,9 @@ def grid_archive_heatmap(archive,
         ValueError: The archive's dimension must be 1D or 2D.
     """
     _validate_heatmap_visual_args(
-        aspect, cbar, square, archive.measure_dim, [1, 2],
+        aspect, cbar, archive.measure_dim, [1, 2],
         "Heatmaps can only be plotted for 1D or 2D GridArchive")
+
     if aspect is None:
         # Handles default aspects for different dims.
         if archive.measure_dim == 1:
@@ -182,33 +176,34 @@ def grid_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
 
+    # Useful to have these data available.
+    df = archive.as_pandas()
+    objective_batch = df.objective_batch()
+
     if archive.measure_dim == 1:
-        # Retrieve data from archive. There should be only 2 bounds; upper and lower since its 1D
+        # Retrieve data from archive. There should be only 2 bounds; upper and
+        # lower, since it is 1D.
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
         x_dim = archive.dims[0]
         x_bounds = archive.boundaries[0]
-        y_bounds = np.array([0, 1])  # by default x-y aspect ratio
+        y_bounds = np.array([0, 1])  # To facilitate default x-y aspect ratio.
 
         # Color for each cell in the heatmap.
         colors = np.full((1, x_dim), np.nan)
-        for elite in archive:
-            # TODO: Do not require calling numpy?
-            idx = np.unravel_index(elite.index, archive.dims)
-            colors[0, idx] = elite.objective
+        grid_index_batch = archive.int_to_grid_index(df.index_batch())
+        colors[0, grid_index_batch[:, 0]] = objective_batch
 
         # Initialize the axis.
         ax = plt.gca() if ax is None else ax
         ax.set_xlim(lower_bounds[0], upper_bounds[0])
 
-        # default to 0.5 to make it look good
         ax.set_aspect(aspect)
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        objectives = archive.as_pandas().objective_batch()
-        vmin = np.min(objectives) if vmin is None else vmin
-        vmax = np.max(objectives) if vmax is None else vmax
+        vmin = np.min(objective_batch) if vmin is None else vmin
+        vmax = np.max(objective_batch) if vmax is None else vmax
         t = ax.pcolormesh(x_bounds,
                           y_bounds,
                           colors,
@@ -226,14 +221,13 @@ def grid_archive_heatmap(archive,
 
         # Color for each cell in the heatmap.
         colors = np.full((y_dim, x_dim), np.nan)
-        for elite in archive:
-            # TODO: Do not require calling numpy?
-            idx = np.unravel_index(elite.index, archive.dims)
-            colors[idx[1], idx[0]] = elite.objective
+        grid_index_batch = archive.int_to_grid_index(df.index_batch())
+        colors[grid_index_batch[:, 1], grid_index_batch[:, 0]] = objective_batch
 
         if transpose_measures:
-            # Since the archive is 2D, transpose by swapping the x and y boundaries
-            # and by flipping the bounds (the bounds are arrays of length 2).
+            # Since the archive is 2D, transpose by swapping the x and y
+            # boundaries and by flipping the bounds (the bounds are arrays of
+            # length 2).
             x_bounds, y_bounds = y_bounds, x_bounds
             lower_bounds = np.flip(lower_bounds)
             upper_bounds = np.flip(upper_bounds)
@@ -248,9 +242,8 @@ def grid_archive_heatmap(archive,
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        objectives = archive.as_pandas().objective_batch()
-        vmin = np.min(objectives) if vmin is None else vmin
-        vmax = np.max(objectives) if vmax is None else vmax
+        vmin = np.min(objective_batch) if vmin is None else vmin
+        vmax = np.max(objective_batch) if vmax is None else vmax
         t = ax.pcolormesh(x_bounds,
                           y_bounds,
                           colors,
@@ -265,11 +258,11 @@ def grid_archive_heatmap(archive,
 
 def cvt_archive_heatmap(archive,
                         ax=None,
+                        *,
                         plot_centroids=True,
                         plot_samples=False,
                         transpose_measures=False,
                         cmap="magma",
-                        square=None,
                         aspect="auto",
                         ms=1,
                         lw=0.5,
@@ -301,11 +294,12 @@ def cvt_archive_heatmap(archive,
             >>> # Populate the archive with the negative sphere function.
             >>> archive = CVTArchive(solution_dim=2,
             ...                      cells=100, ranges=[(-1, 1), (-1, 1)])
-            >>> for x in np.linspace(-1, 1, 100):
-            ...     for y in np.linspace(-1, 1, 100):
-            ...         archive.add(solution=np.array([x,y]),
-            ...                     objective=-(x**2 + y**2),
-            ...                     measures=np.array([x,y]))
+            >>> x = y = np.linspace(-1, 1, 100)
+            >>> xxs, yys = np.meshgrid(x, y)
+            >>> xxs, yys = xxs.flatten(), yys.flatten()
+            >>> archive.add(solution_batch=np.stack((xxs, yys), axis=1),
+            ...             objective_batch=-(xxs**2 + yys**2),
+            ...             measures_batch=np.stack((xxs, yys), axis=1))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_heatmap(archive)
@@ -321,18 +315,17 @@ def cvt_archive_heatmap(archive,
         plot_centroids (bool): Whether to plot the cluster centroids.
         plot_samples (bool): Whether to plot the samples used when generating
             the clusters.
-        transpose_measures (bool): By default, the first measure in the archive will
-            appear along the x-axis, and the second will be along the y-axis. To
-            switch this behavior (i.e. to transpose the axes), set this to
-            ``True``.
+        transpose_measures (bool): By default, the first measure in the archive
+            will appear along the x-axis, and the second will be along the
+            y-axis. To switch this behavior (i.e. to transpose the axes), set
+            this to ``True``.
         cmap (str, list, matplotlib.colors.Colormap): The colormap to use when
             plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
-        square (bool): [DEPRECATED]
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap.
-            Defaults to ``'auto'`` for 2D. ``'equal'`` is the same as
+        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
+            height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
             ``aspect=1``.
         ms (float): Marker size for both centroids and samples.
         lw (float): Line width when plotting the voronoi diagram.
@@ -352,8 +345,9 @@ def cvt_archive_heatmap(archive,
         ValueError: The archive is not 2D.
     """
     _validate_heatmap_visual_args(
-        aspect, cbar, square, archive.measure_dim, [2],
-        "Heatmaps can only be plotted for 1D or 2D CVTArchive")
+        aspect, cbar, archive.measure_dim, [2],
+        "Heatmaps can only be plotted for 2D CVTArchive")
+
     if aspect is None:
         aspect = "auto"
 
@@ -438,13 +432,16 @@ def cvt_archive_heatmap(archive,
 
 def sliding_boundaries_archive_heatmap(archive,
                                        ax=None,
+                                       *,
                                        transpose_measures=False,
                                        cmap="magma",
-                                       square=False,
+                                       aspect="auto",
                                        ms=None,
                                        boundary_lw=0,
                                        vmin=None,
-                                       vmax=None):
+                                       vmax=None,
+                                       cbar="auto",
+                                       cbar_kwargs=None):
     """Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with
     2D measure space.
 
@@ -466,26 +463,22 @@ def sliding_boundaries_archive_heatmap(archive,
             ...                                    ranges=[(-1, 1), (-1, 1)],
             ...                                    seed=42)
             >>> # Populate the archive with the negative sphere function.
-            >>> rng = np.random.default_rng(10)
-            >>> for _ in range(1000):
-            ...     x, y = rng.uniform((-1, -1), (1, 1))
-            ...     archive.add(
-            ...         solution=np.array([x,y]),
-            ...         objective=-(x**2 + y**2),
-            ...         measures=np.array([x, y]),
-            ...     )
+            >>> rng = np.random.default_rng(seed=10)
+            >>> coords = np.clip(rng.standard_normal((1000, 2)), -1.5, 1.5)
+            >>> archive.add(solution_batch=coords,
+            ...             objective_batch=-np.sum(coords**2, axis=1),
+            ...             measures_batch=coords)
             >>> # Plot heatmaps of the archive.
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
             >>> fig.suptitle("Negative sphere function")
             >>> sliding_boundaries_archive_heatmap(archive, ax=ax1,
-            ...                                  boundary_lw=0.5)
+            ...                                    boundary_lw=0.5)
             >>> sliding_boundaries_archive_heatmap(archive, ax=ax2)
             >>> ax1.set_title("With boundaries")
             >>> ax2.set_title("Without boundaries")
             >>> ax1.set(xlabel='x coords', ylabel='y coords')
             >>> ax2.set(xlabel='x coords', ylabel='y coords')
             >>> plt.show()
-
 
     Args:
         archive (SlidingBoundariesArchive): A 2D
@@ -501,7 +494,9 @@ def sliding_boundaries_archive_heatmap(archive,
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
-        square (bool): If ``True``, set the axes aspect ratio to be ``'equal'``.
+        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
+            height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
+            ``aspect=1``.
         ms (float): Marker size for the solutions.
         boundary_lw (float): Line width when plotting the boundaries.
             Set to ``0`` to have no boundaries.
@@ -509,18 +504,28 @@ def sliding_boundaries_archive_heatmap(archive,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
             the maximum objective value in the archive is used.
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to
+            ``'auto'`` which displays the colorbar on the archive's current
+            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not
+            displayed. If this is an :class:`~matplotlib.axes.Axes`, displays
+            the colorbar on the specified Axes.
+        cbar_kwargs (dict): Additional kwargs to pass to
+            :func:`~matplotlib.figure.Figure.colorbar`.
     Raises:
         ValueError: The archive is not 2D.
     """
-    if archive.measure_dim != 2:
-        raise ValueError("Cannot plot heatmap for non-2D archive.")
+    _validate_heatmap_visual_args(
+        aspect, cbar, archive.measure_dim, [2],
+        "Heatmaps can only be plotted for 2D SlidingBoundariesArchive")
 
-    df = archive.as_pandas()
+    if aspect is None:
+        aspect = "auto"
 
     # Try getting the colormap early in case it fails.
     cmap = _retrieve_cmap(cmap)
 
     # Retrieve data from archive.
+    df = archive.as_pandas()
     measures_batch = df.measures_batch()
     x = measures_batch[:, 0]
     y = measures_batch[:, 1]
@@ -542,15 +547,19 @@ def sliding_boundaries_archive_heatmap(archive,
     ax = plt.gca() if ax is None else ax
     ax.set_xlim(lower_bounds[0], upper_bounds[0])
     ax.set_ylim(lower_bounds[1], upper_bounds[1])
-
-    if square:
-        ax.set_aspect("equal")
+    ax.set_aspect(aspect)
 
     # Create the plot.
-    objectives = df.objective_batch()
-    vmin = np.min(objectives) if vmin is None else vmin
-    vmax = np.max(objectives) if vmax is None else vmax
-    t = ax.scatter(x, y, s=ms, c=objectives, cmap=cmap, vmin=vmin, vmax=vmax)
+    objective_batch = df.objective_batch()
+    vmin = np.min(objective_batch) if vmin is None else vmin
+    vmax = np.max(objective_batch) if vmax is None else vmax
+    t = ax.scatter(x,
+                   y,
+                   s=ms,
+                   c=objective_batch,
+                   cmap=cmap,
+                   vmin=vmin,
+                   vmax=vmax)
     if boundary_lw > 0.0:
         ax.vlines(x_boundary,
                   lower_bounds[0],
@@ -563,12 +572,13 @@ def sliding_boundaries_archive_heatmap(archive,
                   color='k',
                   linewidth=boundary_lw)
 
-    # Create the colorbar.
-    ax.figure.colorbar(t, ax=ax, pad=0.1)
+    # Create color bar.
+    _set_cbar(t, ax, cbar, cbar_kwargs)
 
 
 def parallel_axes_plot(archive,
                        ax=None,
+                       *,
                        measure_order=None,
                        cmap="magma",
                        linewidth=1.5,
@@ -612,12 +622,13 @@ def parallel_axes_plot(archive,
             >>> # Populate the archive with the negative sphere function.
             >>> archive = GridArchive(
             ...               solution_dim=3, dims=[20, 20, 20, 20, 20],
-            ...               ranges=[(-1, 1), (-1, 1), (-1, 1), (-1, 1), (-1, 1)]
+            ...               ranges=[(-1, 1), (-1, 1), (-1, 1),
+            ...                       (-1, 1), (-1, 1)],
             ...           )
             >>> for x in np.linspace(-1, 1, 100):
             ...     for y in np.linspace(0, 1, 100):
             ...         for z in np.linspace(-1, 1, 100):
-            ...             archive.add(
+            ...             archive.add_single(
             ...                 solution=np.array([x,y,z]),
             ...                 objective=-(x**2 + y**2 + z**2),
             ...                 measures=np.array([0.5*x,x,y,z,-0.5*z]),
@@ -730,8 +741,8 @@ def parallel_axes_plot(archive,
         lower_bounds[0])
 
     # Copy the axis for the other measures.
-    axes = [host_ax] + [host_ax.twinx() for i in range(len(cols) - 1)]
-    for i, axis in enumerate(axes):
+    axs = [host_ax] + [host_ax.twinx() for i in range(len(cols) - 1)]
+    for i, axis in enumerate(axs):
         axis.set_ylim(lower_bounds[i], upper_bounds[i])
         axis.spines['top'].set_visible(False)
         axis.spines['bottom'].set_visible(False)
