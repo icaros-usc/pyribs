@@ -3,14 +3,15 @@
 The sphere function in this example is adapted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to
 the range [-5.12, 5.12], and the optimum is moved from [0,..] to [0.4 * 5.12 =
-2.048,..]. Furthermore, the objective values are normalized to the range [0,
+2.048,..]. Furthermore, the objectives are normalized to the range [0,
 100] where 100 is the maximum and corresponds to 0 on the original sphere
 function.
 
-There are two BCs in this example. The first is the sum of the first n/2 clipped
-values of the solution, and the second is the sum of the last n/2 clipped values
-of the solution. Having each BC depend equally on several values in the solution
-space makes the problem more difficult (refer to Fontaine 2020 for more info).
+There are two measures in this example. The first is the sum of the first n/2
+clipped values of the solution, and the second is the sum of the last n/2
+clipped values of the solution. Having each measure depend equally on several
+values in the solution space makes the problem more difficult (refer to
+Fontaine 2020 for more info).
 
 The supported algorithms are:
 - `map_elites`: GridArchive with GaussianEmitter.
@@ -21,7 +22,7 @@ The supported algorithms are:
   TwoStageImprovmentRanker.
 - `cma_me_imp_mu`: GridArchive with EvolutionStrategyEmitter using
   TwoStageImprovmentRanker and mu selection rule.
-- `cma_me_rd`: GridArchive with EvolutionStrategyRanker using
+- `cma_me_rd`: GridArchive with EvolutionStrategyEmitter using
   RandomDirectionRanker.
 - `cma_me_rd_mu`: GridArchive with EvolutionStrategyEmitter using
   TwoStageRandomDirectionRanker and mu selection rule.
@@ -33,18 +34,22 @@ The supported algorithms are:
 - `cma_mega`: GridArchive with GradientAborescenceEmitter.
 - `cma_mega_adam`: GridArchive with GradientAborescenceEmitter using Adam
   Optimizer.
-
-Note: the settings for `cma_mega` and `cma_mega_adam` are consistent with the
-paper (`Fontaine 2021 <https://arxiv.org/abs/2106.03894>`_) in which these
-algorithms are proposed.
+- `cma_mae`: GridArchive (learning_rate = 0.01) with EvolutionStrategyEmitter
+  using ImprovementRanker.
+- `cma_maega`: GridArchive (learning_rate = 0.01) with
+  GradientAborescenceEmitter using ImprovementRanker.
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
 
-Note that the CVTArchive in this example uses 10,000 cells, as opposed to the
-250,000 (500x500) in the GridArchive, so it is not fair to directly compare
-`cvt_map_elites` and `line_cvt_map_elites` to the other algorithms. However, the
-other algorithms may be fairly compared because they use the same archive.
+Notes:
+- `cma_mega` and `cma_mega_adam` use only one emitter and run for 10,000
+  iterations. This is to be consistent with the paper (`Fontaine 2021
+  <https://arxiv.org/abs/2106.03894>`_) in which these algorithms were proposed.
+- `cma_mae` and `cma_maega` run for 10,000 iterations as well.
+- CVTArchive in this example uses 10,000 cells, as opposed to the 250,000
+  (500x500) in the GridArchive, so it is not fair to directly compare
+  `cvt_map_elites` and `line_cvt_map_elites` to the other algorithms.
 
 Outputs are saved in the `sphere_output/` directory by default. The archive is
 saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
@@ -77,23 +82,23 @@ from pathlib import Path
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
-from alive_progress import alive_bar
+import tqdm
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
                            GradientAborescenceEmitter, IsoLineEmitter)
-from ribs.optimizers import Optimizer
+from ribs.schedulers import Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
 
 def sphere(solution_batch):
-    """Sphere function evaluation and BCs for a batch of solutions.
+    """Sphere function evaluation and measures for a batch of solutions.
 
     Args:
-        solution_batch (np.ndarray): (batch_size, dim) array of solutions
+        solution_batch (np.ndarray): (batch_size, dim) batch of solutions.
     Returns:
-        objective_batch (np.ndarray): (batch_size,) array of objective values
-        measures_batch (np.ndarray): (batch_size, 2) array of measure values
+        objective_batch (np.ndarray): (batch_size,) batch of objectives.
+        measures_batch (np.ndarray): (batch_size, 2) batch of measures.
     """
     dim = solution_batch.shape[1]
 
@@ -141,46 +146,58 @@ def sphere(solution_batch):
     )
 
 
-def create_optimizer(algorithm, dim, seed):
-    """Creates an optimizer based on the algorithm name.
+def create_scheduler(algorithm,
+                     solution_dim,
+                     archive_dims,
+                     learning_rate,
+                     use_result_archive=True,
+                     seed=None):
+    """Creates a scheduler based on the algorithm name.
 
     Args:
         algorithm (str): Name of the algorithm passed into sphere_main.
-        dim (int): Dimensionality of the sphere function.
+        solution_dim(int): Dimensionality of the sphere function.
+        archive_dims (int): Dimensionality of the archive.
+        learning_rate (float): Learning rate of archive.
+        use_result_archive (bool): Whether to use a separate archive to store
+            the results.
         seed (int): Main seed or the various components.
     Returns:
-        Optimizer: A ribs Optimizer for running the algorithm.
+        ribs.schedulers.Scheduler: A ribs scheduler for running the algorithm.
     """
-    max_bound = dim / 2 * 5.12
+    max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
-    initial_sol = np.zeros(dim)
+    initial_sol = np.zeros(solution_dim)
     batch_size = 37
     num_emitters = 15
+    mode = "batch"
+    threshold_min = -np.inf  # default
+
+    if algorithm in ["cma_mae", "cma_maega"]:
+        threshold_min = 0
 
     # Create archive.
-    if algorithm in [
-            "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-            "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
-    ]:
-        archive = GridArchive(solution_dim=dim,
-                              dims=(500, 500),
-                              ranges=bounds,
-                              seed=seed)
-    elif algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
-        archive = CVTArchive(solution_dim=dim,
+    if algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
+        archive = CVTArchive(solution_dim=solution_dim,
                              cells=10_000,
                              ranges=bounds,
                              samples=100_000,
                              use_kd_tree=True)
-    elif algorithm in ["cma_mega", "cma_mega_adam"]:
-        # Note that the archive is smaller for these algorithms. This is to be
-        # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
-        archive = GridArchive(solution_dim=dim,
-                              dims=(100, 100),
-                              ranges=bounds,
-                              seed=seed)
     else:
-        raise ValueError(f"Algorithm `{algorithm}` is not recognized")
+        archive = GridArchive(solution_dim=solution_dim,
+                              dims=archive_dims,
+                              ranges=bounds,
+                              learning_rate=learning_rate,
+                              threshold_min=threshold_min,
+                              seed=seed)
+
+    # Create result archive.
+    result_archive = None
+    if use_result_archive:
+        result_archive = GridArchive(solution_dim=solution_dim,
+                                     dims=archive_dims,
+                                     ranges=bounds,
+                                     seed=seed)
 
     # Create emitters. Each emitter needs a different seed, so that they do not
     # all do the same thing.
@@ -190,8 +207,8 @@ def create_optimizer(algorithm, dim, seed):
         emitters = [
             GaussianEmitter(
                 archive,
-                initial_sol,
-                0.5,
+                sigma=0.5,
+                x0=initial_sol,
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds
@@ -200,7 +217,7 @@ def create_optimizer(algorithm, dim, seed):
         emitters = [
             IsoLineEmitter(
                 archive,
-                initial_sol,
+                x0=initial_sol,
                 iso_sigma=0.1,
                 line_sigma=0.2,
                 batch_size=batch_size,
@@ -211,18 +228,18 @@ def create_optimizer(algorithm, dim, seed):
         emitters = [
             EvolutionStrategyEmitter(
                 archive,
-                initial_sol,
-                0.5,
-                "2rd",
+                x0=initial_sol,
+                sigma0=0.5,
+                ranker="2rd",
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds[:7]
         ] + [
             EvolutionStrategyEmitter(
                 archive,
-                initial_sol,
-                0.5,
-                "2imp",
+                x0=initial_sol,
+                sigma0=0.5,
+                ranker="2imp",
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds[7:]
@@ -237,7 +254,7 @@ def create_optimizer(algorithm, dim, seed):
         }[algorithm]
         emitters = [
             EvolutionStrategyEmitter(
-                archive=archive,
+                archive,
                 x0=initial_sol,
                 sigma0=0.5,
                 ranker=ranker,
@@ -253,7 +270,7 @@ def create_optimizer(algorithm, dim, seed):
         emitters = [
             GradientAborescenceEmitter(
                 archive,
-                initial_sol,
+                x0=initial_sol,
                 sigma0=10.0,
                 step_size=1.0,
                 grad_opt="gradient_ascent",
@@ -268,7 +285,7 @@ def create_optimizer(algorithm, dim, seed):
         emitters = [
             GradientAborescenceEmitter(
                 archive,
-                initial_sol,
+                x0=initial_sol,
                 sigma0=10.0,
                 step_size=0.002,
                 grad_opt="adam",
@@ -277,7 +294,41 @@ def create_optimizer(algorithm, dim, seed):
                 batch_size=batch_size - 1,  # 1 solution is returned by ask_dqd
                 seed=emitter_seeds[0])
         ]
-    return Optimizer(archive, emitters)
+    elif algorithm == "cma_mae":
+        emitters = [
+            EvolutionStrategyEmitter(
+                archive,
+                x0=initial_sol,
+                sigma0=0.5,
+                ranker="imp",
+                selection_rule="mu",
+                restart_rule="basic",
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds
+        ]
+    elif algorithm in ["cma_maega"]:
+        emitters = [
+            GradientAborescenceEmitter(archive,
+                                       x0=initial_sol,
+                                       sigma0=10.0,
+                                       step_size=1.0,
+                                       ranker="imp",
+                                       grad_opt="gradient_ascent",
+                                       restart_rule="basic",
+                                       bounds=None,
+                                       batch_size=batch_size,
+                                       seed=s) for s in emitter_seeds
+        ]
+
+    print(
+        f"Created Scheduler for {algorithm} with learning rate {learning_rate} "
+        f"and add mode {mode}, using solution dim {solution_dim} and archive "
+        f"dims {archive_dims}.")
+    return Scheduler(archive,
+                     emitters,
+                     result_archive=result_archive,
+                     add_mode=mode)
 
 
 def save_heatmap(archive, heatmap_path):
@@ -303,6 +354,8 @@ def save_heatmap(archive, heatmap_path):
 def sphere_main(algorithm,
                 dim=None,
                 itrs=None,
+                archive_dims=None,
+                learning_rate=None,
                 outdir="sphere_output",
                 log_freq=250,
                 seed=None):
@@ -310,24 +363,30 @@ def sphere_main(algorithm,
 
     Args:
         algorithm (str): Name of the algorithm.
-        dim (int): Dimensionality of solutions.
+        dim (int): Dimensionality of the sphere function.
         itrs (int): Iterations to run.
+        archive_dims (tuple): Dimensionality of the archive.
+        learning_rate (float): The archive learning rate.
         outdir (str): Directory to save output.
         log_freq (int): Number of iterations to wait before recording metrics
             and saving heatmap.
         seed (int): Seed for the algorithm. By default, there is no seed.
     """
+    # Use default dim for each algorithm.
     if dim is None:
-        if algorithm in ["cma_mega", "cma_mega_adam"]:
+        if algorithm in ["cma_mega", "cma_mega_adam", "cma_maega"]:
             dim = 1_000
+        elif algorithm in ["cma_mae"]:
+            dim = 100
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
                 "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
         ]:
             dim = 20
 
+    # Use default itrs for each algorithm.
     if itrs is None:
-        if algorithm in ["cma_mega", "cma_mega_adam"]:
+        if algorithm in ["cma_mega", "cma_mega_adam", "cma_mae", "cma_maega"]:
             itrs = 10_000
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
@@ -335,15 +394,42 @@ def sphere_main(algorithm,
         ]:
             itrs = 4500
 
+    # Use default archive_dim for each algorithm.
+    if archive_dims is None:
+        if algorithm in ["cma_mega", "cma_mega_adam", "cma_mae", "cma_maega"]:
+            archive_dims = (100, 100)
+        elif algorithm in [
+                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
+        ]:
+            archive_dims = (500, 500)
+
+    # Use default learning_rate for each algorithm.
+    if learning_rate is None:
+        if algorithm in ["cma_mae", "cma_maega"]:
+            learning_rate = 0.01
+        elif algorithm in [
+                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed",
+                "cma_mega", "cma_mega_adam"
+        ]:
+            learning_rate = 1.0
+
     name = f"{algorithm}_{dim}"
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
 
-    is_dqd = algorithm in ['cma_mega', 'cma_mega_adam']
+    is_dqd = algorithm in ["cma_mega", "cma_mega_adam", "cma_maega"]
+    use_result_archive = algorithm in ["cma_mae", "cma_maega"]
 
-    optimizer = create_optimizer(algorithm, dim, seed)
-    archive = optimizer.archive
+    scheduler = create_scheduler(algorithm,
+                                 dim,
+                                 archive_dims,
+                                 learning_rate,
+                                 use_result_archive=use_result_archive,
+                                 seed=seed)
+    result_archive = scheduler.result_archive
     metrics = {
         "QD Score": {
             "x": [0],
@@ -356,47 +442,44 @@ def sphere_main(algorithm,
     }
 
     non_logging_time = 0.0
-    with alive_bar(itrs) as progress:
-        save_heatmap(archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
+    save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
 
-        for itr in range(1, itrs + 1):
-            itr_start = time.time()
+    for itr in tqdm.trange(1, itrs + 1):
+        itr_start = time.time()
 
-            if is_dqd:
-                solution_batch = optimizer.ask_dqd()
-                (objective_batch, objective_grad_batch, measures_batch,
-                 measures_grad_batch) = sphere(solution_batch)
-                objective_grad_batch = np.expand_dims(objective_grad_batch,
-                                                      axis=1)
-                jacobian_batch = np.concatenate(
-                    (objective_grad_batch, measures_grad_batch), axis=1)
-                optimizer.tell_dqd(objective_batch, measures_batch,
-                                   jacobian_batch)
+        if is_dqd:
+            solution_batch = scheduler.ask_dqd()
+            (objective_batch, objective_grad_batch, measures_batch,
+             measures_grad_batch) = sphere(solution_batch)
+            objective_grad_batch = np.expand_dims(objective_grad_batch, axis=1)
+            jacobian_batch = np.concatenate(
+                (objective_grad_batch, measures_grad_batch), axis=1)
+            scheduler.tell_dqd(objective_batch, measures_batch, jacobian_batch)
 
-            solution_batch = optimizer.ask()
-            objective_batch, _, measure_batch, _ = sphere(solution_batch)
-            optimizer.tell(objective_batch, measure_batch)
-            non_logging_time += time.time() - itr_start
-            progress()
+        solution_batch = scheduler.ask()
+        objective_batch, _, measure_batch, _ = sphere(solution_batch)
+        scheduler.tell(objective_batch, measure_batch)
+        non_logging_time += time.time() - itr_start
 
-            # Logging and output.
-            final_itr = itr == itrs
-            if itr % log_freq == 0 or final_itr:
-                if final_itr:
-                    archive.as_pandas(include_solutions=final_itr).to_csv(
-                        outdir / f"{name}_archive.csv")
+        # Logging and output.
+        final_itr = itr == itrs
+        if itr % log_freq == 0 or final_itr:
+            if final_itr:
+                result_archive.as_pandas(include_solutions=final_itr).to_csv(
+                    outdir / f"{name}_archive.csv")
 
-                # Record and display metrics.
-                metrics["QD Score"]["x"].append(itr)
-                metrics["QD Score"]["y"].append(archive.stats.qd_score)
-                metrics["Archive Coverage"]["x"].append(itr)
-                metrics["Archive Coverage"]["y"].append(archive.stats.coverage)
-                print(f"Iteration {itr} | Archive Coverage: "
-                      f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
-                      f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
+            # Record and display metrics.
+            metrics["QD Score"]["x"].append(itr)
+            metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
+            metrics["Archive Coverage"]["x"].append(itr)
+            metrics["Archive Coverage"]["y"].append(
+                result_archive.stats.coverage)
+            print(f"Iteration {itr} | Archive Coverage: "
+                  f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
+                  f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
-                save_heatmap(archive,
-                             str(outdir / f"{name}_heatmap_{itr:05d}.png"))
+            save_heatmap(result_archive,
+                         str(outdir / f"{name}_heatmap_{itr:05d}.png"))
 
     # Plot metrics.
     print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")

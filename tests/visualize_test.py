@@ -41,7 +41,7 @@ def clean_matplotlib():
 def add_uniform_sphere_1d(archive, x_range):
     """Adds points from the negative sphere function in a 1D grid w/ 100 elites.
 
-    The solutions are the same as the BCs
+    The solutions are the same as the measures
 
     x_range is a tuple of (lower_bound, upper_bound).
     """
@@ -56,7 +56,7 @@ def add_uniform_sphere_1d(archive, x_range):
 def add_uniform_sphere(archive, x_range, y_range):
     """Adds points from the negative sphere function in a 100x100 grid.
 
-    The solutions are the same as the BCs (the (x,y) coordinates).
+    The solutions are the same as the measures (the (x,y) coordinates).
 
     x_range and y_range are tuples of (lower_bound, upper_bound).
     """
@@ -76,7 +76,7 @@ def add_uniform_sphere(archive, x_range, y_range):
 def add_uniform_3d_sphere(archive, x_range, y_range, z_range):
     """Adds points from the negative sphere function in a 100x100x100 grid.
 
-    The solutions are the same as the BCs (the (x,y,z) coordinates).
+    The solutions are the same as the measures (the (x,y,z) coordinates).
 
     x_range, y_range, and z_range are tuples of (lower_bound, upper_bound).
     """
@@ -97,9 +97,9 @@ def add_uniform_3d_sphere(archive, x_range, y_range, z_range):
 def add_random_sphere(archive, x_range, y_range):
     """Adds 1000 random points from the negative sphere function.
 
-    Solutions, BCs, and ranges are same as in add_uniform_sphere.
+    Solutions, measures, and ranges are same as in add_uniform_sphere.
     """
-    # Use random BCs to make the boundaries shift.
+    # Use random measures to make the boundaries shift.
     rng = np.random.default_rng(10)
     solutions = rng.uniform(
         (x_range[0], y_range[0]),
@@ -118,7 +118,7 @@ def add_random_sphere(archive, x_range, y_range):
 #
 @pytest.fixture(scope="module")
 def grid_archive_1d():
-    """Deterministically created GridArchive with 1 BC."""
+    """Deterministically created GridArchive with 1 measure."""
     # The archive must be low-res enough that we can tell if the number of cells
     # is correct, yet high-res enough that we can see different colors.
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1, 1)], seed=42)
@@ -141,7 +141,7 @@ def grid_archive():
 
 @pytest.fixture(scope="module")
 def long_grid_archive():
-    """Same as above, but the behavior space is longer in one direction."""
+    """Same as above, but the measure space is longer in one direction."""
     archive = GridArchive(solution_dim=2,
                           dims=[10, 10],
                           ranges=[(-2, 2), (-1, 1)],
@@ -152,7 +152,7 @@ def long_grid_archive():
 
 @pytest.fixture(scope="module")
 def three_d_grid_archive():
-    """Deterministic archive, but there are three behavior axes of different
+    """Deterministic archive, but there are three measure axes of different
     sizes, and some of the axes are not totally filled."""
     archive = GridArchive(solution_dim=3,
                           dims=[10, 10, 10],
@@ -177,7 +177,7 @@ def cvt_archive():
 
 @pytest.fixture(scope="module")
 def long_cvt_archive():
-    """Same as above, but the behavior space is longer in one direction."""
+    """Same as above, but the measure space is longer in one direction."""
     archive = CVTArchive(solution_dim=2,
                          cells=100,
                          ranges=[(-2, 2), (-1, 1)],
@@ -201,7 +201,7 @@ def sliding_archive():
 
 @pytest.fixture(scope="module")
 def long_sliding_archive():
-    """Same as above, but the behavior space is longer in one direction."""
+    """Same as above, but the measure space is longer in one direction."""
     archive = SlidingBoundariesArchive(solution_dim=2,
                                        dims=[10, 20],
                                        ranges=[(-2, 2), (-1, 1)],
@@ -387,7 +387,6 @@ def test_heatmap_archive__cvt(cvt_archive):
     cvt_archive_heatmap(cvt_archive)
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap"],
                   remove_text=False,
                   extensions=["png"])
@@ -412,7 +411,6 @@ def test_heatmap_with_custom_axis__cvt(cvt_archive):
     cvt_archive_heatmap(cvt_archive, ax=ax)
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap"],
                   remove_text=False,
                   extensions=["png"])
@@ -437,7 +435,6 @@ def test_heatmap_long__cvt(long_cvt_archive):
     cvt_archive_heatmap(long_cvt_archive)
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap_long"],
                   remove_text=False,
                   extensions=["png"])
@@ -462,13 +459,12 @@ def test_heatmap_long_square__cvt(long_cvt_archive):
     cvt_archive_heatmap(long_cvt_archive, aspect="equal")
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap_long_square"],
                   remove_text=False,
                   extensions=["png"])
 def test_heatmap_long_square__sliding(long_sliding_archive):
     plt.figure(figsize=(8, 6))
-    sliding_boundaries_archive_heatmap(long_sliding_archive, square=True)
+    sliding_boundaries_archive_heatmap(long_sliding_archive, aspect="equal")
 
 
 @image_comparison(baseline_images=["grid_archive_heatmap_long_transpose"],
@@ -476,7 +472,7 @@ def test_heatmap_long_square__sliding(long_sliding_archive):
                   extensions=["png"])
 def test_heatmap_long_transpose__grid(long_grid_archive):
     plt.figure(figsize=(8, 6))
-    grid_archive_heatmap(long_grid_archive, transpose_bcs=True)
+    grid_archive_heatmap(long_grid_archive, transpose_measures=True)
 
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_long_transpose"],
@@ -484,16 +480,16 @@ def test_heatmap_long_transpose__grid(long_grid_archive):
                   extensions=["png"])
 def test_heatmap_long_transpose__cvt(long_cvt_archive):
     plt.figure(figsize=(8, 6))
-    cvt_archive_heatmap(long_cvt_archive, transpose_bcs=True)
+    cvt_archive_heatmap(long_cvt_archive, transpose_measures=True)
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap_long_transpose"],
                   remove_text=False,
                   extensions=["png"])
 def test_heatmap_long_transpose__sliding(long_sliding_archive):
     plt.figure(figsize=(8, 6))
-    sliding_boundaries_archive_heatmap(long_sliding_archive, transpose_bcs=True)
+    sliding_boundaries_archive_heatmap(long_sliding_archive,
+                                       transpose_measures=True)
 
 
 @image_comparison(baseline_images=["grid_archive_heatmap_with_limits"],
@@ -514,7 +510,6 @@ def test_heatmap_with_limits__cvt(cvt_archive):
     cvt_archive_heatmap(cvt_archive, vmin=-1.0, vmax=-0.5)
 
 
-@pytest.mark.skip
 @image_comparison(baseline_images=["sliding_boundaries_heatmap_with_limits"],
                   remove_text=False,
                   extensions=["png"])
@@ -540,7 +535,6 @@ def test_heatmap_listed_cmap__cvt(cvt_archive):
     cvt_archive_heatmap(cvt_archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
 
-@pytest.mark.skip
 @image_comparison(
     baseline_images=["sliding_boundaries_heatmap_with_listed_cmap"],
     remove_text=False,
@@ -567,7 +561,6 @@ def test_heatmap_coolwarm_cmap__cvt(cvt_archive):
     cvt_archive_heatmap(cvt_archive, cmap="coolwarm")
 
 
-@pytest.mark.skip
 @image_comparison(
     baseline_images=["sliding_boundaries_heatmap_with_coolwarm_cmap"],
     remove_text=False,
@@ -594,7 +587,6 @@ def test_grid_archive_with_boundaries(grid_archive):
                          })
 
 
-@pytest.mark.skip
 @image_comparison(
     baseline_images=["sliding_boundaries_heatmap_with_boundaries"],
     remove_text=False,
@@ -646,7 +638,7 @@ def test_parallel_axes_3d_custom_ax(three_d_grid_archive):
                   extensions=["png"])
 def test_parallel_axes_3d_custom_order(three_d_grid_archive):
     plt.figure(figsize=(8, 6))
-    parallel_axes_plot(three_d_grid_archive, bc_order=[1, 2, 0])
+    parallel_axes_plot(three_d_grid_archive, measure_order=[1, 2, 0])
 
 
 @image_comparison(baseline_images=["parallel_axes_3d_custom_names"],
@@ -655,7 +647,7 @@ def test_parallel_axes_3d_custom_order(three_d_grid_archive):
 def test_parallel_axes_3d_custom_names(three_d_grid_archive):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(three_d_grid_archive,
-                       bc_order=[(1, 'One'), (2, 'Two'), (0, 'Zero')])
+                       measure_order=[(1, 'One'), (2, 'Two'), (0, 'Zero')])
 
 
 @image_comparison(baseline_images=["parallel_axes_3d_coolwarm"],

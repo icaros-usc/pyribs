@@ -16,10 +16,13 @@ redesign of MAP-Elites detailed in the paper
 
 [Quality diversity (QD) optimization](https://arxiv.org/abs/2012.04322) is a
 subfield of optimization where solutions generated cover every point in a
-behavior space while simultaneously maximizing (or minimizing) a single
-objective. QD algorithms within the MAP-Elites family of QD algorithms produce
+_measure_ space while simultaneously maximizing (or minimizing) a single
+_objective_. QD algorithms within the MAP-Elites family of QD algorithms produce
 heatmaps (archives) as output where each cell contains the best discovered
-representative of a region in behavior space.
+representative of a region in measure space.
+
+> In the QD literature, measure function outputs have also been referred to as
+> "behavior characteristics," "behavior descriptors," or "feature descriptors."
 
 While many QD libraries exist, this particular library aims to be the QD analog
 to the [pycma](https://pypi.org/project/cma/) library (a single objective
@@ -28,17 +31,17 @@ optimization library). In contrast to other QD libraries, this library is
 focuses solely on optimizing fixed-dimensional continuous domains. Focusing
 solely on this one commonly-occurring problem allows us to optimize the library
 for performance as well as ease of use. Refer to the list of
-[additional QD libraries](#additional-qd-libraries) if you need greater
+[additional QD libraries](#additional-qd-libraries) below if you need greater
 performance or have additional use cases.
 
 A user of pyribs selects three components that meet the needs of their
 application:
 
-- An **Archive** saves the best representatives generated within behavior space.
+- An **Archive** saves the best representatives generated within measure space.
 - **Emitters** control how new candidate solutions are generated and affect if
   the algorithm prioritizes quality or diversity.
-- An **Optimizer** joins the **Archive** and **Emitters** together and acts as a
-  scheduling algorithm for emitters. The **Optimizer** provides an interface for
+- A **Scheduler** joins the **Archive** and **Emitters** together and acts as a
+  scheduling algorithm for emitters. The **Scheduler** provides an interface for
   requesting new candidate solutions and telling the algorithm how candidates
   performed.
 
@@ -54,7 +57,7 @@ package in order to use the `\url` command.
   title = {pyribs: A bare-bones Python library for quality diversity
            optimization},
   author = {Bryon Tjanaka and Matthew C. Fontaine and David H. Lee and
-            Trung Tran Minh Vu and Yulun Zhang and Sam Sommerer and
+            Yulun Zhang and Trung Tran Minh Vu and Sam Sommerer and
             Nathan Dennler and Stefanos Nikolaidis},
   year = {2021},
   publisher = {GitHub},
@@ -94,36 +97,36 @@ algorithm, we first create:
 - An **ImprovementEmitter**, which starts from the search point **0** in 10
   dimensional space and a Gaussian sampling distribution with standard deviation
   0.1.
-- An **Optimizer** that combines the archive and emitter together.
+- A **Scheduler** that combines the archive and emitter together.
 
 After initializing the components, we optimize (pyribs maximizes) the negative
 10-D Sphere function for 1000 iterations. Users of
 [pycma](https://pypi.org/project/cma/) will be familiar with the ask-tell
-interface (which pyribs adopted). First, the user must `ask` the optimizer for
+interface (which pyribs adopted). First, the user must `ask` the scheduler for
 new candidate solutions. After evaluating the solution, they `tell` the
-optimizer the objective value and behavior characteristics (BCs) of each
-candidate solution. The algorithm then populates the archive and makes decisions
-on where to sample solutions next. Our toy example uses the first two parameters
-of the search space as BCs.
+scheduler the objectives and measures of each candidate solution. The algorithm
+then populates the archive and makes decisions on where to sample solutions
+next. Our toy example uses the first two parameters of the search space as
+measures.
 
 ```python
 import numpy as np
 
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
-from ribs.optimizers import Optimizer
+from ribs.scheduler import Scheduler
 
 archive = GridArchive(solution_dim=len([0.0] * 10), dims=[20, 20], ranges=[(-1, 1), (-1, 1)])
 emitters = [ImprovementEmitter(archive, [0.0] * 10, 0.1)]
-optimizer = Optimizer(archive, emitters)
+scheduler = Scheduler(archive, emitters)
 
 for itr in range(1000):
-    solutions = optimizer.ask()
+    solutions = scheduler.ask()
 
     objectives = -np.sum(np.square(solutions), axis=1)
-    bcs = solutions[:, :2]
+    measures = solutions[:, :2]
 
-    optimizer.tell(objectives, bcs)
+    scheduler.tell(objectives, measures)
 ```
 
 To visualize this archive with matplotlib, we then use the
@@ -215,9 +218,12 @@ pyribs users include:
 <!-- Alphabetical order -->
 
 - [Adam Gaier (Autodesk Research)](https://scholar.google.com/citations?user=GGyARB8AAAAJ)
+- [Adaptive & Intelligent Robotics Lab (Imperial College London)](https://www.imperial.ac.uk/adaptive-intelligent-robotics)
 - [Chair of Statistical Learning and Data Science (LMU Munich)](https://www.slds.stat.uni-muenchen.de/)
 - [Game Innovation Lab (New York University)](https://game.engineering.nyu.edu)
+- [Giovanni Iacca (University of Trento)](https://sites.google.com/site/giovanniiacca/)
 - [ganyariya (University of Tsukuba)](https://github.com/ganyariya/mario_pytorch)
+- [HUAWEI Noah's Ark Lab](https://github.com/huawei-noah)
 - [ICAROS Lab (University of Southern California)](http://icaros.usc.edu/)
 - [Jacob Schrum (Southwestern University)](https://github.com/schrum2/PyribsForGameGAN)
 - [Lenia Research](https://lenia.world)

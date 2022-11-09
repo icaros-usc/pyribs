@@ -31,6 +31,12 @@ def use_kd_tree(request):
     return request.param
 
 
+@pytest.fixture(params=["single", "batch"])
+def add_mode(request):
+    """Single or batch add."""
+    return request.param
+
+
 #
 # Helpers for generating archive data.
 #
@@ -71,7 +77,7 @@ def get_archive_data(name, dtype=np.float64):
     ARCHIVE_NAMES.
     """
     # Characteristics of a single solution to insert into archive_with_elite.
-    solution = np.array([1, 2, 3])
+    solution = np.array([1., 2., 3.])
     objective = 1.0
     measures = np.array([0.25, 0.25])
     metadata = {"metadata_key": 42}
@@ -120,17 +126,20 @@ def get_archive_data(name, dtype=np.float64):
         # Sliding boundary archive with 10 cells and range (-1, 1) in first dim,
         # and 20 cells and range (-2, 2) in second dim.
         cells = 10 * 20
-        archive = SlidingBoundariesArchive(len(solution), [10, 20], [(-1, 1),
-                                                                     (-2, 2)],
+        archive = SlidingBoundariesArchive(solution_dim=len(solution),
+                                           dims=[10, 20],
+                                           ranges=[(-1, 1), (-2, 2)],
                                            remap_frequency=100,
                                            buffer_capacity=1000,
                                            dtype=dtype)
 
-        archive_with_elite = SlidingBoundariesArchive(len(solution), [10, 20],
-                                                      [(-1, 1), (-2, 2)],
-                                                      remap_frequency=100,
-                                                      buffer_capacity=1000,
-                                                      dtype=dtype)
+        archive_with_elite = SlidingBoundariesArchive(
+            solution_dim=len(solution),
+            dims=[10, 20],
+            ranges=[(-1, 1), (-2, 2)],
+            remap_frequency=100,
+            buffer_capacity=1000,
+            dtype=dtype)
         grid_indices = (6, 11)
         int_index = 131
 

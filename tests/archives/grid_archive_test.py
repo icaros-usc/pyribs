@@ -85,7 +85,7 @@ def assert_archive_elite_batch(
 def test_fails_on_dim_mismatch():
     with pytest.raises(ValueError):
         GridArchive(
-            solution_dim=10,  #arbitrary
+            solution_dim=10,  # arbitrary
             dims=[10] * 2,  # 2D space here.
             ranges=[(-1, 1)] * 3,  # But 3D space here.
         )
@@ -104,15 +104,22 @@ def test_properties_are_correct(data):
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
-def test_add_single_to_archive(data, use_list):
+def test_add_single_to_archive(data, use_list, add_mode):
+    solution = data.solution
+    objective = data.objective
+    measures = data.measures
+    metadata = data.metadata
+
     if use_list:
-        status, value = data.archive.add_single(list(data.solution),
-                                                data.objective,
-                                                list(data.measures),
-                                                data.metadata)
+        solution = list(data.solution)
+        measures = list(data.measures)
+
+    if add_mode == "single":
+        status, value = data.archive.add_single(solution, objective, measures,
+                                                metadata)
     else:
-        status, value = data.archive.add_single(data.solution, data.objective,
-                                                data.measures, data.metadata)
+        status, value = data.archive.add([solution], [objective], [measures],
+                                         [metadata])
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective)
@@ -120,56 +127,181 @@ def test_add_single_to_archive(data, use_list):
                          data.measures, data.grid_indices, data.metadata)
 
 
-def test_add_single_with_low_measures(data):
+@pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
+def test_add_single_to_archive_negative_objective(data, use_list, add_mode):
+    """Same as test_add_single_to_archive, but negative objective since there
+    are some weird cases when handling value calculations."""
+    solution = data.solution
+    objective = -data.objective
+    measures = data.measures
+    metadata = data.metadata
+
+    if use_list:
+        solution = list(data.solution)
+        measures = list(data.measures)
+
+    if add_mode == "single":
+        status, value = data.archive.add_single(solution, objective, measures,
+                                                metadata)
+    else:
+        status, value = data.archive.add([solution], [objective], [measures],
+                                         [metadata])
+
+    assert status == AddStatus.NEW
+    assert np.isclose(value, -data.objective)
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices, data.metadata)
+
+
+def test_add_single_with_low_measures(data, add_mode):
     measures = np.array([-2, -3])
     indices = (0, 0)
-    status, _ = data.archive.add_single(data.solution, data.objective, measures,
-                                        data.metadata)
+    if add_mode == "single":
+        status, _ = data.archive.add_single(data.solution, data.objective,
+                                            measures, data.metadata)
+    else:
+        status, _ = data.archive.add([data.solution], [data.objective],
+                                     [measures], [data.metadata])
+
     assert status
     assert_archive_elite(data.archive, data.solution, data.objective, measures,
                          indices, data.metadata)
 
 
-def test_add_single_with_high_measures(data):
+def test_add_single_with_high_measures(data, add_mode):
     measures = np.array([2, 3])
     indices = (9, 19)
-    status, _ = data.archive.add_single(data.solution, data.objective, measures,
-                                        data.metadata)
+    if add_mode == "single":
+        status, _ = data.archive.add_single(data.solution, data.objective,
+                                            measures, data.metadata)
+    else:
+        status, _ = data.archive.add([data.solution], [data.objective],
+                                     [measures], [data.metadata])
     assert status
     assert_archive_elite(data.archive, data.solution, data.objective, measures,
                          indices, data.metadata)
 
 
-def test_add_single_and_overwrite(data):
+def test_add_single_and_overwrite(data, add_mode):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     high_objective = data.objective + 1.0
 
-    status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       high_objective,
-                                                       data.measures,
-                                                       arbitrary_metadata)
+    if add_mode == "single":
+        status, value = data.archive_with_elite.add_single(
+            arbitrary_sol, high_objective, data.measures, arbitrary_metadata)
+    else:
+        status, value = data.archive_with_elite.add([arbitrary_sol],
+                                                    [high_objective],
+                                                    [data.measures],
+                                                    [arbitrary_metadata])
+
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
                          data.measures, data.grid_indices, arbitrary_metadata)
 
 
-def test_add_single_without_overwrite(data):
+def test_add_single_without_overwrite(data, add_mode):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
     arbitrary_metadata = {"foobar": 12}
     low_objective = data.objective - 1.0
 
-    status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       low_objective,
-                                                       data.measures,
-                                                       arbitrary_metadata)
+    if add_mode == "single":
+        status, value = data.archive_with_elite.add_single(
+            arbitrary_sol, low_objective, data.measures, arbitrary_metadata)
+    else:
+        status, value = data.archive_with_elite.add([arbitrary_sol],
+                                                    [low_objective],
+                                                    [data.measures],
+                                                    [arbitrary_metadata])
+
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
                          data.measures, data.grid_indices, data.metadata)
+
+
+def test_add_single_threshold_update(add_mode):
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 10],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=-1.0,
+        learning_rate=0.1,
+    )
+    solution = [1, 2, 3]
+    measures = [0.1, 0.1]
+
+    # Add a new solution to the archive.
+    if add_mode == "single":
+        status, value = archive.add_single(solution, 0.0, measures)
+    else:
+        status_batch, value_batch = archive.add([solution], [0.0], [measures])
+        status, value = status_batch[0], value_batch[0]
+
+    assert status == 2  # NEW
+    assert np.isclose(value, 1.0)  # 0.0 - (-1.0)
+
+    # Threshold should now be (1 - 0.1) * -1.0 + 0.1 * 0.0 = -0.9
+
+    # These solutions are below the threshold and should not be inserted.
+    if add_mode == "single":
+        status, value = archive.add_single(solution, -0.95, measures)
+    else:
+        status_batch, value_batch = archive.add([solution], [-0.95], [measures])
+        status, value = status_batch[0], value_batch[0]
+
+    assert status == 0  # NOT_ADDED
+    assert np.isclose(value, -0.05)  # -0.95 - (-0.9)
+
+    # These solutions are above the threshold and should be inserted.
+    if add_mode == "single":
+        status, value = archive.add_single(solution, -0.8, measures)
+    else:
+        status_batch, value_batch = archive.add([solution], [-0.8], [measures])
+        status, value = status_batch[0], value_batch[0]
+
+    assert status == 1  # IMPROVE_EXISTING
+    assert np.isclose(value, 0.1)  # -0.8 - (-0.9)
+
+
+def test_add_single_after_clear(data):
+    """After clearing, we should still get the same status and value when adding
+    to the archive.
+
+    https://github.com/icaros-usc/pyribs/pull/260
+    """
+    status, value = data.archive.add_single(data.solution, data.objective,
+                                            data.measures)
+
+    assert status == 2
+    assert value == data.objective
+
+    data.archive.clear()
+
+    status, value = data.archive.add_single(data.solution, data.objective,
+                                            data.measures)
+
+    assert status == 2
+    assert value == data.objective
+
+
+def test_add_single_wrong_shapes(data):
+    with pytest.raises(ValueError):
+        data.archive.add_single(
+            solution=[1, 1],  # 2D instead of 3D solution.
+            objective=0,
+            measures=[0, 0],
+        )
+    with pytest.raises(ValueError):
+        data.archive.add_single(
+            solution=[0, 0, 0],
+            objective=0,
+            measures=[1, 1, 1],  # 3D instead of 2D measures.
+        )
 
 
 def test_add_batch_all_new(data):
@@ -319,19 +451,134 @@ def test_add_batch_first_solution_wins_in_ties(data):
     )
 
 
-def test_add_single_wrong_shapes(data):
-    with pytest.raises(ValueError):
-        data.archive.add_single(
-            solution=[1, 1],  # 2D instead of 3D solution.
-            objective=0,
-            measures=[0, 0],
-        )
-    with pytest.raises(ValueError):
-        data.archive.add_single(
-            solution=[0, 0, 0],
-            objective=0,
-            measures=[1, 1, 1],  # 3D instead of 2D measures.
-        )
+def test_add_batch_not_inserted_if_below_threshold_min():
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 10],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=-10.0,
+        learning_rate=0.1,
+    )
+
+    status_batch, value_batch = archive.add(
+        solution_batch=[[1, 2, 3]] * 4,
+        objective_batch=[-20.0, -20.0, 10.0, 10.0],
+        measures_batch=[[0.0, 0.0]] * 4,
+    )
+
+    # The first two solutions should not have been inserted since they did not
+    # cross the threshold_min of -10.0.
+    assert (status_batch == [0, 0, 2, 2]).all()
+    assert np.isclose(value_batch, [-10.0, -10.0, 20.0, 20.0]).all()
+
+    assert_archive_elite_batch(
+        archive=archive,
+        batch_size=1,
+        solution_batch=[[1, 2, 3]],
+        objective_batch=[10.0],
+        measures_batch=[[0.0, 0.0]],
+        metadata_batch=[None],
+        grid_indices_batch=[[5, 5]],
+    )
+
+
+def test_add_batch_threshold_update():
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 10],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=-1.0,
+        learning_rate=0.1,
+    )
+    solution = [1, 2, 3]
+    measures = [0.1, 0.1]
+    measures2 = [-0.1, -0.1]
+
+    # Add new solutions to the archive in two cells determined by measures and
+    # measures2.
+    status_batch, value_batch = archive.add(
+        [solution, solution, solution, solution, solution, solution],
+        # The first three solutions are inserted since they cross
+        # threshold_min, but the last solution is not inserted since it does not
+        # cross threshold_min.
+        [0.0, 1.0, 2.0, 10.0, 100.0, -10.0],
+        [measures, measures, measures, measures2, measures2, measures2],
+    )
+
+    assert (status_batch == [2, 2, 2, 2, 2, 0]).all()
+    assert np.isclose(
+        value_batch, [1.0, 2.0, 3.0, 11.0, 101.0, -9.0]).all()  # [...] - (-1.0)
+
+    # Thresholds based on batch update rule should now be
+    # (1 - 0.1)**3 * -1.0 + (0.0 + 1.0 + 2.0) / 3 * (1 - (1 - 0.1)**3) = -0.458
+    # and
+    # (1 - 0.1)**2 * -1.0 + (10.0 + 100.0) / 2 * (1 - (1 - 0.1)**2) = 9.64
+
+    # Mix between solutions which are inserted and not inserted.
+    status_batch, value_batch = archive.add(
+        [solution, solution, solution, solution],
+        [-0.95, -0.457, 9.63, 9.65],
+        [measures, measures, measures2, measures2],
+    )
+
+    assert (status_batch == [0, 1, 0, 1]).all()
+    # [-0.95 - (-0.458), -0.458 - (-0.457), 9.63 - 9.64, 9.65 - 9.64]
+    assert np.isclose(value_batch, [-0.492, 0.001, -0.01, 0.01]).all()
+
+    # Thresholds should now be
+    # (1 - 0.1)**1 * -0.458 + (-0.457) / 1 * (1 - (1 - 0.1)**1) = -0.4579
+    # and
+    # (1 - 0.1)**1 * 9.64 + (9.65) / 1 * (1 - (1 - 0.1)**1) = 9.641
+
+    # Again mix between solutions which are inserted and not inserted.
+    status_batch, value_batch = archive.add(
+        [solution, solution, solution, solution],
+        [-0.4580, -0.4578, 9.640, 9.642],
+        [measures, measures, measures2, measures2],
+    )
+
+    assert (status_batch == [0, 1, 0, 1]).all()
+    assert np.isclose(value_batch, [-0.0001, 0.0001, -0.001, 0.001]).all()
+
+
+def test_add_batch_threshold_update_inf_threshold_min():
+    # These default values of threshold_min and learning_rate induce special
+    # CMA-ME behavior for threshold updates.
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 10],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=-np.inf,
+        learning_rate=1.0,
+    )
+    solution = [1, 2, 3]
+    measures = [0.1, 0.1]
+    measures2 = [-0.1, -0.1]
+
+    # Add new solutions to the archive.
+    status_batch, value_batch = archive.add(
+        [solution, solution, solution, solution, solution, solution],
+        [0.0, 1.0, 2.0, -10.0, 10.0, 100.0],
+        [measures, measures, measures, measures2, measures2, measures2],
+    )
+
+    # Value is same as objective since these are new cells.
+    assert (status_batch == [2, 2, 2, 2, 2, 2]).all()
+    assert np.isclose(value_batch, [0.0, 1.0, 2.0, -10.0, 10.0, 100.0]).all()
+
+    # Thresholds are updated based on maximum values in each cell, i.e. 2.0 and
+    # 100.0.
+
+    # Mix between solutions which are inserted and not inserted.
+    status_batch, value_batch = archive.add(
+        [solution, solution, solution, solution],
+        [1.0, 10.0, 99.0, 101.0],
+        [measures, measures, measures2, measures2],
+    )
+
+    assert (status_batch == [0, 1, 0, 1]).all()
+    # [1.0 - 2.0, 10.0 - 2.0, 99.0 - 100.0, 101.0 - 100.0]
+    assert np.isclose(value_batch, [-1.0, 8.0, -1.0, 1.0]).all()
 
 
 def test_add_batch_wrong_shapes(data):
@@ -451,8 +698,28 @@ def test_values_go_to_correct_bin(dtype):
     assert archive.index_of_single([0.11]) == 9
 
 
+def test_nonfinite_inputs(data):
+    data.solution[0] = np.inf
+    data.measures[0] = np.nan
+
+    with pytest.raises(ValueError):
+        data.archive.add([data.solution], -np.inf, [data.measures])
+    with pytest.raises(ValueError):
+        data.archive.add_single(data.solution, -np.inf, data.measures)
+    with pytest.raises(ValueError):
+        data.archive.elites_with_measures([data.measures])
+    with pytest.raises(ValueError):
+        data.archive.elites_with_measures_single(data.measures)
+    with pytest.raises(ValueError):
+        data.archive.index_of([data.measures])
+    with pytest.raises(ValueError):
+        data.archive.index_of_single(data.measures)
+
+
 def test_cqd_score_with_one_elite():
-    archive = GridArchive(2, [10, 10], [(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
 
     score = archive.cqd_score(
@@ -473,7 +740,9 @@ def test_cqd_score_with_one_elite():
 
 
 def test_cqd_score_with_two_elites():
-    archive = GridArchive(2, [10, 10], [(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 0.25, [0.0, 0.0])  # Elite 1.
     archive.add_single([4.0, 4.0], 0.0, [1.0, 1.0])  # Elite 2.
 

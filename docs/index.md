@@ -18,7 +18,7 @@ examples
 api/ribs.archives
 api/ribs.emitters
 api/ribs.emitters.rankers
-api/ribs.optimizers
+api/ribs.schedulers
 api/ribs.visualize
 ```
 

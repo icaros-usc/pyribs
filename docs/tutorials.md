@@ -7,6 +7,7 @@ tutorials/lunar_lander
 tutorials/lsi_mnist
 tutorials/arm_repertoire
 tutorials/fooling_mnist
+tutorials/cma_mae
 ```
 
 Tutorials are Python notebooks with detailed explanations of pyribs usage. They
@@ -17,9 +18,10 @@ running locally, make sure to have
 installed. Each notebook contains cell magic that installs the dependencies it
 needs for execution.
 
-| Name                            | Archive                             | Emitter                                    | Optimizer                           |
-| ------------------------------- | ----------------------------------- | ------------------------------------------ | ----------------------------------- |
-| {doc}`tutorials/lunar_lander`   | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
-| {doc}`tutorials/lsi_mnist`      | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
-| {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.ImprovementEmitter` | {class}`~ribs.optimizers.Optimizer` |
-| {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GaussianEmitter`    | {class}`~ribs.optimizers.Optimizer` |
+| Name                            | Archive                             | Emitter                                          | Scheduler                           |
+| ------------------------------- | ----------------------------------- | ------------------------------------------------ | ----------------------------------- |
+| {doc}`tutorials/lunar_lander`   | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
+| {doc}`tutorials/lsi_mnist`      | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
+| {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
+| {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GaussianEmitter`          | {class}`~ribs.schedulers.Scheduler` |
+| {doc}`tutorials/cma_mae`        | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |

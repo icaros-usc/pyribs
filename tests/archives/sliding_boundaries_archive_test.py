@@ -19,7 +19,7 @@ def data():
 def test_fails_on_dim_mismatch():
     with pytest.raises(ValueError):
         SlidingBoundariesArchive(
-            0,
+            solution_dim=0,
             dims=[10] * 2,  # 2D space here.
             ranges=[(-1, 1)] * 3,  # But 3D space here.
         )
@@ -55,7 +55,6 @@ def test_add_to_archive(data, use_list):
                          data.measures, data.grid_indices, data.metadata)
 
 
-@pytest.mark.skip
 def test_add_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
@@ -68,12 +67,10 @@ def test_add_and_overwrite(data):
                                                        arbitrary_metadata)
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, arbitrary_sol,
-                         high_objective, data.measures, data.grid_indices,
-                         arbitrary_metadata)
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
+                         data.measures, data.grid_indices, arbitrary_metadata)
 
 
-@pytest.mark.skip
 def test_add_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
@@ -90,11 +87,12 @@ def test_add_without_overwrite(data):
                          data.measures, data.grid_indices, data.metadata)
 
 
-@pytest.mark.skip
 def test_initial_remap():
     """Checks that boundaries and entries are correct after initial remap."""
     # remap_frequency is (10 + 1) * (20 + 1)
-    archive = SlidingBoundariesArchive(2, [10, 20], [(-1, 1), (-2, 2)],
+    archive = SlidingBoundariesArchive(solution_dim=2,
+                                       dims=[10, 20],
+                                       ranges=[(-1, 1), (-2, 2)],
                                        remap_frequency=231,
                                        buffer_capacity=1000)
 
@@ -135,13 +133,12 @@ def test_initial_remap():
 
     # Check that all the measures are as expected.
     pandas_measures = archive.as_pandas(include_solutions=False)[[
-        "measures_0", "measure_1"
+        "measure_0", "measure_1"
     ]]
     measures = list(pandas_measures.itertuples(name=None, index=False))
     assert np.isclose(sorted(measures), sorted(expected_measures)).all()
 
 
-@pytest.mark.skip
 def test_add_to_archive_with_full_buffer(data):
     for _ in range(data.archive.buffer_capacity + 1):
         data.archive.add_single(data.solution, data.objective, data.measures,
@@ -153,7 +150,8 @@ def test_add_to_archive_with_full_buffer(data):
                          data.measures, (0, 0), data.metadata)
 
     # Even if another elite is added, it should still go to the same cell
-    # because the measures are clipped to the boundaries before being inserted.
+    # because the measures are clipped to the boundaries before being
+    # inserted.
     arbitrary_metadata = {"foobar": 12}
     data.archive.add_single(2 * data.solution, 2 * data.objective,
                             2 * data.measures, arbitrary_metadata)
@@ -161,10 +159,11 @@ def test_add_to_archive_with_full_buffer(data):
                          2 * data.measures, (0, 0), arbitrary_metadata)
 
 
-@pytest.mark.skip
 def test_adds_solutions_from_old_archive():
     """Solutions from previous archive should be inserted during remap."""
-    archive = SlidingBoundariesArchive(2, [10, 20], [(-1, 1), (-2, 2)],
+    archive = SlidingBoundariesArchive(solution_dim=2,
+                                       dims=[10, 20],
+                                       ranges=[(-1, 1), (-2, 2)],
                                        remap_frequency=231,
                                        buffer_capacity=231)
 

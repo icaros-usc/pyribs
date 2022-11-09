@@ -3,12 +3,13 @@ import itertools
 
 import numpy as np
 
-from ribs.emitters._dqd_emitter_base import DQDEmitterBase
+from ribs._utils import check_1d_shape
+from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
 from ribs.emitters.rankers import _get_ranker
 
 
-class GradientAborescenceEmitter(DQDEmitterBase):
+class GradientAborescenceEmitter(EmitterBase):
     """Generates solutions with a gradient arborescence, with coefficients
     parameterized by CMA-ES.
 
@@ -42,8 +43,10 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             CMA-ES. With "mu" selection, the first half of the solutions will be
             selected as parents, while in "filter", any solutions that were
             added to the archive will be selected.
-        restart_rule ("no_improvement" or "basic"): Method to use when checking
-            for restarts. With "basic", only the default CMA-ES convergence
+        restart_rule (int, "no_improvement", and "basic"): Method to use when
+            checking for restarts. If given an integer, then the emitter will
+            restart after this many iterations, where each iteration is a call
+            to :meth:`tell`. With "basic", only the default CMA-ES convergence
             rules will be used, while with "no_improvement", the emitter will
             restart when none of the proposed solutions were added to the
             archive.
@@ -74,11 +77,15 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
-        ValueError: If ``restart_rule`` is invalid.
+        ValueError: There is an error in x0 or initial_solutions.
+        ValueError: There is an error in the bounds configuration.
+        ValueError: If ``restart_rule``, ``selection_rule``, or ``ranker`` is
+            invalid.
     """
 
     def __init__(self,
                  archive,
+                 *,
                  x0,
                  sigma0,
                  step_size,
@@ -94,21 +101,23 @@ class GradientAborescenceEmitter(DQDEmitterBase):
         self._epsilon = epsilon
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
+        check_1d_shape(self._x0, "x0", archive.solution_dim,
+                       "archive.solution_dim")
         self._sigma0 = sigma0
         self._normalize_grads = normalize_grad
         self._jacobian_batch = None
         self._grad_coefficients = None
-        DQDEmitterBase.__init__(
+        EmitterBase.__init__(
             self,
             archive,
-            len(self._x0),
-            bounds,
+            solution_dim=archive.solution_dim,
+            bounds=bounds,
         )
 
         self._ranker = _get_ranker(ranker)
         self._ranker.reset(self, archive, self._rng)
 
-        # Initialize gradient optimizer
+        # Initialize gradient optimizer.
         self._grad_opt = None
         if grad_opt == "adam":
             self._grad_opt = AdamOpt(self._x0, step_size)
@@ -121,8 +130,11 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             raise ValueError(f"Invalid selection_rule {selection_rule}")
         self._selection_rule = selection_rule
 
-        if restart_rule not in ["basic", "no_improvement"]:
-            raise ValueError(f"Invalid restart_rule {restart_rule}")
+        self._restart_rule = restart_rule
+        self._restarts = 0
+        self._itrs = 0
+        # Check if the restart_rule is valid.
+        _ = self._check_restart(0)
         self._restart_rule = restart_rule
 
         # We have a coefficient for each measure and an extra coefficient for
@@ -137,6 +149,7 @@ class GradientAborescenceEmitter(DQDEmitterBase):
 
         self._batch_size = self.opt.batch_size
         self._restarts = 0
+        self._itrs = 0
 
     @property
     def x0(self):
@@ -161,6 +174,11 @@ class GradientAborescenceEmitter(DQDEmitterBase):
     def restarts(self):
         """int: The number of restarts for this emitter."""
         return self._restarts
+
+    @property
+    def itrs(self):
+        """int: The number of iterations for this emitter."""
+        return self._itrs
 
     @property
     def epsilon(self):
@@ -193,26 +211,58 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
         """
-        lower_bounds = np.full(self._num_coefficients,
-                               -np.inf,
-                               dtype=self._archive.dtype)
-        upper_bounds = np.full(self._num_coefficients,
-                               np.inf,
-                               dtype=self._archive.dtype)
-        self._grad_coefficients = self.opt.ask(lower_bounds, upper_bounds)
-        noise = np.expand_dims(self._grad_coefficients, axis=2)
+        coefficient_lower_bounds = np.full(self._num_coefficients,
+                                           -np.inf,
+                                           dtype=self._archive.dtype)
+        coefficient_upper_bounds = np.full(self._num_coefficients,
+                                           np.inf,
+                                           dtype=self._archive.dtype)
 
-        return self._grad_opt.theta + np.sum(
-            np.multiply(self._jacobian_batch, noise), axis=1)
+        lower_bounds = np.expand_dims(self._lower_bounds, axis=0)
+        upper_bounds = np.expand_dims(self._upper_bounds, axis=0)
+
+        solution_batch = np.empty((self.batch_size, self.solution_dim),
+                                  dtype=self.opt.dtype)
+
+        # Resampling method for bound constraints -> sample new solutions until
+        # all solutions are within bounds.
+        remaining_indices = np.arange(self._batch_size)
+        while len(remaining_indices) > 0:
+            self._grad_coefficients = self.opt.ask(coefficient_lower_bounds,
+                                                   coefficient_upper_bounds,
+                                                   len(remaining_indices))
+            noise = np.expand_dims(self._grad_coefficients, axis=2)
+            new_solution_batch = (self._grad_opt.theta +
+                                  np.sum(self._jacobian_batch * noise, axis=1))
+            solution_batch[remaining_indices] = new_solution_batch
+            out_of_bounds = np.logical_or(new_solution_batch < lower_bounds,
+                                          new_solution_batch > upper_bounds)
+
+            # Find indices in remaining_indices that are still out of bounds
+            # (out_of_bounds indicates whether each value in each solution is
+            # out of bounds).
+            remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
+
+        return solution_batch
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
 
         The optimizer also has its own checks.
+
+        Args:
+            num_parents (int): The number of solution to propagate to the next
+                generation from the solutions generated by CMA-ES.
+        Raises:
+          ValueError: If :attr:`restart_rule` is invalid.
         """
+        if isinstance(self._restart_rule, (int, np.integer)):
+            return self._itrs % self._restart_rule == 0
         if self._restart_rule == "no_improvement":
             return num_parents == 0
-        return False
+        if self._restart_rule == "basic":
+            return False
+        raise ValueError(f"Invalid restart_rule {self._restart_rule}")
 
     def tell_dqd(self,
                  solution_batch,
@@ -234,8 +284,8 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             measures_batch (numpy.ndarray): (batch_size, measure space
                 dimension) array with the measure space coordinates of each
                 solution.
-            jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
-                solution_dim)`` array consisting of Jacobian matrices of the
+            jacobian_batch (numpy.ndarray): (batch_size, 1 + measure_dim,
+                solution_dim) array consisting of Jacobian matrices of the
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
@@ -284,6 +334,9 @@ class GradientAborescenceEmitter(DQDEmitterBase):
             metadata_batch (numpy.ndarray): 1d object array containing a
                 metadata object for each solution.
         """
+        # Increase iteration counter.
+        self._itrs += 1
+
         if self._jacobian_batch is None:
             raise RuntimeError("tell() was called without calling tell_dqd().")
 

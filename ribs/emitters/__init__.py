@@ -18,9 +18,7 @@ inherit from :class:`DQDEmitterBase`.
     ribs.emitters.GaussianEmitter
     ribs.emitters.IsoLineEmitter
     ribs.emitters.EmitterBase
-    ribs.emitters.DQDEmitterBase
 """
-from ribs.emitters._dqd_emitter_base import DQDEmitterBase
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters._evolution_strategy_emitter import EvolutionStrategyEmitter
 from ribs.emitters._gaussian_emitter import GaussianEmitter
@@ -34,5 +32,4 @@ __all__ = [
     "GaussianEmitter",
     "IsoLineEmitter",
     "EmitterBase",
-    "DQDEmitterBase",
 ]
