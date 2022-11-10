@@ -31,13 +31,13 @@ The supported algorithms are:
 - `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, where half (7) of
   the emitter are using TwoStageRandomDirectionRanker and half (8) are
   TwoStageImprovementRanker.
-- `cma_mega`: GridArchive with GradientAborescenceEmitter.
-- `cma_mega_adam`: GridArchive with GradientAborescenceEmitter using Adam
+- `cma_mega`: GridArchive with GradientArborescenceEmitter.
+- `cma_mega_adam`: GridArchive with GradientArborescenceEmitter using Adam
   Optimizer.
 - `cma_mae`: GridArchive (learning_rate = 0.01) with EvolutionStrategyEmitter
   using ImprovementRanker.
 - `cma_maega`: GridArchive (learning_rate = 0.01) with
-  GradientAborescenceEmitter using ImprovementRanker.
+  GradientArborescenceEmitter using ImprovementRanker.
 
 All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
 4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
@@ -86,7 +86,7 @@ import tqdm
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           GradientAborescenceEmitter, IsoLineEmitter)
+                           GradientArborescenceEmitter, IsoLineEmitter)
 from ribs.schedulers import Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
@@ -268,7 +268,7 @@ def create_scheduler(algorithm,
         # Note that only one emitter is used for cma_mega. This is to be
         # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
         emitters = [
-            GradientAborescenceEmitter(
+            GradientArborescenceEmitter(
                 archive,
                 x0=initial_sol,
                 sigma0=10.0,
@@ -283,7 +283,7 @@ def create_scheduler(algorithm,
         # Note that only one emitter is used for cma_mega_adam. This is to be
         # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
         emitters = [
-            GradientAborescenceEmitter(
+            GradientArborescenceEmitter(
                 archive,
                 x0=initial_sol,
                 sigma0=10.0,
@@ -309,16 +309,16 @@ def create_scheduler(algorithm,
         ]
     elif algorithm in ["cma_maega"]:
         emitters = [
-            GradientAborescenceEmitter(archive,
-                                       x0=initial_sol,
-                                       sigma0=10.0,
-                                       step_size=1.0,
-                                       ranker="imp",
-                                       grad_opt="gradient_ascent",
-                                       restart_rule="basic",
-                                       bounds=None,
-                                       batch_size=batch_size,
-                                       seed=s) for s in emitter_seeds
+            GradientArborescenceEmitter(archive,
+                                        x0=initial_sol,
+                                        sigma0=10.0,
+                                        step_size=1.0,
+                                        ranker="imp",
+                                        grad_opt="gradient_ascent",
+                                        restart_rule="basic",
+                                        bounds=None,
+                                        batch_size=batch_size,
+                                        seed=s) for s in emitter_seeds
         ]
 
     print(
