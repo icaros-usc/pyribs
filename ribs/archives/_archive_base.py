@@ -9,6 +9,7 @@ from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
                          check_is_1d, check_solution_batch_dim)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
+from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._elite import Elite, EliteBatch
 
 _ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() takes in a "
@@ -287,8 +288,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     def _stats_reset(self):
         """Resets the archive stats."""
-        self._stats = ArchiveStats(0, self.dtype(0.0), self.dtype(0.0), None,
-                                   None)
+        self._stats = ArchiveStats(
+            num_elites=0,
+            coverage=self.dtype(0.0),
+            qd_score=self.dtype(0.0),
+            obj_max=None,
+            obj_mean=None,
+        )
 
     def _compute_new_thresholds(self, threshold_arr, objective_batch,
                                 index_batch, learning_rate):
@@ -1126,10 +1132,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 range [0,1]). Alternatively, this may be a 1D array which
                 explicitly lists the penalty values. Known as :math:`\\theta` in
                 Kent 2022.
-            objective_min (float): Minimum objective value, used when
-                normalizing the objectives.
-            objective_max (float): Maximum objective value, used when
-                normalizing the objectives.
+            objective_min (float): Minimum objective value, used when normalizing the
+                objectives.
+            objective_max (float): Maximum objective value, used when normalizing the
+                objectives.
             max_distance (float): Maximum distance between points in measure
                 space. Defaults to the Euclidean distance between the extremes
                 of the measure space bounds. Known as :math:`\\delta_{max}` in
@@ -1160,7 +1166,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 size=(iterations, target_points, self.measure_dim),
             )
         else:
-            target_points = np.asarray(target_points)
+            target_points = np.copy(target_points)  # Copy since we return this.
             if (target_points.ndim != 3 or
                     target_points.shape[0] != iterations or
                     target_points.shape[2] != self.measure_dim):
@@ -1177,7 +1183,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         if np.isscalar(penalties):
             penalties = np.linspace(0, 1, penalties)
         else:
-            penalties = np.asarray(penalties)
+            penalties = np.copy(penalties)  # Copy since we return this.
             check_is_1d(penalties, "penalties")
 
         index_batch = self._occupied_indices[:self._num_occupied]
@@ -1186,7 +1192,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         norm_objectives = objective_batch / (objective_max - objective_min)
 
-        scores = []
+        scores = np.zeros(iterations)
 
         for itr in range(iterations):
             # Distance calculation -- start by taking the difference between
@@ -1198,7 +1204,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
             norm_distances = distances / max_distance
 
-            score = 0.0
             for penalty in penalties:
                 # Known as omega in Kent 2022 -- a (len(archive),
                 # n_target_points) array.
@@ -1207,8 +1212,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 # (n_target_points,) array.
                 max_values_per_target = np.max(values, axis=0)
 
-                score += np.sum(max_values_per_target)
+                scores[itr] += np.sum(max_values_per_target)
 
-            scores.append(score)
-
-        return np.mean(scores)
+        return CQDScoreResult(
+            iterations=iterations,
+            mean=np.mean(scores),
+            scores=scores,
+            target_points=target_points,
+            penalties=penalties,
+            objective_min=objective_min,
+            objective_max=objective_max,
+            max_distance=max_distance,
+        )

@@ -751,7 +751,7 @@ def test_cqd_score_with_one_elite():
         penalties=2,
         objective_min=0.0,
         objective_max=1.0,
-    )
+    ).mean
 
     # For theta=0, the score should be 1.0 - 0 * 0.5 = 1.0
     # For theta=1, the score should be 1.0 - 1 * 0.5 = 0.5
@@ -773,11 +773,56 @@ def test_cqd_score_with_max_dist():
         objective_min=0.0,
         objective_max=1.0,
         max_distance=2.0,
-    )
+    ).mean
 
     # For theta=0, the score should be 0.5 - 0 * 0.5 = 0.5
     # For theta=1, the score should be 0.5 - 1 * 0.5 = 0.0
     assert np.isclose(score, 0.5 + 0.0)
+
+
+def test_cqd_score_full_output():
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
+    archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
+
+    result = archive.cqd_score(
+        iterations=5,
+        # With this target point, the solution above at [0, 0] has a normalized
+        # distance of 0.5, since it is halfway between the archive bounds of
+        # (-1, -1) and (1, 1).
+        target_points=np.array([
+            [[1.0, 1.0]],
+            [[1.0, 1.0]],
+            [[1.0, 1.0]],
+            [[-1.0, -1.0]],
+            [[-1.0, -1.0]],
+        ]),
+        penalties=2,
+        objective_min=0.0,
+        objective_max=1.0,
+    )
+
+    # For theta=0, the score should be 1.0 - 0 * 0.5 = 1.0
+    # For theta=1, the score should be 1.0 - 1 * 0.5 = 0.5
+    assert result.iterations == 5
+    assert np.isclose(result.mean, 1.0 + 0.5)
+    assert np.all(np.isclose(result.scores, 1.0 + 0.5))
+    assert np.all(
+        np.isclose(
+            result.target_points,
+            np.array([
+                [[1.0, 1.0]],
+                [[1.0, 1.0]],
+                [[1.0, 1.0]],
+                [[-1.0, -1.0]],
+                [[-1.0, -1.0]],
+            ])))
+    assert np.all(np.isclose(result.penalties, [0.0, 1.0]))
+    assert np.isclose(result.objective_min, 0.0)
+    assert np.isclose(result.objective_max, 1.0)
+    # Distance from (-1,-1) to (1,1).
+    assert np.isclose(result.max_distance, 2 * np.sqrt(2))
 
 
 def test_cqd_score_with_two_elites():
@@ -798,7 +843,7 @@ def test_cqd_score_with_two_elites():
         penalties=2,  # Penalties of 0 and 1.
         objective_min=0.0,
         objective_max=1.0,
-    )
+    ).mean
 
     # For theta=0, the score should be max(0.25 - 0 * 0.5, 0 - 0 * 0) = 0.25
     # For theta=1, the score should be max(0.25 - 1 * 0.5, 0 - 1 * 0) = 0
