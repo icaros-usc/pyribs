@@ -1114,7 +1114,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             must be an array of custom points.
 
         Args:
-            iterations (int): Number of times to compute the CQD score.
+            iterations (int): Number of times to compute the CQD score. We
+                return the mean CQD score across these iterations.
             target_points (int or array-like): Number of target points to
                 generate, or an (iterations, n, measure_dim) array which
                 lists n target points to list on each iteration. When an int is
@@ -1133,6 +1134,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 space. Defaults to the Euclidean distance between the extremes
                 of the measure space bounds. Known as :math:`\\delta_{max}` in
                 Kent 2022.
+        Returns:
+            The mean CQD score obtained with ``iterations`` rounds of
+            calculations.
         Raises:
             RuntimeError: The archive does not have the bounds properties
                 mentioned above, and max_distance is not specified or the target
