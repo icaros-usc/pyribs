@@ -1104,9 +1104,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         The Continuous Quality Diversity (CQD) score was introduced in
         `Kent 2022 <https://dl.acm.org/doi/10.1145/3520304.3534018>`_.
 
-        .. note:: This method assumes the archive has an ``upper_bounds`` and
-            ``lower_bounds`` property which delineate the bounds of the measure
-            space, as is the case in :class:`~ribs.archives.GridArchive`,
+        .. note:: This method by default assumes that the archive has an
+            ``upper_bounds`` and ``lower_bounds`` property which delineate the
+            bounds of the measure space, as is the case in
+            :class:`~ribs.archives.GridArchive`,
             :class:`~ribs.archives.CVTArchive`, and
             :class:`~ribs.archives.SlidingBoundariesArchive`.  If this is not
             the case, ``max_distance`` must be passed in, and ``target_points``
@@ -1130,7 +1131,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 normalizing the objectives.
             max_distance (float): Maximum distance between points in measure
                 space. Defaults to the Euclidean distance between the extremes
-                of the measure space bounds. Known as :math:`\\delta_max` in
+                of the measure space bounds. Known as :math:`\\delta_{max}` in
                 Kent 2022.
         Raises:
             RuntimeError: The archive does not have the bounds properties

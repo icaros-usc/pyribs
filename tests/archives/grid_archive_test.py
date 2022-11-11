@@ -716,6 +716,26 @@ def test_nonfinite_inputs(data):
         data.archive.index_of_single(data.measures)
 
 
+def test_cqd_score_detects_wrong_shapes(data):
+    with pytest.raises(ValueError):
+        data.archive.cqd_score(
+            iterations=1,
+            target_points=np.array([1.0]),  # Should be 3D.
+            penalties=2,
+            objective_min=0.0,
+            objective_max=1.0,
+        )
+
+    with pytest.raises(ValueError):
+        data.archive.cqd_score(
+            iterations=1,
+            target_points=3,
+            penalties=[[1.0, 1.0]],  # Should be 1D.
+            objective_min=0.0,
+            objective_max=1.0,
+        )
+
+
 def test_cqd_score_with_one_elite():
     archive = GridArchive(solution_dim=2,
                           dims=[10, 10],
