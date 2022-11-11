@@ -1102,8 +1102,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                   iterations,
                   target_points,
                   penalties,
-                  objective_min,
-                  objective_max,
+                  obj_min,
+                  obj_max,
                   max_distance=None):
         """Computes the CQD score of the archive.
 
@@ -1132,9 +1132,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 range [0,1]). Alternatively, this may be a 1D array which
                 explicitly lists the penalty values. Known as :math:`\\theta` in
                 Kent 2022.
-            objective_min (float): Minimum objective value, used when normalizing the
+            obj_min (float): Minimum objective value, used when normalizing the
                 objectives.
-            objective_max (float): Maximum objective value, used when normalizing the
+            obj_max (float): Maximum objective value, used when normalizing the
                 objectives.
             max_distance (float): Maximum distance between points in measure
                 space. Defaults to the Euclidean distance between the extremes
@@ -1190,7 +1190,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         measures_batch = self._measures_arr[index_batch]
         objective_batch = self._objective_arr[index_batch]
 
-        norm_objectives = objective_batch / (objective_max - objective_min)
+        norm_objectives = objective_batch / (obj_max - obj_min)
 
         scores = np.zeros(iterations)
 
@@ -1220,7 +1220,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             scores=scores,
             target_points=target_points,
             penalties=penalties,
-            objective_min=objective_min,
-            objective_max=objective_max,
+            obj_min=obj_min,
+            obj_max=obj_max,
             max_distance=max_distance,
         )

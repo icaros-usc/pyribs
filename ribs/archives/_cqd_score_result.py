@@ -27,10 +27,10 @@ class CQDScoreResult:
     penalties: np.ndarray
 
     #: Minimum objective passed into the method.
-    objective_min: float
+    obj_min: float
 
     #: Maximum objective passed into the method.
-    objective_max: float
+    obj_max: float
 
     #: Max distance passed into the method, or the one that was computed based
     #: on measure space bounds.

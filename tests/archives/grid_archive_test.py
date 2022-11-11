@@ -722,8 +722,8 @@ def test_cqd_score_detects_wrong_shapes(data):
             iterations=1,
             target_points=np.array([1.0]),  # Should be 3D.
             penalties=2,
-            objective_min=0.0,
-            objective_max=1.0,
+            obj_min=0.0,
+            obj_max=1.0,
         )
 
     with pytest.raises(ValueError):
@@ -731,8 +731,8 @@ def test_cqd_score_detects_wrong_shapes(data):
             iterations=1,
             target_points=3,
             penalties=[[1.0, 1.0]],  # Should be 1D.
-            objective_min=0.0,
-            objective_max=1.0,
+            obj_min=0.0,
+            obj_max=1.0,
         )
 
 
@@ -749,8 +749,8 @@ def test_cqd_score_with_one_elite():
         # (-1, -1) and (1, 1).
         target_points=np.array([[[1.0, 1.0]]]),
         penalties=2,
-        objective_min=0.0,
-        objective_max=1.0,
+        obj_min=0.0,
+        obj_max=1.0,
     ).mean
 
     # For theta=0, the score should be 1.0 - 0 * 0.5 = 1.0
@@ -770,8 +770,8 @@ def test_cqd_score_with_max_dist():
         # has a normalized distance of 0.5, since it is one unit away.
         target_points=np.array([[[1.0, 1.0]]]),
         penalties=2,
-        objective_min=0.0,
-        objective_max=1.0,
+        obj_min=0.0,
+        obj_max=1.0,
         max_distance=2.0,
     ).mean
 
@@ -799,8 +799,8 @@ def test_cqd_score_full_output():
             [[-1.0, -1.0]],
         ]),
         penalties=2,
-        objective_min=0.0,
-        objective_max=1.0,
+        obj_min=0.0,
+        obj_max=1.0,
     )
 
     # For theta=0, the score should be 1.0 - 0 * 0.5 = 1.0
@@ -819,8 +819,8 @@ def test_cqd_score_full_output():
                 [[-1.0, -1.0]],
             ])))
     assert np.all(np.isclose(result.penalties, [0.0, 1.0]))
-    assert np.isclose(result.objective_min, 0.0)
-    assert np.isclose(result.objective_max, 1.0)
+    assert np.isclose(result.obj_min, 0.0)
+    assert np.isclose(result.obj_max, 1.0)
     # Distance from (-1,-1) to (1,1).
     assert np.isclose(result.max_distance, 2 * np.sqrt(2))
 
@@ -841,8 +841,8 @@ def test_cqd_score_with_two_elites():
         # Elite 2 has a normalized distance of 0, since it is exactly at [1, 1].
         target_points=np.array([[[1.0, 1.0]]]),
         penalties=2,  # Penalties of 0 and 1.
-        objective_min=0.0,
-        objective_max=1.0,
+        obj_min=0.0,
+        obj_max=1.0,
     ).mean
 
     # For theta=0, the score should be max(0.25 - 0 * 0.5, 0 - 0 * 0) = 0.25
