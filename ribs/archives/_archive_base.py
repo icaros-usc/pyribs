@@ -1091,3 +1091,119 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             data,
             copy=False,  # Fancy indexing above already results in copying.
         )
+
+    def cqd_score(self,
+                  iterations,
+                  target_points,
+                  penalties,
+                  objective_min,
+                  objective_max,
+                  max_distance=None):
+        """Computes the CQD score of the archive.
+
+        The Continuous Quality Diversity (CQD) score was introduced in
+        `Kent 2022 <https://dl.acm.org/doi/10.1145/3520304.3534018>`_.
+
+        .. note:: This method assumes the archive has an ``upper_bounds`` and
+            ``lower_bounds`` property which delineate the bounds of the measure
+            space, as is the case in :class:`~ribs.archives.GridArchive`,
+            :class:`~ribs.archives.CVTArchive`, and
+            :class:`~ribs.archives.SlidingBoundariesArchive`.  If this is not
+            the case, ``max_distance`` must be passed in, and ``target_points``
+            must be an array of custom points.
+
+        Args:
+            iterations (int): Number of times to compute the CQD score.
+            target_points (int or array-like): Number of target points to
+                generate, or an (iterations, n, measure_dim) array which
+                lists n target points to list on each iteration. When an int is
+                passed, the points are sampled uniformly within the bounds of
+                the measure space.
+            penalties (int or array-like): Number of penalty values over which
+                to compute the score (the values are distributed evenly over the
+                range [0,1]). Alternatively, this may be a 1D array which
+                explicitly lists the penalty values. Known as :math:`\\theta` in
+                Kent 2022.
+            objective_min (float): Minimum objective value, used when
+                normalizing the objectives.
+            objective_max (float): Maximum objective value, used when
+                normalizing the objectives.
+            max_distance (float): Maximum distance between points in measure
+                space. Defaults to the Euclidean distance between the extremes
+                of the measure space bounds. Known as :math:`\\delta_max` in
+                Kent 2022.
+        Raises:
+            RuntimeError: The archive does not have the bounds properties
+                mentioned above, and max_distance is not specified or the target
+                points are not provided.
+            ValueError: target_points or penalties is an array with the wrong
+                shape.
+        """
+        if (not (hasattr(self, "upper_bounds") and
+                 hasattr(self, "lower_bounds")) and
+            (max_distance is None or np.isscalar(target_points))):
+            raise RuntimeError(
+                "When the archive does not have lower_bounds and "
+                "upper_bounds properties, max_distance must be specified, "
+                "and target_points must be an array")
+
+        if np.isscalar(target_points):
+            # pylint: disable = no-member
+            target_points = self._rng.uniform(
+                low=self.lower_bounds,
+                high=self.upper_bounds,
+                size=(iterations, target_points, self.measure_dim),
+            )
+        else:
+            target_points = np.asarray(target_points)
+            if (target_points.ndim != 3 or
+                    target_points.shape[0] != iterations or
+                    target_points.shape[2] != self.measure_dim):
+                raise ValueError(
+                    "Expected target_points to be a 3D array with "
+                    f"shape ({iterations}, n, {self.measure_dim}) "
+                    "(i.e. shape (iterations, n, measure_dim)) but it had "
+                    f"shape {target_points.shape}")
+
+        if max_distance is None:
+            # pylint: disable = no-member
+            max_distance = np.linalg.norm(self.upper_bounds - self.lower_bounds)
+
+        if np.isscalar(penalties):
+            penalties = np.linspace(0, 1, penalties)
+        else:
+            penalties = np.asarray(penalties)
+            check_is_1d(penalties, "penalties")
+
+        index_batch = self._occupied_indices[:self._num_occupied]
+        measures_batch = self._measures_arr[index_batch]
+        objective_batch = self._objective_arr[index_batch]
+
+        norm_objectives = objective_batch / (objective_max - objective_min)
+
+        scores = []
+
+        for itr in range(iterations):
+            # Distance calculation -- start by taking the difference between
+            # each measure i and all the target points.
+            distances = measures_batch[:, None] - target_points[itr]
+
+            # (len(archive), n_target_points) array of distances.
+            distances = np.linalg.norm(distances, axis=2)
+
+            norm_distances = distances / max_distance
+
+            score = 0.0
+            for penalty in penalties:
+                # Known as omega in Kent 2022 -- a (len(archive),
+                # n_target_points) array.
+                values = norm_objectives[:, None] - penalty * norm_distances
+
+                # (n_target_points,) array.
+                max_values_per_target = np.max(values, axis=0)
+
+                score += np.sum(max_values_per_target)
+
+            scores.append(score)
+
+        return np.mean(scores)
