@@ -758,6 +758,28 @@ def test_cqd_score_with_one_elite():
     assert np.isclose(score, 1.0 + 0.5)
 
 
+def test_cqd_score_with_max_dist():
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
+    archive.add_single([4.0, 4.0], 0.5, [0.0, 1.0])
+
+    score = archive.cqd_score(
+        iterations=1,
+        # With this target point and max_distance, the solution above at [0, 1]
+        # has a normalized distance of 0.5, since it is one unit away.
+        target_points=np.array([[[1.0, 1.0]]]),
+        penalties=2,
+        objective_min=0.0,
+        objective_max=1.0,
+        max_distance=2.0,
+    )
+
+    # For theta=0, the score should be 0.5 - 0 * 0.5 = 0.5
+    # For theta=1, the score should be 0.5 - 1 * 0.5 = 0.0
+    assert np.isclose(score, 0.5 + 0.0)
+
+
 def test_cqd_score_with_two_elites():
     archive = GridArchive(solution_dim=2,
                           dims=[10, 10],
