@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Add shape checks to `tell()` and `tell_dqd()`
+  methods (#269)
 - **Backwards-incompatible:** Deprecate positional arguments in constructors
   (#261)
 - **Backwards-incompatible:** Allow custom initialization in Gaussian and
