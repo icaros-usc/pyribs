@@ -48,6 +48,26 @@ def check_is_1d(array, array_name, extra_msg=""):
                          f"shape {array.shape}.{extra_msg}")
 
 
+def check_batch_shape_3d(array,
+                         array_name,
+                         dim1,
+                         dim1_name,
+                         dim2,
+                         dim2_name,
+                         extra_msg=""):
+    """Checks that the array has shape (batch_size, dim1, dim2).
+
+    `batch_size` can be any value.
+
+    `array` must be a numpy array, `dim1` and `dim2` must be int.
+    """
+    if array.ndim != 3 or array.shape[1] != dim1 or array.shape[2] != dim2:
+        raise ValueError(f"Expected {array_name} to be a 3D array with shape "
+                         f"(batch_size, {dim1}, {dim2}) (i.e. shape "
+                         f"(batch_size, {dim1_name}, {dim2_name})) but it had"
+                         f"shape {array.shape}.{extra_msg}")
+
+
 def check_solution_batch_dim(array,
                              array_name,
                              batch_size,

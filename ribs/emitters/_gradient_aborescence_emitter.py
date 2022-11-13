@@ -1,16 +1,17 @@
-"""Provides the GradientImprovementEmitter."""
+"""Provides the GradientAborescenceEmitter."""
 import itertools
 
 import numpy as np
 
-from ribs._utils import check_1d_shape
+from ribs._utils import (check_1d_shape, check_batch_shape,
+                         check_batch_shape_3d, check_solution_batch_dim)
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
 from ribs.emitters.rankers import _get_ranker
 
 
 class GradientAborescenceEmitter(EmitterBase):
-    """Generates solutions with a gradient arborescence, with coefficients
+    """Generates solutions with a gradient aborescence, with coefficients
     parameterized by CMA-ES.
 
     This emitter originates in `Fontaine 2021
@@ -298,6 +299,38 @@ class GradientAborescenceEmitter(EmitterBase):
             metadata_batch (numpy.ndarray): 1d object array containing a
                 metadata object for each solution.
         """
+        # Shape checks
+        check_solution_batch_dim(solution_batch, "solution_batch",
+                                 self.batch_size)
+        check_batch_shape(solution_batch, "solution_batch",
+                          self.archive.solution_dim, "solution_dim")
+        check_solution_batch_dim(objective_batch,
+                                 "objective_batch",
+                                 len(solution_batch),
+                                 is_1d=True)
+        check_solution_batch_dim(measures_batch, "measures_batch",
+                                 len(solution_batch))
+        check_batch_shape(measures_batch, "measures_batch",
+                          self.archive.measure_dim, "measure_dim")
+        check_solution_batch_dim(jacobian_batch, "jacobian_batch",
+                                 len(solution_batch))
+        check_batch_shape_3d(jacobian_batch, "jacobian_batch",
+                             self.archive.measure_dim + 1, "measure_dim + 1",
+                             self.archive.solution_dim, "solution_dim")
+        check_solution_batch_dim(status_batch,
+                                 "status_batch",
+                                 len(solution_batch),
+                                 is_1d=True)
+        check_solution_batch_dim(value_batch,
+                                 "value_batch",
+                                 len(solution_batch),
+                                 is_1d=True)
+        if metadata_batch is not None:
+            check_solution_batch_dim(metadata_batch,
+                                     "metadata_batch",
+                                     self.batch_size,
+                                     is_1d=True)
+
         if self._normalize_grads:
             norms = (np.linalg.norm(jacobian_batch, axis=2, keepdims=True) +
                      self._epsilon)
@@ -334,6 +367,33 @@ class GradientAborescenceEmitter(EmitterBase):
             metadata_batch (numpy.ndarray): 1d object array containing a
                 metadata object for each solution.
         """
+        # Shape checks
+        check_solution_batch_dim(solution_batch, "solution_batch",
+                                 self.batch_size)
+        check_batch_shape(solution_batch, "solution_batch",
+                          self.archive.solution_dim, "solution_dim")
+        check_solution_batch_dim(objective_batch,
+                                 "objective_batch",
+                                 len(solution_batch),
+                                 is_1d=True)
+        check_solution_batch_dim(measures_batch, "measures_batch",
+                                 len(solution_batch))
+        check_batch_shape(measures_batch, "measures_batch",
+                          self.archive.measure_dim, "measure_dim")
+        check_solution_batch_dim(status_batch,
+                                 "status_batch",
+                                 len(solution_batch),
+                                 is_1d=True)
+        check_solution_batch_dim(value_batch,
+                                 "value_batch",
+                                 len(solution_batch),
+                                 is_1d=True)
+        if metadata_batch is not None:
+            check_solution_batch_dim(metadata_batch,
+                                     "metadata_batch",
+                                     self.batch_size,
+                                     is_1d=True)
+
         # Increase iteration counter.
         self._itrs += 1
 
