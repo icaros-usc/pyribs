@@ -10,8 +10,8 @@ from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
 from ribs.emitters.rankers import _get_ranker
 
 
-class GradientAborescenceEmitter(EmitterBase):
-    """Generates solutions with a gradient aborescence, with coefficients
+class GradientArborescenceEmitter(EmitterBase):
+    """Generates solutions with a gradient arborescence, with coefficients
     parameterized by CMA-ES.
 
     This emitter originates in `Fontaine 2021
@@ -22,7 +22,7 @@ class GradientAborescenceEmitter(EmitterBase):
     inserted into the archive (see ``ranker``), the solution point is updated
     with gradient ascent, and the distribution is updated with CMA-ES.
 
-    Note that unlike non-gradient emitters, GradientAborescenceEmitter requires
+    Note that unlike non-gradient emitters, GradientArborescenceEmitter requires
     calling :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before calling
     :meth:`ask` and :meth:`tell` to communicate the gradient information to the
     emitter.
@@ -73,7 +73,7 @@ class GradientAborescenceEmitter(EmitterBase):
         epsilon (float): For numerical stability, we add a small epsilon when
             normalizing gradients in :meth:`tell_dqd` -- refer to the
             implementation `here
-            <../_modules/ribs/emitters/_gradient_aborescence_emitter.html#GradientAborescenceEmitter.tell_dqd>`_.
+            <../_modules/ribs/emitters/_gradient_aborescence_emitter.html#GradientArborescenceEmitter.tell_dqd>`_.
             Pass this parameter to configure that epsilon.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
