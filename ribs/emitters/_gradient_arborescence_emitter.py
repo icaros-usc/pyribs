@@ -1,4 +1,4 @@
-"""Provides the GradientAborescenceEmitter."""
+"""Provides the GradientArborescenceEmitter."""
 import itertools
 
 import numpy as np
@@ -17,7 +17,7 @@ class GradientArborescenceEmitter(EmitterBase):
     This emitter originates in `Fontaine 2021
     <https://arxiv.org/abs/2106.03894>`_. It leverages the gradient information
     of the objective and measure functions, generating new solutions around a
-    "solution point" using gradient aborescence with coefficients drawn from a
+    "solution point" using gradient arborescence with coefficients drawn from a
     Gaussian distribution. Based on how the solutions are ranked after being
     inserted into the archive (see ``ranker``), the solution point is updated
     with gradient ascent, and the distribution is updated with CMA-ES.
@@ -73,7 +73,7 @@ class GradientArborescenceEmitter(EmitterBase):
         epsilon (float): For numerical stability, we add a small epsilon when
             normalizing gradients in :meth:`tell_dqd` -- refer to the
             implementation `here
-            <../_modules/ribs/emitters/_gradient_aborescence_emitter.html#GradientArborescenceEmitter.tell_dqd>`_.
+            <../_modules/ribs/emitters/_gradient_arborescence_emitter.html#GradientArborescenceEmitter.tell_dqd>`_.
             Pass this parameter to configure that epsilon.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
@@ -199,7 +199,7 @@ class GradientArborescenceEmitter(EmitterBase):
         return self._grad_opt.theta[None]
 
     def ask(self):
-        """Samples new solutions from a gradient aborescence parameterized by a
+        """Samples new solutions from a gradient arborescence parameterized by a
         multivariate Gaussian distribution.
 
         The multivariate Gaussian is parameterized by the evolution strategy
