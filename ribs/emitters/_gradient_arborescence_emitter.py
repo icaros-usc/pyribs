@@ -328,7 +328,7 @@ class GradientArborescenceEmitter(EmitterBase):
         if metadata_batch is not None:
             check_solution_batch_dim(metadata_batch,
                                      "metadata_batch",
-                                     self.batch_size,
+                                     len(solution_batch),
                                      is_1d=True)
 
         if self._normalize_grads:
