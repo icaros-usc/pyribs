@@ -1,5 +1,6 @@
 """Provides CQDScoreResult."""
 import dataclasses
+import typing
 
 import numpy as np
 
@@ -34,4 +35,8 @@ class CQDScoreResult:
 
     #: Max distance passed into the method, or the one that was computed based
     #: on measure space bounds.
-    max_distance: float
+    dist_max: float
+
+    #: Order of the norm for distance which is passed into the method. Refer to
+    #: the ``ord`` argument in :func:`numpy.linalg.norm` for type info.
+    dist_ord: typing.Any

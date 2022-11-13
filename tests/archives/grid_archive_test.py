@@ -766,18 +766,42 @@ def test_cqd_score_with_max_dist():
 
     score = archive.cqd_score(
         iterations=1,
-        # With this target point and max_distance, the solution above at [0, 1]
+        # With this target point and dist_max, the solution above at [0, 1]
         # has a normalized distance of 0.5, since it is one unit away.
         target_points=np.array([[[1.0, 1.0]]]),
         penalties=2,
         obj_min=0.0,
         obj_max=1.0,
-        max_distance=2.0,
+        dist_max=2.0,
     ).mean
 
     # For theta=0, the score should be 0.5 - 0 * 0.5 = 0.5
     # For theta=1, the score should be 0.5 - 1 * 0.5 = 0.0
     assert np.isclose(score, 0.5 + 0.0)
+
+
+def test_cqd_score_l1_norm():
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
+    archive.add_single([4.0, 4.0], 0.5, [0.0, 0.0])
+
+    score = archive.cqd_score(
+        iterations=1,
+        # With this target point and dist_max, the solution above at [0, 0]
+        # has a normalized distance of 1.0, since it is two units away.
+        target_points=np.array([[[1.0, 1.0]]]),
+        penalties=2,
+        obj_min=0.0,
+        obj_max=1.0,
+        dist_max=2.0,
+        # L1 norm.
+        dist_ord=1,
+    ).mean
+
+    # For theta=0, the score should be 0.5 - 0 * 1.0 = 0.5
+    # For theta=1, the score should be 0.5 - 1 * 1.0 = -0.5
+    assert np.isclose(score, 0.5 + -0.5)
 
 
 def test_cqd_score_full_output():
@@ -822,7 +846,8 @@ def test_cqd_score_full_output():
     assert np.isclose(result.obj_min, 0.0)
     assert np.isclose(result.obj_max, 1.0)
     # Distance from (-1,-1) to (1,1).
-    assert np.isclose(result.max_distance, 2 * np.sqrt(2))
+    assert np.isclose(result.dist_max, 2 * np.sqrt(2))
+    assert result.dist_ord is None
 
 
 def test_cqd_score_with_two_elites():

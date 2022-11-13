@@ -1104,7 +1104,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                   penalties,
                   obj_min,
                   obj_max,
-                  max_distance=None):
+                  dist_max=None,
+                  dist_ord=None):
         """Computes the CQD score of the archive.
 
         The Continuous Quality Diversity (CQD) score was introduced in
@@ -1116,8 +1117,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             :class:`~ribs.archives.GridArchive`,
             :class:`~ribs.archives.CVTArchive`, and
             :class:`~ribs.archives.SlidingBoundariesArchive`.  If this is not
-            the case, ``max_distance`` must be passed in, and ``target_points``
-            must be an array of custom points.
+            the case, ``dist_max`` must be passed in, and ``target_points`` must
+            be an array of custom points.
 
         Args:
             iterations (int): Number of times to compute the CQD score. We
@@ -1136,26 +1137,31 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 objectives.
             obj_max (float): Maximum objective value, used when normalizing the
                 objectives.
-            max_distance (float): Maximum distance between points in measure
-                space. Defaults to the Euclidean distance between the extremes
-                of the measure space bounds. Known as :math:`\\delta_{max}` in
+            dist_max (float): Maximum distance between points in measure space.
+                Defaults to the distance between the extremes of the measure
+                space bounds (the type of distance is computed with the order
+                specified by ``dist_ord``). Known as :math:`\\delta_{max}` in
                 Kent 2022.
+            dist_ord: Order of the norm to use for calculating measure space
+                distance; this is passed to :func:`numpy.linalg.norm` as the
+                ``ord`` argument. See :func:`numpy.linalg.norm` for possible
+                values. The default is to use Euclidean distance (L2 norm).
         Returns:
             The mean CQD score obtained with ``iterations`` rounds of
             calculations.
         Raises:
             RuntimeError: The archive does not have the bounds properties
-                mentioned above, and max_distance is not specified or the target
+                mentioned above, and dist_max is not specified or the target
                 points are not provided.
             ValueError: target_points or penalties is an array with the wrong
                 shape.
         """
         if (not (hasattr(self, "upper_bounds") and
                  hasattr(self, "lower_bounds")) and
-            (max_distance is None or np.isscalar(target_points))):
+            (dist_max is None or np.isscalar(target_points))):
             raise RuntimeError(
                 "When the archive does not have lower_bounds and "
-                "upper_bounds properties, max_distance must be specified, "
+                "upper_bounds properties, dist_max must be specified, "
                 "and target_points must be an array")
 
         if np.isscalar(target_points):
@@ -1176,9 +1182,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                     "(i.e. shape (iterations, n, measure_dim)) but it had "
                     f"shape {target_points.shape}")
 
-        if max_distance is None:
+        if dist_max is None:
             # pylint: disable = no-member
-            max_distance = np.linalg.norm(self.upper_bounds - self.lower_bounds)
+            dist_max = np.linalg.norm(self.upper_bounds - self.lower_bounds,
+                                      ord=dist_ord)
 
         if np.isscalar(penalties):
             penalties = np.linspace(0, 1, penalties)
@@ -1200,9 +1207,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             distances = measures_batch[:, None] - target_points[itr]
 
             # (len(archive), n_target_points) array of distances.
-            distances = np.linalg.norm(distances, axis=2)
+            distances = np.linalg.norm(distances, ord=dist_ord, axis=2)
 
-            norm_distances = distances / max_distance
+            norm_distances = distances / dist_max
 
             for penalty in penalties:
                 # Known as omega in Kent 2022 -- a (len(archive),
@@ -1222,5 +1229,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             penalties=penalties,
             obj_min=obj_min,
             obj_max=obj_max,
-            max_distance=max_distance,
+            dist_max=dist_max,
+            dist_ord=dist_ord,
         )
