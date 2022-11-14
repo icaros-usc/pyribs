@@ -6,6 +6,7 @@
 
 #### API
 
+- Add method for computing CQD score in archives (#252)
 - **Backwards-incompatible:** Deprecate positional arguments in constructors
   (#261)
 - **Backwards-incompatible:** Allow custom initialization in Gaussian and
@@ -15,14 +16,14 @@
   - Add separate tests for `add_single` and `add` with single solution
 - Fix all examples and tutorials (#253)
 - Add restart timer to `EvolutionStrategyEmitter` and
-  `GradientAborescenceEmitter`(#255)
+  `GradientArborescenceEmitter`(#255)
 - Rename fields and update documentation (#249, #250)
   - **Backwards-incompatible:** rename `Optimizer` to `Scheduler`
   - **Backwards-incompatible:** rename `objective_value` to `objective`
   - **Backwards-incompatible:** rename `behavior_value`/`bcs` to `measures`
   - **Backwards-incompatible:** `behavior_dim` in archives is now `measure_dim`
   - Rename `n_solutions` to `batch_size` in `Scheduler`.
-- Add `GradientAborescenceEmitter`, which is used to implement CMA-MEGA (#240,
+- Add `GradientArborescenceEmitter`, which is used to implement CMA-MEGA (#240,
   #263, #264)
 - Update emitter `tell()` docstrings to no longer say "Inserts entries into
   archive" (#247)
