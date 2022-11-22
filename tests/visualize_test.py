@@ -247,8 +247,7 @@ def test_heatmap_fails_on_unsupported_dims(archive_type):
         }[archive_type](archive)
 
 
-@pytest.mark.parametrize("archive_type", ["grid"]
-                        )  # TODO: impl + test for cvt and sliding show heatmap
+@pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
 @pytest.mark.parametrize("invalid_arg_cbar",
                          ["None", 3.2, True, (3.2, None), [3.2, None]]
                         )  # some random but invalid inputs
@@ -280,8 +279,7 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
         }[archive_type](archive=archive, cbar=invalid_arg_cbar)
 
 
-@pytest.mark.parametrize("archive_type", ["grid"]
-                        )  # TODO: impl + test for cvt and sliding show heatmap
+@pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
 @pytest.mark.parametrize("invalid_arg_aspect",
                          ["None", True, (3.2, None), [3.2, None]]
                         )  # some random but invalid inputs
@@ -594,6 +592,24 @@ def test_grid_archive_with_boundaries(grid_archive):
 def test_sliding_archive_with_boundaries(sliding_archive):
     plt.figure(figsize=(8, 6))
     sliding_boundaries_archive_heatmap(sliding_archive, boundary_lw=0.5)
+
+
+@image_comparison(
+    baseline_images=["sliding_boundaries_heatmap_mismatch_xy_with_boundaries"],
+    remove_text=False,
+    extensions=["png"])
+def test_sliding_archive_mismatch_xy_with_boundaries():
+    """There was a bug caused by the boundary lines being assigned incorrectly.
+
+    https://github.com/icaros-usc/pyribs/issues/270
+    """
+    archive = SlidingBoundariesArchive(solution_dim=2,
+                                       dims=[10, 20],
+                                       ranges=[(-1, 1), (-2, 2)],
+                                       seed=42)
+    add_random_sphere(archive, (-1, 1), (-2, 2))
+    plt.figure(figsize=(8, 6))
+    sliding_boundaries_archive_heatmap(archive, boundary_lw=0.5)
 
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_samples"],
