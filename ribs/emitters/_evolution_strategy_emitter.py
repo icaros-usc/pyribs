@@ -3,8 +3,7 @@ import itertools
 
 import numpy as np
 
-from ribs._utils import (check_1d_shape, check_batch_shape,
-                         check_solution_batch_dim)
+from ribs._utils import check_1d_shape, validate_args
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import CMAEvolutionStrategy
 from ribs.emitters.rankers import _get_ranker
@@ -194,38 +193,21 @@ class EvolutionStrategyEmitter(EmitterBase):
             metadata_batch (numpy.ndarray): 1D object array containing a
                 metadata object for each solution.
         """
-        # Shape checks
-        check_solution_batch_dim(solution_batch, "solution_batch",
-                                 self.batch_size)
-        check_batch_shape(solution_batch, "solution_batch",
-                          self.archive.solution_dim, "solution_dim")
-        check_solution_batch_dim(objective_batch,
-                                 "objective_batch",
-                                 len(solution_batch),
-                                 is_1d=True)
-        check_solution_batch_dim(measures_batch, "measures_batch",
-                                 len(solution_batch))
-        check_batch_shape(measures_batch, "measures_batch",
-                          self.archive.measure_dim, "measure_dim")
-        check_solution_batch_dim(status_batch,
-                                 "status_batch",
-                                 len(solution_batch),
-                                 is_1d=True)
-        check_solution_batch_dim(value_batch,
-                                 "value_batch",
-                                 len(solution_batch),
-                                 is_1d=True)
-        if metadata_batch is not None:
-            check_solution_batch_dim(metadata_batch,
-                                     "metadata_batch",
-                                     len(solution_batch),
-                                     is_1d=True)
-
-        # Increase iteration counter.
-        self._itrs += 1
 
         metadata_batch = itertools.repeat(
             None) if metadata_batch is None else metadata_batch
+
+        # Validate arguments.
+        validate_args(archive=self.archive,
+                      solution_batch=solution_batch,
+                      objective_batch=objective_batch,
+                      measures_batch=measures_batch,
+                      status_batch=status_batch,
+                      value_batch=value_batch,
+                      metadata_batch=metadata_batch)
+
+        # Increase iteration counter.
+        self._itrs += 1
 
         # Count number of new solutions.
         new_sols = status_batch.astype(bool).sum()

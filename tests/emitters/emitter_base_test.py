@@ -1,4 +1,6 @@
 """Tests that should work for all emitters."""
+import itertools
+
 import numpy as np
 import pytest
 
@@ -77,196 +79,45 @@ def test_ask_emits_correct_num_sols_on_nonempty_archive(emitter_fixture):
 #
 
 
-@pytest.fixture(
-    params=["GradientArborescenceEmitter", "EvolutionStrategyEmitter"])
-def shape_test_fixture(request):
-    """Creates an archive, emitter, and initial solution.
+@pytest.mark.parametrize(
+    "emitter_type", ["GradientArborescenceEmitter", "EvolutionStrategyEmitter"],
+    ids=["GAEmitter", "ESEmitter"])
+@pytest.mark.parametrize(
+    "wrong_array,offsets",
+    [
+        ("solution_batch", [(0, 1), (1, 0)]),
+        ("objective_batch", [(1,)]),
+        ("measures_batch", [(0, 1), (1, 0)]),
+        ("jacobian_batch", [(0, 0, 1), (0, 1, 0), (1, 0, 0)]),
+        ("status_batch", [(1,)]),
+        ("value_batch", [(1,)]),
+        ("metadata_batch", [(1,)]),
+    ],
+)
+def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
+    """Test for incorrect shape of arguments in tell and tell_dqd.
 
-    Returns:
-        Tuple of (archive, emitter, batch_size, solution_dim).
+    This test assumes that testing for every dimension of the input shapes
+    individually covers the cases where some combination of the dimensions are
+    wrong. For instance, if we have solution_batch.shape = (x, y), then testing
+    for incorrect x and incorrect y individually is enough. We don't have to
+    test for when both x and y are incorrect.
     """
-    emitter_name = request.param
-
     batch_size = 3
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
-    if emitter_name == "GradientArborescenceEmitter":
+    if emitter_type == "GradientArborescenceEmitter":
         emitter = GradientArborescenceEmitter(archive,
                                               x0=np.array([0]),
                                               sigma0=1.0,
                                               step_size=0.1,
                                               batch_size=batch_size)
-    elif emitter_name == "EvolutionStrategyEmitter":
+    elif emitter_type == "EvolutionStrategyEmitter":
         emitter = EvolutionStrategyEmitter(archive,
                                            x0=np.array([0]),
                                            sigma0=1.0,
                                            ranker="imp",
                                            batch_size=batch_size)
 
-    return archive, emitter, batch_size
-
-
-@pytest.mark.parametrize("offset", [(0, 1), (1, 0), (1, 1)])
-def test_tell_wrong_shape_solution_batch(shape_test_fixture, offset):
-    archive, emitter, batch_size = shape_test_fixture
-
-    wrong_batch_size = batch_size + offset[0]
-    wrong_solution_dim = archive.solution_dim + offset[1]
-
-    solution_batch = np.ones(
-        (wrong_batch_size, wrong_solution_dim))  # wrong shape
-    objective_batch = np.ones(batch_size)
-    measures_batch = np.ones((batch_size, archive.measure_dim))
-    jacobian_batch = np.ones(
-        (batch_size, archive.measure_dim + 1, archive.solution_dim))
-    status_batch = np.ones(batch_size)
-    value_batch = np.ones(batch_size)
-
-    if isinstance(emitter, GradientArborescenceEmitter):
-        with pytest.raises(ValueError):
-            emitter.tell_dqd(solution_batch, objective_batch, measures_batch,
-                             jacobian_batch, status_batch, value_batch)
-
-    with pytest.raises(ValueError):
-        # For GradientArborescenceEmitter, tell is called before tell_dqd, but
-        # a shape check exception should be thrown before tell complains that
-        # tell_dqd is called.
-        emitter.tell(solution_batch, objective_batch, measures_batch,
-                     status_batch, value_batch)
-
-
-def test_tell_wrong_shape_objective_batch(shape_test_fixture):
-    archive, emitter, batch_size = shape_test_fixture
-
-    solution_batch = np.ones((batch_size, archive.solution_dim))
-    objective_batch = np.ones(batch_size + 1)  # wrong shape
-    measures_batch = np.ones((batch_size, archive.measure_dim))
-    jacobian_batch = np.ones(
-        (batch_size, archive.measure_dim + 1, archive.solution_dim))
-    status_batch = np.ones(batch_size)
-    value_batch = np.ones(batch_size)
-
-    if isinstance(emitter, GradientArborescenceEmitter):
-        with pytest.raises(ValueError):
-            emitter.tell_dqd(solution_batch, objective_batch, measures_batch,
-                             jacobian_batch, status_batch, value_batch)
-
-    with pytest.raises(ValueError):
-        # For GradientArborescenceEmitter, tell is called before tell_dqd, but
-        # a shape check exception should be thrown before tell complains that
-        # tell_dqd is called.
-        emitter.tell(solution_batch, objective_batch, measures_batch,
-                     status_batch, value_batch)
-
-
-@pytest.mark.parametrize("offset", [(0, 1), (1, 0), (1, 1)])
-def test_tell_wrong_shape_measures_batch(shape_test_fixture, offset):
-    archive, emitter, batch_size = shape_test_fixture
-
-    wrong_batch_size = batch_size + offset[0]
-    wrong_measure_dim = archive.measure_dim + offset[1]
-
-    solution_batch = np.ones((batch_size, archive.solution_dim))
-    objective_batch = np.ones(batch_size)
-    measures_batch = np.ones(
-        (wrong_batch_size, wrong_measure_dim))  # wrong shape
-    jacobian_batch = np.ones(
-        (batch_size, archive.measure_dim + 1, archive.solution_dim))
-    status_batch = np.ones(batch_size)
-    value_batch = np.ones(batch_size)
-
-    if isinstance(emitter, GradientArborescenceEmitter):
-        with pytest.raises(ValueError):
-            emitter.tell_dqd(solution_batch, objective_batch, measures_batch,
-                             jacobian_batch, status_batch, value_batch)
-
-    with pytest.raises(ValueError):
-        # For GradientArborescenceEmitter, tell is called before tell_dqd, but
-        # a shape check exception should be thrown before tell complains that
-        # tell_dqd is called.
-        emitter.tell(solution_batch, objective_batch, measures_batch,
-                     status_batch, value_batch)
-
-
-@pytest.mark.parametrize("offset", [(0, 0, 1), (0, 1, 0), (1, 0, 0), (0, 1, 1),
-                                    (1, 1, 0), (1, 0, 1), (1, 1, 1)])
-def test_tell_wrong_shape_jacobian_batch(shape_test_fixture, offset):
-    archive, emitter, batch_size = shape_test_fixture
-
-    wrong_batch_size = batch_size + offset[0]
-    wrong_measure_dim = archive.measure_dim + offset[1]
-    wrong_solution_dim = archive.solution_dim + offset[2]
-
-    solution_batch = np.ones((batch_size, archive.solution_dim))
-    objective_batch = np.ones(batch_size)
-    measures_batch = np.ones((batch_size, archive.measure_dim))
-    jacobian_batch = np.ones((wrong_batch_size, wrong_measure_dim + 1,
-                              wrong_solution_dim))  # wrong shape
-    status_batch = np.ones(batch_size)
-    value_batch = np.ones(batch_size)
-
-    if isinstance(emitter, GradientArborescenceEmitter):
-        with pytest.raises(ValueError):
-            emitter.tell_dqd(solution_batch, objective_batch, measures_batch,
-                             jacobian_batch, status_batch, value_batch)
-
-
-def test_tell_wrong_shape_status_batch(shape_test_fixture):
-    archive, emitter, batch_size = shape_test_fixture
-
-    wrong_batch_size = batch_size + 1
-
-    solution_batch = np.ones((batch_size, archive.solution_dim))
-    objective_batch = np.ones(batch_size)
-    measures_batch = np.ones((batch_size, archive.measure_dim))
-    jacobian_batch = np.ones(
-        (batch_size, archive.measure_dim + 1, archive.solution_dim))
-    status_batch = np.ones(wrong_batch_size)  # wrong shape
-    value_batch = np.ones(batch_size)
-
-    if isinstance(emitter, GradientArborescenceEmitter):
-        with pytest.raises(ValueError):
-            emitter.tell_dqd(solution_batch, objective_batch, measures_batch,
-                             jacobian_batch, status_batch, value_batch)
-
-    with pytest.raises(ValueError):
-        # For GradientArborescenceEmitter, tell is called before tell_dqd, but
-        # a shape check exception should be thrown before tell complains that
-        # tell_dqd is called.
-        emitter.tell(solution_batch, objective_batch, measures_batch,
-                     status_batch, value_batch)
-
-
-def test_tell_wrong_shape_value_batch(shape_test_fixture):
-    archive, emitter, batch_size = shape_test_fixture
-
-    wrong_batch_size = batch_size + 1
-
-    solution_batch = np.ones((batch_size, archive.solution_dim))
-    objective_batch = np.ones(batch_size)
-    measures_batch = np.ones((batch_size, archive.measure_dim))
-    jacobian_batch = np.ones(
-        (batch_size, archive.measure_dim + 1, archive.solution_dim))
-    status_batch = np.ones(batch_size)
-    value_batch = np.ones(wrong_batch_size)  # wrong shape
-
-    if isinstance(emitter, GradientArborescenceEmitter):
-        with pytest.raises(ValueError):
-            emitter.tell_dqd(solution_batch, objective_batch, measures_batch,
-                             jacobian_batch, status_batch, value_batch)
-
-    with pytest.raises(ValueError):
-        # For GradientArborescenceEmitter, tell is called before tell_dqd, but
-        # a shape check exception should be thrown before tell complains that
-        # tell_dqd is called.
-        emitter.tell(solution_batch, objective_batch, measures_batch,
-                     status_batch, value_batch)
-
-
-def test_tell_wrong_shape_metadata_batch(shape_test_fixture):
-    archive, emitter, batch_size = shape_test_fixture
-
-    wrong_batch_size = batch_size + 1
-
     solution_batch = np.ones((batch_size, archive.solution_dim))
     objective_batch = np.ones(batch_size)
     measures_batch = np.ones((batch_size, archive.measure_dim))
@@ -274,47 +125,53 @@ def test_tell_wrong_shape_metadata_batch(shape_test_fixture):
         (batch_size, archive.measure_dim + 1, archive.solution_dim))
     status_batch = np.ones(batch_size)
     value_batch = np.ones(batch_size)
-    metadata_batch = np.ones(wrong_batch_size)
+    metadata_batch = np.ones(batch_size)
 
-    if isinstance(emitter, GradientArborescenceEmitter):
+    for offset in offsets:
+        if wrong_array == "solution_batch":
+            solution_batch = np.ones((
+                batch_size + offset[0],
+                archive.solution_dim + offset[1],
+            ))
+        elif wrong_array == "objective_batch":
+            objective_batch = np.ones(batch_size + offset[0])
+        elif wrong_array == "measures_batch":
+            measures_batch = np.ones((
+                batch_size + offset[0],
+                archive.measure_dim + offset[1],
+            ))
+        elif wrong_array == "jacobian_batch":
+            print(offset)
+            jacobian_batch = np.ones((
+                batch_size + offset[0],
+                archive.measure_dim + 1 + offset[1],
+                archive.solution_dim + offset[2],
+            ))
+        elif wrong_array == "status_batch":
+            status_batch = np.ones(batch_size + offset[0])
+        elif wrong_array == "value_batch":
+            value_batch = np.ones(batch_size + offset[0])
+        elif wrong_array == "metadata_batch":
+            metadata_batch = np.ones(batch_size + offset[0])
+
+        # Only GradientArborescenceEmitter has tell_dqd method.
+        if isinstance(emitter, GradientArborescenceEmitter):
+            with pytest.raises(ValueError):
+                emitter.tell_dqd(solution_batch, objective_batch,
+                                 measures_batch, jacobian_batch, status_batch,
+                                 value_batch, metadata_batch)
+
+        if wrong_array == "jacobian_batch":
+            # tell() does not use jacobian_batch paramter, so we skip calling
+            # it when we are testing for incorrect jacobian_batch shape.
+            return
+
         with pytest.raises(ValueError):
-            emitter.tell_dqd(solution_batch, objective_batch, measures_batch,
-                             jacobian_batch, status_batch, value_batch,
-                             metadata_batch)
-
-    with pytest.raises(ValueError):
-        # For GradientArborescenceEmitter, tell is called before tell_dqd, but
-        # a shape check exception should be thrown before tell complains that
-        # tell_dqd is called.
-        emitter.tell(solution_batch, objective_batch, measures_batch,
-                     status_batch, value_batch, metadata_batch)
-
-
-def test_tell_wrong_shape_batch_size(shape_test_fixture):
-    archive, emitter, batch_size = shape_test_fixture
-
-    wrong_batch_size = batch_size + 1
-
-    # Everything has wrong shape.
-    solution_batch = np.ones((wrong_batch_size, archive.solution_dim))
-    objective_batch = np.ones(wrong_batch_size)
-    measures_batch = np.ones((wrong_batch_size, archive.measure_dim))
-    jacobian_batch = np.ones(
-        (wrong_batch_size, archive.solution_dim + 1, archive.solution_dim))
-    status_batch = np.ones(wrong_batch_size)
-    value_batch = np.ones(wrong_batch_size)
-
-    if isinstance(emitter, GradientArborescenceEmitter):
-        with pytest.raises(ValueError):
-            emitter.tell_dqd(solution_batch, objective_batch, measures_batch,
-                             jacobian_batch, status_batch, value_batch)
-
-    with pytest.raises(ValueError):
-        # For GradientArborescenceEmitter, tell is called before tell_dqd, but
-        # a shape check exception should be thrown before tell complains that
-        # tell_dqd is called.
-        emitter.tell(solution_batch, objective_batch, measures_batch,
-                     status_batch, value_batch)
+            # For GradientArborescenceEmitter, tell is called before tell_dqd,
+            # but shape check exception should be thrown before tell complains
+            # that tell_dqd is not called.
+            emitter.tell(solution_batch, objective_batch, measures_batch,
+                         status_batch, value_batch, metadata_batch)
 
 
 #

@@ -6,7 +6,7 @@ import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
-                         check_is_1d, check_solution_batch_dim)
+                         check_is_1d, check_solution_batch_dim, validate_args)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._elite import Elite, EliteBatch
@@ -409,51 +409,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
 
-    def _validate_add_args(self, solution_batch, objective_batch,
-                           measures_batch, metadata_batch):
-        """Performs preprocessing and checks for arguments to add()."""
-        solution_batch = np.asarray(solution_batch)
-        check_batch_shape(solution_batch, "solution_batch", self.solution_dim,
-                          "solution_dim", _ADD_WARNING)
-        batch_size = solution_batch.shape[0]
-
-        objective_batch = np.asarray(objective_batch, self.dtype)
-        check_is_1d(objective_batch, "objective_batch", _ADD_WARNING)
-        check_solution_batch_dim(objective_batch,
-                                 "objective_batch",
-                                 batch_size,
-                                 is_1d=True,
-                                 extra_msg=_ADD_WARNING)
-        check_finite(objective_batch, "objective_batch")
-
-        measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
-                          "measure_dim", _ADD_WARNING)
-        check_solution_batch_dim(measures_batch,
-                                 "measures_batch",
-                                 batch_size,
-                                 is_1d=False,
-                                 extra_msg=_ADD_WARNING)
-        check_finite(measures_batch, "measures_batch")
-
-        metadata_batch = (np.empty(batch_size, dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
-        check_is_1d(metadata_batch, "metadata_batch", _ADD_WARNING)
-        check_solution_batch_dim(metadata_batch,
-                                 "metadata_batch",
-                                 batch_size,
-                                 is_1d=True,
-                                 extra_msg=_ADD_WARNING)
-
-        return (
-            batch_size,
-            solution_batch,
-            objective_batch,
-            measures_batch,
-            metadata_batch,
-        )
-
     def add(self,
             solution_batch,
             objective_batch,
@@ -564,12 +519,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             solution_batch,
             objective_batch,
             measures_batch,
+            _,
+            _,
             metadata_batch,
-        ) = self._validate_add_args(
+        ) = validate_args(
             solution_batch,
             objective_batch,
             measures_batch,
-            metadata_batch,
+            metadata_batch=metadata_batch,
         )
 
         ## Step 2: Compute status_batch and value_batch ##
