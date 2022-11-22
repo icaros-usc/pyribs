@@ -247,8 +247,7 @@ def test_heatmap_fails_on_unsupported_dims(archive_type):
         }[archive_type](archive)
 
 
-@pytest.mark.parametrize("archive_type", ["grid"]
-                        )  # TODO: impl + test for cvt and sliding show heatmap
+@pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
 @pytest.mark.parametrize("invalid_arg_cbar",
                          ["None", 3.2, True, (3.2, None), [3.2, None]]
                         )  # some random but invalid inputs
@@ -280,8 +279,7 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
         }[archive_type](archive=archive, cbar=invalid_arg_cbar)
 
 
-@pytest.mark.parametrize("archive_type", ["grid"]
-                        )  # TODO: impl + test for cvt and sliding show heatmap
+@pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
 @pytest.mark.parametrize("invalid_arg_aspect",
                          ["None", True, (3.2, None), [3.2, None]]
                         )  # some random but invalid inputs
