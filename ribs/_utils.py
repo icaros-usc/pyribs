@@ -154,3 +154,13 @@ def validate_args(archive,
                                  batch_size,
                                  is_1d=True,
                                  extra_msg=_ADD_WARNING)
+
+
+def validate_add_single_args(archive, solution, objective, measures):
+    """Performs preprocessing and checks for arguments to add_single()."""
+    check_1d_shape(solution, "solution", archive.solution_dim, "solution_dim")
+
+    check_finite(objective, "objective")
+
+    check_1d_shape(measures, "measures", archive.measure_dim, "measure_dim")
+    check_finite(measures, "measures")

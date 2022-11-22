@@ -729,16 +729,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """
         self._state["add"] += 1
 
-        (
-            solution,
-            objective,
-            measures,
-            metadata,
-        ) = self._validate_add_single_args(
-            solution,
-            objective,
-            measures,
-            metadata,
+        solution = np.asarray(solution)
+        objective = self.dtype(objective)
+        measures = np.asarray(measures)
+        validate_add_single_args(
+            self,
+            solution=solution,
+            objective=objective,
+            measures=measures,
         )
 
         index = self.index_of_single(measures)
