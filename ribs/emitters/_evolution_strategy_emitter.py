@@ -193,10 +193,6 @@ class EvolutionStrategyEmitter(EmitterBase):
             metadata_batch (numpy.ndarray): 1D object array containing a
                 metadata object for each solution.
         """
-
-        metadata_batch = itertools.repeat(
-            None) if metadata_batch is None else metadata_batch
-
         # Validate arguments.
         validate_args(archive=self.archive,
                       solution_batch=solution_batch,
@@ -205,6 +201,9 @@ class EvolutionStrategyEmitter(EmitterBase):
                       status_batch=status_batch,
                       value_batch=value_batch,
                       metadata_batch=metadata_batch)
+
+        metadata_batch = itertools.repeat(
+            None) if metadata_batch is None else metadata_batch
 
         # Increase iteration counter.
         self._itrs += 1
