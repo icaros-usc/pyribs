@@ -82,43 +82,40 @@ def check_solution_batch_dim(array,
                          f"shape {array.shape}.{extra_msg}")
 
 
-_ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() and tell() take"
-                " in a batch of solutions unlike in pyribs 0.4.0, where add()"
-                " and tell() only took in a single solution.")
+_BATCH_WARNING = (" Note that starting in pyribs 0.5.0, add() and tell() take"
+                  " in a batch of solutions unlike in pyribs 0.4.0, where add()"
+                  " and tell() only took in a single solution.")
 
 
-def validate_args(archive,
-                  *,
-                  solution_batch,
-                  objective_batch,
-                  measures_batch,
-                  status_batch=None,
-                  value_batch=None,
-                  jacobian_batch=None,
-                  metadata_batch=None):
+def validate_batch_args(archive,
+                        *,
+                        solution_batch,
+                        objective_batch,
+                        measures_batch,
+                        status_batch=None,
+                        value_batch=None,
+                        jacobian_batch=None,
+                        metadata_batch=None):
     """Performs checks for arguments to add() and tell()."""
-    solution_batch = np.asarray(solution_batch)
     check_batch_shape(solution_batch, "solution_batch", archive.solution_dim,
-                      "solution_dim", _ADD_WARNING)
+                      "solution_dim", _BATCH_WARNING)
     batch_size = solution_batch.shape[0]
 
-    objective_batch = np.asarray(objective_batch, archive.dtype)
-    check_is_1d(objective_batch, "objective_batch", _ADD_WARNING)
+    check_is_1d(objective_batch, "objective_batch", _BATCH_WARNING)
     check_solution_batch_dim(objective_batch,
                              "objective_batch",
                              batch_size,
                              is_1d=True,
-                             extra_msg=_ADD_WARNING)
+                             extra_msg=_BATCH_WARNING)
     check_finite(objective_batch, "objective_batch")
 
-    measures_batch = np.asarray(measures_batch)
     check_batch_shape(measures_batch, "measures_batch", archive.measure_dim,
-                      "measure_dim", _ADD_WARNING)
+                      "measure_dim", _BATCH_WARNING)
     check_solution_batch_dim(measures_batch,
                              "measures_batch",
                              batch_size,
                              is_1d=False,
-                             extra_msg=_ADD_WARNING)
+                             extra_msg=_BATCH_WARNING)
     check_finite(measures_batch, "measures_batch")
 
     if jacobian_batch is not None:
@@ -128,35 +125,32 @@ def validate_args(archive,
         check_finite(jacobian_batch, "jacobian_batch")
 
     if status_batch is not None:
-        status_batch = np.array(status_batch)
-        check_is_1d(status_batch, "status_batch", _ADD_WARNING)
+        check_is_1d(status_batch, "status_batch", _BATCH_WARNING)
         check_solution_batch_dim(status_batch,
                                  "status_batch",
                                  batch_size,
                                  is_1d=True,
-                                 extra_msg=_ADD_WARNING)
+                                 extra_msg=_BATCH_WARNING)
         check_finite(status_batch, "status_batch")
 
     if value_batch is not None:
-        value_batch = np.array(value_batch)
-        check_is_1d(value_batch, "value_batch", _ADD_WARNING)
+        check_is_1d(value_batch, "value_batch", _BATCH_WARNING)
         check_solution_batch_dim(value_batch,
                                  "value_batch",
                                  batch_size,
                                  is_1d=True,
-                                 extra_msg=_ADD_WARNING)
+                                 extra_msg=_BATCH_WARNING)
 
     if metadata_batch is not None:
-        metadata_batch = np.asarray(metadata_batch, dtype=object)
-        check_is_1d(metadata_batch, "metadata_batch", _ADD_WARNING)
+        check_is_1d(metadata_batch, "metadata_batch", _BATCH_WARNING)
         check_solution_batch_dim(metadata_batch,
                                  "metadata_batch",
                                  batch_size,
                                  is_1d=True,
-                                 extra_msg=_ADD_WARNING)
+                                 extra_msg=_BATCH_WARNING)
 
 
-def validate_add_single_args(archive, solution, objective, measures):
+def validate_single_args(archive, solution, objective, measures):
     """Performs preprocessing and checks for arguments to add_single()."""
     check_1d_shape(solution, "solution", archive.solution_dim, "solution_dim")
 

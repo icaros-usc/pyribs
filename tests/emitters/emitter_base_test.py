@@ -141,7 +141,6 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
                 archive.measure_dim + offset[1],
             ))
         elif wrong_array == "jacobian_batch":
-            print(offset)
             jacobian_batch = np.ones((
                 batch_size + offset[0],
                 archive.measure_dim + 1 + offset[1],

@@ -5,8 +5,8 @@ from collections import deque
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs._utils import (check_batch_shape, validate_add_single_args,
-                         validate_args)
+from ribs._utils import (check_batch_shape, validate_single_args,
+                         validate_batch_args)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._grid_archive import GridArchive
 
@@ -407,7 +407,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                                                                  dtype=object))
 
         # Validate arguments.
-        validate_args(
+        validate_batch_args(
             archive=self,
             solution_batch=solution_batch,
             objective_batch=objective_batch,
@@ -442,7 +442,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         solution = np.asarray(solution)
         objective = self.dtype(objective)
         measures = np.asarray(measures)
-        validate_add_single_args(
+        validate_single_args(
             self,
             solution=solution,
             objective=objective,

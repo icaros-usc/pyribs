@@ -7,7 +7,7 @@ from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
                          check_is_1d, check_solution_batch_dim,
-                         validate_add_single_args, validate_args)
+                         validate_batch_args, validate_single_args)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._cqd_score_result import CQDScoreResult
@@ -521,16 +521,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._state["add"] += 1
 
         ## Step 0: Preprocess input. ##
-        solution_batch = np.array(solution_batch)
+        solution_batch = np.asarray(solution_batch)
         batch_size = solution_batch.shape[0]
-        objective_batch = np.array(objective_batch)
-        measures_batch = np.array(measures_batch)
+        objective_batch = np.asarray(objective_batch)
+        measures_batch = np.asarray(measures_batch)
         metadata_batch = (np.empty(batch_size, dtype=object) if
                           metadata_batch is None else np.asarray(metadata_batch,
                                                                  dtype=object))
 
         ## Step 1: Validate input. ##
-        validate_args(
+        validate_batch_args(
             archive=self,
             solution_batch=solution_batch,
             objective_batch=objective_batch,
@@ -724,7 +724,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         solution = np.asarray(solution)
         objective = self.dtype(objective)
         measures = np.asarray(measures)
-        validate_add_single_args(
+        validate_single_args(
             self,
             solution=solution,
             objective=objective,
