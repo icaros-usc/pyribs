@@ -6,7 +6,8 @@ import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
-                         check_is_1d, check_solution_batch_dim, validate_args)
+                         check_is_1d, check_solution_batch_dim,
+                         validate_add_single_args, validate_args)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._cqd_score_result import CQDScoreResult
@@ -681,21 +682,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         return status_batch, value_batch
 
-    def _validate_add_single_args(self, solution, objective, measures,
-                                  metadata):
-        """Performs preprocessing and checks for arguments to add_single()."""
-        solution = np.asarray(solution)
-        check_1d_shape(solution, "solution", self.solution_dim, "solution_dim")
-
-        objective = self.dtype(objective)
-        check_finite(objective, "objective")
-
-        measures = np.asarray(measures)
-        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
-
-        return solution, objective, measures, metadata
-
     def add_single(self, solution, objective, measures, metadata=None):
         """Inserts a single solution into the archive.
 
@@ -1129,7 +1115,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 size=(iterations, target_points, self.measure_dim),
             )
         else:
-            target_points = np.copy(target_points)  # Copy since we return this.
+            # Copy since we return this.
+            target_points = np.copy(target_points)
             if (target_points.ndim != 3 or
                     target_points.shape[0] != iterations or
                     target_points.shape[2] != self.measure_dim):
