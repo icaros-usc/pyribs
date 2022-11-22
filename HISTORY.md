@@ -87,6 +87,10 @@
       removed
     - `index_of` must now return an integer
 
+#### Bugs
+
+- Fix boundary lines in sliding boundaries archive heatmap (#271)
+
 #### Documentation
 
 - Add sphinx-codeautolink to docs (#206)

@@ -594,6 +594,24 @@ def test_sliding_archive_with_boundaries(sliding_archive):
     sliding_boundaries_archive_heatmap(sliding_archive, boundary_lw=0.5)
 
 
+@image_comparison(
+    baseline_images=["sliding_boundaries_heatmap_mismatch_xy_with_boundaries"],
+    remove_text=False,
+    extensions=["png"])
+def test_sliding_archive_mismatch_xy_with_boundaries():
+    """There was a bug caused by the boundary lines being assigned incorrectly.
+
+    https://github.com/icaros-usc/pyribs/issues/270
+    """
+    archive = SlidingBoundariesArchive(solution_dim=2,
+                                       dims=[10, 20],
+                                       ranges=[(-1, 1), (-2, 2)],
+                                       seed=42)
+    add_random_sphere(archive, (-1, 1), (-2, 2))
+    plt.figure(figsize=(8, 6))
+    sliding_boundaries_archive_heatmap(archive, boundary_lw=0.5)
+
+
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_samples"],
                   remove_text=False,
                   extensions=["png"])

@@ -561,14 +561,17 @@ def sliding_boundaries_archive_heatmap(archive,
                    vmin=vmin,
                    vmax=vmax)
     if boundary_lw > 0.0:
+        # Careful with bounds here. Lines drawn along the x axis should extend
+        # between the y bounds and vice versa -- see
+        # https://github.com/icaros-usc/pyribs/issues/270
         ax.vlines(x_boundary,
-                  lower_bounds[0],
-                  upper_bounds[0],
+                  lower_bounds[1],
+                  upper_bounds[1],
                   color='k',
                   linewidth=boundary_lw)
         ax.hlines(y_boundary,
-                  lower_bounds[1],
-                  upper_bounds[1],
+                  lower_bounds[0],
+                  upper_bounds[0],
                   color='k',
                   linewidth=boundary_lw)
 
