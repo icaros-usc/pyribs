@@ -88,6 +88,7 @@ _ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() and tell() take"
 
 
 def validate_args(archive,
+                  *,
                   solution_batch,
                   objective_batch,
                   measures_batch,
