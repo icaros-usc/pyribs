@@ -8,6 +8,7 @@
 
 - **Backwards-incompatible:** Add shape checks to `tell()` and `tell_dqd()`
   methods (#269)
+- Add method for computing CQD score in archives (#252)
 - **Backwards-incompatible:** Deprecate positional arguments in constructors
   (#261)
 - **Backwards-incompatible:** Allow custom initialization in Gaussian and
@@ -87,6 +88,10 @@
       indicating its current usage, and `_occupied_indices_cols` has been
       removed
     - `index_of` must now return an integer
+
+#### Bugs
+
+- Fix boundary lines in sliding boundaries archive heatmap (#271)
 
 #### Documentation
 
