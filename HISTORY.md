@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Add shape checks to `tell()` and `tell_dqd()`
+  methods (#269)
 - Add method for computing CQD score in archives (#252)
 - **Backwards-incompatible:** Deprecate positional arguments in constructors
   (#261)
