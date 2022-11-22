@@ -199,6 +199,10 @@ class EvolutionStrategyEmitter(EmitterBase):
         measures_batch = np.asarray(measures_batch)
         status_batch = np.asarray(status_batch)
         value_batch = np.asarray(value_batch)
+        batch_size = solution_batch.shape[0]
+        metadata_batch = (np.empty(batch_size, dtype=object) if
+                          metadata_batch is None else np.asarray(metadata_batch,
+                                                                 dtype=object))
 
         # Validate arguments.
         validate_batch_args(archive=self.archive,
@@ -209,8 +213,8 @@ class EvolutionStrategyEmitter(EmitterBase):
                             value_batch=value_batch,
                             metadata_batch=metadata_batch)
 
-        metadata_batch = itertools.repeat(
-            None) if metadata_batch is None else np.asarray(metadata_batch)
+        # metadata_batch = itertools.repeat(
+        #     None) if metadata_batch is None else np.asarray(metadata_batch)
 
         # Increase iteration counter.
         self._itrs += 1

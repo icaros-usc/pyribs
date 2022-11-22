@@ -303,6 +303,10 @@ class GradientArborescenceEmitter(EmitterBase):
         measures_batch = np.asarray(measures_batch)
         status_batch = np.asarray(status_batch)
         value_batch = np.asarray(value_batch)
+        batch_size = solution_batch.shape[0]
+        metadata_batch = (np.empty(batch_size, dtype=object) if
+                          metadata_batch is None else np.asarray(metadata_batch,
+                                                                 dtype=object))
 
         # Validate arguments.
         validate_batch_args(archive=self.archive,
@@ -355,6 +359,10 @@ class GradientArborescenceEmitter(EmitterBase):
         measures_batch = np.asarray(measures_batch)
         status_batch = np.asarray(status_batch)
         value_batch = np.asarray(value_batch)
+        batch_size = solution_batch.shape[0]
+        metadata_batch = (np.empty(batch_size, dtype=object) if
+                          metadata_batch is None else np.asarray(metadata_batch,
+                                                                 dtype=object))
 
         # Validate arguments.
         validate_batch_args(archive=self.archive,
