@@ -7,6 +7,10 @@ import numba as nb
 import numpy as np
 from threadpoolctl import threadpool_limits
 
+from ribs.emitters.opt._optimizer_base import OptimizerBase
+
+# TODO logger?
+
 
 class DecompMatrix:
     """Maintains a covariance matrix and its eigendecomposition.
@@ -70,17 +74,10 @@ class DecompMatrix:
         self.updated_eval = current_eval
 
 
-class CMAEvolutionStrategy:
+class CMAEvolutionStrategy(OptimizerBase):
     """CMA-ES optimizer for use with emitters.
 
-    The basic usage is:
-    - Initialize the optimizer and reset it.
-    - Repeatedly:
-      - Request new solutions with ask()
-      - Rank the solutions in the emitter (better solutions come first) and pass
-        them back with tell().
-      - Use check_stop() to see if the optimizer has reached a stopping
-        condition, and if so, call reset().
+    Refer to OptimizerBase for usage instruction.
 
     Args:
         sigma0 (float): Initial step size.
@@ -93,13 +90,16 @@ class CMAEvolutionStrategy:
         dtype (str or data-type): Data type of solutions.
     """
 
+    # TODO Keyword args?
     def __init__(self, sigma0, batch_size, solution_dim, weight_rule, seed,
                  dtype):
-        self.batch_size = (4 + int(3 * np.log(solution_dim))
-                           if batch_size is None else batch_size)
-        self.sigma0 = sigma0
-        self.solution_dim = solution_dim
-        self.dtype = dtype
+        super().__init__(
+            sigma0,
+            batch_size,
+            solution_dim,
+            seed,
+            dtype,
+        )
 
         if weight_rule not in ["truncation", "active"]:
             raise ValueError(f"Invalid weight_rule {weight_rule}")
@@ -118,8 +118,6 @@ class CMAEvolutionStrategy:
         self.pc = None
         self.ps = None
         self.cov = None
-
-        self._rng = np.random.default_rng(seed)
 
     def reset(self, x0):
         """Resets the optimizer to start at x0.
@@ -198,9 +196,10 @@ class CMAEvolutionStrategy:
             batch_size (int): batch size of the sample. Defaults to
                 ``self.batch_size``.
         """
-        self.cov.update_eigensystem(self.current_eval, self.lazy_gap_evals)
         if batch_size is None:
             batch_size = self.batch_size
+
+        self.cov.update_eigensystem(self.current_eval, self.lazy_gap_evals)
         solutions = np.empty((batch_size, self.solution_dim), dtype=self.dtype)
         transform_mat = self.cov.eigenbasis * np.sqrt(self.cov.eigenvalues)
 
@@ -261,7 +260,7 @@ class CMAEvolutionStrategy:
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def tell(self, solutions, num_parents):
+    def tell(self, solutions, num_parents, ranking_indices=None):
         """Passes the solutions back to the optimizer.
 
         Args:
@@ -270,6 +269,7 @@ class CMAEvolutionStrategy:
                 objective value. It is important that _all_ of the solutions
                 initially given in ask() are returned here.
             num_parents (int): Number of best solutions to select.
+            ranking_indices (array-like of int): Unused.
         """
         self.current_eval += len(solutions)
 
@@ -309,6 +309,7 @@ class CMAEvolutionStrategy:
         # and taking a weighted sum of the outer products.
         rank_mu_update = np.einsum("ki,kj", weighted_ys, ys)
         c1a = c1 * (1 - (1 - hsig**2) * cc * (2 - cc))
+        # TODO sep-cma-mae has additional weight parameter.
         self.cov.cov = self._calc_cov_update(self.cov.cov, c1a, cmu, c1,
                                              self.pc, self.sigma,
                                              rank_mu_update)

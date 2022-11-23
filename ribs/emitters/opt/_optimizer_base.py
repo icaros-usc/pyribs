@@ -69,7 +69,7 @@ class OptimizerBase(ABC):
         """
 
     @abstractmethod
-    def tell(self, solutions, num_parents):
+    def tell(self, solutions, num_parents, ranking_indices=None):
         """Passes the solutions back to the optimizer.
 
         Args:
@@ -78,4 +78,7 @@ class OptimizerBase(ABC):
                 objective value. It is important that _all_ of the solutions
                 initially given in ask() are returned here.
             num_parents (int): Number of best solutions to select.
+            ranking_indices (array-like of int): Indices that were used to
+                order solutions from the original solutions returned in ask().
+                This argument is not used by all optimizers.
         """

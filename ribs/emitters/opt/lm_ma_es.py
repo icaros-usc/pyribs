@@ -182,7 +182,7 @@ class LMMAEvolutionStrategy(OptimizerBase):
             solutions[remaining_indices] = new_solutions
 
             # Find indices in remaining_indices that are still out of bounds
-            # (out_of_bounds indicates whether each entry in each solution is
+            # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
             remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
 

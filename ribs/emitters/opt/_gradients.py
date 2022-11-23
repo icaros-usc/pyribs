@@ -1,4 +1,5 @@
 """Gradient ascent optimizers.
+
 Adapted from:
 https://github.com/icaros-usc/dqd/blob/main/ribs/emitters/opt/_adam.py
 https://github.com/hardmaru/estool/blob/master/es.py
