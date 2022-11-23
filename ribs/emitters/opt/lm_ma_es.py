@@ -207,7 +207,7 @@ class LMMAEvolutionStrategy(OptimizerBase):
         return weights, mueff
 
     # TODO threadpool limits?
-    def tell(self, solutions, num_parents, ranking_indices=None):
+    def tell(self, solutions, num_parents, ranking_indices):
         """Passes the solutions back to the optimizer.
 
         Args:
@@ -218,7 +218,6 @@ class LMMAEvolutionStrategy(OptimizerBase):
             num_parents (int): Number of best solutions to select.
             ranking_indices (array-like of int): Indices that were used to
                 order solutions from the original solutions returned in ask().
-                This argument is not used by all optimizers.
         """
         if ranking_indices is None:
             raise ValueError("LM-MA-ES requires ranking_indices when calling"

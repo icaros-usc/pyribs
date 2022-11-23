@@ -248,7 +248,7 @@ class SeparableCMAEvolutionStrategy(OptimizerBase):
         return (cov * (1 - c1a - cmu * np.sum(weights)) + rank_one_update * c1 +
                 rank_mu_update * cmu / (sigma**2))
 
-    def tell(self, solutions, num_parents, ranking_indices=None):
+    def tell(self, solutions, num_parents, ranking_indices):
         """Passes the solutions back to the optimizer.
 
         Args:
