@@ -373,9 +373,6 @@ class GradientArborescenceEmitter(EmitterBase):
                             value_batch=value_batch,
                             metadata_batch=metadata_batch)
 
-        metadata_batch = itertools.repeat(
-            None) if metadata_batch is None else np.asarray(metadata_batch)
-
         if self._jacobian_batch is None:
             raise RuntimeError("tell() was called without calling tell_dqd().")
 

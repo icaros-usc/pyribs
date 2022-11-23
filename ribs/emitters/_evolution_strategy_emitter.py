@@ -213,9 +213,6 @@ class EvolutionStrategyEmitter(EmitterBase):
                             value_batch=value_batch,
                             metadata_batch=metadata_batch)
 
-        # metadata_batch = itertools.repeat(
-        #     None) if metadata_batch is None else np.asarray(metadata_batch)
-
         # Increase iteration counter.
         self._itrs += 1
 
