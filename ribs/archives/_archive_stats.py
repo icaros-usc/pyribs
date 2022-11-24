@@ -1,10 +1,11 @@
 """Provides ArchiveStats."""
-from typing import NamedTuple
+import dataclasses
 
 import numpy as np
 
 
-class ArchiveStats(NamedTuple):
+@dataclasses.dataclass
+class ArchiveStats:
     """Holds statistics about an archive.
 
     Attributes of type :class:`~numpy.floating` will match the
