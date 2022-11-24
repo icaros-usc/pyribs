@@ -5,6 +5,7 @@ https://github.com/CMA-ES/pycma/blob/master/cma/purecma.py
 """
 import numba as nb
 import numpy as np
+from threadpoolctl import threadpool_limits
 
 from ribs.emitters.opt._optimizer_base import OptimizerBase
 
@@ -58,12 +59,12 @@ class LMMAEvolutionStrategy(OptimizerBase):
 
         # Learning rates.
         self.csigma = 2 * self.batch_size / self.solution_dim
-        # TODO test calculations?
         # c_d,i = 1 / (1.5 ** (i - 1) * n) for i in 1..m
         self.cd = 1 / (1.5**np.arange(self.n_vectors) * self.solution_dim)
         # c_c,i = lambda / 4 ** (i - 1) * n for i in 1..m
         self.cc = self.batch_size / (4.0**np.arange(self.n_vectors) *
                                      self.solution_dim)
+        # TODO remove assert?
         assert self.cc.shape == (self.n_vectors,)
         assert self.cd.shape == (self.n_vectors,)
 
@@ -120,16 +121,6 @@ class LMMAEvolutionStrategy(OptimizerBase):
         """Transforms params sampled from Gaussian dist into solution space."""
         d = z
         for j in range(itrs):
-            # TODO delete?
-            # Original (numba does not support indexing with None):
-            #  d = ((1 - self.cd[j]) * d  # (_, n)
-            #       + (
-            #           self.cd[j] * self.m[j, None] *  # (1, n)
-            #           (self.m[j, :, None].T @ d.T).T  # (_, 1)
-            #       )  # (_, n)
-            #      )
-
-            # TODO cleanup annotation?
             d = ((1 - cd[j]) * d  # (_, n)
                  + (
                      cd[j] * np.expand_dims(m[j], axis=0) *  # (1, n)
@@ -145,7 +136,9 @@ class LMMAEvolutionStrategy(OptimizerBase):
 
         return new_solutions, out_of_bounds
 
-    # TODO threadpool limits?
+    # Limit OpenBLAS to single thread. This is typically faster than
+    # multithreading because our data is too small.
+    @threadpool_limits.wrap(limits=1, user_api="blas")
     def ask(self, lower_bounds, upper_bounds, batch_size=None):
         """Samples new solutions from the Gaussian distribution.
 
@@ -160,7 +153,7 @@ class LMMAEvolutionStrategy(OptimizerBase):
             batch_size (int): batch size of the sample. Defaults to
                 ``self.batch_size``.
         """
-        # Note: The LM-MA-ES uses mirror sampling by default, but we do not.
+        # NOTE: The LM-MA-ES uses mirror sampling by default, but we do not.
         if batch_size is None:
             batch_size = self.batch_size
 
@@ -188,7 +181,6 @@ class LMMAEvolutionStrategy(OptimizerBase):
 
         return np.asarray(solutions)
 
-    # TODO keep numba?
     @staticmethod
     @nb.jit(nopython=True)
     def _calc_strat_params(num_parents, weight_rule):
@@ -206,30 +198,25 @@ class LMMAEvolutionStrategy(OptimizerBase):
 
         return weights, mueff
 
-    # TODO threadpool limits?
-    def tell(self, solutions, num_parents, ranking_indices):
+    # Limit OpenBLAS to single thread. This is typically faster than
+    # multithreading because our data is too small.
+    @threadpool_limits.wrap(limits=1, user_api="blas")
+    def tell(self, ranking_indices, num_parents):
         """Passes the solutions back to the optimizer.
 
         Args:
-            solutions (np.ndarray): Array of ranked solutions. The user should
-                have determined some way to rank the solutions, such as by
-                objective value. It is important that _all_ of the solutions
-                initially given in ask() are returned here.
-            num_parents (int): Number of best solutions to select.
-            ranking_indices (array-like of int): Indices that were used to
-                order solutions from the original solutions returned in ask().
+            ranking_indices (array-like of int): Indices that indicate the
+                ranking of the original solutions returned in ``ask()``.
+            num_parents (int): Number of top solutions to select from the
+                ranked solutions.
         """
-        if ranking_indices is None:
-            raise ValueError("LM-MA-ES requires ranking_indices when calling"
-                             "tell().")
-
         self.current_gens += 1
 
         if num_parents == 0:
             return
 
         weights, mueff = self._calc_strat_params(num_parents, self.weight_rule)
-        parents = solutions[:num_parents]
+        parents = self._solutions[ranking_indices][:num_parents]
         z_parents = self.solution_z[ranking_indices][:num_parents]
         z_mean = np.sum(weights[:, None] * z_parents, axis=0)
 

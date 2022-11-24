@@ -55,6 +55,8 @@ class EvolutionStrategyEmitter(EmitterBase):
             default CMA-ES rules.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
+        kwargs (dict): Keyword arguments that will be passed to the specific
+            evolution strategy used.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
@@ -62,17 +64,20 @@ class EvolutionStrategyEmitter(EmitterBase):
             invalid.
     """
 
-    def __init__(self,
-                 archive,
-                 *,
-                 x0,
-                 sigma0,
-                 ranker,
-                 selection_rule="filter",
-                 restart_rule="no_improvement",
-                 bounds=None,
-                 batch_size=None,
-                 seed=None):
+    def __init__(
+        self,
+        archive,
+        *,
+        x0,
+        sigma0,
+        ranker,
+        selection_rule="filter",
+        restart_rule="no_improvement",
+        bounds=None,
+        batch_size=None,
+        seed=None,
+        **kwargs,
+    ):
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
         check_1d_shape(self._x0, "x0", archive.solution_dim,
@@ -96,9 +101,13 @@ class EvolutionStrategyEmitter(EmitterBase):
         _ = self._check_restart(0)
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
-                                        "truncation", opt_seed,
-                                        self.archive.dtype)
+        self.opt = CMAEvolutionStrategy(sigma0=sigma0,
+                                        batch_size=batch_size,
+                                        solution_dim=self._solution_dim,
+                                        weight_rule="truncation",
+                                        seed=opt_seed,
+                                        dtype=self.archive.dtype,
+                                        **kwargs)
         self.opt.reset(self._x0)
 
         self._ranker = _get_ranker(ranker)
@@ -229,7 +238,7 @@ class EvolutionStrategyEmitter(EmitterBase):
                        self._batch_size // 2)
 
         # Update Evolution Strategy.
-        self.opt.tell(solution_batch[indices], num_parents)
+        self.opt.tell(indices, num_parents)
 
         # Check for reset.
         if (self.opt.check_stop(ranking_values[indices]) or

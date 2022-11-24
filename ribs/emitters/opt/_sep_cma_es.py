@@ -5,6 +5,7 @@ https://github.com/CMA-ES/pycma/blob/master/cma/purecma.py
 """
 import numba as nb
 import numpy as np
+from threadpoolctl import threadpool_limits
 
 from ribs.emitters.opt._optimizer_base import OptimizerBase
 
@@ -135,7 +136,9 @@ class SeparableCMAEvolutionStrategy(OptimizerBase):
         )
         return solutions, out_of_bounds
 
-    # TODO threadpool?
+    # Limit OpenBLAS to single thread. This is typically faster than
+    # multithreading because our data is too small.
+    @threadpool_limits.wrap(limits=1, user_api="blas")
     def ask(self, lower_bounds, upper_bounds, batch_size=None):
         """Samples new solutions from the Gaussian distribution.
 
@@ -248,23 +251,24 @@ class SeparableCMAEvolutionStrategy(OptimizerBase):
         return (cov * (1 - c1a - cmu * np.sum(weights)) + rank_one_update * c1 +
                 rank_mu_update * cmu / (sigma**2))
 
-    def tell(self, solutions, num_parents, ranking_indices):
+    # Limit OpenBLAS to single thread. This is typically faster than
+    # multithreading because our data is too small.
+    @threadpool_limits.wrap(limits=1, user_api="blas")
+    def tell(self, ranking_indices, num_parents):
         """Passes the solutions back to the optimizer.
 
         Args:
-            solutions (np.ndarray): Array of ranked solutions. The user should
-                have determined some way to rank the solutions, such as by
-                objective value. It is important that _all_ of the solutions
-                initially given in ask() are returned here.
-            num_parents (int): Number of best solutions to select.
-            ranking_indices: Unused.
+            ranking_indices (array-like of int): Indices that indicate the
+                ranking of the original solutions returned in ``ask()``.
+            num_parents (int): Number of top solutions to select from the
+                ranked solutions.
         """
-        self.current_eval += len(solutions)
+        self.current_eval += len(self._solutions[ranking_indices])
 
         if num_parents == 0:
             return
 
-        parents = solutions[:num_parents]
+        parents = self._solutions[ranking_indices][:num_parents]
 
         weights, mueff, cc, cs, c1, cmu = self._calc_strat_params(
             self.solution_dim, num_parents, self.weight_rule)

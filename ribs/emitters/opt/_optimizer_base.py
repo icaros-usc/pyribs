@@ -25,14 +25,14 @@ class OptimizerBase(ABC):
         dtype (str or data-type): Data type of solutions.
     """
 
-    def __init__(self, sigma0, batch_size, solution_dim, seed,
-                 dtype):
+    def __init__(self, sigma0, batch_size, solution_dim, seed, dtype):
         self.batch_size = (4 + int(3 * np.log(solution_dim))
                            if batch_size is None else batch_size)
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
         self._rng = np.random.default_rng(seed)
+        self._solutions = None
 
     @abstractmethod
     def reset(self, x0):
@@ -69,15 +69,12 @@ class OptimizerBase(ABC):
         """
 
     @abstractmethod
-    def tell(self, solutions, num_parents, ranking_indices):
+    def tell(self, ranking_indices, num_parents):
         """Passes the solutions back to the optimizer.
 
         Args:
-            solutions (np.ndarray): Array of ranked solutions. The user should
-                have determined some way to rank the solutions, such as by
-                objective value. It is important that _all_ of the solutions
-                initially given in ask() are returned here.
-            num_parents (int): Number of best solutions to select.
-            ranking_indices (array-like of int): Indices that were used to
-                order solutions from the original solutions returned in ask().
+            ranking_indices (array-like of int): Indices that indicate the
+                ranking of the original solutions returned in ``ask()``.
+            num_parents (int): Number of top solutions to select from the
+                ranked solutions.
         """
