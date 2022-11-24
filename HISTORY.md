@@ -6,6 +6,7 @@
 
 #### API
 
+- **Backwards-incompatible:** Make ArchiveStats a dataclass (#275)
 - **Backwards-incompatible:** Add shape checks to `tell()` and `tell_dqd()`
   methods (#269)
 - Add method for computing CQD score in archives (#252)
