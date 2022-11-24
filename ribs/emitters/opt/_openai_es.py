@@ -107,9 +107,9 @@ class OpenAIEvolutionStrategy(OptimizerBase):
             weight_rule,  # pylint: disable = unused-argument
             seed,
             dtype,
-            mirror_sampling,  # TODO reasonable defaults
-            adam_learning_rate,  # TODO reasonable defaults
-            adam_l2_coeff,  # TODO reasonable defaults
+            mirror_sampling=None,  # TODO reasonable defaults
+            adam_learning_rate=None,  # TODO reasonable defaults
+            adam_l2_coeff=None,  # TODO reasonable defaults
             max_gens=None):
         # This default is from CMA-ES.
         default_batch_size = 4 + int(3 * np.log(solution_dim))
