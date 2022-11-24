@@ -88,7 +88,8 @@ If you use the following algorithms, please also cite their relevant papers:
     series = {GECCO '20}
   }
   ```
-- **CMA-MEGA:** [Fontaine 2021](https://proceedings.neurips.cc/paper/2021/hash/532923f11ac97d3e7cb0130315b067dc-Abstract.html)
+- **CMA-MEGA:**
+  [Fontaine 2021](https://proceedings.neurips.cc/paper/2021/hash/532923f11ac97d3e7cb0130315b067dc-Abstract.html)
   ```
   @inproceedings{NEURIPS2021_532923f1,
    author = {Fontaine, Matthew and Nikolaidis, Stefanos},
@@ -134,9 +135,9 @@ algorithm, we first create:
 
 - A 2D **GridArchive** where each dimension contains 20 cells across the range
   [-1, 1].
-- An **ImprovementEmitter**, which starts from the search point **0** in 10
-  dimensional space and a Gaussian sampling distribution with standard deviation
-  0.1.
+- An **EvolutionStrategyEmitter**, which starts from the search point **0** in
+  10 dimensional space and a Gaussian sampling distribution with standard
+  deviation 0.1.
 - A **Scheduler** that combines the archive and emitter together.
 
 After initializing the components, we optimize (pyribs maximizes) the negative
@@ -153,11 +154,13 @@ measures.
 import numpy as np
 
 from ribs.archives import GridArchive
-from ribs.emitters import ImprovementEmitter
-from ribs.scheduler import Scheduler
+from ribs.emitters import EvolutionStrategyEmitter
+from ribs.schedulers import Scheduler
 
-archive = GridArchive(solution_dim=len([0.0] * 10), dims=[20, 20], ranges=[(-1, 1), (-1, 1)])
-emitters = [ImprovementEmitter(archive, [0.0] * 10, 0.1)]
+archive = GridArchive(solution_dim=len([0.0] * 10),
+                      dims=[20, 20],
+                      ranges=[(-1, 1), (-1, 1)])
+emitters = [EvolutionStrategyEmitter(archive, x0=[0.0] * 10, sigma0=0.1)]
 scheduler = Scheduler(archive, emitters)
 
 for itr in range(1000):
