@@ -1,6 +1,4 @@
 """Provides the EvolutionStrategyEmitter."""
-import itertools
-
 import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
@@ -67,7 +65,7 @@ class EvolutionStrategyEmitter(EmitterBase):
                  *,
                  x0,
                  sigma0,
-                 ranker,
+                 ranker="2imp",
                  selection_rule="filter",
                  restart_rule="no_improvement",
                  bounds=None,
