@@ -8,8 +8,8 @@ A _bare-bones_ Python library for quality diversity optimization. pyribs is the
 official implementation of Covariance Matrix Adaptation MAP-Elites (CMA-ME),
 Covariance Matrix Adaptation MAP-Elites via a Gradient Arborescence (CMA-MEGA),
 Covariance Matrix Adaptation MAP-Annealing (CMA-MAE), and scalable variants of
-CMA-MAE. pyribs implements the _Rapid Illumination of Behavior Space (RIBS)_
-redesign of MAP-Elites detailed in the paper
+CMA-MAE. Overall, pyribs implements the _Rapid Illumination of Behavior Space
+(RIBS)_ redesign of MAP-Elites detailed in the paper
 [Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
 
 ## Overview
