@@ -6,6 +6,10 @@
 
 #### API
 
+- Add normalized QD score to ArchiveStats (#276)
+- **Backwards-incompatible:** Make ArchiveStats a dataclass (#275)
+- **Backwards-incompatible:** Add shape checks to `tell()` and `tell_dqd()`
+  methods (#269)
 - Add method for computing CQD score in archives (#252)
 - **Backwards-incompatible:** Deprecate positional arguments in constructors
   (#261)
@@ -94,6 +98,7 @@
 #### Documentation
 
 - Add CMA-MAE tutorial (#273)
+- Update README (#279)
 - Add sphinx-codeautolink to docs (#206)
 - Fix documentation rendering issues on ReadTheDocs (#205)
 - Fix typos and formatting in docstrings of `ribs/visualize.py` (#203)

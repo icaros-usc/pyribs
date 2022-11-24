@@ -96,6 +96,7 @@ def test_stats_dtype(dtype):
     assert isinstance(data.archive_with_elite.stats.num_elites, int)
     assert isinstance(data.archive_with_elite.stats.coverage, dtype)
     assert isinstance(data.archive_with_elite.stats.qd_score, dtype)
+    assert isinstance(data.archive_with_elite.stats.norm_qd_score, dtype)
     assert isinstance(data.archive_with_elite.stats.obj_max, dtype)
     assert isinstance(data.archive_with_elite.stats.obj_mean, dtype)
 
@@ -117,6 +118,7 @@ def test_stats_multiple_add(add_mode):
     assert archive.stats.num_elites == 3
     assert np.isclose(archive.stats.coverage, 3 / 200)
     assert np.isclose(archive.stats.qd_score, 6.0)
+    assert np.isclose(archive.stats.norm_qd_score, 6.0 / 200)
     assert np.isclose(archive.stats.obj_max, 3.0)
     assert np.isclose(archive.stats.obj_mean, 2.0)
 
@@ -140,6 +142,7 @@ def test_stats_add_and_overwrite(add_mode):
     assert archive.stats.num_elites == 3
     assert np.isclose(archive.stats.coverage, 3 / 200)
     assert np.isclose(archive.stats.qd_score, 9.0)
+    assert np.isclose(archive.stats.norm_qd_score, 9.0 / 200)
     assert np.isclose(archive.stats.obj_max, 5.0)
     assert np.isclose(archive.stats.obj_mean, 3.0)
 
@@ -248,12 +251,15 @@ def test_basic_stats(data):
     assert data.archive.stats.num_elites == 0
     assert data.archive.stats.coverage == 0.0
     assert data.archive.stats.qd_score == 0.0
+    assert data.archive.stats.norm_qd_score == 0.0
     assert data.archive.stats.obj_max is None
     assert data.archive.stats.obj_mean is None
 
     assert data.archive_with_elite.stats.num_elites == 1
     assert data.archive_with_elite.stats.coverage == 1 / data.cells
     assert data.archive_with_elite.stats.qd_score == data.objective
+    assert (data.archive_with_elite.stats.norm_qd_score == data.objective /
+            data.cells)
     assert data.archive_with_elite.stats.obj_max == data.objective
     assert data.archive_with_elite.stats.obj_mean == data.objective
 
