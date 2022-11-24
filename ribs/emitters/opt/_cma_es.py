@@ -142,6 +142,7 @@ class CMAEvolutionStrategy(OptimizerBase):
             ranking_values (np.ndarray): Array of objective values of the
                 solutions, sorted in the same order that the solutions were
                 sorted when passed to tell().
+
         Returns:
             True if any of the stopping conditions are satisfied.
         """

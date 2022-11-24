@@ -1,11 +1,9 @@
 """Provides the EvolutionStrategyEmitter."""
-import itertools
-
 import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.opt import CMAEvolutionStrategy
+from ribs.emitters.opt import _get_optimizer
 from ribs.emitters.rankers import _get_ranker
 
 
@@ -19,21 +17,26 @@ class EvolutionStrategyEmitter(EmitterBase):
     the mean and covariance of the distribution.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
+        archive (ribs.archives.ArchiveBase): An archive to use when creating
+            and inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution. Must be 1-dimensional.
         sigma0 (float): Initial step size / standard deviation.
-        selection_rule ("mu" or "filter"): Method for selecting parents in
-            CMA-ES. With "mu" selection, the first half of the solutions will be
-            selected as parents, while in "filter", any solutions that were
-            added to the archive will be selected.
         ranker (Callable or str): The ranker is a :class:`RankerBase` object
             that orders the solutions after they have been evaluated in the
-            environment. This parameter may be a callable (e.g. a class or a
-            lambda function) that takes in no parameters and returns an instance
-            of :class:`RankerBase`, or it may be a full or abbreviated ranker
-            name as described in :meth:`ribs.emitters.rankers.get_ranker`.
+            environment. This parameter may be a callable (e.g. a class or
+            a lambda function) that takes in no parameters and returns an
+            instance of :class:`RankerBase`, or it may be a full or abbreviated
+            ranker name as described in
+            :meth:`ribs.emitters.rankers.get_ranker`.
+        evolution_strategy (str): The evolution strategy is
+            a :class:`OptimizerBase` object that is used to adapt the
+            distribution from which new solution are sampled from. This
+            parameter must be the full or abbreviated optimizer name.
+        selection_rule ("mu" or "filter"): Method for selecting parents for the
+            evolution strategy. With "mu" selection, the first half of the
+            solutions will be selected as parents, while in "filter", any
+            solutions that were added to the archive will be selected.
         restart_rule (int, "no_improvement", and "basic"): Method to use when
             checking for restarts. If given an integer, then the emitter will
             restart after this many iterations, where each iteration is a call
@@ -71,6 +74,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         x0,
         sigma0,
         ranker,
+        evolution_strategy="cma-es",
         selection_rule="filter",
         restart_rule="no_improvement",
         bounds=None,
@@ -97,17 +101,19 @@ class EvolutionStrategyEmitter(EmitterBase):
         self._restart_rule = restart_rule
         self._restarts = 0
         self._itrs = 0
+
         # Check if the restart_rule is valid, discard check_restart result.
         _ = self._check_restart(0)
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = CMAEvolutionStrategy(sigma0=sigma0,
-                                        batch_size=batch_size,
-                                        solution_dim=self._solution_dim,
-                                        weight_rule="truncation",
-                                        seed=opt_seed,
-                                        dtype=self.archive.dtype,
-                                        **kwargs)
+        self.opt = _get_optimizer(evolution_strategy)(
+            sigma0=sigma0,
+            batch_size=batch_size,
+            solution_dim=self._solution_dim,
+            weight_rule="truncation",
+            seed=opt_seed,
+            dtype=self.archive.dtype,
+            **kwargs)
         self.opt.reset(self._x0)
 
         self._ranker = _get_ranker(ranker)
