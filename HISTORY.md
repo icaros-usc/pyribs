@@ -49,7 +49,7 @@
 - **Backwards-incompatible:** Remove ribs.factory (#225, #228)
 - **Backwards-incompatible:** Replaced `ImprovementEmitter`,
   `RandomDirectionEmitter`, and `OptimizingEmitter` with
-  `EvolutionStrategyEmitter` (#220, #223)
+  `EvolutionStrategyEmitter` (#220, #223, #278)
 - Raise ValueError for incorrect array shapes in archive methods (#219)
 - Add elites_with_measures_single method for getting elite for a single
   solution's measures (#215)
