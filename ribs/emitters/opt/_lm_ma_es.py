@@ -179,7 +179,8 @@ class LMMAEvolutionStrategy(OptimizerBase):
             # out of bounds).
             remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
 
-        return np.asarray(solutions)
+        self._solutions = np.asarray(solutions)
+        return self._solutions
 
     @staticmethod
     @nb.jit(nopython=True)

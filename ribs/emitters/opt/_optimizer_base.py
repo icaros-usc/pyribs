@@ -32,6 +32,8 @@ class OptimizerBase(ABC):
         self.solution_dim = solution_dim
         self.dtype = dtype
         self._rng = np.random.default_rng(seed)
+
+        # ask() should store the returned solutions for tell().
         self._solutions = None
 
     @abstractmethod

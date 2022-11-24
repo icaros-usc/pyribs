@@ -74,7 +74,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         x0,
         sigma0,
         ranker,
-        evolution_strategy="cma-es",
+        evolution_strategy="cma_es",
         selection_rule="filter",
         restart_rule="no_improvement",
         bounds=None,

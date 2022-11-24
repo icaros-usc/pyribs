@@ -189,9 +189,10 @@ class OpenAIEvolutionStrategy(OptimizerBase):
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
     def ask(
-            self,
-            lower_bounds,  # pylint: disable = unused-argument
-            upper_bounds,  # pylint: disable = unused-argument
+        self,
+        lower_bounds,  # pylint: disable = unused-argument
+        upper_bounds,  # pylint: disable = unused-argument
+        batch_size=None,
     ):
         """Samples new solutions from the Gaussian distribution.
 
@@ -205,19 +206,25 @@ class OpenAIEvolutionStrategy(OptimizerBase):
                 indicated unbounded space.
             upper_bounds (float or np.ndarray): Same as above, but for upper
                 bounds (and pass np.inf instead of -np.inf).
+            batch_size (int): batch size of the sample. Defaults to
+                ``self.batch_size``.
         """
         # TODO: Implement bounds handling and remove note above.
+        if batch_size is None:
+            batch_size = self.batch_size
 
         if self.mirror_sampling:
             noise_half = self._rng.standard_normal(
-                (self.batch_size // 2, self.solution_dim), dtype=self.dtype)
+                (batch_size // 2, self.solution_dim), dtype=self.dtype)
             self.noise = np.concatenate((noise_half, -noise_half))
             solutions = self.mean[None] + self.sigma0 * self.noise
         else:
             self.noise = self._rng.standard_normal(
-                (self.batch_size, self.solution_dim), dtype=self.dtype)
+                (batch_size, self.solution_dim), dtype=self.dtype)
             solutions = self.mean[None] + self.sigma0 * self.noise
-        return solutions
+
+        self._solutions = np.asarray(solutions)
+        return self._solutions
 
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
