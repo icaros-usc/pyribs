@@ -67,6 +67,15 @@ napoleon_include_special_with_doc = True
 # while to run.
 nb_execution_mode = "off"
 
+# https://github.com/executablebooks/MyST-NB/issues/441
+myst_enable_extensions = [
+    "amsmath",
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "html_image",
+]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
