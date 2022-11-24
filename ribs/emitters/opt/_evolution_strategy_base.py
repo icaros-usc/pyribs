@@ -1,11 +1,11 @@
-"""Provides OptimizerBase."""
+"""Provides EvolutionStrategyBase."""
 from abc import ABC, abstractmethod
 
 import numpy as np
 
 
-class OptimizerBase(ABC):
-    """Base class for optimizers for use with emitters.
+class EvolutionStrategyBase(ABC):
+    """Base class for evolution strategy optimizers for use with emitters.
 
     The basic usage is:
     - Initialize the optimizer and reset it.

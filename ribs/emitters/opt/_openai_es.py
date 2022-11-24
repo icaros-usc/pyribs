@@ -5,7 +5,7 @@ See here for more info: https://arxiv.org/abs/1703.03864
 import numpy as np
 from threadpoolctl import threadpool_limits
 
-from ribs.emitters.opt._optimizer_base import OptimizerBase
+from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
 
 
 class Adam:
@@ -70,17 +70,10 @@ class Adam:
         return ratio, theta + step
 
 
-class OpenAIEvolutionStrategy(OptimizerBase):
+class OpenAIEvolutionStrategy(EvolutionStrategyBase):
     """OpenAI-ES optimizer for use with emitters.
 
-    The basic usage is:
-    - Initialize the optimizer and reset it.
-    - Repeatedly:
-      - Request new solutions with ask()
-      - Rank the solutions in the emitter (better solutions come first) and pass
-        them back with tell().
-      - Use check_stop() to see if the optimizer has reached a stopping
-        condition, and if so, call reset().
+    Refer to :class:`EvolutionStrategyBase` for usage instruction.
 
     Args:
         sigma0 (float): Initial step size.

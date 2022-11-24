@@ -7,7 +7,7 @@ import numba as nb
 import numpy as np
 from threadpoolctl import threadpool_limits
 
-from ribs.emitters.opt._optimizer_base import OptimizerBase
+from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
 
 
 class DiagonalMatrix:
@@ -42,8 +42,10 @@ class DiagonalMatrix:
         return 1 / np.sqrt(self.cov)
 
 
-class SeparableCMAEvolutionStrategy(OptimizerBase):
+class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
     """sep-CMA-ES optimizer for use with emitters.
+
+    Refer to :class:`EvolutionStrategyBase` for usage instruction.
 
     Args:
         sigma0 (float): Initial step size.

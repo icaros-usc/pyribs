@@ -11,13 +11,13 @@ Optimizers based on evolution strategies inherit from :class:`OptimizerBase`.
     ribs.emitters.opt.SeparableCMAEvolutionStrategy
     ribs.emitters.opt.AdamOpt
     ribs.emitters.opt.GradientAscentOpt
-    ribs.emitters.opt.OptimizerBase
+    ribs.emitters.opt.EvolutionStrategyBase
 """
 from ribs.emitters.opt._cma_es import CMAEvolutionStrategy
 from ribs.emitters.opt._gradients import AdamOpt, GradientAscentOpt
 from ribs.emitters.opt._lm_ma_es import LMMAEvolutionStrategy
 from ribs.emitters.opt._openai_es import OpenAIEvolutionStrategy
-from ribs.emitters.opt._optimizer_base import OptimizerBase
+from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
 from ribs.emitters.opt._sep_cma_es import SeparableCMAEvolutionStrategy
 
 __all__ = [
@@ -27,7 +27,7 @@ __all__ = [
     "SeparableCMAEvolutionStrategy",
     "AdamOpt",
     "GradientAscentOpt",
-    "OptimizerBase",
+    "EvolutionStrategyBase",
 ]
 
 _NAME_TO_OPTIMIZER_MAP = {
