@@ -136,7 +136,7 @@ algorithm, we first create:
 - A 2D **GridArchive** where each dimension contains 20 cells across the range
   [-1, 1].
 - An **EvolutionStrategyEmitter**, which starts from the search point **0** in
-  10 dimensional space and a Gaussian sampling distribution with standard
+  10-dimensional space and a Gaussian sampling distribution with standard
   deviation 0.1.
 - A **Scheduler** that combines the archive and emitter together.
 
