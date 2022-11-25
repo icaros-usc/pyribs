@@ -10,21 +10,28 @@ from ribs.emitters.opt._gradient_opt_base import GradientOptBase
 
 
 class GradientAscentOpt(GradientOptBase):
-    """Vanilla gradient ascent."""
+    """Vanilla gradient ascent.
 
-    def __init__(self, theta0, stepsize, epsilon=1e-8):
-        self.epsilon = epsilon
+    Args:
+        theta0: Initial solution point.
+        stepsize: Used to scale the gradient during the update.
+    """
 
+    def __init__(self, theta0, stepsize):
         self.dim = len(theta0)
         self.stepsize = stepsize
+
+        self._theta = None
+
         self.reset(theta0)
 
-    def reset(self, theta0):
-        self.theta = np.copy(theta0)
+    @property
+    def theta(self):
+        return self._theta
 
-    def _compute_step(self, grad):
-        return self.stepsize * grad
+    def reset(self, theta0):
+        self._theta = np.copy(theta0)
 
     def step(self, grad):
-        step = self._compute_step(grad)
-        self.theta += step
+        step = self.stepsize * grad
+        self._theta += step
