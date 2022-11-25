@@ -24,7 +24,12 @@ class AdamOpt(GradientOptBase):
         epsilon (float): Hyperparameter for numerical stability.
     """
 
-    def __init__(self, theta0, step_size, beta1=0.9, beta2=0.999, epsilon=1e-8):
+    def __init__(self,
+                 theta0,
+                 step_size=0.001,
+                 beta1=0.9,
+                 beta2=0.999,
+                 epsilon=1e-8):
         self.epsilon = epsilon
 
         self.step_size = step_size
