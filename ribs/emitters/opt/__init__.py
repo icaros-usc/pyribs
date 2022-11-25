@@ -1,7 +1,19 @@
 """Various optimizers which are employed across emitters.
 
 There are gradient-based optimizers which inherit from :class:`GradientOptBase`
-and evolution strategies which inherit from :class:`EvolutionStrategyBase`.
+and evolution strategies which inherit from :class:`EvolutionStrategyBase`. When
+specifying optimizers for an emitter, one can pass in the optimizer class
+itself, or the string name of the optimizer, or an abbreviated name. The
+supported abbreviations are as follows.
+
+For gradient-based optimizers (inheriting from :class:`GradientOptBase`):
+
+* ``adam``: :class:`AdamOpt`
+* ``gradient_ascent``: :class:`GradientAscentOpt`
+
+For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
+
+* ``cma_es``: :class:`CMAEvolutionStrategy`
 
 .. autosummary::
     :toctree:
