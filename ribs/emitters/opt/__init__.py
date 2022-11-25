@@ -19,9 +19,9 @@ from ribs.emitters.opt._gradient_ascent_opt import GradientAscentOpt
 from ribs.emitters.opt._gradient_opt_base import GradientOptBase
 
 __all__ = [
-    "GradientOptBase",
     "AdamOpt",
     "GradientAscentOpt",
-    "EvolutionStrategyBase",
+    "GradientOptBase",
     "CMAEvolutionStrategy",
+    "EvolutionStrategyBase",
 ]
