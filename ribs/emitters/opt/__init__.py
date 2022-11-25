@@ -37,3 +37,65 @@ __all__ = [
     "CMAEvolutionStrategy",
     "EvolutionStrategyBase",
 ]
+
+_NAME_TO_GRAD_OPT_MAP = {
+    "AdamOpt": AdamOpt,
+    "GradientAscentOpt": GradientAscentOpt,
+    "adam": AdamOpt,
+    "gradient_ascent": GradientAscentOpt,
+}
+
+
+def _get_grad_opt(klass, theta0, lr, grad_opt_kwargs):
+    """Returns a gradient optimizer class based on its name.
+
+    Args:
+        klass: Either a callable or a str for the gradient optimizer.
+        theta0: Argument for all instances of GradientOptBase.
+        lr: Argument for all instances of GradientOptBase.
+        grad_opt_kwargs (dict): Additional kwargs for the gradient optimizer.
+    Returns:
+        The new gradient optimizer.
+    """
+    if isinstance(klass, str):
+        if klass in _NAME_TO_GRAD_OPT_MAP:
+            klass = _NAME_TO_GRAD_OPT_MAP[klass]
+        else:
+            raise ValueError(f"`{klass}` is not the full or abbreviated "
+                             "name of a valid gradient optimizer")
+    if callable(klass):
+        grad_opt = klass(theta0, lr, **grad_opt_kwargs)
+        if isinstance(grad_opt, GradientOptBase):
+            return grad_opt
+        raise ValueError(f"Callable `{klass}` did not return an instance "
+                         "of GradientOptBase.")
+    raise ValueError(f"`{klass}` is neither a callable nor a string")
+
+
+_NAME_TO_ES_MAP = {
+    "cma_es": CMAEvolutionStrategy,
+}
+
+
+def _get_es(klass, es_kwargs):
+    """Returns an evolution strategy (ES) class based on its name.
+
+    Args:
+        klass: Either a callable or a str for the ES.
+        es_kwargs (dict): Additional kwargs for the ES.
+    Returns:
+        The new ES.
+    """
+    if isinstance(klass, str):
+        if klass in _NAME_TO_ES_MAP:
+            klass = _NAME_TO_ES_MAP[klass]
+        else:
+            raise ValueError(f"`{klass}` is not the full or abbreviated "
+                             "name of a valid evolution strategy")
+    if callable(klass):
+        es = klass(**es_kwargs)
+        if isinstance(es, EvolutionStrategyBase):
+            return es
+        raise ValueError(f"Callable `{klass}` did not return an instance "
+                         "of EvolutionStrategyBase.")
+    raise ValueError(f"`{klass}` is neither a callable nor a string")
