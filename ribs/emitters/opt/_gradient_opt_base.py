@@ -14,6 +14,9 @@ class GradientOptBase(ABC):
     updated by passing a gradient to :meth:`step`. Finally, the point can be
     reset to a new value with :meth:`reset`.
 
+    Your constructor may take in additional arguments beyond ``theta0`` and
+    ``lr``, but expect that these two arguments will always be passed in.
+
     Args:
         theta0 (array-like): Initial solution. 1D array.
         lr (float): Learning rate for the update.
