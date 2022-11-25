@@ -6,11 +6,11 @@ and evolution strategies which inherit from :class:`EvolutionStrategyBase`.
 .. autosummary::
     :toctree:
 
-    ribs.emitters.opt.GradientOptBase
     ribs.emitters.opt.GradientAscentOpt
     ribs.emitters.opt.AdamOpt
-    ribs.emitters.opt.EvolutionStrategyBase
+    ribs.emitters.opt.GradientOptBase
     ribs.emitters.opt.CMAEvolutionStrategy
+    ribs.emitters.opt.EvolutionStrategyBase
 """
 from ribs.emitters.opt._adam_opt import AdamOpt
 from ribs.emitters.opt._cma_es import CMAEvolutionStrategy
