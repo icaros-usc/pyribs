@@ -13,25 +13,27 @@ class GradientAscentOpt(GradientOptBase):
     """Vanilla gradient ascent.
 
     Args:
-        theta0: Initial solution point.
-        step_size: Used to scale the gradient during the update.
+        theta0 (np.ndarray): Initial solution point.
+        step_size (float): Used to scale the gradient during the update.
     """
 
     def __init__(self, theta0, step_size):
-        self.dim = len(theta0)
-        self.step_size = step_size
-
+        self._step_size = step_size
         self._theta = None
-
         self.reset(theta0)
 
     @property
     def theta(self):
         return self._theta
 
+    @property
+    def step_size(self):
+        """Step size of the optimizer."""
+        return self._step_size
+
     def reset(self, theta0):
         self._theta = np.copy(theta0)
 
     def step(self, gradient):
-        step = self.step_size * gradient
+        step = self._step_size * gradient
         self._theta += step
