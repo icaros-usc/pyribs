@@ -49,6 +49,7 @@ class AdamOpt(GradientOptBase):
         self._theta = np.copy(theta0)
         self.m = np.zeros(self.dim, dtype=np.float32)
         self.v = np.zeros(self.dim, dtype=np.float32)
+        self.t = 0
 
     def step(self, gradient):
         self.t += 1
