@@ -50,8 +50,16 @@ class GradientArborescenceEmitter(EmitterBase):
             rules will be used, while with "no_improvement", the emitter will
             restart when none of the proposed solutions were added to the
             archive.
-        grad_opt ("adam" or "gradient_ascent"): Gradient optimizer to use for
-            the gradient ascent step of the algorithm. Defaults to `adam`.
+        grad_opt (Callable or str): Gradient optimizer to use for the gradient
+            ascent step of the algorithm. The optimizer is a
+            :class:`GradientOptBase` object. This parameter may be a callable
+            (e.g. a class or a lambda function) which takes in the ``theta0``
+            and ``lr`` arguments, or it may be a full or abbreviated name as
+            described in :mod:`ribs.emitters.opt`.
+        grad_opt_kwargs (dict): Additional arguments to pass to the gradient
+            optimizer. See the gradient-based optimizers in
+            :mod:`ribs.emitters.opt` for the arguments allowed by each
+            optimizer. Note that we already pass in ``theta0`` and ``lr``.
         normalize_grad (bool): If true (default), then gradient infomation will
             be normalized. Otherwise, it will not be normalized.
         bounds (None or array-like): Bounds of the solution space. As suggested
@@ -93,6 +101,7 @@ class GradientArborescenceEmitter(EmitterBase):
                  selection_rule="filter",
                  restart_rule="no_improvement",
                  grad_opt="adam",
+                 grad_opt_kwargs=None,
                  normalize_grad=True,
                  bounds=None,
                  batch_size=None,
@@ -118,6 +127,7 @@ class GradientArborescenceEmitter(EmitterBase):
         self._ranker.reset(self, archive, self._rng)
 
         # Initialize gradient optimizer.
+        # TODO: Gradient optimizer retrieval.
         self._grad_opt = None
         if grad_opt == "adam":
             self._grad_opt = AdamOpt(self._x0, lr)
