@@ -13,12 +13,12 @@ class GradientAscentOpt(GradientOptBase):
     """Vanilla gradient ascent.
 
     Args:
-        theta0 (array-like): 1D initial solution.
-        step_size (float): Used to scale the gradient during the update.
+        theta0 (array-like): Initial solution. 1D array.
+        lr (float): Learning rate for the update.
     """
 
-    def __init__(self, theta0, step_size):
-        self._step_size = step_size
+    def __init__(self, theta0, lr):  # pylint: disable = super-init-not-called
+        self._lr = lr
         self._theta = None
         self.reset(theta0)
 
@@ -30,5 +30,5 @@ class GradientAscentOpt(GradientOptBase):
         self._theta = np.copy(theta0)
 
     def step(self, gradient):
-        step = self._step_size * np.asarray(gradient)
+        step = self._lr * np.asarray(gradient)
         self._theta += step
