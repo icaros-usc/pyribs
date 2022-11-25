@@ -26,11 +26,6 @@ class GradientAscentOpt(GradientOptBase):
     def theta(self):
         return self._theta
 
-    @property
-    def step_size(self):
-        """Step size for scaling the gradient."""
-        return self._step_size
-
     def reset(self, theta0):
         self._theta = np.copy(theta0)
 
