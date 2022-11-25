@@ -31,15 +31,14 @@ class AdamOpt(GradientOptBase):
                  beta2=0.999,
                  epsilon=1e-8):
         self._epsilon = epsilon
-
         self._step_size = step_size
         self._beta1 = beta1
         self._beta2 = beta2
 
-        self._t = 0
+        self._theta = None
         self._m = None
         self._v = None
-        self._theta = None
+        self._t = None
 
         self.reset(theta0)
 
