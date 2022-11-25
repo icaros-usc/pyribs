@@ -10,9 +10,9 @@ class GradientOptBase(ABC):
         descent.
 
     These optimizers maintain a current solution point :math:`\\theta`. The
-    solution point may be obtained with the :attr:`theta` property, and it may
-    be updated by passing a gradient to :meth:`step`. Finally, the point may be
-    reset with :meth:`reset`.
+    solution point is obtained with the :attr:`theta` property, and it is
+    updated by passing a gradient to :meth:`step`. Finally, the point can be
+    reset to a new value with :meth:`reset`.
     """
 
     @property
@@ -25,7 +25,7 @@ class GradientOptBase(ABC):
         """Resets the solution point to a new value.
 
         Args:
-            theta0 (array-like): The new solution point.
+            theta0 (array-like): The new solution point. 1D array.
         """
 
     @abstractmethod
@@ -34,5 +34,5 @@ class GradientOptBase(ABC):
 
         Args:
             gradient (array-like): The (estimated) gradient of the current
-                solution point.
+                solution point. 1D array.
         """
