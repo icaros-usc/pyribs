@@ -13,7 +13,14 @@ class GradientOptBase(ABC):
     solution point is obtained with the :attr:`theta` property, and it is
     updated by passing a gradient to :meth:`step`. Finally, the point can be
     reset to a new value with :meth:`reset`.
+
+    Args:
+        theta0 (array-like): Initial solution. 1D array.
+        lr (float): Learning rate for the update.
     """
+
+    def __init__(self, theta0, lr):
+        pass
 
     @property
     @abstractmethod
