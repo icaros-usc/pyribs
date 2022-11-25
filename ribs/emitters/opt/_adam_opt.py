@@ -30,15 +30,15 @@ class AdamOpt(GradientOptBase):
                  beta1=0.9,
                  beta2=0.999,
                  epsilon=1e-8):
-        self.epsilon = epsilon
+        self._epsilon = epsilon
 
-        self.step_size = step_size
-        self.beta1 = beta1
-        self.beta2 = beta2
+        self._step_size = step_size
+        self._beta1 = beta1
+        self._beta2 = beta2
 
-        self.t = 0
-        self.m = None
-        self.v = None
+        self._t = 0
+        self._m = None
+        self._v = None
         self._theta = None
 
         self.reset(theta0)
@@ -49,16 +49,17 @@ class AdamOpt(GradientOptBase):
 
     def reset(self, theta0):
         self._theta = np.copy(theta0)
-        self.m = np.zeros_like(self._theta)
-        self.v = np.zeros_like(self._theta)
-        self.t = 0
+        self._m = np.zeros_like(self._theta)
+        self._v = np.zeros_like(self._theta)
+        self._t = 0
 
     def step(self, gradient):
         gradient = np.asarray(gradient)
-        self.t += 1
-        a = self.step_size * np.sqrt(1 - self.beta2**self.t) / (
-            1 - self.beta1**self.t)
-        self.m = self.beta1 * self.m + (1 - self.beta1) * gradient
-        self.v = self.beta2 * self.v + (1 - self.beta2) * (gradient * gradient)
-        step = a * self.m / (np.sqrt(self.v) + self.epsilon)
+        self._t += 1
+        a = (self._step_size * np.sqrt(1 - self._beta2**self._t) /
+             (1 - self._beta1**self._t))
+        self._m = self._beta1 * self._m + (1 - self._beta1) * gradient
+        self._v = (self._beta2 * self._v + (1 - self._beta2) *
+                   (gradient * gradient))
+        step = a * self._m / (np.sqrt(self._v) + self._epsilon)
         self._theta += step
