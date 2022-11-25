@@ -4,6 +4,7 @@ Adapted from:
 https://github.com/icaros-usc/dqd/blob/main/ribs/emitters/opt/_adam.py
 https://github.com/hardmaru/estool/blob/master/es.py
 https://github.com/openai/evolution-strategies-starter/blob/master/es_distributed/optimizers.py
+https://pytorch.org/docs/stable/generated/torch.optim.Adam.html
 """
 import numpy as np
 
@@ -60,16 +61,19 @@ class AdamOpt(GradientOptBase):
         self._t = 0
 
     def step(self, gradient):
-        gradient = np.asarray(gradient)
+        # Invert gradient since we seek to maximize -- see pseudocode here:
+        # https://pytorch.org/docs/stable/generated/torch.optim.Adam.html
+        gradient = -np.asarray(gradient)
 
         # L2 regularization (not weight decay).
         gradient += self._l2_coeff * self._theta
 
         self._t += 1
+
         a = (self._step_size * np.sqrt(1 - self._beta2**self._t) /
              (1 - self._beta1**self._t))
         self._m = self._beta1 * self._m + (1 - self._beta1) * gradient
         self._v = (self._beta2 * self._v + (1 - self._beta2) *
                    (gradient * gradient))
-        step = a * self._m / (np.sqrt(self._v) + self._epsilon)
+        step = -a * self._m / (np.sqrt(self._v) + self._epsilon)
         self._theta += step
