@@ -13,7 +13,7 @@ class GradientAscentOpt(GradientOptBase):
     """Vanilla gradient ascent.
 
     Args:
-        theta0 (np.ndarray): Initial solution point.
+        theta0 (np.ndarray): 1D initial solution.
         step_size (float): Used to scale the gradient during the update.
     """
 

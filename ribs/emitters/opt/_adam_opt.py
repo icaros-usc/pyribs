@@ -17,26 +17,24 @@ class AdamOpt(GradientOptBase):
     more information on hyperparameters.
 
     Args:
-        theta0: Initial solution.
-        step_size: Scale for the gradient. Also known as alpha.
-        beta1: Exponential decay rate for the moment estimates.
-        beta2: Another exponential decay rate for the moment estimates.
-        epsilon: Hyperparameter for numerical stability.
+        theta0 (np.ndarray): 1D initial solution.
+        step_size (float): Scale for the gradient. Also known as alpha.
+        beta1 (float): Exponential decay rate for the moment estimates.
+        beta2 (float): Another exponential decay rate for the moment estimates.
+        epsilon (float): Hyperparameter for numerical stability.
     """
 
     def __init__(self, theta0, step_size, beta1=0.9, beta2=0.999, epsilon=1e-8):
         self.epsilon = epsilon
-
-        self.t = 0
 
         self.dim = len(theta0)
         self.step_size = step_size
         self.beta1 = beta1
         self.beta2 = beta2
 
+        self.t = 0
         self.m = None
         self.v = None
-
         self._theta = None
 
         self.reset(theta0)
