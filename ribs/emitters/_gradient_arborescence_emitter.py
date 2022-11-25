@@ -392,7 +392,7 @@ class GradientArborescenceEmitter(EmitterBase):
                        self._batch_size // 2)
 
         # Update Evolution Strategy.
-        self.opt.tell(self._grad_coefficients[indices], num_parents)
+        self.opt.tell(indices, num_parents)
 
         # Calculate a new mean in solution space. These weights are from CMA-ES.
         parents = solution_batch[indices]
