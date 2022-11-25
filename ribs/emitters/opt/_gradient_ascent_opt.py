@@ -14,12 +14,12 @@ class GradientAscentOpt(GradientOptBase):
 
     Args:
         theta0: Initial solution point.
-        stepsize: Used to scale the gradient during the update.
+        step_size: Used to scale the gradient during the update.
     """
 
-    def __init__(self, theta0, stepsize):
+    def __init__(self, theta0, step_size):
         self.dim = len(theta0)
-        self.stepsize = stepsize
+        self.step_size = step_size
 
         self._theta = None
 
@@ -32,6 +32,6 @@ class GradientAscentOpt(GradientOptBase):
     def reset(self, theta0):
         self._theta = np.copy(theta0)
 
-    def step(self, grad):
-        step = self.stepsize * grad
+    def step(self, gradient):
+        step = self.step_size * gradient
         self._theta += step

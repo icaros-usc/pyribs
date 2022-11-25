@@ -5,6 +5,10 @@ from abc import ABC, abstractmethod
 class GradientOptBase(ABC):
     """Base class for gradient-based optimizers.
 
+    .. note::
+        These optimizers are designed for gradient ascent rather than gradient
+        descent.
+
     These optimizers maintain a current solution point :math:`\\theta`. The
     solution point may be obtained with the :attr:`theta` property, and it may
     be updated by passing a gradient to :meth:`step`. Finally, the point may be
@@ -26,9 +30,9 @@ class GradientOptBase(ABC):
 
     @abstractmethod
     def step(self, gradient):
-        """Updates the solution based on the given gradient.
+        """Ascends the solution based on the given gradient.
 
         Args:
-            gradient (np.ndarray): The gradient to use for updating the
-                solution.
+            gradient (np.ndarray): The (estimated) gradient of the current
+                solution point.
         """
