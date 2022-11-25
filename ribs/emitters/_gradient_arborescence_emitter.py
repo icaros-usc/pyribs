@@ -32,7 +32,7 @@ class GradientArborescenceEmitter(EmitterBase):
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
         sigma0 (float): Initial step size / standard deviation.
-        step_size (float): Step size for the gradient optimizer.
+        lr (float): Learning rate for the gradient optimizer.
         ranker (Callable or str): The ranker is a :class:`RankerBase` object
             that orders the solutions after they have been evaluated in the
             environment. This parameter may be a callable (e.g. a class or a
@@ -88,7 +88,7 @@ class GradientArborescenceEmitter(EmitterBase):
                  *,
                  x0,
                  sigma0,
-                 step_size,
+                 lr,
                  ranker="2imp",
                  selection_rule="filter",
                  restart_rule="no_improvement",
@@ -120,9 +120,9 @@ class GradientArborescenceEmitter(EmitterBase):
         # Initialize gradient optimizer.
         self._grad_opt = None
         if grad_opt == "adam":
-            self._grad_opt = AdamOpt(self._x0, step_size)
+            self._grad_opt = AdamOpt(self._x0, lr)
         elif grad_opt == "gradient_ascent":
-            self._grad_opt = GradientAscentOpt(self._x0, step_size)
+            self._grad_opt = GradientAscentOpt(self._x0, lr)
         else:
             raise ValueError(f"Invalid Gradient Ascent Optimizer {grad_opt}")
 
