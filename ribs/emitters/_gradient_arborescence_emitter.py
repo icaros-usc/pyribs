@@ -38,7 +38,7 @@ class GradientArborescenceEmitter(EmitterBase):
             environment. This parameter may be a callable (e.g. a class or a
             lambda function) that takes in no parameters and returns an instance
             of :class:`RankerBase`, or it may be a full or abbreviated ranker
-            name as described in :meth:`ribs.emitters.rankers.get_ranker`.
+            name as described in :mod:`ribs.emitters.rankers`.
         selection_rule ("mu" or "filter"): Method for selecting parents in
             CMA-ES. With "mu" selection, the first half of the solutions will be
             selected as parents, while in "filter", any solutions that were
