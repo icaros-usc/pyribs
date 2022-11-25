@@ -31,7 +31,7 @@ class EvolutionStrategyEmitter(EmitterBase):
             environment. This parameter may be a callable (e.g. a class or a
             lambda function) that takes in no parameters and returns an instance
             of :class:`RankerBase`, or it may be a full or abbreviated ranker
-            name as described in :meth:`ribs.emitters.rankers.get_ranker`.
+            name as described in :mod:`ribs.emitters.rankers`.
         restart_rule (int, "no_improvement", and "basic"): Method to use when
             checking for restarts. If given an integer, then the emitter will
             restart after this many iterations, where each iteration is a call

@@ -5,7 +5,7 @@ import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
+from ribs.emitters.opt import CMAEvolutionStrategy, _get_grad_opt
 from ribs.emitters.rankers import _get_ranker
 
 
@@ -32,13 +32,13 @@ class GradientArborescenceEmitter(EmitterBase):
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
         sigma0 (float): Initial step size / standard deviation.
-        step_size (float): Step size for the gradient optimizer.
+        lr (float): Learning rate for the gradient optimizer.
         ranker (Callable or str): The ranker is a :class:`RankerBase` object
             that orders the solutions after they have been evaluated in the
             environment. This parameter may be a callable (e.g. a class or a
             lambda function) that takes in no parameters and returns an instance
             of :class:`RankerBase`, or it may be a full or abbreviated ranker
-            name as described in :meth:`ribs.emitters.rankers.get_ranker`.
+            name as described in :mod:`ribs.emitters.rankers`.
         selection_rule ("mu" or "filter"): Method for selecting parents in
             CMA-ES. With "mu" selection, the first half of the solutions will be
             selected as parents, while in "filter", any solutions that were
@@ -50,8 +50,16 @@ class GradientArborescenceEmitter(EmitterBase):
             rules will be used, while with "no_improvement", the emitter will
             restart when none of the proposed solutions were added to the
             archive.
-        grad_opt ("adam" or "gradient_ascent"): Gradient optimizer to use for
-            the gradient ascent step of the algorithm. Defaults to `adam`.
+        grad_opt (Callable or str): Gradient optimizer to use for the gradient
+            ascent step of the algorithm. The optimizer is a
+            :class:`GradientOptBase` object. This parameter may be a callable
+            (e.g. a class or a lambda function) which takes in the ``theta0``
+            and ``lr`` arguments, or it may be a full or abbreviated name as
+            described in :mod:`ribs.emitters.opt`.
+        grad_opt_kwargs (dict): Additional arguments to pass to the gradient
+            optimizer. See the gradient-based optimizers in
+            :mod:`ribs.emitters.opt` for the arguments allowed by each
+            optimizer. Note that we already pass in ``theta0`` and ``lr``.
         normalize_grad (bool): If true (default), then gradient infomation will
             be normalized. Otherwise, it will not be normalized.
         bounds (None or array-like): Bounds of the solution space. As suggested
@@ -88,11 +96,12 @@ class GradientArborescenceEmitter(EmitterBase):
                  *,
                  x0,
                  sigma0,
-                 step_size,
+                 lr,
                  ranker="2imp",
                  selection_rule="filter",
                  restart_rule="no_improvement",
                  grad_opt="adam",
+                 grad_opt_kwargs=None,
                  normalize_grad=True,
                  bounds=None,
                  batch_size=None,
@@ -118,13 +127,9 @@ class GradientArborescenceEmitter(EmitterBase):
         self._ranker.reset(self, archive, self._rng)
 
         # Initialize gradient optimizer.
-        self._grad_opt = None
-        if grad_opt == "adam":
-            self._grad_opt = AdamOpt(self._x0, step_size)
-        elif grad_opt == "gradient_ascent":
-            self._grad_opt = GradientAscentOpt(self._x0, step_size)
-        else:
-            raise ValueError(f"Invalid Gradient Ascent Optimizer {grad_opt}")
+        self._grad_opt = _get_grad_opt(
+            grad_opt, self._x0, lr,
+            {} if grad_opt_kwargs is None else grad_opt_kwargs)
 
         if selection_rule not in ["mu", "filter"]:
             raise ValueError(f"Invalid selection_rule {selection_rule}")

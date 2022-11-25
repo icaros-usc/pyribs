@@ -13,7 +13,7 @@ def test_auto_batch_size():
     emitter = GradientArborescenceEmitter(archive,
                                           x0=np.zeros(10),
                                           sigma0=1.0,
-                                          step_size=1.0)
+                                          lr=1.0)
     assert emitter.batch_size is not None
     assert isinstance(emitter.batch_size, int)
 
@@ -25,7 +25,7 @@ def test_list_as_initial_solution():
     emitter = GradientArborescenceEmitter(archive,
                                           x0=[0.0] * 10,
                                           sigma0=1.0,
-                                          step_size=1.0)
+                                          lr=1.0)
 
     # The list was passed in but should be converted to a numpy array.
     assert isinstance(emitter.x0, np.ndarray)
@@ -42,7 +42,7 @@ def test_dtypes(dtype):
     emitter = GradientArborescenceEmitter(archive,
                                           x0=np.zeros(10),
                                           sigma0=1.0,
-                                          step_size=1.0)
+                                          lr=1.0)
     assert emitter.x0.dtype == dtype
 
 
@@ -53,7 +53,7 @@ def test_adhere_to_solution_bounds():
     emitter = GradientArborescenceEmitter(archive,
                                           x0=np.array([0]),
                                           sigma0=1.0,
-                                          step_size=1.0,
+                                          lr=1.0,
                                           normalize_grad=False,
                                           bounds=bound,
                                           batch_size=batch_size)
