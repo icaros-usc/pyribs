@@ -17,6 +17,7 @@ examples
 
 api/ribs.archives
 api/ribs.emitters
+api/ribs.emitters.opt
 api/ribs.emitters.rankers
 api/ribs.schedulers
 api/ribs.visualize

@@ -32,7 +32,7 @@ class GradientArborescenceEmitter(EmitterBase):
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
         sigma0 (float): Initial step size / standard deviation.
-        step_size (float): Step size for the gradient optimizer
+        step_size (float): Step size for the gradient optimizer.
         ranker (Callable or str): The ranker is a :class:`RankerBase` object
             that orders the solutions after they have been evaluated in the
             environment. This parameter may be a callable (e.g. a class or a

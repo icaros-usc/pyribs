@@ -6,6 +6,7 @@
 
 #### API
 
+- Make ribs.emitters.opt public (#281)
 - Add normalized QD score to ArchiveStats (#276)
 - **Backwards-incompatible:** Make ArchiveStats a dataclass (#275)
 - **Backwards-incompatible:** Add shape checks to `tell()` and `tell_dqd()`
