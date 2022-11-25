@@ -27,7 +27,6 @@ class AdamOpt(GradientOptBase):
     def __init__(self, theta0, step_size, beta1=0.9, beta2=0.999, epsilon=1e-8):
         self.epsilon = epsilon
 
-        self.dim = len(theta0)
         self.step_size = step_size
         self.beta1 = beta1
         self.beta2 = beta2
@@ -45,8 +44,8 @@ class AdamOpt(GradientOptBase):
 
     def reset(self, theta0):
         self._theta = np.copy(theta0)
-        self.m = np.zeros(self.dim, dtype=np.float32)
-        self.v = np.zeros(self.dim, dtype=np.float32)
+        self.m = np.zeros_like(self._theta)
+        self.v = np.zeros_like(self._theta)
         self.t = 0
 
     def step(self, gradient):
