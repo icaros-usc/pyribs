@@ -5,8 +5,7 @@ import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.opt import (AdamOpt, CMAEvolutionStrategy, GradientAscentOpt,
-                               _get_grad_opt)
+from ribs.emitters.opt import CMAEvolutionStrategy, _get_grad_opt
 from ribs.emitters.rankers import _get_ranker
 
 
