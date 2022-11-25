@@ -17,7 +17,7 @@ class AdamOpt(GradientOptBase):
     more information on hyperparameters.
 
     Args:
-        theta0 (np.ndarray): 1D initial solution.
+        theta0 (array-like): 1D initial solution.
         step_size (float): Scale for the gradient. Also known as alpha.
         beta1 (float): Exponential decay rate for the moment estimates.
         beta2 (float): Another exponential decay rate for the moment estimates.
@@ -49,6 +49,7 @@ class AdamOpt(GradientOptBase):
         self.t = 0
 
     def step(self, gradient):
+        gradient = np.asarray(gradient)
         self.t += 1
         a = self.step_size * np.sqrt(1 - self.beta2**self.t) / (
             1 - self.beta1**self.t)

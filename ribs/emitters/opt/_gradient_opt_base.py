@@ -25,7 +25,7 @@ class GradientOptBase(ABC):
         """Resets the solution point to a new value.
 
         Args:
-            theta0 (np.ndarray): The new solution point.
+            theta0 (array-like): The new solution point.
         """
 
     @abstractmethod
@@ -33,6 +33,6 @@ class GradientOptBase(ABC):
         """Ascends the solution based on the given gradient.
 
         Args:
-            gradient (np.ndarray): The (estimated) gradient of the current
+            gradient (array-like): The (estimated) gradient of the current
                 solution point.
         """
