@@ -5,7 +5,8 @@ import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.opt import AdamOpt, CMAEvolutionStrategy, GradientAscentOpt
+from ribs.emitters.opt import (AdamOpt, CMAEvolutionStrategy, GradientAscentOpt,
+                               _get_grad_opt)
 from ribs.emitters.rankers import _get_ranker
 
 
@@ -127,14 +128,9 @@ class GradientArborescenceEmitter(EmitterBase):
         self._ranker.reset(self, archive, self._rng)
 
         # Initialize gradient optimizer.
-        # TODO: Gradient optimizer retrieval.
-        self._grad_opt = None
-        if grad_opt == "adam":
-            self._grad_opt = AdamOpt(self._x0, lr)
-        elif grad_opt == "gradient_ascent":
-            self._grad_opt = GradientAscentOpt(self._x0, lr)
-        else:
-            raise ValueError(f"Invalid Gradient Ascent Optimizer {grad_opt}")
+        self._grad_opt = _get_grad_opt(
+            grad_opt, self._x0, lr,
+            {} if grad_opt_kwargs is None else grad_opt_kwargs)
 
         if selection_rule not in ["mu", "filter"]:
             raise ValueError(f"Invalid selection_rule {selection_rule}")
