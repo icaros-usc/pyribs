@@ -84,12 +84,10 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
         mirror_sampling (bool): Whether to use mirror sampling when gathering
-            solutions.
+            solutions. Defaults to true.
         adam_learning_rate (float): Known as alpha in the adam paper.
         adam_l2_coeff (float): Coefficient for L2 regularization (see
             Adam.update).
-        max_gens (int): Maximum number of generations to run this optimizer.
-            None indicates no maximum.
     """
 
     def __init__(
@@ -100,10 +98,10 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             weight_rule,  # pylint: disable = unused-argument
             seed,
             dtype,
-            mirror_sampling=None,  # TODO reasonable defaults
-            adam_learning_rate=None,  # TODO reasonable defaults
-            adam_l2_coeff=None,  # TODO reasonable defaults
-            max_gens=None):
+            mirror_sampling=True,
+            # adam_learning_rate=None,
+            # adam_l2_coeff=None,
+            **kwargs):
         # This default is from CMA-ES.
         default_batch_size = 4 + int(3 * np.log(solution_dim))
         if default_batch_size % 2 == 1:
@@ -121,7 +119,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self.dtype = dtype
         self._rng = np.random.default_rng(seed)
         self.mirror_sampling = mirror_sampling
-        self.max_gens = max_gens
 
         assert self.batch_size > 1, \
             ("Batch size of 1 currently not supported because rank"
@@ -131,12 +128,8 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
                 "If using mirror_sampling, batch_size must be an even number."
 
         # Strategy-specific params -> initialized in reset().
-        self.adam = Adam(self.solution_dim,
-                         adam_learning_rate,
-                         adam_l2_coeff,
-                         dtype=self.dtype)
+        self.adam = Adam(self.solution_dim, **kwargs, dtype=self.dtype)
         self.last_update_ratio = None
-        self.current_gens = None
         self.mean = None
         self.noise = None
 
@@ -148,7 +141,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         """
         self.adam.reset()
         self.last_update_ratio = np.inf  # Updated at end of tell().
-        self.current_gens = 0
         self.mean = np.array(x0, self.dtype)
         self.noise = None  # Becomes (batch_size, solution_dim) array in ask().
 
@@ -162,11 +154,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         Returns:
             True if any of the stopping conditions are satisfied.
         """
-        if self.max_gens is not None and self.current_gens >= self.max_gens:
-            return True
-
-        # Probably never going to be reached -- max gens and no improvement (in
-        # the improvement emitter) are more likely stopping conditions.
         if self.last_update_ratio < 1e-9:
             return True
 
@@ -235,8 +222,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             num_parents (int): Number of top solutions to select from the
                 ranked solutions.
         """
-        self.current_gens += 1
-
         # Indices come in decreasing order, so we reverse to get them to
         # increasing order.
         assert len(ranking_indices) == self.batch_size
