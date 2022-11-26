@@ -14,6 +14,9 @@ For gradient-based optimizers (inheriting from :class:`GradientOptBase`):
 For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
 
 * ``cma_es``: :class:`CMAEvolutionStrategy`
+* ``sep_cma_es``: :class:`SeparableCMAEvolutionStrategy`
+* ``lm_ma_es``: :class:`LMMAEvolutionStrategy`
+* `openai_es``: :class:`OpenAIEvolutionStrategy`
 
 .. autosummary::
     :toctree:
@@ -62,8 +65,9 @@ def _get_grad_opt(klass, theta0, lr, **grad_opt_kwargs):
         theta0: Argument for all instances of GradientOptBase.
         lr: Argument for all instances of GradientOptBase.
         grad_opt_kwargs (dict): Additional kwargs for the gradient optimizer.
+
     Returns:
-        The new gradient optimizer.
+        The corresponding gradient optimizer class instance.
     """
     if isinstance(klass, str):
         if klass in _NAME_TO_GRAD_OPT_MAP:
@@ -97,9 +101,10 @@ def _get_es(klass, **es_kwargs):
 
     Args:
         klass: Either a callable or a str for the ES.
-        es_kwargs (dict): Additional kwargs for the ES.
+        es_kwargs (dict): Additional keyword arguments for the ES.
+
     Returns:
-        The new ES.
+        The corresponding evolution strategy class instance.
     """
     if isinstance(klass, str):
         if klass in _NAME_TO_ES_MAP:
