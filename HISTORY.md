@@ -6,6 +6,7 @@
 
 #### API
 
+- Make ribs.emitters.opt public (#281)
 - Add normalized QD score to ArchiveStats (#276)
 - **Backwards-incompatible:** Make ArchiveStats a dataclass (#275)
 - **Backwards-incompatible:** Add shape checks to `tell()` and `tell_dqd()`
@@ -28,7 +29,7 @@
   - **Backwards-incompatible:** `behavior_dim` in archives is now `measure_dim`
   - Rename `n_solutions` to `batch_size` in `Scheduler`.
 - Add `GradientArborescenceEmitter`, which is used to implement CMA-MEGA (#240,
-  #263, #264)
+  #263, #264, #282)
 - Update emitter `tell()` docstrings to no longer say "Inserts entries into
   archive" (#247)
 - Expose `emitter.restarts` as a property (#248)
