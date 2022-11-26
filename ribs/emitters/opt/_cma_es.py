@@ -250,10 +250,10 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
 
     @staticmethod
     @nb.jit(nopython=True)
-    def _calc_cov_update(cov, c1a, cmu, c1, pc, sigma, rank_mu_update):
+    def _calc_cov_update(cov, c1a, cmu, c1, pc, sigma, rank_mu_update, weights):
         """Calculates covariance matrix update."""
-        rank_one_update = c1 * np.outer(pc, pc)
-        return (cov * (1 - c1a - cmu) + rank_one_update * c1 +
+        rank_one_update = c1 * pc**2
+        return (cov * (1 - c1a - cmu * np.sum(weights)) + rank_one_update * c1 +
                 rank_mu_update * cmu / (sigma**2))
 
     # Limit OpenBLAS to single thread. This is typically faster than
@@ -306,10 +306,9 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         # and taking a weighted sum of the outer products.
         rank_mu_update = np.einsum("ki,kj", weighted_ys, ys)
         c1a = c1 * (1 - (1 - hsig**2) * cc * (2 - cc))
-        # TODO sep-cma-mae has additional weight parameter.
         self.cov.cov = self._calc_cov_update(self.cov.cov, c1a, cmu, c1,
                                              self.pc, self.sigma,
-                                             rank_mu_update)
+                                             rank_mu_update, weights)
 
         # Update sigma.
         cn, sum_square_ps = cs / damps, np.sum(np.square(self.ps))
