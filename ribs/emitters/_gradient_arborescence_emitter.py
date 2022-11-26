@@ -128,11 +128,11 @@ class GradientArborescenceEmitter(EmitterBase):
             raise ValueError(f"Invalid selection_rule {selection_rule}")
         self._selection_rule = selection_rule
 
+        self._restart_rule = restart_rule
         self._restarts = 0
         self._itrs = 0
 
-        # Check if the restart_rule is valid.
-        self._restart_rule = restart_rule
+        # Check if the restart_rule is valid, discard check_restart result.
         _ = self._check_restart(0)
 
         # We have a coefficient for each measure and an extra coefficient for
