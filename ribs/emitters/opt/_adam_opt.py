@@ -38,18 +38,16 @@ class AdamOpt(GradientOptBase):
             beta2=0.999,
             epsilon=1e-8,
             l2_coeff=0.0):
+        super().__init__(theta0, lr)
+
         self._epsilon = epsilon
-        self._lr = lr
         self._beta1 = beta1
         self._beta2 = beta2
         self._l2_coeff = l2_coeff
 
-        self._theta = None
         self._m = None
         self._v = None
         self._t = None
-
-        self.reset(theta0)
 
     @property
     def theta(self):

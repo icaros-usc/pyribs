@@ -17,15 +17,6 @@ class GradientAscentOpt(GradientOptBase):
         lr (float): Learning rate for the update.
     """
 
-    def __init__(self, theta0, lr):  # pylint: disable = super-init-not-called
-        self._lr = lr
-        self._theta = None
-        self.reset(theta0)
-
-    @property
-    def theta(self):
-        return self._theta
-
     def reset(self, theta0):
         self._theta = np.copy(theta0)
 
