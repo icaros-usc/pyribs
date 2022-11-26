@@ -82,14 +82,14 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         batch_size (int): Number of solutions to evaluate at a time. If None, we
             calculate a default batch size based on solution_dim.
         solution_dim (int): Size of the solution space.
-        weight_rule (str): Method for generating weights. Either "truncation"
-            (positive weights only) or "active" (include negative weights).
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
+        weight_rule (str): Method for generating weights. Either "truncation"
+            (positive weights only) or "active" (include negative weights).
     """
 
-    def __init__(self, sigma0, batch_size, solution_dim, weight_rule, seed,
-                 dtype):
+    def __init__(self, sigma0, batch_size, solution_dim, seed, dtype,
+                 weight_rule):
         super().__init__(
             sigma0,
             batch_size,
@@ -141,7 +141,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         Args:
             ranking_values (np.ndarray): Array of objective values of the
                 solutions, sorted in the same order that the solutions were
-                sorted when passed to tell().
+                sorted when passed to ``tell()``.
 
         Returns:
             True if any of the stopping conditions are satisfied.
