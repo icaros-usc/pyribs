@@ -36,12 +36,13 @@ from ribs.emitters.opt._openai_es import OpenAIEvolutionStrategy
 from ribs.emitters.opt._sep_cma_es import SeparableCMAEvolutionStrategy
 
 __all__ = [
+    "AdamOpt",
+    "GradientAscentOpt",
+    "GradientOptBase",
     "CMAEvolutionStrategy",
     "LMMAEvolutionStrategy",
     "OpenAIEvolutionStrategy",
     "SeparableCMAEvolutionStrategy",
-    "AdamOpt",
-    "GradientAscentOpt",
     "EvolutionStrategyBase",
 ]
 
@@ -91,7 +92,7 @@ _NAME_TO_ES_MAP = {
 }
 
 
-def _get_es(klass, es_kwargs):
+def _get_es(klass, **es_kwargs):
     """Returns an evolution strategy (ES) class based on its name.
 
     Args:

@@ -3,7 +3,7 @@ import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.opt import _get_optimizer
+from ribs.emitters.opt import _get_es
 from ribs.emitters.rankers import _get_ranker
 
 
@@ -106,14 +106,14 @@ class EvolutionStrategyEmitter(EmitterBase):
         _ = self._check_restart(0)
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = _get_optimizer(evolution_strategy)(
-            sigma0=sigma0,
-            batch_size=batch_size,
-            solution_dim=self._solution_dim,
-            weight_rule="truncation",
-            seed=opt_seed,
-            dtype=self.archive.dtype,
-            **kwargs)
+        self.opt = _get_es(evolution_strategy,
+                           sigma0=sigma0,
+                           batch_size=batch_size,
+                           solution_dim=self._solution_dim,
+                           weight_rule="truncation",
+                           seed=opt_seed,
+                           dtype=self.archive.dtype,
+                           **kwargs)
         self.opt.reset(self._x0)
 
         self._ranker = _get_ranker(ranker)
