@@ -5,69 +5,8 @@ See here for more info: https://arxiv.org/abs/1703.03864
 import numpy as np
 from threadpoolctl import threadpool_limits
 
+from ribs.emitters.opt._adam_opt import AdamOpt
 from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
-
-
-class Adam:
-    """Adam optimizer class.
-
-    Adapted from
-    https://github.com/openai/evolution-strategies-starter/blob/master/es_distributed/optimizers.py
-
-    Refer also to https://arxiv.org/abs/1412.6980v5 -- note there are some
-    slight differences between the implementation here and the implementation in
-    the paper.
-    """
-
-    def __init__(self,
-                 dim,
-                 stepsize,
-                 l2_coeff,
-                 beta1=0.9,
-                 beta2=0.999,
-                 epsilon=1e-08,
-                 dtype=np.float32):
-        self.dtype = dtype
-        self.dim = dim
-        self.stepsize = stepsize
-        self.l2_coeff = l2_coeff
-        self.beta1 = beta1
-        self.beta2 = beta2
-        self.epsilon = epsilon
-
-        # Parameters defined in reset().
-        self.t = None
-        self.m = None
-        self.v = None
-
-        self.reset()
-
-    def reset(self):
-        """Resets Adam variables."""
-        self.m = np.zeros(self.dim, dtype=self.dtype)
-        self.v = np.zeros(self.dim, dtype=self.dtype)
-        self.t = 0
-
-    def update(self, theta, grad):
-        """Updates theta based on the given gradient.
-
-        Returns the ratio of |step|_2 / |theta|_2 (i.e. how large the step is
-        compared to theta) as well as the new theta.
-        """
-        # L2 regularization: https://www.fast.ai/2018/07/02/adam-weight-decay/.
-        # Apparently, weight decay is a bit better than L2 regularization, but
-        # prior work (OpenAI ES and ME-ES) use L2 regularization and the
-        # difference seems tiny anyway.
-        grad += self.l2_coeff * theta
-
-        self.t += 1
-        a = self.stepsize * np.sqrt(1 - self.beta2**self.t) / (
-            1 - self.beta1**self.t)
-        self.m = self.beta1 * self.m + (1 - self.beta1) * grad
-        self.v = self.beta2 * self.v + (1 - self.beta2) * (grad * grad)
-        step = -a * self.m / (np.sqrt(self.v) + self.epsilon)
-        ratio = np.linalg.norm(step) / np.linalg.norm(theta)
-        return ratio, theta + step
 
 
 class OpenAIEvolutionStrategy(EvolutionStrategyBase):
@@ -88,6 +27,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         adam_learning_rate (float): Known as alpha in the adam paper.
         adam_l2_coeff (float): Coefficient for L2 regularization (see
             Adam.update).
+        kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
     """
 
     def __init__(
@@ -99,14 +39,13 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             seed,
             dtype,
             mirror_sampling=True,
-            # adam_learning_rate=None,
-            # adam_l2_coeff=None,
             **kwargs):
         # This default is from CMA-ES.
         default_batch_size = 4 + int(3 * np.log(solution_dim))
         if default_batch_size % 2 == 1:
             default_batch_size += 1
         batch_size = (default_batch_size if batch_size is None else batch_size)
+
         super().__init__(
             sigma0,
             batch_size,  # This will never be None.
@@ -114,11 +53,9 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             seed,
             dtype,
         )
-
-        self.solution_dim = solution_dim
-        self.dtype = dtype
-        self._rng = np.random.default_rng(seed)
         self.mirror_sampling = mirror_sampling
+
+        self.adam_opt = AdamOpt(self.solution_dim, **kwargs)
 
         assert self.batch_size > 1, \
             ("Batch size of 1 currently not supported because rank"
@@ -128,9 +65,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
                 "If using mirror_sampling, batch_size must be an even number."
 
         # Strategy-specific params -> initialized in reset().
-        self.adam = Adam(self.solution_dim, **kwargs, dtype=self.dtype)
         self.last_update_ratio = None
-        self.mean = None
         self.noise = None
 
     def reset(self, x0):
@@ -139,9 +74,8 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         Args:
             x0 (np.ndarray): Initial mean.
         """
-        self.adam.reset()
+        self.adam_opt.reset(x0)
         self.last_update_ratio = np.inf  # Updated at end of tell().
-        self.mean = np.array(x0, self.dtype)
         self.noise = None  # Becomes (batch_size, solution_dim) array in ask().
 
     def check_stop(self, ranking_values):
@@ -197,11 +131,11 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             noise_half = self._rng.standard_normal(
                 (batch_size // 2, self.solution_dim), dtype=self.dtype)
             self.noise = np.concatenate((noise_half, -noise_half))
-            solutions = self.mean[None] + self.sigma0 * self.noise
+            solutions = self.adam_opt.theta[None] + self.sigma0 * self.noise
         else:
             self.noise = self._rng.standard_normal(
                 (batch_size, self.solution_dim), dtype=self.dtype)
-            solutions = self.mean[None] + self.sigma0 * self.noise
+            solutions = self.adam_opt.theta[None] + self.sigma0 * self.noise
 
         self._solutions = np.asarray(solutions)
         return self._solutions
@@ -244,5 +178,4 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         else:
             gradient = np.sum(self.noise * ranks[:, None], axis=0)
             gradient /= self.batch_size * self.sigma0
-        (self.last_update_ratio,
-         self.mean) = self.adam.update(self.mean, -gradient)
+        self.last_update_ratio = self.adam_opt.step(gradient)

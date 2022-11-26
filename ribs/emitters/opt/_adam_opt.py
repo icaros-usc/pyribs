@@ -49,10 +49,6 @@ class AdamOpt(GradientOptBase):
         self._v = None
         self._t = None
 
-    @property
-    def theta(self):
-        return self._theta
-
     def reset(self, theta0):
         self._theta = np.copy(theta0)
         self._m = np.zeros_like(self._theta)
@@ -75,4 +71,6 @@ class AdamOpt(GradientOptBase):
         self._v = (self._beta2 * self._v + (1 - self._beta2) *
                    (gradient * gradient))
         step = -a * self._m / (np.sqrt(self._v) + self._epsilon)
+        ratio = np.linalg.norm(step) / np.linalg.norm(self._theta)
         self._theta += step
+        return ratio

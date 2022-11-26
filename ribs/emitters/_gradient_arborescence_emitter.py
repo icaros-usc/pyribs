@@ -1,6 +1,4 @@
 """Provides the GradientArborescenceEmitter."""
-import itertools
-
 import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
