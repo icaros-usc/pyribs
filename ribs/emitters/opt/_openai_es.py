@@ -19,27 +19,23 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         batch_size (int): Number of solutions to evaluate at a time. If None, we
             calculate a default batch size based on solution_dim.
         solution_dim (int): Size of the solution space.
-        weight_rule (str): Not used. Kept for consistency with other emitters.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
         mirror_sampling (bool): Whether to use mirror sampling when gathering
             solutions. Defaults to true.
-        adam_learning_rate (float): Known as alpha in the adam paper.
-        adam_l2_coeff (float): Coefficient for L2 regularization (see
-            Adam.update).
-        kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
+        weight_rule (str): Not used.
+        adam_kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
     """
 
-    def __init__(
-            self,
-            sigma0,
-            batch_size,
-            solution_dim,
-            weight_rule,  # pylint: disable = unused-argument
-            seed,
-            dtype,
-            mirror_sampling=True,
-            **kwargs):
+    def __init__(self,
+                 sigma0,
+                 batch_size,
+                 solution_dim,
+                 seed,
+                 dtype,
+                 mirror_sampling=True,
+                 weight_rule = None,
+                 **adam_kwargs):
         # This default is from CMA-ES.
         default_batch_size = 4 + int(3 * np.log(solution_dim))
         if default_batch_size % 2 == 1:
@@ -55,7 +51,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         )
         self.mirror_sampling = mirror_sampling
 
-        self.adam_opt = AdamOpt(self.solution_dim, **kwargs)
+        self.adam_opt = AdamOpt(self.solution_dim, **adam_kwargs)
 
         assert self.batch_size > 1, \
             ("Batch size of 1 currently not supported because rank"
@@ -102,12 +98,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def ask(
-        self,
-        lower_bounds,  # pylint: disable = unused-argument
-        upper_bounds,  # pylint: disable = unused-argument
-        batch_size=None,
-    ):
+    def ask(self, lower_bounds, upper_bounds, batch_size=None):
         """Samples new solutions from the Gaussian distribution.
 
         Note: Bounds are currently not enforced.
@@ -123,19 +114,37 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             batch_size (int): batch size of the sample. Defaults to
                 ``self.batch_size``.
         """
-        # TODO: Implement bounds handling and remove note above.
         if batch_size is None:
             batch_size = self.batch_size
 
-        if self.mirror_sampling:
-            noise_half = self._rng.standard_normal(
-                (batch_size // 2, self.solution_dim), dtype=self.dtype)
-            self.noise = np.concatenate((noise_half, -noise_half))
-            solutions = self.adam_opt.theta[None] + self.sigma0 * self.noise
-        else:
-            self.noise = self._rng.standard_normal(
-                (batch_size, self.solution_dim), dtype=self.dtype)
-            solutions = self.adam_opt.theta[None] + self.sigma0 * self.noise
+        solutions = np.empty((batch_size, self.solution_dim), dtype=self.dtype)
+
+        # Resampling method for bound constraints -> sample new solutions until
+        # all solutions are within bounds.
+        remaining_indices = np.arange(batch_size)
+        while len(remaining_indices) > 0:
+            if self.mirror_sampling:
+                noise_half = self._rng.standard_normal(
+                    (batch_size // 2, self.solution_dim), dtype=self.dtype)
+                self.noise = np.concatenate((noise_half, -noise_half))
+            else:
+                self.noise = self._rng.standard_normal(
+                    (batch_size, self.solution_dim), dtype=self.dtype)
+
+            # TODO Numba
+            new_solutions = (self.adam_opt.theta[None] +
+                             self.sigma0 * self.noise)
+            out_of_bounds = np.logical_or(
+                new_solutions < np.expand_dims(lower_bounds, axis=0),
+                new_solutions > np.expand_dims(upper_bounds, axis=0),
+            )
+
+            solutions[remaining_indices] = new_solutions
+
+            # Find indices in remaining_indices that are still out of bounds
+            # (out_of_bounds indicates whether each value in each solution is
+            # out of bounds).
+            remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
 
         self._solutions = np.asarray(solutions)
         return self._solutions

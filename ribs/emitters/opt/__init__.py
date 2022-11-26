@@ -54,7 +54,7 @@ _NAME_TO_GRAD_OPT_MAP = {
 }
 
 
-def _get_grad_opt(klass, theta0, lr, grad_opt_kwargs):
+def _get_grad_opt(klass, theta0, lr, **grad_opt_kwargs):
     """Returns a gradient optimizer class based on its name.
 
     Args:

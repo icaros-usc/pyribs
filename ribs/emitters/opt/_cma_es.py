@@ -198,7 +198,8 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
             batch_size = self.batch_size
 
         self.cov.update_eigensystem(self.current_eval, self.lazy_gap_evals)
-        solutions = np.empty((batch_size, self.solution_dim), dtype=self.dtype)
+        self._solutions = np.empty((batch_size, self.solution_dim),
+                                   dtype=self.dtype)
         transform_mat = self.cov.eigenbasis * np.sqrt(self.cov.eigenvalues)
 
         # Resampling method for bound constraints -> sample new solutions until
@@ -213,14 +214,13 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
             new_solutions, out_of_bounds = self._transform_and_check_sol(
                 unscaled_params, transform_mat, self.mean, lower_bounds,
                 upper_bounds)
-            solutions[remaining_indices] = new_solutions
+            self._solutions[remaining_indices] = new_solutions
 
             # Find indices in remaining_indices that are still out of bounds
             # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
             remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
 
-        self._solutions = np.asarray(solutions)
         return self._solutions
 
     def _calc_strat_params(self, num_parents):

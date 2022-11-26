@@ -105,6 +105,13 @@ class GradientArborescenceEmitter(EmitterBase):
                  batch_size=None,
                  epsilon=1e-8,
                  seed=None):
+        EmitterBase.__init__(
+            self,
+            archive,
+            solution_dim=archive.solution_dim,
+            bounds=bounds,
+        )
+
         self._epsilon = epsilon
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
@@ -113,36 +120,29 @@ class GradientArborescenceEmitter(EmitterBase):
         self._sigma0 = sigma0
         self._normalize_grads = normalize_grad
         self._jacobian_batch = None
-        self._grad_coefficients = None
-        EmitterBase.__init__(
-            self,
-            archive,
-            solution_dim=archive.solution_dim,
-            bounds=bounds,
-        )
 
         self._ranker = _get_ranker(ranker)
         self._ranker.reset(self, archive, self._rng)
-
-        # Initialize gradient optimizer.
-        self._grad_opt = _get_grad_opt(
-            grad_opt, self._x0, lr,
-            {} if grad_opt_kwargs is None else grad_opt_kwargs)
 
         if selection_rule not in ["mu", "filter"]:
             raise ValueError(f"Invalid selection_rule {selection_rule}")
         self._selection_rule = selection_rule
 
-        self._restart_rule = restart_rule
         self._restarts = 0
         self._itrs = 0
+
         # Check if the restart_rule is valid.
-        _ = self._check_restart(0)
         self._restart_rule = restart_rule
+        _ = self._check_restart(0)
 
         # We have a coefficient for each measure and an extra coefficient for
         # the objective.
         self._num_coefficients = archive.measure_dim + 1
+
+        # Initialize gradient optimizer.
+        self._grad_opt = _get_grad_opt(
+            grad_opt, self._x0, lr,
+            **(grad_opt_kwargs if grad_opt_kwargs is not None else {}))
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
         self.opt = CMAEvolutionStrategy(sigma0, batch_size,
@@ -231,10 +231,10 @@ class GradientArborescenceEmitter(EmitterBase):
         # all solutions are within bounds.
         remaining_indices = np.arange(self._batch_size)
         while len(remaining_indices) > 0:
-            self._grad_coefficients = self.opt.ask(coefficient_lower_bounds,
-                                                   coefficient_upper_bounds,
-                                                   len(remaining_indices))
-            noise = np.expand_dims(self._grad_coefficients, axis=2)
+            gradient_coefficients = self.opt.ask(coefficient_lower_bounds,
+                                                 coefficient_upper_bounds,
+                                                 len(remaining_indices))
+            noise = np.expand_dims(gradient_coefficients, axis=2)
             new_solution_batch = (self._grad_opt.theta +
                                   np.sum(self._jacobian_batch * noise, axis=1))
             solution_batch[remaining_indices] = new_solution_batch

@@ -20,10 +20,10 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         batch_size (int): Number of solutions to evaluate at a time. If None, we
             calculate a default batch size based on solution_dim.
         solution_dim (int): Size of the solution space.
-        weight_rule (str): Method for generating weights. Either "truncation"
-            (positive weights only) or "active" (include negative weights).
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
+        weight_rule (str): Method for generating weights. Either "truncation"
+            (positive weights only) or "active" (include negative weights).
         n_vectors (int): Number of vectors to use in the approximation. If None,
             this defaults to be equal to the batch size.
     """
@@ -32,9 +32,9 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
                  sigma0,
                  batch_size,
                  solution_dim,
-                 weight_rule,
                  seed,
                  dtype,
+                 weight_rule,
                  n_vectors=None):
         super().__init__(
             sigma0,
