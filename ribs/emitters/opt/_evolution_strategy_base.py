@@ -18,14 +18,19 @@ class EvolutionStrategyBase(ABC):
 
     Args:
         sigma0 (float): Initial step size.
+        solution_dim (int): Size of the solution space.
         batch_size (int): Number of solutions to evaluate at a time. If None, we
             calculate a default batch size based on solution_dim.
-        solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
     """
 
-    def __init__(self, sigma0, batch_size, solution_dim, seed, dtype):
+    def __init__(self,
+                 sigma0,
+                 solution_dim,
+                 batch_size=None,
+                 seed=None,
+                 dtype=np.float64):
         self.batch_size = (4 + int(3 * np.log(solution_dim))
                            if batch_size is None else batch_size)
         self.sigma0 = sigma0

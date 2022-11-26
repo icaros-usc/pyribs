@@ -88,12 +88,17 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
             (positive weights only) or "active" (include negative weights).
     """
 
-    def __init__(self, sigma0, batch_size, solution_dim, seed, dtype,
-                 weight_rule):
+    def __init__(self,
+                 sigma0,
+                 solution_dim,
+                 batch_size=None,
+                 seed=None,
+                 dtype=np.float64,
+                 weight_rule="truncation"):
         super().__init__(
             sigma0,
-            batch_size,
             solution_dim,
+            batch_size,
             seed,
             dtype,
         )

@@ -30,20 +30,21 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
     def __init__(
             self,
             sigma0,
-            batch_size,
             solution_dim,
-            seed,
-            dtype,
+            batch_size=None,
+            seed=None,
+            dtype=np.float64,
+            weight_rule="truncation",
             mirror_sampling=True,
-            weight_rule=None,  # pylint: disable = unused-argument
             **adam_kwargs):
         super().__init__(
             sigma0,
-            batch_size,
             solution_dim,
+            batch_size,
             seed,
             dtype,
         )
+        self.weight_rule = weight_rule  # Not used.
         self.mirror_sampling = mirror_sampling
 
         # Default batch size should be an even number for mirror sampling.
