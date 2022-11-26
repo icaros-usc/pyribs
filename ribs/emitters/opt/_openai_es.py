@@ -27,40 +27,40 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         adam_kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
     """
 
-    def __init__(self,
-                 sigma0,
-                 batch_size,
-                 solution_dim,
-                 seed,
-                 dtype,
-                 mirror_sampling=True,
-                 weight_rule = None,
-                 **adam_kwargs):
-        # This default is from CMA-ES.
-        default_batch_size = 4 + int(3 * np.log(solution_dim))
-        if default_batch_size % 2 == 1:
-            default_batch_size += 1
-        batch_size = (default_batch_size if batch_size is None else batch_size)
-
+    def __init__(
+            self,
+            sigma0,
+            batch_size,
+            solution_dim,
+            seed,
+            dtype,
+            mirror_sampling=True,
+            weight_rule=None,  # pylint: disable = unused-argument
+            **adam_kwargs):
         super().__init__(
             sigma0,
-            batch_size,  # This will never be None.
+            batch_size,
             solution_dim,
             seed,
             dtype,
         )
         self.mirror_sampling = mirror_sampling
 
-        self.adam_opt = AdamOpt(self.solution_dim, **adam_kwargs)
+        # Default batch size should be an even number for mirror sampling.
+        if batch_size is None and self.batch_size % 2 != 0:
+            self.batch_size += 1
 
-        assert self.batch_size > 1, \
-            ("Batch size of 1 currently not supported because rank"
-             "normalization does not work with batch size of 1.")
-        if mirror_sampling:
-            assert self.batch_size % 2 == 0, \
-                "If using mirror_sampling, batch_size must be an even number."
+        if self.batch_size <= 1:
+            raise ValueError("Batch size of 1 is not supported because rank"
+                             " normalization does not work with batch size of"
+                             " 1.")
+
+        if self.mirror_sampling and self.batch_size % 2 != 0:
+            raise ValueError("If using mirror sampling, batch_size must be an"
+                             " even number.")
 
         # Strategy-specific params -> initialized in reset().
+        self.adam_opt = AdamOpt(self.solution_dim, **adam_kwargs)
         self.last_update_ratio = None
         self.noise = None
 
@@ -168,7 +168,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         """
         # Indices come in decreasing order, so we reverse to get them to
         # increasing order.
-        assert len(ranking_indices) == self.batch_size
         ranks = np.empty(self.batch_size, dtype=np.int32)
 
         # Assign ranks -- ranks[i] tells the rank of noise[i].

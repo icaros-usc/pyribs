@@ -145,9 +145,14 @@ class GradientArborescenceEmitter(EmitterBase):
             **(grad_opt_kwargs if grad_opt_kwargs is not None else {}))
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = CMAEvolutionStrategy(sigma0, batch_size,
-                                        self._num_coefficients, "truncation",
-                                        opt_seed, self.archive.dtype)
+        self.opt = CMAEvolutionStrategy(
+                           sigma0=sigma0,
+                           batch_size=batch_size,
+                           solution_dim=self._num_coefficients,
+                           seed=opt_seed,
+                           dtype=self.archive.dtype,
+                           weight_rule="truncation")
+
         self.opt.reset(np.zeros(self._num_coefficients))
 
         self._batch_size = self.opt.batch_size

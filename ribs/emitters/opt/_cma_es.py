@@ -197,9 +197,9 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         if batch_size is None:
             batch_size = self.batch_size
 
-        self.cov.update_eigensystem(self.current_eval, self.lazy_gap_evals)
         self._solutions = np.empty((batch_size, self.solution_dim),
                                    dtype=self.dtype)
+        self.cov.update_eigensystem(self.current_eval, self.lazy_gap_evals)
         transform_mat = self.cov.eigenbasis * np.sqrt(self.cov.eigenvalues)
 
         # Resampling method for bound constraints -> sample new solutions until
@@ -252,7 +252,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     @nb.jit(nopython=True)
     def _calc_cov_update(cov, c1a, cmu, c1, pc, sigma, rank_mu_update, weights):
         """Calculates covariance matrix update."""
-        rank_one_update = c1 * pc**2
+        rank_one_update = c1 * np.outer(pc, pc)
         return (cov * (1 - c1a - cmu * np.sum(weights)) + rank_one_update * c1 +
                 rank_mu_update * cmu / (sigma**2))
 

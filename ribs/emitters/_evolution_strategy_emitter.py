@@ -110,9 +110,9 @@ class EvolutionStrategyEmitter(EmitterBase):
                            sigma0=sigma0,
                            batch_size=batch_size,
                            solution_dim=self._solution_dim,
-                           weight_rule="truncation",
                            seed=opt_seed,
                            dtype=self.archive.dtype,
+                           weight_rule="truncation",
                            **kwargs)
         self.opt.reset(self._x0)
 

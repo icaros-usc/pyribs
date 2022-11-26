@@ -55,7 +55,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         self.n_vectors = self.batch_size if n_vectors is None else n_vectors
 
         # z-vectors for the current solutions - initialized in ask().
-        self.solution_z = None
+        self._solution_z = None
 
         # Learning rates.
         self.csigma = 2 * self.batch_size / self.solution_dim
@@ -64,7 +64,6 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         # c_c,i = lambda / 4 ** (i - 1) * n for i in 1..m
         self.cc = self.batch_size / (4.0**np.arange(self.n_vectors) *
                                      self.solution_dim)
-        # TODO remove assert?
         assert self.cc.shape == (self.n_vectors,)
         assert self.cd.shape == (self.n_vectors,)
 
@@ -118,8 +117,12 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
     @staticmethod
     @nb.jit(nopython=True)
-    def _transform(z, itrs, cd, m, mean, sigma, lower_bounds, upper_bounds):
-        """Transforms params sampled from Gaussian dist into solution space."""
+    def _transform_and_check_sol(z, itrs, cd, m, mean, sigma, lower_bounds,
+                                 upper_bounds):
+        """Numba helper for transforming parameters to the solution space.
+
+        Numba is important here since we may be resampling multiple times.
+        """
         d = z
         for j in range(itrs):
             d = ((1 - cd[j]) * d  # (_, n)
@@ -158,9 +161,10 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         if batch_size is None:
             batch_size = self.batch_size
 
-        solutions = np.empty((batch_size, self.solution_dim), dtype=self.dtype)
-        self.solution_z = np.empty((batch_size, self.solution_dim),
+        self._solutions = np.empty((batch_size, self.solution_dim),
                                    dtype=self.dtype)
+        self._solution_z = np.empty((batch_size, self.solution_dim),
+                                    dtype=self.dtype)
 
         # Resampling method for bound constraints -> sample new solutions until
         # all solutions are within bounds.
@@ -168,19 +172,18 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         while len(remaining_indices) > 0:
             z = self._rng.standard_normal(
                 (len(remaining_indices), self.solution_dim))  # (_, n)
-            self.solution_z[remaining_indices] = z
+            self._solution_z[remaining_indices] = z
 
-            new_solutions, out_of_bounds = self._transform(
+            new_solutions, out_of_bounds = self._transform_and_check_sol(
                 z, min(self.current_gens, self.n_vectors), self.cd, self.m,
                 self.mean, self.sigma, lower_bounds, upper_bounds)
-            solutions[remaining_indices] = new_solutions
+            self._solutions[remaining_indices] = new_solutions
 
             # Find indices in remaining_indices that are still out of bounds
             # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
             remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
 
-        self._solutions = np.asarray(solutions)
         return self._solutions
 
     @staticmethod
@@ -219,7 +222,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
         weights, mueff = self._calc_strat_params(num_parents, self.weight_rule)
         parents = self._solutions[ranking_indices][:num_parents]
-        z_parents = self.solution_z[ranking_indices][:num_parents]
+        z_parents = self._solution_z[ranking_indices][:num_parents]
         z_mean = np.sum(weights[:, None] * z_parents, axis=0)
 
         # Recombination of the new mean - equivalent to line 12 in Algorithm 1
