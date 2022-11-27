@@ -30,24 +30,23 @@ class AdamOpt(GradientOptBase):
             more info.
     """
 
-    def __init__(
-            self,
-            theta0,
-            lr=0.001,
-            beta1=0.9,
-            beta2=0.999,
-            epsilon=1e-8,
-            l2_coeff=0.0):
-        super().__init__(theta0, lr)
+    def __init__(self,
+                 theta0,
+                 lr=0.001,
+                 beta1=0.9,
+                 beta2=0.999,
+                 epsilon=1e-8,
+                 l2_coeff=0.0):
+        self._m = None
+        self._v = None
+        self._t = None
 
         self._epsilon = epsilon
         self._beta1 = beta1
         self._beta2 = beta2
         self._l2_coeff = l2_coeff
 
-        self._m = None
-        self._v = None
-        self._t = None
+        super().__init__(theta0, lr)
 
     def reset(self, theta0):
         self._theta = np.copy(theta0)
