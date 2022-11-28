@@ -23,7 +23,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
         mirror_sampling (bool): Whether to use mirror sampling when gathering
-            solutions. Defaults to true.
+            solutions. Defaults to True.
         adam_kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
     """
 
@@ -189,7 +189,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             gradient /= self.batch_size * self.sigma0
 
         # Used to compute last update ratio.
-        theta0 = self.adam_opt.theta
+        theta0 = self.adam_opt.theta.copy()
 
         self.adam_opt.step(gradient)
 
