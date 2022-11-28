@@ -51,6 +51,10 @@ class AdamOpt(GradientOptBase):
         self._theta = None
         self.reset(theta0)
 
+    @property
+    def theta(self):
+        return self._theta
+
     def reset(self, theta0):
         self._theta = np.copy(theta0)
         self._m = np.zeros_like(self._theta)

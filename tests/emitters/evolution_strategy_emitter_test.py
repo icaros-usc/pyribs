@@ -24,7 +24,7 @@ def emitter_fixture(request):
                                        x0=x0,
                                        sigma0=1.0,
                                        ranker=request.param[0],
-                                       evolution_strategy=request.param[1])
+                                       es=request.param[1])
 
     return emitter, archive, x0
 
