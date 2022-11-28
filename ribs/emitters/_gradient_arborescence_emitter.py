@@ -108,7 +108,7 @@ class GradientArborescenceEmitter(EmitterBase):
                  restart_rule="no_improvement",
                  grad_opt="adam",
                  grad_opt_kwargs=None,
-                 es="cma-es",
+                 es="cma_es",
                  es_kwargs=None,
                  normalize_grad=True,
                  bounds=None,
