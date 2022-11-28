@@ -33,8 +33,10 @@ class EvolutionStrategyEmitter(EmitterBase):
             that is used to adapt the distribution from which new solution are
             sampled from. This parameter must be the full or abbreviated
             optimizer name.
-        es_kwargs (dict): Keyword arguments that will be passed to the specific
-            evolution strategy used.
+        es_kwargs (dict): Additional arguments to pass to the evolution
+            strategy optimizer. See the evolution-strategy-based optimizers in
+            :mod:`ribs.emitters.opt` for the arguments allowed by each
+            optimizer.
         selection_rule ("mu" or "filter"): Method for selecting parents for the
             evolution strategy. With "mu" selection, the first half of the
             solutions will be selected as parents, while in "filter", any

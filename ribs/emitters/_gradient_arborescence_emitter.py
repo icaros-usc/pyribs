@@ -3,7 +3,7 @@ import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.opt import CMAEvolutionStrategy, _get_grad_opt
+from ribs.emitters.opt import CMAEvolutionStrategy, _get_es, _get_grad_opt
 from ribs.emitters.rankers import _get_ranker
 
 
@@ -58,6 +58,14 @@ class GradientArborescenceEmitter(EmitterBase):
             optimizer. See the gradient-based optimizers in
             :mod:`ribs.emitters.opt` for the arguments allowed by each
             optimizer. Note that we already pass in ``theta0`` and ``lr``.
+        es (str): The evolution strategy is a :class:`OptimizerBase` object
+            that is used to adapt the distribution from which new solution are
+            sampled from. This parameter must be the full or abbreviated
+            optimizer name.
+        es_kwargs (dict): Additional arguments to pass to the evolution
+            strategy optimizer. See the evolution-strategy-based optimizers in
+            :mod:`ribs.emitters.opt` for the arguments allowed by each
+            optimizer.
         normalize_grad (bool): If true (default), then gradient infomation will
             be normalized. Otherwise, it will not be normalized.
         bounds (None or array-like): Bounds of the solution space. As suggested
@@ -100,6 +108,8 @@ class GradientArborescenceEmitter(EmitterBase):
                  restart_rule="no_improvement",
                  grad_opt="adam",
                  grad_opt_kwargs=None,
+                 es="cma-es",
+                 es_kwargs=None,
                  normalize_grad=True,
                  bounds=None,
                  batch_size=None,
@@ -145,11 +155,12 @@ class GradientArborescenceEmitter(EmitterBase):
             **(grad_opt_kwargs if grad_opt_kwargs is not None else {}))
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = CMAEvolutionStrategy(sigma0=sigma0,
-                                        batch_size=batch_size,
-                                        solution_dim=self._num_coefficients,
-                                        seed=opt_seed,
-                                        dtype=self.archive.dtype)
+        self.opt = _get_es(es)(sigma0=sigma0,
+                               batch_size=batch_size,
+                               solution_dim=self._num_coefficients,
+                               seed=opt_seed,
+                               dtype=self.archive.dtype,
+                               **es_kwargs)
 
         self.opt.reset(np.zeros(self._num_coefficients))
 

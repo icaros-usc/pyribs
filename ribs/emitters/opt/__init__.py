@@ -58,7 +58,7 @@ _NAME_TO_GRAD_OPT_MAP = {
 }
 
 
-def _get_grad_opt(klass, theta0, lr, **grad_opt_kwargs):
+def _get_grad_opt(klass, **grad_opt_kwargs):
     """Returns a gradient optimizer class based on its name.
 
     Args:
@@ -77,7 +77,7 @@ def _get_grad_opt(klass, theta0, lr, **grad_opt_kwargs):
             raise ValueError(f"`{klass}` is not the full or abbreviated "
                              "name of a valid gradient optimizer")
     if callable(klass):
-        grad_opt = klass(theta0, lr, **grad_opt_kwargs)
+        grad_opt = klass(**grad_opt_kwargs)
         if isinstance(grad_opt, GradientOptBase):
             return grad_opt
         raise ValueError(f"Callable `{klass}` did not return an instance "

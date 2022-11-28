@@ -7,6 +7,7 @@ import numba as nb
 import numpy as np
 from threadpoolctl import threadpool_limits
 
+from ribs._utils import readonly
 from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
 
 
@@ -26,20 +27,21 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
             this defaults to be equal to the batch size.
     """
 
-    def __init__(self,
-                 sigma0,
-                 solution_dim,
-                 batch_size=None,
-                 seed=None,
-                 dtype=np.float64,
-                 n_vectors=None):
-        super().__init__(
+    def __init__(  # pylint: disable = super-init-not-called
+            self,
             sigma0,
             solution_dim,
-            batch_size,
-            seed,
-            dtype,
-        )
+            batch_size=None,
+            seed=None,
+            dtype=np.float64,
+            n_vectors=None):
+        self.batch_size = (4 + int(3 * np.log(solution_dim))
+                           if batch_size is None else batch_size)
+        self.sigma0 = sigma0
+        self.solution_dim = solution_dim
+        self.dtype = dtype
+        self._rng = np.random.default_rng(seed)
+        self._solutions = None
 
         if self.batch_size > self.solution_dim:
             raise ValueError(f"batch_size ({self.batch_size}) is greater than"
@@ -177,7 +179,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
             # out of bounds).
             remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
 
-        return self._solutions
+        return readonly(self._solutions)
 
     @staticmethod
     @nb.jit(nopython=True)

@@ -31,15 +31,7 @@ class EvolutionStrategyBase(ABC):
                  batch_size=None,
                  seed=None,
                  dtype=np.float64):
-        self.batch_size = (4 + int(3 * np.log(solution_dim))
-                           if batch_size is None else batch_size)
-        self.sigma0 = sigma0
-        self.solution_dim = solution_dim
-        self.dtype = dtype
-        self._rng = np.random.default_rng(seed)
-
-        # ask() should store the returned solutions for tell().
-        self._solutions = None
+        pass
 
     @abstractmethod
     def reset(self, x0):

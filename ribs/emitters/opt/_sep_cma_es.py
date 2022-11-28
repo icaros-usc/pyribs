@@ -58,19 +58,20 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
             (positive weights only) or "active" (include negative weights).
     """
 
-    def __init__(self,
-                 sigma0,
-                 solution_dim,
-                 batch_size=None,
-                 seed=None,
-                 dtype=np.float64):
-        super().__init__(
+    def __init__(  # pylint: disable = super-init-not-called
+            self,
             sigma0,
             solution_dim,
-            batch_size,
-            seed,
-            dtype,
-        )
+            batch_size=None,
+            seed=None,
+            dtype=np.float64):
+        self.batch_size = (4 + int(3 * np.log(solution_dim))
+                           if batch_size is None else batch_size)
+        self.sigma0 = sigma0
+        self.solution_dim = solution_dim
+        self.dtype = dtype
+        self._rng = np.random.default_rng(seed)
+        self._solutions = None
 
         # Strategy-specific params -> initialized in reset().
         self.current_eval = None
