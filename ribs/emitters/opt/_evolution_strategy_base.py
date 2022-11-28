@@ -19,8 +19,7 @@ class EvolutionStrategyBase(ABC):
     Args:
         sigma0 (float): Initial step size.
         solution_dim (int): Size of the solution space.
-        batch_size (int): Number of solutions to evaluate at a time. If None, we
-            calculate a default batch size based on solution_dim.
+        batch_size (int): Number of solutions to evaluate at a time.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
     """
