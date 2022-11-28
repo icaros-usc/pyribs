@@ -7,6 +7,7 @@ import numba as nb
 import numpy as np
 from threadpoolctl import threadpool_limits
 
+from ribs._utils import readonly
 from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
 
 
@@ -183,7 +184,7 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
             # out of bounds).
             remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
 
-        return self._solutions
+        return readonly(self._solutions)
 
     @staticmethod
     def _conedf(df, mu, solution_dim):

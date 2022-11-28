@@ -5,6 +5,7 @@ See here for more info: https://arxiv.org/abs/1703.03864
 import numpy as np
 from threadpoolctl import threadpool_limits
 
+from ribs._utils import readonly
 from ribs.emitters.opt._adam_opt import AdamOpt
 from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
 
@@ -117,7 +118,8 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         if batch_size is None:
             batch_size = self.batch_size
 
-        solutions = np.empty((batch_size, self.solution_dim), dtype=self.dtype)
+        self._solutions = np.empty((batch_size, self.solution_dim),
+                                   dtype=self.dtype)
 
         # Resampling method for bound constraints -> sample new solutions until
         # all solutions are within bounds.
@@ -139,15 +141,14 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
                 new_solutions > np.expand_dims(upper_bounds, axis=0),
             )
 
-            solutions[remaining_indices] = new_solutions
+            self._solutions[remaining_indices] = new_solutions
 
             # Find indices in remaining_indices that are still out of bounds
             # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
             remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
 
-        self._solutions = np.asarray(solutions)
-        return self._solutions
+        return readonly(self._solutions)
 
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
