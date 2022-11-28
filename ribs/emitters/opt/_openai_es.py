@@ -23,20 +23,17 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         dtype (str or data-type): Data type of solutions.
         mirror_sampling (bool): Whether to use mirror sampling when gathering
             solutions. Defaults to true.
-        weight_rule (str): Not used.
         adam_kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
     """
 
-    def __init__(
-            self,
-            sigma0,
-            solution_dim,
-            batch_size=None,
-            seed=None,
-            dtype=np.float64,
-            weight_rule="truncation",
-            mirror_sampling=True,
-            **adam_kwargs):
+    def __init__(self,
+                 sigma0,
+                 solution_dim,
+                 batch_size=None,
+                 seed=None,
+                 dtype=np.float64,
+                 mirror_sampling=True,
+                 **adam_kwargs):
         super().__init__(
             sigma0,
             solution_dim,
@@ -44,7 +41,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             seed,
             dtype,
         )
-        self.weight_rule = weight_rule  # Not used.
+
         self.mirror_sampling = mirror_sampling
 
         # Default batch size should be an even number for mirror sampling.

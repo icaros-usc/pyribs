@@ -63,8 +63,7 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
                  solution_dim,
                  batch_size=None,
                  seed=None,
-                 dtype=np.float64,
-                 weight_rule="truncation"):
+                 dtype=np.float64):
         super().__init__(
             sigma0,
             solution_dim,
@@ -72,10 +71,6 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
             seed,
             dtype,
         )
-
-        if weight_rule not in ["truncation", "active"]:
-            raise ValueError(f"Invalid weight_rule {weight_rule}")
-        self.weight_rule = weight_rule
 
         # Strategy-specific params -> initialized in reset().
         self.current_eval = None
@@ -199,7 +194,7 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
         """Used for computing separable learning rate."""
         return (alphamu + mu + 1. / mu - 2) / (df + 4 * np.sqrt(df) + mu / 2.)
 
-    def _calc_strat_params(self, solution_dim, num_parents, weight_rule):
+    def _calc_strat_params(self, solution_dim, num_parents):
         """Calculates weights, mueff, and learning rates for sep-CMA-ES.
 
         Refer here
@@ -207,14 +202,11 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
         for the learning rates.
         """
         # Create fresh weights for the number of parents found.
-        if weight_rule == "truncation":
-            weights = (np.log(num_parents + 0.5) -
-                       np.log(np.arange(1, num_parents + 1)))
-            total_weights = np.sum(weights)
-            weights = weights / total_weights
-            mueff = np.sum(weights)**2 / np.sum(weights**2)
-        elif weight_rule == "active":
-            weights = None
+        weights = (np.log(num_parents + 0.5) -
+                   np.log(np.arange(1, num_parents + 1)))
+        total_weights = np.sum(weights)
+        weights = weights / total_weights
+        mueff = np.sum(weights)**2 / np.sum(weights**2)
 
         # Dynamically update these strategy-specific parameters.
         cc = ((4 + mueff / solution_dim) /  # pylint: disable = unused-variable
@@ -280,7 +272,7 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
         parents = self._solutions[ranking_indices][:num_parents]
 
         weights, mueff, cc, cs, c1, cmu = self._calc_strat_params(
-            self.solution_dim, num_parents, self.weight_rule)
+            self.solution_dim, num_parents)
 
         damps = (1 + 2 * max(
             0,

@@ -84,8 +84,6 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
-        weight_rule (str): Method for generating weights. Either "truncation"
-            (positive weights only) or "active" (include negative weights).
     """
 
     def __init__(self,
@@ -93,8 +91,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
                  solution_dim,
                  batch_size=None,
                  seed=None,
-                 dtype=np.float64,
-                 weight_rule="truncation"):
+                 dtype=np.float64):
         super().__init__(
             sigma0,
             solution_dim,
@@ -102,10 +99,6 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
             seed,
             dtype,
         )
-
-        if weight_rule not in ["truncation", "active"]:
-            raise ValueError(f"Invalid weight_rule {weight_rule}")
-        self.weight_rule = weight_rule
 
         # Calculate gap between covariance matrix updates.
         num_parents = self.batch_size // 2
@@ -231,16 +224,13 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     def _calc_strat_params(self, num_parents):
         """Calculates weights, mueff, and learning rates for CMA-ES."""
         # Create fresh weights for the number of parents found.
-        if self.weight_rule == "truncation":
-            weights = (np.log(num_parents + 0.5) -
-                       np.log(np.arange(1, num_parents + 1)))
-            total_weights = np.sum(weights)
-            weights = weights / total_weights
-            # Note: Since `weights` changes on the line above, np.sum(weights)
-            # is NOT the same as total_weights.
-            mueff = np.sum(weights)**2 / np.sum(weights**2)
-        elif self.weight_rule == "active":
-            weights = None
+        weights = (np.log(num_parents + 0.5) -
+                   np.log(np.arange(1, num_parents + 1)))
+        total_weights = np.sum(weights)
+        weights = weights / total_weights
+        # Note: Since `weights` changes on the line above, np.sum(weights)
+        # is NOT the same as total_weights.
+        mueff = np.sum(weights)**2 / np.sum(weights**2)
 
         # Dynamically update these strategy-specific parameters.
         cc = ((4 + mueff / self.solution_dim) /

@@ -29,10 +29,12 @@ class EvolutionStrategyEmitter(EmitterBase):
             instance of :class:`RankerBase`, or it may be a full or abbreviated
             ranker name as described in
             :meth:`ribs.emitters.rankers.get_ranker`.
-        evolution_strategy (str): The evolution strategy is
-            a :class:`OptimizerBase` object that is used to adapt the
-            distribution from which new solution are sampled from. This
-            parameter must be the full or abbreviated optimizer name.
+        es (str): The evolution strategy is a :class:`OptimizerBase` object
+            that is used to adapt the distribution from which new solution are
+            sampled from. This parameter must be the full or abbreviated
+            optimizer name.
+        es_kwargs (dict): Keyword arguments that will be passed to the specific
+            evolution strategy used.
         selection_rule ("mu" or "filter"): Method for selecting parents for the
             evolution strategy. With "mu" selection, the first half of the
             solutions will be selected as parents, while in "filter", any
@@ -58,8 +60,6 @@ class EvolutionStrategyEmitter(EmitterBase):
             default CMA-ES rules.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-        kwargs (dict): Keyword arguments that will be passed to the specific
-            evolution strategy used.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
@@ -74,13 +74,13 @@ class EvolutionStrategyEmitter(EmitterBase):
         x0,
         sigma0,
         ranker="2imp",
-        evolution_strategy="cma_es",
+        es="cma_es",
+        es_kwargs=None,
         selection_rule="filter",
         restart_rule="no_improvement",
         bounds=None,
         batch_size=None,
         seed=None,
-        **kwargs,
     ):
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
@@ -106,14 +106,13 @@ class EvolutionStrategyEmitter(EmitterBase):
         _ = self._check_restart(0)
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = _get_es(evolution_strategy,
+        self.opt = _get_es(es,
                            sigma0=sigma0,
                            batch_size=batch_size,
                            solution_dim=self._solution_dim,
                            seed=opt_seed,
                            dtype=self.archive.dtype,
-                           weight_rule="truncation",
-                           **kwargs)
+                           **(es_kwargs if es_kwargs is not None else {}))
         self.opt.reset(self._x0)
 
         self._ranker = _get_ranker(ranker)

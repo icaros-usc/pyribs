@@ -22,8 +22,6 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
-        weight_rule (str): Method for generating weights. Either "truncation"
-            (positive weights only) or "active" (include negative weights).
         n_vectors (int): Number of vectors to use in the approximation. If None,
             this defaults to be equal to the batch size.
     """
@@ -34,7 +32,6 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
                  batch_size=None,
                  seed=None,
                  dtype=np.float64,
-                 weight_rule="truncation",
                  n_vectors=None):
         super().__init__(
             sigma0,
@@ -43,10 +40,6 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
             seed,
             dtype,
         )
-
-        if weight_rule not in ["truncation", "active"]:
-            raise ValueError(f"Invalid weight_rule {weight_rule}")
-        self.weight_rule = weight_rule
 
         if self.batch_size > self.solution_dim:
             raise ValueError(f"batch_size ({self.batch_size}) is greater than"
@@ -188,18 +181,15 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
     @staticmethod
     @nb.jit(nopython=True)
-    def _calc_strat_params(num_parents, weight_rule):
+    def _calc_strat_params(num_parents):
         """Calculates weights, mueff, and learning rates for LM-MA-ES."""
         # Create fresh weights for the number of parents found.
-        if weight_rule == "truncation":
-            weights = (np.log(num_parents + 0.5) -
-                       np.log(np.arange(1, num_parents + 1)))
-            total_weights = np.sum(weights)
-            weights = weights / total_weights
-            # The weights should sum to 1 for mueff.
-            mueff = np.sum(weights)**2 / np.sum(weights**2)
-        elif weight_rule == "active":
-            weights = None
+        weights = (np.log(num_parents + 0.5) -
+                   np.log(np.arange(1, num_parents + 1)))
+        total_weights = np.sum(weights)
+        weights = weights / total_weights
+        # The weights should sum to 1 for mueff.
+        mueff = np.sum(weights)**2 / np.sum(weights**2)
 
         return weights, mueff
 
@@ -220,7 +210,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         if num_parents == 0:
             return
 
-        weights, mueff = self._calc_strat_params(num_parents, self.weight_rule)
+        weights, mueff = self._calc_strat_params(num_parents)
         parents = self._solutions[ranking_indices][:num_parents]
         z_parents = self._solution_z[ranking_indices][:num_parents]
         z_mean = np.sum(weights[:, None] * z_parents, axis=0)
