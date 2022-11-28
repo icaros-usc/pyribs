@@ -23,13 +23,12 @@ class GradientOptBase(ABC):
     """
 
     def __init__(self, theta0, lr):
-        self._lr = lr
-        self._theta = None
-        self.reset(theta0)
+        pass
 
     @property
+    @abstractmethod
     def theta(self):
-        return self._theta
+        """The current solution point."""
 
     @abstractmethod
     def reset(self, theta0):

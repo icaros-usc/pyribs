@@ -63,8 +63,6 @@ def _get_grad_opt(klass, **grad_opt_kwargs):
 
     Args:
         klass: Either a callable or a str for the gradient optimizer.
-        theta0: Argument for all instances of GradientOptBase.
-        lr: Argument for all instances of GradientOptBase.
         grad_opt_kwargs (dict): Additional kwargs for the gradient optimizer.
 
     Returns:

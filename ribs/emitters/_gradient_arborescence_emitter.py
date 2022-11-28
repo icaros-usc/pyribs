@@ -151,7 +151,9 @@ class GradientArborescenceEmitter(EmitterBase):
 
         # Initialize gradient optimizer.
         self._grad_opt = _get_grad_opt(
-            grad_opt, self._x0, lr,
+            grad_opt,
+            theta0=self._x0,
+            lr=lr,
             **(grad_opt_kwargs if grad_opt_kwargs is not None else {}))
 
         opt_seed = None if seed is None else self._rng.integers(10_000)

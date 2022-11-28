@@ -12,7 +12,7 @@ class EvolutionStrategyBase(ABC):
     - Repeatedly:
       - Request new solutions with ``ask()``
       - Rank the solutions in the emitter (better solutions come first) and
-        pass them back with ``tell()``.
+        pass the indices back with ``tell()``.
       - Use ``check_stop()`` to see if the optimizer has reached a stopping
         condition, and if so, call ``reset()``.
 
