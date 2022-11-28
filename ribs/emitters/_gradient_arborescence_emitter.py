@@ -157,12 +157,13 @@ class GradientArborescenceEmitter(EmitterBase):
             **(grad_opt_kwargs if grad_opt_kwargs is not None else {}))
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = _get_es(es)(sigma0=sigma0,
-                               batch_size=batch_size,
-                               solution_dim=self._num_coefficients,
-                               seed=opt_seed,
-                               dtype=self.archive.dtype,
-                               **es_kwargs)
+        self.opt = _get_es(es,
+                           sigma0=sigma0,
+                           batch_size=batch_size,
+                           solution_dim=self._num_coefficients,
+                           seed=opt_seed,
+                           dtype=self.archive.dtype,
+                           **(es_kwargs if es_kwargs is not None else {}))
 
         self.opt.reset(np.zeros(self._num_coefficients))
 

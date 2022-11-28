@@ -34,8 +34,6 @@ def test_init_with_get_grad_opt(grad_opt_name):
 
     if grad_opt_name == "adam":
         grad_opt_kwargs = {
-            "theta0": 2.0,
-            "lr": 1,
             "beta1": 0.1,
             "beta2": 0.1,
             "epsilon": 1,
@@ -44,7 +42,10 @@ def test_init_with_get_grad_opt(grad_opt_name):
     else:
         grad_opt_kwargs = {}
 
-    grad_opt = _get_grad_opt(grad_opt_name, **grad_opt_kwargs)
+    grad_opt = _get_grad_opt(grad_opt_name,
+                             theta0=theta0,
+                             lr=lr,
+                             **grad_opt_kwargs)
 
     assert grad_opt.theta == theta0
 
