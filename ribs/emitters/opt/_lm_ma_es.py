@@ -102,10 +102,9 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         if self.sigma < 1e-12:
             return True
 
-        # Fitness is too flat (only applies if there are at least 2
-        # parents).
+        # NOTE: We use norm here because we may have multiple ranking values.
         if (len(ranking_values) >= 2 and
-                np.abs(ranking_values[0] - ranking_values[-1]) < 1e-12):
+                np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12):
             return True
 
         return False
