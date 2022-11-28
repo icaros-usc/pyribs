@@ -16,7 +16,7 @@ For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
 * ``cma_es``: :class:`CMAEvolutionStrategy`
 * ``sep_cma_es``: :class:`SeparableCMAEvolutionStrategy`
 * ``lm_ma_es``: :class:`LMMAEvolutionStrategy`
-* `openai_es``: :class:`OpenAIEvolutionStrategy`
+* ``openai_es``: :class:`OpenAIEvolutionStrategy`
 
 .. autosummary::
     :toctree:
@@ -25,9 +25,10 @@ For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
     ribs.emitters.opt.LMMAEvolutionStrategy
     ribs.emitters.opt.OpenAIEvolutionStrategy
     ribs.emitters.opt.SeparableCMAEvolutionStrategy
+    ribs.emitters.opt.EvolutionStrategyBase
     ribs.emitters.opt.AdamOpt
     ribs.emitters.opt.GradientAscentOpt
-    ribs.emitters.opt.EvolutionStrategyBase
+    ribs.emitters.opt.GradientOptBase
 """
 from ribs.emitters.opt._adam_opt import AdamOpt
 from ribs.emitters.opt._cma_es import CMAEvolutionStrategy
@@ -39,14 +40,14 @@ from ribs.emitters.opt._openai_es import OpenAIEvolutionStrategy
 from ribs.emitters.opt._sep_cma_es import SeparableCMAEvolutionStrategy
 
 __all__ = [
-    "AdamOpt",
-    "GradientAscentOpt",
-    "GradientOptBase",
     "CMAEvolutionStrategy",
     "LMMAEvolutionStrategy",
     "OpenAIEvolutionStrategy",
     "SeparableCMAEvolutionStrategy",
     "EvolutionStrategyBase",
+    "AdamOpt",
+    "GradientAscentOpt",
+    "GradientOptBase",
 ]
 
 _NAME_TO_GRAD_OPT_MAP = {
