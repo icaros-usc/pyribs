@@ -77,6 +77,4 @@ class AdamOpt(GradientOptBase):
         self._v = (self._beta2 * self._v + (1 - self._beta2) *
                    (gradient * gradient))
         step = -a * self._m / (np.sqrt(self._v) + self._epsilon)
-        ratio = np.linalg.norm(step) / np.linalg.norm(self._theta)
         self._theta += step
-        return ratio

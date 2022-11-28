@@ -187,4 +187,11 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         else:
             gradient = np.sum(self.noise * ranks[:, None], axis=0)
             gradient /= self.batch_size * self.sigma0
-        self.last_update_ratio = self.adam_opt.step(gradient)
+
+        # Used to compute last update ratio.
+        theta0 = self.adam_opt.theta
+
+        self.adam_opt.step(gradient)
+
+        self.last_update_ratio = (np.linalg.norm(self.adam_opt.theta - theta0) /
+                                  np.linalg.norm(self.adam_opt.theta))
