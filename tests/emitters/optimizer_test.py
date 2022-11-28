@@ -22,7 +22,6 @@ def test_init_with_get_es(es_name):
     assert es.sigma0 == es_kwargs["sigma0"]
     assert es.solution_dim == es_kwargs["solution_dim"]
     assert es.dtype == es_kwargs["dtype"]
-    assert es.weight_rule == "truncation"  # Default
 
 
 # Gradient Optimizer Tests
