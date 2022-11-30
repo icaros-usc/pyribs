@@ -3,7 +3,7 @@ import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.opt import CMAEvolutionStrategy
+from ribs.emitters.opt import _get_es
 from ribs.emitters.rankers import _get_ranker
 
 
@@ -17,21 +17,30 @@ class EvolutionStrategyEmitter(EmitterBase):
     the mean and covariance of the distribution.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
+        archive (ribs.archives.ArchiveBase): An archive to use when creating
+            and inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution. Must be 1-dimensional.
         sigma0 (float): Initial step size / standard deviation.
-        selection_rule ("mu" or "filter"): Method for selecting parents in
-            CMA-ES. With "mu" selection, the first half of the solutions will be
-            selected as parents, while in "filter", any solutions that were
-            added to the archive will be selected.
         ranker (Callable or str): The ranker is a :class:`RankerBase` object
             that orders the solutions after they have been evaluated in the
-            environment. This parameter may be a callable (e.g. a class or a
-            lambda function) that takes in no parameters and returns an instance
-            of :class:`RankerBase`, or it may be a full or abbreviated ranker
-            name as described in :mod:`ribs.emitters.rankers`.
+            environment. This parameter may be a callable (e.g. a class or
+            a lambda function) that takes in no parameters and returns an
+            instance of :class:`RankerBase`, or it may be a full or abbreviated
+            ranker name as described in
+            :meth:`ribs.emitters.rankers.get_ranker`.
+        es (str): The evolution strategy is a :class:`OptimizerBase` object
+            that is used to adapt the distribution from which new solution are
+            sampled from. This parameter must be the full or abbreviated
+            optimizer name as described in :mod:`ribs.emitters.opt`.
+        es_kwargs (dict): Additional arguments to pass to the evolution
+            strategy optimizer. See the evolution-strategy-based optimizers in
+            :mod:`ribs.emitters.opt` for the arguments allowed by each
+            optimizer.
+        selection_rule ("mu" or "filter"): Method for selecting parents for the
+            evolution strategy. With "mu" selection, the first half of the
+            solutions will be selected as parents, while in "filter", any
+            solutions that were added to the archive will be selected.
         restart_rule (int, "no_improvement", and "basic"): Method to use when
             checking for restarts. If given an integer, then the emitter will
             restart after this many iterations, where each iteration is a call
@@ -60,17 +69,21 @@ class EvolutionStrategyEmitter(EmitterBase):
             invalid.
     """
 
-    def __init__(self,
-                 archive,
-                 *,
-                 x0,
-                 sigma0,
-                 ranker="2imp",
-                 selection_rule="filter",
-                 restart_rule="no_improvement",
-                 bounds=None,
-                 batch_size=None,
-                 seed=None):
+    def __init__(
+        self,
+        archive,
+        *,
+        x0,
+        sigma0,
+        ranker="2imp",
+        es="cma_es",
+        es_kwargs=None,
+        selection_rule="filter",
+        restart_rule="no_improvement",
+        bounds=None,
+        batch_size=None,
+        seed=None,
+    ):
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
         check_1d_shape(self._x0, "x0", archive.solution_dim,
@@ -90,13 +103,18 @@ class EvolutionStrategyEmitter(EmitterBase):
         self._restart_rule = restart_rule
         self._restarts = 0
         self._itrs = 0
+
         # Check if the restart_rule is valid, discard check_restart result.
         _ = self._check_restart(0)
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = CMAEvolutionStrategy(sigma0, batch_size, self._solution_dim,
-                                        "truncation", opt_seed,
-                                        self.archive.dtype)
+        self.opt = _get_es(es,
+                           sigma0=sigma0,
+                           batch_size=batch_size,
+                           solution_dim=self._solution_dim,
+                           seed=opt_seed,
+                           dtype=self.archive.dtype,
+                           **(es_kwargs if es_kwargs is not None else {}))
         self.opt.reset(self._x0)
 
         self._ranker = _get_ranker(ranker)
@@ -211,9 +229,6 @@ class EvolutionStrategyEmitter(EmitterBase):
                             value_batch=value_batch,
                             metadata_batch=metadata_batch)
 
-        # metadata_batch = itertools.repeat(
-        #     None) if metadata_batch is None else np.asarray(metadata_batch)
-
         # Increase iteration counter.
         self._itrs += 1
 
@@ -230,7 +245,7 @@ class EvolutionStrategyEmitter(EmitterBase):
                        self._batch_size // 2)
 
         # Update Evolution Strategy.
-        self.opt.tell(solution_batch[indices], num_parents)
+        self.opt.tell(indices, num_parents)
 
         # Check for reset.
         if (self.opt.check_stop(ranking_values[indices]) or

@@ -1,11 +1,9 @@
 """Provides the GradientArborescenceEmitter."""
-import itertools
-
 import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.opt import CMAEvolutionStrategy, _get_grad_opt
+from ribs.emitters.opt import CMAEvolutionStrategy, _get_es, _get_grad_opt
 from ribs.emitters.rankers import _get_ranker
 
 
@@ -60,6 +58,14 @@ class GradientArborescenceEmitter(EmitterBase):
             optimizer. See the gradient-based optimizers in
             :mod:`ribs.emitters.opt` for the arguments allowed by each
             optimizer. Note that we already pass in ``theta0`` and ``lr``.
+        es (str): The evolution strategy is a :class:`OptimizerBase` object
+            that is used to adapt the distribution from which new solution are
+            sampled from. This parameter must be the full or abbreviated
+            optimizer name as described in :mod:`ribs.emitters.opt`.
+        es_kwargs (dict): Additional arguments to pass to the evolution
+            strategy optimizer. See the evolution-strategy-based optimizers in
+            :mod:`ribs.emitters.opt` for the arguments allowed by each
+            optimizer.
         normalize_grad (bool): If true (default), then gradient infomation will
             be normalized. Otherwise, it will not be normalized.
         bounds (None or array-like): Bounds of the solution space. As suggested
@@ -102,11 +108,20 @@ class GradientArborescenceEmitter(EmitterBase):
                  restart_rule="no_improvement",
                  grad_opt="adam",
                  grad_opt_kwargs=None,
+                 es="cma_es",
+                 es_kwargs=None,
                  normalize_grad=True,
                  bounds=None,
                  batch_size=None,
                  epsilon=1e-8,
                  seed=None):
+        EmitterBase.__init__(
+            self,
+            archive,
+            solution_dim=archive.solution_dim,
+            bounds=bounds,
+        )
+
         self._epsilon = epsilon
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
@@ -115,21 +130,9 @@ class GradientArborescenceEmitter(EmitterBase):
         self._sigma0 = sigma0
         self._normalize_grads = normalize_grad
         self._jacobian_batch = None
-        self._grad_coefficients = None
-        EmitterBase.__init__(
-            self,
-            archive,
-            solution_dim=archive.solution_dim,
-            bounds=bounds,
-        )
 
         self._ranker = _get_ranker(ranker)
         self._ranker.reset(self, archive, self._rng)
-
-        # Initialize gradient optimizer.
-        self._grad_opt = _get_grad_opt(
-            grad_opt, self._x0, lr,
-            {} if grad_opt_kwargs is None else grad_opt_kwargs)
 
         if selection_rule not in ["mu", "filter"]:
             raise ValueError(f"Invalid selection_rule {selection_rule}")
@@ -138,18 +141,30 @@ class GradientArborescenceEmitter(EmitterBase):
         self._restart_rule = restart_rule
         self._restarts = 0
         self._itrs = 0
-        # Check if the restart_rule is valid.
+
+        # Check if the restart_rule is valid, discard check_restart result.
         _ = self._check_restart(0)
-        self._restart_rule = restart_rule
 
         # We have a coefficient for each measure and an extra coefficient for
         # the objective.
         self._num_coefficients = archive.measure_dim + 1
 
+        # Initialize gradient optimizer.
+        self._grad_opt = _get_grad_opt(
+            grad_opt,
+            theta0=self._x0,
+            lr=lr,
+            **(grad_opt_kwargs if grad_opt_kwargs is not None else {}))
+
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = CMAEvolutionStrategy(sigma0, batch_size,
-                                        self._num_coefficients, "truncation",
-                                        opt_seed, self.archive.dtype)
+        self.opt = _get_es(es,
+                           sigma0=sigma0,
+                           batch_size=batch_size,
+                           solution_dim=self._num_coefficients,
+                           seed=opt_seed,
+                           dtype=self.archive.dtype,
+                           **(es_kwargs if es_kwargs is not None else {}))
+
         self.opt.reset(np.zeros(self._num_coefficients))
 
         self._batch_size = self.opt.batch_size
@@ -233,10 +248,10 @@ class GradientArborescenceEmitter(EmitterBase):
         # all solutions are within bounds.
         remaining_indices = np.arange(self._batch_size)
         while len(remaining_indices) > 0:
-            self._grad_coefficients = self.opt.ask(coefficient_lower_bounds,
-                                                   coefficient_upper_bounds,
-                                                   len(remaining_indices))
-            noise = np.expand_dims(self._grad_coefficients, axis=2)
+            gradient_coefficients = self.opt.ask(coefficient_lower_bounds,
+                                                 coefficient_upper_bounds,
+                                                 len(remaining_indices))
+            noise = np.expand_dims(gradient_coefficients, axis=2)
             new_solution_batch = (self._grad_opt.theta +
                                   np.sum(self._jacobian_batch * noise, axis=1))
             solution_batch[remaining_indices] = new_solution_batch
@@ -378,9 +393,6 @@ class GradientArborescenceEmitter(EmitterBase):
                             value_batch=value_batch,
                             metadata_batch=metadata_batch)
 
-        metadata_batch = itertools.repeat(
-            None) if metadata_batch is None else np.asarray(metadata_batch)
-
         if self._jacobian_batch is None:
             raise RuntimeError("tell() was called without calling tell_dqd().")
 
@@ -400,7 +412,7 @@ class GradientArborescenceEmitter(EmitterBase):
                        self._batch_size // 2)
 
         # Update Evolution Strategy.
-        self.opt.tell(self._grad_coefficients[indices], num_parents)
+        self.opt.tell(indices, num_parents)
 
         # Calculate a new mean in solution space. These weights are from CMA-ES.
         parents = solution_batch[indices]

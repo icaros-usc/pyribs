@@ -1,6 +1,4 @@
 """Tests that should work for all emitters."""
-import itertools
-
 import numpy as np
 import pytest
 

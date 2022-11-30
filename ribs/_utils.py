@@ -158,3 +158,8 @@ def validate_single_args(archive, solution, objective, measures):
 
     check_1d_shape(measures, "measures", archive.measure_dim, "measure_dim")
     check_finite(measures, "measures")
+
+def readonly(arr):
+    """Sets an array to be readonly."""
+    arr.flags.writeable = False
+    return arr
