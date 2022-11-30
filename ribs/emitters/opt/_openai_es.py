@@ -189,9 +189,9 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             gradient /= self.batch_size * self.sigma0
 
         # Used to compute last update ratio.
-        theta0 = self.adam_opt.theta.copy()
+        theta_prev = self.adam_opt.theta.copy()
 
         self.adam_opt.step(gradient)
 
-        self.last_update_ratio = (np.linalg.norm(self.adam_opt.theta - theta0) /
+        self.last_update_ratio = (np.linalg.norm(self.adam_opt.theta - theta_prev) /
                                   np.linalg.norm(self.adam_opt.theta))
