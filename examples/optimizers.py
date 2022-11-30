@@ -1,4 +1,4 @@
-"""Generates CMA-ES animation on sphere function.
+"""Generates animations of optimizers on the 2D sphere or rastrigin functions.
 
 For gradient-based optimizers (inheriting from :class:`GradientOptBase`):
 * ``adam``: :class:`AdamOpt`
@@ -26,11 +26,6 @@ import numpy as np
 import tqdm
 
 from ribs.emitters.opt import _get_es
-
-mpl.rcParams["font.weight"] = "light"
-mpl.rcParams["axes.titleweight"] = "light"
-mpl.rcParams["axes.labelweight"] = "light"
-mpl.rcParams["figure.titleweight"] = "light"
 
 
 def rastrigin(x1, x2):
