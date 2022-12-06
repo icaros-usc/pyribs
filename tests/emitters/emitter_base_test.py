@@ -1,6 +1,4 @@
 """Tests that should work for all emitters."""
-import itertools
-
 import numpy as np
 import pytest
 
@@ -109,7 +107,7 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
         emitter = GradientArborescenceEmitter(archive,
                                               x0=np.array([0]),
                                               sigma0=1.0,
-                                              step_size=0.1,
+                                              lr=0.1,
                                               batch_size=batch_size)
     elif emitter_type == "EvolutionStrategyEmitter":
         emitter = EvolutionStrategyEmitter(archive,

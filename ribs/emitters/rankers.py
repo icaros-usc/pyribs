@@ -366,12 +366,13 @@ def _get_ranker(klass):
     such as "imp".
 
     Args:
-        klass (Callable or str): This parameter may either be a callable (e.g.
+        klass (callable or str): This parameter may either be a callable (e.g.
             a class or a lambda function) that takes in no parameters and
             returns an instance of :class:`RankerBase`, or it may be a full or
             abbreviated ranker name.
+
     Returns:
-        The corresponding ranker class.
+        The corresponding ranker class instance.
     """
     if isinstance(klass, str):
         if klass in _NAME_TO_RANKER_MAP:

@@ -54,10 +54,10 @@ extras_require = {
         "sphinx-material==0.0.32",
         "sphinx-autobuild==2020.9.1",
         "sphinx-copybutton==0.3.1",
-        "myst-nb==0.15.0",
+        "myst-nb==0.17.1",
         "sphinx-toolbox==3.1.0",
         "sphinx-autodoc-typehints==1.18.2",
-        "sphinx-codeautolink==0.11.0",
+        "sphinx-codeautolink==0.12.1",
 
         # Distribution
         "bump2version==0.5.11",

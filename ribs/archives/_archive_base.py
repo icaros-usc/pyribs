@@ -6,8 +6,8 @@ import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
-                         check_is_1d, check_solution_batch_dim,
-                         validate_batch_args, validate_single_args)
+                         check_is_1d, readonly, validate_batch_args,
+                         validate_single_args)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._cqd_score_result import CQDScoreResult
@@ -16,12 +16,6 @@ from ribs.archives._elite import Elite, EliteBatch
 _ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() takes in a "
                 "batch of solutions unlike in pyribs 0.4.0, where add() "
                 "only took in a single solution.")
-
-
-def readonly(arr):
-    """Sets an array to be readonly."""
-    arr.flags.writeable = False
-    return arr
 
 
 class ArchiveIterator:
@@ -293,6 +287,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             num_elites=0,
             coverage=self.dtype(0.0),
             qd_score=self.dtype(0.0),
+            norm_qd_score=self.dtype(0.0),
             obj_max=None,
             obj_mean=None,
         )
@@ -676,6 +671,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             num_elites=len(self),
             coverage=self.dtype(len(self) / self.cells),
             qd_score=new_qd_score,
+            norm_qd_score=self.dtype(new_qd_score / self.cells),
             obj_max=new_obj_max,
             obj_mean=new_qd_score / self.dtype(len(self)),
         )
@@ -796,6 +792,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 num_elites=len(self),
                 coverage=self.dtype(len(self) / self.cells),
                 qd_score=new_qd_score,
+                norm_qd_score=self.dtype(new_qd_score / self.cells),
                 obj_max=new_obj_max,
                 obj_mean=new_qd_score / self.dtype(len(self)),
             )

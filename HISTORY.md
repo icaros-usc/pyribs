@@ -6,6 +6,10 @@
 
 #### API
 
+- **Backwards-incompatible:** Implement Scalable CMA-ES Optimizers (#274)
+- Make ribs.emitters.opt public (#281)
+- Add normalized QD score to ArchiveStats (#276)
+- **Backwards-incompatible:** Make ArchiveStats a dataclass (#275)
 - **Backwards-incompatible:** Add shape checks to `tell()` and `tell_dqd()`
   methods (#269)
 - Add method for computing CQD score in archives (#252)
@@ -26,7 +30,7 @@
   - **Backwards-incompatible:** `behavior_dim` in archives is now `measure_dim`
   - Rename `n_solutions` to `batch_size` in `Scheduler`.
 - Add `GradientArborescenceEmitter`, which is used to implement CMA-MEGA (#240,
-  #263, #264)
+  #263, #264, #282)
 - Update emitter `tell()` docstrings to no longer say "Inserts entries into
   archive" (#247)
 - Expose `emitter.restarts` as a property (#248)
@@ -47,7 +51,7 @@
 - **Backwards-incompatible:** Remove ribs.factory (#225, #228)
 - **Backwards-incompatible:** Replaced `ImprovementEmitter`,
   `RandomDirectionEmitter`, and `OptimizingEmitter` with
-  `EvolutionStrategyEmitter` (#220, #223)
+  `EvolutionStrategyEmitter` (#220, #223, #278)
 - Raise ValueError for incorrect array shapes in archive methods (#219)
 - Add elites_with_measures_single method for getting elite for a single
   solution's measures (#215)
@@ -95,7 +99,8 @@
 
 #### Documentation
 
-- Add sphinx-codeautolink to docs (#206)
+- Update README (#279)
+- Add sphinx-codeautolink to docs (#206, #280)
 - Fix documentation rendering issues on ReadTheDocs (#205)
 - Fix typos and formatting in docstrings of `ribs/visualize.py` (#203)
 - Add in-comment type hint rich linking (#204)
