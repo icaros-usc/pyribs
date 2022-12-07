@@ -8,6 +8,7 @@ tutorials/lsi_mnist
 tutorials/arm_repertoire
 tutorials/fooling_mnist
 tutorials/cma_mae
+tutorials/DQDTutorial
 ```
 
 Tutorials are Python notebooks with detailed explanations of pyribs usage. They
@@ -25,3 +26,4 @@ needs for execution.
 | {doc}`tutorials/arm_repertoire` | {class}`~ribs.archives.CVTArchive`  | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
 | {doc}`tutorials/fooling_mnist`  | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GaussianEmitter`          | {class}`~ribs.schedulers.Scheduler` |
 | {doc}`tutorials/cma_mae`        | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.EvolutionStrategyEmitter` | {class}`~ribs.schedulers.Scheduler` |
+| {doc}`tutorials/DQDTutorial`    | {class}`~ribs.archives.GridArchive` | {class}`~ribs.emitters.GradientArborescenceEmitter` | {class}`~ribs.schedulers.Scheduler` |

@@ -99,6 +99,7 @@
 
 #### Documentation
 
+- Add DQDTutorial (#267)
 - Update README (#279)
 - Add sphinx-codeautolink to docs (#206, #280)
 - Fix documentation rendering issues on ReadTheDocs (#205)
