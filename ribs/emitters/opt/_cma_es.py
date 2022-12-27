@@ -60,6 +60,7 @@ class DecompMatrix:
 
         # Note: eigh returns float64, so we must cast it.
         self.eigenvalues, self.eigenbasis = np.linalg.eigh(self.cov)
+        self.eigenvalues = np.abs(self.eigenvalues)
         self.eigenvalues = self.eigenvalues.real.astype(self.dtype)
         self.eigenbasis = self.eigenbasis.real.astype(self.dtype)
         self.condition_number = (np.max(self.eigenvalues) /
