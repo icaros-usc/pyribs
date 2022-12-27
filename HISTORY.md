@@ -96,6 +96,7 @@
 #### Bugs
 
 - Fix boundary lines in sliding boundaries archive heatmap (#271)
+- Fix negative eigenvalue in CMA-ES covariance matrix (#285)
 
 #### Documentation
 
