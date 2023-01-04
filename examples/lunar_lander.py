@@ -105,7 +105,7 @@ def simulate(model, seed=None, video_env=None):
         total_reward += reward
 
         # Refer to the definition of state here:
-        # https://github.com/openai/gym/blob/master/gym/envs/box2d/lunar_lander.py#L306
+        # https://gymnasium.farama.org/environments/box2d/lunar_lander/
         x_pos = obs[0]
         y_vel = obs[3]
         leg0_touch = bool(obs[6])
