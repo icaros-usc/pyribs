@@ -31,6 +31,7 @@ extras_require = {
         # Strict since different gym may give different results. Note that we
         # use gymnasium (https://gymnasium.farama.org), the successor to gym.
         "gymnasium[box2d]==0.27.0",
+        "moviepy>=1.0.0",  # For recording videos in gym.
         "fire>=0.4.0",
         "tqdm>=4.0.0",
 
