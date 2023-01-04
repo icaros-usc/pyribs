@@ -100,6 +100,7 @@
 
 #### Documentation
 
+- Update lunar lander to use Gymnasium (#289)
 - Add CMA-MAE tutorial (#273, #284)
 - Update README (#279)
 - Add sphinx-codeautolink to docs (#206, #280)
