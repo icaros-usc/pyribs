@@ -161,17 +161,17 @@ class GradientArborescenceEmitter(EmitterBase):
             **(grad_opt_kwargs if grad_opt_kwargs is not None else {}))
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = _get_es(es,
-                           sigma0=sigma0,
-                           batch_size=batch_size,
-                           solution_dim=self._num_coefficients,
-                           seed=opt_seed,
-                           dtype=self.archive.dtype,
-                           **(es_kwargs if es_kwargs is not None else {}))
+        self._opt = _get_es(es,
+                            sigma0=sigma0,
+                            batch_size=batch_size,
+                            solution_dim=self._num_coefficients,
+                            seed=opt_seed,
+                            dtype=self.archive.dtype,
+                            **(es_kwargs if es_kwargs is not None else {}))
 
-        self.opt.reset(np.zeros(self._num_coefficients))
+        self._opt.reset(np.zeros(self._num_coefficients))
 
-        self._batch_size = self.opt.batch_size
+        self._batch_size = self._opt.batch_size
         self._restarts = 0
         self._itrs = 0
 
@@ -226,7 +226,7 @@ class GradientArborescenceEmitter(EmitterBase):
         multivariate Gaussian distribution.
 
         The multivariate Gaussian is parameterized by the evolution strategy
-        optimizer ``self.opt``.
+        optimizer ``self._opt``.
 
         Note that this method returns `batch_size - 1` solution as one solution
         is returned via ask_dqd.
@@ -246,15 +246,15 @@ class GradientArborescenceEmitter(EmitterBase):
         upper_bounds = np.expand_dims(self._upper_bounds, axis=0)
 
         solution_batch = np.empty((self.batch_size, self.solution_dim),
-                                  dtype=self.opt.dtype)
+                                  dtype=self._opt.dtype)
 
         # Resampling method for bound constraints -> sample new solutions until
         # all solutions are within bounds.
         remaining_indices = np.arange(self._batch_size)
         while len(remaining_indices) > 0:
-            gradient_coefficients = self.opt.ask(coefficient_lower_bounds,
-                                                 coefficient_upper_bounds,
-                                                 len(remaining_indices))
+            gradient_coefficients = self._opt.ask(coefficient_lower_bounds,
+                                                  coefficient_upper_bounds,
+                                                  len(remaining_indices))
             noise = np.expand_dims(gradient_coefficients, axis=2)
             new_solution_batch = (self._grad_opt.theta +
                                   np.sum(self._jacobian_batch * noise, axis=1))
@@ -416,7 +416,7 @@ class GradientArborescenceEmitter(EmitterBase):
                        self._batch_size // 2)
 
         # Update Evolution Strategy.
-        self.opt.tell(indices, num_parents)
+        self._opt.tell(indices, num_parents)
 
         # Calculate a new mean in solution space. These weights are from CMA-ES.
         parents = solution_batch[indices]
@@ -431,10 +431,10 @@ class GradientArborescenceEmitter(EmitterBase):
         self._grad_opt.step(gradient_step)
 
         # Check for reset.
-        if (self.opt.check_stop(ranking_values[indices]) or
+        if (self._opt.check_stop(ranking_values[indices]) or
                 self._check_restart(new_sols)):
             new_coeff = self.archive.sample_elites(1).solution_batch[0]
             self._grad_opt.reset(new_coeff)
-            self.opt.reset(np.zeros(self._num_coefficients))
+            self._opt.reset(np.zeros(self._num_coefficients))
             self._ranker.reset(self, self.archive, self._rng)
             self._restarts += 1
