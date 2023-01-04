@@ -58,10 +58,14 @@ class GradientArborescenceEmitter(EmitterBase):
             optimizer. See the gradient-based optimizers in
             :mod:`ribs.emitters.opt` for the arguments allowed by each
             optimizer. Note that we already pass in ``theta0`` and ``lr``.
-        es (str): The evolution strategy is a :class:`OptimizerBase` object
-            that is used to adapt the distribution from which new solution are
-            sampled from. This parameter must be the full or abbreviated
-            optimizer name as described in :mod:`ribs.emitters.opt`.
+        es (Callable or str): The evolution strategy is an
+            :class:`EvolutionStrategyBase` object that is used to adapt the
+            distribution from which new gradient coefficients are sampled. This
+            parameter may be a callable (e.g. a class or a lambda function) that
+            takes in the parameters of :class:`EvolutionStrategyBase` along with
+            kwargs provided by the ``es_kwargs`` argument, or it may be a full
+            or abbreviated optimizer name as described in
+            :mod:`ribs.emitters.opt`.
         es_kwargs (dict): Additional arguments to pass to the evolution
             strategy optimizer. See the evolution-strategy-based optimizers in
             :mod:`ribs.emitters.opt` for the arguments allowed by each
