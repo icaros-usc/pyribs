@@ -1,4 +1,4 @@
-"""Uses CMA-ME to train linear agents in Lunar Lander.
+"""Uses CMA-ME to train agents with linear policies in Lunar Lander.
 
 This script uses the same setup as the tutorial, but it also uses Dask to
 parallelize evaluations on a single machine and adds in a CLI. Refer to the
@@ -49,7 +49,7 @@ import time
 from pathlib import Path
 
 import fire
-import gym
+import gymnasium as gym
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -87,9 +87,6 @@ def simulate(model, seed=None, video_env=None):
     else:
         env = video_env
 
-    if seed is not None:
-        env.seed(seed)
-
     action_dim = env.action_space.n
     obs_dim = env.observation_space.shape[0]
     model = model.reshape((action_dim, obs_dim))
@@ -98,12 +95,13 @@ def simulate(model, seed=None, video_env=None):
     impact_x_pos = None
     impact_y_vel = None
     all_y_vels = []
-    obs = env.reset()
+    obs, _ = env.reset(seed=seed)
     done = False
 
     while not done:
         action = np.argmax(model @ obs)  # Linear policy.
-        obs, reward, done, _ = env.step(action)
+        obs, reward, terminated, truncated, _ = env.step(action)
+        done = terminated or truncated
         total_reward += reward
 
         # Refer to the definition of state here:
@@ -317,14 +315,11 @@ def run_evaluation(outdir, env_seed):
     indices = np.random.permutation(len(df))[:10]
 
     # Use a single env so that all the videos go to the same directory.
-    video_env = gym.wrappers.Monitor(
-        gym.make("LunarLander-v2"),
-        str(outdir / "videos"),
-        force=True,
-        # Default is to write the video for "cubic" episodes -- 0,1,8,etc (see
-        # https://github.com/openai/gym/blob/master/gym/wrappers/monitor.py#L54).
-        # This will ensure all the videos are written.
-        video_callable=lambda idx: True,
+    video_env = gym.wrappers.RecordVideo(
+        gym.make("LunarLander-v2", render_mode="rgb_array"),
+        video_folder=str(outdir / "videos"),
+        # This will ensure all episodes are recorded as videos.
+        episode_trigger=lambda idx: True,
     )
 
     for idx in indices:
@@ -342,7 +337,7 @@ def run_evaluation(outdir, env_seed):
 
 
 def lunar_lander_main(workers=4,
-                      env_seed=1339,
+                      env_seed=52,
                       iterations=500,
                       log_freq=25,
                       n_emitters=5,
@@ -369,11 +364,13 @@ def lunar_lander_main(workers=4,
             solutions selected from the archive in the `outdir`.
     """
     outdir = Path(outdir)
-    outdir.mkdir(exist_ok=True)
 
     if run_eval:
         run_evaluation(outdir, env_seed)
         return
+
+    # Make the directory here so that it is not made when running eval.
+    outdir.mkdir(exist_ok=True)
 
     # Setup Dask. The client connects to a "cluster" running on this machine.
     # The cluster simply manages several concurrent worker processes. If using
