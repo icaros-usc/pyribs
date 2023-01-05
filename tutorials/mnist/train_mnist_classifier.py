@@ -9,7 +9,7 @@ Requirements:
 
 Usage:
     # Saves classifier to mnist_classifier.pth (We have saved a copy in
-    # examples/tutorials/_static/).
+    # tutorials/mnist/).
     python train_mnist_classifier.py
 
     # Evaluates an existing network.
