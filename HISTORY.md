@@ -100,6 +100,7 @@
 
 #### Documentation
 
+- Move tutorials out of examples folder (#290)
 - Update lunar lander to use Gymnasium (#289)
 - Add CMA-MAE tutorial (#273, #284)
 - Update README (#279)

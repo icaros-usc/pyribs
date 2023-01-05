@@ -20,7 +20,7 @@
      href="{{
        "https://colab.research.google.com/github/icaros-usc/pyribs/blob/" +
        ("master/" if docstitle.find("stable") == -1 else "v" + version + "/") +
-       ("examples/" if sourcename.startswith("tutorials/") else "docs/") +
+       ("" if sourcename.startswith("tutorials/") else "docs/") +
        sourcename[:-4]
      }}">
     <span class="md-icon">library_books</span> <b>Open in Colab</b>
@@ -32,7 +32,7 @@
   <a class="md-nav__extra_link"
      href="{{
        theme_repo_url + "edit/master/" +
-       ("examples/" if sourcename.startswith("tutorials/") else "docs/") +
+       ("" if sourcename.startswith("tutorials/") else "docs/") +
          sourcename[:-4]
      }}">
     <span class="md-icon">edit</span> <b>{{ _('Edit on GitHub') }}</b>
