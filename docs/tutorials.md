@@ -13,22 +13,33 @@ tutorials/fooling_mnist
 
 Tutorials are Python notebooks with detailed explanations of pyribs usage. They
 may be [run locally](running-locally) or on
-[Google Colab](https://colab.research.google.com/notebooks/intro.ipynb).
+[Google Colab](https://colab.research.google.com/notebooks/intro.ipynb). Each
+tutorial page has a link to open the tutorial in Google Colab.
 
 ## Key Algorithms
 
 We recommend new users start with these tutorials which demonstrate how to use
 the key algorithms in pyribs.
 
-* {doc}`tutorials/lunar_lander`
-* {doc}`tutorials/tom_cruise_dqd`
-* {doc}`tutorials/cma_mae`
+- {doc}`tutorials/lunar_lander`: Covers CMA-ME and CMA-MAE, two algorithms ideal
+  for a wide range of quality diversity problems.
+- {doc}`tutorials/tom_cruise_dqd`: Covers CMA-MEGA and CMA-MAEGA, two algorithms
+  which work well in differentiable quality diversity problems (problems where
+  gradients are available).
+- {doc}`tutorials/cma_mae`: Dives into the finer details of configuring MAE
+  algorithms like CMA-MAE and CMA-MAEGA.
 
 ## Applications
 
-* {doc}`tutorials/lsi_mnist`
-* {doc}`tutorials/arm_repertoire`
-* {doc}`tutorials/fooling_mnist`
+The following tutorials show how pyribs can implement a variety of algorithms
+for different problems.
+
+- {doc}`tutorials/lsi_mnist`: Generates diverse handwritten MNIST digits with
+  CMA-ME.
+- {doc}`tutorials/arm_repertoire`: Combines CMA-ME with a CVTArchive to search
+  for optimal configurations for a robot arm.
+- {doc}`tutorials/fooling_mnist`: Searches for misclassified MNIST images with
+  MAP-Elites.
 
 <!-- How MyST handles section labels: https://jupyterbook.org/en/stable/content/references.html -->
 
