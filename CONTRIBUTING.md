@@ -146,10 +146,10 @@ to the docs.
 
 ### Adding a Tutorial
 
-Tutorials are created in Jupyter notebooks that are stored under
-`examples/tutorials` in the repo. To create a tutorial:
+Tutorials are created in Jupyter notebooks that are stored under `tutorials/` in
+the repo. To create a tutorial:
 
-1. Write the notebook and save it under `examples/tutorials`.
+1. Write the notebook and save it under `tutorials/`.
 1. Use cell magic (e.g. `%pip install ribs`) to install pyribs and other
    dependencies.
    - Installation cells tend to produce a lot of output. Make sure to clear this
