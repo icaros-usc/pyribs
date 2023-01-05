@@ -23,7 +23,7 @@ function test_notebook {
   # give special amounts to different tutorials if the default of 5 does not
   # work.
   case "$notebook" in
-    examples/tutorials/arm_repertoire.ipynb)
+    tutorials/arm_repertoire.ipynb)
       test_itrs=50
       ;;
     *)
@@ -37,15 +37,15 @@ function test_notebook {
 
   # Any further special replacements for testing.
   case "$notebook" in
-    examples/tutorials/arm_repertoire.ipynb)
+    tutorials/arm_repertoire.ipynb)
       # Reduce samples so that CVTArchive runs quickly.
       sed -i 's/use_kd_tree=True,/use_kd_tree=True, samples=10000,/g' "${TMP_FILE}"
       ;;
-    examples/tutorials/lsi_mnist.ipynb)
+    tutorials/lsi_mnist.ipynb)
       # Reduce data for the discriminator archive.
       sed -i 's/original_data = archive.as_pandas()/original_data = archive.as_pandas().loc[:5]/g' "${TMP_FILE}"
       ;;
-    examples/tutorials/lunar_lander.ipynb)
+    tutorials/lunar_lander.ipynb)
       # Avoid displaying videos.
       sed -i 's/display_video(elite.solution)/pass/g' "${TMP_FILE}"
       ;;
@@ -63,7 +63,7 @@ function test_notebook {
 
 if [ -z "$1" ]; then
   # Default: Test all notebooks.
-  TUTORIALS=($(ls examples/tutorials/*.ipynb))
+  TUTORIALS=($(ls tutorials/*.ipynb))
   for t in "${TUTORIALS[@]}"; do
     test_notebook "$t"
   done
