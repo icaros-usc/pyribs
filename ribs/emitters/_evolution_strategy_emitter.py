@@ -29,10 +29,13 @@ class EvolutionStrategyEmitter(EmitterBase):
             instance of :class:`RankerBase`, or it may be a full or abbreviated
             ranker name as described in
             :meth:`ribs.emitters.rankers.get_ranker`.
-        es (str): The evolution strategy is a :class:`OptimizerBase` object
-            that is used to adapt the distribution from which new solution are
-            sampled from. This parameter must be the full or abbreviated
-            optimizer name as described in :mod:`ribs.emitters.opt`.
+        es (Callable or str): The evolution strategy is an
+            :class:`EvolutionStrategyBase` object that is used to adapt the
+            distribution from which new solutions are sampled. This parameter
+            may be a callable (e.g. a class or a lambda function) that takes in
+            the parameters of :class:`EvolutionStrategyBase` along with kwargs
+            provided by the ``es_kwargs`` argument, or it may be a full or
+            abbreviated optimizer name as described in :mod:`ribs.emitters.opt`.
         es_kwargs (dict): Additional arguments to pass to the evolution
             strategy optimizer. See the evolution-strategy-based optimizers in
             :mod:`ribs.emitters.opt` for the arguments allowed by each
@@ -108,19 +111,19 @@ class EvolutionStrategyEmitter(EmitterBase):
         _ = self._check_restart(0)
 
         opt_seed = None if seed is None else self._rng.integers(10_000)
-        self.opt = _get_es(es,
-                           sigma0=sigma0,
-                           batch_size=batch_size,
-                           solution_dim=self._solution_dim,
-                           seed=opt_seed,
-                           dtype=self.archive.dtype,
-                           **(es_kwargs if es_kwargs is not None else {}))
-        self.opt.reset(self._x0)
+        self._opt = _get_es(es,
+                            sigma0=sigma0,
+                            batch_size=batch_size,
+                            solution_dim=self._solution_dim,
+                            seed=opt_seed,
+                            dtype=self.archive.dtype,
+                            **(es_kwargs if es_kwargs is not None else {}))
+        self._opt.reset(self._x0)
 
         self._ranker = _get_ranker(ranker)
         self._ranker.reset(self, archive, self._rng)
 
-        self._batch_size = self.opt.batch_size
+        self._batch_size = self._opt.batch_size
 
     @property
     def x0(self):
@@ -147,13 +150,13 @@ class EvolutionStrategyEmitter(EmitterBase):
         """Samples new solutions from a multivariate Gaussian.
 
         The multivariate Gaussian is parameterized by the evolution strategy
-        optimizer ``self.opt``.
+        optimizer ``self._opt``.
 
         Returns:
             (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
         """
-        return self.opt.ask(self.lower_bounds, self.upper_bounds)
+        return self._opt.ask(self.lower_bounds, self.upper_bounds)
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
@@ -245,12 +248,12 @@ class EvolutionStrategyEmitter(EmitterBase):
                        self._batch_size // 2)
 
         # Update Evolution Strategy.
-        self.opt.tell(indices, num_parents)
+        self._opt.tell(indices, num_parents)
 
         # Check for reset.
-        if (self.opt.check_stop(ranking_values[indices]) or
+        if (self._opt.check_stop(ranking_values[indices]) or
                 self._check_restart(new_sols)):
             new_x0 = self.archive.sample_elites(1).solution_batch[0]
-            self.opt.reset(new_x0)
+            self._opt.reset(new_x0)
             self._ranker.reset(self, self.archive, self._rng)
             self._restarts += 1
