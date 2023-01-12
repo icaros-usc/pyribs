@@ -9,7 +9,7 @@ from ribs.emitters.rankers import _get_ranker
 
 class GradientArborescenceEmitter(EmitterBase):
     """Generates solutions with a gradient arborescence, with coefficients
-    parameterized by CMA-ES.
+    parameterized by an ES.
 
     This emitter originates in `Fontaine 2021
     <https://arxiv.org/abs/2106.03894>`_. It leverages the gradient information
@@ -17,7 +17,8 @@ class GradientArborescenceEmitter(EmitterBase):
     "solution point" using gradient arborescence with coefficients drawn from a
     Gaussian distribution. Based on how the solutions are ranked after being
     inserted into the archive (see ``ranker``), the solution point is updated
-    with gradient ascent, and the distribution is updated with CMA-ES.
+    with gradient ascent, and the distribution is updated with an ES (the
+    default ES is CMA-ES).
 
     Note that unlike non-gradient emitters, GradientArborescenceEmitter requires
     calling :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before calling
