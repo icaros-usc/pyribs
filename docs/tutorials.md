@@ -21,9 +21,9 @@ tutorial page has a link to open the tutorial in Google Colab.
 We recommend new users start with these tutorials which demonstrate how to use
 the key algorithms in pyribs.
 
-- {doc}`tutorials/lunar_lander`: Covers CMA-ME and CMA-MAE, two algorithms ideal
+- {doc}`tutorials/lunar_lander`: Covers CMA-MAE and CMA-ME, two algorithms ideal
   for a wide range of quality diversity problems.
-- {doc}`tutorials/tom_cruise_dqd`: Covers CMA-MEGA and CMA-MAEGA, two algorithms
+- {doc}`tutorials/tom_cruise_dqd`: Covers CMA-MAEGA and CMA-MEGA, two algorithms
   which work well in differentiable quality diversity problems (problems where
   gradients are available).
 - {doc}`tutorials/cma_mae`: Dives into the finer details of configuring MAE
