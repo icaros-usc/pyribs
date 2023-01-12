@@ -163,7 +163,8 @@ the repo. To create a tutorial:
 1. Make sure that the only level 1 heading (e.g. `# Awesome Tutorial`) is the
    title at the top of the notebook. Subsequent titles should be level 2 (e.g.
    `## Level 2 Heading`) or higher.
-1. Add an entry into the toctree and table in `docs/tutorials.md`.
+1. Add an entry into the toctree in `docs/tutorials.md` and add it to one of the
+   lists of tutorials.
 1. Check that the tutorial shows up on the Tutorials page when serving the docs.
 1. Create a PR into the website repo that adds the tutorial onto the home page,
    specifically
@@ -198,7 +199,7 @@ their source is shown in the docs. To create an example:
    ```
    ````
 1. Add any other relevant info to the Markdown file.
-1. Add an entry into the toctree and table in `docs/examples.md`.
+1. Add an entry into the toctree and list of examples in `docs/examples.md`.
 1. Check that the example shows up on the Examples page when serving the docs.
 
 ### Referencing Papers
