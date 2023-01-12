@@ -19,5 +19,7 @@ Here are the current examples:
 - {doc}`examples/sphere`: Demonstrates how to set up recent QD algorithms and
   apply them to the sphere benchmark function.
 - {doc}`examples/lunar_lander`: An extended version of the
-  [Lunar Lander tutorial](tutorials/lunar_lander) which speeds up evaluations by
-  distributing them across multiple CPUs.
+  [Lunar Lander tutorial](tutorials/lunar_lander) and
+  [Lunar Lander CMA-MAE tutorial](tutorials/lunar_lander_mae) which speeds up
+  evaluations by distributing them across multiple CPUs. Features both CMA-ME
+  and CMA-MAE.
