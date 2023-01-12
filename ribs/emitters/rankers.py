@@ -120,7 +120,7 @@ class ImprovementRanker(RankerBase):
     """Ranks the solutions based on the improvement in the objective.
 
     This ranker ranks solutions in a single stage. The solutions are ranked by
-    the improvement "value" described in :meth:`ArchiveBase.add`.
+    the improvement "value" described in :meth:`ribs.archives.ArchiveBase.add`.
     """
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
@@ -146,7 +146,7 @@ class TwoStageImprovementRanker(RankerBase):
     "status" -- those that found a new cell in the archive rank above those that
     improved an existing cell, which rank above those that were not added to the
     archive. Second, solutions are ranked by the "value" described in
-    :meth:`ArchiveBase.add`.
+    :meth:`ribs.archives.ArchiveBase.add`
     """
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
