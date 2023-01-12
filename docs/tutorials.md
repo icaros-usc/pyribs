@@ -25,7 +25,7 @@ the key algorithms in pyribs.
 - {doc}`tutorials/lunar_lander`: Covers the CMA-ME algorithm and various basic
   library features.
 - {doc}`tutorials/lunar_lander_mae`: Shows how to implement CMA-MAE, a powerful
-  alternative to CMA-ME.
+  algorithm built on CMA-ME.
 - {doc}`tutorials/tom_cruise_dqd`: Covers CMA-MEGA and CMA-MAEGA, two algorithms
   designed for differentiable quality diversity problems (problems where
   gradients are available).
