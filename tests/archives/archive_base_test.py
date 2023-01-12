@@ -195,7 +195,7 @@ def test_index_of_single():
 
 def test_index_of_single_wrong_shape(data):
     with pytest.raises(ValueError):
-        data.archive.elites_with_measures_single(data.measures[:-1])
+        data.archive.find_elites_single(data.measures[:-1])
 
 
 #
@@ -264,8 +264,8 @@ def test_basic_stats(data):
     assert data.archive_with_elite.stats.obj_mean == data.objective
 
 
-def test_elites_with_measures_gets_correct_elite(data):
-    elite_batch = data.archive_with_elite.elites_with_measures([data.measures])
+def test_find_elites_gets_correct_elite(data):
+    elite_batch = data.archive_with_elite.find_elites([data.measures])
     assert np.all(elite_batch.solution_batch[0] == data.solution)
     assert elite_batch.objective_batch[0] == data.objective
     assert np.all(elite_batch.measures_batch[0] == data.measures)
@@ -273,8 +273,8 @@ def test_elites_with_measures_gets_correct_elite(data):
     assert elite_batch.metadata_batch[0] == data.metadata
 
 
-def test_elites_with_measures_empty_values(data):
-    elite_batch = data.archive.elites_with_measures([data.measures])
+def test_find_elites_empty_values(data):
+    elite_batch = data.archive.find_elites([data.measures])
     assert np.all(np.isnan(elite_batch.solution_batch[0]))
     assert np.isnan(elite_batch.objective_batch)
     assert np.all(np.isnan(elite_batch.measures_batch[0]))
@@ -282,13 +282,13 @@ def test_elites_with_measures_empty_values(data):
     assert elite_batch.metadata_batch[0] is None
 
 
-def test_elites_with_measures_wrong_shape(data):
+def test_find_elites_wrong_shape(data):
     with pytest.raises(ValueError):
-        data.archive.elites_with_measures([data.measures[:-1]])
+        data.archive.find_elites([data.measures[:-1]])
 
 
-def test_elites_with_measures_single_gets_correct_elite(data):
-    elite = data.archive_with_elite.elites_with_measures_single(data.measures)
+def test_find_elites_single_gets_correct_elite(data):
+    elite = data.archive_with_elite.find_elites_single(data.measures)
     assert np.all(elite.solution == data.solution)
     assert elite.objective == data.objective
     assert np.all(elite.measures == data.measures)
@@ -296,8 +296,8 @@ def test_elites_with_measures_single_gets_correct_elite(data):
     assert elite.metadata == data.metadata
 
 
-def test_elites_with_measures_single_empty_values(data):
-    elite = data.archive.elites_with_measures_single(data.measures)
+def test_find_elites_single_empty_values(data):
+    elite = data.archive.find_elites_single(data.measures)
     assert np.all(np.isnan(elite.solution))
     assert np.isnan(elite.objective)
     assert np.all(np.isnan(elite.measures))
@@ -305,9 +305,9 @@ def test_elites_with_measures_single_empty_values(data):
     assert elite.metadata is None
 
 
-def test_elites_with_measures_single_wrong_shape(data):
+def test_find_elites_single_wrong_shape(data):
     with pytest.raises(ValueError):
-        data.archive.elites_with_measures_single(data.measures[:-1])
+        data.archive.find_elites_single(data.measures[:-1])
 
 
 def test_sample_elites_gets_single_elite(data):
