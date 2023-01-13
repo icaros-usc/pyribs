@@ -191,7 +191,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                       dtype=self.dtype)
 
         self._qd_score_offset = self._dtype(qd_score_offset)
+
         self._stats = None
+        # Sum of all objective values in the archive; useful for computing
+        # qd_score and obj_mean.
+        self._objective_sum = None
         self._stats_reset()
 
         self._best_elite = None
@@ -308,6 +312,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             obj_max=None,
             obj_mean=None,
         )
+        self._objective_sum = self.dtype(0.0)
 
     def _compute_new_thresholds(self, threshold_arr, objective_batch,
                                 index_batch, learning_rate):
@@ -666,10 +671,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Since we set the new solutions in the old objective batch to have
         # value 0.0, the objectives for new solutions are added in properly
         # here.
-        new_qd_score = (
-            self._stats.qd_score +
-            np.sum(objective_batch_insert - old_objective_batch_insert -
-                   self._qd_score_offset))
+        self._objective_sum += np.sum(objective_batch_insert -
+                                      old_objective_batch_insert)
+        new_qd_score = (self._objective_sum -
+                        self.dtype(len(self)) * self._qd_score_offset)
         max_idx = np.argmax(objective_batch_insert)
         max_obj_insert = objective_batch_insert[max_idx]
 
@@ -691,7 +696,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             qd_score=new_qd_score,
             norm_qd_score=self.dtype(new_qd_score / self.cells),
             obj_max=new_obj_max,
-            obj_mean=new_qd_score / self.dtype(len(self)),
+            obj_mean=self._objective_sum / self.dtype(len(self)),
         )
 
         return status_batch, value_batch
@@ -792,8 +797,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         if status:
             # Update archive stats.
-            new_qd_score = (self._stats.qd_score + (objective - old_objective) -
-                            self._qd_score_offset)
+            self._objective_sum += objective - old_objective
+            new_qd_score = (self._objective_sum -
+                            self.dtype(len(self)) * self._qd_score_offset)
 
             if self._stats.obj_max is None or objective > self._stats.obj_max:
                 new_obj_max = objective
@@ -813,7 +819,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 qd_score=new_qd_score,
                 norm_qd_score=self.dtype(new_qd_score / self.cells),
                 obj_max=new_obj_max,
-                obj_mean=new_qd_score / self.dtype(len(self)),
+                obj_mean=self._objective_sum / self.dtype(len(self)),
             )
 
         return status, objective - old_threshold
