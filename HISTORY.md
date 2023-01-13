@@ -53,14 +53,12 @@
   `RandomDirectionEmitter`, and `OptimizingEmitter` with
   `EvolutionStrategyEmitter` (#220, #223, #278)
 - Raise ValueError for incorrect array shapes in archive methods (#219)
-- Add elites_with_measures_single method for getting elite for a single
-  solution's measures (#215)
 - Introduced the Ranker object, which is responsible for ranking the solutions
   based on different objectives (#209, #222, #245)
 - Add index_of_single method for getting index of measures for one solution
   (#214)
-- **Backwards-incompatible:** Replace elite_with_behavior with batched
-  elites_with_measures method in archives (#213)
+- **Backwards-incompatible:** Replace elite_with_behavior with
+  retrieve and retrieve_single in archives (#213, #215, #295)
 - **Backwards-incompatible:** Replace get_index with batched index_of method in
   archives (#208)
   - Also added `grid_to_int_index` and `int_to_grid_index` methods for

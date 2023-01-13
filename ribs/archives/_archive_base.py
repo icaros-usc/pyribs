@@ -824,7 +824,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         return status, objective - old_threshold
 
-    def elites_with_measures(self, measures_batch):
+    def retrieve(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
         specified.
 
@@ -833,11 +833,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         namedtuple, it can be unpacked::
 
             solution_batch, objective_batch, measures_batch, \\
-                index_batch, metadata_batch = archive.elites_with_measures(...)
+                index_batch, metadata_batch = archive.retrieve(...)
 
         Or the fields may be accessed by name::
 
-            elite_batch = archive.elites_with_measures(...)
+            elite_batch = archive.retrieve(...)
             elite_batch.solution_batch
             elite_batch.objective_batch
             elite_batch.measures_batch
@@ -864,7 +864,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         * ``elite_batch.metadata_batch[i]`` will be None
 
         If you need to retrieve a *single* elite associated with some measures,
-        consider using :meth:`elites_with_measures_single`.
+        consider using :meth:`retrieve_single`.
 
         Args:
             measures_batch (array-like): (batch_size, :attr:`measure_dim`)
@@ -926,13 +926,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 )),
         )
 
-    def elites_with_measures_single(self, measures):
+    def retrieve_single(self, measures):
         """Retrieves the elite with measures in the same cell as the measures
         specified.
 
-        While :meth:`elites_with_measures` takes in a *batch* of measures, this
-        method takes in the measures for only *one* solution and returns a
-        single :namedtuple:`Elite`.
+        While :meth:`retrieve` takes in a *batch* of measures, this method takes
+        in the measures for only *one* solution and returns a single
+        :namedtuple:`Elite`.
 
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures.
@@ -941,7 +941,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             specified, then this method returns an :namedtuple:`Elite` where all
             the fields hold the info of that elite. Otherwise, this method
             returns an :namedtuple:`Elite` filled with the same "empty" values
-            described in :meth:`elites_with_measures`.
+            described in :meth:`retrieve`.
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -950,7 +950,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
-        elite_batch = self.elites_with_measures(measures[None])
+        elite_batch = self.retrieve(measures[None])
         return Elite(
             elite_batch.solution_batch[0],
             elite_batch.objective_batch[0],

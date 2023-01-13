@@ -707,9 +707,9 @@ def test_nonfinite_inputs(data):
     with pytest.raises(ValueError):
         data.archive.add_single(data.solution, -np.inf, data.measures)
     with pytest.raises(ValueError):
-        data.archive.elites_with_measures([data.measures])
+        data.archive.retrieve([data.measures])
     with pytest.raises(ValueError):
-        data.archive.elites_with_measures_single(data.measures)
+        data.archive.retrieve_single(data.measures)
     with pytest.raises(ValueError):
         data.archive.index_of([data.measures])
     with pytest.raises(ValueError):
