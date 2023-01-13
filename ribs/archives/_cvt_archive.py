@@ -71,7 +71,7 @@ class CVTArchive(ArchiveBase):
             values, and if the QD score were to be computed with these negative
             objectives, the algorithm would be penalized for adding new cells
             with negative objectives. Thus, a standard practice is to normalize
-            all the objectives so that they are positive by introducing an
+            all the objectives so that they are non-negative by introducing an
             offset. This QD score offset will be *subtracted* from all
             objectives in the archive, e.g., if your objectives go as low as
             -300, pass in -300 so that each objective will be transformed as

@@ -116,7 +116,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             values, and if the QD score were to be computed with these negative
             objectives, the algorithm would be penalized for adding new cells
             with negative objectives. Thus, a standard practice is to normalize
-            all the objectives so that they are positive by introducing an
+            all the objectives so that they are non-negative by introducing an
             offset. This QD score offset will be *subtracted* from all
             objectives in the archive, e.g., if your objectives go as low as
             -300, pass in -300 so that each objective will be transformed as
@@ -259,7 +259,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     @property
     def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values before
+        """float: The offset which is subtracted from objective values when
         computing the QD score."""
         return self._qd_score_offset
 
