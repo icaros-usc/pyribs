@@ -112,6 +112,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         measure_dim (int): The dimension of the measure space.
         learning_rate (float): The learning rate for threshold updates.
         threshold_min (float): The initial threshold value for all the cells.
+        qd_score_offset (float): Archives often contain negative objective
+            values, and if the QD score were to be computed with these negative
+            objectives, the algorithm would be penalized for adding new cells
+            with negative objectives. Thus, a standard practice is to normalize
+            all the objectives so that they are positive by introducing an
+            offset. This QD score offset will be *subtracted* from all
+            objectives in the archive, e.g., if your objectives go as low as
+            -300, pass in -300 so that each objective will be transformed as
+            ``objective - (-300)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objectives,
@@ -150,6 +159,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                  measure_dim,
                  learning_rate=1.0,
                  threshold_min=-np.inf,
+                 qd_score_offset=0.0,
                  seed=None,
                  dtype=np.float64):
 
@@ -180,6 +190,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                       threshold_min,
                                       dtype=self.dtype)
 
+        self._qd_score_offset = self._dtype(qd_score_offset)
         self._stats = None
         self._stats_reset()
 
@@ -241,6 +252,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def threshold_min(self):
         """float: The initial threshold value for all the cells."""
         return self._threshold_min
+
+    @property
+    def qd_score_offset(self):
+        """float: The offset which is subtracted from objective values before
+        computing the QD score."""
+        return self._qd_score_offset
 
     @property
     def stats(self):
