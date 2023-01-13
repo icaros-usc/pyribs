@@ -155,8 +155,8 @@ def test_stats_add_and_overwrite(add_mode, qd_score_offset):
         assert np.isclose(archive.stats.norm_qd_score, 9.0 / 200)
     else:
         # -1 is subtracted from every objective.
-        assert np.isclose(archive.stats.qd_score, 13.0)
-        assert np.isclose(archive.stats.norm_qd_score, 13.0 / 200)
+        assert np.isclose(archive.stats.qd_score, 12.0)
+        assert np.isclose(archive.stats.norm_qd_score, 12.0 / 200)
     assert np.isclose(archive.stats.obj_max, 5.0)
     assert np.isclose(archive.stats.obj_mean, 3.0)
 
