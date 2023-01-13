@@ -8,12 +8,12 @@ from ribs.emitters.rankers import _get_ranker
 
 
 class EvolutionStrategyEmitter(EmitterBase):
-    """Adapts a distribution of solutions with CMA-ES.
+    """Adapts a distribution of solutions with an ES.
 
     This emitter originates in `Fontaine 2020
     <https://arxiv.org/abs/1912.02400>`_. The multivariate Gaussian solution
     distribution begins at ``x0`` with standard deviation ``sigma0``. Based on
-    how the generated solutions are ranked (see ``ranker``), CMA-ES then adapts
+    how the generated solutions are ranked (see ``ranker``), the ES then adapts
     the mean and covariance of the distribution.
 
     Args:
