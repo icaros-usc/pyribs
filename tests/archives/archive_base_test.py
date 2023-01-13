@@ -101,10 +101,12 @@ def test_stats_dtype(dtype):
     assert isinstance(data.archive_with_elite.stats.obj_mean, dtype)
 
 
-def test_stats_multiple_add(add_mode):
+@pytest.mark.parametrize("qd_score_offset", [0.0, -1.0])
+def test_stats_multiple_add(add_mode, qd_score_offset):
     archive = GridArchive(solution_dim=3,
                           dims=[10, 20],
-                          ranges=[(-1, 1), (-2, 2)])
+                          ranges=[(-1, 1), (-2, 2)],
+                          qd_score_offset=qd_score_offset)
     if add_mode == "single":
         archive.add_single([1, 2, 3], 1.0, [0, 0])
         archive.add_single([1, 2, 3], 2.0, [0.25, 0.25])
@@ -117,16 +119,23 @@ def test_stats_multiple_add(add_mode):
 
     assert archive.stats.num_elites == 3
     assert np.isclose(archive.stats.coverage, 3 / 200)
-    assert np.isclose(archive.stats.qd_score, 6.0)
-    assert np.isclose(archive.stats.norm_qd_score, 6.0 / 200)
+    if qd_score_offset == 0.0:
+        assert np.isclose(archive.stats.qd_score, 6.0)
+        assert np.isclose(archive.stats.norm_qd_score, 6.0 / 200)
+    else:
+        # -1 is subtracted from every objective.
+        assert np.isclose(archive.stats.qd_score, 9.0)
+        assert np.isclose(archive.stats.norm_qd_score, 9.0 / 200)
     assert np.isclose(archive.stats.obj_max, 3.0)
     assert np.isclose(archive.stats.obj_mean, 2.0)
 
 
-def test_stats_add_and_overwrite(add_mode):
+@pytest.mark.parametrize("qd_score_offset", [0.0, -1.0])
+def test_stats_add_and_overwrite(add_mode, qd_score_offset):
     archive = GridArchive(solution_dim=3,
                           dims=[10, 20],
-                          ranges=[(-1, 1), (-2, 2)])
+                          ranges=[(-1, 1), (-2, 2)],
+                          qd_score_offset=qd_score_offset)
     if add_mode == "single":
         archive.add_single([1, 2, 3], 1.0, [0, 0])
         archive.add_single([1, 2, 3], 2.0, [0.25, 0.25])
@@ -141,8 +150,13 @@ def test_stats_add_and_overwrite(add_mode):
 
     assert archive.stats.num_elites == 3
     assert np.isclose(archive.stats.coverage, 3 / 200)
-    assert np.isclose(archive.stats.qd_score, 9.0)
-    assert np.isclose(archive.stats.norm_qd_score, 9.0 / 200)
+    if qd_score_offset == 0.0:
+        assert np.isclose(archive.stats.qd_score, 9.0)
+        assert np.isclose(archive.stats.norm_qd_score, 9.0 / 200)
+    else:
+        # -1 is subtracted from every objective.
+        assert np.isclose(archive.stats.qd_score, 12.0)
+        assert np.isclose(archive.stats.norm_qd_score, 12.0 / 200)
     assert np.isclose(archive.stats.obj_max, 5.0)
     assert np.isclose(archive.stats.obj_mean, 3.0)
 
@@ -245,6 +259,10 @@ def test_learning_rate_correct(data):
 
 def test_threshold_min_correct(data):
     assert data.archive.threshold_min == -np.inf  # Default value.
+
+
+def test_qd_score_offset_correct(data):
+    assert data.archive.qd_score_offset == 0.0  # Default value.
 
 
 def test_basic_stats(data):

@@ -5,8 +5,8 @@ from collections import deque
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs._utils import (check_batch_shape, validate_single_args,
-                         validate_batch_args)
+from ribs._utils import (check_batch_shape, validate_batch_args,
+                         validate_single_args)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._grid_archive import GridArchive
 
@@ -122,6 +122,15 @@ class SlidingBoundariesArchive(ArchiveBase):
             method -- refer to the implementation `here
             <../_modules/ribs/archives/_sliding_boundaries_archive.html#SlidingBoundariesArchive.index_of>`_.
             Pass this parameter to configure that epsilon.
+        qd_score_offset (float): Archives often contain negative objective
+            values, and if the QD score were to be computed with these negative
+            objectives, the algorithm would be penalized for adding new cells
+            with negative objectives. Thus, a standard practice is to normalize
+            all the objectives so that they are non-negative by introducing an
+            offset. This QD score offset will be *subtracted* from all
+            objectives in the archive, e.g., if your objectives go as low as
+            -300, pass in -300 so that each objective will be transformed as
+            ``objective - (-300)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objectives,
@@ -140,6 +149,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                  dims,
                  ranges,
                  epsilon=1e-6,
+                 qd_score_offset=0.0,
                  seed=None,
                  dtype=np.float64,
                  remap_frequency=100,
@@ -154,6 +164,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             solution_dim=solution_dim,
             cells=np.product(self._dims),
             measure_dim=len(self._dims),
+            qd_score_offset=qd_score_offset,
             seed=seed,
             dtype=dtype,
         )
