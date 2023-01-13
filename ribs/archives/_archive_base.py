@@ -668,7 +668,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # here.
         new_qd_score = (
             self._stats.qd_score +
-            np.sum(objective_batch_insert - old_objective_batch_insert))
+            np.sum(objective_batch_insert - old_objective_batch_insert -
+                   self._qd_score_offset))
         max_idx = np.argmax(objective_batch_insert)
         max_obj_insert = objective_batch_insert[max_idx]
 
@@ -791,7 +792,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         if status:
             # Update archive stats.
-            new_qd_score = self._stats.qd_score + (objective - old_objective)
+            new_qd_score = (self._stats.qd_score + (objective - old_objective) -
+                            self._qd_score_offset)
 
             if self._stats.obj_max is None or objective > self._stats.obj_max:
                 new_obj_max = objective
