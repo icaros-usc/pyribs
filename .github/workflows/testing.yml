@@ -116,7 +116,7 @@ jobs:
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install ffmpeg
       - name: Install deps
-        run: pip install .[visualize] jupyter nbconvert
+        run: pip install .[visualize] jupyter nbconvert moviepy
       - name: Test Tutorials
         run: bash tests/tutorials.sh
   docs:
