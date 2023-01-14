@@ -57,8 +57,8 @@
   based on different objectives (#209, #222, #245)
 - Add index_of_single method for getting index of measures for one solution
   (#214)
-- **Backwards-incompatible:** Replace elite_with_behavior with batched
-  find_elites and find_elites_single in archives (#213, #215, #295)
+- **Backwards-incompatible:** Replace elite_with_behavior with
+  retrieve and retrieve_single in archives (#213, #215, #295)
 - **Backwards-incompatible:** Replace get_index with batched index_of method in
   archives (#208)
   - Also added `grid_to_int_index` and `int_to_grid_index` methods for
