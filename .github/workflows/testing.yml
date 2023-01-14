@@ -113,8 +113,6 @@ jobs:
           python-version: "3.7"
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
-      - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install ffmpeg
       - name: Install deps
         run: pip install .[visualize] jupyter nbconvert moviepy
       - name: Test Tutorials
