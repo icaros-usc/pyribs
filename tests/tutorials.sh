@@ -45,10 +45,6 @@ function test_notebook {
       # Reduce data for the discriminator archive.
       sed -i 's/original_data = archive.as_pandas()/original_data = archive.as_pandas().loc[:5]/g' "${TMP_FILE}"
       ;;
-    tutorials/lunar_lander.ipynb)
-      # Avoid displaying videos.
-      sed -i 's/display_video(elite.solution)/pass/g' "${TMP_FILE}"
-      ;;
   esac
 
   # Run the notebook. Timeout is long since some notebook cells take a while,
