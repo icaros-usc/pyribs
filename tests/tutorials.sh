@@ -47,8 +47,6 @@ function test_notebook {
       ;;
     tutorials/lunar_lander.ipynb)
       # Avoid displaying videos.
-      sed -i 's/display_video(elite.solution)/pass/g' "${TMP_FILE}"
-      sed -i 's/display_video(archive.best_elite.solution)/pass/g' "${TMP_FILE}"
       ;;
   esac
 
