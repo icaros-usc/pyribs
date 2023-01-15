@@ -112,12 +112,12 @@ def sphere(solution_batch):
     raw_obj = np.sum(np.square(solution_batch - sphere_shift), axis=1)
     objective_batch = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
 
-    # Compute gradient of the objective
+    # Compute gradient of the objective.
     objective_grad_batch = -2 * (solution_batch - sphere_shift)
 
     # Calculate measures.
     clipped = solution_batch.copy()
-    clip_indices = np.where(np.logical_or(clipped > 5.12, clipped < -5.12))
+    clip_indices = np.where((clipped < -5.12) | (clipped > 5.12))
     clipped[clip_indices] = 5.12 / clipped[clip_indices]
     measures_batch = np.concatenate(
         (
@@ -127,7 +127,7 @@ def sphere(solution_batch):
         axis=1,
     )
 
-    # Compute gradient of the measures
+    # Compute gradient of the measures.
     derivatives = np.ones(solution_batch.shape)
     derivatives[clip_indices] = -5.12 / np.square(solution_batch[clip_indices])
 
@@ -233,11 +233,11 @@ def create_scheduler(algorithm,
     elif algorithm == "me_map_elites":
         batch_size = 50
         emitters = [
-            IsoLineEmitter(
+            EvolutionStrategyEmitter(
                 archive,
                 x0=initial_sol,
-                iso_sigma=0.01,
-                line_sigma=0.1,
+                sigma0=0.5,
+                ranker="obj",
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds[:12]
@@ -246,7 +246,7 @@ def create_scheduler(algorithm,
                 archive,
                 x0=initial_sol,
                 sigma0=0.5,
-                ranker="2imp",
+                ranker="2rd",
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds[12:24]
@@ -255,16 +255,16 @@ def create_scheduler(algorithm,
                 archive,
                 x0=initial_sol,
                 sigma0=0.5,
-                ranker="obj",
+                ranker="2imp",
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds[24:36]
         ] + [
-            EvolutionStrategyEmitter(
+            IsoLineEmitter(
                 archive,
                 x0=initial_sol,
-                sigma0=0.5,
-                ranker="2rd",
+                iso_sigma=0.01,
+                line_sigma=0.1,
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds[36:]
@@ -368,16 +368,17 @@ def create_scheduler(algorithm,
 
     if algorithm == "me_map_elites":
         scheduler = BanditScheduler(archive, emitters, num_active=12)
+        scheduler_name = "BanditScheduler"
     else:
         scheduler = Scheduler(archive,
                               emitters,
                               result_archive=result_archive,
                               add_mode=mode)
+        scheduler_name = "Scheduler"
 
-    print(
-        f"Created Scheduler for {algorithm} with learning rate {learning_rate} "
-        f"and add mode {mode}, using solution dim {solution_dim} and archive "
-        f"dims {archive_dims}.")
+    print(f"Create {scheduler_name} for {algorithm} with learning rate"
+          f"{learning_rate} and add mode {mode}, using solution dim"
+          f"{solution_dim} and archive dims {archive_dims}.")
     return scheduler
 
 
