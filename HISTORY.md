@@ -6,6 +6,7 @@
 
 #### API
 
+- Implement `BanditScheduler` (#299)
 - **Backwards-incompatible:** Implement Scalable CMA-ES Optimizers (#274, #288)
 - Make ribs.emitters.opt public (#281)
 - Add normalized QD score to ArchiveStats (#276)
