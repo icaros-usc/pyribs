@@ -50,8 +50,9 @@ class BanditScheduler:
     def __init__(self,
                  archive,
                  emitters,
+                 num_active,
                  *,
-                 zeta=0.1,
+                 zeta=0.05,
                  result_archive=None,
                  add_mode="batch"):
         if len(emitters) == 0:
@@ -86,13 +87,13 @@ class BanditScheduler:
                              "`result_archive=None`")
 
         self._archive = archive
-        self._emitters = emitters
+        self._emitters = np.array(emitters)
+        self._num_active = num_active
         self._add_mode = add_mode
 
         # Used for UCB-1.
         n = len(self._emitters)
         self._active_arr = np.empty(n)  # Index of active emitters.
-        self._ucb1 = np.zeros(n)
         self._success = np.zeros(n)
         self._selection = np.zeros(n)
         self._zeta = zeta
@@ -105,7 +106,7 @@ class BanditScheduler:
         # The last set of solutions returned by ask().
         self._solution_batch = []
         # The number of solutions created by each emitter.
-        self._num_emitted = [None for _ in self._active_arr]
+        self._num_emitted = np.array([None for _ in self._active_arr])
 
     @property
     def archive(self):
@@ -147,18 +148,12 @@ class BanditScheduler:
                                self._last_called)
         self._last_called = "ask"
 
-        # Remove restarted emitters.
-        # for emitter in self._active_emitters:
-
-        # Select active emitters.
-        for i, emitter in enumerate(self._emitters):
-            self._ucb1[i] = (
-                self._success[i] / self._selection[i] + self._zeta *
-                np.sqrt(np.log(self._success.sum()) / self._selection[i]))
-
-        n_needed_emitters = len(self._active_arr)
-        # TODO: Right now we replace all emitters every round.
-        self._active_arr = np.argsort(self._ucb1)[-n_needed_emitters:]
+        # Select emitters based on UCB-1.
+        # Note: Right now we replace all emitters every round.
+        ucb1 = (
+            self._success / self._selection +
+            self._zeta * np.sqrt(np.log(self._success.sum()) / self._selection))
+        self._active_arr = np.argsort(ucb1)[-self._num_active:]
 
         self._solution_batch = []
 
@@ -183,12 +178,32 @@ class BanditScheduler:
                 "(this is the number of solutions output by ask()) but "
                 f"has length {len(array)}")
 
-    def _tell_internal(self,
-                       objective_batch,
-                       measures_batch,
-                       metadata_batch=None):
-        """Internal method that handles duplicate subroutine between
-        :meth:`tell` and :meth:`tell_dqd`."""
+    def tell(self, objective_batch, measures_batch, metadata_batch=None):
+        """Returns info for solutions from :meth:`ask`.
+
+        .. note:: The objective batch, measures batch, and metadata batch must
+            be in the same order as the solutions created by :meth:`ask_dqd`;
+            i.e.  ``objective_batch[i]``, ``measures_batch[i]``, and
+            ``metadata_batch[i]`` should be the objective, measures, and
+            metadata for ``solution_batch[i]``.
+
+        Args:
+            objective_batch ((batch_size,) array): Each entry of this array
+                contains the objective function evaluation of a solution.
+            measures_batch ((batch_size, measures_dm) array): Each row of
+                this array contains a solution's coordinates in measure space.
+            metadata_batch ((batch_size,) array): Each entry of this array
+                contains an object holding metadata for a solution.
+        Raises:
+            RuntimeError: This method is called without first calling
+                :meth:`ask`.
+            ValueError: ``objective_batch``, ``measures_batch``, or
+                ``metadata`` has the wrong shape.
+        """
+        if self._last_called != "ask":
+            raise RuntimeError("tell() was called without calling ask().")
+        self._last_called = "tell"
+
         objective_batch = np.asarray(objective_batch)
         measures_batch = np.asarray(measures_batch)
         metadata_batch = (np.empty(len(self._solution_batch), dtype=object) if
@@ -230,48 +245,6 @@ class BanditScheduler:
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
 
-        return (
-            objective_batch,
-            measures_batch,
-            status_batch,
-            value_batch,
-            metadata_batch,
-        )
-
-    def tell(self, objective_batch, measures_batch, metadata_batch=None):
-        """Returns info for solutions from :meth:`ask`.
-
-        .. note:: The objective batch, measures batch, and metadata batch must
-            be in the same order as the solutions created by :meth:`ask_dqd`;
-            i.e.  ``objective_batch[i]``, ``measures_batch[i]``, and
-            ``metadata_batch[i]`` should be the objective, measures, and
-            metadata for ``solution_batch[i]``.
-
-        Args:
-            objective_batch ((batch_size,) array): Each entry of this array
-                contains the objective function evaluation of a solution.
-            measures_batch ((batch_size, measures_dm) array): Each row of
-                this array contains a solution's coordinates in measure space.
-            metadata_batch ((batch_size,) array): Each entry of this array
-                contains an object holding metadata for a solution.
-        Raises:
-            RuntimeError: This method is called without first calling
-                :meth:`ask`.
-            ValueError: ``objective_batch``, ``measures_batch``, or
-                ``metadata`` has the wrong shape.
-        """
-        if self._last_called != "ask":
-            raise RuntimeError("tell() was called without calling ask().")
-        self._last_called = "tell"
-
-        (
-            objective_batch,
-            measures_batch,
-            status_batch,
-            value_batch,
-            metadata_batch,
-        ) = self._tell_internal(objective_batch, measures_batch, metadata_batch)
-
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
         for i, emitter, n in zip(self._active_arr,
@@ -284,5 +257,5 @@ class BanditScheduler:
                          metadata_batch[pos:end])
             # Track selection and success.
             self._selection[i] += n
-            self._success[i] += status_batch[pos:end].sum()
+            self._success[i] += status_batch[pos:end].astype(bool).sum()
             pos = end
