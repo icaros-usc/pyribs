@@ -51,6 +51,7 @@ class BanditScheduler:
                  archive,
                  emitters,
                  *,
+                 zeta=0.1,
                  result_archive=None,
                  add_mode="batch"):
         if len(emitters) == 0:
@@ -88,6 +89,14 @@ class BanditScheduler:
         self._emitters = emitters
         self._add_mode = add_mode
 
+        # Used for UCB-1.
+        n = len(self._emitters)
+        self._active_arr = np.empty(n)  # Index of active emitters.
+        self._ucb1 = np.zeros(n)
+        self._success = np.zeros(n)
+        self._selection = np.zeros(n)
+        self._zeta = zeta
+
         self._result_archive = result_archive
 
         # Keeps track of whether the scheduler should be receiving a call to
@@ -96,7 +105,7 @@ class BanditScheduler:
         # The last set of solutions returned by ask().
         self._solution_batch = []
         # The number of solutions created by each emitter.
-        self._num_emitted = [None for _ in self._emitters]
+        self._num_emitted = [None for _ in self._active_arr]
 
     @property
     def archive(self):
@@ -108,7 +117,7 @@ class BanditScheduler:
     def emitters(self):
         """list of ribs.archives.EmitterBase: Emitters for generating solutions
         in this scheduler."""
-        return self._emitters
+        return self._active_arr
 
     @property
     def result_archive(self):
@@ -119,38 +128,6 @@ class BanditScheduler:
         """
         return (self._archive
                 if self._result_archive is None else self._result_archive)
-
-    def ask_dqd(self):
-        """Generates a batch of solutions by calling ask_dqd() on all DQD
-        emitters.
-
-        .. note:: The order of the solutions returned from this method is
-            important, so do not rearrange them.
-
-        Returns:
-            (batch_size, dim) array: An array of n solutions to evaluate. Each
-            row contains a single solution.
-        Raises:
-            RuntimeError: This method was called without first calling
-                :meth:`tell`.
-        """
-        if self._last_called in ["ask", "ask_dqd"]:
-            raise RuntimeError("ask_dqd cannot be called immediately after " +
-                               self._last_called)
-        self._last_called = "ask_dqd"
-
-        self._solution_batch = []
-
-        for i, emitter in enumerate(self._emitters):
-            emitter_sols = emitter.ask_dqd()
-            self._solution_batch.append(emitter_sols)
-            self._num_emitted[i] = len(emitter_sols)
-
-        # In case the emitters didn't return any solutions.
-        self._solution_batch = np.concatenate(
-            self._solution_batch, axis=0) if self._solution_batch else np.empty(
-                (0, self._solution_dim))
-        return self._solution_batch
 
     def ask(self):
         """Generates a batch of solutions by calling ask() on all emitters.
@@ -170,9 +147,23 @@ class BanditScheduler:
                                self._last_called)
         self._last_called = "ask"
 
+        # Remove restarted emitters.
+        # for emitter in self._active_emitters:
+
+        # Select active emitters.
+        for i, emitter in enumerate(self._emitters):
+            self._ucb1[i] = (
+                self._success[i] / self._selection[i] + self._zeta *
+                np.sqrt(np.log(self._success.sum()) / self._selection[i]))
+
+        n_needed_emitters = len(self._active_arr)
+        # TODO: Right now we replace all emitters every round.
+        self._active_arr = np.argsort(self._ucb1)[-n_needed_emitters:]
+
         self._solution_batch = []
 
-        for i, emitter in enumerate(self._emitters):
+        for i, emitter in zip(self._active_arr,
+                              self._emitters[self._active_arr]):
             emitter_sols = emitter.ask()
             self._solution_batch.append(emitter_sols)
             self._num_emitted[i] = len(emitter_sols)
@@ -247,61 +238,6 @@ class BanditScheduler:
             metadata_batch,
         )
 
-    def tell_dqd(self,
-                 objective_batch,
-                 measures_batch,
-                 jacobian_batch,
-                 metadata_batch=None):
-        """Returns info for solutions from :meth:`ask_dqd`.
-
-        .. note:: The objective batch, measures batch, jacobian batch, and
-            metadata batch must be in the same order as the solutions created by
-            :meth:`ask_dqd`; i.e.  ``objective_batch[i]``,
-            ``measures_batch[i]``, ``jacobian_batch[i]``, and
-            ``metadata_batch[i]`` should be the objective, measures, jacobian,
-            and metadata for ``solution_batch[i]``.
-
-        Args:
-            objective_batch ((batch_size,) array): Each entry of this array
-                contains the objective function evaluation of a solution.
-            measures_batch ((batch_size, measure_dim) array): Each row of
-                this array contains a solution's coordinates in measure space.
-            jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
-                solution_dim)`` array consisting of Jacobian matrices of the
-                solutions obtained from :meth:`ask_dqd`. Each matrix should
-                consist of the objective gradient of the solution followed by
-                the measure gradients.
-            metadata_batch ((batch_size,) array): Each entry of this array
-                contains an object holding metadata for a solution.
-        Raises:
-            RuntimeError: This method is called without first calling
-                :meth:`ask`.
-            ValueError: ``objective_batch``, ``measures_batch``, or
-                ``metadata`` has the wrong shape.
-        """
-        if self._last_called != "ask_dqd":
-            raise RuntimeError(
-                "tell_dqd() was called without calling ask_dqd().")
-        self._last_called = "tell_dqd"
-
-        (
-            objective_batch,
-            measures_batch,
-            status_batch,
-            value_batch,
-            metadata_batch,
-        ) = self._tell_internal(objective_batch, measures_batch, metadata_batch)
-
-        # Keep track of pos because emitters may have different batch sizes.
-        pos = 0
-        for emitter, n in zip(self._emitters, self._num_emitted):
-            end = pos + n
-            emitter.tell_dqd(self._solution_batch[pos:end],
-                             objective_batch[pos:end], measures_batch[pos:end],
-                             jacobian_batch[pos:end], status_batch[pos:end],
-                             value_batch[pos:end], metadata_batch[pos:end])
-            pos = end
-
     def tell(self, objective_batch, measures_batch, metadata_batch=None):
         """Returns info for solutions from :meth:`ask`.
 
@@ -338,10 +274,15 @@ class BanditScheduler:
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
-        for emitter, n in zip(self._emitters, self._num_emitted):
+        for i, emitter, n in zip(self._active_arr,
+                                 self._emitters[self._active_arr],
+                                 self._num_emitted[self._active_arr]):
             end = pos + n
             emitter.tell(self._solution_batch[pos:end],
                          objective_batch[pos:end], measures_batch[pos:end],
                          status_batch[pos:end], value_batch[pos:end],
                          metadata_batch[pos:end])
+            # Track selection and success.
+            self._selection[i] += n
+            self._success[i] += status_batch[pos:end].sum()
             pos = end
