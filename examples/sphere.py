@@ -402,7 +402,7 @@ def save_heatmap(archive, heatmap_path):
 
 
 def sphere_main(algorithm,
-                solution_dim=None,
+                dim=None,
                 itrs=None,
                 archive_dims=None,
                 learning_rate=None,
@@ -423,17 +423,17 @@ def sphere_main(algorithm,
         seed (int): Seed for the algorithm. By default, there is no seed.
     """
     # Use default dim for each algorithm.
-    if solution_dim is None:
+    if dim is None:
         if algorithm in ["cma_mega", "cma_mega_adam", "cma_maega"]:
-            solution_dim = 1_000
+            dim = 1_000
         elif algorithm in ["cma_mae"]:
-            solution_dim = 100
+            dim = 100
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
                 "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed",
                 "me_map_elites"
         ]:
-            solution_dim = 20
+            dim = 20
 
     # Use default itrs for each algorithm.
     if itrs is None:
@@ -471,7 +471,7 @@ def sphere_main(algorithm,
         ]:
             learning_rate = 1.0
 
-    name = f"{algorithm}_{solution_dim}"
+    name = f"{algorithm}_{dim}"
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
@@ -480,7 +480,7 @@ def sphere_main(algorithm,
     use_result_archive = algorithm in ["cma_mae", "cma_maega"]
 
     scheduler = create_scheduler(algorithm,
-                                 solution_dim,
+                                 dim,
                                  archive_dims,
                                  learning_rate,
                                  use_result_archive=use_result_archive,
