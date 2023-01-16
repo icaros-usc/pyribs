@@ -159,7 +159,7 @@ class TwoStageImprovementRanker(RankerBase):
         # that were not added.
         #
         # Since lexsort uses the last column/row as the key, we flip the
-        # ranking_values along the last axis so that we are sorting statuses
+        # ranking_values along the last axis so that we are sorting by status
         # first.
         #
         # Note that lexsort sorts the values in ascending order,

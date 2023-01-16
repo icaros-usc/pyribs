@@ -69,7 +69,6 @@ class BanditScheduler:
                              f"num_active emitters, but only"
                              f"{len(emitter_pool)} are given.")
 
-
         emitter_ids = set(id(e) for e in emitter_pool)
         if len(emitter_ids) != len(emitter_pool):
             raise ValueError(
@@ -102,15 +101,18 @@ class BanditScheduler:
         self._emitter_pool = np.array(emitter_pool)
         self._num_active = num_active
         self._add_mode = add_mode
-
-        # Used for UCB-1.
-        n = len(self._emitter_pool)
-        self._active_arr = np.empty(n)  # Index of active emitters.
-        self._success = np.zeros(n)
-        self._selection = np.zeros(n)
-        self._zeta = zeta
-
         self._result_archive = result_archive
+
+        # Boolean mask of the active emitters. Initializes to the first
+        # num_active emitters in the emitter pool.
+        self._active_arr = np.zeros_like(self._emitter_pool, dtype=bool)
+        self._active_arr[:self._num_active] = True
+
+        # Used by UCB1 to select emitters.
+        self._success = np.zeros_like(self._emitter_pool)
+        self._selection = np.zeros_like(self._emitter_pool)
+        self._restarts = np.zeros_like(self._emitter_pool)
+        self._zeta = zeta
 
         # Keeps track of whether the scheduler should be receiving a call to
         # ask() or tell().
@@ -165,23 +167,36 @@ class BanditScheduler:
                                self._last_called)
         self._last_called = "ask"
 
-        # Select emitters based on UCB-1.
-        # NOTE: Right now we replace all emitters every round. This is
-        # different from the original paper, which only replaces emitters that
-        # have terminated.
-        ucb1 = np.empty_like(self._emitter_pool)
-        update_ucb = self._selection != 0
-        if update_ucb.any():
+        # Remove emitters that have terminated/restarted.
+        emitter_restarts = np.array(
+            [emitter.restarts for emitter in self._emitter_pool])
+        terminated = emitter_restarts > self._restarts
+        self._active_arr[terminated] = False
+
+        self._restarts = emitter_restarts
+
+        # Only replace the number of emitters that have restarted.
+        n_restarted = terminated.sum()
+
+        # Select emitters based on the UCB1 formula.
+        # In addition to that, the ranking of emitters follow these rules:
+        # - Emitters that have never been selected are prioritized.
+        # - Only emitters that have terminated/restarted will be replaced from
+        #   the active list.
+        update_ucb = (self._selection != 0)
+        if terminated.any():
+            ucb1 = np.full_like(self._emitter_pool, np.inf)
             ucb1[update_ucb] = (
                 self._success[update_ucb] / self._selection[update_ucb] +
                 self._zeta * np.sqrt(
-                    np.log(self._success.sum()) / self._selection[update_ucb])
-            )
-        self._active_arr = np.argsort(ucb1)[-self._num_active:]
+                    np.log(self._success.sum()) / self._selection[update_ucb]))
+            # Activate top n_restarted emitters.
+            activate = np.argsort(ucb1)[-n_restarted:]
+            self._active_arr[activate] = True
 
         self._solution_batch = []
 
-        for i in self._active_arr:
+        for i in np.where(self._active_arr)[0]:
             emitter = self._emitter_pool[i]
             emitter_sols = emitter.ask()
             self._solution_batch.append(emitter_sols)
@@ -274,7 +289,7 @@ class BanditScheduler:
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
-        for i in self._active_arr:
+        for i in np.where(self._active_arr)[0]:
             emitter = self._emitter_pool[i]
             n = self._num_emitted[i]
 

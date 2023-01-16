@@ -35,6 +35,7 @@ class EmitterBase(ABC):
         (self._lower_bounds,
          self._upper_bounds) = self._process_bounds(bounds, self._solution_dim,
                                                     archive.dtype)
+        self._restarts = 0
 
     @staticmethod
     def _process_bounds(bounds, solution_dim, dtype):
@@ -85,6 +86,11 @@ class EmitterBase(ABC):
         solution space has a lower bound of -1.
         """
         return self._lower_bounds
+
+    @property
+    def restarts(self):
+        """int: The number of restarts for this emitter."""
+        return self._restarts
 
     @property
     def upper_bounds(self):

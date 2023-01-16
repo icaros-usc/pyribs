@@ -376,8 +376,8 @@ def create_scheduler(algorithm,
                               add_mode=mode)
         scheduler_name = "Scheduler"
 
-    print(f"Create {scheduler_name} for {algorithm} with learning rate"
-          f"{learning_rate} and add mode {mode}, using solution dim"
+    print(f"Create {scheduler_name} for {algorithm} with learning rate "
+          f"{learning_rate} and add mode {mode}, using solution dim "
           f"{solution_dim} and archive dims {archive_dims}.")
     return scheduler
 

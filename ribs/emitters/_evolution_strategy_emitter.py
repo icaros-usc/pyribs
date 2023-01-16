@@ -104,7 +104,6 @@ class EvolutionStrategyEmitter(EmitterBase):
         self._selection_rule = selection_rule
 
         self._restart_rule = restart_rule
-        self._restarts = 0
         self._itrs = 0
 
         # Check if the restart_rule is valid, discard check_restart result.
@@ -134,11 +133,6 @@ class EvolutionStrategyEmitter(EmitterBase):
     def batch_size(self):
         """int: Number of solutions to return in :meth:`ask`."""
         return self._batch_size
-
-    @property
-    def restarts(self):
-        """int: The number of restarts for this emitter."""
-        return self._restarts
 
     @property
     def itrs(self):
