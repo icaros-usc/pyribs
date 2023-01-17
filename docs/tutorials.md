@@ -4,9 +4,8 @@
 :hidden:
 
 tutorials/lunar_lander
-tutorials/lunar_lander_mae
-tutorials/tom_cruise_dqd
 tutorials/cma_mae
+tutorials/tom_cruise_dqd
 tutorials/lsi_mnist
 tutorials/arm_repertoire
 tutorials/fooling_mnist
@@ -24,13 +23,11 @@ the key algorithms in pyribs.
 
 - {doc}`tutorials/lunar_lander`: Covers the CMA-ME algorithm and various basic
   library features.
-- {doc}`tutorials/lunar_lander_mae`: Shows how to implement CMA-MAE, a powerful
-  algorithm built on CMA-ME.
+- {doc}`tutorials/cma_mae`: Shows how to implement CMA-MAE, a powerful
+  algorithm built on CMA-ME, on the sphere linear projection benchmark.
 - {doc}`tutorials/tom_cruise_dqd`: Covers CMA-MEGA and CMA-MAEGA, two algorithms
   designed for differentiable quality diversity problems (problems where
   gradients are available).
-- {doc}`tutorials/cma_mae`: Dives into the finer details of configuring MAE
-  algorithms like CMA-MAE and CMA-MAEGA.
 
 ## Applications
 
