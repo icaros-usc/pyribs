@@ -144,7 +144,6 @@ class GradientArborescenceEmitter(EmitterBase):
         self._selection_rule = selection_rule
 
         self._restart_rule = restart_rule
-        self._restarts = 0
         self._itrs = 0
 
         # Check if the restart_rule is valid, discard check_restart result.
@@ -173,7 +172,6 @@ class GradientArborescenceEmitter(EmitterBase):
         self._opt.reset(np.zeros(self._num_coefficients))
 
         self._batch_size = self._opt.batch_size
-        self._restarts = 0
         self._itrs = 0
 
     @property
@@ -194,11 +192,6 @@ class GradientArborescenceEmitter(EmitterBase):
         :meth:`ask_dqd`.
         """
         return 1
-
-    @property
-    def restarts(self):
-        """int: The number of restarts for this emitter."""
-        return self._restarts
 
     @property
     def itrs(self):
