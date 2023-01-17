@@ -367,7 +367,7 @@ def create_scheduler(algorithm,
         ]
 
     if algorithm == "me_map_elites":
-        scheduler = BanditScheduler(archive, emitters, num_active=12)
+        scheduler = BanditScheduler(archive, emitters, num_active=12, reselect="all")
         scheduler_name = "BanditScheduler"
     else:
         scheduler = Scheduler(archive,

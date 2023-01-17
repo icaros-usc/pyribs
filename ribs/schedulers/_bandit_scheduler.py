@@ -121,9 +121,9 @@ class BanditScheduler:
         self._active_arr[:self._num_active] = True
 
         # Used by UCB1 to select emitters.
-        self._success = np.zeros_like(self._emitter_pool)
-        self._selection = np.zeros_like(self._emitter_pool)
-        self._restarts = np.zeros_like(self._emitter_pool)
+        self._success = np.zeros_like(self._emitter_pool, dtype=float)
+        self._selection = np.zeros_like(self._emitter_pool, dtype=float)
+        self._restarts = np.zeros_like(self._emitter_pool, dtype=int)
         self._zeta = zeta
 
         # Keeps track of whether the scheduler should be receiving a call to
@@ -189,7 +189,7 @@ class BanditScheduler:
             self._restarts = emitter_restarts
         else:
             # Reselect all emitters.
-            reselect = self._active_arr
+            reselect = np.copy(self._active_arr)
 
         # Deactivate emitters to be reselected.
         self._active_arr[reselect] = False
@@ -203,13 +203,15 @@ class BanditScheduler:
         # - If reselect is "terminated", then only active emitters that have
         #   terminated/restarted will be reselected. Otherwise, if reselect is
         #   "all", then all emitters are reselected.
-        update_ucb = (self._selection != 0)
         if reselect.any():
             ucb1 = np.full_like(self._emitter_pool, np.inf)
-            ucb1[update_ucb] = (
-                self._success[update_ucb] / self._selection[update_ucb] +
-                self._zeta * np.sqrt(
-                    np.log(self._success.sum()) / self._selection[update_ucb]))
+            update_ucb = (self._selection != 0)
+            if update_ucb.any():
+                ucb1[update_ucb] = (
+                    self._success[update_ucb] / self._selection[update_ucb] +
+                    self._zeta * np.sqrt(
+                        np.log(self._success.sum()) /
+                        self._selection[update_ucb]))
             # Activate top n_reselect emitters.
             activate = np.argsort(ucb1)[-n_reselect:]
             self._active_arr[activate] = True
