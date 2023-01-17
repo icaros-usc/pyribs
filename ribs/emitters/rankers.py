@@ -121,6 +121,13 @@ class ImprovementRanker(RankerBase):
 
     This ranker ranks solutions in a single stage. The solutions are ranked by
     the improvement "value" described in :meth:`ribs.archives.ArchiveBase.add`.
+
+    This ranker should not be used with CMA-ME. The improvement values for new
+    solutions in CMA-ME are on a different scale from the improvement values for
+    the other solutions, in that new solutions have an improvement value which
+    is simply their objective, while other solutions have an improvement value
+    which is the difference between their objective and the objective of their
+    corresponding cell in the archive.
     """
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,

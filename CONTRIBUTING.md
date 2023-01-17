@@ -163,6 +163,9 @@ the repo. To create a tutorial:
 1. Make sure that the only level 1 heading (e.g. `# Awesome Tutorial`) is the
    title at the top of the notebook. Subsequent titles should be level 2 (e.g.
    `## Level 2 Heading`) or higher.
+1. If linking to the pyribs documentation, make sure to link to pages in the
+   `latest` version on ReadTheDocs, i.e. your links should start with
+   `https://docs.pyribs.org/en/latest/`
 1. Add an entry into the toctree in `docs/tutorials.md` and add it to one of the
    lists of tutorials.
 1. Check that the tutorial shows up on the Tutorials page when serving the docs.
@@ -211,6 +214,12 @@ particularly relevant when linking to arXiv papers.
 ### Deploying
 
 1. Create a PR into master after doing the following:
+   1. Switch tutorial links from latest to stable with:
+      ```bash
+      make tutorial_links
+      ```
+      See [#300](https://github.com/icaros-usc/pyribs/pull/300) for why we do
+      this.
    1. Update the version with `bump2version` by running the following for minor
       versions:
       ```bash
@@ -238,5 +247,12 @@ particularly relevant when linking to arXiv papers.
 1. Check that the version was deployed to PyPI. If it failed, delete the tag,
    make appropriate fixes, and repeat steps 2 and 3.
 1. Write up the release on GitHub, and attach it to the tag.
+1. Submit another PR which reverts the changes to the tutorial links.
+   Specifically, while on master, make sure your workspace is clean, then revert
+   the changes with:
+   ```bash
+   git checkout HEAD~ tutorials/
+   ```
+   And commit the result.
 
 Our deployment process may change in the future as pyribs becomes more complex.

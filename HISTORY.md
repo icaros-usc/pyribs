@@ -99,6 +99,7 @@
 
 #### Documentation
 
+- Facilitate linking to latest version of documentation (#300)
 - Update lunar lander tutorial with v0.5.0 features (#292)
 - Improve tutorial and example overviews (#291)
 - Move tutorials out of examples folder (#290)
