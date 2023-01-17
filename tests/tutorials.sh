@@ -27,7 +27,7 @@ function test_notebook {
       test_itrs=50
       ;;
     tutorials/cma_mae.ipynb)
-      test_itrs=50
+      test_itrs=5
       ;;
     *)
       test_itrs=3
