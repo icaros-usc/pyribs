@@ -14,6 +14,11 @@ class BanditScheduler:
         and methods. Please refer to the documentation of :class:`Scheduler`
         for more details.
 
+    .. note::
+        The main difference between :class:`BanditScheduler` and
+        :class:`Scheduler` is that, unlike :class:`Scheduler`, DQD emitters are
+        not supported by :class:`BanditScheduler`.
+
     To initialize this class, first create an archive and a list of emitters
     for the QD algorithm. The BanditScheduler will schedule the emitters using
     the Upper Confidence Bound - 1 algorithm (UCB1). Everytime :meth:`ask` is
@@ -24,7 +29,9 @@ class BanditScheduler:
         archive (ribs.archives.ArchiveBase): An archive object, e.g. one
             selected from :mod:`ribs.archives`.
         emitter_pool (list of ribs.archives.EmitterBase): A pool of emitters to
-            select from, e.g. :class:`ribs.emitters.GaussianEmitter`.
+            select from, e.g. :class:`ribs.emitters.GaussianEmitter`. On the
+            first iteration, the first `num_active` emitters from the
+            emitter_pool will be activated.
         num_active (int): The number of active emitters at a time. Active
             emitters are used when calling ask-tell.
         zeta (float): Hyperparamter of UBC1 that balances the trade-off between
@@ -32,10 +39,10 @@ class BanditScheduler:
             parameter will emphasize the uncertainty of the emitters. Refer to
             the original paper for more information.
         reselect (str): Indicates how emitters are reselected from the pool.
-            The default is "terminated", where only terminated/restarted emitters
-            are deactivated and reselected (but they might be selected again).
-            Alternatively, use "all" to reselect all active emitters every
-            iteration.
+            The default is "terminated", where only terminated/restarted
+            emitters are deactivated and reselected (but they might be selected
+            again). Alternatively, use "all" to reselect all active emitters
+            every iteration.
         add_mode (str): Indicates how solutions should be added to the archive.
             The default is "batch", which adds all solutions with one call to
             :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single"
@@ -118,7 +125,7 @@ class BanditScheduler:
         # Boolean mask of the active emitters. Initializes to the first
         # num_active emitters in the emitter pool.
         self._active_arr = np.zeros_like(self._emitter_pool, dtype=bool)
-        self._active_arr[:self._num_active] = True
+        # self._active_arr[:self._num_active] = True
 
         # Used by UCB1 to select emitters.
         self._success = np.zeros_like(self._emitter_pool, dtype=float)
@@ -156,13 +163,28 @@ class BanditScheduler:
         return (self._archive
                 if self._result_archive is None else self._result_archive)
 
+    def ask_dqd(self):
+        """Generates a batch of solutions by calling ask_dqd() on all DQD
+        emitters.
+
+        This method is not supported for this scheduler and throws an error if
+        called.
+
+        Raises:
+            NotImplementedError: This method is not supported by this
+                scheduler.
+        """
+        raise NotImplementedError("ask_dqd() is not supported by"
+                                  "BanditScheduler.")
+
     def ask(self):
-        """Generates a batch of solutions by calling ask() on all emitters.
+        """Generates a batch of solutions by calling ask() on all active
+        emitters.
 
         The emitters used by ask are determined by the UCB1 algorithm. Briefly,
-        emitters that have never been selected are prioritized, then emitters
-        are sorted in descending order based the accurary of their past
-        prediction.
+        emitters that have never been selected before are prioritized, then
+        emitters are sorted in descending order based on the accurary of their
+        past prediction.
 
         .. note:: The order of the solutions returned from this method is
             important, so do not rearrange them.
@@ -174,28 +196,36 @@ class BanditScheduler:
             RuntimeError: This method was called without first calling
                 :meth:`tell`.
         """
-        if self._last_called in ["ask", "ask_dqd"]:
-            raise RuntimeError("ask_dqd cannot be called immediately after " +
+        if self._last_called == "ask":
+            raise RuntimeError("ask cannot be called immediately after " +
                                self._last_called)
         self._last_called = "ask"
 
         if self._reselect == "terminated":
             # Reselect terminated emitters. Emitters are terminated if their
-            # restarts have incremented.
-            emitter_restarts = np.array(
-                [emitter.restarts for emitter in self._emitter_pool])
+            # restarts attribute have incremented.
+            emitter_restarts = np.array([
+                emitter.restarts if hasattr(emitter, "restarts") else -1
+                for emitter in self._emitter_pool
+            ])
             reselect = emitter_restarts > self._restarts
+
+            # If the emitter does not have "restarts" attribute, assume it
+            # restarts every iteration.
+            reselect[emitter_restarts < 0] = True
 
             self._restarts = emitter_restarts
         else:
             # Reselect all emitters.
-            reselect = np.copy(self._active_arr)
+            reselect = self._active_arr.copy()
+
+        # If no emitters are active, activate the first num_active.
+        if not self._active_arr.any():
+            reselect[:] = False
+            self._active_arr[:self._num_active] = True
 
         # Deactivate emitters to be reselected.
         self._active_arr[reselect] = False
-
-        # The number of emitter that should be replaced.
-        n_reselect = reselect.sum()
 
         # Select emitters based on the UCB1 formula.
         # The ranking of emitters also follows these rules:
@@ -212,8 +242,8 @@ class BanditScheduler:
                     self._zeta * np.sqrt(
                         np.log(self._success.sum()) /
                         self._selection[update_ucb]))
-            # Activate top n_reselect emitters.
-            activate = np.argsort(ucb1)[-n_reselect:]
+            # Activate top emitters based on UCB1.
+            activate = np.argsort(ucb1)[-reselect.sum():]
             self._active_arr[activate] = True
 
         self._solution_batch = []
@@ -239,6 +269,23 @@ class BanditScheduler:
                 "(this is the number of solutions output by ask()) but "
                 f"has length {len(array)}")
 
+    def tell_dqd(self,
+                 objective_batch,
+                 measures_batch,
+                 jacobian_batch,
+                 metadata_batch=None):
+        """Returns info for solutions from :meth:`ask_dqd`.
+
+        This method is not supported for this scheduler and throws an error if
+        called.
+
+        Raises:
+            NotImplementedError: This method is not supported by this
+                scheduler.
+        """
+        raise NotImplementedError("tell_dqd() is not supported by"
+                                  "BanditScheduler.")
+
     def tell(self, objective_batch, measures_batch, metadata_batch=None):
         """Returns info for solutions from :meth:`ask`.
 
@@ -262,7 +309,7 @@ class BanditScheduler:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
             ValueError: ``objective_batch``, ``measures_batch``, or
-                ``metadata`` has the wrong shape.
+                ``metadata_batch`` has the wrong shape.
         """
         if self._last_called != "ask":
             raise RuntimeError("tell() was called without calling ask().")
@@ -317,7 +364,7 @@ class BanditScheduler:
 
             end = pos + n
             self._selection[i] += n
-            self._success[i] += status_batch[pos:end].astype(bool).sum()
+            self._success[i] += np.count_nonzero(status_batch[pos:end])
             emitter.tell(self._solution_batch[pos:end],
                          objective_batch[pos:end], measures_batch[pos:end],
                          status_batch[pos:end], value_batch[pos:end],
