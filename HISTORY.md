@@ -6,7 +6,8 @@
 
 #### API
 
-- **Backwards-incompatible:** Implement Scalable CMA-ES Optimizers (#274)
+- Implement `BanditScheduler` (#299)
+- **Backwards-incompatible:** Implement Scalable CMA-ES Optimizers (#274, #288)
 - Make ribs.emitters.opt public (#281)
 - Add normalized QD score to ArchiveStats (#276)
 - **Backwards-incompatible:** Make ArchiveStats a dataclass (#275)
@@ -53,14 +54,12 @@
   `RandomDirectionEmitter`, and `OptimizingEmitter` with
   `EvolutionStrategyEmitter` (#220, #223, #278)
 - Raise ValueError for incorrect array shapes in archive methods (#219)
-- Add elites_with_measures_single method for getting elite for a single
-  solution's measures (#215)
 - Introduced the Ranker object, which is responsible for ranking the solutions
   based on different objectives (#209, #222, #245)
 - Add index_of_single method for getting index of measures for one solution
   (#214)
-- **Backwards-incompatible:** Replace elite_with_behavior with batched
-  elites_with_measures method in archives (#213)
+- **Backwards-incompatible:** Replace elite_with_behavior with
+  retrieve and retrieve_single in archives (#213, #215, #295)
 - **Backwards-incompatible:** Replace get_index with batched index_of method in
   archives (#208)
   - Also added `grid_to_int_index` and `int_to_grid_index` methods for
@@ -96,10 +95,17 @@
 #### Bugs
 
 - Fix boundary lines in sliding boundaries archive heatmap (#271)
+- Fix negative eigenvalue in CMA-ES covariance matrix (#285)
 
 #### Documentation
 
 - Add DQDTutorial (#267)
+- Facilitate linking to latest version of documentation (#300)
+- Update lunar lander tutorial with v0.5.0 features (#292)
+- Improve tutorial and example overviews (#291)
+- Move tutorials out of examples folder (#290)
+- Update lunar lander to use Gymnasium (#289)
+- Add CMA-MAE tutorial (#273, #284)
 - Update README (#279)
 - Add sphinx-codeautolink to docs (#206, #280)
 - Fix documentation rendering issues on ReadTheDocs (#205)

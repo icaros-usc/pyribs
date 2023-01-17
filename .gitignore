@@ -120,7 +120,8 @@ MNIST/
 dask-worker-space/
 !tests/baseline_images/visualize_test/*
 !docs/_static/**/*
-!examples/tutorials/_static/**/*
+!tutorials/_static/**/*
+!tutorials/mnist/*
 !readme_assets/*
 results/
 

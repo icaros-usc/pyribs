@@ -166,7 +166,7 @@ class Scheduler:
                 :meth:`tell`.
         """
         if self._last_called in ["ask", "ask_dqd"]:
-            raise RuntimeError("ask_dqd cannot be called immediately after " +
+            raise RuntimeError("ask cannot be called immediately after " +
                                self._last_called)
         self._last_called = "ask"
 
@@ -277,7 +277,7 @@ class Scheduler:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
             ValueError: ``objective_batch``, ``measures_batch``, or
-                ``metadata`` has the wrong shape.
+                ``metadata_batch`` has the wrong shape.
         """
         if self._last_called != "ask_dqd":
             raise RuntimeError(

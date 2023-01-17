@@ -91,6 +91,9 @@ release: dist ## package and upload a release
 	twine upload dist/*
 .PHONY: release
 
+tutorial_links:
+	find tutorials -type f -name *.ipynb -exec sed -i 's/docs\.pyribs\.org\/en\/latest/docs\.pyribs\.org\/en\/stable/g' {} \;
+
 dist: clean ## builds source and wheel package
 	python setup.py sdist
 	python setup.py bdist_wheel

@@ -112,6 +112,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         measure_dim (int): The dimension of the measure space.
         learning_rate (float): The learning rate for threshold updates.
         threshold_min (float): The initial threshold value for all the cells.
+        qd_score_offset (float): Archives often contain negative objective
+            values, and if the QD score were to be computed with these negative
+            objectives, the algorithm would be penalized for adding new cells
+            with negative objectives. Thus, a standard practice is to normalize
+            all the objectives so that they are non-negative by introducing an
+            offset. This QD score offset will be *subtracted* from all
+            objectives in the archive, e.g., if your objectives go as low as
+            -300, pass in -300 so that each objective will be transformed as
+            ``objective - (-300)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objectives,
@@ -150,6 +159,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                  measure_dim,
                  learning_rate=1.0,
                  threshold_min=-np.inf,
+                 qd_score_offset=0.0,
                  seed=None,
                  dtype=np.float64):
 
@@ -180,7 +190,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                                       threshold_min,
                                       dtype=self.dtype)
 
+        self._qd_score_offset = self._dtype(qd_score_offset)
+
         self._stats = None
+        # Sum of all objective values in the archive; useful for computing
+        # qd_score and obj_mean.
+        self._objective_sum = None
         self._stats_reset()
 
         self._best_elite = None
@@ -243,6 +258,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._threshold_min
 
     @property
+    def qd_score_offset(self):
+        """float: The offset which is subtracted from objective values when
+        computing the QD score."""
+        return self._qd_score_offset
+
+    @property
     def stats(self):
         """:class:`ArchiveStats`: Statistics about the archive.
 
@@ -291,6 +312,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             obj_max=None,
             obj_mean=None,
         )
+        self._objective_sum = self.dtype(0.0)
 
     def _compute_new_thresholds(self, threshold_arr, objective_batch,
                                 index_batch, learning_rate):
@@ -649,9 +671,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # Since we set the new solutions in the old objective batch to have
         # value 0.0, the objectives for new solutions are added in properly
         # here.
-        new_qd_score = (
-            self._stats.qd_score +
-            np.sum(objective_batch_insert - old_objective_batch_insert))
+        self._objective_sum += np.sum(objective_batch_insert -
+                                      old_objective_batch_insert)
+        new_qd_score = (self._objective_sum -
+                        self.dtype(len(self)) * self._qd_score_offset)
         max_idx = np.argmax(objective_batch_insert)
         max_obj_insert = objective_batch_insert[max_idx]
 
@@ -673,7 +696,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             qd_score=new_qd_score,
             norm_qd_score=self.dtype(new_qd_score / self.cells),
             obj_max=new_obj_max,
-            obj_mean=new_qd_score / self.dtype(len(self)),
+            obj_mean=self._objective_sum / self.dtype(len(self)),
         )
 
         return status_batch, value_batch
@@ -774,7 +797,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         if status:
             # Update archive stats.
-            new_qd_score = self._stats.qd_score + (objective - old_objective)
+            self._objective_sum += objective - old_objective
+            new_qd_score = (self._objective_sum -
+                            self.dtype(len(self)) * self._qd_score_offset)
 
             if self._stats.obj_max is None or objective > self._stats.obj_max:
                 new_obj_max = objective
@@ -794,12 +819,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 qd_score=new_qd_score,
                 norm_qd_score=self.dtype(new_qd_score / self.cells),
                 obj_max=new_obj_max,
-                obj_mean=new_qd_score / self.dtype(len(self)),
+                obj_mean=self._objective_sum / self.dtype(len(self)),
             )
 
         return status, objective - old_threshold
 
-    def elites_with_measures(self, measures_batch):
+    def retrieve(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
         specified.
 
@@ -808,11 +833,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         namedtuple, it can be unpacked::
 
             solution_batch, objective_batch, measures_batch, \\
-                index_batch, metadata_batch = archive.elites_with_measures(...)
+                index_batch, metadata_batch = archive.retrieve(...)
 
         Or the fields may be accessed by name::
 
-            elite_batch = archive.elites_with_measures(...)
+            elite_batch = archive.retrieve(...)
             elite_batch.solution_batch
             elite_batch.objective_batch
             elite_batch.measures_batch
@@ -839,7 +864,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         * ``elite_batch.metadata_batch[i]`` will be None
 
         If you need to retrieve a *single* elite associated with some measures,
-        consider using :meth:`elites_with_measures_single`.
+        consider using :meth:`retrieve_single`.
 
         Args:
             measures_batch (array-like): (batch_size, :attr:`measure_dim`)
@@ -901,13 +926,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 )),
         )
 
-    def elites_with_measures_single(self, measures):
+    def retrieve_single(self, measures):
         """Retrieves the elite with measures in the same cell as the measures
         specified.
 
-        While :meth:`elites_with_measures` takes in a *batch* of measures, this
-        method takes in the measures for only *one* solution and returns a
-        single :namedtuple:`Elite`.
+        While :meth:`retrieve` takes in a *batch* of measures, this method takes
+        in the measures for only *one* solution and returns a single
+        :namedtuple:`Elite`.
 
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures.
@@ -916,7 +941,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             specified, then this method returns an :namedtuple:`Elite` where all
             the fields hold the info of that elite. Otherwise, this method
             returns an :namedtuple:`Elite` filled with the same "empty" values
-            described in :meth:`elites_with_measures`.
+            described in :meth:`retrieve`.
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -925,7 +950,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
-        elite_batch = self.elites_with_measures(measures[None])
+        elite_batch = self.retrieve(measures[None])
         return Elite(
             elite_batch.solution_batch[0],
             elite_batch.objective_batch[0],

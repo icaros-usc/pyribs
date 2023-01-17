@@ -28,8 +28,10 @@ extras_require = {
     # install deps with cell magic and only depend on ribs and ribs[visualize]).
     "examples": [
         "matplotlib>=3.0.0",
-        "gym~=0.17.0",  # Strict since different gym may give different results.
-        "Box2D~=2.3.10",  # Used in envs such as Lunar Lander.
+        # Strict since different gym may give different results. Note that we
+        # use gymnasium (https://gymnasium.farama.org), the successor to gym.
+        "gymnasium[box2d]==0.27.0",
+        "moviepy>=1.0.0",  # For recording videos in gym.
         "fire>=0.4.0",
         "tqdm>=4.0.0",
 

@@ -120,7 +120,14 @@ class ImprovementRanker(RankerBase):
     """Ranks the solutions based on the improvement in the objective.
 
     This ranker ranks solutions in a single stage. The solutions are ranked by
-    the improvement "value" described in :meth:`ArchiveBase.add`.
+    the improvement "value" described in :meth:`ribs.archives.ArchiveBase.add`.
+
+    This ranker should not be used with CMA-ME. The improvement values for new
+    solutions in CMA-ME are on a different scale from the improvement values for
+    the other solutions, in that new solutions have an improvement value which
+    is simply their objective, while other solutions have an improvement value
+    which is the difference between their objective and the objective of their
+    corresponding cell in the archive.
     """
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
@@ -146,7 +153,7 @@ class TwoStageImprovementRanker(RankerBase):
     "status" -- those that found a new cell in the archive rank above those that
     improved an existing cell, which rank above those that were not added to the
     archive. Second, solutions are ranked by the "value" described in
-    :meth:`ArchiveBase.add`.
+    :meth:`ribs.archives.ArchiveBase.add`
     """
 
     def rank(self, emitter, archive, rng, solution_batch, objective_batch,
@@ -159,7 +166,7 @@ class TwoStageImprovementRanker(RankerBase):
         # that were not added.
         #
         # Since lexsort uses the last column/row as the key, we flip the
-        # ranking_values along the last axis so that we are sorting statuses
+        # ranking_values along the last axis so that we are sorting by status
         # first.
         #
         # Note that lexsort sorts the values in ascending order,
