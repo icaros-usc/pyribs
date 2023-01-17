@@ -125,7 +125,6 @@ class BanditScheduler:
         # Boolean mask of the active emitters. Initializes to the first
         # num_active emitters in the emitter pool.
         self._active_arr = np.zeros_like(self._emitter_pool, dtype=bool)
-        # self._active_arr[:self._num_active] = True
 
         # Used by UCB1 to select emitters.
         self._success = np.zeros_like(self._emitter_pool, dtype=float)
