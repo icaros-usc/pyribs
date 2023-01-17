@@ -26,6 +26,9 @@ function test_notebook {
     tutorials/arm_repertoire.ipynb)
       test_itrs=50
       ;;
+    tutorials/cma_mae.ipynb)
+      test_itrs=50
+      ;;
     *)
       test_itrs=3
       ;;
