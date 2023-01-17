@@ -68,53 +68,12 @@ extras_require = {
         "check-wheel-contents==0.2.0",
     ],
 
-    # All dependencies above.
+    # All dependencies above except dev and examples.
     # NOTE: No need to manually remove the duplicates, setuptools automatically
     # does that.
     "all": [
         ### visualize ###
         "matplotlib>=3.0.0",
-
-        ### examples ###
-        "matplotlib>=3.0.0",
-        # Strict since different gym may give different results. Note that we
-        # use gymnasium (https://gymnasium.farama.org), the successor to gym.
-        "gymnasium[box2d]==0.27.0",
-        "moviepy>=1.0.0",  # For recording videos in gym.
-        "fire>=0.4.0",
-        "tqdm>=4.0.0",
-
-        # Dask
-        "dask>=2.0.0",
-        "distributed>=2.0.0",
-        "bokeh>=2.0.0",  # Dask dashboard.
-
-        ### dev ###
-        "pip>=20.3",
-        "pylint==2.8.3",
-        "yapf",
-
-        # Testing
-        "pytest==7.0.1",
-        "pytest-cov==3.0.0",
-        "pytest-benchmark==3.4.1",
-        "pytest-xdist==2.5.0",
-
-        # Documentation
-        "Sphinx==4.5.0",
-        "sphinx-material==0.0.32",
-        "sphinx-autobuild==2020.9.1",
-        "sphinx-copybutton==0.3.1",
-        "myst-nb==0.17.1",
-        "sphinx-toolbox==3.1.0",
-        "sphinx-autodoc-typehints==1.18.2",
-        "sphinx-codeautolink==0.12.1",
-
-        # Distribution
-        "bump2version==0.5.11",
-        "wheel==0.36.2",
-        "twine==1.14.0",
-        "check-wheel-contents==0.2.0",
     ],
 }
 
