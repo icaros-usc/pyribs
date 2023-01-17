@@ -117,8 +117,8 @@ def sphere(solution_batch):
 
     # Calculate measures.
     clipped = solution_batch.copy()
-    clip_indices = np.where((clipped < -5.12) | (clipped > 5.12))
-    clipped[clip_indices] = 5.12 / clipped[clip_indices]
+    clip_mask = (clipped < -5.12) | (clipped > 5.12)
+    clipped[clip_mask] = 5.12 / clipped[clip_mask]
     measures_batch = np.concatenate(
         (
             np.sum(clipped[:, :dim // 2], axis=1, keepdims=True),
@@ -129,7 +129,7 @@ def sphere(solution_batch):
 
     # Compute gradient of the measures.
     derivatives = np.ones(solution_batch.shape)
-    derivatives[clip_indices] = -5.12 / np.square(solution_batch[clip_indices])
+    derivatives[clip_mask] = -5.12 / np.square(solution_batch[clip_mask])
 
     mask_0 = np.concatenate((np.ones(dim // 2), np.zeros(dim - dim // 2)))
     mask_1 = np.concatenate((np.zeros(dim // 2), np.ones(dim - dim // 2)))
