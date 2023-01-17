@@ -18,6 +18,7 @@ The supported algorithms are:
 - `line_map_elites`: GridArchive with IsoLineEmitter.
 - `cvt_map_elites`: CVTArchive with GaussianEmitter.
 - `line_cvt_map_elites`: CVTArchive with IsoLineEmitter.
+- `me_map_elites`: MAP-Elites with Bandit Scheduler.
 - `cma_me_imp`: GridArchive with EvolutionStrategyEmitter using
   TwoStageImprovmentRanker.
 - `cma_me_imp_mu`: GridArchive with EvolutionStrategyEmitter using
@@ -87,7 +88,7 @@ import tqdm
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
                            GradientArborescenceEmitter, IsoLineEmitter)
-from ribs.schedulers import Scheduler
+from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
 
@@ -111,13 +112,13 @@ def sphere(solution_batch):
     raw_obj = np.sum(np.square(solution_batch - sphere_shift), axis=1)
     objective_batch = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
 
-    # Compute gradient of the objective
+    # Compute gradient of the objective.
     objective_grad_batch = -2 * (solution_batch - sphere_shift)
 
     # Calculate measures.
     clipped = solution_batch.copy()
-    clip_indices = np.where(np.logical_or(clipped > 5.12, clipped < -5.12))
-    clipped[clip_indices] = 5.12 / clipped[clip_indices]
+    clip_mask = (clipped < -5.12) | (clipped > 5.12)
+    clipped[clip_mask] = 5.12 / clipped[clip_mask]
     measures_batch = np.concatenate(
         (
             np.sum(clipped[:, :dim // 2], axis=1, keepdims=True),
@@ -126,9 +127,9 @@ def sphere(solution_batch):
         axis=1,
     )
 
-    # Compute gradient of the measures
+    # Compute gradient of the measures.
     derivatives = np.ones(solution_batch.shape)
-    derivatives[clip_indices] = -5.12 / np.square(solution_batch[clip_indices])
+    derivatives[clip_mask] = -5.12 / np.square(solution_batch[clip_mask])
 
     mask_0 = np.concatenate((np.ones(dim // 2), np.zeros(dim - dim // 2)))
     mask_1 = np.concatenate((np.zeros(dim // 2), np.ones(dim - dim // 2)))
@@ -171,10 +172,15 @@ def create_scheduler(algorithm,
     batch_size = 37
     num_emitters = 15
     mode = "batch"
-    threshold_min = -np.inf  # default
 
     if algorithm in ["cma_mae", "cma_maega"]:
         threshold_min = 0
+    else:
+        threshold_min = -np.inf
+
+    if algorithm in ["me_map_elites"]:
+        batch_size = 50
+        num_emitters = 48
 
     # Create archive.
     if algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
@@ -223,6 +229,45 @@ def create_scheduler(algorithm,
                 batch_size=batch_size,
                 seed=s,
             ) for s in emitter_seeds
+        ]
+    elif algorithm == "me_map_elites":
+        batch_size = 50
+        emitters = [
+            EvolutionStrategyEmitter(
+                archive,
+                x0=initial_sol,
+                sigma0=0.5,
+                ranker="obj",
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds[:12]
+        ] + [
+            EvolutionStrategyEmitter(
+                archive,
+                x0=initial_sol,
+                sigma0=0.5,
+                ranker="2rd",
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds[12:24]
+        ] + [
+            EvolutionStrategyEmitter(
+                archive,
+                x0=initial_sol,
+                sigma0=0.5,
+                ranker="2imp",
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds[24:36]
+        ] + [
+            IsoLineEmitter(
+                archive,
+                x0=initial_sol,
+                iso_sigma=0.01,
+                line_sigma=0.1,
+                batch_size=batch_size,
+                seed=s,
+            ) for s in emitter_seeds[36:]
         ]
     elif algorithm == "cma_me_mixed":
         emitters = [
@@ -321,14 +366,23 @@ def create_scheduler(algorithm,
                                         seed=s) for s in emitter_seeds
         ]
 
-    print(
-        f"Created Scheduler for {algorithm} with learning rate {learning_rate} "
-        f"and add mode {mode}, using solution dim {solution_dim} and archive "
-        f"dims {archive_dims}.")
-    return Scheduler(archive,
-                     emitters,
-                     result_archive=result_archive,
-                     add_mode=mode)
+    if algorithm == "me_map_elites":
+        scheduler = BanditScheduler(archive,
+                                    emitters,
+                                    num_active=12,
+                                    reselect="terminated")
+        scheduler_name = "BanditScheduler"
+    else:
+        scheduler = Scheduler(archive,
+                              emitters,
+                              result_archive=result_archive,
+                              add_mode=mode)
+        scheduler_name = "Scheduler"
+
+    print(f"Create {scheduler_name} for {algorithm} with learning rate "
+          f"{learning_rate} and add mode {mode}, using solution dim "
+          f"{solution_dim} and archive dims {archive_dims}.")
+    return scheduler
 
 
 def save_heatmap(archive, heatmap_path):
@@ -376,7 +430,7 @@ def sphere_main(algorithm,
     if dim is None:
         if algorithm in ["cma_mega", "cma_mega_adam", "cma_maega"]:
             dim = 1_000
-        elif algorithm in ["cma_mae"]:
+        elif algorithm in ["cma_mae", "me_map_elites"]:
             dim = 100
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
@@ -393,10 +447,15 @@ def sphere_main(algorithm,
                 "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
         ]:
             itrs = 4500
+        elif algorithm in ["me_map_elites"]:
+            itrs = 20_000
 
     # Use default archive_dim for each algorithm.
     if archive_dims is None:
-        if algorithm in ["cma_mega", "cma_mega_adam", "cma_mae", "cma_maega"]:
+        if algorithm in [
+                "cma_mega", "cma_mega_adam", "cma_mae", "cma_maega",
+                "me_map_elites"
+        ]:
             archive_dims = (100, 100)
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
@@ -411,7 +470,7 @@ def sphere_main(algorithm,
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
                 "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed",
-                "cma_mega", "cma_mega_adam"
+                "cma_mega", "cma_mega_adam", "me_map_elites"
         ]:
             learning_rate = 1.0
 
