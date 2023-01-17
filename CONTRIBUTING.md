@@ -163,6 +163,9 @@ the repo. To create a tutorial:
 1. Make sure that the only level 1 heading (e.g. `# Awesome Tutorial`) is the
    title at the top of the notebook. Subsequent titles should be level 2 (e.g.
    `## Level 2 Heading`) or higher.
+1. If linking to the pyribs documentation, make sure to link to pages in the
+   `latest` version on ReadTheDocs, i.e. your links should start with
+   `https://docs.pyribs.org/en/latest/`
 1. Add an entry into the toctree in `docs/tutorials.md` and add it to one of the
    lists of tutorials.
 1. Check that the tutorial shows up on the Tutorials page when serving the docs.
