@@ -23,13 +23,19 @@ class BanditScheduler:
     Args:
         archive (ribs.archives.ArchiveBase): An archive object, e.g. one
             selected from :mod:`ribs.archives`.
-        emitters (list of ribs.archives.EmitterBase): A pool of emitter objects
-            to be selected from, e.g. :class:`ribs.emitters.GaussianEmitter`.
-        num_active (int): The number of emitters used for ask-tell.
+        emitter_pool (list of ribs.archives.EmitterBase): A pool of emitters to
+            select from, e.g. :class:`ribs.emitters.GaussianEmitter`.
+        num_active (int): The number of active emitters at a time. Active
+            emitters are used when calling ask-tell.
         zeta (float): Hyperparamter of UBC1 that balances the trade-off between
             the accuracy and the uncertainty of the emitters. Increasing this
             parameter will emphasize the uncertainty of the emitters. Refer to
             the original paper for more information.
+        reselect (str): Indicates how emitters are reselected from the pool.
+            The default is "terminated", where only terminated/restarted emitters
+            are deactivated and reselected (but they might be selected again).
+            Alternatively, use "all" to reselect all active emitters every
+            iteration.
         add_mode (str): Indicates how solutions should be added to the archive.
             The default is "batch", which adds all solutions with one call to
             :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single"
@@ -58,6 +64,7 @@ class BanditScheduler:
                  emitter_pool,
                  num_active,
                  *,
+                 reselect="terminated",
                  zeta=0.05,
                  result_archive=None,
                  add_mode="batch"):
@@ -87,6 +94,10 @@ class BanditScheduler:
                     f"Emitter {idx} has dimension {emitter.solution_dim}, "
                     f"while Emitter 0 has dimension {self._solution_dim}")
 
+        if reselect not in ["terminated", "all"]:
+            raise ValueError("add_mode must either be 'terminated' or 'all',"
+                             f"but it was '{reselect}'")
+
         if add_mode not in ["single", "batch"]:
             raise ValueError("add_mode must either be 'batch' or 'single', but "
                              f"it was '{add_mode}'")
@@ -102,6 +113,7 @@ class BanditScheduler:
         self._num_active = num_active
         self._add_mode = add_mode
         self._result_archive = result_archive
+        self._reselect = reselect
 
         # Boolean mask of the active emitters. Initializes to the first
         # num_active emitters in the emitter pool.
@@ -167,31 +179,39 @@ class BanditScheduler:
                                self._last_called)
         self._last_called = "ask"
 
-        # Remove emitters that have terminated/restarted.
-        emitter_restarts = np.array(
-            [emitter.restarts for emitter in self._emitter_pool])
-        terminated = emitter_restarts > self._restarts
-        self._active_arr[terminated] = False
+        if self._reselect == "terminated":
+            # Reselect terminated emitters. Emitters are terminated if their
+            # restarts have incremented.
+            emitter_restarts = np.array(
+                [emitter.restarts for emitter in self._emitter_pool])
+            reselect = emitter_restarts > self._restarts
 
-        self._restarts = emitter_restarts
+            self._restarts = emitter_restarts
+        else:
+            # Reselect all emitters.
+            reselect = self._active_arr
 
-        # Only replace the number of emitters that have restarted.
-        n_restarted = terminated.sum()
+        # Deactivate emitters to be reselected.
+        self._active_arr[reselect] = False
+
+        # The number of emitter that should be replaced.
+        n_reselect = reselect.sum()
 
         # Select emitters based on the UCB1 formula.
-        # In addition to that, the ranking of emitters follow these rules:
+        # The ranking of emitters also follows these rules:
         # - Emitters that have never been selected are prioritized.
-        # - Only emitters that have terminated/restarted will be replaced from
-        #   the active list.
+        # - If reselect is "terminated", then only active emitters that have
+        #   terminated/restarted will be reselected. Otherwise, if reselect is
+        #   "all", then all emitters are reselected.
         update_ucb = (self._selection != 0)
-        if terminated.any():
+        if reselect.any():
             ucb1 = np.full_like(self._emitter_pool, np.inf)
             ucb1[update_ucb] = (
                 self._success[update_ucb] / self._selection[update_ucb] +
                 self._zeta * np.sqrt(
                     np.log(self._success.sum()) / self._selection[update_ucb]))
-            # Activate top n_restarted emitters.
-            activate = np.argsort(ucb1)[-n_restarted:]
+            # Activate top n_reselect emitters.
+            activate = np.argsort(ucb1)[-n_reselect:]
             self._active_arr[activate] = True
 
         self._solution_batch = []
