@@ -265,11 +265,11 @@ pyribs users include:
 - [Chair of Statistical Learning and Data Science (LMU Munich)](https://www.slds.stat.uni-muenchen.de/)
 - [Game Innovation Lab (New York University)](https://game.engineering.nyu.edu)
 - [Giovanni Iacca (University of Trento)](https://sites.google.com/site/giovanniiacca/)
-- [ganyariya (University of Tsukuba)](https://github.com/ganyariya/mario_pytorch)
 - [HUAWEI Noah's Ark Lab](https://github.com/huawei-noah)
 - [ICAROS Lab (University of Southern California)](http://icaros.usc.edu/)
 - [Jacob Schrum (Southwestern University)](https://github.com/schrum2/PyribsForGameGAN)
 - [Lenia Research](https://lenia.world)
+- [Various](https://github.com/ganyariya/mario_pytorch) [researchers](https://direct.mit.edu/isal/proceedings/isal/33/112256) at the University of Tsukuba
 
 ### Publications
 
