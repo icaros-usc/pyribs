@@ -68,9 +68,8 @@ extras_require = {
         "check-wheel-contents==0.2.0",
     ],
 
-    # All dependencies above except dev and examples.
-    # NOTE: No need to manually remove the duplicates, setuptools automatically
-    # does that.
+    # All dependencies above except dev and examples. Don't worry if there are
+    # duplicate dependencies, since setuptools automatically handles duplicates.
     "all": [
         ### visualize ###
         "matplotlib>=3.0.0",
