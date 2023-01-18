@@ -66,7 +66,14 @@ extras_require = {
         "wheel==0.36.2",
         "twine==1.14.0",
         "check-wheel-contents==0.2.0",
-    ]
+    ],
+
+    # All dependencies above except dev and examples. Don't worry if there are
+    # duplicate dependencies, since setuptools automatically handles duplicates.
+    "all": [
+        ### visualize ###
+        "matplotlib>=3.0.0",
+    ],
 }
 
 setup(
