@@ -259,8 +259,8 @@ the CMA-ME algorithm.
 
 - [QDax](https://github.com/adaptive-intelligent-robotics/QDax): Implementations
   of QD algorithms in JAX. QDax is suitable if you want to run entire QD
-  algorithms on hardware accelerators in a matter of minutes, and particularly
-  useful if you need to interface with Brax environments.
+  algorithms on hardware accelerators in a matter of minutes, and it is
+  particularly useful if you need to interface with Brax environments.
 - [qdpy](https://gitlab.com/leo.cazenille/qdpy/): Python implementations of a
   wide variety of QD algorithms.
 - [sferes](https://github.com/sferes2/sferes2): Contains C++ implementations of
@@ -281,7 +281,9 @@ pyribs users include:
 - [ICAROS Lab (University of Southern California)](http://icaros.usc.edu/)
 - [Jacob Schrum (Southwestern University)](https://github.com/schrum2/PyribsForGameGAN)
 - [Lenia Research](https://lenia.world)
-- [Various](https://github.com/ganyariya/mario_pytorch) [researchers](https://direct.mit.edu/isal/proceedings/isal/33/112256) at the University of Tsukuba
+- [Various](https://github.com/ganyariya/mario_pytorch)
+  [researchers](https://direct.mit.edu/isal/proceedings/isal/33/112256) at the
+  University of Tsukuba
 
 ### Publications
 
