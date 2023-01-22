@@ -52,7 +52,8 @@ application:
 If you use pyribs in your research, please cite it as follows. Note that you
 will need to include the
 [hyperref](https://www.overleaf.com/learn/latex/Hyperlinks#Linking_web_addresses)
-package in order to use the `\url` command.
+package in order to use the `\url` command. Also consider citing any algorithms
+you use as shown [below](#citing-algorithms-in-pyribs).
 
 ```
 @misc{pyribs,
@@ -67,66 +68,6 @@ package in order to use the `\url` command.
   howpublished = {\url{https://github.com/icaros-usc/pyribs}},
 }
 ```
-
-If you use the following algorithms, please also cite their relevant papers:
-
-- **CMA-ME:** [Fontaine 2020](https://dl.acm.org/doi/10.1145/3377930.3390232)
-  ```
-  @inproceedings{10.1145/3377930.3390232,
-    author = {Fontaine, Matthew C. and Togelius, Julian and Nikolaidis, Stefanos and Hoover, Amy K.},
-    title = {Covariance Matrix Adaptation for the Rapid Illumination of Behavior Space},
-    year = {2020},
-    isbn = {9781450371285},
-    publisher = {Association for Computing Machinery},
-    address = {New York, NY, USA},
-    url = {https://doi.org/10.1145/3377930.3390232},
-    doi = {10.1145/3377930.3390232},
-    booktitle = {Proceedings of the 2020 Genetic and Evolutionary Computation Conference},
-    pages = {94–102},
-    numpages = {9},
-    location = {Canc\'{u}n, Mexico},
-    series = {GECCO '20}
-  }
-  ```
-- **CMA-MEGA:**
-  [Fontaine 2021](https://proceedings.neurips.cc/paper/2021/hash/532923f11ac97d3e7cb0130315b067dc-Abstract.html)
-  ```
-  @inproceedings{NEURIPS2021_532923f1,
-   author = {Fontaine, Matthew and Nikolaidis, Stefanos},
-   booktitle = {Advances in Neural Information Processing Systems},
-   editor = {M. Ranzato and A. Beygelzimer and Y. Dauphin and P.S. Liang and J. Wortman Vaughan},
-   pages = {10040--10052},
-   publisher = {Curran Associates, Inc.},
-   title = {Differentiable Quality Diversity},
-   url = {https://proceedings.neurips.cc/paper/2021/file/532923f11ac97d3e7cb0130315b067dc-Paper.pdf},
-   volume = {34},
-   year = {2021}
-  }
-  ```
-- **CMA-MAE:** [Fontaine 2022](https://arxiv.org/abs/2205.10752)
-  ```
-  @misc{cmamae,
-    doi = {10.48550/ARXIV.2205.10752},
-    url = {https://arxiv.org/abs/2205.10752},
-    author = {Fontaine, Matthew C. and Nikolaidis, Stefanos},
-    keywords = {Machine Learning (cs.LG), Artificial Intelligence (cs.AI), FOS: Computer and information sciences, FOS: Computer and information sciences},
-    title = {Covariance Matrix Adaptation MAP-Annealing},
-    publisher = {arXiv},
-    year = {2022},
-    copyright = {arXiv.org perpetual, non-exclusive license}
-  }
-  ```
-- **Scalable CMA-MAE:** [Tjanaka 2022](https://arxiv.org/abs/2210.02622)
-  ```
-  @misc{scalablecmamae,
-        title={Training Diverse High-Dimensional Controllers by Scaling Covariance Matrix Adaptation MAP-Annealing},
-        author={Bryon Tjanaka and Matthew C. Fontaine and Aniruddha Kalkar and Stefanos Nikolaidis},
-        year={2022},
-        eprint={2210.02622},
-        archivePrefix={arXiv},
-        primaryClass={cs.RO}
-  }
-  ```
 
 ## Usage
 
@@ -255,17 +196,6 @@ We thank [Amy K. Hoover](http://amykhoover.com/) and
 [Julian Togelius](http://julian.togelius.com/) for their contributions deriving
 the CMA-ME algorithm.
 
-## Additional QD Libraries
-
-- [QDax](https://github.com/adaptive-intelligent-robotics/QDax): Implementations
-  of QD algorithms in JAX. QDax is suitable if you want to run entire QD
-  algorithms on hardware accelerators in a matter of minutes, and it is
-  particularly useful if you need to interface with Brax environments.
-- [qdpy](https://gitlab.com/leo.cazenille/qdpy/): Python implementations of a
-  wide variety of QD algorithms.
-- [sferes](https://github.com/sferes2/sferes2): Contains C++ implementations of
-  QD algorithms; can also handle discrete domains.
-
 ## Users
 
 pyribs users include:
@@ -295,6 +225,79 @@ For the list of publications which use pyribs, refer to our
 See the
 [GitHub dependency graph](https://github.com/icaros-usc/pyribs/network/dependents)
 for the public GitHub repositories which depend on pyribs.
+
+## Citing Algorithms in pyribs
+
+If you use the following algorithms, please also cite their relevant papers:
+
+- **CMA-ME:** [Fontaine 2020](https://dl.acm.org/doi/10.1145/3377930.3390232)
+  ```
+  @inproceedings{10.1145/3377930.3390232,
+    author = {Fontaine, Matthew C. and Togelius, Julian and Nikolaidis, Stefanos and Hoover, Amy K.},
+    title = {Covariance Matrix Adaptation for the Rapid Illumination of Behavior Space},
+    year = {2020},
+    isbn = {9781450371285},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    url = {https://doi.org/10.1145/3377930.3390232},
+    doi = {10.1145/3377930.3390232},
+    booktitle = {Proceedings of the 2020 Genetic and Evolutionary Computation Conference},
+    pages = {94–102},
+    numpages = {9},
+    location = {Canc\'{u}n, Mexico},
+    series = {GECCO '20}
+  }
+  ```
+- **CMA-MEGA:**
+  [Fontaine 2021](https://proceedings.neurips.cc/paper/2021/hash/532923f11ac97d3e7cb0130315b067dc-Abstract.html)
+  ```
+  @inproceedings{NEURIPS2021_532923f1,
+   author = {Fontaine, Matthew and Nikolaidis, Stefanos},
+   booktitle = {Advances in Neural Information Processing Systems},
+   editor = {M. Ranzato and A. Beygelzimer and Y. Dauphin and P.S. Liang and J. Wortman Vaughan},
+   pages = {10040--10052},
+   publisher = {Curran Associates, Inc.},
+   title = {Differentiable Quality Diversity},
+   url = {https://proceedings.neurips.cc/paper/2021/file/532923f11ac97d3e7cb0130315b067dc-Paper.pdf},
+   volume = {34},
+   year = {2021}
+  }
+  ```
+- **CMA-MAE:** [Fontaine 2022](https://arxiv.org/abs/2205.10752)
+  ```
+  @misc{cmamae,
+    doi = {10.48550/ARXIV.2205.10752},
+    url = {https://arxiv.org/abs/2205.10752},
+    author = {Fontaine, Matthew C. and Nikolaidis, Stefanos},
+    keywords = {Machine Learning (cs.LG), Artificial Intelligence (cs.AI), FOS: Computer and information sciences, FOS: Computer and information sciences},
+    title = {Covariance Matrix Adaptation MAP-Annealing},
+    publisher = {arXiv},
+    year = {2022},
+    copyright = {arXiv.org perpetual, non-exclusive license}
+  }
+  ```
+- **Scalable CMA-MAE:** [Tjanaka 2022](https://arxiv.org/abs/2210.02622)
+  ```
+  @misc{scalablecmamae,
+        title={Training Diverse High-Dimensional Controllers by Scaling Covariance Matrix Adaptation MAP-Annealing},
+        author={Bryon Tjanaka and Matthew C. Fontaine and Aniruddha Kalkar and Stefanos Nikolaidis},
+        year={2022},
+        eprint={2210.02622},
+        archivePrefix={arXiv},
+        primaryClass={cs.RO}
+  }
+  ```
+
+## Additional QD Libraries
+
+- [QDax](https://github.com/adaptive-intelligent-robotics/QDax): Implementations
+  of QD algorithms in JAX. QDax is suitable if you want to run entire QD
+  algorithms on hardware accelerators in a matter of minutes, and it is
+  particularly useful if you need to interface with Brax environments.
+- [qdpy](https://gitlab.com/leo.cazenille/qdpy/): Python implementations of a
+  wide variety of QD algorithms.
+- [sferes](https://github.com/sferes2/sferes2): Contains C++ implementations of
+  QD algorithms; can also handle discrete domains.
 
 ## License
 
