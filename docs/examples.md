@@ -8,11 +8,8 @@ examples/lunar_lander
 ```
 
 These examples provide single Python files with fewer explanations than
-tutorials. If running locally, install dependencies with:
-
-```bash
-pip install ribs[examples]
-```
+tutorials. If running locally, first install the dependencies listed at the top
+of each file.
 
 Here are the current examples:
 
