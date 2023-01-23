@@ -8,13 +8,8 @@ examples/lunar_lander
 ```
 
 These examples provide single Python files with fewer explanations than
-tutorials. If running locally, install dependencies with:
-
-```bash
-pip install ribs[examples]
-```
-
-Here are the current examples:
+tutorials. To run each example, first install the dependencies listed at the top
+of each file, then follow the usage instructions. Here are the current examples:
 
 - {doc}`examples/sphere`: Demonstrates how to set up recent QD algorithms and
   apply them to the sphere benchmark function.
