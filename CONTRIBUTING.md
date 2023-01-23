@@ -180,11 +180,12 @@ Examples are created in Python scripts stored under `examples/` in the repo, and
 their source is shown in the docs. To create an example:
 
 1. Write the Python script and save it under `examples/`.
+1. Add any dependencies at the top of the script with a `pip install` command
+   (see existing examples for a sample of how to do this).
 1. Add a shell command to `tests/examples.sh` that calls the script with
-   parameters that will make it run as quickly as possible. In the future, this
-   will help us ensure that the script has basic correctness.
-1. Add any dependencies needed to run the example into the `examples` extra in
-   `setup.py` (under `extras_require`).
+   parameters that will make it run as quickly as possible. This helps us ensure
+   that the script has basic correctness. Also call the `install_deps` function
+   on the script file before running the script.
 1. Add a Markdown file in the `docs/examples` directory with the same name as
    the Python file -- if the example is `examples/foobar.py`, the Markdown file
    will be `docs/examples/foobar.md`.

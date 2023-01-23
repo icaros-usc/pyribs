@@ -4,7 +4,6 @@
 # run.
 #
 # Usage:
-#   pip install .[visualize,examples]
 #   bash tests/examples.sh
 
 set -e  # Exit if any of the commands fail.
@@ -15,11 +14,17 @@ if [ ! -d "${TMPDIR}" ]; then
   mkdir "${TMPDIR}"
 fi
 
+function install_deps() {
+  install_cmd=$(grep "pip install" "$1")
+  $install_cmd
+}
+
 # Single-threaded for consistency.
 export OPENBLAS_NUM_THREADS=1
 export OMP_NUM_THREADS=1
 
 # sphere.py
+install_deps examples/sphere.py
 SPHERE_OUTPUT="${TMPDIR}/sphere_output"
 python examples/sphere.py map_elites --itrs 10 --outdir "${SPHERE_OUTPUT}"
 python examples/sphere.py line_map_elites --itrs 10 --outdir "${SPHERE_OUTPUT}"
@@ -42,6 +47,7 @@ python examples/sphere.py cma_mae --dim 20 --itrs 10 --learning_rate 0.01 --outd
 python examples/sphere.py cma_maega --dim 20 --itrs 10 --learning_rate 0.01 --outdir "${SPHERE_OUTPUT}"
 
 # lunar_lander.py
+install_deps examples/lunar_lander.py
 LUNAR_LANDER_OUTPUT="${TMPDIR}/lunar_lander_output"
 python examples/lunar_lander.py --iterations 5 --outdir "${LUNAR_LANDER_OUTPUT}"
 
