@@ -84,6 +84,7 @@ import fire
 import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
+import importlib
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
@@ -91,6 +92,558 @@ from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
 from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
+
+CONFIG = {
+    "map_elites": {
+        "dim": 20,
+        "iters": 4500,
+        "archive_dims": (500, 500),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "GaussianEmitter",
+                "kwargs": {
+                    "sigma": 0.5
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {
+                "add_mode": "batch"
+            }
+        }
+    },
+    "line_map_elites": {
+        "dim": 20,
+        "iters": 4500,
+        "archive_dims": (500, 500),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "IsoLineEmitter",
+                "kwargs": {
+                    "iso_sigma": 0.1,
+                    "line_sigma": 0.2
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "cvt_map_elites": {
+        "dim": None,
+        "iters": None,
+        "archive_dims": None,
+        "learning_rate": None,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "CVTArchive",
+            "kwargs": {
+                "cells": 10_000,
+                "samples": 100_000,
+                "use_kd_tree": True
+            }
+        },
+        "emitters": [
+            {
+                "class": "GaussianEmitter",
+                "kwargs": {
+                    "sigma": 0.5
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None,
+                "batch_size": 37
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "line_cvt_map_elites": {
+        "dim": None,
+        "iters": None,
+        "archive_dims": None,
+        "learning_rate": None,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+            "archive": {
+            "class": "CVTArchive",
+            "kwargs": {
+                "cells": 10_000,
+                "samples": 100_000,
+                "use_kd_tree": True
+            }
+        },
+        "emitters": [
+            {
+                "class": "GaussianEmitter",
+                "kwargs": {
+                    "iso_sigma": 0.1,
+                    "line_sigma": 0.2
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None,
+                "batch_size": 37
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+    },
+    "me_map_elites": {
+        "dim": 100,
+        "iters": 20_000,
+        "archive_dims": (100, 100),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 50,
+        "num_emitters": 48,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "obj"
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": 12,
+                "batch_size": 50
+            },
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2nd"
+                },
+                "emitter_seeds_start": 12,
+                "emitter_seeds_end": 24,
+                "batch_size": 50
+            },
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2imp"
+                },
+                "emitter_seeds_start": 24,
+                "emitter_seeds_end": 36,
+                "batch_size": 50
+            },
+            {
+                "class": "IsoLineEmitter",
+                "kwargs": {
+                    "iso_sigma": 0.01,
+                    "line_sigma": 0.1
+                },
+                "emitter_seeds_start": 36,
+                "emitter_seeds_end": None,
+                "batch_size": 50
+            }
+        ],
+        "scheduler": {
+            "class": "BanditScheduler",
+            "kwargs": {
+                "num_active": 12,
+                "reselect": "terminated"
+            }
+        }
+
+    },
+    "cma_me_mixed": {
+        "dim": 20,
+        "iters": 4500,
+        "archive_dims": (500, 500),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2rd"
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": 7
+            },
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2imp"
+                },
+                "emitter_seeds_start": 7,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "cma_me_imp": {
+        "dim": 20,
+        "iters": 4500,
+        "archive_dims": (500, 500),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2imp",
+                    "selection_rule": "filter",
+                    "restart_rule": "no_improvement"
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "cma_me_imp_mu": {
+        "dim": 20,
+        "iters": 4500,
+        "archive_dims": (500, 500),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2imp",
+                    "selection_rule": "mu",
+                    "restart_rule": "no_improvement"
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "cma_me_rd": {
+        "dim": 20,
+        "iters": 4500,
+        "archive_dims": (500, 500),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2rd",
+                    "selection_rule": "filter",
+                    "restart_rule": "no_improvement"
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "cma_me_rd_mu": {
+        "dim": 20,
+        "iters": 4500,
+        "archive_dims": (500, 500),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2rd",
+                    "selection_rule": "mu",
+                    "restart_rule": "no_improvement"
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "cma_me_opt": {
+        "dim": 20,
+        "iters": 4500,
+        "archive_dims": (500, 500),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "obj",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic"
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "cma_mega": {
+        "dim": 1_000,
+        "iters": 4500,
+        "archive_dims": (100, 100),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": True,
+        "batch_size": 36,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "GradientArborescenceEmitter",
+                "kwargs": {
+                    "sigma0": 10.0,
+                    "lr": 1.0,
+                    "grad_opt": "gradient_ascent",
+                    "selection_rule": "mu",
+                    "bounds": None
+                },
+                "emitter_seeds_start": None,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "cma_mega_adam": {
+        "dim": 1_000,
+        "iters": 10_000,
+        "archive_dims": (100, 100),
+        "learning_rate": 1.0,
+        "use_result_archive": False,
+        "is_dqd": True,
+        "batch_size": 36,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [
+            {
+                "class": "GradientArborescenceEmitter",
+                "kwargs": {
+                    "sigma0": 10.0,
+                    "lr": 0.002,
+                    "grad_opt": "adam",
+                    "selection_rule": "mu",
+                    "bounds": None
+                },
+                "emitter_seeds_start": None,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "cma_mae": {
+        "dim": 100,
+        "iters": 10_000,
+        "archive_dims": (100, 100),
+        "learning_rate": 0.01,
+        "use_result_archive": True,
+        "is_dqd": False,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": 0
+            }
+        },
+        "emitters": [
+            {
+                "class": "EvolutionStrategyEmitter",
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "imp",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic"
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    },
+    "cma_maega": {
+        "dim": 1_000,
+        "iters": 10_000,
+        "archive_dims": (100, 100),
+        "learning_rate": 0.01,
+        "use_result_archive": True,
+        "is_dqd": True,
+        "batch_size": 37,
+        "num_emitters": 15,
+        "archive": {
+            "class": "GridArchive",
+            "kwargs": {
+                "threshold_min": 0
+            }
+        },
+        "emitters": [
+            {
+                "class": "GradientArborescenceEmitter",
+                "kwargs": {
+                    "sigma0": 10.0,
+                    "lr": 1.0,
+                    "ranker": "imp",
+                    "grad_opt": "gradient_ascent",
+                    "restart_rule": "basic",
+                    "bounds": None
+                },
+                "emitter_seeds_start": 0,
+                "emitter_seeds_end": None
+            }
+        ],
+        "scheduler": {
+            "class": "Scheduler",
+            "kwargs": {}
+        }
+
+    }
+}
 
 def sphere(solution_batch):
     """Sphere function evaluation and measures for a batch of solutions.
@@ -169,33 +722,17 @@ def create_scheduler(algorithm,
     max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     initial_sol = np.zeros(solution_dim)
-    batch_size = 37
-    num_emitters = 15
     mode = "batch"
 
-    if algorithm in ["cma_mae", "cma_maega"]:
-        threshold_min = 0
-    else:
-        threshold_min = -np.inf
-
-    if algorithm in ["me_map_elites"]:
-        batch_size = 50
-        num_emitters = 48
+    config = CONFIG[algorithm]
 
     # Create archive.
-    if algorithm in ["cvt_map_elites", "line_cvt_map_elites"]:
-        archive = CVTArchive(solution_dim=solution_dim,
-                             cells=10_000,
-                             ranges=bounds,
-                             samples=100_000,
-                             use_kd_tree=True)
+    archive_module = importlib.import_module("ribs.archives")
+    archive_class = getattr(archive_module, config["archive"]["class"])
+    if config["archive"]["class"] == "GridArchive":
+        archive = archive_class(solution_dim=solution_dim, ranges=bounds, dims=archive_dims, seed=seed, **config["archive"]["kwargs"])
     else:
-        archive = GridArchive(solution_dim=solution_dim,
-                              dims=archive_dims,
-                              ranges=bounds,
-                              learning_rate=learning_rate,
-                              threshold_min=threshold_min,
-                              seed=seed)
+        archive = archive_class(solution_dim=solution_dim, ranges=bounds, **config["archive"]["kwargs"])
 
     # Create result archive.
     result_archive = None
@@ -207,177 +744,24 @@ def create_scheduler(algorithm,
 
     # Create emitters. Each emitter needs a different seed, so that they do not
     # all do the same thing.
-    emitter_seeds = [None] * num_emitters if seed is None else np.arange(
-        seed, seed + num_emitters)
-    if algorithm in ["map_elites", "cvt_map_elites"]:
-        emitters = [
-            GaussianEmitter(
-                archive,
-                sigma=0.5,
-                x0=initial_sol,
-                batch_size=batch_size,
-                seed=s,
-            ) for s in emitter_seeds
-        ]
-    elif algorithm in ["line_map_elites", "line_cvt_map_elites"]:
-        emitters = [
-            IsoLineEmitter(
-                archive,
-                x0=initial_sol,
-                iso_sigma=0.1,
-                line_sigma=0.2,
-                batch_size=batch_size,
-                seed=s,
-            ) for s in emitter_seeds
-        ]
-    elif algorithm == "me_map_elites":
-        batch_size = 50
-        emitters = [
-            EvolutionStrategyEmitter(
-                archive,
-                x0=initial_sol,
-                sigma0=0.5,
-                ranker="obj",
-                batch_size=batch_size,
-                seed=s,
-            ) for s in emitter_seeds[:12]
-        ] + [
-            EvolutionStrategyEmitter(
-                archive,
-                x0=initial_sol,
-                sigma0=0.5,
-                ranker="2rd",
-                batch_size=batch_size,
-                seed=s,
-            ) for s in emitter_seeds[12:24]
-        ] + [
-            EvolutionStrategyEmitter(
-                archive,
-                x0=initial_sol,
-                sigma0=0.5,
-                ranker="2imp",
-                batch_size=batch_size,
-                seed=s,
-            ) for s in emitter_seeds[24:36]
-        ] + [
-            IsoLineEmitter(
-                archive,
-                x0=initial_sol,
-                iso_sigma=0.01,
-                line_sigma=0.1,
-                batch_size=batch_size,
-                seed=s,
-            ) for s in emitter_seeds[36:]
-        ]
-    elif algorithm == "cma_me_mixed":
-        emitters = [
-            EvolutionStrategyEmitter(
-                archive,
-                x0=initial_sol,
-                sigma0=0.5,
-                ranker="2rd",
-                batch_size=batch_size,
-                seed=s,
-            ) for s in emitter_seeds[:7]
-        ] + [
-            EvolutionStrategyEmitter(
-                archive,
-                x0=initial_sol,
-                sigma0=0.5,
-                ranker="2imp",
-                batch_size=batch_size,
-                seed=s,
-            ) for s in emitter_seeds[7:]
-        ]
-    elif algorithm.startswith("cma_me_"):
-        ranker, selection_rule, restart_rule = {
-            "cma_me_imp": ("2imp", "filter", "no_improvement"),
-            "cma_me_imp_mu": ("2imp", "mu", "no_improvement"),
-            "cma_me_rd": ("2rd", "filter", "no_improvement"),
-            "cma_me_rd_mu": ("2rd", "mu", "no_improvement"),
-            "cma_me_opt": ("obj", "mu", "basic"),
-        }[algorithm]
-        emitters = [
-            EvolutionStrategyEmitter(
-                archive,
-                x0=initial_sol,
-                sigma0=0.5,
-                ranker=ranker,
-                selection_rule=selection_rule,
-                restart_rule=restart_rule,
-                batch_size=batch_size,
-                seed=s,
-            ) for s in emitter_seeds
-        ]
-    elif algorithm == "cma_mega":
-        # Note that only one emitter is used for cma_mega. This is to be
-        # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
-        emitters = [
-            GradientArborescenceEmitter(
-                archive,
-                x0=initial_sol,
-                sigma0=10.0,
-                lr=1.0,
-                grad_opt="gradient_ascent",
-                selection_rule="mu",
-                bounds=None,
-                batch_size=batch_size - 1,  # 1 solution is returned by ask_dqd
-                seed=emitter_seeds[0])
-        ]
-    elif algorithm == "cma_mega_adam":
-        # Note that only one emitter is used for cma_mega_adam. This is to be
-        # consistent with Fontaine 2021 <https://arxiv.org/abs/2106.03894>.
-        emitters = [
-            GradientArborescenceEmitter(
-                archive,
-                x0=initial_sol,
-                sigma0=10.0,
-                lr=0.002,
-                grad_opt="adam",
-                selection_rule="mu",
-                bounds=None,
-                batch_size=batch_size - 1,  # 1 solution is returned by ask_dqd
-                seed=emitter_seeds[0])
-        ]
-    elif algorithm == "cma_mae":
-        emitters = [
-            EvolutionStrategyEmitter(
-                archive,
-                x0=initial_sol,
-                sigma0=0.5,
-                ranker="imp",
-                selection_rule="mu",
-                restart_rule="basic",
-                batch_size=batch_size,
-                seed=s,
-            ) for s in emitter_seeds
-        ]
-    elif algorithm in ["cma_maega"]:
-        emitters = [
-            GradientArborescenceEmitter(archive,
-                                        x0=initial_sol,
-                                        sigma0=10.0,
-                                        lr=1.0,
-                                        ranker="imp",
-                                        grad_opt="gradient_ascent",
-                                        restart_rule="basic",
-                                        bounds=None,
-                                        batch_size=batch_size,
-                                        seed=s) for s in emitter_seeds
-        ]
-
-    if algorithm == "me_map_elites":
-        scheduler = BanditScheduler(archive,
-                                    emitters,
-                                    num_active=12,
-                                    reselect="terminated")
-        scheduler_name = "BanditScheduler"
+    emitter_seeds = [None] * config["num_emitters"] if seed is None else np.arange(
+        seed, seed + config["num_emitters"])
+    emitter_module = importlib.import_module("ribs.emitters")
+    emitters = []
+    if algorithm in ["cma_mega", "cma_mega_adam"]:
+        for e in config["emitters"]:
+            emitter_class = getattr(emitter_module, e["class"])
+            emitters += [emitter_class(archive, x0=initial_sol, **e["kwargs"], batch_size=config["batch_size"], seed=emitter_seeds[0])]
     else:
-        scheduler = Scheduler(archive,
-                              emitters,
-                              result_archive=result_archive,
-                              add_mode=mode)
-        scheduler_name = "Scheduler"
+        for e in config["emitters"]:
+            emitter_class = getattr(emitter_module, e["class"])
+            emitters += [emitter_class(archive, x0=initial_sol, **e["kwargs"], batch_size=config["batch_size"], seed=s) for s in emitter_seeds[e["emitter_seeds_start"]: e["emitter_seeds_end"]]]
+
+    # Create Scheduler
+    scheduler_module = importlib.import_module("ribs.schedulers")
+    scheduler_class = getattr(scheduler_module, config["scheduler"]["class"])
+    scheduler_name = config["scheduler"]["class"]
+    scheduler = scheduler_class(archive, emitters, result_archive=result_archive, mode=mode, **config["scheduler"]["kwargs"])
 
     print(f"Create {scheduler_name} for {algorithm} with learning rate "
           f"{learning_rate} and add mode {mode}, using solution dim "
@@ -427,60 +811,24 @@ def sphere_main(algorithm,
         seed (int): Seed for the algorithm. By default, there is no seed.
     """
     # Use default dim for each algorithm.
-    if dim is None:
-        if algorithm in ["cma_mega", "cma_mega_adam", "cma_maega"]:
-            dim = 1_000
-        elif algorithm in ["cma_mae", "me_map_elites"]:
-            dim = 100
-        elif algorithm in [
-                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
-        ]:
-            dim = 20
+    dim = CONFIG[algorithm]["dim"] if dim == None else dim
 
     # Use default itrs for each algorithm.
-    if itrs is None:
-        if algorithm in ["cma_mega", "cma_mega_adam", "cma_mae", "cma_maega"]:
-            itrs = 10_000
-        elif algorithm in [
-                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
-        ]:
-            itrs = 4500
-        elif algorithm in ["me_map_elites"]:
-            itrs = 20_000
+    itrs = CONFIG[algorithm]["itrs"] if itrs == None else itrs
 
     # Use default archive_dim for each algorithm.
-    if archive_dims is None:
-        if algorithm in [
-                "cma_mega", "cma_mega_adam", "cma_mae", "cma_maega",
-                "me_map_elites"
-        ]:
-            archive_dims = (100, 100)
-        elif algorithm in [
-                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
-        ]:
-            archive_dims = (500, 500)
+    archive_dims = CONFIG[algorithm]["archive_dims"] if archive_dims == None else archive_dims
 
     # Use default learning_rate for each algorithm.
-    if learning_rate is None:
-        if algorithm in ["cma_mae", "cma_maega"]:
-            learning_rate = 0.01
-        elif algorithm in [
-                "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed",
-                "cma_mega", "cma_mega_adam", "me_map_elites"
-        ]:
-            learning_rate = 1.0
+    learning_rate = CONFIG[algorithm]["learning_rate"] if learning_rate == None else learning_rate
 
     name = f"{algorithm}_{dim}"
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
 
-    is_dqd = algorithm in ["cma_mega", "cma_mega_adam", "cma_maega"]
-    use_result_archive = algorithm in ["cma_mae", "cma_maega"]
+    is_dqd = CONFIG[algorithm]["is_dqd"]
+    use_result_archive = CONFIG[algorithm]["use_result_archive"]
 
     scheduler = create_scheduler(algorithm,
                                  dim,
@@ -551,7 +899,6 @@ def sphere_main(algorithm,
         plt.clf()
     with (outdir / f"{name}_metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
-
 
 if __name__ == '__main__':
     fire.Fire(sphere_main)
