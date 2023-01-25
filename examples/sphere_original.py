@@ -1,5 +1,8 @@
 """Runs various QD algorithms on the Sphere function.
 
+Install the following dependencies before running this example:
+    pip install ribs[visualize] tqdm fire
+
 The sphere function in this example is adapted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to
 the range [-5.12, 5.12], and the optimum is moved from [0,..] to [0.4 * 5.12 =
@@ -434,7 +437,7 @@ def sphere_main(algorithm,
             dim = 100
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed", "cvt_map_elites", "line_cvt_map_elites"
         ]:
             dim = 20
 
@@ -444,7 +447,7 @@ def sphere_main(algorithm,
             itrs = 10_000
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed", "cvt_map_elites", "line_cvt_map_elites"
         ]:
             itrs = 4500
         elif algorithm in ["me_map_elites"]:
@@ -459,7 +462,7 @@ def sphere_main(algorithm,
             archive_dims = (100, 100)
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
-                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed"
+                "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed", "cvt_map_elites", "line_cvt_map_elites"
         ]:
             archive_dims = (500, 500)
 
@@ -470,7 +473,7 @@ def sphere_main(algorithm,
         elif algorithm in [
                 "map_elites", "line_map_elites", "cma_me_imp", "cma_me_imp_mu",
                 "cma_me_rd", "cma_me_rd_mu", "cma_me_opt", "cma_me_mixed",
-                "cma_mega", "cma_mega_adam", "me_map_elites"
+                "cma_mega", "cma_mega_adam", "me_map_elites", "cvt_map_elites", "line_cvt_map_elites"
         ]:
             learning_rate = 1.0
 

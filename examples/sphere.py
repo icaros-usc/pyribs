@@ -102,7 +102,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -115,15 +114,12 @@ CONFIG = {
                 "kwargs": {
                     "sigma": 0.5
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None
+                "num_emitters": 15
             }
         ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {
-                "add_mode": "batch"
-            }
+            "kwargs": {}
         }
     },
     "line_map_elites": {
@@ -134,7 +130,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -148,8 +143,7 @@ CONFIG = {
                     "iso_sigma": 0.1,
                     "line_sigma": 0.2
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None
+                "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -159,14 +153,13 @@ CONFIG = {
 
     },
     "cvt_map_elites": {
-        "dim": None,
-        "iters": None,
-        "archive_dims": None,
-        "learning_rate": None,
+        "dim": 20,
+        "iters": 4500,
+        "archive_dims": (500, 500),
+        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": CVTArchive,
             "kwargs": {
@@ -181,9 +174,7 @@ CONFIG = {
                 "kwargs": {
                     "sigma": 0.5
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None,
-                "batch_size": 37
+                "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -193,14 +184,13 @@ CONFIG = {
 
     },
     "line_cvt_map_elites": {
-        "dim": None,
-        "iters": None,
-        "archive_dims": None,
-        "learning_rate": None,
+        "dim": 20,
+        "iters": 4500,
+        "archive_dims": (500, 500),
+        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
             "archive": {
             "class": CVTArchive,
             "kwargs": {
@@ -211,14 +201,12 @@ CONFIG = {
         },
         "emitters": [
             {
-                "class": GaussianEmitter,
+                "class": IsoLineEmitter,
                 "kwargs": {
                     "iso_sigma": 0.1,
                     "line_sigma": 0.2
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None,
-                "batch_size": 37
+                "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -234,7 +222,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 50,
-        "num_emitters": 48,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -248,19 +235,15 @@ CONFIG = {
                     "sigma0": 0.5,
                     "ranker": "obj"
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": 12,
-                "batch_size": 50
+                "num_emitters": 12
             },
             {
                 "class": EvolutionStrategyEmitter,
                 "kwargs": {
                     "sigma0": 0.5,
-                    "ranker": "2nd"
+                    "ranker": "2rd"
                 },
-                "emitter_seeds_start": 12,
-                "emitter_seeds_end": 24,
-                "batch_size": 50
+                "num_emitters": 12
             },
             {
                 "class": EvolutionStrategyEmitter,
@@ -268,9 +251,7 @@ CONFIG = {
                     "sigma0": 0.5,
                     "ranker": "2imp"
                 },
-                "emitter_seeds_start": 24,
-                "emitter_seeds_end": 36,
-                "batch_size": 50
+                "num_emitters": 12
             },
             {
                 "class": IsoLineEmitter,
@@ -278,9 +259,7 @@ CONFIG = {
                     "iso_sigma": 0.01,
                     "line_sigma": 0.1
                 },
-                "emitter_seeds_start": 36,
-                "emitter_seeds_end": None,
-                "batch_size": 50
+                "num_emitters": 12
             }
         ],
         "scheduler": {
@@ -300,7 +279,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -314,8 +292,7 @@ CONFIG = {
                     "sigma0": 0.5,
                     "ranker": "2rd"
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": 7
+                "num_emitters": 7
             },
             {
                 "class": EvolutionStrategyEmitter,
@@ -323,8 +300,7 @@ CONFIG = {
                     "sigma0": 0.5,
                     "ranker": "2imp"
                 },
-                "emitter_seeds_start": 7,
-                "emitter_seeds_end": None
+                "num_emitters": 8
             }
         ],
         "scheduler": {
@@ -341,7 +317,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -357,8 +332,7 @@ CONFIG = {
                     "selection_rule": "filter",
                     "restart_rule": "no_improvement"
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None
+                "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -375,7 +349,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -391,8 +364,7 @@ CONFIG = {
                     "selection_rule": "mu",
                     "restart_rule": "no_improvement"
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None
+                "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -409,7 +381,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -425,8 +396,7 @@ CONFIG = {
                     "selection_rule": "filter",
                     "restart_rule": "no_improvement"
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None
+               "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -443,7 +413,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -459,8 +428,7 @@ CONFIG = {
                     "selection_rule": "mu",
                     "restart_rule": "no_improvement"
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None
+                "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -477,7 +445,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -493,8 +460,7 @@ CONFIG = {
                     "selection_rule": "mu",
                     "restart_rule": "basic"
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None
+                "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -511,7 +477,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": True,
         "batch_size": 36,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -528,8 +493,7 @@ CONFIG = {
                     "selection_rule": "mu",
                     "bounds": None
                 },
-                "emitter_seeds_start": None,
-                "emitter_seeds_end": None
+                "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -546,7 +510,6 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": True,
         "batch_size": 36,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -563,8 +526,7 @@ CONFIG = {
                     "selection_rule": "mu",
                     "bounds": None
                 },
-                "emitter_seeds_start": None,
-                "emitter_seeds_end": None
+                "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -581,7 +543,6 @@ CONFIG = {
         "use_result_archive": True,
         "is_dqd": False,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -597,15 +558,13 @@ CONFIG = {
                     "selection_rule": "mu",
                     "restart_rule": "basic"
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None
+                "num_emitters": 15
             }
         ],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "cma_maega": {
         "dim": 1_000,
@@ -615,7 +574,6 @@ CONFIG = {
         "use_result_archive": True,
         "is_dqd": True,
         "batch_size": 37,
-        "num_emitters": 15,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -633,8 +591,7 @@ CONFIG = {
                     "restart_rule": "basic",
                     "bounds": None
                 },
-                "emitter_seeds_start": 0,
-                "emitter_seeds_end": None
+                "num_emitters": 15
             }
         ],
         "scheduler": {
@@ -711,16 +668,15 @@ def create_scheduler(config,
     Returns:
         ribs.schedulers.Scheduler: A ribs scheduler for running the algorithm.
     """
-    max_bound = solution_dim / 2 * 5.12
-    bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
-    initial_sol = np.zeros(solution_dim)
-    mode = "batch"
-    
     solution_dim = config["dim"]
     archive_dims = config["archive_dims"]
     learning_rate = config["learning_rate"]
     use_result_archive = config["use_result_archive"]
 
+    max_bound = solution_dim / 2 * 5.12
+    bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
+    initial_sol = np.zeros(solution_dim)
+    mode = "batch"
 
     # Create archive.
     archive_class = config["archive"]["class"]
@@ -739,9 +695,11 @@ def create_scheduler(config,
 
     # Create emitters. Each emitter needs a different seed, so that they do not
     # all do the same thing.
-    emitter_seeds = [None] * config["num_emitters"] if seed is None else np.arange(
-        seed, seed + config["num_emitters"])
+    num_emitters = sum(e["num_emitters"] for e in config["emitters"])
+    emitter_seeds = [None] * num_emitters if seed is None else np.arange(
+        seed, seed + num_emitters)
     emitters = []
+    seed_index = 0
     if algorithm in ["cma_mega", "cma_mega_adam"]:
         for e in config["emitters"]:
             emitter_class = e["class"]
@@ -749,11 +707,13 @@ def create_scheduler(config,
     else:
         for e in config["emitters"]:
             emitter_class = e["class"]
-            emitters += [emitter_class(archive, x0=initial_sol, **e["kwargs"], batch_size=config["batch_size"], seed=s) for s in emitter_seeds[e["emitter_seeds_start"]: e["emitter_seeds_end"]]]
+            emitters += [emitter_class(archive, x0=initial_sol, **e["kwargs"], batch_size=config["batch_size"], seed=s) for s in emitter_seeds[seed_index: seed_index + e["num_emitters"]]]
+            seed_index += e["num_emitters"]
 
     # Create Scheduler
     scheduler_class = config["scheduler"]["class"]
-    scheduler = scheduler_class(archive, emitters, result_archive=result_archive, mode=mode, **config["scheduler"]["kwargs"])
+    scheduler = scheduler_class(archive, emitters, result_archive=result_archive, add_mode=mode, **config["scheduler"]["kwargs"])
+    scheduler_name = scheduler.__class__.__name__
 
     print(f"Create {scheduler_name} for {algorithm} with learning rate "
           f"{learning_rate} and add mode {mode}, using solution dim "
