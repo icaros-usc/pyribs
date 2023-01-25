@@ -775,7 +775,7 @@ def sphere_main(algorithm,
     # Use default learning_rate for each algorithm.
     config["learning_rate"] = CONFIG[algorithm]["learning_rate"] if learning_rate is None else learning_rate
 
-    name = f"{algorithm}_{dim}"
+    name = f"{algorithm}_{config['dim']}"
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
