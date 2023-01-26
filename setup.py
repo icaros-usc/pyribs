@@ -24,21 +24,11 @@ install_requires = [
 
 extras_require = {
     "visualize": ["matplotlib>=3.0.0",],
-    # Dependencies for examples (NOT tutorials -- tutorial notebooks should
-    # install deps with cell magic and only depend on ribs and ribs[visualize]).
-    "examples": [
+    # All dependencies except for dev. Don't worry if there are duplicate
+    # dependencies, since setuptools automatically handles duplicates.
+    "all": [
+        ### visualize ###
         "matplotlib>=3.0.0",
-        # Strict since different gym may give different results. Note that we
-        # use gymnasium (https://gymnasium.farama.org), the successor to gym.
-        "gymnasium[box2d]==0.27.0",
-        "moviepy>=1.0.0",  # For recording videos in gym.
-        "fire>=0.4.0",
-        "tqdm>=4.0.0",
-
-        # Dask
-        "dask>=2.0.0",
-        "distributed>=2.0.0",
-        "bokeh>=2.0.0",  # Dask dashboard.
     ],
     "dev": [
         "pip>=20.3",
@@ -66,13 +56,6 @@ extras_require = {
         "wheel==0.36.2",
         "twine==1.14.0",
         "check-wheel-contents==0.2.0",
-    ],
-
-    # All dependencies above except dev and examples. Don't worry if there are
-    # duplicate dependencies, since setuptools automatically handles duplicates.
-    "all": [
-        ### visualize ###
-        "matplotlib>=3.0.0",
     ],
 }
 

@@ -1,5 +1,8 @@
 """Runs various QD algorithms on the Sphere function.
 
+Install the following dependencies before running this example:
+    pip install ribs[visualize] tqdm fire
+
 The sphere function in this example is adapted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to
 the range [-5.12, 5.12], and the optimum is moved from [0,..] to [0.4 * 5.12 =
