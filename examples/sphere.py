@@ -647,7 +647,6 @@ def sphere(solution_batch):
     )
 
 
-
 def create_scheduler(config,
                      algorithm,
                      seed=None):
