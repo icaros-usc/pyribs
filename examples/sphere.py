@@ -83,12 +83,12 @@ import json
 import time
 from pathlib import Path
 
+import copy
+import random
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
-import copy
-import random
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
@@ -770,7 +770,6 @@ def sphere_main(algorithm,
     if not outdir.is_dir():
         outdir.mkdir()
 
-    
     scheduler = create_scheduler(config,
                                  algorithm,
                                  seed=seed)
