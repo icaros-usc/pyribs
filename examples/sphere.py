@@ -533,7 +533,8 @@ CONFIG = {
         "archive": {
             "class": GridArchive,
             "kwargs": {
-                "threshold_min": 0
+                "threshold_min": 0,
+                "learning_rate": 0.01
             }
         },
         "emitters": [
@@ -543,8 +544,7 @@ CONFIG = {
                     "sigma0": 0.5,
                     "ranker": "imp",
                     "selection_rule": "mu",
-                    "restart_rule": "basic",
-                    "learning_rate": 0.01
+                    "restart_rule": "basic"
                 },
                 "num_emitters": 15
             }
@@ -819,7 +819,7 @@ def sphere_main(algorithm,
             metrics["Archive Coverage"]["x"].append(itr)
             metrics["Archive Coverage"]["y"].append(
                 result_archive.stats.coverage)
-            print(f"Iteration {itr} | Archive Coverage: "
+            tqdm.tqdm.write(f"Iteration {itr} | Archive Coverage: "
                   f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
                   f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
