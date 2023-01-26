@@ -85,6 +85,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 import copy
+import random
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
@@ -98,7 +99,6 @@ CONFIG = {
         "dim": 20,
         "iters": 4500,
         "archive_dims": (500, 500),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
@@ -126,7 +126,6 @@ CONFIG = {
         "dim": 20,
         "iters": 4500,
         "archive_dims": (500, 500),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
@@ -156,7 +155,6 @@ CONFIG = {
         "dim": 20,
         "iters": 4500,
         "archive_dims": (500, 500),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
@@ -187,7 +185,6 @@ CONFIG = {
         "dim": 20,
         "iters": 4500,
         "archive_dims": (500, 500),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
@@ -218,7 +215,6 @@ CONFIG = {
         "dim": 100,
         "iters": 20_000,
         "archive_dims": (100, 100),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 50,
@@ -275,7 +271,6 @@ CONFIG = {
         "dim": 20,
         "iters": 4500,
         "archive_dims": (500, 500),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
@@ -313,7 +308,6 @@ CONFIG = {
         "dim": 20,
         "iters": 4500,
         "archive_dims": (500, 500),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
@@ -345,7 +339,6 @@ CONFIG = {
         "dim": 20,
         "iters": 4500,
         "archive_dims": (500, 500),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
@@ -377,7 +370,6 @@ CONFIG = {
         "dim": 20,
         "iters": 4500,
         "archive_dims": (500, 500),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
@@ -409,7 +401,6 @@ CONFIG = {
         "dim": 20,
         "iters": 4500,
         "archive_dims": (500, 500),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
@@ -441,7 +432,6 @@ CONFIG = {
         "dim": 20,
         "iters": 4500,
         "archive_dims": (500, 500),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
@@ -473,7 +463,6 @@ CONFIG = {
         "dim": 1_000,
         "iters": 4500,
         "archive_dims": (100, 100),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": True,
         "batch_size": 36,
@@ -493,7 +482,7 @@ CONFIG = {
                     "selection_rule": "mu",
                     "bounds": None
                 },
-                "num_emitters": 15
+                "num_emitters": 1
             }
         ],
         "scheduler": {
@@ -506,7 +495,6 @@ CONFIG = {
         "dim": 1_000,
         "iters": 10_000,
         "archive_dims": (100, 100),
-        "learning_rate": 1.0,
         "use_result_archive": False,
         "is_dqd": True,
         "batch_size": 36,
@@ -526,7 +514,7 @@ CONFIG = {
                     "selection_rule": "mu",
                     "bounds": None
                 },
-                "num_emitters": 15
+                "num_emitters": 1
             }
         ],
         "scheduler": {
@@ -539,7 +527,6 @@ CONFIG = {
         "dim": 100,
         "iters": 10_000,
         "archive_dims": (100, 100),
-        "learning_rate": 0.01,
         "use_result_archive": True,
         "is_dqd": False,
         "batch_size": 37,
@@ -556,7 +543,8 @@ CONFIG = {
                     "sigma0": 0.5,
                     "ranker": "imp",
                     "selection_rule": "mu",
-                    "restart_rule": "basic"
+                    "restart_rule": "basic",
+                    "learning_rate": 0.01
                 },
                 "num_emitters": 15
             }
@@ -570,14 +558,14 @@ CONFIG = {
         "dim": 1_000,
         "iters": 10_000,
         "archive_dims": (100, 100),
-        "learning_rate": 0.01,
         "use_result_archive": True,
         "is_dqd": True,
         "batch_size": 37,
         "archive": {
             "class": GridArchive,
             "kwargs": {
-                "threshold_min": 0
+                "threshold_min": 0,
+                "learning_rate": 0.01
             }
         },
         "emitters": [
@@ -656,6 +644,7 @@ def sphere(solution_batch):
     )
 
 
+
 def create_scheduler(config,
                      algorithm,
                      seed=None):
@@ -670,9 +659,8 @@ def create_scheduler(config,
     """
     solution_dim = config["dim"]
     archive_dims = config["archive_dims"]
-    learning_rate = config["learning_rate"]
+    learning_rate = 1.0 if "learning_rate" not in config["archive"]["kwargs"] else config["archive"]["kwargs"]["learning_rate"]
     use_result_archive = config["use_result_archive"]
-
     max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     initial_sol = np.zeros(solution_dim)
@@ -696,19 +684,14 @@ def create_scheduler(config,
     # Create emitters. Each emitter needs a different seed, so that they do not
     # all do the same thing.
     num_emitters = sum(e["num_emitters"] for e in config["emitters"])
-    emitter_seeds = [None] * num_emitters if seed is None else np.arange(
-        seed, seed + num_emitters)
+    random.seed(10)
+    emitter_seeds = [None] * num_emitters if seed is None else random.sample(range(0, 30000), num_emitters)
     emitters = []
     seed_index = 0
-    if algorithm in ["cma_mega", "cma_mega_adam"]:
-        for e in config["emitters"]:
-            emitter_class = e["class"]
-            emitters += [emitter_class(archive, x0=initial_sol, **e["kwargs"], batch_size=config["batch_size"], seed=emitter_seeds[0])]
-    else:
-        for e in config["emitters"]:
-            emitter_class = e["class"]
-            emitters += [emitter_class(archive, x0=initial_sol, **e["kwargs"], batch_size=config["batch_size"], seed=s) for s in emitter_seeds[seed_index: seed_index + e["num_emitters"]]]
-            seed_index += e["num_emitters"]
+    for e in config["emitters"]:
+        emitter_class = e["class"]
+        emitters += [emitter_class(archive, x0=initial_sol, **e["kwargs"], batch_size=config["batch_size"], seed=s) for s in emitter_seeds[seed_index: seed_index + e["num_emitters"]]]
+        seed_index += e["num_emitters"]
 
     # Create Scheduler
     scheduler_class = config["scheduler"]["class"]
@@ -763,17 +746,22 @@ def sphere_main(algorithm,
         seed (int): Seed for the algorithm. By default, there is no seed.
     """
     config = copy.deepcopy(CONFIG[algorithm])
+
     # Use default dim for each algorithm.
-    config["dim"] = CONFIG[algorithm]["dim"] if dim is None else dim
+    if dim is not None:
+        config["dim"] = dim
 
     # Use default itrs for each algorithm.
-    config["iters"] = CONFIG[algorithm]["iters"] if itrs is None else itrs
+    if itrs is not None:
+        config["iters"] = itrs
 
     # Use default archive_dim for each algorithm.
-    config["archive_dims"] = CONFIG[algorithm]["archive_dims"] if archive_dims is None else archive_dims
+    if archive_dims is not None:
+        config["archive_dims"] = archive_dims
 
     # Use default learning_rate for each algorithm.
-    config["learning_rate"] = CONFIG[algorithm]["learning_rate"] if learning_rate is None else learning_rate
+    if learning_rate is not None:
+        config["archive"]["kwargs"]["learning_rate"] = learning_rate
 
     name = f"{algorithm}_{config['dim']}"
     outdir = Path(outdir)
