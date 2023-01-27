@@ -79,11 +79,11 @@ Example:
 Help:
     python sphere.py --help
 """
+import copy
 import json
 import time
 from pathlib import Path
 
-import copy
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
@@ -605,7 +605,8 @@ def create_scheduler(config, algorithm, seed=None):
     """Creates a scheduler based on the algorithm.
 
     Args:
-        config (dict): Configuration dictionary with parameters for the various components.
+        config (dict): Configuration dictionary with parameters for the various
+            components.
         algorithm (string): Name of the algorithm
         seed (int): Main seed or the various components.
     Returns:
@@ -642,14 +643,11 @@ def create_scheduler(config, algorithm, seed=None):
                                      ranges=bounds,
                                      seed=seed)
 
-    # Create emitters. Each emitter needs a different seed, so that they do not
-    # all do the same thing.
-    num_emitters = sum(e["num_emitters"] for e in config["emitters"])
-    rng = np.random.default_rng(10)
-    emitter_seeds = [None] * num_emitters if seed is None else rng.integers(
-        0, 30000, num_emitters)
+    # Create emitters. Each emitter needs a different seed so that they do not
+    # all do the same thing, hence we create an rng here to generate seeds. The
+    # rng may be seeded with None or with a user-provided seed.
+    rng = np.random.default_rng(seed)
     emitters = []
-    seed_index = 0
     for e in config["emitters"]:
         emitter_class = e["class"]
         emitters += [
@@ -658,9 +656,8 @@ def create_scheduler(config, algorithm, seed=None):
                           **e["kwargs"],
                           batch_size=config["batch_size"],
                           seed=s)
-            for s in emitter_seeds[seed_index:seed_index + e["num_emitters"]]
+            for s in rng.integers(0, 1_000_000, e["num_emitters"])
         ]
-        seed_index += e["num_emitters"]
 
     # Create Scheduler
     scheduler_class = config["scheduler"]["class"]
@@ -673,7 +670,8 @@ def create_scheduler(config, algorithm, seed=None):
 
     print(f"Create {scheduler_name} for {algorithm} with learning rate "
           f"{learning_rate} and add mode {mode}, using solution dim "
-          f"{solution_dim} and archive dims {archive_dims}.")
+          f"{solution_dim}, archive dims {archive_dims}, and "
+          f"{len(emitters)} emitters.")
     return scheduler
 
 
