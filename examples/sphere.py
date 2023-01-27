@@ -95,7 +95,6 @@ from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
 from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
-
 CONFIG = {
     "map_elites": {
         "dim": 20,
@@ -110,15 +109,13 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": GaussianEmitter,
-                "kwargs": {
-                    "sigma": 0.5
-                },
-                "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": GaussianEmitter,
+            "kwargs": {
+                "sigma": 0.5
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
@@ -137,21 +134,18 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": IsoLineEmitter,
-                "kwargs": {
-                    "iso_sigma": 0.1,
-                    "line_sigma": 0.2
-                },
-                "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": IsoLineEmitter,
+            "kwargs": {
+                "iso_sigma": 0.1,
+                "line_sigma": 0.2
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "cvt_map_elites": {
         "dim": 20,
@@ -168,20 +162,17 @@ CONFIG = {
                 "use_kd_tree": True
             }
         },
-        "emitters": [
-            {
-                "class": GaussianEmitter,
-                "kwargs": {
-                    "sigma": 0.5
-                },
-                "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": GaussianEmitter,
+            "kwargs": {
+                "sigma": 0.5
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "line_cvt_map_elites": {
         "dim": 20,
@@ -190,7 +181,7 @@ CONFIG = {
         "use_result_archive": False,
         "is_dqd": False,
         "batch_size": 37,
-            "archive": {
+        "archive": {
             "class": CVTArchive,
             "kwargs": {
                 "cells": 10_000,
@@ -198,16 +189,14 @@ CONFIG = {
                 "use_kd_tree": True
             }
         },
-        "emitters": [
-            {
-                "class": IsoLineEmitter,
-                "kwargs": {
-                    "iso_sigma": 0.1,
-                    "line_sigma": 0.2
-                },
-                "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": IsoLineEmitter,
+            "kwargs": {
+                "iso_sigma": 0.1,
+                "line_sigma": 0.2
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
@@ -226,40 +215,35 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "obj"
-                },
-                "num_emitters": 12
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "obj"
             },
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "2rd"
-                },
-                "num_emitters": 12
+            "num_emitters": 12
+        }, {
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2rd"
             },
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "2imp"
-                },
-                "num_emitters": 12
+            "num_emitters": 12
+        }, {
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2imp"
             },
-            {
-                "class": IsoLineEmitter,
-                "kwargs": {
-                    "iso_sigma": 0.01,
-                    "line_sigma": 0.1
-                },
-                "num_emitters": 12
-            }
-        ],
+            "num_emitters": 12
+        }, {
+            "class": IsoLineEmitter,
+            "kwargs": {
+                "iso_sigma": 0.01,
+                "line_sigma": 0.1
+            },
+            "num_emitters": 12
+        }],
         "scheduler": {
             "class": BanditScheduler,
             "kwargs": {
@@ -267,7 +251,6 @@ CONFIG = {
                 "reselect": "terminated"
             }
         }
-
     },
     "cma_me_mixed": {
         "dim": 20,
@@ -282,29 +265,25 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "2rd"
-                },
-                "num_emitters": 7
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2rd"
             },
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "2imp"
-                },
-                "num_emitters": 8
-            }
-        ],
+            "num_emitters": 7
+        }, {
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2imp"
+            },
+            "num_emitters": 8
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "cma_me_imp": {
         "dim": 20,
@@ -319,23 +298,20 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "2imp",
-                    "selection_rule": "filter",
-                    "restart_rule": "no_improvement"
-                },
-                "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2imp",
+                "selection_rule": "filter",
+                "restart_rule": "no_improvement"
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "cma_me_imp_mu": {
         "dim": 20,
@@ -350,23 +326,20 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "2imp",
-                    "selection_rule": "mu",
-                    "restart_rule": "no_improvement"
-                },
-                "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2imp",
+                "selection_rule": "mu",
+                "restart_rule": "no_improvement"
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "cma_me_rd": {
         "dim": 20,
@@ -381,23 +354,20 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "2rd",
-                    "selection_rule": "filter",
-                    "restart_rule": "no_improvement"
-                },
-               "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2rd",
+                "selection_rule": "filter",
+                "restart_rule": "no_improvement"
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "cma_me_rd_mu": {
         "dim": 20,
@@ -412,23 +382,20 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "2rd",
-                    "selection_rule": "mu",
-                    "restart_rule": "no_improvement"
-                },
-                "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2rd",
+                "selection_rule": "mu",
+                "restart_rule": "no_improvement"
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "cma_me_opt": {
         "dim": 20,
@@ -443,23 +410,20 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "obj",
-                    "selection_rule": "mu",
-                    "restart_rule": "basic"
-                },
-                "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "obj",
+                "selection_rule": "mu",
+                "restart_rule": "basic"
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "cma_mega": {
         "dim": 1_000,
@@ -474,24 +438,21 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": GradientArborescenceEmitter,
-                "kwargs": {
-                    "sigma0": 10.0,
-                    "lr": 1.0,
-                    "grad_opt": "gradient_ascent",
-                    "selection_rule": "mu",
-                    "bounds": None
-                },
-                "num_emitters": 1
-            }
-        ],
+        "emitters": [{
+            "class": GradientArborescenceEmitter,
+            "kwargs": {
+                "sigma0": 10.0,
+                "lr": 1.0,
+                "grad_opt": "gradient_ascent",
+                "selection_rule": "mu",
+                "bounds": None
+            },
+            "num_emitters": 1
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "cma_mega_adam": {
         "dim": 1_000,
@@ -506,24 +467,21 @@ CONFIG = {
                 "threshold_min": -np.inf
             }
         },
-        "emitters": [
-            {
-                "class": GradientArborescenceEmitter,
-                "kwargs": {
-                    "sigma0": 10.0,
-                    "lr": 0.002,
-                    "grad_opt": "adam",
-                    "selection_rule": "mu",
-                    "bounds": None
-                },
-                "num_emitters": 1
-            }
-        ],
+        "emitters": [{
+            "class": GradientArborescenceEmitter,
+            "kwargs": {
+                "sigma0": 10.0,
+                "lr": 0.002,
+                "grad_opt": "adam",
+                "selection_rule": "mu",
+                "bounds": None
+            },
+            "num_emitters": 1
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
-
     },
     "cma_mae": {
         "dim": 100,
@@ -539,18 +497,16 @@ CONFIG = {
                 "learning_rate": 0.01
             }
         },
-        "emitters": [
-            {
-                "class": EvolutionStrategyEmitter,
-                "kwargs": {
-                    "sigma0": 0.5,
-                    "ranker": "imp",
-                    "selection_rule": "mu",
-                    "restart_rule": "basic"
-                },
-                "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "imp",
+                "selection_rule": "mu",
+                "restart_rule": "basic"
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
@@ -570,26 +526,25 @@ CONFIG = {
                 "learning_rate": 0.01
             }
         },
-        "emitters": [
-            {
-                "class": GradientArborescenceEmitter,
-                "kwargs": {
-                    "sigma0": 10.0,
-                    "lr": 1.0,
-                    "ranker": "imp",
-                    "grad_opt": "gradient_ascent",
-                    "restart_rule": "basic",
-                    "bounds": None
-                },
-                "num_emitters": 15
-            }
-        ],
+        "emitters": [{
+            "class": GradientArborescenceEmitter,
+            "kwargs": {
+                "sigma0": 10.0,
+                "lr": 1.0,
+                "ranker": "imp",
+                "grad_opt": "gradient_ascent",
+                "restart_rule": "basic",
+                "bounds": None
+            },
+            "num_emitters": 15
+        }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
     }
 }
+
 
 def sphere(solution_batch):
     """Sphere function evaluation and measures for a batch of solutions.
@@ -646,9 +601,7 @@ def sphere(solution_batch):
     )
 
 
-def create_scheduler(config,
-                     algorithm,
-                     seed=None):
+def create_scheduler(config, algorithm, seed=None):
     """Creates a scheduler based on the algorithm.
 
     Args:
@@ -660,7 +613,8 @@ def create_scheduler(config,
     """
     solution_dim = config["dim"]
     archive_dims = config["archive_dims"]
-    learning_rate = 1.0 if "learning_rate" not in config["archive"]["kwargs"] else config["archive"]["kwargs"]["learning_rate"]
+    learning_rate = 1.0 if "learning_rate" not in config["archive"][
+        "kwargs"] else config["archive"]["kwargs"]["learning_rate"]
     use_result_archive = config["use_result_archive"]
     max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
@@ -670,9 +624,15 @@ def create_scheduler(config,
     # Create archive.
     archive_class = config["archive"]["class"]
     if archive_class == GridArchive:
-        archive = archive_class(solution_dim=solution_dim, ranges=bounds, dims=archive_dims, seed=seed, **config["archive"]["kwargs"])
+        archive = archive_class(solution_dim=solution_dim,
+                                ranges=bounds,
+                                dims=archive_dims,
+                                seed=seed,
+                                **config["archive"]["kwargs"])
     else:
-        archive = archive_class(solution_dim=solution_dim, ranges=bounds, **config["archive"]["kwargs"])
+        archive = archive_class(solution_dim=solution_dim,
+                                ranges=bounds,
+                                **config["archive"]["kwargs"])
 
     # Create result archive.
     result_archive = None
@@ -686,17 +646,29 @@ def create_scheduler(config,
     # all do the same thing.
     num_emitters = sum(e["num_emitters"] for e in config["emitters"])
     rng = np.random.default_rng(10)
-    emitter_seeds = [None] * num_emitters if seed is None else rng.integers(0, 30000, num_emitters)
+    emitter_seeds = [None] * num_emitters if seed is None else rng.integers(
+        0, 30000, num_emitters)
     emitters = []
     seed_index = 0
     for e in config["emitters"]:
         emitter_class = e["class"]
-        emitters += [emitter_class(archive, x0=initial_sol, **e["kwargs"], batch_size=config["batch_size"], seed=s) for s in emitter_seeds[seed_index: seed_index + e["num_emitters"]]]
+        emitters += [
+            emitter_class(archive,
+                          x0=initial_sol,
+                          **e["kwargs"],
+                          batch_size=config["batch_size"],
+                          seed=s)
+            for s in emitter_seeds[seed_index:seed_index + e["num_emitters"]]
+        ]
         seed_index += e["num_emitters"]
 
     # Create Scheduler
     scheduler_class = config["scheduler"]["class"]
-    scheduler = scheduler_class(archive, emitters, result_archive=result_archive, add_mode=mode, **config["scheduler"]["kwargs"])
+    scheduler = scheduler_class(archive,
+                                emitters,
+                                result_archive=result_archive,
+                                add_mode=mode,
+                                **config["scheduler"]["kwargs"])
     scheduler_name = scheduler.__class__.__name__
 
     print(f"Create {scheduler_name} for {algorithm} with learning rate "
@@ -769,9 +741,7 @@ def sphere_main(algorithm,
     if not outdir.is_dir():
         outdir.mkdir()
 
-    scheduler = create_scheduler(config,
-                                 algorithm,
-                                 seed=seed)
+    scheduler = create_scheduler(config, algorithm, seed=seed)
     result_archive = scheduler.result_archive
     is_dqd = config["is_dqd"]
     itrs = config["iters"]
@@ -819,9 +789,10 @@ def sphere_main(algorithm,
             metrics["Archive Coverage"]["x"].append(itr)
             metrics["Archive Coverage"]["y"].append(
                 result_archive.stats.coverage)
-            tqdm.tqdm.write(f"Iteration {itr} | Archive Coverage: "
-                  f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
-                  f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
+            tqdm.tqdm.write(
+                f"Iteration {itr} | Archive Coverage: "
+                f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
+                f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
             save_heatmap(result_archive,
                          str(outdir / f"{name}_heatmap_{itr:05d}.png"))
@@ -837,6 +808,7 @@ def sphere_main(algorithm,
         plt.clf()
     with (outdir / f"{name}_metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
+
 
 if __name__ == '__main__':
     fire.Fire(sphere_main)
