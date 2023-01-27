@@ -68,10 +68,10 @@ heatmap for cma_me_imp with 20 dims.
     ffmpeg -r 6 -i "sphere_output/cma_me_imp_20_heatmap_%*.png" \
         sphere_output/cma_me_imp_20_heatmap_video.mp4
 
-Usage (see sphere_main function for all args):
-    python sphere.py ALGORITHM [DIM] [ITRS] [ARCHIVE_DIMS] [LEARNING_RATE] [OUTDIR] [LOG_FREQ] [SEED]
+Usage (see sphere_main function for all args or run `python sphere.py --help`):
+    python sphere.py ALGORITHM
 Example:
-    python sphere.py map_elites 20
+    python sphere.py map_elites
 
     # To make numpy and sklearn run single-threaded, set env variables for BLAS
     # and OpenMP:
@@ -84,7 +84,6 @@ import time
 from pathlib import Path
 
 import copy
-import random
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
@@ -686,8 +685,8 @@ def create_scheduler(config,
     # Create emitters. Each emitter needs a different seed, so that they do not
     # all do the same thing.
     num_emitters = sum(e["num_emitters"] for e in config["emitters"])
-    random.seed(10)
-    emitter_seeds = [None] * num_emitters if seed is None else random.sample(range(0, 30000), num_emitters)
+    rng = np.random.default_rng(10)
+    emitter_seeds = [None] * num_emitters if seed is None else rng.integers(0, 30000, num_emitters)
     emitters = []
     seed_index = 0
     for e in config["emitters"]:
