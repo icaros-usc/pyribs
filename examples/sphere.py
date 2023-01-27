@@ -69,7 +69,7 @@ heatmap for cma_me_imp with 20 dims.
         sphere_output/cma_me_imp_20_heatmap_video.mp4
 
 Usage (see sphere_main function for all args):
-    python sphere.py ALGORITHM DIM
+    python sphere.py ALGORITHM [DIM] [ITRS] [ARCHIVE_DIMS] [LEARNING_RATE] [OUTDIR] [LOG_FREQ] [SEED]
 Example:
     python sphere.py map_elites 20
 
