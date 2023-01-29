@@ -211,7 +211,7 @@ pyribs users include:
 - [ICAROS Lab (University of Southern California)](http://icaros.usc.edu/)
 - [Jacob Schrum (Southwestern University)](https://github.com/schrum2/PyribsForGameGAN)
 - [Lenia Research](https://lenia.world)
-- [Paul Kent (University of Warwick)](https://warwick.ac.uk/fac/sci/mathsys/people/students/2018intake/kent/)
+- [Paul Kent (The University of Warwick)](https://warwick.ac.uk/fac/sci/mathsys/people/students/2018intake/kent/)
 - [Various](https://github.com/ganyariya/mario_pytorch)
   [researchers](https://direct.mit.edu/isal/proceedings/isal/33/112256) at the
   University of Tsukuba
