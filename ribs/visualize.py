@@ -157,7 +157,7 @@ def grid_archive_heatmap(archive,
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
         cbar_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.figure.Figure.colorbar`.
+            :func:`~matplotlib.pyplot.colorbar`.
 
     Raises:
         ValueError: The archive's dimension must be 1D or 2D.
@@ -339,7 +339,7 @@ def cvt_archive_heatmap(archive,
             displayed. If this is an :class:`~matplotlib.axes.Axes`, displays
             the colorbar on the specified Axes.
         cbar_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.figure.Figure.colorbar`.
+            :func:`~matplotlib.pyplot.colorbar`.
 
     Raises:
         ValueError: The archive is not 2D.
@@ -510,7 +510,7 @@ def sliding_boundaries_archive_heatmap(archive,
             displayed. If this is an :class:`~matplotlib.axes.Axes`, displays
             the colorbar on the specified Axes.
         cbar_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.figure.Figure.colorbar`.
+            :func:`~matplotlib.pyplot.colorbar`.
     Raises:
         ValueError: The archive is not 2D.
     """
