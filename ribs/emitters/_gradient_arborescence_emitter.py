@@ -24,8 +24,8 @@ class GradientArborescenceEmitter(EmitterBase):
     .. math::
 
         \\boldsymbol{\\theta'_i} \\gets \\boldsymbol{\\theta} +
-            c_0 \\boldsymbol{\\nabla} f(\\boldsymbol{\\theta}) +
-            \\sum_{j=1}^k c_j \\boldsymbol{\\nabla} m_j(\\boldsymbol{\\theta})
+            c_{i,0} \\boldsymbol{\\nabla} f(\\boldsymbol{\\theta}) +
+            \\sum_{j=1}^k c_{i,j}\\boldsymbol{\\nabla}m_j(\\boldsymbol{\\theta})
 
     Where :math:`k` is the number of measures, and
     :math:`\\boldsymbol{\\nabla} f(\\boldsymbol{\\theta})` and
