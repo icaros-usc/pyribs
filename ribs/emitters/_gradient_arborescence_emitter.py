@@ -14,11 +14,30 @@ class GradientArborescenceEmitter(EmitterBase):
     This emitter originates in `Fontaine 2021
     <https://arxiv.org/abs/2106.03894>`_. It leverages the gradient information
     of the objective and measure functions, generating new solutions around a
-    "solution point" using gradient arborescence with coefficients drawn from a
-    Gaussian distribution. Based on how the solutions are ranked after being
-    inserted into the archive (see ``ranker``), the solution point is updated
-    with gradient ascent, and the distribution is updated with an ES (the
-    default ES is CMA-ES).
+    *solution point* :math:`\\boldsymbol{\\theta}` using *gradient
+    arborescence*, with coefficients drawn from a Gaussian distribution.
+    Essentially, this means that the emitter samples coefficients
+    :math:`\\boldsymbol{c_i} \\sim
+    \\mathcal{N}(\\boldsymbol{\\mu}, \\boldsymbol{\\Sigma})`
+    and creates new solutions :math:`\\boldsymbol{\\theta'_i}` according to
+
+    .. math::
+
+        \\boldsymbol{\\theta'_i} \\gets \\boldsymbol{\\theta} +
+            c_0 \\boldsymbol{\\nabla} f(\\boldsymbol{\\theta}) +
+            \\sum_{j=1}^k c_j \\boldsymbol{\\nabla} m_j(\\boldsymbol{\\theta})
+
+    Where :math:`k` is the number of measures, and
+    :math:`\\boldsymbol{\\nabla} f(\\boldsymbol{\\theta})` and
+    :math:`\\boldsymbol{\\nabla} m_j(\\boldsymbol{\\theta})` are the objective
+    and measure gradients of the solution point :math:`\\boldsymbol{\\theta}`,
+    respectively.
+
+    Based on how the solutions are ranked after being inserted into the archive
+    (see ``ranker``), the solution point :math:`\\boldsymbol{\\theta}` is
+    updated with gradient ascent, and the coefficient distribution parameters
+    :math:`\\boldsymbol{\\mu}` and :math:`\\boldsymbol{\\Sigma}` are updated
+    with an ES (the default ES is CMA-ES).
 
     Note that unlike non-gradient emitters, GradientArborescenceEmitter requires
     calling :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before calling
