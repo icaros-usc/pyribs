@@ -427,7 +427,7 @@ CONFIG = {
     },
     "cma_mega": {
         "dim": 1_000,
-        "iters": 4500,
+        "iters": 10_000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
