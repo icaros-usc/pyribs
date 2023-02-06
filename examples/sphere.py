@@ -553,7 +553,11 @@ def sphere(solution_batch):
         solution_batch (np.ndarray): (batch_size, dim) batch of solutions.
     Returns:
         objective_batch (np.ndarray): (batch_size,) batch of objectives.
+        objective_grad_batch (np.ndarray): (batch_size, solution_dim) batch of
+            objective gradients.
         measures_batch (np.ndarray): (batch_size, 2) batch of measures.
+        measures_grad_batch (np.ndarray): (batch_size, 2, solution_dim) batch of
+            measure gradients.
     """
     dim = solution_batch.shape[1]
 
