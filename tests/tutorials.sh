@@ -64,10 +64,11 @@ if [ -z "$1" ]; then
   TUTORIALS=($(ls tutorials/*.ipynb))  # Contains all notebooks.
   for t in "${TUTORIALS[@]}"; do
     # Notebooks to exclude.
-    case "$notebook" in
-      tutorials/tom_cruise_dqd.ipynb)
-        continue  # Takes too long to test due to installation.
-        ;;
+    case "$t" in
+      # Example:
+      # tutorials/tom_cruise_dqd.ipynb)
+      #   continue
+      #   ;;
     esac
 
     test_notebook "$t"
