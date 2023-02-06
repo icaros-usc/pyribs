@@ -176,8 +176,9 @@ def test_best_elite(add_mode):
         archive.add([[1, 2, 3]], [1.0], [[0, 0]])
 
     assert np.isclose(archive.best_elite.solution, [1, 2, 3]).all()
-    assert np.isclose(archive.best_elite.objective, 1.0).all()
+    assert np.isclose(archive.best_elite.objective, 1.0)
     assert np.isclose(archive.best_elite.measures, [0, 0]).all()
+    assert np.isclose(archive.stats.obj_max, 1.0)
 
     # Add an elite into the same cell as the previous elite -- best_elite should
     # now be overwritten.
@@ -187,8 +188,42 @@ def test_best_elite(add_mode):
         archive.add([[4, 5, 6]], [2.0], [[0, 0]])
 
     assert np.isclose(archive.best_elite.solution, [4, 5, 6]).all()
-    assert np.isclose(archive.best_elite.objective, 2.0).all()
+    assert np.isclose(archive.best_elite.objective, 2.0)
     assert np.isclose(archive.best_elite.measures, [0, 0]).all()
+    assert np.isclose(archive.stats.obj_max, 2.0)
+
+
+def test_best_elite_with_threshold(add_mode):
+    archive = GridArchive(solution_dim=3,
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)],
+                          learning_rate=0.1,
+                          threshold_min=0.0)
+
+    # Add an elite.
+    if add_mode == "single":
+        archive.add_single([1, 2, 3], 1.0, [0, 0])
+    else:
+        archive.add([[1, 2, 3]], [1.0], [[0, 0]])
+
+    # Threshold should now be 0.1 * 1 + (1 - 0.1) * 0.
+
+    assert np.isclose(archive.best_elite.solution, [1, 2, 3]).all()
+    assert np.isclose(archive.best_elite.objective, 1.0).all()
+    assert np.isclose(archive.best_elite.measures, [0, 0]).all()
+    assert np.isclose(archive.stats.obj_max, 1.0)
+
+    # Add an elite with lower objective value than best elite but higher
+    # objective value than threshold.
+    if add_mode == "single":
+        archive.add_single([4, 5, 6], 0.2, [0, 0])
+    else:
+        archive.add([[4, 5, 6]], [0.2], [[0, 0]])
+
+    assert np.isclose(archive.best_elite.solution, [4, 5, 6]).all()
+    assert np.isclose(archive.best_elite.objective, 0.2).all()
+    assert np.isclose(archive.best_elite.measures, [0, 0]).all()
+    assert np.isclose(archive.stats.obj_max, 0.2)
 
 
 #
