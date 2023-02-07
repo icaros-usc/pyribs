@@ -99,6 +99,7 @@
 
 #### Documentation
 
+- Add DQDTutorial (#267)
 - Remove examples extra in favor of individual example deps (#306)
 - Facilitate linking to latest version of documentation (#300)
 - Update lunar lander tutorial with v0.5.0 features (#292)

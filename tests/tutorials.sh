@@ -61,9 +61,16 @@ function test_notebook {
 }
 
 if [ -z "$1" ]; then
-  # Default: Test all notebooks.
-  TUTORIALS=($(ls tutorials/*.ipynb))
+  TUTORIALS=($(ls tutorials/*.ipynb))  # Contains all notebooks.
   for t in "${TUTORIALS[@]}"; do
+    # Notebooks to exclude.
+    case "$t" in
+      # Example:
+      # tutorials/tom_cruise_dqd.ipynb)
+      #   continue
+      #   ;;
+    esac
+
     test_notebook "$t"
   done
 else
