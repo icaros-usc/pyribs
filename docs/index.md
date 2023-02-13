@@ -28,7 +28,7 @@ api/ribs.visualize
 :caption: Reference
 :hidden:
 
-contributing
+CONTRIBUTING
 history
 genindex
 ```
