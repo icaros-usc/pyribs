@@ -8,13 +8,15 @@ class EvolutionStrategyBase(ABC):
     """Base class for evolution strategy optimizers for use with emitters.
 
     The basic usage is:
+
     - Initialize the optimizer and reset it.
     - Repeatedly:
-      - Request new solutions with ``ask()``
-      - Rank the solutions in the emitter (better solutions come first) and
-        pass the indices back with ``tell()``.
-      - Use ``check_stop()`` to see if the optimizer has reached a stopping
-        condition, and if so, call ``reset()``.
+
+        - Request new solutions with ``ask()``
+        - Rank the solutions in the emitter (better solutions come first) and
+          pass the indices back with ``tell()``.
+        - Use ``check_stop()`` to see if the optimizer has reached a stopping
+          condition, and if so, call ``reset()``.
 
     Args:
         sigma0 (float): Initial step size.
