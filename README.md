@@ -180,7 +180,7 @@ preview will also reload.
 
 pyribs is developed and maintained by the [ICAROS Lab](http://icaros.usc.edu) at
 USC. For information on contributing to the repo, see
-[CONTRIBUTING](./CONTRIBUTING).
+[CONTRIBUTING](./CONTRIBUTING.md).
 
 - [Bryon Tjanaka](https://btjanaka.net)
 - [Matthew C. Fontaine](https://scholar.google.com/citations?user=RqSvzikAAAAJ)
