@@ -44,7 +44,7 @@ extras_require = {
         # Documentation
         "Sphinx==4.5.0",
         "sphinx-material==0.0.32",
-        "sphinx-autobuild==2020.9.1",
+        "sphinx-autobuild==2021.3.14",
         "sphinx-copybutton==0.3.1",
         "myst-nb==0.17.1",
         "sphinx-toolbox==3.1.0",
