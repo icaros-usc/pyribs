@@ -187,10 +187,12 @@ USC. For information on contributing to the repo, see
 - [David H. Lee](https://github.com/itsdawei)
 - [Yulun Zhang](https://github.com/lunjohnzhang)
 - [Nivedit Reddy Balam](https://www.linkedin.com/in/nivedit-reddy)
-- [Vincent Vu](https://vuvincent.com/)
-- [Sam Sommerer](https://github.com/sam-sommerer)
 - [Nathan Dennler](https://ndennler.github.io/)
+- [Sujay S. Garlanka](https://sujaygarlanka.com)
 - Nikitas Klapsis
+- [Robby Costales](https://robbycostales.com)
+- [Sam Sommerer](https://github.com/sam-sommerer)
+- [Vincent Vu](https://vuvincent.com/)
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 
 We thank [Amy K. Hoover](http://amykhoover.com/) and
