@@ -237,9 +237,10 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
             metrics["Max Score"]["y"].append(scheduler.archive.stats.obj_max)
             metrics["Archive Size"]["x"].append(itr)
             metrics["Archive Size"]["y"].append(len(scheduler.archive))
-            print(f"> {itr} itrs completed after {elapsed_time:.2f} s")
-            print(f"  - Max Score: {metrics['Max Score']['y'][-1]}")
-            print(f"  - Archive Size: {metrics['Archive Size']['y'][-1]}")
+            tqdm.tqdm.write(
+                f"> {itr} itrs completed after {elapsed_time:.2f} s\n"
+                f"  - Max Score: {metrics['Max Score']['y'][-1]}\n"
+                f"  - Archive Size: {metrics['Archive Size']['y'][-1]}")
 
     return metrics
 
