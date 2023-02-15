@@ -99,6 +99,7 @@
 
 #### Documentation
 
+- Speed up lunar lander tutorial (#319)
 - Add DQDTutorial (#267)
 - Remove examples extra in favor of individual example deps (#306)
 - Facilitate linking to latest version of documentation (#300)
