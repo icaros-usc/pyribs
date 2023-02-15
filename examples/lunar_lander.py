@@ -68,10 +68,6 @@ from ribs.visualize import grid_archive_heatmap
 def simulate(model, seed=None, video_env=None):
     """Simulates the lunar lander model.
 
-    Note that this function has some slight differences from the simulate()
-    function in the lunar lander tutorial; e.g., it creates an environment
-    rather than taking the environment as an argument.
-
     Args:
         model (np.ndarray): The array of weights for the linear policy.
         seed (int): The seed for the environment.
@@ -89,7 +85,8 @@ def simulate(model, seed=None, video_env=None):
     if video_env is None:
         # Since we are using multiple processes, it is simpler if each worker
         # just creates their own copy of the environment instead of trying to
-        # share the environment. This also makes the function "pure."
+        # share the environment. This also makes the function "pure." However,
+        # we should use the video_env if it is passed in.
         env = gym.make("LunarLander-v2")
     else:
         env = video_env
