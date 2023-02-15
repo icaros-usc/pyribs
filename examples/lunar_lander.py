@@ -3,10 +3,10 @@
 Install the following dependencies before running this example:
     pip install ribs[visualize] tqdm fire gymnasium[box2d]==0.27.0 moviepy>=1.0.0 dask>=2.0.0 distributed>=2.0.0 bokeh>=2.0.0
 
-This script uses the same setup as the tutorial, but it also uses Dask to
-parallelize evaluations on a single machine and adds in a CLI. Refer to the
-tutorial here: https://docs.pyribs.org/en/stable/tutorials/lunar_lander.html for
-more info.
+This script uses the same setup as the tutorial, but it also uses Dask instead
+of Python's multiprocessing to parallelize evaluations on a single machine and
+adds in a CLI. Refer to the tutorial here:
+https://docs.pyribs.org/en/stable/tutorials/lunar_lander.html for more info.
 
 You should not need much familiarity with Dask to read this example. However, if
 you would like to know more about Dask, we recommend referring to the quickstart
