@@ -15,4 +15,4 @@ of each file, then follow the usage instructions. Here are the current examples:
   apply them to the sphere benchmark function.
 - {doc}`examples/lunar_lander`: An extended version of the
   [Lunar Lander tutorial](tutorials/lunar_lander) which distributes evaluations
-  with Dask instead of Python's multiprocessing module.
+  with Dask and adds other features such as a command-line interface.
