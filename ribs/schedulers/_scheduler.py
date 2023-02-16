@@ -195,7 +195,7 @@ class Scheduler:
                 f"has length {len(array)}")
 
     EMPTY_WARNING = (
-        "`{name}` was empty and is still empty after adding solutions. "
+        "`{name}` was empty before and is still empty after adding solutions. "
         "One potential cause is that `threshold_min` is too high in this "
         "archive, i.e., solutions are not being inserted because their "
         "objective value does not exceed `threshold_min`.")
@@ -217,7 +217,8 @@ class Scheduler:
         self._check_length("metadata_batch", metadata_batch)
 
         archive_empty_before = self.archive.empty
-        result_archive_empty_before = self.result_archive.empty
+        if self._result_archive is not None:
+            result_archive_empty_before = self.result_archive.empty
 
         # Add solutions to the archive.
         if self._add_mode == "batch":
@@ -253,8 +254,9 @@ class Scheduler:
         # Warn the user if nothing was inserted into the archives.
         if archive_empty_before and self.archive.empty:
             warnings.warn(self.EMPTY_WARNING.format(name="archive"))
-        if result_archive_empty_before and self.result_archive.empty:
-            warnings.warn(self.EMPTY_WARNING.format(name="result_archive"))
+        if self._result_archive is not None:
+            if result_archive_empty_before and self.result_archive.empty:
+                warnings.warn(self.EMPTY_WARNING.format(name="result_archive"))
 
         return (
             objective_batch,
