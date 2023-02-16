@@ -71,6 +71,46 @@ def test_ask_fails_when_called_twice(scheduler_fixture):
         scheduler.ask()
 
 
+def test_warn_nothing_added_to_archive():
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)],
+                          threshold_min=1.0)
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
+    scheduler = Scheduler(archive, emitters)
+
+    _ = scheduler.ask()
+    with pytest.warns(UserWarning):
+        scheduler.tell(
+            # All objectives are below threshold_min of 1.0.
+            objective_batch=np.zeros(4),
+            # Arbitrary measures.
+            measures_batch=np.linspace(-1, 1, 4 * 2).reshape((4, 2)),
+        )
+
+
+def test_warn_nothing_added_to_result_archive():
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)],
+                          threshold_min=-np.inf)
+    result_archive = GridArchive(solution_dim=2,
+                                 dims=[100, 100],
+                                 ranges=[(-1, 1), (-1, 1)],
+                                 threshold_min=10.0)
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
+    scheduler = Scheduler(archive, emitters, result_archive=result_archive)
+
+    _ = scheduler.ask()
+    with pytest.warns(UserWarning):
+        scheduler.tell(
+            # All objectives are below threshold_min of 1.0.
+            objective_batch=np.zeros(4),
+            # Arbitrary measures.
+            measures_batch=np.linspace(-1, 1, 4 * 2).reshape((4, 2)),
+        )
+
+
 @pytest.mark.parametrize("tell_metadata", [True, False],
                          ids=["metadata", "no_metadata"])
 def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
