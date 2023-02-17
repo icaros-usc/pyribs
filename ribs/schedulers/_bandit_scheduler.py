@@ -34,7 +34,7 @@ class BanditScheduler:
             emitter_pool will be activated.
         num_active (int): The number of active emitters at a time. Active
             emitters are used when calling ask-tell.
-        zeta (float): Hyperparamter of UBC1 that balances the trade-off between
+        zeta (float): Hyperparamter of UCB1 that balances the trade-off between
             the accuracy and the uncertainty of the emitters. Increasing this
             parameter will emphasize the uncertainty of the emitters. Refer to
             the original paper for more information.
