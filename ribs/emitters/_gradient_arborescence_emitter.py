@@ -39,10 +39,17 @@ class GradientArborescenceEmitter(EmitterBase):
     :math:`\\boldsymbol{\\mu}` and :math:`\\boldsymbol{\\Sigma}` are updated
     with an ES (the default ES is CMA-ES).
 
-    Note that unlike non-gradient emitters, GradientArborescenceEmitter requires
-    calling :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before calling
-    :meth:`ask` and :meth:`tell` to communicate the gradient information to the
-    emitter.
+    .. note::
+
+        Unlike non-gradient emitters, GradientArborescenceEmitter requires
+        calling :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
+        calling :meth:`ask` and :meth:`tell` to communicate the gradient
+        information to the emitter.
+
+    .. note::
+
+        This emitter does not support solution space bounds, as bounding
+        solutions for DQD algorithms such as CMA-MEGA is still an open problem.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -92,15 +99,6 @@ class GradientArborescenceEmitter(EmitterBase):
             optimizer.
         normalize_grad (bool): If true (default), then gradient infomation will
             be normalized. Otherwise, it will not be normalized.
-        bounds (None or array-like): Bounds of the solution space. As suggested
-            in `Biedrzycki 2020
-            <https://www.sciencedirect.com/science/article/abs/pii/S2210650219301622>`_,
-            solutions are resampled until they fall within these bounds.  Pass
-            None to indicate there are no bounds. Alternatively, pass an
-            array-like to specify the bounds for each dim. Each element in this
-            array-like can be None to indicate no bound, or a tuple of
-            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
-            ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to return in :meth:`ask`. If not
             passed in, a batch size will be automatically calculated using the
             default CMA-ES rules. Note that `batch_size` **does not** include
@@ -116,7 +114,6 @@ class GradientArborescenceEmitter(EmitterBase):
             avoid a fixed seed.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
-        ValueError: There is an error in the bounds configuration.
         ValueError: If ``restart_rule``, ``selection_rule``, or ``ranker`` is
             invalid.
     """
@@ -135,7 +132,6 @@ class GradientArborescenceEmitter(EmitterBase):
                  es="cma_es",
                  es_kwargs=None,
                  normalize_grad=True,
-                 bounds=None,
                  batch_size=None,
                  epsilon=1e-8,
                  seed=None):
@@ -143,7 +139,7 @@ class GradientArborescenceEmitter(EmitterBase):
             self,
             archive,
             solution_dim=archive.solution_dim,
-            bounds=bounds,
+            bounds=None,
         )
 
         self._epsilon = epsilon
