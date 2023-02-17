@@ -195,7 +195,8 @@ class Scheduler:
                 f"has length {len(array)}")
 
     EMPTY_WARNING = (
-        "`{name}` was empty before and is still empty after adding solutions. "
+        "`{name}` was empty before adding solutions, and it is still empty "
+        "after adding solutions. "
         "One potential cause is that `threshold_min` is too high in this "
         "archive, i.e., solutions are not being inserted because their "
         "objective value does not exceed `threshold_min`.")
