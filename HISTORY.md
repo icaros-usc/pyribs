@@ -32,7 +32,7 @@
   - **Backwards-incompatible:** `behavior_dim` in archives is now `measure_dim`
   - Rename `n_solutions` to `batch_size` in `Scheduler`.
 - Add `GradientArborescenceEmitter`, which is used to implement CMA-MEGA (#240,
-  #263, #264, #282)
+  #263, #264, #282, #321)
 - Update emitter `tell()` docstrings to no longer say "Inserts entries into
   archive" (#247)
 - Expose `emitter.restarts` as a property (#248)

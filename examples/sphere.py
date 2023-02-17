@@ -444,8 +444,7 @@ CONFIG = {
                 "sigma0": 10.0,
                 "lr": 1.0,
                 "grad_opt": "gradient_ascent",
-                "selection_rule": "mu",
-                "bounds": None
+                "selection_rule": "mu"
             },
             "num_emitters": 1
         }],
@@ -473,8 +472,7 @@ CONFIG = {
                 "sigma0": 10.0,
                 "lr": 0.002,
                 "grad_opt": "adam",
-                "selection_rule": "mu",
-                "bounds": None
+                "selection_rule": "mu"
             },
             "num_emitters": 1
         }],
@@ -533,8 +531,7 @@ CONFIG = {
                 "lr": 1.0,
                 "ranker": "imp",
                 "grad_opt": "gradient_ascent",
-                "restart_rule": "basic",
-                "bounds": None
+                "restart_rule": "basic"
             },
             "num_emitters": 15
         }],
