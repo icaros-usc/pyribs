@@ -536,7 +536,7 @@ CONFIG = {
                 "restart_rule": "basic",
                 "bounds": None
             },
-            "num_emitters": 15
+            "num_emitters": 1
         }],
         "scheduler": {
             "class": Scheduler,
