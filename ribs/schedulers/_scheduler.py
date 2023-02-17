@@ -219,6 +219,8 @@ class Scheduler:
 
         archive_empty_before = self.archive.empty
         if self._result_archive is not None:
+            # Check self._result_archive here since self.result_archive is a
+            # property that always provides a proper archive.
             result_archive_empty_before = self.result_archive.empty
 
         # Add solutions to the archive.
