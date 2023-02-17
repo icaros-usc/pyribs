@@ -250,39 +250,22 @@ class GradientArborescenceEmitter(EmitterBase):
             (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
         """
-        coefficient_lower_bounds = np.full(self._num_coefficients,
-                                           -np.inf,
-                                           dtype=self._archive.dtype)
-        coefficient_upper_bounds = np.full(self._num_coefficients,
-                                           np.inf,
-                                           dtype=self._archive.dtype)
-
-        lower_bounds = np.expand_dims(self._lower_bounds, axis=0)
-        upper_bounds = np.expand_dims(self._upper_bounds, axis=0)
-
-        solution_batch = np.empty((self.batch_size, self.solution_dim),
-                                  dtype=self._opt.dtype)
-
-        # Resampling method for bound constraints -> sample new solutions until
-        # all solutions are within bounds.
-        remaining_indices = np.arange(self._batch_size)
-        while len(remaining_indices) > 0:
-            gradient_coefficients = self._opt.ask(coefficient_lower_bounds,
-                                                  coefficient_upper_bounds,
-                                                  len(remaining_indices))
-            noise = np.expand_dims(gradient_coefficients, axis=2)
-            new_solution_batch = (self._grad_opt.theta +
-                                  np.sum(self._jacobian_batch * noise, axis=1))
-            solution_batch[remaining_indices] = new_solution_batch
-            out_of_bounds = np.logical_or(new_solution_batch < lower_bounds,
-                                          new_solution_batch > upper_bounds)
-
-            # Find indices in remaining_indices that are still out of bounds
-            # (out_of_bounds indicates whether each value in each solution is
-            # out of bounds).
-            remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
-
-        return solution_batch
+        coeff_lower_bounds = np.full(
+            self._num_coefficients,
+            -np.inf,
+            dtype=self._archive.dtype,
+        )
+        coeff_upper_bounds = np.full(
+            self._num_coefficients,
+            np.inf,
+            dtype=self._archive.dtype,
+        )
+        grad_coeffs = self._opt.ask(
+            coeff_lower_bounds,
+            coeff_upper_bounds,
+        )[:, :, None]
+        return (self._grad_opt.theta +
+                np.sum(self._jacobian_batch * grad_coeffs, axis=1))
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
