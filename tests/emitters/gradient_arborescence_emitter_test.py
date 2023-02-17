@@ -44,3 +44,18 @@ def test_dtypes(dtype):
                                           sigma0=1.0,
                                           lr=1.0)
     assert emitter.x0.dtype == dtype
+
+
+def test_bounds_must_be_none():
+    bound = [(-1, 1)]
+    batch_size = 1
+    archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
+
+    with pytest.raises(ValueError):
+        GradientArborescenceEmitter(archive,
+                                    x0=np.array([0]),
+                                    sigma0=1.0,
+                                    lr=1.0,
+                                    normalize_grad=False,
+                                    bounds=bound,
+                                    batch_size=batch_size)
