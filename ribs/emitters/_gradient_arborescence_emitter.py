@@ -46,11 +46,6 @@ class GradientArborescenceEmitter(EmitterBase):
         calling :meth:`ask` and :meth:`tell` to communicate the gradient
         information to the emitter.
 
-    .. note::
-
-        This emitter does not support solution space bounds, as bounding
-        solutions for DQD algorithms such as CMA-MEGA is still an open problem.
-
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
@@ -99,6 +94,10 @@ class GradientArborescenceEmitter(EmitterBase):
             optimizer.
         normalize_grad (bool): If true (default), then gradient infomation will
             be normalized. Otherwise, it will not be normalized.
+        bounds: This argument may be used for providing solution space bounds in
+            the future. This emitter does not currently support solution space
+            bounds, as bounding solutions for DQD algorithms such as CMA-MEGA is
+            an open problem. Hence, this argument must be set to None.
         batch_size (int): Number of solutions to return in :meth:`ask`. If not
             passed in, a batch size will be automatically calculated using the
             default CMA-ES rules. Note that `batch_size` **does not** include
@@ -114,6 +113,7 @@ class GradientArborescenceEmitter(EmitterBase):
             avoid a fixed seed.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
+        ValueError: ``bounds`` is set even though it is not currently supported.
         ValueError: If ``restart_rule``, ``selection_rule``, or ``ranker`` is
             invalid.
     """
@@ -132,14 +132,23 @@ class GradientArborescenceEmitter(EmitterBase):
                  es="cma_es",
                  es_kwargs=None,
                  normalize_grad=True,
+                 bounds=None,
                  batch_size=None,
                  epsilon=1e-8,
                  seed=None):
+
+        if bounds is not None:
+            raise ValueError(
+                "`bounds` must be set to None. The GradientArborescenceEmitter "
+                "does not currently support solution space bounds, as bounding "
+                "solutions for DQD algorithms such as CMA-MEGA is an open "
+                "problem.")
+
         EmitterBase.__init__(
             self,
             archive,
             solution_dim=archive.solution_dim,
-            bounds=None,
+            bounds=bounds,
         )
 
         self._epsilon = epsilon
