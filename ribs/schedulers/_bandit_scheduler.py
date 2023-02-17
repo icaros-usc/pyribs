@@ -1,5 +1,9 @@
 """Provides the Bandit Scheduler."""
+import warnings
+
 import numpy as np
+
+from ribs.schedulers._scheduler import Scheduler
 
 
 class BanditScheduler:
@@ -34,7 +38,7 @@ class BanditScheduler:
             emitter_pool will be activated.
         num_active (int): The number of active emitters at a time. Active
             emitters are used when calling ask-tell.
-        zeta (float): Hyperparamter of UBC1 that balances the trade-off between
+        zeta (float): Hyperparamter of UCB1 that balances the trade-off between
             the accuracy and the uncertainty of the emitters. Increasing this
             parameter will emphasize the uncertainty of the emitters. Refer to
             the original paper for more information.
@@ -324,6 +328,12 @@ class BanditScheduler:
         self._check_length("measures_batch", measures_batch)
         self._check_length("metadata_batch", metadata_batch)
 
+        archive_empty_before = self.archive.empty
+        if self._result_archive is not None:
+            # Check self._result_archive here since self.result_archive is a
+            # property that always provides a proper archive.
+            result_archive_empty_before = self.result_archive.empty
+
         # Add solutions to the archive.
         if self._add_mode == "batch":
             status_batch, value_batch = self.archive.add(
@@ -354,6 +364,14 @@ class BanditScheduler:
                                                     measure, metadata)
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
+
+        # Warn the user if nothing was inserted into the archives.
+        if archive_empty_before and self.archive.empty:
+            warnings.warn(Scheduler.EMPTY_WARNING.format(name="archive"))
+        if self._result_archive is not None:
+            if result_archive_empty_before and self.result_archive.empty:
+                warnings.warn(
+                    Scheduler.EMPTY_WARNING.format(name="result_archive"))
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
