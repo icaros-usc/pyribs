@@ -8,7 +8,7 @@
 
 tutorials
 examples
-migrating
+whats-new
 ```
 
 ```{toctree}
