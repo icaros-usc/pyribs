@@ -1,11 +1,11 @@
 # What's New in v0.5.0
 
 The new version of pyribs is here! Much has changed since our last version,
-v0.4.0. Most of these changes can be categorized under two general goals: (1)
-integrate new algorithms via new emitters and schedulers, and (2) improve
-archive performance via batched operations. In this guide, we will review the
-major changes to pyribs. For the full list of changes, refer to our
-[History page](./history).
+v0.4.0. Most of these changes can be categorized under two goals: (1) integrate
+new algorithms via new emitters and schedulers, and (2) improve archive
+performance via batched operations. We will review the changes related to these
+goals and several other changes made to pyribs. For the full list of changes,
+refer to our [History page](./history).
 
 ## General
 
@@ -31,7 +31,7 @@ in the tutorial {doc}`tutorials/tom_cruise_dqd`.
   `measures_batch`, and `metadata_batch`, while individual arguments are
   referred to as `solution`, `objective`, `measures`, and `metadata`.
 - **cells vs bins:** For consistency with the literature, we have replaced the
-  term `bins` with `cells`.
+  term `bins` with `cells` when discussing archives.
 - **optimizers are now schedulers:** To better reflect their role, the
   "optimizers" from pyribs v0.4.0 are now referred to as "schedulers". All
   schedulers are under the {mod}`ribs.schedulers` module, including
@@ -55,7 +55,7 @@ use {mod}`ribs.visualize`, you can install pyribs with
 ## Goal 1: Implement New Algorithms
 
 Our first major goal in pyribs v0.5.0 has been to implement an array of new
-algorithms.
+algorithms via new emitters and schedulers.
 
 ### Flexible CMA-ME and CMA-MAE with EvolutionStrategyEmitter
 
@@ -96,8 +96,9 @@ see the tutorial {doc}`tutorials/tom_cruise_dqd`.
 {class}`~ribs.emitters.IsoLineEmitter` now support passing in custom initial
 solutions. By default, they sample from Gaussian distributions initially, but
 this can be restricting given that many MAP-Elites variants begin by sampling
-from a uniform distribution. With this change, it is now possible to sample
-solutions in advance and pass them to the emitter.
+from a uniform distribution. With this change, this behavior can be achieved by
+sampling from a uniform distribution and passing in the sampled solutions as the
+custom initial solutions.
 
 ```python
 # Initially (i.e., when the archive is empty), the emitter will return
@@ -146,10 +147,12 @@ To elaborate on these changes:
     {meth}`~ribs.archives.GridArchive.grid_to_int_index` and
     {meth}`~ribs.archives.GridArchive.int_to_grid_index` method to convert to
     and from grid indices in these archives.
-- {meth}`~ribs.archives.ArchiveBase.add` used to operate on single solutions.
+- {meth}`~ribs.archives.ArchiveBase.add` formerly operated on single solutions.
   Now, it inserts solutions into the archive in batch. There is also an
-  {meth}`ribs.archives.ArchiveBase.add_single` which inserts solutions one at a
-  time and is more amenable to modifications than the batched `add()` method.
+  {meth}`~ribs.archives.ArchiveBase.add_single` which inserts solutions one at a
+  time. The source code for {meth}`~ribs.archives.ArchiveBase.add_single` is
+  more amenable to modifications than that of the batched
+  {meth}`~ribs.archives.ArchiveBase.add` method.
 - `get_random_elite()`, which sampled one elite from the archive, has been
   replaced with a batched {meth}`~ribs.archives.ArchiveBase.sample_elites`
   method which samples multiple elites at once.
@@ -182,18 +185,17 @@ Before, they were:
 
 We have also renamed the `ArchiveDataFrame` methods as follows:
 
-| Old Name             | New Name                                               |
-| -------------------- | ------------------------------------------------------ |
-| `batch_behaviors()`  | {meth}`ribs.archives.ArchiveDataFrame.measures_batch`  |
-| `batch_indices()`    | {meth}`ribs.archives.ArchiveDataFrame.index_batch`     |
-| `batch_metadata()`   | {meth}`ribs.archives.ArchiveDataFrame.metadata_batch`  |
-| `batch_objectives()` | {meth}`ribs.archives.ArchiveDataFrame.objective_batch` |
-| `batch_solutions()`  | {meth}`ribs.archives.ArchiveDataFrame.solution_batch`  |
+| Old Name             | New Name                                                |
+| -------------------- | ------------------------------------------------------- |
+| `batch_behaviors()`  | {meth}`~ribs.archives.ArchiveDataFrame.measures_batch`  |
+| `batch_indices()`    | {meth}`~ribs.archives.ArchiveDataFrame.index_batch`     |
+| `batch_metadata()`   | {meth}`~ribs.archives.ArchiveDataFrame.metadata_batch`  |
+| `batch_objectives()` | {meth}`~ribs.archives.ArchiveDataFrame.objective_batch` |
+| `batch_solutions()`  | {meth}`~ribs.archives.ArchiveDataFrame.solution_batch`  |
 
 ## Miscellaneous
 
-Finally, here are several of the major general improvements we have made to
-pyribs.
+Finally, here are several miscellaneous improvements we have made to pyribs.
 
 ### Removal of initialize() Method for Archives
 
@@ -216,7 +218,7 @@ archive = GridArchive(solution_dim, ...)
 In all heatmap visualization tools, we have made the colorbar more flexible by
 adding a `cbar` option to control which axes the colorbar appears on and a
 `cbar_kwargs` option to pass arguments directly to Matplotlib's
-{meth}`~matplotlib.pyplot.colorbar`.
+{func}`~matplotlib.pyplot.colorbar`.
 
 ```python
 from ribs.visualize import grid_archive_heatmap  # cvt_archive_heatmap and sliding_boundaries_archive_heatmap also work
@@ -232,7 +234,7 @@ grid_archive_heatmap(archive, ..., cbar_kwargs={...})  # Pass arguments to the c
 In addition:
 
 - We have added an `aspect` argument which can set the aspect ratio of the
-  heatmap, i.e. the ratio `height / width`.
+  heatmap, i.e., the ratio `height / width`.
 - We now support heatmaps for 1D grid archives.
 
 ### Continuous Quality Diversity (CQD) Score
@@ -277,9 +279,8 @@ EvolutionStrategyEmitter(archive, x0=np.zeros(10), sigma=0.1)
 
 ### Input Validation
 
-**Input validation:** Many of our methods, e.g., the archives'
-{meth}`~ribs.archives.ArchiveBase.add` method and schedulers'
-{meth}`~ribs.schedulers.Scheduler.ask` and
+Many of our methods, e.g., the archives' {meth}`~ribs.archives.ArchiveBase.add`
+method and schedulers' {meth}`~ribs.schedulers.Scheduler.ask` and
 {meth}`~ribs.schedulers.Scheduler.tell` methods, now have input validation to
 help catch common argument errors. For example, we check that arguments are the
 correct shape, and we check that they do not have `NaN` or `inf` values.
