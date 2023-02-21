@@ -10,7 +10,7 @@ class BanditScheduler:
     """Schedules emitters with a bandit algorithm.
 
     This implementation is based on `Cully 2021
-    <https://arxiv.org/pdf/2007.05352.pdf>`_.
+    <https://arxiv.org/abs/2007.05352>`_.
 
     .. note::
         This class follows the similar ask-tell framework as

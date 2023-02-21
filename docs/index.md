@@ -8,6 +8,7 @@
 
 tutorials
 examples
+whats-new
 ```
 
 ```{toctree}
