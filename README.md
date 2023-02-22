@@ -61,8 +61,8 @@ problem allows us to optimize the library for performance as well as ease of
 use. Refer to the list of [additional QD libraries](#additional-qd-libraries)
 below if you need greater performance or have additional use cases.
 
-Following the RIBS framework, a standard algorithm in pyribs operates as
-follows:
+Following the RIBS framework (shown in the figure below), a standard algorithm
+in pyribs operates as follows:
 
 1. The user calls the `ask()` method on the scheduler. The scheduler requests
    solutions from each emitter by calling the emitter's `ask()` method.
@@ -151,7 +151,7 @@ for itr in range(1000):
     scheduler.tell(objective_batch, measures_batch)
 ```
 
-To visualize this archive with matplotlib, we then use the
+To visualize this archive with Matplotlib, we then use the
 `grid_archive_heatmap` function from `ribs.visualize`.
 
 ```python
