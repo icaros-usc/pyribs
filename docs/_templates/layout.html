@@ -16,7 +16,13 @@
   theme_base_url +
   (pagename if pagename != 'index' else '')
 }}" />
-<meta property="og:image" content="{{ theme_base_url + '_static/imgs/open_graph_image.png' }}" />
+<meta property="og:image" content="{{ theme_base_url + '_static/imgs/open-graph-preview.png' }}" />
+
+{# Twitter #}
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="{{ title }}" />
+{# <meta name="twitter:description" content="{{ description }}" /> #}
+<meta name="twitter:image" content="{{ theme_base_url + '_static/imgs/twitter-preview.png' }}" />
 
 {# Currently, there is no description available. #}
 {# <meta property="og:description" content="{{ description }}" /> #}

@@ -166,12 +166,12 @@ The following table shows the old methods and the names of the new methods which
 operate on batched inputs. As a convenience, we have also included "single"
 methods which can operate on single inputs.
 
-| Old Method            | New Batched Method                               | New Single Method                                  |
-| --------------------- | ------------------------------------------------ | -------------------------------------------------- |
-| `add()`               | {meth}`~ribs.archives.ArchiveBase.add`           | {meth}`~ribs.archives.ArchiveBase.add_single`      |
-| `get_index()`         | {meth}`~ribs.archives.ArchiveBase.index_of`      | {meth}`~ribs.archives.ArchiveBase.index_of_single` |
-| `get_random_elite()`  | {meth}`~ribs.archives.ArchiveBase.sample_elites` | N/A                                                |
-| `elite_with_behavior` | {meth}`~ribs.archives.ArchiveBase.retrieve`      | {meth}`~ribs.archives.ArchiveBase.retrieve_single` |
+| Old Method              | New Batched Method                               | New Single Method                                  |
+| ----------------------- | ------------------------------------------------ | -------------------------------------------------- |
+| `add()`                 | {meth}`~ribs.archives.ArchiveBase.add`           | {meth}`~ribs.archives.ArchiveBase.add_single`      |
+| `get_index()`           | {meth}`~ribs.archives.ArchiveBase.index_of`      | {meth}`~ribs.archives.ArchiveBase.index_of_single` |
+| `get_random_elite()`    | {meth}`~ribs.archives.ArchiveBase.sample_elites` | N/A                                                |
+| `elite_with_behavior()` | {meth}`~ribs.archives.ArchiveBase.retrieve`      | {meth}`~ribs.archives.ArchiveBase.retrieve_single` |
 
 To elaborate on these changes:
 
