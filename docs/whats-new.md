@@ -7,10 +7,11 @@ performance via batched operations. We will review the changes related to these
 goals and several other changes made to pyribs. For the full list of changes,
 refer to our [History page](./history).
 
-Note that to improve the pyribs API, many of these changes are
-backwards-incompatible and will break existing v0.4.0 code. In the future, we
-anticipate that we will introduce fewer breaking changes as pyribs matures to
-have a clean, stable API.
+```{note}
+To improve the pyribs API, many of these changes are backwards-incompatible and
+break existing v0.4.0 code. In the future, we anticipate that we will introduce
+fewer breaking changes as pyribs matures to have a clean, stable API.
+```
 
 ## General
 
@@ -35,7 +36,7 @@ in the tutorial {doc}`tutorials/tom_cruise_dqd`.
   optimization has grown into a general-purpose optimization paradigm. For
   example, in an application where QD generates images of a face with varying
   age and hair length, it seems odd to refer to age and hair length as
-  behaviors. Our new terminology instead refers to the age and hair lengths as
+  behaviors. Our new terminology instead refers to the age and hair length as
   measures of the solutions, where QD optimization must vary the outputs of
   those measures.
 - **Batch arguments:** Many of our methods now operate in batch. The batch
@@ -109,7 +110,7 @@ that the archive is empty), both {class}`~ribs.emitters.GaussianEmitter` and
 {class}`~ribs.emitters.IsoLineEmitter` sample solutions from a Gaussian
 distribution. However, many implementations of MAP-Elites sample solutions from
 a uniform distribution on the first iteration. More generally, users may seek to
-provide a custom population of solutions for the first iteration.
+provide any custom population of solutions for the first iteration.
 
 Before, it was possible to provide custom initial solutions by evaluating the
 initial solutions and directly {meth}`~ribs.archives.ArchiveBase.add`'ing them
