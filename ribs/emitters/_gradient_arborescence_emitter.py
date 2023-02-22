@@ -24,8 +24,8 @@ class GradientArborescenceEmitter(EmitterBase):
     .. math::
 
         \\boldsymbol{\\theta'_i} \\gets \\boldsymbol{\\theta} +
-            c_0 \\boldsymbol{\\nabla} f(\\boldsymbol{\\theta}) +
-            \\sum_{j=1}^k c_j \\boldsymbol{\\nabla} m_j(\\boldsymbol{\\theta})
+            c_{i,0} \\boldsymbol{\\nabla} f(\\boldsymbol{\\theta}) +
+            \\sum_{j=1}^k c_{i,j}\\boldsymbol{\\nabla}m_j(\\boldsymbol{\\theta})
 
     Where :math:`k` is the number of measures, and
     :math:`\\boldsymbol{\\nabla} f(\\boldsymbol{\\theta})` and
@@ -39,10 +39,12 @@ class GradientArborescenceEmitter(EmitterBase):
     :math:`\\boldsymbol{\\mu}` and :math:`\\boldsymbol{\\Sigma}` are updated
     with an ES (the default ES is CMA-ES).
 
-    Note that unlike non-gradient emitters, GradientArborescenceEmitter requires
-    calling :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before calling
-    :meth:`ask` and :meth:`tell` to communicate the gradient information to the
-    emitter.
+    .. note::
+
+        Unlike non-gradient emitters, GradientArborescenceEmitter requires
+        calling :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
+        calling :meth:`ask` and :meth:`tell` to communicate the gradient
+        information to the emitter.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -92,15 +94,10 @@ class GradientArborescenceEmitter(EmitterBase):
             optimizer.
         normalize_grad (bool): If true (default), then gradient infomation will
             be normalized. Otherwise, it will not be normalized.
-        bounds (None or array-like): Bounds of the solution space. As suggested
-            in `Biedrzycki 2020
-            <https://www.sciencedirect.com/science/article/abs/pii/S2210650219301622>`_,
-            solutions are resampled until they fall within these bounds.  Pass
-            None to indicate there are no bounds. Alternatively, pass an
-            array-like to specify the bounds for each dim. Each element in this
-            array-like can be None to indicate no bound, or a tuple of
-            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
-            ``upper_bound`` may be None to indicate no bound.
+        bounds: This argument may be used for providing solution space bounds in
+            the future. This emitter does not currently support solution space
+            bounds, as bounding solutions for DQD algorithms such as CMA-MEGA is
+            an open problem. Hence, this argument must be set to None.
         batch_size (int): Number of solutions to return in :meth:`ask`. If not
             passed in, a batch size will be automatically calculated using the
             default CMA-ES rules. Note that `batch_size` **does not** include
@@ -116,7 +113,7 @@ class GradientArborescenceEmitter(EmitterBase):
             avoid a fixed seed.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
-        ValueError: There is an error in the bounds configuration.
+        ValueError: ``bounds`` is set even though it is not currently supported.
         ValueError: If ``restart_rule``, ``selection_rule``, or ``ranker`` is
             invalid.
     """
@@ -139,6 +136,14 @@ class GradientArborescenceEmitter(EmitterBase):
                  batch_size=None,
                  epsilon=1e-8,
                  seed=None):
+
+        if bounds is not None:
+            raise ValueError(
+                "`bounds` must be set to None. The GradientArborescenceEmitter "
+                "does not currently support solution space bounds, as bounding "
+                "solutions for DQD algorithms such as CMA-MEGA is an open "
+                "problem.")
+
         EmitterBase.__init__(
             self,
             archive,
@@ -254,39 +259,22 @@ class GradientArborescenceEmitter(EmitterBase):
             (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
         """
-        coefficient_lower_bounds = np.full(self._num_coefficients,
-                                           -np.inf,
-                                           dtype=self._archive.dtype)
-        coefficient_upper_bounds = np.full(self._num_coefficients,
-                                           np.inf,
-                                           dtype=self._archive.dtype)
-
-        lower_bounds = np.expand_dims(self._lower_bounds, axis=0)
-        upper_bounds = np.expand_dims(self._upper_bounds, axis=0)
-
-        solution_batch = np.empty((self.batch_size, self.solution_dim),
-                                  dtype=self._opt.dtype)
-
-        # Resampling method for bound constraints -> sample new solutions until
-        # all solutions are within bounds.
-        remaining_indices = np.arange(self._batch_size)
-        while len(remaining_indices) > 0:
-            gradient_coefficients = self._opt.ask(coefficient_lower_bounds,
-                                                  coefficient_upper_bounds,
-                                                  len(remaining_indices))
-            noise = np.expand_dims(gradient_coefficients, axis=2)
-            new_solution_batch = (self._grad_opt.theta +
-                                  np.sum(self._jacobian_batch * noise, axis=1))
-            solution_batch[remaining_indices] = new_solution_batch
-            out_of_bounds = np.logical_or(new_solution_batch < lower_bounds,
-                                          new_solution_batch > upper_bounds)
-
-            # Find indices in remaining_indices that are still out of bounds
-            # (out_of_bounds indicates whether each value in each solution is
-            # out of bounds).
-            remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
-
-        return solution_batch
+        coeff_lower_bounds = np.full(
+            self._num_coefficients,
+            -np.inf,
+            dtype=self._archive.dtype,
+        )
+        coeff_upper_bounds = np.full(
+            self._num_coefficients,
+            np.inf,
+            dtype=self._archive.dtype,
+        )
+        grad_coeffs = self._opt.ask(
+            coeff_lower_bounds,
+            coeff_upper_bounds,
+        )[:, :, None]
+        return (self._grad_opt.theta +
+                np.sum(self._jacobian_batch * grad_coeffs, axis=1))
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.

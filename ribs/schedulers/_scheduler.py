@@ -1,4 +1,6 @@
 """Provides the Scheduler."""
+import warnings
+
 import numpy as np
 
 
@@ -192,6 +194,13 @@ class Scheduler:
                 "(this is the number of solutions output by ask()) but "
                 f"has length {len(array)}")
 
+    EMPTY_WARNING = (
+        "`{name}` was empty before adding solutions, and it is still empty "
+        "after adding solutions. "
+        "One potential cause is that `threshold_min` is too high in this "
+        "archive, i.e., solutions are not being inserted because their "
+        "objective value does not exceed `threshold_min`.")
+
     def _tell_internal(self,
                        objective_batch,
                        measures_batch,
@@ -207,6 +216,12 @@ class Scheduler:
         self._check_length("objective_batch", objective_batch)
         self._check_length("measures_batch", measures_batch)
         self._check_length("metadata_batch", metadata_batch)
+
+        archive_empty_before = self.archive.empty
+        if self._result_archive is not None:
+            # Check self._result_archive here since self.result_archive is a
+            # property that always provides a proper archive.
+            result_archive_empty_before = self.result_archive.empty
 
         # Add solutions to the archive.
         if self._add_mode == "batch":
@@ -238,6 +253,13 @@ class Scheduler:
                                                     measure, metadata)
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
+
+        # Warn the user if nothing was inserted into the archives.
+        if archive_empty_before and self.archive.empty:
+            warnings.warn(self.EMPTY_WARNING.format(name="archive"))
+        if self._result_archive is not None:
+            if result_archive_empty_before and self.result_archive.empty:
+                warnings.warn(self.EMPTY_WARNING.format(name="result_archive"))
 
         return (
             objective_batch,

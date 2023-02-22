@@ -14,5 +14,5 @@ of each file, then follow the usage instructions. Here are the current examples:
 - {doc}`examples/sphere`: Demonstrates how to set up recent QD algorithms and
   apply them to the sphere benchmark function.
 - {doc}`examples/lunar_lander`: An extended version of the
-  [Lunar Lander tutorial](tutorials/lunar_lander) which speeds up evaluations by
-  distributing them across multiple CPUs.
+  [Lunar Lander tutorial](tutorials/lunar_lander) which distributes evaluations
+  with Dask and adds other features such as a command-line interface.

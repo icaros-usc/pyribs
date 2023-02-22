@@ -75,6 +75,8 @@ myst_enable_extensions = [
     "dollarmath",
     "html_image",
 ]
+# Auto-generate heading anchors.
+myst_heading_anchors = 3
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

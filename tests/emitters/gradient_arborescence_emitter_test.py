@@ -46,37 +46,16 @@ def test_dtypes(dtype):
     assert emitter.x0.dtype == dtype
 
 
-def test_adhere_to_solution_bounds():
+def test_bounds_must_be_none():
     bound = [(-1, 1)]
     batch_size = 1
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
-    emitter = GradientArborescenceEmitter(archive,
-                                          x0=np.array([0]),
-                                          sigma0=1.0,
-                                          lr=1.0,
-                                          normalize_grad=False,
-                                          bounds=bound,
-                                          batch_size=batch_size)
 
-    # Set jacobian so tell_dqd doesn't crash.
-    jacobian = np.full(
-        (
-            1,  # Only one solution.
-            2,  # Two gradients -- one objective, one measures.
-            1,  # One solution dimension for each gradient.
-        ),
-        2,  # Each value is 2.0.
-    )
-    emitter.tell_dqd(
-        np.zeros((batch_size, archive.solution_dim)),
-        np.zeros(batch_size),
-        np.zeros((batch_size, archive.measure_dim)),
-        jacobian,
-        np.zeros(batch_size),
-        np.zeros(batch_size),
-    )
-
-    # This might take a while because it needs to resample.
-    sol = emitter.ask()
-
-    assert np.all(np.logical_and(sol >= bound[0][0], sol <= bound[0][1]))
+    with pytest.raises(ValueError):
+        GradientArborescenceEmitter(archive,
+                                    x0=np.array([0]),
+                                    sigma0=1.0,
+                                    lr=1.0,
+                                    normalize_grad=False,
+                                    bounds=bound,
+                                    batch_size=batch_size)

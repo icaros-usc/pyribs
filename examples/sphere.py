@@ -427,7 +427,7 @@ CONFIG = {
     },
     "cma_mega": {
         "dim": 1_000,
-        "iters": 4500,
+        "iters": 10_000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
@@ -444,8 +444,7 @@ CONFIG = {
                 "sigma0": 10.0,
                 "lr": 1.0,
                 "grad_opt": "gradient_ascent",
-                "selection_rule": "mu",
-                "bounds": None
+                "selection_rule": "mu"
             },
             "num_emitters": 1
         }],
@@ -473,8 +472,7 @@ CONFIG = {
                 "sigma0": 10.0,
                 "lr": 0.002,
                 "grad_opt": "adam",
-                "selection_rule": "mu",
-                "bounds": None
+                "selection_rule": "mu"
             },
             "num_emitters": 1
         }],
@@ -533,8 +531,7 @@ CONFIG = {
                 "lr": 1.0,
                 "ranker": "imp",
                 "grad_opt": "gradient_ascent",
-                "restart_rule": "basic",
-                "bounds": None
+                "restart_rule": "basic"
             },
             "num_emitters": 15
         }],
@@ -553,7 +550,11 @@ def sphere(solution_batch):
         solution_batch (np.ndarray): (batch_size, dim) batch of solutions.
     Returns:
         objective_batch (np.ndarray): (batch_size,) batch of objectives.
+        objective_grad_batch (np.ndarray): (batch_size, solution_dim) batch of
+            objective gradients.
         measures_batch (np.ndarray): (batch_size, 2) batch of measures.
+        measures_grad_batch (np.ndarray): (batch_size, 2, solution_dim) batch of
+            measure gradients.
     """
     dim = solution_batch.shape[1]
 

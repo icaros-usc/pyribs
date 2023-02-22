@@ -79,6 +79,7 @@ servedocs: ## compile the docs watching for changes
 		--open-browser \
 		--watch ribs/ \
 		--watch examples/ \
+		--watch tutorials/ \
 		docs/ \
 		docs/_build/html
 .PHONY: servedocs

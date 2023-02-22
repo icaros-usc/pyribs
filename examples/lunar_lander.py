@@ -3,10 +3,10 @@
 Install the following dependencies before running this example:
     pip install ribs[visualize] tqdm fire gymnasium[box2d]==0.27.0 moviepy>=1.0.0 dask>=2.0.0 distributed>=2.0.0 bokeh>=2.0.0
 
-This script uses the same setup as the tutorial, but it also uses Dask to
-parallelize evaluations on a single machine and adds in a CLI. Refer to the
-tutorial here: https://docs.pyribs.org/en/stable/tutorials/lunar_lander.html for
-more info.
+This script uses the same setup as the tutorial, but it also uses Dask instead
+of Python's multiprocessing to parallelize evaluations on a single machine and
+adds in a CLI. Refer to the tutorial here:
+https://docs.pyribs.org/en/stable/tutorials/lunar_lander.html for more info.
 
 You should not need much familiarity with Dask to read this example. However, if
 you would like to know more about Dask, we recommend referring to the quickstart
@@ -68,10 +68,6 @@ from ribs.visualize import grid_archive_heatmap
 def simulate(model, seed=None, video_env=None):
     """Simulates the lunar lander model.
 
-    Note that this function has some slight differences from the simulate()
-    function in the lunar lander tutorial; e.g., it creates an environment
-    rather than taking the environment as an argument.
-
     Args:
         model (np.ndarray): The array of weights for the linear policy.
         seed (int): The seed for the environment.
@@ -89,7 +85,8 @@ def simulate(model, seed=None, video_env=None):
     if video_env is None:
         # Since we are using multiple processes, it is simpler if each worker
         # just creates their own copy of the environment instead of trying to
-        # share the environment. This also makes the function "pure."
+        # share the environment. This also makes the function "pure." However,
+        # we should use the video_env if it is passed in.
         env = gym.make("LunarLander-v2")
     else:
         env = video_env
@@ -240,9 +237,10 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
             metrics["Max Score"]["y"].append(scheduler.archive.stats.obj_max)
             metrics["Archive Size"]["x"].append(itr)
             metrics["Archive Size"]["y"].append(len(scheduler.archive))
-            print(f"> {itr} itrs completed after {elapsed_time:.2f} s")
-            print(f"  - Max Score: {metrics['Max Score']['y'][-1]}")
-            print(f"  - Archive Size: {metrics['Archive Size']['y'][-1]}")
+            tqdm.tqdm.write(
+                f"> {itr} itrs completed after {elapsed_time:.2f} s\n"
+                f"  - Max Score: {metrics['Max Score']['y'][-1]}\n"
+                f"  - Archive Size: {metrics['Archive Size']['y'][-1]}")
 
     return metrics
 
