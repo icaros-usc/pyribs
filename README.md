@@ -4,13 +4,12 @@
 | :------------------------------: | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------: |
 | [pyribs.org](https://pyribs.org) | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Conda Recipe](https://img.shields.io/badge/recipe-pyribs-green.svg?style=flat-square)](https://anaconda.org/conda-forge/pyribs) | [![Tests](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Tests") | [docs.pyribs.org](https://docs.pyribs.org) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=stable&style=flat-square)](https://readthedocs.org/projects/ribs/) | [![Twitter](https://img.shields.io/badge/twitter-%231DA1F2.svg?&style=flat-square&logo=twitter&logoColor=white)](https://twitter.com/pyribs) |
 
-A _bare-bones_ Python library for quality diversity optimization. pyribs is the
-official implementation of Covariance Matrix Adaptation MAP-Elites (CMA-ME),
-Covariance Matrix Adaptation MAP-Elites via a Gradient Arborescence (CMA-MEGA),
-Covariance Matrix Adaptation MAP-Annealing (CMA-MAE), and scalable variants of
-CMA-MAE. Overall, pyribs implements the _Rapid Illumination of Behavior Space
-(RIBS)_ redesign of MAP-Elites detailed in the paper
-[Covariance Matrix Adapation for the Rapid Illumination of Behavior Space](https://arxiv.org/abs/1912.02400).
+A _bare-bones_ Python library for quality diversity (QD) optimization. Pyribs
+implements the highly modular _Rapid Illumination of Behavior Space (RIBS)_
+framework for QD optimization. Pyribs is also the official implementation of
+Covariance Matrix Adaptation MAP-Elites (CMA-ME), Covariance Matrix Adaptation
+MAP-Elites via a Gradient Arborescence (CMA-MEGA), Covariance Matrix Adaptation
+MAP-Annealing (CMA-MAE), and scalable variants of CMA-MAE.
 
 ## Overview
 
@@ -24,28 +23,56 @@ heatmaps (archives) as output where each cell contains the best discovered
 representative of a region in measure space.
 
 > In the QD literature, measure function outputs have also been referred to as
-> "behavior characteristics," "behavior descriptors," or "feature descriptors."
+> "behavioral characteristics," "behavior descriptors," or "feature
+> descriptors."
 
-While many QD libraries exist, this particular library aims to be the QD analog
-to the [pycma](https://pypi.org/project/cma/) library (a single objective
-optimization library). In contrast to other QD libraries, this library is
-"bare-bones," meaning pyribs (like [pycma](https://pypi.org/project/cma/))
-focuses solely on optimizing fixed-dimensional continuous domains. Focusing
-solely on this one commonly-occurring problem allows us to optimize the library
-for performance as well as ease of use. Refer to the list of
-[additional QD libraries](#additional-qd-libraries) below if you need greater
-performance or have additional use cases.
+Recent years have seen the development of a large number of QD algorithms. To
+represent these and future algorithms, we have developed the highly modular RIBS
+framework. RIBS divides a QD algorithm into three components:
 
-A user of pyribs selects three components that meet the needs of their
-application:
+- An **archive**, which saves generated solutions within measure space.
+- One or more **emitters**, where each emitter is an algorithm which generates
+  new candidate solutions and responds to feedback about how the solutions were
+  evaluated and how they were inserted into the archive.
+- A **scheduler** which controls the interaction of the **archive** and
+  **emitters**. The **scheduler** also provides an interface for requesting new
+  candidate solutions and telling the algorithm how candidates performed.
 
-- An **Archive** saves the best representatives generated within measure space.
-- **Emitters** control how new candidate solutions are generated and affect
-  whether the algorithm prioritizes quality or diversity.
-- A **Scheduler** joins the **Archive** and **Emitters** together and acts as a
-  scheduling algorithm for emitters. The **Scheduler** provides an interface for
-  requesting new candidate solutions and telling the algorithm how candidates
-  performed.
+By interchanging these components, a user can compose a large number of QD
+algorithms.
+
+Pyribs is an implementation of the RIBS framework designed to support a wide
+range of users, from beginners entering the field to experienced researchers
+seeking to develop new algorithms. Pyribs achieves these goals by embodying
+three principles:
+
+- **Simple:** Centered _only_ on components that are absolutely necessary to run
+  a QD algorithm, allowing users to combine the framework with other software
+  frameworks.
+- **Flexible:** Capable of representing a wide range of current and future QD
+  algorithms, allowing users to easily create or modify components.
+- **Accessible:** Easy to install and learn, particularly for beginners with
+  limited computational resources.
+
+In contrast to other QD libraries, pyribs is "bare-bones." For example, like
+[pycma](https://pypi.org/project/cma/), pyribs focuses solely on optimizing
+fixed-dimensional continuous domains. Focusing on this one commonly-occurring
+problem allows us to optimize the library for performance as well as ease of
+use. Refer to the list of [additional QD libraries](#additional-qd-libraries)
+below if you need greater performance or have additional use cases.
+
+Following the RIBS framework (shown in the figure below), a standard algorithm
+in pyribs operates as follows:
+
+1. The user calls the `ask()` method on the scheduler. The scheduler requests
+   solutions from each emitter by calling the emitter's `ask()` method.
+2. The user evaluates solutions to obtain the objective and measure values.
+3. The user passes the evaluations to the scheduler's `tell()` method. The
+   scheduler adds the solutions into the archive and receives feedback. The
+   scheduler passes this feedback along with the evaluated solutions to each
+   emitter's `tell()` method, and each emitter then updates its internal state.
+
+![The RIBS framework](readme_assets/ribs.png)
 
 ## Citation
 
@@ -124,7 +151,7 @@ for itr in range(1000):
     scheduler.tell(objective_batch, measures_batch)
 ```
 
-To visualize this archive with matplotlib, we then use the
+To visualize this archive with Matplotlib, we then use the
 `grid_archive_heatmap` function from `ribs.visualize`.
 
 ```python

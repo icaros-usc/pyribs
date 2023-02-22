@@ -7,6 +7,12 @@ performance via batched operations. We will review the changes related to these
 goals and several other changes made to pyribs. For the full list of changes,
 refer to our [History page](./history).
 
+```{note}
+To improve the pyribs API, many of these changes are backwards-incompatible and
+break existing v0.4.0 code. In the future, we anticipate that we will introduce
+fewer breaking changes as pyribs matures to have a clean, stable API.
+```
+
 ## General
 
 We'll start with some important general changes.
@@ -25,7 +31,14 @@ in the tutorial {doc}`tutorials/tom_cruise_dqd`.
 
 - **measures vs behaviors:** We have adopted the `measures` terminology of
   recent literature over the `behaviors` terminology in pyribs 0.4.0. Names such
-  as `behavior_values` are now referred to as `measures`.
+  as `behavior_values` are now referred to as `measures`. While QD originated in
+  neuroevolution with the purpose of producing diverse collections of agents, QD
+  optimization has grown into a general-purpose optimization paradigm. For
+  example, in an application where QD generates images of a face with varying
+  age and hair length, it seems odd to refer to age and hair length as
+  behaviors. Our new terminology instead refers to the age and hair length as
+  measures of the solutions, where QD optimization must vary the outputs of
+  those measures.
 - **Batch arguments:** Many of our methods now operate in batch. The batch
   arguments are referred to as `solution_batch`, `objective_batch`,
   `measures_batch`, and `metadata_batch`, while individual arguments are
@@ -92,18 +105,45 @@ see the tutorial {doc}`tutorials/tom_cruise_dqd`.
 
 ### Custom Initial Solutions in Emitters
 
-{class}`~ribs.emitters.GaussianEmitter` and
-{class}`~ribs.emitters.IsoLineEmitter` now support passing in custom initial
-solutions. By default, they sample from Gaussian distributions initially, but
-this can be restricting given that many MAP-Elites variants begin by sampling
-from a uniform distribution. With this change, this behavior can be achieved by
-sampling from a uniform distribution and passing in the sampled solutions as the
-custom initial solutions.
+By default, on the first iteration (the first iteration is detected by checking
+that the archive is empty), both {class}`~ribs.emitters.GaussianEmitter` and
+{class}`~ribs.emitters.IsoLineEmitter` sample solutions from a Gaussian
+distribution. However, many implementations of MAP-Elites sample solutions from
+a uniform distribution on the first iteration. More generally, users may seek to
+provide any custom population of solutions for the first iteration.
+
+Before, it was possible to provide custom initial solutions by evaluating the
+initial solutions and directly {meth}`~ribs.archives.ArchiveBase.add`'ing them
+to the archive, like so:
 
 ```python
-# Initially (i.e., when the archive is empty), the emitter will return
-# `initial_solutions` during the ask() method.
-GaussianEmitter(archive, ..., initial_solutions=[[0.0, 1.0], [1.3, 2.0]])
+archive = ...
+emitters = [GaussianEmitter(archive, ...)]
+scheduler = Scheduler(archive, emitters)
+
+initial_solutions = ...
+objectives, measures = evaluate(initial_solutions)
+archive.add(initial_solutions, objectives, measures)
+
+for itr in range(1000):
+    ...
+```
+
+However, it can be inconvenient to have to add this special case before the main
+pyribs loop, e.g., if the evaluation function is more complex than a single
+line. Thus, we now make it possible to pass the initial solutions to the
+emitters so that on the first iteration of the QD algorithm (more specifically,
+when the archive is empty), these initial solutions are returned.
+
+```python
+archive = ...
+emitters = [GaussianEmitter(archive, ..., initial_solutions=[[0.0, 1.0], [1.3, 2.0]])]
+scheduler = Scheduler(archive, emitters)
+
+for itr in range(1000):
+    # On the first iteration, `solutions` will be the `initial_solutions` that
+    # were passed into GaussianEmitter.
+    solutions = scheduler.ask()
 ```
 
 ### ME-MAP-Elites with BanditScheduler
@@ -111,7 +151,7 @@ GaussianEmitter(archive, ..., initial_solutions=[[0.0, 1.0], [1.3, 2.0]])
 We have added a new {class}`~ribs.schedulers.BanditScheduler` which maintains a
 pool of emitters and only asks a subset of emitters for solutions on each
 iteration. The emitters to ask are selected with a multi-armed bandit algorithm.
-This scheduler is adapted from the
+This scheduler is our implementation of the
 [ME-MAP-Elites](https://arxiv.org/abs/2007.05352) algorithm.
 
 ## Goal 2: Improve Archive Performance via Batching
@@ -246,8 +286,13 @@ in all archives with the {meth}`~ribs.archives.ArchiveBase.cqd_score` method.
 ### ArchiveStats
 
 The {class}`~ribs.archives.ArchiveStats` object now includes the normalized QD
-score (i.e., the QD score divided by the number of elites in the archive).
-Furthermore, it is now a dataclass rather than a namedtuple.
+score (i.e., the QD score divided by the number of cells in the archive).
+Furthermore, {class}`~ribs.archives.ArchiveStats` is now a dataclass rather than
+a namedtuple.
+
+```python
+archive.stats.norm_qd_score  # Normalized QD score.
+```
 
 ### Deprecation of Positional Arguments
 
