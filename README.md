@@ -4,12 +4,12 @@
 | :------------------------------: | :--------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------: |
 | [pyribs.org](https://pyribs.org) | [GitHub](https://github.com/icaros-usc/pyribs) | [![PyPI](https://img.shields.io/pypi/v/ribs.svg?style=flat-square&color=blue)](https://pypi.python.org/pypi/ribs) | [![Conda Recipe](https://img.shields.io/badge/recipe-pyribs-green.svg?style=flat-square)](https://anaconda.org/conda-forge/pyribs) | [![Tests](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ficaros-usc%2Fpyribs%2Fbadge&style=flat-square)](https://github.com/icaros-usc/pyribs/actions?query=workflow%3A"Tests") | [docs.pyribs.org](https://docs.pyribs.org) | [![Documentation Status](https://readthedocs.org/projects/ribs/badge/?version=stable&style=flat-square)](https://readthedocs.org/projects/ribs/) | [![Twitter](https://img.shields.io/badge/twitter-%231DA1F2.svg?&style=flat-square&logo=twitter&logoColor=white)](https://twitter.com/pyribs) |
 
-A _bare-bones_ Python library for quality diversity optimization. Pyribs
+A _bare-bones_ Python library for quality diversity (QD) optimization. Pyribs
 implements the highly modular _Rapid Illumination of Behavior Space (RIBS)_
-framework for quality diversity (QD). Pyribs is also the official implementation
-of Covariance Matrix Adaptation MAP-Elites (CMA-ME), Covariance Matrix
-Adaptation MAP-Elites via a Gradient Arborescence (CMA-MEGA), Covariance Matrix
-Adaptation MAP-Annealing (CMA-MAE), and scalable variants of CMA-MAE.
+framework for QD optimization. Pyribs is also the official implementation of
+Covariance Matrix Adaptation MAP-Elites (CMA-ME), Covariance Matrix Adaptation
+MAP-Elites via a Gradient Arborescence (CMA-MEGA), Covariance Matrix Adaptation
+MAP-Annealing (CMA-MAE), and scalable variants of CMA-MAE.
 
 ## Overview
 
@@ -23,7 +23,8 @@ heatmaps (archives) as output where each cell contains the best discovered
 representative of a region in measure space.
 
 > In the QD literature, measure function outputs have also been referred to as
-> "behavior characteristics," "behavior descriptors," or "feature descriptors."
+> "behavioral characteristics," "behavior descriptors," or "feature
+> descriptors."
 
 Recent years have seen the development of a large number of QD algorithms. To
 represent these and future algorithms, we have developed the highly modular RIBS
@@ -40,10 +41,10 @@ framework. RIBS divides a QD algorithm into three components:
 By interchanging these components, a user can compose a large number of QD
 algorithms.
 
-Pyribs is an implementation of the RIBS framework geared towards a wide range of
-users, from beginners entering the field to experienced researchers seeking to
-develop new algorithms. Pyribs achieves these goals by embodying three
-principles:
+Pyribs is an implementation of the RIBS framework designed to support a wide
+range of users, from beginners entering the field to experienced researchers
+seeking to develop new algorithms. Pyribs achieves these goals by embodying
+three principles:
 
 - **Simple:** Centered _only_ on components that are absolutely necessary to run
   a QD algorithm, allowing users to combine the framework with other software
