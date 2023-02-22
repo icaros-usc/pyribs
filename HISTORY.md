@@ -3,7 +3,7 @@
 ## 0.5.0
 
 To learn about this release, see our page on What's New in v0.5.0:
-https://docs.pyribs.org/en/latest/whats-new.html
+https://docs.pyribs.org/en/stable/whats-new.html
 
 ### Changelog
 
