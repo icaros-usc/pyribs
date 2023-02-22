@@ -285,8 +285,13 @@ in all archives with the {meth}`~ribs.archives.ArchiveBase.cqd_score` method.
 ### ArchiveStats
 
 The {class}`~ribs.archives.ArchiveStats` object now includes the normalized QD
-score (i.e., the QD score divided by the number of elites in the archive).
-Furthermore, it is now a dataclass rather than a namedtuple.
+score (i.e., the QD score divided by the number of cells in the archive).
+Furthermore, {class}`~ribs.archives.ArchiveStats` is now a dataclass rather than
+a namedtuple.
+
+```python
+archive.stats.norm_qd_score  # Normalized QD score.
+```
 
 ### Deprecation of Positional Arguments
 
