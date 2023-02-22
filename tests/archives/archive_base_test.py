@@ -187,10 +187,12 @@ def test_best_elite(add_mode):
     else:
         archive.add([[4, 5, 6]], [2.0], [[0, 0]])
 
-    assert np.isclose(archive.best_elite.solution, [4, 5, 6]).all()
-    assert np.isclose(archive.best_elite.objective, 2.0)
+    # Best elite remains the same even though this is a non-elitist archive and
+    # the best elite is no longer in the archive.
+    assert np.isclose(archive.best_elite.solution, [1, 2, 3]).all()
+    assert np.isclose(archive.best_elite.objective, 1.0)
     assert np.isclose(archive.best_elite.measures, [0, 0]).all()
-    assert np.isclose(archive.stats.obj_max, 2.0)
+    assert np.isclose(archive.stats.obj_max, 1.0)
 
 
 def test_best_elite_with_threshold(add_mode):
