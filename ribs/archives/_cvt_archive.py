@@ -15,7 +15,7 @@ class CVTArchive(ArchiveBase):
 
     This archive originates in `Vassiliades 2018
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
-    Tesselation (CVT) to divide an n-dimensional measure space into k cells.
+    Tessellation (CVT) to divide an n-dimensional measure space into k cells.
     The CVT is created by sampling points uniformly from the n-dimensional
     measure space and using k-means clustering to identify k centroids. When
     items are inserted into the archive, we identify their cell by identifying
