@@ -80,10 +80,9 @@ in pyribs operates as follows:
 
 ## Paper
 
-Two years after the initial release of pyribs (which was in 2021), we released a
-paper which elaborates on the RIBS framework and the design decisions behind
-pyribs. For more information on this paper, see
-[here](https://pyribs.org/paper).
+Two years after the initial release of pyribs, we released a paper which
+elaborates on the RIBS framework and the design decisions behind pyribs. For
+more information on this paper, see [here](https://pyribs.org/paper).
 
 ### Citation
 
