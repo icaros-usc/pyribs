@@ -1,5 +1,10 @@
 # History
 
+## 0.5.1
+
+This release contains miscellaneous edits to our documentation from v0.5.0.
+There were no changes to library functionality in this release.
+
 ## 0.5.0
 
 To learn about this release, see our page on What's New in v0.5.0:
