@@ -72,10 +72,10 @@ class GradientArborescenceEmitter(EmitterBase):
             archive.
         grad_opt (Callable or str): Gradient optimizer to use for the gradient
             ascent step of the algorithm. The optimizer is a
-            :class:`GradientOptBase` object. This parameter may be a callable
-            (e.g. a class or a lambda function) which takes in the ``theta0``
-            and ``lr`` arguments, or it may be a full or abbreviated name as
-            described in :mod:`ribs.emitters.opt`.
+            :class:`~ribs.emitters.opt.GradientOptBase` object. This parameter
+            may be a callable (e.g. a class or a lambda function) which takes in
+            the ``theta0`` and ``lr`` arguments, or it may be a full or
+            abbreviated name as described in :mod:`ribs.emitters.opt`.
         grad_opt_kwargs (dict): Additional arguments to pass to the gradient
             optimizer. See the gradient-based optimizers in
             :mod:`ribs.emitters.opt` for the arguments allowed by each
