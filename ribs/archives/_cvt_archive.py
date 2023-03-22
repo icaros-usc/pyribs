@@ -55,6 +55,9 @@ class CVTArchive(ArchiveBase):
         <../../tutorials/cma_mae.html>`_ for more info on thresholds, including
         the ``learning_rate`` and ``threshold_min`` parameters.
 
+    .. note:: For more information on our choice of k-D tree implementation, see
+        `#38 <https://github.com/icaros-usc/pyribs/issues/38>`_.
+
     Args:
         solution_dim (int): Dimension of the solution space.
         cells (int): The number of cells to use in the archive, equivalent to
