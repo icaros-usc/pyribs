@@ -5,9 +5,9 @@ algorithm, along with any information relevant to solutions, such as objective
 and measure values. Archives in pyribs can also store metadata (i.e., arbitrary
 objects) alongside each solution.
 
-The archives in this module are arranged in a one-layer hierarchy, with all
-archives inheriting from :class:`~ribs.archives.ArchiveBase`. This module also
-contains several utilities associated with the archives, such as
+The archives in this subpackage are arranged in a one-layer hierarchy, with all
+archives inheriting from :class:`~ribs.archives.ArchiveBase`. This subpackage
+also contains several utilities associated with the archives, such as
 :class:`~ribs.archives.Elite` and :class:`~ribs.archives.ArchiveDataFrame`.
 
 .. autosummary::
