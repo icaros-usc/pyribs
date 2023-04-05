@@ -1,8 +1,10 @@
-"""Emitters output new candidate solutions in QD algorithms.
+"""Emitters generate new candidate solutions in QD algorithms.
 
-All emitters should inherit from :class:`EmitterBase`, except for emitters
-designed for differentiable quality diversity (DQD), which should instead
-inherit from :class:`DQDEmitterBase`.
+More formally, emitters are algorithms that generate solutions and adapt to
+objective, measure, and archive insertion feedback.
+
+The emitters in this module follow a one-layer hierarchy, with all emitters
+inheriting from :class:`~ribs.emitters.EmitterBase`.
 
 .. note::
     Emitters provided here take on the data type of the archive passed to their
@@ -23,7 +25,7 @@ from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters._evolution_strategy_emitter import EvolutionStrategyEmitter
 from ribs.emitters._gaussian_emitter import GaussianEmitter
 from ribs.emitters._gradient_arborescence_emitter import \
-  GradientArborescenceEmitter
+    GradientArborescenceEmitter
 from ribs.emitters._iso_line_emitter import IsoLineEmitter
 
 __all__ = [
