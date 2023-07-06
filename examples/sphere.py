@@ -43,8 +43,7 @@ The supported algorithms are:
 - `cma_maega`: GridArchive (learning_rate = 0.01) with
   GradientArborescenceEmitter using ImprovementRanker.
 
-All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
-4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
+The parameters for each algorithm are stored in CONFIG.
 
 Notes:
 - `cma_mega` and `cma_mega_adam` use only one emitter and run for 10,000
