@@ -430,7 +430,7 @@ CONFIG = {
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
-        "batch_size": 36,
+        "batch_size": 35,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -458,7 +458,7 @@ CONFIG = {
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
-        "batch_size": 36,
+        "batch_size": 35,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -486,7 +486,7 @@ CONFIG = {
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": False,
-        "batch_size": 37,
+        "batch_size": 36,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -515,7 +515,7 @@ CONFIG = {
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": True,
-        "batch_size": 37,
+        "batch_size": 35,
         "archive": {
             "class": GridArchive,
             "kwargs": {
