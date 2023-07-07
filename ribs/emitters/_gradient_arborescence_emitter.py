@@ -9,7 +9,7 @@ from ribs.emitters.rankers import _get_ranker
 
 class GradientArborescenceEmitter(EmitterBase):
     """Generates solutions with a gradient arborescence, with coefficients
-    parameterized by an ES.
+    parameterized by an evolution strategy.
 
     This emitter originates in `Fontaine 2021
     <https://arxiv.org/abs/2106.03894>`_. It leverages the gradient information
@@ -100,10 +100,9 @@ class GradientArborescenceEmitter(EmitterBase):
             an open problem. Hence, this argument must be set to None.
         batch_size (int): Number of solutions to return in :meth:`ask`. If not
             passed in, a batch size will be automatically calculated using the
-            default CMA-ES rules. Note that `batch_size` **does not** include
-            the number of solutions returned by :meth:`ask_dqd`, but also note
-            that :meth:`ask_dqd` always returns one solution, i.e. the solution
-            point.
+            default CMA-ES rules. This **does not** account for the **one**
+            solution returned by :meth:`ask_dqd`, which is the solution point
+            maintained by the gradient optimizer.
         epsilon (float): For numerical stability, we add a small epsilon when
             normalizing gradients in :meth:`tell_dqd` -- refer to the
             implementation `here
@@ -252,12 +251,12 @@ class GradientArborescenceEmitter(EmitterBase):
         The multivariate Gaussian is parameterized by the evolution strategy
         optimizer ``self._opt``.
 
-        Note that this method returns `batch_size - 1` solution as one solution
-        is returned via ask_dqd.
+        This method returns ``batch_size`` solutions, even though one solution
+        is returned via ``ask_dqd``.
 
         Returns:
-            (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
-            to evaluate.
+            (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new
+            solutions to evaluate.
         """
         coeff_lower_bounds = np.full(
             self._num_coefficients,

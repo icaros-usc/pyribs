@@ -43,17 +43,9 @@ The supported algorithms are:
 - `cma_maega`: GridArchive (learning_rate = 0.01) with
   GradientArborescenceEmitter using ImprovementRanker.
 
-All algorithms use 15 emitters, each with a batch size of 37. Each one runs for
-4500 iterations for a total of 15 * 37 * 4500 ~= 2.5M evaluations.
-
-Notes:
-- `cma_mega` and `cma_mega_adam` use only one emitter and run for 10,000
-  iterations. This is to be consistent with the paper (`Fontaine 2021
-  <https://arxiv.org/abs/2106.03894>`_) in which these algorithms were proposed.
-- `cma_mae` and `cma_maega` run for 10,000 iterations as well.
-- CVTArchive in this example uses 10,000 cells, as opposed to the 250,000
-  (500x500) in the GridArchive, so it is not fair to directly compare
-  `cvt_map_elites` and `line_cvt_map_elites` to the other algorithms.
+The parameters for each algorithm are stored in CONFIG. The parameters
+reproduce the experiments presented in the paper in which each algorithm is
+introduced.
 
 Outputs are saved in the `sphere_output/` directory by default. The archive is
 saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
@@ -431,7 +423,7 @@ CONFIG = {
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
-        "batch_size": 36,
+        "batch_size": 35,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -459,7 +451,7 @@ CONFIG = {
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
-        "batch_size": 36,
+        "batch_size": 35,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -487,7 +479,7 @@ CONFIG = {
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": False,
-        "batch_size": 37,
+        "batch_size": 36,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -516,7 +508,7 @@ CONFIG = {
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": True,
-        "batch_size": 37,
+        "batch_size": 35,
         "archive": {
             "class": GridArchive,
             "kwargs": {
