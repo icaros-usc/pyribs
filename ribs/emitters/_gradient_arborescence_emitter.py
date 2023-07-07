@@ -251,12 +251,12 @@ class GradientArborescenceEmitter(EmitterBase):
         The multivariate Gaussian is parameterized by the evolution strategy
         optimizer ``self._opt``.
 
-        This method returns batch_size solutions, even though one solution is
-        returned via ``ask_dqd``.
+        This method returns ``batch_size`` solutions, even though one solution
+        is returned via ``ask_dqd``.
 
         Returns:
-            (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
-            to evaluate.
+            (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new
+            solutions to evaluate.
         """
         coeff_lower_bounds = np.full(
             self._num_coefficients,
