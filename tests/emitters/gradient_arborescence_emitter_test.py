@@ -72,9 +72,9 @@ def test_ask_dqd_must_be_called_before_ask():
         emitter.ask()
 
 
-def test_dqd_must_be_called_before_tell():
+def test_tell_dqd_must_be_called_before_tell():
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         emitter = GradientArborescenceEmitter(archive,
                                               x0=np.array([0]),
                                               sigma0=1.0,
