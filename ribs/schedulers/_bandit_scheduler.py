@@ -60,7 +60,8 @@ class BanditScheduler:
             solutions. The `result_archive` is a secondary archive where we can
             store all the best-performing solutions.
     Raises:
-        ValueError: Number of active emitter is less than one.
+        TypeError: The `emitter_pool` argument was not a list of emitters.
+        ValueError: Number of active emitters is less than one.
         ValueError: Less emitters in the pool than the number of active
             emitters.
         ValueError: The emitters passed in do not have the same solution
@@ -82,10 +83,17 @@ class BanditScheduler:
         if num_active < 1:
             raise ValueError("num_active cannot be less than 1.")
 
-        if len(emitter_pool) < num_active:
-            raise ValueError(f"The emitter pool must contain at least"
-                             f"num_active emitters, but only"
-                             f"{len(emitter_pool)} are given.")
+        try:
+            if len(emitter_pool) < num_active:
+                raise ValueError(f"The emitter pool must contain at least"
+                                 f"num_active emitters, but only"
+                                 f"{len(emitter_pool)} are given.")
+        except TypeError as exception:
+            # TypeError will be raised by len(). We avoid directly checking if
+            # `emitter_pool` is an instance of list since we do not want to be
+            # too restrictive.
+            raise TypeError("`emitter_pool` must be a list of emitter objects."
+                           ) from exception
 
         emitter_ids = set(id(e) for e in emitter_pool)
         if len(emitter_ids) != len(emitter_pool):
@@ -238,7 +246,7 @@ class BanditScheduler:
         #   "all", then all emitters are reselected.
         if reselect.any():
             ucb1 = np.full_like(self._emitter_pool, np.inf)
-            update_ucb = (self._selection != 0)
+            update_ucb = self._selection != 0
             if update_ucb.any():
                 ucb1[update_ucb] = (
                     self._success[update_ucb] / self._selection[update_ucb] +
