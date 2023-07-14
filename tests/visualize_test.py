@@ -612,6 +612,14 @@ def test_sliding_archive_mismatch_xy_with_boundaries():
     sliding_boundaries_archive_heatmap(archive, boundary_lw=0.5)
 
 
+@image_comparison(baseline_images=["cvt_archive_heatmap_with_centroids"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_cvt_archive_heatmap_with_centroids(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, plot_centroids=True)
+
+
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_samples"],
                   remove_text=False,
                   extensions=["png"])
