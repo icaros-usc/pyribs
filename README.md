@@ -86,20 +86,28 @@ more information on this paper, see [here](https://pyribs.org/paper).
 
 ## Citation
 
-If you use pyribs in your research, please cite it as follows. Note that you
-will need to include the
-[hyperref](https://www.overleaf.com/learn/latex/Hyperlinks#Linking_web_addresses)
-package in order to use the `\url` command. Also consider citing any algorithms
-you use as shown [below](#citing-algorithms-in-pyribs).
+If you use pyribs in your research, please consider citing our
+[GECCO 2023 paper](https://dl.acm.org/doi/10.1145/3583131.3590374) as follows.
+Also consider citing any algorithms you use as shown
+[below](#citing-algorithms-in-pyribs).
 
 ```
-@misc{pyribs,
-  title={pyribs: A Bare-Bones Python Library for Quality Diversity Optimization},
-  author={Bryon Tjanaka and Matthew C. Fontaine and David H. Lee and Yulun Zhang and Nivedit Reddy Balam and Nathaniel Dennler and Sujay S. Garlanka and Nikitas Dimitri Klapsis and Stefanos Nikolaidis},
-  year={2023},
-  eprint={2303.00191},
-  archivePrefix={arXiv},
-  primaryClass={cs.NE}
+@inproceedings{10.1145/3583131.3590374,
+  author = {Tjanaka, Bryon and Fontaine, Matthew C and Lee, David H and Zhang, Yulun and Balam, Nivedit Reddy and Dennler, Nathaniel and Garlanka, Sujay S and Klapsis, Nikitas Dimitri and Nikolaidis, Stefanos},
+  title = {Pyribs: A Bare-Bones Python Library for Quality Diversity Optimization},
+  year = {2023},
+  isbn = {9798400701191},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3583131.3590374},
+  doi = {10.1145/3583131.3590374},
+  abstract = {Recent years have seen a rise in the popularity of quality diversity (QD) optimization, a branch of optimization that seeks to find a collection of diverse, high-performing solutions to a given problem. To grow further, we believe the QD community faces two challenges: developing a framework to represent the field's growing array of algorithms, and implementing that framework in software that supports a range of researchers and practitioners. To address these challenges, we have developed pyribs, a library built on a highly modular conceptual QD framework. By replacing components in the conceptual framework, and hence in pyribs, users can compose algorithms from across the QD literature; equally important, they can identify unexplored algorithm variations. Furthermore, pyribs makes this framework simple, flexible, and accessible, with a user-friendly API supported by extensive documentation and tutorials. This paper overviews the creation of pyribs, focusing on the conceptual framework that it implements and the design principles that have guided the library's development. Pyribs is available at https://pyribs.org},
+  booktitle = {Proceedings of the Genetic and Evolutionary Computation Conference},
+  pages = {220–229},
+  numpages = {10},
+  keywords = {framework, quality diversity, software library},
+  location = {Lisbon, Portugal},
+  series = {GECCO '23}
 }
 ```
 
