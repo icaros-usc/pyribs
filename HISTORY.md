@@ -1,5 +1,12 @@
 # History
 
+## 0.5.2
+
+### Changelog
+
+#### Documentation
+ - Add BibTex citation for GECCO 2023 (#337)
+
 ## 0.5.1
 
 This release contains miscellaneous edits to our documentation from v0.5.0.

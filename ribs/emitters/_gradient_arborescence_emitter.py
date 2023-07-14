@@ -51,7 +51,8 @@ class GradientArborescenceEmitter(EmitterBase):
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
-        sigma0 (float): Initial step size / standard deviation.
+        sigma0 (float): Initial step size / standard deviation of the
+            distribution of gradient coefficients.
         lr (float): Learning rate for the gradient optimizer.
         ranker (Callable or str): The ranker is a :class:`RankerBase` object
             that orders the solutions after they have been evaluated in the
