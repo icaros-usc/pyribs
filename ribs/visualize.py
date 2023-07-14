@@ -41,7 +41,7 @@ __all__ = [
 def _retrieve_cmap(cmap):
     """Retrieves colormap from matplotlib."""
     if isinstance(cmap, str):
-        return matplotlib.cm.get_cmap(cmap)
+        return plt.get_cmap(cmap)
     if isinstance(cmap, list):
         return matplotlib.colors.ListedColormap(cmap)
     return cmap
@@ -779,5 +779,6 @@ def parallel_axes_plot(archive,
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(vmin, vmax)
     host_ax.figure.colorbar(mappable,
+                            ax=host_ax,
                             pad=cbar_pad,
                             orientation=cbar_orientation)
