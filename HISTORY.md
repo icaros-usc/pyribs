@@ -6,6 +6,7 @@
 
 #### API
 
+- Supports Python 3.11 (#342)
 - Check that emitters passed in are lists/iterables in scheduler (#341)
 - Fix Matplotlib `get_cmap` deprecation (#340)
 - Set `plot_centroids` to False when plotting (#339)
