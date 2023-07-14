@@ -4,8 +4,13 @@
 
 ### Changelog
 
+#### API
+
+- Raise error messages when `ask` is called without `ask_dqd` (#338)
+
 #### Documentation
- - Add BibTex citation for GECCO 2023 (#337)
+
+- Add BibTex citation for GECCO 2023 (#337)
 
 ## 0.5.1
 

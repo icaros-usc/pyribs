@@ -258,7 +258,14 @@ class GradientArborescenceEmitter(EmitterBase):
         Returns:
             (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new
             solutions to evaluate.
+        Raises:
+            RuntimeError: This method was called without first passing gradients
+                with calls to ask_dqd() and tell_dqd().
         """
+        if self._jacobian_batch is None:
+            raise RuntimeError("Please call ask_dqd() and tell_dqd() "
+                               "before calling ask().")
+
         coeff_lower_bounds = np.full(
             self._num_coefficients,
             -np.inf,
@@ -382,6 +389,9 @@ class GradientArborescenceEmitter(EmitterBase):
                 floats represent, refer to :meth:`ribs.archives.add()`.
             metadata_batch (array-like): 1d object array containing a metadata
                 object for each solution.
+        Raises:
+            RuntimeError: This method was called without first passing gradients
+                with calls to ask_dqd() and tell_dqd().
         """
         # Preprocessing arguments.
         solution_batch = np.asarray(solution_batch)
@@ -403,7 +413,8 @@ class GradientArborescenceEmitter(EmitterBase):
                             metadata_batch=metadata_batch)
 
         if self._jacobian_batch is None:
-            raise RuntimeError("tell() was called without calling tell_dqd().")
+            raise RuntimeError("Please call ask_dqd(), tell_dqd(), and ask() "
+                               "before calling tell().")
 
         # Increase iteration counter.
         self._itrs += 1
