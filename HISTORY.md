@@ -2,6 +2,11 @@
 
 ## 0.5.2
 
+This release contains miscellaneous edits to our documentation from v0.5.1.
+Furthermore, the library is updated to support Python 3.11, removed deprecated
+options, and strengthened with more robust checks and error messages in the
+schedulers.
+
 ### Changelog
 
 #### API
