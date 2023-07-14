@@ -34,6 +34,18 @@ def add_mode(request):
     return request.param
 
 
+def test_init_fails_with_non_list():
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
+
+    # Just a single emitter not in a list.
+    emitters = GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=1)
+
+    with pytest.raises(TypeError):
+        Scheduler(archive, emitters)
+
+
 def test_init_fails_with_no_emitters():
     # arbitrary sol_dim
     archive = GridArchive(solution_dim=10,

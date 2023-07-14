@@ -41,6 +41,7 @@ class Scheduler:
             solutions. The `result_archive` is a secondary archive where we can
             store all the best-performing solutions.
     Raises:
+        TypeError: The `emitters` argument was not a list of emitters.
         ValueError: The emitters passed in do not have the same solution
             dimensions.
         ValueError: There is no emitter passed in.
@@ -55,8 +56,16 @@ class Scheduler:
                  *,
                  result_archive=None,
                  add_mode="batch"):
-        if len(emitters) == 0:
-            raise ValueError("Pass in at least one emitter to the scheduler.")
+        try:
+            if len(emitters) == 0:
+                raise ValueError(
+                    "Pass in at least one emitter to the scheduler.")
+        except TypeError as exception:
+            # TypeError will be raised by len(). We avoid directly checking if
+            # `emitters` is an instance of list since we do not want to be too
+            # restrictive.
+            raise TypeError(
+                "`emitters` must be a list of emitter objects.") from exception
 
         emitter_ids = set(id(e) for e in emitters)
         if len(emitter_ids) != len(emitters):
