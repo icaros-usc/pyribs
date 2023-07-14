@@ -7,6 +7,7 @@
 #### API
 
 - Raise error messages when `ask` is called without `ask_dqd` (#338)
+- Set `plot_centroids` to False when plotting (#339)
 
 #### Documentation
 
