@@ -37,7 +37,7 @@ class CVTArchive(ArchiveBase):
         :alt: Runtime to insert 100k entries into CVTArchive
 
     Across almost all numbers of cells, using the k-D tree is faster than using
-    brute force. Thus, **we recommend always using he k-D tree.** See
+    brute force. Thus, **we recommend always using the k-D tree.** See
     `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
     in the project repo for more information about how this plot was generated.
@@ -188,6 +188,7 @@ class CVTArchive(ArchiveBase):
                     f"{self._measure_dim})")
             self._centroids = custom_centroids
             self._samples = None
+
         if self._centroids is None:
             self._samples = self._rng.uniform(
                 self._lower_bounds,
@@ -267,9 +268,8 @@ class CVTArchive(ArchiveBase):
         check_finite(measures_batch, "measures_batch")
 
         if self._use_kd_tree:
-            return np.asarray(
-                self._centroid_kd_tree.query(measures_batch))[1].astype(
-                    np.int32)
+            _, indices = self._centroid_kd_tree.query(measures_batch)
+            return indices.astype(np.int32)
 
         # Brute force distance calculation -- start by taking the difference
         # between each measure i and all the centroids.

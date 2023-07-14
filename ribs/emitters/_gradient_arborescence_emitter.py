@@ -51,7 +51,8 @@ class GradientArborescenceEmitter(EmitterBase):
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
-        sigma0 (float): Initial step size / standard deviation.
+        sigma0 (float): Initial step size / standard deviation of the
+            distribution of gradient coefficients.
         lr (float): Learning rate for the gradient optimizer.
         ranker (Callable or str): The ranker is a :class:`RankerBase` object
             that orders the solutions after they have been evaluated in the
@@ -257,7 +258,14 @@ class GradientArborescenceEmitter(EmitterBase):
         Returns:
             (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new
             solutions to evaluate.
+        Raises:
+            RuntimeError: This method was called without first passing gradients
+                with calls to ask_dqd() and tell_dqd().
         """
+        if self._jacobian_batch is None:
+            raise RuntimeError("Please call ask_dqd() and tell_dqd() "
+                               "before calling ask().")
+
         coeff_lower_bounds = np.full(
             self._num_coefficients,
             -np.inf,
@@ -334,9 +342,8 @@ class GradientArborescenceEmitter(EmitterBase):
         status_batch = np.asarray(status_batch)
         value_batch = np.asarray(value_batch)
         batch_size = solution_batch.shape[0]
-        metadata_batch = (np.empty(batch_size, dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
+        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
+                          is None else np.asarray(metadata_batch, dtype=object))
 
         # Validate arguments.
         validate_batch_args(archive=self.archive,
@@ -382,6 +389,9 @@ class GradientArborescenceEmitter(EmitterBase):
                 floats represent, refer to :meth:`ribs.archives.add()`.
             metadata_batch (array-like): 1d object array containing a metadata
                 object for each solution.
+        Raises:
+            RuntimeError: This method was called without first passing gradients
+                with calls to ask_dqd() and tell_dqd().
         """
         # Preprocessing arguments.
         solution_batch = np.asarray(solution_batch)
@@ -390,9 +400,8 @@ class GradientArborescenceEmitter(EmitterBase):
         status_batch = np.asarray(status_batch)
         value_batch = np.asarray(value_batch)
         batch_size = solution_batch.shape[0]
-        metadata_batch = (np.empty(batch_size, dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
+        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
+                          is None else np.asarray(metadata_batch, dtype=object))
 
         # Validate arguments.
         validate_batch_args(archive=self.archive,
@@ -404,7 +413,8 @@ class GradientArborescenceEmitter(EmitterBase):
                             metadata_batch=metadata_batch)
 
         if self._jacobian_batch is None:
-            raise RuntimeError("tell() was called without calling tell_dqd().")
+            raise RuntimeError("Please call ask_dqd(), tell_dqd(), and ask() "
+                               "before calling tell().")
 
         # Increase iteration counter.
         self._itrs += 1
