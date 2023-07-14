@@ -59,3 +59,25 @@ def test_bounds_must_be_none():
                                     normalize_grad=False,
                                     bounds=bound,
                                     batch_size=batch_size)
+
+
+def test_ask_dqd_must_be_called_before_ask():
+    archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
+    with pytest.raises(RuntimeError):
+        emitter = GradientArborescenceEmitter(archive,
+                                              x0=np.array([0]),
+                                              sigma0=1.0,
+                                              lr=1.0)
+        # Must call ask_dqd() before calling ask() to set the jacobian.
+        emitter.ask()
+
+
+def test_dqd_must_be_called_before_tell():
+    archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
+    with pytest.raises(TypeError):
+        emitter = GradientArborescenceEmitter(archive,
+                                              x0=np.array([0]),
+                                              sigma0=1.0,
+                                              lr=1.0)
+        # Must call ask_dqd() before calling ask() to set the jacobian.
+        emitter.tell([[0]], [0], [[0]], [0], [0])
