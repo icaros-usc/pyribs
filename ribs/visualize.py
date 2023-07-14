@@ -41,7 +41,7 @@ __all__ = [
 def _retrieve_cmap(cmap):
     """Retrieves colormap from matplotlib."""
     if isinstance(cmap, str):
-        return matplotlib.cm.get_cmap(cmap)
+        return plt.get_cmap(cmap)
     if isinstance(cmap, list):
         return matplotlib.colors.ListedColormap(cmap)
     return cmap
@@ -259,7 +259,7 @@ def grid_archive_heatmap(archive,
 def cvt_archive_heatmap(archive,
                         ax=None,
                         *,
-                        plot_centroids=True,
+                        plot_centroids=False,
                         plot_samples=False,
                         transpose_measures=False,
                         cmap="magma",
@@ -403,6 +403,11 @@ def cvt_archive_heatmap(archive,
     max_obj = max_obj if vmax is None else vmax
 
     # Shade the regions.
+    #
+    # Note: by default, the first region will be an empty list -- see:
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Voronoi.html
+    # However, this empty region is ignored by ax.fill since `polygon` is also
+    # an empty list in this case.
     for region, objective in zip(vor.regions, region_obj):
         # This check is O(n), but n is typically small, and creating
         # `polygon` is also O(n) anyway.
@@ -774,5 +779,6 @@ def parallel_axes_plot(archive,
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(vmin, vmax)
     host_ax.figure.colorbar(mappable,
+                            ax=host_ax,
                             pad=cbar_pad,
                             orientation=cbar_orientation)
