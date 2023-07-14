@@ -51,7 +51,8 @@ class GradientArborescenceEmitter(EmitterBase):
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
-        sigma0 (float): Initial step size / standard deviation.
+        sigma0 (float): Initial step size / standard deviation of the
+            distribution of gradient coefficients.
         lr (float): Learning rate for the gradient optimizer.
         ranker (Callable or str): The ranker is a :class:`RankerBase` object
             that orders the solutions after they have been evaluated in the
@@ -334,9 +335,8 @@ class GradientArborescenceEmitter(EmitterBase):
         status_batch = np.asarray(status_batch)
         value_batch = np.asarray(value_batch)
         batch_size = solution_batch.shape[0]
-        metadata_batch = (np.empty(batch_size, dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
+        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
+                          is None else np.asarray(metadata_batch, dtype=object))
 
         # Validate arguments.
         validate_batch_args(archive=self.archive,
@@ -390,9 +390,8 @@ class GradientArborescenceEmitter(EmitterBase):
         status_batch = np.asarray(status_batch)
         value_batch = np.asarray(value_batch)
         batch_size = solution_batch.shape[0]
-        metadata_batch = (np.empty(batch_size, dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
+        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
+                          is None else np.asarray(metadata_batch, dtype=object))
 
         # Validate arguments.
         validate_batch_args(archive=self.archive,
