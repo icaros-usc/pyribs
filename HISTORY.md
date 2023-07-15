@@ -11,6 +11,7 @@ schedulers.
 
 #### API
 
+- Update distribution dependencies (#344)
 - Support Python 3.11 (#342)
 - Check that emitters passed in are lists/iterables in scheduler (#341)
 - Fix Matplotlib `get_cmap` deprecation (#340)
