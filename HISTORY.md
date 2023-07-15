@@ -2,14 +2,20 @@
 
 ## 0.5.2
 
+This release contains miscellaneous edits to our documentation from v0.5.1.
+Furthermore, the library is updated to support Python 3.11, removed deprecated
+options, and strengthened with more robust checks and error messages in the
+schedulers.
+
 ### Changelog
 
 #### API
 
-- Supports Python 3.11 (#342)
+- Support Python 3.11 (#342)
 - Check that emitters passed in are lists/iterables in scheduler (#341)
 - Fix Matplotlib `get_cmap` deprecation (#340)
-- Set `plot_centroids` to False when plotting (#339)
+- **Backwards-incompatible:** Default `plot_centroids` to False when plotting
+  (#339)
 - Raise error messages when `ask` is called without `ask_dqd` (#338)
 
 #### Documentation
