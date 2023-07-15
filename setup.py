@@ -52,10 +52,10 @@ extras_require = {
         "sphinx-codeautolink==0.12.1",
 
         # Distribution
-        "bump2version==0.5.11",
-        "wheel==0.36.2",
-        "twine==1.14.0",
-        "check-wheel-contents==0.2.0",
+        "bump2version==1.0.1",
+        "wheel==0.40.0",
+        "twine==4.0.2",
+        "check-wheel-contents==0.4.0",
     ],
 }
 
