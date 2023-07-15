@@ -11,7 +11,6 @@ schedulers.
 
 #### API
 
-- Update distribution dependencies (#344)
 - Support Python 3.11 (#342)
 - Check that emitters passed in are lists/iterables in scheduler (#341)
 - Fix Matplotlib `get_cmap` deprecation (#340)
@@ -22,6 +21,10 @@ schedulers.
 #### Documentation
 
 - Add BibTex citation for GECCO 2023 (#337)
+
+#### Improvements
+
+- Update distribution dependencies (#344)
 
 ## 0.5.1
 
