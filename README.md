@@ -264,7 +264,7 @@ pyribs users include:
 ### Publications
 
 For the list of publications which use pyribs, refer to our
-[Google Scholar entry](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=16246392515630874608).
+[Google Scholar entry](https://scholar.google.com/scholar?cites=1780392371068190395).
 
 ### Software
 
