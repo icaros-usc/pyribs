@@ -25,6 +25,10 @@ from ribs.visualize import (cvt_archive_heatmap, grid_archive_heatmap,
 
 # pylint: disable = redefined-outer-name
 
+# Tolerance for root mean square difference between the pixels of the images,
+# where 255 is the max value.
+CVT_IMAGE_TOLERANCE = 0.1
+
 
 @pytest.fixture(autouse=True)
 def clean_matplotlib():
@@ -379,7 +383,8 @@ def test_heatmap_archive__grid_custom_cbar_axis(grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_archive__cvt(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive)
@@ -403,7 +408,8 @@ def test_heatmap_with_custom_axis__grid(grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_with_custom_axis__cvt(cvt_archive):
     _, ax = plt.subplots(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, ax=ax)
@@ -427,7 +433,8 @@ def test_heatmap_long__grid(long_grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_long"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_long__cvt(long_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(long_cvt_archive)
@@ -451,7 +458,8 @@ def test_heatmap_long_square__grid(long_grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_long_square"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_long_square__cvt(long_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(long_cvt_archive, aspect="equal")
@@ -475,7 +483,8 @@ def test_heatmap_long_transpose__grid(long_grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_long_transpose"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_long_transpose__cvt(long_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(long_cvt_archive, transpose_measures=True)
@@ -502,7 +511,8 @@ def test_heatmap_with_limits__grid(grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_limits"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_with_limits__cvt(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, vmin=-1.0, vmax=-0.5)
@@ -527,7 +537,8 @@ def test_heatmap_listed_cmap__grid(grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_listed_cmap"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_listed_cmap__cvt(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
@@ -553,7 +564,8 @@ def test_heatmap_coolwarm_cmap__grid(grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_coolwarm_cmap"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_coolwarm_cmap__cvt(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, cmap="coolwarm")
@@ -614,7 +626,8 @@ def test_sliding_archive_mismatch_xy_with_boundaries():
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_vmin_equals_vmax"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_cvt_archive_heatmap_vmin_equals_vmax(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, vmin=-0.5, vmax=-0.5)
@@ -622,7 +635,8 @@ def test_cvt_archive_heatmap_vmin_equals_vmax(cvt_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_centroids"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_cvt_archive_heatmap_with_centroids(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, plot_centroids=True)
@@ -630,7 +644,8 @@ def test_cvt_archive_heatmap_with_centroids(cvt_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_samples"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_cvt_archive_heatmap_with_samples(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, plot_samples=True)
@@ -650,7 +665,8 @@ def test_cvt_archive_heatmap_no_samples_error():
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_voronoi_style"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_cvt_archive_heatmap_voronoi_style(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, lw=3.0, ec="grey")

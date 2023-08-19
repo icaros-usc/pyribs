@@ -422,27 +422,56 @@ def cvt_archive_heatmap(archive,
     if min_obj == max_obj:
         min_obj, max_obj = min_obj - 0.01, max_obj + 0.01
 
-    # Shade the regions.
-    #
-    # Note: by default, the first region will be an empty list -- see:
-    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Voronoi.html
-    # However, this empty region is ignored by ax.fill since `polygon` is also
-    # an empty list in this case.
+    # Vertices of all cells.
+    vertices = []
+    # The facecolor of each cell. Shape (n_regions, 4) for RGBA format, but we
+    # do not know n_regions in advance.
+    facecolors = []
+    # Boolean array indicating which of the facecolors needs to be computed with
+    # the cmap. The other colors correspond to empty cells. Shape (n_regions,)
+    facecolor_cmap_mask = []
+    # The objective corresponding to the regions which must be passed through
+    # the cmap. Shape (sum(facecolor_cmap_mask),)
+    facecolor_objs = []
+
+    # Cycle through the regions to collect patches and facecolors.
     for region, objective in zip(vor.regions, region_obj):
-        # This check is O(n), but n is typically small, and creating
-        # `polygon` is also O(n) anyway.
-        if -1 not in region:
-            if objective is None:
-                # Transparent white (RGBA format) -- this ensures that if a
-                # figure is saved with a transparent background, the empty cells
-                # will also be transparent.
-                color = (1.0, 1.0, 1.0, 0.0)
-            else:
-                normalized_obj = np.clip(
-                    (objective - min_obj) / (max_obj - min_obj), 0.0, 1.0)
-                color = cmap(normalized_obj)
-            polygon = vor.vertices[region]
-            ax.fill(*zip(*polygon), color=color, ec=ec, lw=lw)
+        # Checking for -1 is O(n), but n is typically small.
+        #
+        # We check length since the first region is an empty list by default:
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Voronoi.html
+        if -1 in region or len(region) == 0:
+            continue
+
+        if objective is None:
+            # Transparent white (RGBA format) -- this ensures that if a figure
+            # is saved with a transparent background, the empty cells will also
+            # be transparent.
+            facecolors.append(np.array([1.0, 1.0, 1.0, 0.0]))
+            facecolor_cmap_mask.append(False)
+        else:
+            facecolors.append(np.empty(4))
+            facecolor_cmap_mask.append(True)
+            facecolor_objs.append(objective)
+
+        vertices.append(vor.vertices[region])
+
+    # Compute facecolors from the cmap. We first normalize the objectives and
+    # clip them to [0, 1].
+    normalized_objs = np.clip(
+        (np.asarray(facecolor_objs) - min_obj) / (max_obj - min_obj), 0.0, 1.0)
+    facecolors = np.asarray(facecolors)
+    facecolors[facecolor_cmap_mask] = cmap(normalized_objs)
+
+    # Plot the collection on the axes. Note that this is faster than plotting
+    # each polygon individually with ax.fill().
+    ax.add_collection(
+        matplotlib.collections.PolyCollection(
+            vertices,
+            edgecolors=ec,
+            facecolors=facecolors,
+            linewidths=lw,
+        ))
 
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)
