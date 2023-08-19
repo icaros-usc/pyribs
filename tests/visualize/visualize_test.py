@@ -612,6 +612,14 @@ def test_sliding_archive_mismatch_xy_with_boundaries():
     sliding_boundaries_archive_heatmap(archive, boundary_lw=0.5)
 
 
+@image_comparison(baseline_images=["cvt_archive_heatmap_vmin_equals_vmax"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_cvt_archive_heatmap_vmin_equals_vmax(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, vmin=-0.5, vmax=-0.5)
+
+
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_centroids"],
                   remove_text=False,
                   extensions=["png"])
@@ -626,6 +634,26 @@ def test_cvt_archive_heatmap_with_centroids(cvt_archive):
 def test_cvt_archive_heatmap_with_samples(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, plot_samples=True)
+
+
+def test_cvt_archive_heatmap_no_samples_error():
+    # This archive has no samples since custom centroids were passed in.
+    archive = CVTArchive(solution_dim=2,
+                         cells=2,
+                         ranges=[(-1, 1), (-1, 1)],
+                         custom_centroids=[[0, 0], [1, 1]])
+
+    # Thus, plotting samples on this archive should fail.
+    with pytest.raises(ValueError):
+        cvt_archive_heatmap(archive, lw=3.0, ec="grey", plot_samples=True)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_voronoi_style"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_cvt_archive_heatmap_voronoi_style(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, lw=3.0, ec="grey")
 
 
 #
