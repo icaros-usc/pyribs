@@ -3,10 +3,10 @@
 
 from setuptools import find_packages, setup
 
-with open("README.md") as readme_file:
+with open("README.md", encoding="utf-8") as readme_file:
     readme = readme_file.read()
 
-with open("HISTORY.md") as history_file:
+with open("HISTORY.md", encoding="utf-8") as history_file:
     history = history_file.read()
 
 # NOTE: Update pinned_reqs whenever install_requires or extras_require changes.
@@ -24,12 +24,16 @@ install_requires = [
 ]
 
 extras_require = {
-    "visualize": ["matplotlib>=3.0.0",],
+    "visualize": [
+        "matplotlib>=3.0.0",
+        "shapely>=2.0.0",
+    ],
     # All dependencies except for dev. Don't worry if there are duplicate
     # dependencies, since setuptools automatically handles duplicates.
     "all": [
         ### visualize ###
         "matplotlib>=3.0.0",
+        "shapely>=2.0.0",
     ],
     "dev": [
         "pip>=20.3",

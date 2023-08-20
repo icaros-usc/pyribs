@@ -23,6 +23,7 @@ to these functions.
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import shapely
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
@@ -270,6 +271,7 @@ def cvt_archive_heatmap(archive,
                         vmax=None,
                         cbar="auto",
                         cbar_kwargs=None,
+                        clip=False,
                         plot_centroids=False,
                         plot_samples=False,
                         ms=1):
@@ -343,6 +345,14 @@ def cvt_archive_heatmap(archive,
             the colorbar on the specified Axes.
         cbar_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.colorbar`.
+        clip (bool, shapely.Polygon): Clip the heatmap cells to a given polygon.
+            By default, we draw the cells along the outer edges of the heatmap
+            as polygons that extend beyond the archive bounds, but these
+            polygons are hidden because we set the axis limits to be the archive
+            bounds. Passing `clip=True` will clip the heatmap such that these
+            "outer edge" polygons are within the archive bounds. An arbitrary
+            polygon can also be passed in to clip the heatmap to a custom shape.
+            See `#TODO <TODO>`_ for more info.
         plot_centroids (bool): Whether to plot the cluster centroids.
         plot_samples (bool): Whether to plot the samples used when generating
             the clusters.
@@ -375,6 +385,11 @@ def cvt_archive_heatmap(archive,
         lower_bounds = np.flip(lower_bounds)
         upper_bounds = np.flip(upper_bounds)
         centroids = np.flip(centroids, axis=1)
+
+    # If clip is on, make it default to an archive bounding box.
+    if clip and not isinstance(clip, shapely.Polygon):
+        clip = shapely.box(lower_bounds[0], lower_bounds[1], upper_bounds[0],
+                           upper_bounds[1])
 
     if plot_samples:
         samples = archive.samples
@@ -443,18 +458,36 @@ def cvt_archive_heatmap(archive,
         if -1 in region or len(region) == 0:
             continue
 
-        if objective is None:
-            # Transparent white (RGBA format) -- this ensures that if a figure
-            # is saved with a transparent background, the empty cells will also
-            # be transparent.
-            facecolors.append(np.array([1.0, 1.0, 1.0, 0.0]))
-            facecolor_cmap_mask.append(False)
+        if clip:
+            # Clip the cell vertices to the polygon. Clipping may cause some
+            # cells to split into two or more polygons, especially if the clip
+            # polygon has holes.
+            polygon = shapely.Polygon(vor.vertices[region])
+            intersection = polygon.intersection(clip)
+            if isinstance(intersection, shapely.MultiPolygon):
+                for polygon in intersection.geoms:
+                    vertices.append(polygon.exterior.coords)
+                n_splits = len(intersection.geoms)
+            else:
+                # The intersection is a single Polygon.
+                vertices.append(intersection.exterior.coords)
+                n_splits = 1
         else:
-            facecolors.append(np.empty(4))
-            facecolor_cmap_mask.append(True)
-            facecolor_objs.append(objective)
+            vertices.append(vor.vertices[region])
+            n_splits = 1
 
-        vertices.append(vor.vertices[region])
+        # Repeat values for each split.
+        for _ in range(n_splits):
+            if objective is None:
+                # Transparent white (RGBA format) -- this ensures that if a
+                # figure is saved with a transparent background, the empty cells
+                # will also be transparent.
+                facecolors.append(np.array([1.0, 1.0, 1.0, 0.0]))
+                facecolor_cmap_mask.append(False)
+            else:
+                facecolors.append(np.empty(4))
+                facecolor_cmap_mask.append(True)
+                facecolor_objs.append(objective)
 
     # Compute facecolors from the cmap. We first normalize the objectives and
     # clip them to [0, 1].
