@@ -21,6 +21,7 @@ schedulers.
 #### Documentation
 
 - Add BibTex citation for GECCO 2023 (#337)
+- Use dask instead of multiprocessing for lunar lander tutorial (#346)
 
 #### Improvements
 
