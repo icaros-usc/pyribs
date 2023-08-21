@@ -21,11 +21,15 @@ schedulers.
 #### Documentation
 
 - Add BibTex citation for GECCO 2023 (#337)
-- Use dask instead of multiprocessing for lunar lander tutorial (#346)
 
 #### Improvements
 
 - Update distribution dependencies (#344)
+
+#### Upcoming
+
+- Use dask instead of multiprocessing for lunar lander tutorial (#346)
+- pip install swig before gymnasium[box2d] in lunar lander tutorial (#346)
 
 ## 0.5.1
 
