@@ -1,5 +1,14 @@
 # History
 
+## (Upcoming)
+
+### Changelog
+
+#### Documentation
+
+- Use dask instead of multiprocessing for lunar lander tutorial (#346)
+- pip install swig before gymnasium[box2d] in lunar lander tutorial (#346)
+
 ## 0.5.2
 
 This release contains miscellaneous edits to our documentation from v0.5.1.
