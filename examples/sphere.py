@@ -35,7 +35,8 @@ The supported algorithms are:
 - `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, where half (7) of
   the emitter are using TwoStageRandomDirectionRanker and half (8) are
   TwoStageImprovementRanker.
-- `omg_mega`: GridArchive with GradientEmitter.
+- `og_map_elites`: GridArchive with GradientEmitter, does not use measure gradients.
+- `omg_mega`: GridArchive with GradientEmitter, uses measure gradients.
 - `cma_mega`: GridArchive with GradientArborescenceEmitter.
 - `cma_mega_adam`: GridArchive with GradientArborescenceEmitter using Adam
   Optimizer.
@@ -419,13 +420,41 @@ CONFIG = {
             "kwargs": {}
         }
     },
+    "og_map_elites": {
+        "dim": 1_000,
+        "iters": 10_000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": True,
+        "batch_size": 36 // 2,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [{
+            "class": GradientEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "sigma_g": 0.5,
+                "measure_gradients": False,
+                "normalize_grad": False,
+            },
+            "num_emitters": 1
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
     "omg_mega": {
         "dim": 1_000,
         "iters": 10_000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
-        "batch_size": 36,
+        "batch_size": 36 // 2,
         "archive": {
             "class": GridArchive,
             "kwargs": {
