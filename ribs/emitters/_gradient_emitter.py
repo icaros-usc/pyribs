@@ -55,7 +55,7 @@ class GradientEmitter(EmitterBase):
                  sigma_g=0.05,
                  line_sigma=0.0,
                  measure_gradients=False,
-                 normalize_gradients=False,
+                 normalize_grad=False,
                  epsilon=1e-8,
                  operator_type='isotropic',
                  bounds=None,
@@ -75,9 +75,11 @@ class GradientEmitter(EmitterBase):
         self._line_sigma = line_sigma
         self._use_isolinedd = operator_type != 'isotropic'
         self._measure_gradients = measure_gradients
-        self._normalize_gradients = normalize_gradients
+        self._normalize_grad = normalize_grad
         self._epsilon = epsilon
         self._batch_size = batch_size
+
+        self._jacobian_batch = None
 
     @property
     def x0(self):
@@ -99,18 +101,67 @@ class GradientEmitter(EmitterBase):
     def ask_dqd(self,):
         """Samples a new solution to have its value and gradient evaluated.
         """
-        # get solutions not from grad optimizer, but from....
-        if self.archive.empty():
+        # get perturbed solutions from the archive
+        if self.archive.empty:
             parents = np.expand_dims(self.x0, axis=0)
+        else:
+            parents = self.archive.sample_elites(self.batch_size).solution_batch
 
-    def tell_dqd(self,):
+        if self._use_isolinedd:
+            pass
+        else:
+            noise = self._rng.normal(
+                loc=0.0,
+                scale=self.sigma0,
+                size=(self.batch_size, self.solution_dim),
+            ).astype(self.archive.dtype)
+
+            #todo use batch ops instead of numba, check if batching works
+            sol = np.minimum(np.maximum(parents + noise, self.lower_bounds),
+                             self.upper_bounds)
+
+        self._parents = sol
+        return self._parents
+
+    def tell_dqd(self,
+                 solution_batch,
+                 objective_batch,
+                 measures_batch,
+                 jacobian_batch,
+                 status_batch,
+                 value_batch,
+                 metadata_batch=None):
         """Sets the emitter Jacbians from evaluating the gradient of the
         solutions.
         """
         # preprocess + validate args
+        solution_batch = np.asarray(solution_batch)
+        objective_batch = np.asarray(objective_batch)
+        measures_batch = np.asarray(measures_batch)
+        status_batch = np.asarray(status_batch)
+        value_batch = np.asarray(value_batch)
+        batch_size = solution_batch.shape[0]
+        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
+                          is None else np.asarray(metadata_batch, dtype=object))
+
+        # Validate arguments.
+        validate_batch_args(archive=self.archive,
+                            solution_batch=solution_batch,
+                            objective_batch=objective_batch,
+                            measures_batch=measures_batch,
+                            status_batch=status_batch,
+                            value_batch=value_batch,
+                            jacobian_batch=jacobian_batch,
+                            metadata_batch=metadata_batch)
 
         # normalize gradients + set jacobian
         # jacobian is obtained from evaluating solutions of ask_dqd()
+        if self._normalize_grad:
+            norms = np.linalg.norm(jacobian_batch, axis=2,
+                                   keepdims=True) + self._epsilon
+            jacobian_batch /= norms
+
+        self._jacobian_batch = jacobian_batch
 
     def ask(self):
         """Get branched solutions

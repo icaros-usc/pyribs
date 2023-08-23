@@ -35,6 +35,7 @@ The supported algorithms are:
 - `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, where half (7) of
   the emitter are using TwoStageRandomDirectionRanker and half (8) are
   TwoStageImprovementRanker.
+- `omg_mega`: GridArchive with GradientEmitter.
 - `cma_mega`: GridArchive with GradientArborescenceEmitter.
 - `cma_mega_adam`: GridArchive with GradientArborescenceEmitter using Adam
   Optimizer.
@@ -83,7 +84,8 @@ import tqdm
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           GradientArborescenceEmitter, IsoLineEmitter)
+                           GradientEmitter, GradientArborescenceEmitter,
+                           IsoLineEmitter)
 from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
@@ -411,6 +413,34 @@ CONFIG = {
                 "restart_rule": "basic"
             },
             "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "omg_mega": {
+        "dim": 1_000,
+        "iters": 10_000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": True,
+        "batch_size": 36,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [{
+            "class": GradientEmitter,
+            "kwargs": {
+                "sigma0": 1.0,
+                "sigma_g": 10.0,
+                # "grad_opt": "gradient_ascent",
+                # "selection_rule": "mu"
+            },
+            "num_emitters": 1
         }],
         "scheduler": {
             "class": Scheduler,
