@@ -69,6 +69,8 @@ class GradientEmitter(EmitterBase):
         )
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
+        check_1d_shape(self._x0, "x0", archive.solution_dim,
+                       "archive.solution_dim")
         self._sigma0 = archive.dtype(sigma0) if isinstance(
             sigma0, (float, np.floating)) else np.array(sigma0)
         self._sigma_g = archive.dtype(sigma_g)
@@ -168,6 +170,30 @@ class GradientEmitter(EmitterBase):
 
         _extended_summary_
         """
+        if self._jacobian_batch is None:
+            raise RuntimeError("Please call ask_dqd() and tell_dqd() "
+                               "before calling ask().")
+
+        if self._measure_gradients:
+            noise = self._rng.normal(
+                loc=0.0,
+                scale=self._sigma_g,
+                size=self._jacobian_batch.shape[:2],
+            )
+            noise[:, 0] = np.abs(noise[:, 0])
+            noise = np.expand_dims(noise, axis=2)
+            offsets = np.sum(np.multiply(self._jacobian_batch, noise), axis=1)
+            sols = offsets + self._parents
+        else:
+            # Transform the Jacobian
+            if len(self._jacobian_batch.shape) == 3:
+                self._jacobian_batch = np.squeeze(self._jacobian_batch[:,
+                                                                       0:1, :],
+                                                  axis=1)
+            sols = self._parents + self._jacobian_batch * self._sigma_g
+
+        return sols
+
 
     def tell(self):
         """update optimizer internals using ranking and Jacobian info

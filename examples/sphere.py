@@ -435,10 +435,10 @@ CONFIG = {
         "emitters": [{
             "class": GradientEmitter,
             "kwargs": {
-                "sigma0": 1.0,
+                "sigma0": 0.0,
                 "sigma_g": 10.0,
-                # "grad_opt": "gradient_ascent",
-                # "selection_rule": "mu"
+                "measure_gradients": True,
+                "normalize_grad": True,
             },
             "num_emitters": 1
         }],
