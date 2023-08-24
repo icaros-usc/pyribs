@@ -99,7 +99,18 @@ class GradientEmitter(EmitterBase):
         """int: Number of solutions to return in :meth:`ask`."""
         return self._batch_size
 
-    def ask_dqd(self,):
+    @property
+    def batch_size_dqd(self):
+        """int: Number of solutions to return in :meth:`ask_dqd`."""
+        return self._batch_size
+
+    @property
+    def epsilon(self):
+        """int: The epsilon added for numerical stability when normalizing
+        gradients in :meth:`tell_dqd`."""
+        return self._epsilon
+
+    def ask_dqd(self):
         """Samples a new solution to have its value and gradient evaluated.
         """
         # get perturbed solutions from the archive
@@ -192,9 +203,3 @@ class GradientEmitter(EmitterBase):
             sols = self._parents + self._jacobian_batch * self._sigma_g
 
         return sols
-
-
-    def tell(self):
-        """update optimizer internals using ranking and Jacobian info
-
-        """
