@@ -48,7 +48,8 @@ class GradientEmitter(EmitterBase):
 
     def __init__(self,
                  archive,
-                 x0,
+                 initial_solutions=None,
+                 x0=None,
                  sigma0=0.1,
                  sigma_g=0.05,
                  line_sigma=0.0,
@@ -65,10 +66,26 @@ class GradientEmitter(EmitterBase):
             solution_dim=archive.solution_dim,
             bounds=bounds,
         )
+        self._initial_solutions = None
+        self._x0 = None
+
+        if x0 is None and initial_solutions is None:
+            raise ValueError("Either x0 or initial_solutions must be provided.")
+        if x0 is not None and initial_solutions is not None:
+            raise ValueError(
+                "x0 and initial_solutions cannot both be provided.")
+
+        if x0 is not None:
+            self._x0 = np.array(x0, dtype=archive.dtype)
+            check_1d_shape(self._x0, "x0", archive.solution_dim,
+                           "archive.solution_dim")
+        elif initial_solutions is not None:
+            self._initial_solutions = np.asarray(initial_solutions,
+                                                 dtype=archive.dtype)
+            check_batch_shape(self._initial_solutions, "initial_solutions",
+                              archive.solution_dim, "archive.solution_dim")
+
         self._rng = np.random.default_rng(seed)
-        self._x0 = np.array(x0, dtype=archive.dtype)
-        check_1d_shape(self._x0, "x0", archive.solution_dim,
-                       "archive.solution_dim")
         self._sigma0 = archive.dtype(sigma0) if isinstance(
             sigma0, (float, np.floating)) else np.array(sigma0)
         self._sigma_g = archive.dtype(sigma_g)
@@ -83,9 +100,16 @@ class GradientEmitter(EmitterBase):
         self._parents = None
 
     @property
+    def initial_solutions(self):
+        """numpy.ndarray: The initial solutions which are returned when the
+        archive is empty (if x0 is not set)."""
+        return self._initial_solutions
+
+    @property
     def x0(self):
         """numpy.ndarray: Center of the Gaussian distribution from which to
-        sample solutions when the archive is empty."""
+        sample solutions when the archive is empty (if initial_solutions is not
+        set)."""
         return self._x0
 
     @property
@@ -113,6 +137,9 @@ class GradientEmitter(EmitterBase):
     def ask_dqd(self):
         """Samples a new solution to have its value and gradient evaluated.
         """
+        if self.archive.empty and self._initial_solutions is not None:
+            return np.empty((0, self.archive.solution_dim))
+
         # get perturbed solutions from the archive
         if self.archive.empty:
             parents = np.expand_dims(self.x0, axis=0)
@@ -180,6 +207,9 @@ class GradientEmitter(EmitterBase):
 
         _extended_summary_
         """
+        if self.archive.empty and self._initial_solutions is not None:
+            return self._initial_solutions
+
         if self._jacobian_batch is None:
             raise RuntimeError("Please call ask_dqd() and tell_dqd() "
                                "before calling ask().")
