@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from ribs._utils import check_1d_shape, validate_batch_args
+from ribs._utils import check_1d_shape, check_batch_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
 
 
@@ -147,7 +147,23 @@ class GradientEmitter(EmitterBase):
             parents = self.archive.sample_elites(self.batch_size).solution_batch
 
         if self._use_isolinedd:
-            pass
+            noise = self._rng.normal(
+                loc=0.0,
+                scale=self.sigma0,
+                size=(self.batch_size, self.solution_dim),
+            ).astype(self.archive.dtype)
+
+            directions = self.archive.sample_elites(
+                self._batch_size).solution_batch - parents
+
+            line_gaussian = self._rng.normal(
+                scale=self._line_sigma,
+                size=(self._batch_size, 1),
+            ).astype(self.archive.dtype)
+
+            sol = parents + line_gaussian * directions
+            sol = np.minimum(np.maximum(sol + noise, self.lower_bounds),
+                             self.upper_bounds)
         else:
             noise = self._rng.normal(
                 loc=0.0,
@@ -155,7 +171,6 @@ class GradientEmitter(EmitterBase):
                 size=(self.batch_size, self.solution_dim),
             ).astype(self.archive.dtype)
 
-            #todo use batch ops instead of numba, check if batching works
             sol = np.minimum(np.maximum(parents + noise, self.lower_bounds),
                              self.upper_bounds)
 
