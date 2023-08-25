@@ -5,6 +5,7 @@
 ### Changelog
 - Implemented GradientEmitter from the official DQD repo, which is used to implement OMG-MEGA and OG-MAP-Elites.
 
+
 #### Documentation
 
 - Use dask instead of multiprocessing for lunar lander tutorial (#346)
