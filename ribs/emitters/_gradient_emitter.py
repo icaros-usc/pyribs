@@ -15,6 +15,10 @@ class GradientEmitter(EmitterBase):
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
+        initial_solutions (array-like): An (n, solution_dim) array of solutions
+            to be used when the archive is empty. If this argument is None, then
+            solutions will be sampled from a Gaussian distribution centered at
+            ``x0`` with standard deviation ``sigma``.
         x0 (array-like): Center of the Gaussian distribution from which to
             sample solutions when the archive is empty.
         sigma0 (float or array-like): Standard deviation of the Gaussian
@@ -26,7 +30,12 @@ class GradientEmitter(EmitterBase):
             used to sample gradient coefficients.
         line_sigma (float): The theta_2 parameter for a Iso+LineDD operator.
         measure_gradients (bool): Signals if measure gradients will be used.
-        normalize_gradients (bool): Sets if gradients should be normalized before steps.
+        normalize_grad (bool): Sets if gradients should be normalized before steps.
+        epsilon (float): For numerical stability, we add a small epsilon when
+            normalizing gradients in :meth:`tell_dqd` -- refer to the
+            implementation `here
+            <../_modules/ribs/emitters/_gradient_arborescence_emitter.html#GradientArborescenceEmitter.tell_dqd>`_.
+            Pass this parameter to configure that epsilon.
         operator_type (str): Either 'isotropic' or 'iso_line_dd' to mark the operator type 
             for intermediate operations. Defaults to 'isotropic'.
         bounds (None or array-like): Bounds of the solution space. Solutions are
@@ -36,11 +45,6 @@ class GradientEmitter(EmitterBase):
             bound, or a tuple of ``(lower_bound, upper_bound)``, where
             ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to return in :meth:`ask`.
-        epsilon (float): For numerical stability, we add a small epsilon when
-            normalizing gradients in :meth:`tell_dqd` -- refer to the
-            implementation `here
-            <../_modules/ribs/emitters/_gradient_arborescence_emitter.html#GradientArborescenceEmitter.tell_dqd>`_.
-            Pass this parameter to configure that epsilon.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     Raises:
@@ -135,12 +139,23 @@ class GradientEmitter(EmitterBase):
         return self._epsilon
 
     def ask_dqd(self):
-        """Samples a new solution to have its value and gradient evaluated.
+        """Create new solutions by sampling elites from the archive with 
+        (optional) Gaussian perturbation.
+
+        If the archive is empty and initial_solutions is given, the call to this 
+        method on the first iteration returns no solutions. Later iterations will 
+        sample elites from the archive.
+
+        **Call :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
+        calling :meth:`ask` and :meth:`tell`.**
+
+        Returns:
+            ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
+            solutions to evaluate.
         """
         if self.archive.empty and self._initial_solutions is not None:
             return np.empty((0, self.archive.solution_dim))
 
-        # get perturbed solutions from the archive
         if self.archive.empty:
             parents = np.expand_dims(self.x0, axis=0)
         else:
@@ -177,6 +192,49 @@ class GradientEmitter(EmitterBase):
         self._parents = sol
         return self._parents
 
+    def ask(self):
+        """Samples new solutions from a gradient arborescence parameterized by a
+        multivariate Gaussian distribution.
+
+        The multivariate Gaussian is parameterized by sigma_g.
+
+        This method returns ``batch_size`` solutions, even though one solution
+        is returned via ``ask_dqd``.
+        
+        Returns:
+            (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new
+            solutions to evaluate.
+        Raises:
+            RuntimeError: This method was called without first passing gradients
+                with calls to ask_dqd() and tell_dqd().
+        """
+        if self.archive.empty and self._initial_solutions is not None:
+            return self._initial_solutions
+
+        if self._jacobian_batch is None:
+            raise RuntimeError("Please call ask_dqd() and tell_dqd() "
+                               "before calling ask().")
+
+        if self._measure_gradients:
+            noise = self._rng.normal(
+                loc=0.0,
+                scale=self._sigma_g,
+                size=self._jacobian_batch.shape[:2],
+            )
+            noise[:, 0] = np.abs(noise[:, 0])
+            noise = np.expand_dims(noise, axis=2)
+            offsets = np.sum(np.multiply(self._jacobian_batch, noise), axis=1)
+            sols = offsets + self._parents
+        else:
+            # Transform the Jacobian
+            if len(self._jacobian_batch.shape) == 3:
+                self._jacobian_batch = np.squeeze(self._jacobian_batch[:,
+                                                                       0:1, :],
+                                                  axis=1)
+            sols = self._parents + self._jacobian_batch * self._sigma_g
+
+        return sols
+
     def tell_dqd(self,
                  solution_batch,
                  objective_batch,
@@ -185,8 +243,29 @@ class GradientEmitter(EmitterBase):
                  status_batch,
                  value_batch,
                  metadata_batch=None):
-        """Sets the emitter Jacbians from evaluating the gradient of the
-        solutions.
+        """Gives the emitter results from evaluating the solutions.
+
+        Args:
+            solution_batch (array-like): (batch_size, :attr:`solution_dim`)
+                array of solutions generated by this emitter's
+                :meth:`ask_dqd()` method.
+            objective_batch (array-like): 1d array containing the objective
+                function value of each solution.
+            measures_batch (array-like): (batch_size, measure space dimension)
+                array with the measure space coordinates of each solution.
+            jacobian_batch (array-like): (batch_size, 1 + measure_dim,
+                solution_dim) array consisting of Jacobian matrices of the
+                solutions obtained from :meth:`ask_dqd`. Each matrix should
+                consist of the objective gradient of the solution followed by
+                the measure gradients.
+            status_batch (array-like): 1d array of
+                :class:`ribs.archive.addstatus` returned by a series of calls
+                to archive's :meth:`add()` method.
+            value_batch (array-like): 1d array of floats returned by a series
+                of calls to archive's :meth:`add()` method. for what these
+                floats represent, refer to :meth:`ribs.archives.add()`.
+            metadata_batch (array-like): 1d object array containing a metadata
+                object for each solution.
         """
         # preprocess + validate args
         solution_batch = np.asarray(solution_batch)
@@ -216,35 +295,3 @@ class GradientEmitter(EmitterBase):
             jacobian_batch /= norms
 
         self._jacobian_batch = jacobian_batch
-
-    def ask(self):
-        """Get branched solutions
-
-        _extended_summary_
-        """
-        if self.archive.empty and self._initial_solutions is not None:
-            return self._initial_solutions
-
-        if self._jacobian_batch is None:
-            raise RuntimeError("Please call ask_dqd() and tell_dqd() "
-                               "before calling ask().")
-
-        if self._measure_gradients:
-            noise = self._rng.normal(
-                loc=0.0,
-                scale=self._sigma_g,
-                size=self._jacobian_batch.shape[:2],
-            )
-            noise[:, 0] = np.abs(noise[:, 0])
-            noise = np.expand_dims(noise, axis=2)
-            offsets = np.sum(np.multiply(self._jacobian_batch, noise), axis=1)
-            sols = offsets + self._parents
-        else:
-            # Transform the Jacobian
-            if len(self._jacobian_batch.shape) == 3:
-                self._jacobian_batch = np.squeeze(self._jacobian_batch[:,
-                                                                       0:1, :],
-                                                  axis=1)
-            sols = self._parents + self._jacobian_batch * self._sigma_g
-
-        return sols
