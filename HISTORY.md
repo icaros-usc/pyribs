@@ -3,6 +3,7 @@
 ## (Upcoming)
 
 ### Changelog
+- Implemented GradientEmitter from the official DQD repo, which is used to implement OMG-MEGA and OG-MAP-Elites.
 
 #### Documentation
 
