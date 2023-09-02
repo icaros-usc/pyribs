@@ -33,7 +33,7 @@ extras_require = {
     ],
     "dev": [
         "pip>=20.3",
-        "pylint==2.8.3",
+        "pylint",
         "yapf",
 
         # Testing

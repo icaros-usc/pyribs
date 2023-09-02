@@ -193,5 +193,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         self.adam_opt.step(gradient)
 
-        self.last_update_ratio = (np.linalg.norm(self.adam_opt.theta - theta_prev) /
-                                  np.linalg.norm(self.adam_opt.theta))
+        self.last_update_ratio = (
+            np.linalg.norm(self.adam_opt.theta - theta_prev) /
+            np.linalg.norm(self.adam_opt.theta))
