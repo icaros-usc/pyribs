@@ -118,12 +118,14 @@ ENV/
 *.pth
 MNIST/
 dask-worker-space/
-!tests/baseline_images/visualize_test/*
 !docs/_static/**/*
 !tutorials/_static/**/*
 !tutorials/mnist/*
 !readme_assets/*
 results/
+
+# Allow matplotlib baseline images.
+!tests/**/*.png
 
 # Editor, IDE, and OS settings
 .vscode/

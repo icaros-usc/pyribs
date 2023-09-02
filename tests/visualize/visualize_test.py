@@ -4,7 +4,7 @@ For image comparison tests, read these instructions:
 https://matplotlib.org/3.3.1/devel/testing.html#writing-an-image-comparison-test.
 Essentially, after running a new test for the first time in the _root_ directory
 of this repo, copy the image output from result_images/visualize_test to
-tests/extras/baseline_images/visualize_test. For instance, for
+tests/visualize/baseline_images/visualize_test. For instance, for
 ``test_cvt_archive_heatmap_with_samples``, run::
 
     cp result_images/visualize_test/cvt_archive_heatmap_with_samples.png \
