@@ -52,17 +52,16 @@ Ready to contribute? Here's how to set up pyribs for local development.
 1. Now make the appropriate changes locally. If relevant, make sure to write
    tests for your code in the `tests/` folder.
 
-1. Auto-format and lint your code using YAPF, isort, and pylint. We highly
-   recommend installing editor plugins that perform these operations on save,
-   but you can also run on the command line:
+1. Auto-format and lint your code using YAPF, isort, and pylint. Note that
+   pre-commit will automatically run these whenever you commit your code; you
+   can also run them with `pre-commit run`. You can also run these commands on
+   the command line:
 
    ```bash
    yapf -i FILES
    isort FILES
    pylint FILES
    ```
-
-   Note that these checks are also run by pre-commit whenever you commit your code.
 
 1. After making changes, check that the changes pass the tests:
 
