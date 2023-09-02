@@ -183,7 +183,7 @@ For more information, refer to the [documentation](https://docs.pyribs.org/).
 
 ## Installation
 
-pyribs supports Python 3.7 and above. Earlier Python versions may work but are
+pyribs supports Python 3.8 and above. Earlier Python versions may work but are
 not officially supported. To find the installation command for your system
 (including for installing from source), visit the
 [installation selector](https://pyribs.org/#installation) on our website.

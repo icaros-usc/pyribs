@@ -11,15 +11,16 @@ with open("HISTORY.md") as history_file:
 
 # NOTE: Update pinned_reqs whenever install_requires or extras_require changes.
 install_requires = [
-    "numpy>=1.17.0",  # >=1.17.0 is when default_rng becomes available.
+    # numpy>=1.17.0 is when default_rng becomes available;
+    # scikit-learn 1.1.0 requires numpy 1.17.3+
+    "numpy>=1.17.3",
     "numpy_groupies>=0.9.16",  # Supports Python 3.7 and up.
     "numba>=0.51.0",
     "pandas>=1.0.0",
     "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
-    "scikit-learn>=0.20.0",  # Primarily used in CVTArchive.
+    "scikit-learn>=1.1.0",  # Primarily used in CVTArchive.
     "scipy>=1.4.0",  # Primarily used in CVTArchive.
     "threadpoolctl>=3.0.0",
-    "semantic-version>=2.10"
 ]
 
 extras_require = {
@@ -70,7 +71,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
@@ -90,7 +90,7 @@ setup(
     keywords="ribs",
     name="ribs",
     packages=find_packages(include=["ribs", "ribs.*"]),
-    python_requires=">=3.7.0",
+    python_requires=">=3.8.0",
     test_suite="tests",
     url="https://github.com/icaros-usc/pyribs",
     version="0.5.2",

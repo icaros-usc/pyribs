@@ -46,7 +46,7 @@ Ready to contribute? Here's how to set up pyribs for local development.
 
    ```bash
    cd pyribs
-   conda create --prefix ./env python=3.7 # 3.7 is the minimum version pyribs supports.
+   conda create --prefix ./env python=3.8 # 3.8 is the minimum version pyribs supports.
    conda activate ./env
    pip install -e .[dev]
    ```
@@ -116,7 +116,7 @@ Before submitting a pull request, check that it meets these guidelines:
 1. The pull request should include tests.
 1. If the pull request adds functionality, corresponding docstrings and other
    documentation should be updated.
-1. The pull request should work for Python 3.7 and higher. GitHub Actions will
+1. The pull request should work for Python 3.8 and higher. GitHub Actions will
    display test results at the bottom of the pull request page. Check there for
    test results.
 
