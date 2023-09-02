@@ -4,6 +4,10 @@
 
 ### Changelog
 
+#### API
+
+- Drop Python 3.7 support and upgrade dependencies (#350)
+
 #### Documentation
 
 - Use dask instead of multiprocessing for lunar lander tutorial (#346)
