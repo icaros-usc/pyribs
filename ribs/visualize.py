@@ -633,9 +633,9 @@ def parallel_axes_plot(archive,
             ...               ranges=[(-1, 1), (-1, 1), (-1, 1),
             ...                       (-1, 1), (-1, 1)],
             ...           )
-            >>> for x in np.linspace(-1, 1, 100):
-            ...     for y in np.linspace(0, 1, 100):
-            ...         for z in np.linspace(-1, 1, 100):
+            >>> for x in np.linspace(-1, 1, 10):
+            ...     for y in np.linspace(0, 1, 10):
+            ...         for z in np.linspace(-1, 1, 10):
             ...             archive.add_single(
             ...                 solution=np.array([x,y,z]),
             ...                 objective=-(x**2 + y**2 + z**2),

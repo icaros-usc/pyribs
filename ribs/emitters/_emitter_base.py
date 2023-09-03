@@ -11,7 +11,7 @@ class EmitterBase(ABC):
     and a :meth:`tell` method that inserts solutions into the emitter's archive.
     Child classes are only required to override :meth:`ask`.
 
-    DQD emitter should override :meth:`ask_dqd` and :meth:`tell_dqd` methods.
+    DQD emitters should override :meth:`ask_dqd` and :meth:`tell_dqd` methods.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
