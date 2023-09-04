@@ -31,10 +31,10 @@ class DocstringComponents:
             return self.__getattribute__(attr)
         except AttributeError as err:
             # If Python is run with -OO, it will strip docstrings and our lookup
-            # from self.entries will fail. We check for __debug__, which is actually
-            # set to False by -O (it is True for normal execution).
-            # But we only want to see an error when building the docs;
-            # not something users should see, so this slight inconsistency is fine.
+            # from self.entries will fail. We check for __debug__, which is
+            # actually set to False by -O (it is True for normal execution).
+            # But we only want to see an error when building the docs; not
+            # something users should see, so this slight inconsistency is fine.
             if __debug__:
                 raise err
             else:

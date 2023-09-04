@@ -413,9 +413,8 @@ class SlidingBoundariesArchive(ArchiveBase):
         batch_size = solution_batch.shape[0]
         objective_batch = np.array(objective_batch)
         measures_batch = np.array(measures_batch)
-        metadata_batch = (np.empty(batch_size, dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
+        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
+                          is None else np.asarray(metadata_batch, dtype=object))
 
         # Validate arguments.
         validate_batch_args(
