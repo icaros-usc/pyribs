@@ -1,6 +1,5 @@
 """Contains the CVTArchive class."""
 import numpy as np
-import sklearn
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from sklearn.cluster import k_means
 
@@ -218,7 +217,7 @@ class CVTArchive(ArchiveBase):
         """(num_samples, measure_dim) numpy.ndarray: The samples used in
         creating the CVT.
 
-        May be None until :meth:`initialize` is called.
+        Will be None if custom centroids were passed in to the archive.
         """
         return self._samples
 
@@ -226,8 +225,6 @@ class CVTArchive(ArchiveBase):
     def centroids(self):
         """(n_centroids, measure_dim) numpy.ndarray: The centroids used in the
         CVT.
-
-        None until :meth:`initialize` is called.
         """
         return self._centroids
 

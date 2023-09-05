@@ -144,7 +144,8 @@ html_theme_options = {
     "css_minify": not DEV_MODE,
     #  "logo_icon": "&#xe869",
     "repo_type": "github",
-    "globaltoc_depth": 2,
+    # Needs to be 3 so that tutorials show up in sidebar.
+    "globaltoc_depth": 3,
     "color_primary": "deep-purple",
     "color_accent": "purple",
     "touch_icon": None,

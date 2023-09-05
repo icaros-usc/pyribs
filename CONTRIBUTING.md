@@ -118,7 +118,8 @@ to the docs.
 Tutorials are created in Jupyter notebooks that are stored under `tutorials/` in
 the repo. To create a tutorial:
 
-1. Write the notebook and save it under `tutorials/`.
+1. Write the notebook and save it under `tutorials/`. Notebooks may also be
+   saved in a subdirectory of `tutorials/`, e.g., `tutorials/features`.
 1. Use cell magic (e.g. `%pip install ribs`) to install pyribs and other
    dependencies.
    - Installation cells tend to produce a lot of output. Make sure to clear this
@@ -134,7 +135,9 @@ the repo. To create a tutorial:
    `## Level 2 Heading`) or higher.
 1. If linking to the pyribs documentation, make sure to link to pages in the
    `latest` version on ReadTheDocs, i.e. your links should start with
-   `https://docs.pyribs.org/en/latest/`
+   `https://docs.pyribs.org/en/latest/`. Note that we do not use Sphinx autodoc
+   (e.g., `:class:`) in the tutorials because such links do not work outside the
+   pyribs website (e.g., on Google Colab).
 1. Add an entry into the toctree in `docs/tutorials.md` and add it to one of the
    lists of tutorials.
 1. Check that the tutorial shows up on the Tutorials page when serving the docs.

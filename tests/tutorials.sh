@@ -61,7 +61,7 @@ function test_notebook {
 }
 
 if [ -z "$1" ]; then
-  TUTORIALS=($(ls tutorials/*.ipynb))  # Contains all notebooks.
+  TUTORIALS=($(ls tutorials/*.ipynb tutorials/*/*.ipynb))  # Contains all notebooks.
   for t in "${TUTORIALS[@]}"; do
     # Notebooks to exclude.
     case "$t" in
