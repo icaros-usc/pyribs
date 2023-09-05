@@ -7,6 +7,7 @@
 #### API
 
 - Drop Python 3.7 support and upgrade dependencies (#350)
+- Add visualization of QDax repertoires (#353)
 
 #### Documentation
 
