@@ -13,6 +13,7 @@
 - Clip Voronoi regions in cvt_archive_heatmap (#356)
 - **Backwards-incompatible:** Allow using kwargs for colorbar in
   parallel_axes_plot (#358)
+  - Removes cbar_orientaton and cbar_pad args for parallel_axes_plot
 
 #### Documentation
 
