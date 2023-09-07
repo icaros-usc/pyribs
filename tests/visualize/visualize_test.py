@@ -687,6 +687,14 @@ def test_grid_archive_rasterized(grid_archive):
     grid_archive_heatmap(grid_archive, rasterized=True)
 
 
+@image_comparison(baseline_images=["cvt_archive_heatmap_rasterized"],
+                  remove_text=False,
+                  extensions=["pdf"])
+def test_cvt_archive_rasterized(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, rasterized=True)
+
+
 #
 # cvt_archive_heatmap clip tests
 #
