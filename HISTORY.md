@@ -8,6 +8,7 @@
 
 - Drop Python 3.7 support and upgrade dependencies (#350)
 - Add visualization of QDax repertoires (#353)
+- Improve cvt_archive_heatmap flexibility (#354)
 
 #### Documentation
 
