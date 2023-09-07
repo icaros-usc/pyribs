@@ -850,4 +850,5 @@ def test_parallel_axes_3d_sorted(three_d_grid_archive):
                   extensions=["png"])
 def test_parallel_axes_3d_vertical_cbar(three_d_grid_archive):
     plt.figure(figsize=(8, 6))
-    parallel_axes_plot(three_d_grid_archive, cbar_orientation='vertical')
+    parallel_axes_plot(three_d_grid_archive,
+                       cbar_kwargs={"orientation": "vertical"})

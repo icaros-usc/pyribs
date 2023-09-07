@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable
 
-from ribs.visualize._utils import retrieve_cmap
+from ribs.visualize._utils import retrieve_cmap, set_cbar
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
@@ -20,8 +20,8 @@ def parallel_axes_plot(archive,
                        vmin=None,
                        vmax=None,
                        sort_archive=False,
-                       cbar_orientation='horizontal',
-                       cbar_pad=0.1):
+                       cbar="auto",
+                       cbar_kwargs=None):
     """Visualizes archive elites in measure space with a parallel axes plot.
 
     This visualization is meant to show the coverage of the measure space at a
@@ -99,27 +99,25 @@ def parallel_axes_plot(archive,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
             the maximum objective value in the archive is used.
-        sort_archive (boolean): If ``True``, sorts the archive so that the
-            highest performing elites are plotted on top of lower performing
-            elites.
+        sort_archive (bool): If ``True``, sorts the archive so that the highest
+            performing elites are plotted on top of lower performing elites.
 
             .. warning:: This may be slow for large archives.
-        cbar_orientation (str): The orientation of the colorbar. Use either
-            ``'vertical'`` or ``'horizontal'``
-        cbar_pad (float): The amount of padding to use for the colorbar.
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to
+            ``'auto'`` which displays the colorbar on the archive's current
+            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not
+            displayed. If this is an :class:`~matplotlib.axes.Axes`, displays
+            the colorbar on the specified Axes.
+        cbar_kwargs (dict): Additional kwargs to pass to
+            :func:`~matplotlib.pyplot.colorbar`. By default, we set
+            "orientation" to "horizontal" and "pad" to 0.1.
 
     Raises:
-        ValueError: ``cbar_orientation`` has an invalid value.
         ValueError: The measures provided do not exist in the archive.
         TypeError: ``measure_order`` is not a list of all ints or all tuples.
     """
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
-
-    # Check that the orientation input is correct.
-    if cbar_orientation not in ['vertical', 'horizontal']:
-        raise ValueError("cbar_orientation must be 'vertical' or 'horizontal' "
-                         f"but is '{cbar_orientation}'")
 
     # If there is no order specified, plot in increasing numerical order.
     if measure_order is None:
@@ -204,7 +202,12 @@ def parallel_axes_plot(archive,
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(vmin, vmax)
-    host_ax.figure.colorbar(mappable,
-                            ax=host_ax,
-                            pad=cbar_pad,
-                            orientation=cbar_orientation)
+
+    # Default colorbar settings.
+    cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs.copy()
+    if "orientation" not in cbar_kwargs:
+        cbar_kwargs["orientation"] = "horizontal"
+    if "pad" not in cbar_kwargs:
+        cbar_kwargs["pad"] = 0.1
+
+    set_cbar(mappable, host_ax, cbar, cbar_kwargs)
