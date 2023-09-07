@@ -20,7 +20,8 @@ def sliding_boundaries_archive_heatmap(archive,
                                        vmin=None,
                                        vmax=None,
                                        cbar="auto",
-                                       cbar_kwargs=None):
+                                       cbar_kwargs=None,
+                                       rasterized=False):
     """Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with
     2D measure space.
 
@@ -90,6 +91,12 @@ def sliding_boundaries_archive_heatmap(archive,
             the colorbar on the specified Axes.
         cbar_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.colorbar`.
+        rasterized (bool): Whether to rasterize the heatmap. This can be useful
+            for saving to a vector format like PDF. Essentially, only the
+            heatmap will be converted to a raster graphic so that the archive
+            cells will not have to be individually rendered. Meanwhile, the
+            surrounding axes, particularly text labels, will remain in vector
+            format.
     Raises:
         ValueError: The archive is not 2D.
     """
@@ -138,7 +145,8 @@ def sliding_boundaries_archive_heatmap(archive,
                    c=objective_batch,
                    cmap=cmap,
                    vmin=vmin,
-                   vmax=vmax)
+                   vmax=vmax,
+                   rasterized=rasterized)
     if boundary_lw > 0.0:
         # Careful with bounds here. Lines drawn along the x axis should extend
         # between the y bounds and vice versa -- see
@@ -147,12 +155,14 @@ def sliding_boundaries_archive_heatmap(archive,
                   lower_bounds[1],
                   upper_bounds[1],
                   color='k',
-                  linewidth=boundary_lw)
+                  linewidth=boundary_lw,
+                  rasterized=rasterized)
         ax.hlines(y_boundary,
                   lower_bounds[0],
                   upper_bounds[0],
                   color='k',
-                  linewidth=boundary_lw)
+                  linewidth=boundary_lw,
+                  rasterized=rasterized)
 
     # Create color bar.
     set_cbar(t, ax, cbar, cbar_kwargs)
