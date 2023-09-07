@@ -256,4 +256,5 @@ intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "sklearn": ("https://scikit-learn.org/stable/", None),
     "qdax": ("https://qdax.readthedocs.io/en/latest/", None),
+    "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
 }

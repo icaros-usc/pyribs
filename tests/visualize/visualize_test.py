@@ -16,6 +16,7 @@ test should now pass when it is re-run.
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+import shapely
 from matplotlib.testing.decorators import image_comparison
 
 from ribs.archives import CVTArchive, GridArchive, SlidingBoundariesArchive
@@ -671,6 +672,99 @@ def test_cvt_archive_heatmap_no_samples_error():
 def test_cvt_archive_heatmap_voronoi_style(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, lw=3.0, ec="grey")
+
+
+#
+# cvt_archive_heatmap clip tests
+#
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_noclip"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_cvt_archive_heatmap_noclip(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, clip=False)
+    plt.xlim(-1.5, 1.5)
+    plt.ylim(-1.5, 1.5)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_clip"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_cvt_archive_heatmap_clip(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, clip=True)
+    plt.xlim(-1.5, 1.5)
+    plt.ylim(-1.5, 1.5)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_clip_polygon"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_cvt_archive_heatmap_clip_polygon(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive,
+        clip=shapely.Polygon(shell=np.array([
+            [-0.75, -0.375],
+            [-0.75, 0.375],
+            [-0.375, 0.75],
+            [0.375, 0.75],
+            [0.75, 0.375],
+            [0.75, -0.375],
+            [0.375, -0.75],
+            [-0.375, -0.75],
+        ]),),
+    )
+    plt.xlim(-1.5, 1.5)
+    plt.ylim(-1.5, 1.5)
+
+
+@image_comparison(
+    baseline_images=["cvt_archive_heatmap_clip_polygon_with_hole"],
+    remove_text=False,
+    extensions=["png"],
+    tol=CVT_IMAGE_TOLERANCE)
+def test_cvt_archive_heatmap_clip_polygon_with_hole(cvt_archive):
+    """This test will force some cells to be split in two."""
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive,
+        clip=shapely.Polygon(
+            shell=np.array([
+                [-0.75, -0.375],
+                [-0.75, 0.375],
+                [-0.375, 0.75],
+                [0.375, 0.75],
+                [0.75, 0.375],
+                [0.75, -0.375],
+                [0.375, -0.75],
+                [-0.375, -0.75],
+            ]),
+            holes=[
+                # Two holes that split some cells into two parts, and some cells
+                # into three parts.
+                np.array([
+                    [-0.5, 0],
+                    [-0.5, 0.05],
+                    [0.5, 0.05],
+                    [0.5, 0],
+                ]),
+                np.array([
+                    [-0.5, 0.125],
+                    [-0.5, 0.175],
+                    [0.5, 0.175],
+                    [0.5, 0.125],
+                ]),
+            ],
+        ),
+    )
+    plt.xlim(-1.5, 1.5)
+    plt.ylim(-1.5, 1.5)
 
 
 #

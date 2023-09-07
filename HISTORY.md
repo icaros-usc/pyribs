@@ -10,6 +10,7 @@
 - Add visualization of QDax repertoires (#353)
 - Improve cvt_archive_heatmap flexibility (#354)
 - Speed up 2D cvt_archive_heatmap by order of magnitude (#355)
+- Clip Voronoi regions in cvt_archive_heatmap (#356)
 
 #### Documentation
 
