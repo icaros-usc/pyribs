@@ -434,7 +434,7 @@ def cvt_archive_heatmap(archive,
     # the cmap. Shape (sum(facecolor_cmap_mask),)
     facecolor_objs = []
 
-    # Cycle through the regions to collect patches and facecolors.
+    # Cycle through the regions to set up polygon vertices and facecolors.
     for region, objective in zip(vor.regions, region_obj):
         # Checking for -1 is O(n), but n is typically small.
         #
