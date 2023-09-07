@@ -255,4 +255,5 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "sklearn": ("https://scikit-learn.org/stable/", None),
+    "qdax": ("https://qdax.readthedocs.io/en/latest/", None),
 }

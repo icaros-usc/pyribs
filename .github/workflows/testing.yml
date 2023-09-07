@@ -70,8 +70,12 @@ jobs:
           pytest tests/archives tests/emitters tests/schedulers
       - name: Install extras deps
         run: pip install -r pinned_reqs/extras_visualize.txt
-      - name: Test extras
+      - name: Test visualize extra
         run: pytest tests/visualize
+      - name: Install QDax
+        run: pip install qdax
+      - name: Test visualize extra for QDax
+        run: pytest tests/visualize_qdax
   coverage:
     runs-on: ubuntu-latest
     steps:
@@ -87,7 +91,11 @@ jobs:
       - name: Test coverage
         env:
           NUMBA_DISABLE_JIT: 1
-        run: pytest tests
+        # Exclude `visualize_qdax` since we don't install QDax here. We also
+        # exclude `tests` since we don't want the base directory here.
+        run:
+          pytest $(find tests -maxdepth 1 -type d -not -name 'tests' -not -name
+          'visualize_qdax')
   benchmarks:
     runs-on: ubuntu-latest
     steps:
