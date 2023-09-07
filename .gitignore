@@ -126,6 +126,7 @@ results/
 
 # Allow matplotlib baseline images.
 !tests/**/*.png
+!tests/**/*.pdf
 
 # Editor, IDE, and OS settings
 .vscode/
