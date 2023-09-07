@@ -11,6 +11,8 @@
 - Improve cvt_archive_heatmap flexibility (#354)
 - Speed up 2D cvt_archive_heatmap by order of magnitude (#355)
 - Clip Voronoi regions in cvt_archive_heatmap (#356)
+- **Backwards-incompatible:** Allow using kwargs for colorbar in
+  parallel_axes_plot (#358)
 
 #### Documentation
 
