@@ -28,7 +28,8 @@ def clean_matplotlib():
 
 @image_comparison(baseline_images=["qdax_repertoire_heatmap"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=0.1)  # See CVT_IMAGE_TOLERANCE in visualize_test.py
 def test_qdax_repertoire_heatmap():
     plt.figure(figsize=(8, 6))
 
