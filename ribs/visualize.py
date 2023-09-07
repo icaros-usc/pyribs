@@ -352,7 +352,8 @@ def cvt_archive_heatmap(archive,
             bounds. Passing `clip=True` will clip the heatmap such that these
             "outer edge" polygons are within the archive bounds. An arbitrary
             polygon can also be passed in to clip the heatmap to a custom shape.
-            See `#TODO <TODO>`_ for more info.
+            See `#356 <https://github.com/icaros-usc/pyribs/pull/356>`_ for more
+            info.
         plot_centroids (bool): Whether to plot the cluster centroids.
         plot_samples (bool): Whether to plot the samples used when generating
             the clusters.
