@@ -20,6 +20,7 @@
 #### Improvements
 
 - Improve developer workflow with pre-commit (#351)
+- Refactor visualize module into multiple files (#357)
 
 ## 0.5.2
 
