@@ -26,7 +26,8 @@ from ribs.visualize import (cvt_archive_heatmap, grid_archive_heatmap,
 # pylint: disable = redefined-outer-name
 
 # Tolerance for root mean square difference between the pixels of the images,
-# where 255 is the max value.
+# where 255 is the max value. We only have tolerance for `cvt_archive_heatmap`
+# since it is a bit more finicky than the other plots.
 CVT_IMAGE_TOLERANCE = 0.1
 
 
