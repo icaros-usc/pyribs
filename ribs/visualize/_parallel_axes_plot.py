@@ -99,9 +99,8 @@ def parallel_axes_plot(archive,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
             the maximum objective value in the archive is used.
-        sort_archive (boolean): If ``True``, sorts the archive so that the
-            highest performing elites are plotted on top of lower performing
-            elites.
+        sort_archive (bool): If ``True``, sorts the archive so that the highest
+            performing elites are plotted on top of lower performing elites.
 
             .. warning:: This may be slow for large archives.
         cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to
