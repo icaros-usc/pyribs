@@ -203,11 +203,9 @@ def parallel_axes_plot(archive,
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(vmin, vmax)
 
-    # Default colorbar settings.
+    # Add default colorbar settings.
     cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs.copy()
-    if "orientation" not in cbar_kwargs:
-        cbar_kwargs["orientation"] = "horizontal"
-    if "pad" not in cbar_kwargs:
-        cbar_kwargs["pad"] = 0.1
+    cbar_kwargs.setdefault("orientation", "horizontal")
+    cbar_kwargs.setdefault("pad", 0.1)
 
     set_cbar(mappable, host_ax, cbar, cbar_kwargs)
