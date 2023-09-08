@@ -54,7 +54,7 @@ class CVTArchive(ArchiveBase):
         the ``learning_rate`` and ``threshold_min`` parameters.
 
     .. note:: For more information on our choice of k-D tree implementation, see
-        `#38 <https://github.com/icaros-usc/pyribs/issues/38>`_.
+        :pr:`38`.
 
     Args:
         solution_dim (int): Dimension of the solution space.
