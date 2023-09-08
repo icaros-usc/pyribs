@@ -26,7 +26,8 @@ import sphinx_material
 
 import ribs
 
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath(".."))  # Detect ribs.
+sys.path.append(os.path.abspath("./_ext"))  # Detect extensions.
 
 DEV_MODE = os.environ.get("DOCS_MODE", "regular") == "dev"
 READTHEDOCS_VERSION = os.environ.get("READTHEDOCS_VERSION", "stable")
@@ -54,6 +55,7 @@ extensions = [
     "sphinx_toolbox.more_autodoc.autonamedtuple",
     "sphinx_autodoc_typehints",
     "sphinx_codeautolink",
+    "github_links",
 ]
 
 # Napoleon
@@ -119,6 +121,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+github_repo_url = "https://github.com/icaros-usc/pyribs/"
+
 # -- Options for HTML output -------------------------------------------
 
 html_show_sourcelink = True
@@ -137,7 +141,7 @@ html_theme_options = {
     "nav_title": "pyribs",
     "base_url": (f"https://docs.pyribs.org/{READTHEDOCS_LANGUAGE}/"
                  f"{READTHEDOCS_VERSION}/"),
-    "repo_url": "https://github.com/icaros-usc/pyribs/",
+    "repo_url": github_repo_url,
     "repo_name": "pyribs",
     "google_analytics_account": None,
     "html_minify": not DEV_MODE,
