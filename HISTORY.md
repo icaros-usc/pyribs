@@ -24,6 +24,7 @@
 
 - Improve developer workflow with pre-commit ({pr}`351`)
 - Refactor visualize module into multiple files ({pr}`357`)
+- Add GitHub link roles in documentation ({pr}`361`)
 
 ## 0.5.2
 
