@@ -675,6 +675,37 @@ def test_cvt_archive_heatmap_voronoi_style(cvt_archive):
 
 
 #
+# Rasterization tests
+#
+
+
+@image_comparison(baseline_images=["grid_archive_heatmap_rasterized"],
+                  remove_text=False,
+                  extensions=["pdf"])
+def test_grid_archive_rasterized(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, rasterized=True)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_rasterized"],
+                  remove_text=False,
+                  extensions=["pdf"])
+def test_cvt_archive_rasterized(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, rasterized=True)
+
+
+@image_comparison(baseline_images=["sliding_boundaries_heatmap_rasterized"],
+                  remove_text=False,
+                  extensions=["pdf"])
+def test_sliding_boundaries_archive_rasterized(sliding_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundaries_archive_heatmap(sliding_archive,
+                                       boundary_lw=1.0,
+                                       rasterized=True)
+
+
+#
 # cvt_archive_heatmap clip tests
 #
 

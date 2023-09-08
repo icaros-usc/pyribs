@@ -25,6 +25,7 @@ def cvt_archive_heatmap(archive,
                         vmax=None,
                         cbar="auto",
                         cbar_kwargs=None,
+                        rasterized=False,
                         clip=False,
                         plot_centroids=False,
                         plot_samples=False,
@@ -99,6 +100,12 @@ def cvt_archive_heatmap(archive,
             the colorbar on the specified Axes.
         cbar_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.colorbar`.
+        rasterized (bool): Whether to rasterize the heatmap. This can be useful
+            for saving to a vector format like PDF. Essentially, only the
+            heatmap will be converted to a raster graphic so that the archive
+            cells will not have to be individually rendered. Meanwhile, the
+            surrounding axes, particularly text labels, will remain in vector
+            format.
         clip (bool, shapely.Polygon): Clip the heatmap cells to a given polygon.
             By default, we draw the cells along the outer edges of the heatmap
             as polygons that extend beyond the archive bounds, but these
@@ -259,6 +266,7 @@ def cvt_archive_heatmap(archive,
             edgecolors=ec,
             facecolors=facecolors,
             linewidths=lw,
+            rasterized=rasterized,
         ))
 
     # Create a colorbar.

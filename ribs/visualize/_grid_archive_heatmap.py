@@ -18,8 +18,9 @@ def grid_archive_heatmap(archive,
                          vmin=None,
                          vmax=None,
                          cbar="auto",
-                         pcm_kwargs=None,
-                         cbar_kwargs=None):
+                         cbar_kwargs=None,
+                         rasterized=False,
+                         pcm_kwargs=None):
     """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 1D or 2D
     measure space.
 
@@ -82,10 +83,18 @@ def grid_archive_heatmap(archive,
             :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not
             displayed. If this is an :class:`~matplotlib.axes.Axes`, displays
             the colorbar on the specified Axes.
-        pcm_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.pyplot.pcolormesh`.
         cbar_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.colorbar`.
+        rasterized (bool): Whether to rasterize the heatmap. This can be useful
+            for saving to a vector format like PDF. Essentially, only the
+            heatmap will be converted to a raster graphic so that the archive
+            cells will not have to be individually rendered. Meanwhile, the
+            surrounding axes, particularly text labels, will remain in vector
+            format. This is implemented by passing ``rasterized`` to
+            :func:`~matplotlib.pyplot.pcolormesh`, so passing ``"rasterized"``
+            in the ``pcm_kwargs`` below will raise an error.
+        pcm_kwargs (dict): Additional kwargs to pass to
+            :func:`~matplotlib.pyplot.pcolormesh`.
 
     Raises:
         ValueError: The archive's dimension must be 1D or 2D.
@@ -138,6 +147,7 @@ def grid_archive_heatmap(archive,
                           cmap=cmap,
                           vmin=vmin,
                           vmax=vmax,
+                          rasterized=rasterized,
                           **pcm_kwargs)
     elif archive.measure_dim == 2:
         # Retrieve data from archive.
@@ -178,6 +188,7 @@ def grid_archive_heatmap(archive,
                           cmap=cmap,
                           vmin=vmin,
                           vmax=vmax,
+                          rasterized=rasterized,
                           **pcm_kwargs)
 
     # Create color bar.
