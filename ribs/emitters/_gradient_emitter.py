@@ -200,7 +200,11 @@ class GradientEmitter(EmitterBase):
         """Samples new solutions from a gradient arborescence parameterized by a
         multivariate Gaussian distribution.
 
-        The multivariate Gaussian is parameterized by sigma_g.
+        If measure_gradients is used, the multivariate Gaussian is parameterized
+        by sigma_g, and the arboresecence coefficient is sampled from the
+        multivariate Gaussian, with the objective coefficient being always
+        positive. If measure_gradients is not used, the arboresecence
+        coefficient is just sigma_g itself.
 
         This method returns ``batch_size`` solutions by branching
         with gradient arborescence based on the solutions returned by
@@ -248,7 +252,7 @@ class GradientEmitter(EmitterBase):
                  status_batch,
                  value_batch,
                  metadata_batch=None):
-        """Gives the emitter results from evaluating the solutions.
+        """Gives the emitter results of evaluating solutions from ask_dqd()
 
         Args:
             solution_batch (array-like): (batch_size, :attr:`solution_dim`)
@@ -256,13 +260,15 @@ class GradientEmitter(EmitterBase):
                 :meth:`ask_dqd()` method.
             objective_batch (array-like): 1d array containing the objective
                 function value of each solution.
-            measures_batch (array-like): (batch_size, measure space dimension)
+            measures_batch (array-like): (batch_size, measure_dim)
                 array with the measure space coordinates of each solution.
             jacobian_batch (array-like): (batch_size, 1 + measure_dim,
                 solution_dim) array consisting of Jacobian matrices of the
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
+                If measure gradients are not used, the array is of shape
+                (batch_size, 1, solution_dim).
             status_batch (array-like): 1d array of
                 :class:`ribs.archive.addstatus` returned by a series of calls
                 to archive's :meth:`add()` method.
