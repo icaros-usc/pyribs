@@ -96,11 +96,24 @@ def validate_batch_args(archive,
                         value_batch=None,
                         jacobian_batch=None,
                         metadata_batch=None):
-    """Performs checks for arguments to add() and tell()."""
+    """Performs checks for batch arguments.
+
+    The batch size of each argument is validated with respect to solution_batch.
+
+    The arguments are assumed to come directly from users, so they may not be
+    arrays. Thus, we preprocess by converting each argument into a numpy array
+    before performing checks. The arguments are then returned in the same order
+    as in the function definition.
+    """
+    returns = []
+
+    solution_batch = np.asarray(solution_batch)
     check_batch_shape(solution_batch, "solution_batch", archive.solution_dim,
                       "solution_dim", _BATCH_WARNING)
     batch_size = solution_batch.shape[0]
+    returns.append(solution_batch)
 
+    objective_batch = np.asarray(objective_batch)
     check_is_1d(objective_batch, "objective_batch", _BATCH_WARNING)
     check_solution_batch_dim(objective_batch,
                              "objective_batch",
@@ -108,7 +121,9 @@ def validate_batch_args(archive,
                              is_1d=True,
                              extra_msg=_BATCH_WARNING)
     check_finite(objective_batch, "objective_batch")
+    returns.append(objective_batch)
 
+    measures_batch = np.asarray(measures_batch)
     check_batch_shape(measures_batch, "measures_batch", archive.measure_dim,
                       "measure_dim", _BATCH_WARNING)
     check_solution_batch_dim(measures_batch,
@@ -117,14 +132,18 @@ def validate_batch_args(archive,
                              is_1d=False,
                              extra_msg=_BATCH_WARNING)
     check_finite(measures_batch, "measures_batch")
+    returns.append(measures_batch)
 
     if jacobian_batch is not None:
+        jacobian_batch = np.asarray(jacobian_batch)
         check_batch_shape_3d(jacobian_batch, "jacobian_batch",
                              archive.measure_dim + 1, "measure_dim + 1",
                              archive.solution_dim, "solution_dim")
         check_finite(jacobian_batch, "jacobian_batch")
+        returns.append(jacobian_batch)
 
     if status_batch is not None:
+        status_batch = np.asarray(status_batch)
         check_is_1d(status_batch, "status_batch", _BATCH_WARNING)
         check_solution_batch_dim(status_batch,
                                  "status_batch",
@@ -132,22 +151,30 @@ def validate_batch_args(archive,
                                  is_1d=True,
                                  extra_msg=_BATCH_WARNING)
         check_finite(status_batch, "status_batch")
+        returns.append(status_batch)
 
     if value_batch is not None:
+        value_batch = np.asarray(value_batch)
         check_is_1d(value_batch, "value_batch", _BATCH_WARNING)
         check_solution_batch_dim(value_batch,
                                  "value_batch",
                                  batch_size,
                                  is_1d=True,
                                  extra_msg=_BATCH_WARNING)
+        returns.append(value_batch)
 
     if metadata_batch is not None:
+        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
+                          is None else np.asarray(metadata_batch, dtype=object))
         check_is_1d(metadata_batch, "metadata_batch", _BATCH_WARNING)
         check_solution_batch_dim(metadata_batch,
                                  "metadata_batch",
                                  batch_size,
                                  is_1d=True,
                                  extra_msg=_BATCH_WARNING)
+        returns.append(metadata_batch)
+
+    return returns
 
 
 def validate_single_args(archive, solution, objective, measures):

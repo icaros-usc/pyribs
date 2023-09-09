@@ -547,22 +547,20 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """
         self._state["add"] += 1
 
-        ## Step 0: Preprocess input. ##
-        solution_batch = np.asarray(solution_batch)
-        objective_batch = np.asarray(objective_batch)
-        measures_batch = np.asarray(measures_batch)
-        batch_size = solution_batch.shape[0]
-        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
-                          is None else np.asarray(metadata_batch, dtype=object))
-
         ## Step 1: Validate input. ##
-        validate_batch_args(
+        (
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            metadata_batch,
+        ) = validate_batch_args(
             archive=self,
             solution_batch=solution_batch,
             objective_batch=objective_batch,
             measures_batch=measures_batch,
             metadata_batch=metadata_batch,
         )
+        batch_size = solution_batch.shape[0]
 
         ## Step 2: Compute status_batch and value_batch ##
 
