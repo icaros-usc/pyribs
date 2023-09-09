@@ -147,9 +147,9 @@ class GradientEmitter(EmitterBase):
         """Create new solutions by sampling elites from the archive with
         (optional) Gaussian perturbation.
 
-        If the archive is empty and initial_solutions is given, the call to this
-        method on the first iteration returns no solutions. Later iterations
-        will sample elites from the archive.
+        If the archive is empty and initial_solutions is given, this method
+        returns no solutions. Otherwise, this method will sample elites
+        from the archive.
 
         **Call :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
         calling :meth:`ask` and :meth:`tell`.**
@@ -158,7 +158,7 @@ class GradientEmitter(EmitterBase):
             ``(batch_size, solution_dim)`` array -- contains ``batch_size`` new
             solutions to evaluate.
         """
-        if self.archive.empty and self._initial_solutions is not None:
+        if self.archive.empty and (self._initial_solutions is not None):
             return np.empty((0, self.archive.solution_dim))
 
         if self.archive.empty:
@@ -202,8 +202,9 @@ class GradientEmitter(EmitterBase):
 
         The multivariate Gaussian is parameterized by sigma_g.
 
-        This method returns ``batch_size`` solutions, even though one solution
-        is returned via ``ask_dqd``.
+        This method returns ``batch_size`` solutions by branching
+        with gradient arborescence based on the solutions returned by
+        ask_dqd().
 
         Returns:
             (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new
