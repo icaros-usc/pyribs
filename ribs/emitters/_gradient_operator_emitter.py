@@ -232,7 +232,7 @@ class GradientOperatorEmitter(EmitterBase):
             )
             noise[:, 0] = np.abs(noise[:, 0])
             noise = np.expand_dims(noise, axis=2)
-            offsets = np.sum(np.multiply(self._jacobian_batch, noise), axis=1)
+            offsets = np.sum(self._jacobian_batch * noise, axis=1)
             sols = offsets + self._parents
         else:
             # Transform the Jacobian
@@ -282,6 +282,7 @@ class GradientOperatorEmitter(EmitterBase):
         solution_batch = np.asarray(solution_batch)
         objective_batch = np.asarray(objective_batch)
         measures_batch = np.asarray(measures_batch)
+        jacobian_batch = np.asarray(jacobian_batch)
         status_batch = np.asarray(status_batch)
         value_batch = np.asarray(value_batch)
         batch_size = solution_batch.shape[0]
