@@ -7,7 +7,7 @@ from ribs.emitters._emitter_base import EmitterBase
 
 
 class GradientEmitter(EmitterBase):
-    """Generates new solutions based on the gradient of the objective and measures.
+    """Generates new solutions based on gradients of the objective and measures.
 
     _extended_summary_
 
@@ -25,19 +25,20 @@ class GradientEmitter(EmitterBase):
             distribution, both when the archive is empty and afterwards. Note we
             assume the Gaussian is diagonal, so if this argument is an array, it
             must be 1D.
-        sigma_g (float): A step-size for the gradient in the gradient step. If measure
-            gradients are used, sigma_g is the standard deviation of Gaussian noise
-            used to sample gradient coefficients.
+        sigma_g (float): A step-size for the gradient in the gradient step.
+            If measure gradients are used, sigma_g is the standard deviation of
+            the Gaussian noise used to sample gradient coefficients.
         line_sigma (float): The theta_2 parameter for a Iso+LineDD operator.
         measure_gradients (bool): Signals if measure gradients will be used.
-        normalize_grad (bool): Sets if gradients should be normalized before steps.
+        normalize_grad (bool): Whether gradients should be normalized
+            before steps.
         epsilon (float): For numerical stability, we add a small epsilon when
             normalizing gradients in :meth:`tell_dqd` -- refer to the
             implementation `here
             <../_modules/ribs/emitters/_gradient_arborescence_emitter.html#GradientArborescenceEmitter.tell_dqd>`_.
             Pass this parameter to configure that epsilon.
-        operator_type (str): Either 'isotropic' or 'iso_line_dd' to mark the operator type 
-            for intermediate operations. Defaults to 'isotropic'.
+        operator_type (str): Either 'isotropic' or 'iso_line_dd' to mark the
+            operator type for intermediate operations. Defaults to 'isotropic'.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
             Alternatively, pass an array-like to specify the bounds for each
@@ -139,12 +140,12 @@ class GradientEmitter(EmitterBase):
         return self._epsilon
 
     def ask_dqd(self):
-        """Create new solutions by sampling elites from the archive with 
+        """Create new solutions by sampling elites from the archive with
         (optional) Gaussian perturbation.
 
-        If the archive is empty and initial_solutions is given, the call to this 
-        method on the first iteration returns no solutions. Later iterations will 
-        sample elites from the archive.
+        If the archive is empty and initial_solutions is given, the call to this
+        method on the first iteration returns no solutions. Later iterations
+        will sample elites from the archive.
 
         **Call :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
         calling :meth:`ask` and :meth:`tell`.**
@@ -176,9 +177,8 @@ class GradientEmitter(EmitterBase):
                 size=(self._batch_size, 1),
             ).astype(self.archive.dtype)
 
-            sol = parents + line_gaussian * directions
-            sol = np.minimum(np.maximum(sol + noise, self.lower_bounds),
-                             self.upper_bounds)
+            sol = parents + line_gaussian * directions + noise
+            sol = np.clip(sol, self.lower_bounds, self.upper_bounds)
         else:
             noise = self._rng.normal(
                 loc=0.0,
@@ -186,8 +186,8 @@ class GradientEmitter(EmitterBase):
                 size=(self.batch_size, self.solution_dim),
             ).astype(self.archive.dtype)
 
-            sol = np.minimum(np.maximum(parents + noise, self.lower_bounds),
-                             self.upper_bounds)
+            sol = parents + noise
+            sol = np.clip(sol, self.lower_bounds, self.upper_bounds)
 
         self._parents = sol
         return self._parents
@@ -200,7 +200,7 @@ class GradientEmitter(EmitterBase):
 
         This method returns ``batch_size`` solutions, even though one solution
         is returned via ``ask_dqd``.
-        
+
         Returns:
             (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new
             solutions to evaluate.
