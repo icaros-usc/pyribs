@@ -7,9 +7,34 @@ from ribs.emitters._emitter_base import EmitterBase
 
 
 class GradientOperatorEmitter(EmitterBase):
-    """Generates new solutions based on gradients of the objective and measures.
+    """Generates solutions with a gradient arborescence, with coefficients
+    parameterized by a fixed Gaussian distribution.
 
-    _extended_summary_
+    This emitter originates in `Fontaine 2021
+    <https://arxiv.org/abs/2106.03894>`_. It leverages the gradient information
+    of the objective and measure functions, generating new solutions around a
+    *solution point* :math:`\\boldsymbol{\\theta}` using *gradient
+    arborescence*, with coefficients drawn from a Gaussian distribution.
+    Essentially, this means that the emitter samples coefficients
+    :math:`\\boldsymbol{c_i} \\sim
+    \\mathcal{N}(\\boldsymbol{\\mu}, \\boldsymbol{\\Sigma})`
+    and creates new solutions :math:`\\boldsymbol{\\theta'_i}` according to
+
+    .. math::
+
+        \\boldsymbol{\\theta'_i} \\gets \\boldsymbol{\\theta} +
+            |c_{i,0}| \\boldsymbol{\\nabla} f(\\boldsymbol{\\theta}) +
+            \\sum_{j=1}^k c_{i,j}\\boldsymbol{\\nabla}m_j(\\boldsymbol{\\theta})
+
+    Where :math:`k` is the number of measures, and
+    :math:`\\boldsymbol{\\nabla} f(\\boldsymbol{\\theta})` and
+    :math:`\\boldsymbol{\\nabla} m_j(\\boldsymbol{\\theta})` are the objective
+    and measure gradients of the solution point :math:`\\boldsymbol{\\theta}`,
+    respectively.
+
+    The coefficients :math:`\\boldsymbol{c_i}` are sampled from a fixed
+    multivariate Gaussian distribution, with the objective gradient coefficient
+    being non-negative.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -203,7 +228,7 @@ class GradientOperatorEmitter(EmitterBase):
         If measure_gradients is used, the multivariate Gaussian is parameterized
         by sigma_g, and the arboresecence coefficient is sampled from the
         multivariate Gaussian, with the objective coefficient being always
-        positive. If measure_gradients is not used, the arboresecence
+        non-negative. If measure_gradients is not used, the arboresecence
         coefficient is just sigma_g itself.
 
         This method returns ``batch_size`` solutions by branching
