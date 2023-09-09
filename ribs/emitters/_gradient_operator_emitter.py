@@ -1,4 +1,4 @@
-"""Provides the GradientEmitter."""
+"""Provides the GradientOperatorEmitter."""
 
 import numpy as np
 
@@ -6,7 +6,7 @@ from ribs._utils import check_1d_shape, check_batch_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
 
 
-class GradientEmitter(EmitterBase):
+class GradientOperatorEmitter(EmitterBase):
     """Generates new solutions based on gradients of the objective and measures.
 
     _extended_summary_
@@ -38,7 +38,7 @@ class GradientEmitter(EmitterBase):
         epsilon (float): For numerical stability, we add a small epsilon when
             normalizing gradients in :meth:`tell_dqd` -- refer to the
             implementation `here
-            <../_modules/ribs/emitters/_gradient_arborescence_emitter.html#GradientArborescenceEmitter.tell_dqd>`_.
+            <../_modules/ribs/emitters/_gradient_emitter.html#GradientOperatorEmitter.tell_dqd>`_.
             Pass this parameter to configure that epsilon.
         operator_type (str): Either 'isotropic' or 'iso_line_dd' to mark the
             operator type for intermediate operations. Defaults to 'isotropic'.

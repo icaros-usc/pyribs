@@ -35,8 +35,9 @@ The supported algorithms are:
 - `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, where half (7) of
   the emitter are using TwoStageRandomDirectionRanker and half (8) are
   TwoStageImprovementRanker.
-- `og_map_elites`: GridArchive with GradientEmitter, does not use measure gradients.
-- `omg_mega`: GridArchive with GradientEmitter, uses measure gradients.
+- `og_map_elites`: GridArchive with GradientOperatorEmitter, does not use
+  measure gradients.
+- `omg_mega`: GridArchive with GradientOperatorEmitter, uses measure gradients.
 - `cma_mega`: GridArchive with GradientArborescenceEmitter.
 - `cma_mega_adam`: GridArchive with GradientArborescenceEmitter using Adam
   Optimizer.
@@ -83,13 +84,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 
+# yapf: disable
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           GradientEmitter, GradientArborescenceEmitter,
-                           IsoLineEmitter)
+                           GradientArborescenceEmitter,
+                           GradientOperatorEmitter, IsoLineEmitter)
 from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
+# yapf: enable
 CONFIG = {
     "map_elites": {
         "dim": 20,
@@ -434,7 +437,7 @@ CONFIG = {
             }
         },
         "emitters": [{
-            "class": GradientEmitter,
+            "class": GradientOperatorEmitter,
             "kwargs": {
                 "sigma0": 0.5,
                 "sigma_g": 0.5,
@@ -462,7 +465,7 @@ CONFIG = {
             }
         },
         "emitters": [{
-            "class": GradientEmitter,
+            "class": GradientOperatorEmitter,
             "kwargs": {
                 "sigma0": 0.0,
                 "sigma_g": 10.0,
