@@ -39,6 +39,7 @@ extras_require = {
         "pip>=20.3",
         "pylint",
         "yapf",
+        "pre-commit",
 
         # Testing
         "pytest==7.0.1",
