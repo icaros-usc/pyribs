@@ -80,6 +80,7 @@ servedocs: ## compile the docs watching for changes
 		--watch ribs/ \
 		--watch examples/ \
 		--watch tutorials/ \
+		--delay 0 \
 		docs/ \
 		docs/_build/html
 .PHONY: servedocs

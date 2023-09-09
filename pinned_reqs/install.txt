@@ -1,7 +1,7 @@
-numpy==1.17.0
+numpy==1.17.3
 numba==0.51.0
 pandas==1.0.0
 sortedcontainers==2.0.0
-scikit-learn==0.20.0
+scikit-learn==1.1.0
 scipy==1.4.0
 threadpoolctl==3.0.0

@@ -89,14 +89,15 @@ def main():
     # Set up these archives so we can use the same centroids across all
     # experiments for a certain number of cells (and also save time).
     ref_archives = {
-        cells: CVTArchive(
-            solution_dim=all_solution_batch.shape[2],
-            cells=cells,
-            ranges=[(-1, 1), (-1, 1)],
-            # Use 200k cells to avoid dropping clusters. However, note that we
-            # no longer test with 10k cells.
-            samples=100_000 if cells != 10_000 else 200_000,
-            use_kd_tree=False) for cells in n_cells
+        cells:
+            CVTArchive(
+                solution_dim=all_solution_batch.shape[2],
+                cells=cells,
+                ranges=[(-1, 1), (-1, 1)],
+                # Use 200k cells to avoid dropping clusters. However, note that we
+                # no longer test with 10k cells.
+                samples=100_000 if cells != 10_000 else 200_000,
+                use_kd_tree=False) for cells in n_cells
     }
 
     def setup(cells, use_kd_tree):

@@ -1,30 +1,11 @@
 # Contributing
 
-Contributions are welcome, and they are greatly appreciated. Every little bit
-helps, and credit will always be given.
-
-## Types of Contributions
-
-- **Report Bugs:** Refer to the
-  [Issue Tracker](https://github.com/icaros-usc/pyribs/issues). Please include
-  details such as operating system, Python version, and ribs version, as well as
-  detailed steps to reproduce the bug.
-- **Fix Bugs:** Look through the Issue Tracker for bugs. Anything tagged with
-  "bug" and "help wanted" is open to whoever wants to implement it.
-- **Propose features:** To request new features in pyribs, submit a Feature
-  Request on the Issue Tracker. In the request, please:
-  - Explain in detail how the feature would work.
-  - Keep the scope as narrow as possible, to make the features easier to
-    implement.
-- **Implement Features:** Look through the Issue Tracker for features. Anything
-  tagged with "enhancement" and "help wanted" is open to whoever wants to
-  implement it.
-- **Write Documentation:** pyribs could always use more documentation, whether
-  as part of the official pyribs docs, in docstrings, or even on the web in blog
-  posts, articles, and such. For the website, refer to the
-  [website repo](https://github.com/icaros-usc/pyribs.org).
-- **Submit Feedback:** The best way to send feedback is to file an issue on the
-  [Issue Tracker](https://github.com/icaros-usc/pyribs/issues).
+Contributions are welcome and are greatly appreciated! Every little bit helps.
+Contributions include reporting/fixing bugs, proposing/implementing features
+(see our [Issue Tracker](https://github.com/icaros-usc/pyribs/issues)), writing
+documentation in the codebase or on our
+[website repo](https://github.com/icaros-usc/pyribs.org), and submitting
+feedback.
 
 ## Developing pyribs
 
@@ -41,34 +22,46 @@ Ready to contribute? Here's how to set up pyribs for local development.
    git clone https://github.com/USERNAME/pyribs.git
    ```
 
-1. Install the local copy and dev requirements into an environment. For
-   instance, with Conda, the following creates an environment at `./env`.
-
-   ```bash
-   cd pyribs
-   conda create --prefix ./env python=3.7 # 3.7 is the minimum version pyribs supports.
-   conda activate ./env
-   pip install -e .[dev]
-   ```
-
 1. Create a branch for local development:
 
    ```bash
    git checkout -b name-of-bugfix-or-feature
    ```
 
-   Now make the appropriate changes locally.
+1. Install the local copy and dev requirements into a virtual environment. For
+   instance, with Conda, the following creates an environment at `./env`.
 
-   - Please follow the
-     [Google Style Guide](https://google.github.io/styleguide/pyguide.html)
-     (particularly when writing docstrings).
-   - Make sure to auto-format the code using YAPF. We highly recommend
-     installing an editor plugin that auto-formats on save, but YAPF also runs
-     on the command line:
+   ```bash
+   cd pyribs
+   conda create --prefix ./env python=3.8 # 3.8 is the minimum version pyribs supports.
+   conda activate ./env
+   pip install -e .[dev]
+   ```
 
-     ```bash
-     yapf -i FILES
-     ```
+1. We roughly follow the
+   [Google Style Guide](https://google.github.io/styleguide/pyguide.html) in our
+   codebase by using yapf, isort, and pylint to enforce code format and style.
+   To automatically check for formatting and style every time you commit, we use
+   [pre-commit](https://pre-commit.com). Pre-commit should have already been
+   installed with `.[dev]` above. To set it up, run:
+
+   ```bash
+   pre-commit install
+   ```
+
+1. Now make the appropriate changes locally. If relevant, make sure to write
+   tests for your code in the `tests/` folder.
+
+1. Auto-format and lint your code using YAPF, isort, and pylint. Note that
+   pre-commit will automatically run these whenever you commit your code; you
+   can also run them with `pre-commit run`. You can also run these commands on
+   the command line:
+
+   ```bash
+   yapf -i FILES
+   isort FILES
+   pylint FILES
+   ```
 
 1. After making changes, check that the changes pass the tests:
 
@@ -84,16 +77,6 @@ Ready to contribute? Here's how to set up pyribs for local development.
    make benchmark # ^ same as above
    ```
 
-   Finally, to lint the code:
-
-   ```bash
-   pylint ribs tests benchmarks examples
-   make lint # ^ same as above
-   ```
-
-   To get pytest and pylint, pip install them into the environment. However,
-   they should already install with `pip install -e .[dev]`.
-
 1. Add your change to the changelog for the current version in `HISTORY.md`.
 
 1. Commit the changes and push the branch to GitHub:
@@ -104,21 +87,7 @@ Ready to contribute? Here's how to set up pyribs for local development.
    git push origin name-of-bugfix-or-feature
    ```
 
-1. Submit a pull request through the GitHub website.
-
-## Pull Request Guidelines
-
-Before submitting a pull request, check that it meets these guidelines:
-
-1. Style: Code should follow the
-   [Google Style Guide](https://google.github.io/styleguide/pyguide.html) and be
-   auto-formatted with [YAPF](https://github.com/google/yapf).
-1. The pull request should include tests.
-1. If the pull request adds functionality, corresponding docstrings and other
-   documentation should be updated.
-1. The pull request should work for Python 3.7 and higher. GitHub Actions will
-   display test results at the bottom of the pull request page. Check there for
-   test results.
+1. Submit a pull request through the GitHub web interface.
 
 ## Instructions
 
@@ -149,7 +118,8 @@ to the docs.
 Tutorials are created in Jupyter notebooks that are stored under `tutorials/` in
 the repo. To create a tutorial:
 
-1. Write the notebook and save it under `tutorials/`.
+1. Write the notebook and save it under `tutorials/`. Notebooks may also be
+   saved in a subdirectory of `tutorials/`, e.g., `tutorials/features`.
 1. Use cell magic (e.g. `%pip install ribs`) to install pyribs and other
    dependencies.
    - Installation cells tend to produce a lot of output. Make sure to clear this
@@ -165,7 +135,9 @@ the repo. To create a tutorial:
    `## Level 2 Heading`) or higher.
 1. If linking to the pyribs documentation, make sure to link to pages in the
    `latest` version on ReadTheDocs, i.e. your links should start with
-   `https://docs.pyribs.org/en/latest/`
+   `https://docs.pyribs.org/en/latest/`. Note that we do not use Sphinx autodoc
+   (e.g., `:class:`) in the tutorials because such links do not work outside the
+   pyribs website (e.g., on Google Colab).
 1. Add an entry into the toctree in `docs/tutorials.md` and add it to one of the
    lists of tutorials.
 1. Check that the tutorial shows up on the Tutorials page when serving the docs.
@@ -209,8 +181,7 @@ their source is shown in the docs. To create an example:
 ### Referencing Papers
 
 When referencing papers, refer to them as `Lastname YEAR`, e.g. `Smith 2004`.
-Also, prefer to link to the paper's website, rather than just the PDF. This is
-particularly relevant when linking to arXiv papers.
+Also, prefer to link to the paper's website, rather than just the PDF.
 
 ### Deploying
 

@@ -4,7 +4,7 @@ For image comparison tests, read these instructions:
 https://matplotlib.org/3.3.1/devel/testing.html#writing-an-image-comparison-test.
 Essentially, after running a new test for the first time in the _root_ directory
 of this repo, copy the image output from result_images/visualize_test to
-tests/extras/baseline_images/visualize_test. For instance, for
+tests/visualize/baseline_images/visualize_test. For instance, for
 ``test_cvt_archive_heatmap_with_samples``, run::
 
     cp result_images/visualize_test/cvt_archive_heatmap_with_samples.png \
@@ -16,6 +16,7 @@ test should now pass when it is re-run.
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+import shapely
 from matplotlib.testing.decorators import image_comparison
 
 from ribs.archives import CVTArchive, GridArchive, SlidingBoundariesArchive
@@ -24,6 +25,11 @@ from ribs.visualize import (cvt_archive_heatmap, grid_archive_heatmap,
                             sliding_boundaries_archive_heatmap)
 
 # pylint: disable = redefined-outer-name
+
+# Tolerance for root mean square difference between the pixels of the images,
+# where 255 is the max value. We only have tolerance for `cvt_archive_heatmap`
+# since it is a bit more finicky than the other plots.
+CVT_IMAGE_TOLERANCE = 0.1
 
 
 @pytest.fixture(autouse=True)
@@ -379,7 +385,8 @@ def test_heatmap_archive__grid_custom_cbar_axis(grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_archive__cvt(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive)
@@ -403,7 +410,8 @@ def test_heatmap_with_custom_axis__grid(grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_with_custom_axis__cvt(cvt_archive):
     _, ax = plt.subplots(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, ax=ax)
@@ -427,7 +435,8 @@ def test_heatmap_long__grid(long_grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_long"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_long__cvt(long_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(long_cvt_archive)
@@ -451,7 +460,8 @@ def test_heatmap_long_square__grid(long_grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_long_square"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_long_square__cvt(long_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(long_cvt_archive, aspect="equal")
@@ -475,7 +485,8 @@ def test_heatmap_long_transpose__grid(long_grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_long_transpose"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_long_transpose__cvt(long_cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(long_cvt_archive, transpose_measures=True)
@@ -502,7 +513,8 @@ def test_heatmap_with_limits__grid(grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_limits"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_with_limits__cvt(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, vmin=-1.0, vmax=-0.5)
@@ -527,7 +539,8 @@ def test_heatmap_listed_cmap__grid(grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_listed_cmap"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_listed_cmap__cvt(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, cmap=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])
@@ -553,7 +566,8 @@ def test_heatmap_coolwarm_cmap__grid(grid_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_coolwarm_cmap"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_heatmap_coolwarm_cmap__cvt(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, cmap="coolwarm")
@@ -612,9 +626,19 @@ def test_sliding_archive_mismatch_xy_with_boundaries():
     sliding_boundaries_archive_heatmap(archive, boundary_lw=0.5)
 
 
+@image_comparison(baseline_images=["cvt_archive_heatmap_vmin_equals_vmax"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_cvt_archive_heatmap_vmin_equals_vmax(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, vmin=-0.5, vmax=-0.5)
+
+
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_centroids"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_cvt_archive_heatmap_with_centroids(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, plot_centroids=True)
@@ -622,10 +646,156 @@ def test_cvt_archive_heatmap_with_centroids(cvt_archive):
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_with_samples"],
                   remove_text=False,
-                  extensions=["png"])
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
 def test_cvt_archive_heatmap_with_samples(cvt_archive):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive, plot_samples=True)
+
+
+def test_cvt_archive_heatmap_no_samples_error():
+    # This archive has no samples since custom centroids were passed in.
+    archive = CVTArchive(solution_dim=2,
+                         cells=2,
+                         ranges=[(-1, 1), (-1, 1)],
+                         custom_centroids=[[0, 0], [1, 1]])
+
+    # Thus, plotting samples on this archive should fail.
+    with pytest.raises(ValueError):
+        cvt_archive_heatmap(archive, lw=3.0, ec="grey", plot_samples=True)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_voronoi_style"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_cvt_archive_heatmap_voronoi_style(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, lw=3.0, ec="grey")
+
+
+#
+# Rasterization tests
+#
+
+
+@image_comparison(baseline_images=["grid_archive_heatmap_rasterized"],
+                  remove_text=False,
+                  extensions=["pdf"])
+def test_grid_archive_rasterized(grid_archive):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(grid_archive, rasterized=True)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_rasterized"],
+                  remove_text=False,
+                  extensions=["pdf"])
+def test_cvt_archive_rasterized(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, rasterized=True)
+
+
+@image_comparison(baseline_images=["sliding_boundaries_heatmap_rasterized"],
+                  remove_text=False,
+                  extensions=["pdf"])
+def test_sliding_boundaries_archive_rasterized(sliding_archive):
+    plt.figure(figsize=(8, 6))
+    sliding_boundaries_archive_heatmap(sliding_archive,
+                                       boundary_lw=1.0,
+                                       rasterized=True)
+
+
+#
+# cvt_archive_heatmap clip tests
+#
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_noclip"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_cvt_archive_heatmap_noclip(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, clip=False)
+    plt.xlim(-1.5, 1.5)
+    plt.ylim(-1.5, 1.5)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_clip"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_cvt_archive_heatmap_clip(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive, clip=True)
+    plt.xlim(-1.5, 1.5)
+    plt.ylim(-1.5, 1.5)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_clip_polygon"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_cvt_archive_heatmap_clip_polygon(cvt_archive):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive,
+        clip=shapely.Polygon(shell=np.array([
+            [-0.75, -0.375],
+            [-0.75, 0.375],
+            [-0.375, 0.75],
+            [0.375, 0.75],
+            [0.75, 0.375],
+            [0.75, -0.375],
+            [0.375, -0.75],
+            [-0.375, -0.75],
+        ]),),
+    )
+    plt.xlim(-1.5, 1.5)
+    plt.ylim(-1.5, 1.5)
+
+
+@image_comparison(
+    baseline_images=["cvt_archive_heatmap_clip_polygon_with_hole"],
+    remove_text=False,
+    extensions=["png"],
+    tol=CVT_IMAGE_TOLERANCE)
+def test_cvt_archive_heatmap_clip_polygon_with_hole(cvt_archive):
+    """This test will force some cells to be split in two."""
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive,
+        clip=shapely.Polygon(
+            shell=np.array([
+                [-0.75, -0.375],
+                [-0.75, 0.375],
+                [-0.375, 0.75],
+                [0.375, 0.75],
+                [0.75, 0.375],
+                [0.75, -0.375],
+                [0.375, -0.75],
+                [-0.375, -0.75],
+            ]),
+            holes=[
+                # Two holes that split some cells into two parts, and some cells
+                # into three parts.
+                np.array([
+                    [-0.5, 0],
+                    [-0.5, 0.05],
+                    [0.5, 0.05],
+                    [0.5, 0],
+                ]),
+                np.array([
+                    [-0.5, 0.125],
+                    [-0.5, 0.175],
+                    [0.5, 0.175],
+                    [0.5, 0.125],
+                ]),
+            ],
+        ),
+    )
+    plt.xlim(-1.5, 1.5)
+    plt.ylim(-1.5, 1.5)
 
 
 #
@@ -711,4 +881,5 @@ def test_parallel_axes_3d_sorted(three_d_grid_archive):
                   extensions=["png"])
 def test_parallel_axes_3d_vertical_cbar(three_d_grid_archive):
     plt.figure(figsize=(8, 6))
-    parallel_axes_plot(three_d_grid_archive, cbar_orientation='vertical')
+    parallel_axes_plot(three_d_grid_archive,
+                       cbar_kwargs={"orientation": "vertical"})

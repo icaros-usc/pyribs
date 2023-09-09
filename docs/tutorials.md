@@ -1,16 +1,5 @@
 # Tutorials
 
-```{toctree}
-:hidden:
-
-tutorials/lunar_lander
-tutorials/cma_mae
-tutorials/tom_cruise_dqd
-tutorials/lsi_mnist
-tutorials/arm_repertoire
-tutorials/fooling_mnist
-```
-
 Tutorials are Python notebooks with detailed explanations of pyribs usage. They
 may be [run locally](running-locally) or on
 [Google Colab](https://colab.research.google.com/notebooks/intro.ipynb). Each
@@ -18,18 +7,34 @@ tutorial page has a link to open the tutorial in Google Colab.
 
 ## Key Algorithms
 
+```{toctree}
+:hidden:
+
+tutorials/lunar_lander
+tutorials/cma_mae
+tutorials/tom_cruise_dqd
+```
+
 We recommend new users start with these tutorials which demonstrate how to use
 the key algorithms in pyribs.
 
 - {doc}`tutorials/lunar_lander`: Covers the CMA-ME algorithm and various basic
   library features.
-- {doc}`tutorials/cma_mae`: Shows how to implement CMA-MAE, a powerful
-  algorithm built on CMA-ME, on the sphere linear projection benchmark.
+- {doc}`tutorials/cma_mae`: Shows how to implement CMA-MAE, a powerful algorithm
+  built on CMA-ME, on the sphere linear projection benchmark.
 - {doc}`tutorials/tom_cruise_dqd`: Covers CMA-MEGA and CMA-MAEGA, two algorithms
   designed for differentiable quality diversity problems (QD problems where
   gradients are available).
 
 ## Applications
+
+```{toctree}
+:hidden:
+
+tutorials/lsi_mnist
+tutorials/arm_repertoire
+tutorials/fooling_mnist
+```
 
 The following tutorials show how pyribs can implement a variety of algorithms
 for different problems.
@@ -44,6 +49,19 @@ for different problems.
 <!-- How MyST handles section labels: https://jupyterbook.org/en/stable/content/references.html -->
 
 (running-locally)=
+
+## Features
+
+Finally, these tutorials provide a closer look at some of the features of
+pyribs.
+
+```{toctree}
+:hidden:
+
+tutorials/features/example
+```
+
+- {doc}`tutorials/features/example`: Placeholder for upcoming tutorials!
 
 ## Running Locally
 

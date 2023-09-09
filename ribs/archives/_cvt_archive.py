@@ -1,7 +1,5 @@
 """Contains the CVTArchive class."""
 import numpy as np
-import semantic_version
-import sklearn
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from sklearn.cluster import k_means
 
@@ -56,7 +54,7 @@ class CVTArchive(ArchiveBase):
         the ``learning_rate`` and ``threshold_min`` parameters.
 
     .. note:: For more information on our choice of k-D tree implementation, see
-        `#38 <https://github.com/icaros-usc/pyribs/issues/38>`_.
+        :pr:`38`.
 
     Args:
         solution_dim (int): Dimension of the solution space.
@@ -144,23 +142,16 @@ class CVTArchive(ArchiveBase):
         # particularly if they want higher quality clusters.
         self._k_means_kwargs = ({} if k_means_kwargs is None else
                                 k_means_kwargs.copy())
-        if "n_init" not in self._k_means_kwargs:
+        self._k_means_kwargs.setdefault(
             # Only run one iter to be fast.
-            self._k_means_kwargs["n_init"] = 1
-        if "init" not in self._k_means_kwargs:
-            # The default, "k-means++", takes very long to init.
-            self._k_means_kwargs["init"] = "random"
-        if "algorithm" not in self._k_means_kwargs:
-            if semantic_version.Version(
-                    sklearn.__version__) >= semantic_version.Version("1.1.0"):
-                # In the newer versions, "full" has been deprecated in favor of
-                # "lloyd".
-                self._k_means_kwargs["algorithm"] = "lloyd"
-            else:
-                # The default, "auto"/"elkan", allocates a huge array.
-                self._k_means_kwargs["algorithm"] = "full"
-        if "random_state" not in self._k_means_kwargs:
-            self._k_means_kwargs["random_state"] = seed
+            "n_init",
+            1)
+        self._k_means_kwargs.setdefault(
+            # The default "k-means++" takes very long to init.
+            "init",
+            "random")
+        self._k_means_kwargs.setdefault("algorithm", "lloyd")
+        self._k_means_kwargs.setdefault("random_state", seed)
 
         self._use_kd_tree = use_kd_tree
         self._centroid_kd_tree = None
@@ -226,7 +217,7 @@ class CVTArchive(ArchiveBase):
         """(num_samples, measure_dim) numpy.ndarray: The samples used in
         creating the CVT.
 
-        May be None until :meth:`initialize` is called.
+        Will be None if custom centroids were passed in to the archive.
         """
         return self._samples
 
@@ -234,8 +225,6 @@ class CVTArchive(ArchiveBase):
     def centroids(self):
         """(n_centroids, measure_dim) numpy.ndarray: The centroids used in the
         CVT.
-
-        None until :meth:`initialize` is called.
         """
         return self._centroids
 

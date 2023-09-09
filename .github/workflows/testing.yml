@@ -11,6 +11,20 @@ on:
       - master
 
 jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    env:
+      # Skipped for now since we just added pre-commit and not all of our code
+      # perfectly passes pylint.
+      SKIP: pylint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install all deps and pylint (to be available to pre-commit)
+        run: pip install .[all] pylint
+      - uses: pre-commit/action@v3.0.0
   # The visualize extra is only tested with pinned reqs because different
   # Matplotlib versions have slightly different outputs.
   test:
@@ -18,19 +32,18 @@ jobs:
       max-parallel: 12 # All in parallel.
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
         exclude:
           # To cut down on runtime since Mac seems to take the longest.
           - os: macos-latest
-            python-version: "3.8"
-          - os: macos-latest
             python-version: "3.9"
+          - os: macos-latest
+            python-version: "3.10"
     runs-on: ${{ matrix.os }}
-
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Upgrade pip
@@ -43,11 +56,11 @@ jobs:
   pin:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.7"
+          python-version: "3.8"
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install core deps
@@ -57,16 +70,20 @@ jobs:
           pytest tests/archives tests/emitters tests/schedulers
       - name: Install extras deps
         run: pip install -r pinned_reqs/extras_visualize.txt
-      - name: Test extras
-        run: pytest tests/visualize_test.py
+      - name: Test visualize extra
+        run: pytest tests/visualize
+      - name: Install QDax
+        run: pip install qdax
+      - name: Test visualize extra for QDax
+        run: pytest tests/visualize_qdax
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.7"
+          python-version: "3.8"
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install deps
@@ -74,15 +91,19 @@ jobs:
       - name: Test coverage
         env:
           NUMBA_DISABLE_JIT: 1
-        run: pytest tests
+        # Exclude `visualize_qdax` since we don't install QDax here. We also
+        # exclude `tests` since we don't want the base directory here.
+        run:
+          pytest $(find tests -maxdepth 1 -type d -not -name 'tests' -not -name
+          'visualize_qdax')
   benchmarks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.7"
+          python-version: "3.8"
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install deps
@@ -92,11 +113,11 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.7"
+          python-version: "3.8"
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install deps
@@ -106,11 +127,12 @@ jobs:
   tutorials:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+      # We use Python 3.10 instead of 3.8 here since Google Colab uses 3.10.
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.7"
+          python-version: "3.10"
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install deps
@@ -120,9 +142,9 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.8"
       - name: Upgrade pip
@@ -133,14 +155,14 @@ jobs:
         run: make docs
   deploy:
     runs-on: ubuntu-latest
-    needs: [test, pin, coverage, benchmarks, examples, tutorials]
+    needs: [pre-commit, test, pin, coverage, benchmarks, examples, tutorials]
     if: startsWith(github.ref, 'refs/tags')
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.7"
+          python-version: "3.8"
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - name: Install dependencies

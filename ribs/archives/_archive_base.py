@@ -284,8 +284,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             replaced with an elite with a lower objective value. This can happen
             because in non-elitist archives, new solutions only need to exceed
             the *threshold* of the cell they are being inserted into, not the
-            *objective* of the elite currently in the cell. See `#314
-            <https://github.com/icaros-usc/pyribs/pull/314>`_ for more info.
+            *objective* of the elite currently in the cell. See :pr:`314` for
+            more info.
         """
         return self._best_elite
 
@@ -552,9 +552,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         objective_batch = np.asarray(objective_batch)
         measures_batch = np.asarray(measures_batch)
         batch_size = solution_batch.shape[0]
-        metadata_batch = (np.empty(batch_size, dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
+        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
+                          is None else np.asarray(metadata_batch, dtype=object))
 
         ## Step 1: Validate input. ##
         validate_batch_args(
