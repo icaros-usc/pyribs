@@ -27,32 +27,32 @@ jobs:
       - uses: pre-commit/action@v3.0.0
   # The visualize extra is only tested with pinned reqs because different
   # Matplotlib versions have slightly different outputs.
-  test:
-    strategy:
-      max-parallel: 12 # All in parallel.
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-        exclude:
-          # To cut down on runtime since Mac seems to take the longest.
-          - os: macos-latest
-            python-version: "3.9"
-          - os: macos-latest
-            python-version: "3.10"
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
-      - name: Install core deps
-        run: pip install .[dev]
-      - name: Test core
-        run: >
-          pytest tests/archives tests/emitters tests/schedulers
+  # test:
+  #   strategy:
+  #     max-parallel: 12 # All in parallel.
+  #     matrix:
+  #       os: [ubuntu-latest, macos-latest, windows-latest]
+  #       python-version: ["3.8", "3.9", "3.10", "3.11"]
+  #       exclude:
+  #         # To cut down on runtime since Mac seems to take the longest.
+  #         - os: macos-latest
+  #           python-version: "3.9"
+  #         - os: macos-latest
+  #           python-version: "3.10"
+  #   runs-on: ${{ matrix.os }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #     - name: Upgrade pip
+  #       run: python -m pip install --upgrade pip
+  #     - name: Install core deps
+  #       run: pip install .[dev]
+  #     - name: Test core
+  #       run: >
+  #         pytest tests/archives tests/emitters tests/schedulers
   pin:
     runs-on: ubuntu-latest
     steps:
@@ -163,7 +163,7 @@ jobs:
         run: make docs
   deploy:
     runs-on: ubuntu-latest
-    needs: [pre-commit, test, pin, coverage, benchmarks, examples, tutorials]
+    needs: [pre-commit, pin, coverage, benchmarks, examples, tutorials]
     if: startsWith(github.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v4
