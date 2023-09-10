@@ -130,7 +130,11 @@ jobs:
       - name: Install deps
         run: pip install .[visualize]
       - name: Test Examples
-        run: bash tests/examples.sh
+        run: |
+          echo $PATH
+          echo $PYTHONPATH
+          python -c "import sys; print(sys.path)"
+          bash tests/examples.sh
   tutorials:
     runs-on: ubuntu-latest
     steps:
