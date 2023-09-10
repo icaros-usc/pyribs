@@ -21,6 +21,7 @@ function install_deps() {
       $install_cmd
       which -a swig || true
       which -a python
+      hash -r
   done
 }
 
