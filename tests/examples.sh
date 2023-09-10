@@ -19,7 +19,7 @@ function install_deps() {
   # installation commands.
   grep '^\s*pip install' "$1" | while read -r install_cmd ; do
       which pip
-      python -m $install_cmd
+      $install_cmd
       which swig || true
       which python
       python -c "import swig"
