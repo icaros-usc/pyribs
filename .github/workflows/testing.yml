@@ -120,8 +120,8 @@ jobs:
           python-version: "3.8"
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
-      - name: Which swig
-        run: which -a swig
+      - name: Remove swig
+        run: rm -rf /usr/bin/swig
       - name: Swig help
         run: swig --help
       - name: Install deps
