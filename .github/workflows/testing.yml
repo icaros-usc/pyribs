@@ -122,18 +122,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
-      - name: Run
-        run: |
-          python -m venv ./pyenv
-          source ./pyenv/bin/activate
-          which python
-          which pip
-          pip install .[visualize]
-          bash tests/examples.sh
-      # - name: Install deps
-      #   run: pip install .[visualize]
-      # - name: Test Examples
-      #   run: bash tests/examples.sh
+      - name: Create virtual env
+        run: python -m venv ./venv && source ./venv/bin/activate
+      - name: Install deps
+        run: pip install .[visualize]
+      - name: Test Examples
+        run: bash tests/examples.sh
   tutorials:
     runs-on: ubuntu-latest
     steps:
