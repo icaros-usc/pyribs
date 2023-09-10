@@ -1,7 +1,8 @@
 """Uses CMA-ME to train agents with linear policies in Lunar Lander.
 
 Install the following dependencies before running this example:
-    pip install ribs[visualize] tqdm fire gymnasium[box2d]==0.27.0 moviepy>=1.0.0 dask>=2.0.0 distributed>=2.0.0 bokeh>=2.0.0
+    pip install swig  # Must be installed before box2d.
+    pip install ribs[visualize] tqdm fire gymnasium[box2d]==0.29.1 moviepy>=1.0.0 dask>=2.0.0 distributed>=2.0.0 bokeh>=2.0.0
 
 This script uses the same setup as the tutorial, but it also uses Dask instead
 of Python's multiprocessing to parallelize evaluations on a single machine and
