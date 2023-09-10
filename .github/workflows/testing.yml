@@ -120,6 +120,10 @@ jobs:
           python-version: "3.8"
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
+      - name: Which swig
+        run: which -a swig
+      - name: Swig help
+        run: swig --help
       - name: Install deps
         run: pip install .[visualize]
       - name: Test Examples
