@@ -167,6 +167,8 @@ def validate_batch_args(archive, solution_batch, **batch_kwargs):
                                      extra_msg=_BATCH_WARNING)
             returns.append(value_batch)
         elif name == "metadata_batch":
+            # Special case -- metadata_batch defaults to None in our methods,
+            # but we make it into an array of None if it is not provided.
             metadata_batch = (np.empty(batch_size, dtype=object)
                               if arg is None else np.asarray(arg, dtype=object))
             check_is_1d(metadata_batch, "metadata_batch", _BATCH_WARNING)
