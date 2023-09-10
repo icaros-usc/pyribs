@@ -28,7 +28,7 @@
 - Refactor visualize module into multiple files ({pr}`357`)
 - Add GitHub link roles in documentation ({pr}`361`)
 - Refactor argument validation utilities ({pr}`365`)
-- Use virtualenv in all CI jobs ({pr}`368`)
+- Use Conda envs in all CI jobs ({pr}`368`)
 
 ## 0.5.2
 
