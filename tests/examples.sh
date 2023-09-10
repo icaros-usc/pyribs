@@ -20,6 +20,7 @@ function install_deps() {
   grep '^\s*pip install' "$1" | while read -r install_cmd ; do
       $install_cmd
       which -a swig || true
+      which -a python
   done
 }
 
