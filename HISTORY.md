@@ -20,6 +20,7 @@
 
 - Use dask instead of multiprocessing for lunar lander tutorial ({pr}`346`)
 - pip install swig before gymnasium[box2d] in lunar lander tutorial ({pr}`346`)
+- Fix lunar lander dependency issues ({pr}`366`)
 
 #### Improvements
 
