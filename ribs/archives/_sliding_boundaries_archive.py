@@ -408,22 +408,19 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         See :meth:`ArchiveBase.add` for arguments and return values.
         """
-        # Preprocess input.
-        solution_batch = np.array(solution_batch)
-        batch_size = solution_batch.shape[0]
-        objective_batch = np.array(objective_batch)
-        measures_batch = np.array(measures_batch)
-        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
-                          is None else np.asarray(metadata_batch, dtype=object))
-
-        # Validate arguments.
-        validate_batch_args(
+        (
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            metadata_batch,
+        ) = validate_batch_args(
             archive=self,
             solution_batch=solution_batch,
             objective_batch=objective_batch,
             measures_batch=measures_batch,
             metadata_batch=metadata_batch,
         )
+        batch_size = solution_batch.shape[0]
 
         status_batch = np.empty(batch_size, dtype=np.int32)
         value_batch = np.empty(batch_size, dtype=self.dtype)
@@ -449,10 +446,11 @@ class SlidingBoundariesArchive(ArchiveBase):
         See :meth:`ArchiveBase.add_single` for arguments and return values.
         """
 
-        solution = np.asarray(solution)
-        objective = self.dtype(objective)
-        measures = np.asarray(measures)
-        validate_single_args(
+        (
+            solution,
+            objective,
+            measures,
+        ) = validate_single_args(
             self,
             solution=solution,
             objective=objective,
