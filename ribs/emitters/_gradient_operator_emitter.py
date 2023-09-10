@@ -63,7 +63,7 @@ class GradientOperatorEmitter(EmitterBase):
         epsilon (float): For numerical stability, we add a small epsilon when
             normalizing gradients in :meth:`tell_dqd` -- refer to the
             implementation `here
-            <../_modules/ribs/emitters/_gradient_emitter.html#GradientOperatorEmitter.tell_dqd>`_.
+            <../_modules/ribs/emitters/_gradient_operator_emitter.html#GradientOperatorEmitter.tell_dqd>`_.
             Pass this parameter to configure that epsilon.
         operator_type (str): Either 'isotropic' or 'iso_line_dd' to mark the
             operator type for intermediate operations. Defaults to 'isotropic'.
