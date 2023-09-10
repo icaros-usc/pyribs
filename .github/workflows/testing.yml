@@ -122,8 +122,6 @@ jobs:
       # this happens. However, the tutorials seem to work fine.
       # - name: Remove swig
       #   run: sudo apt-get remove swig
-      # - name: Remove swig
-      #   run: sudo apt-get remove swig
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
