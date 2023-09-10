@@ -6,7 +6,7 @@
 
 #### API
 
-- Add GradientEmitter to support OMG-MEGA and OG-MAP-Elites (#348)
+- Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 - Drop Python 3.7 support and upgrade dependencies ({pr}`350`)
 - Add visualization of QDax repertoires ({pr}`353`)
 - Improve cvt_archive_heatmap flexibility ({pr}`354`)
