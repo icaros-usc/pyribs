@@ -34,7 +34,7 @@ class GradientOperatorEmitter(EmitterBase):
 
     The coefficients :math:`\\boldsymbol{c_i}` are sampled from a fixed
     multivariate Gaussian distribution, with the objective gradient coefficient
-    being non-negative.
+    forced to be non-negative by taking its absolute value :math:`|c_{i,0}|`.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -291,9 +291,8 @@ class GradientOperatorEmitter(EmitterBase):
                 solution_dim) array consisting of Jacobian matrices of the
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
-                the measure gradients.
-                If measure gradients are not used, the array is of shape
-                (batch_size, 1, solution_dim).
+                the measure gradients. If measure gradients are not used, the
+                array is of shape (batch_size, 1, solution_dim).
             status_batch (array-like): 1d array of
                 :class:`ribs.archive.addstatus` returned by a series of calls
                 to archive's :meth:`add()` method.
