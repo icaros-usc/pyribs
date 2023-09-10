@@ -59,7 +59,7 @@ def grid_archive_heatmap(archive,
             >>> plt.show()
 
     Args:
-        archive (GridArchive): A 2D :class:`~ribs.archives.GridArchive`.
+        archive (GridArchive): A 1D or 2D :class:`~ribs.archives.GridArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
             If ``None``, the current axis will be used.
         transpose_measures (bool): By default, the first measure in the archive

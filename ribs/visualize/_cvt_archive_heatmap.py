@@ -69,7 +69,7 @@ def cvt_archive_heatmap(archive,
             >>> plt.show()
 
     Args:
-        archive (CVTArchive): A 2D :class:`~ribs.archives.CVTArchive`.
+        archive (CVTArchive): A 1D or 2D :class:`~ribs.archives.CVTArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
             If ``None``, the current axis will be used.
         transpose_measures (bool): By default, the first measure in the archive
