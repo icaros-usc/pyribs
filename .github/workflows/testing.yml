@@ -114,6 +114,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # SWIG should not be installed so that we can test that lunar lander is
+      # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
+      - name: Remove swig
+        run: sudo rm -rf /usr/bin/swig
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
@@ -129,6 +133,10 @@ jobs:
     steps:
       # We use Python 3.10 instead of 3.8 here since Google Colab uses 3.10.
       - uses: actions/checkout@v4
+      # SWIG should not be installed so that we can test that lunar lander is
+      # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
+      - name: Remove swig
+        run: sudo rm -rf /usr/bin/swig
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
