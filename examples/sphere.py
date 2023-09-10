@@ -850,8 +850,8 @@ def sphere_main(algorithm,
 
     # Plot metrics.
     print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")
-    for metric in metrics:
-        plt.plot(metrics[metric]["x"], metrics[metric]["y"])
+    for metric, values in metrics.items():
+        plt.plot(values["x"], values["y"])
         plt.title(metric)
         plt.xlabel("Iteration")
         plt.savefig(
