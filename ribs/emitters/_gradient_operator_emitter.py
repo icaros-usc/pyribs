@@ -277,7 +277,7 @@ class GradientOperatorEmitter(EmitterBase):
                  status_batch,
                  value_batch,
                  metadata_batch=None):
-        """Gives the emitter results of evaluating solutions from ask_dqd()
+        """Gives the emitter results of evaluating solutions from ask_dqd().
 
         Args:
             solution_batch (array-like): (batch_size, :attr:`solution_dim`)
