@@ -18,9 +18,10 @@ function install_deps() {
   # Loop through all instances of `pip install` in the script and run the
   # installation commands.
   grep '^\s*pip install' "$1" | while read -r install_cmd ; do
+      which pip
       $install_cmd
-      which -a swig || true
-      which -a python
+      which swig || true
+      which python
       python -c "import swig"
       python -c "from swig import swig"
   done
