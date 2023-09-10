@@ -446,10 +446,11 @@ class SlidingBoundariesArchive(ArchiveBase):
         See :meth:`ArchiveBase.add_single` for arguments and return values.
         """
 
-        solution = np.asarray(solution)
-        objective = self.dtype(objective)
-        measures = np.asarray(measures)
-        validate_single_args(
+        (
+            solution,
+            objective,
+            measures,
+        ) = validate_single_args(
             self,
             solution=solution,
             objective=objective,

@@ -184,12 +184,17 @@ def validate_batch_args(archive, solution_batch, **batch_kwargs):
 
 def validate_single_args(archive, solution, objective, measures):
     """Performs preprocessing and checks for arguments to add_single()."""
+    solution = np.asarray(solution)
     check_1d_shape(solution, "solution", archive.solution_dim, "solution_dim")
 
+    objective = archive.dtype(objective)
     check_finite(objective, "objective")
 
+    measures = np.asarray(measures)
     check_1d_shape(measures, "measures", archive.measure_dim, "measure_dim")
     check_finite(measures, "measures")
+
+    return solution, objective, measures
 
 
 def readonly(arr):
