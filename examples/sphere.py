@@ -84,15 +84,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 
-# yapf: disable
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           GradientArborescenceEmitter,
-                           GradientOperatorEmitter, IsoLineEmitter)
+                           GradientArborescenceEmitter, GradientOperatorEmitter,
+                           IsoLineEmitter)
 from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
-# yapf: enable
 CONFIG = {
     "map_elites": {
         "dim": 20,
