@@ -21,7 +21,8 @@ function install_deps() {
       $install_cmd
       which -a swig || true
       which -a python
-      swig --help
+      python -c "import swig"
+      python -c "from swig import swig"
   done
 }
 
