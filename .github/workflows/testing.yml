@@ -46,6 +46,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Create virtual env
+        run: python -m venv ./venv && source ./venv/bin/activate
       - name: Install core deps
         run: pip install .[dev]
       - name: Test core
@@ -59,6 +61,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
+      - name: Create virtual env
+        run: python -m venv ./venv && source ./venv/bin/activate
       - name: Install core deps
         run: pip install -r pinned_reqs/install.txt .[dev]
       - name: Test core
@@ -80,6 +84,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
+      - name: Create virtual env
+        run: python -m venv ./venv && source ./venv/bin/activate
       - name: Install deps
         run: pip install .[visualize,dev]
       - name: Test coverage
@@ -98,6 +104,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
+      - name: Create virtual env
+        run: python -m venv ./venv && source ./venv/bin/activate
       - name: Install deps
         run: pip install .[visualize,dev]
       - name: Run benchmarks
@@ -114,6 +122,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
+      - name: Create virtual env
+        run: python -m venv ./venv && source ./venv/bin/activate
       - name: Install deps
         run: pip install .[visualize]
       - name: Test Examples
@@ -131,6 +141,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
+      - name: Create virtual env
+        run: python -m venv ./venv && source ./venv/bin/activate
       - name: Install deps
         run: pip install .[visualize] jupyter nbconvert
       - name: Test Tutorials
@@ -143,6 +155,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
+      - name: Create virtual env
+        run: python -m venv ./venv && source ./venv/bin/activate
       - name: Install deps
         run: pip install .[visualize,dev]
       - name: Build docs
@@ -157,6 +171,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
+      - name: Create virtual env
+        run: python -m venv ./venv && source ./venv/bin/activate
       - name: Install dependencies
         run: |
           pip install -e .
