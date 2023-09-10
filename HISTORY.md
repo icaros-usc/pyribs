@@ -21,6 +21,7 @@
 
 - Use dask instead of multiprocessing for lunar lander tutorial ({pr}`346`)
 - pip install swig before gymnasium[box2d] in lunar lander tutorial ({pr}`346`)
+- Fix lunar lander dependency issues ({pr}`366`, {pr}`377`)
 
 #### Improvements
 
@@ -28,6 +29,7 @@
 - Refactor visualize module into multiple files ({pr}`357`)
 - Add GitHub link roles in documentation ({pr}`361`)
 - Refactor argument validation utilities ({pr}`365`)
+- Use Conda envs in all CI jobs ({pr}`368`)
 
 ## 0.5.2
 

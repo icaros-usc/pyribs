@@ -10,6 +10,13 @@ on:
     branches:
       - master
 
+defaults:
+  run:
+    # The default shell must be set like this so that bash will source the
+    # profile, which contains settings initialized by Conda:
+    # https://github.com/marketplace/actions/setup-miniconda#important
+    shell: bash -el {0}
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -19,9 +26,9 @@ jobs:
       SKIP: pylint
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: 3.11
+          python-version: "3.11"
       - name: Install all deps and pylint (to be available to pre-commit)
         run: pip install .[all] pylint
       - uses: pre-commit/action@v3.0.0
@@ -42,12 +49,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
       - name: Install core deps
         run: pip install .[dev]
       - name: Test core
@@ -57,12 +61,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: "3.8"
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
       - name: Install core deps
         run: pip install -r pinned_reqs/install.txt .[dev]
       - name: Test core
@@ -80,12 +81,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: "3.8"
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
       - name: Install deps
         run: pip install .[visualize,dev]
       - name: Test coverage
@@ -100,12 +98,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: "3.8"
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
       - name: Install deps
         run: pip install .[visualize,dev]
       - name: Run benchmarks
@@ -113,13 +108,14 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
+      # SWIG should not be installed so that we can test that lunar lander is
+      # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
+      - name: Remove swig
+        run: sudo apt-get remove swig
       - uses: actions/checkout@v4
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: "3.8"
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
+          python-version: 3.8
       - name: Install deps
         run: pip install .[visualize]
       - name: Test Examples
@@ -127,14 +123,15 @@ jobs:
   tutorials:
     runs-on: ubuntu-latest
     steps:
+      # SWIG should not be installed so that we can test that lunar lander is
+      # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
+      - name: Remove swig
+        run: sudo apt-get remove swig
       # We use Python 3.10 instead of 3.8 here since Google Colab uses 3.10.
       - uses: actions/checkout@v4
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: "3.10"
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
       - name: Install deps
         run: pip install .[visualize] jupyter nbconvert
       - name: Test Tutorials
@@ -143,12 +140,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: "3.8"
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
       - name: Install deps
         run: pip install .[visualize,dev]
       - name: Build docs
@@ -159,12 +153,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: "3.8"
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
       - name: Install dependencies
         run: |
           pip install -e .
