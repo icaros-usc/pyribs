@@ -117,7 +117,7 @@ jobs:
       # SWIG should not be installed so that we can test that lunar lander is
       # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
       - name: Remove swig
-        run: sudo apt remove swig
+        run: sudo apt-get remove swig
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
@@ -136,7 +136,7 @@ jobs:
       # SWIG should not be installed so that we can test that lunar lander is
       # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
       - name: Remove swig
-        run: sudo apt remove swig
+        run: sudo apt-get remove swig
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
