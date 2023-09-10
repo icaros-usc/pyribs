@@ -122,19 +122,18 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
-      - name: Upgrade pip
+      - name: Run
         run: |
-          python -m pip install --upgrade pip
-          pip --version
+          python -m venv ./pyenv
+          source ./pyenv/bin/activate
+          which python
           which pip
-      - name: Install deps
-        run: pip install .[visualize]
-      - name: Test Examples
-        run: |
-          echo $PATH
-          echo $PYTHONPATH
-          python -c "import sys; print(sys.path)"
+          pip install .[visualize]
           bash tests/examples.sh
+      # - name: Install deps
+      #   run: pip install .[visualize]
+      # - name: Test Examples
+      #   run: bash tests/examples.sh
   tutorials:
     runs-on: ubuntu-latest
     steps:
