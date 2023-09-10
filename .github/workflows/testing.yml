@@ -116,6 +116,12 @@ jobs:
       - uses: actions/checkout@v4
       # SWIG should not be installed so that we can test that lunar lander is
       # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
+      #
+      # Note: Currently, installing swig and then installing gymnasium[box2d]
+      # does not seem to work properly in the examples CI. It is unclear why
+      # this happens. However, the tutorials seem to work fine.
+      # - name: Remove swig
+      #   run: sudo apt-get remove swig
       # - name: Remove swig
       #   run: sudo apt-get remove swig
       - name: Set up Python 3.8
