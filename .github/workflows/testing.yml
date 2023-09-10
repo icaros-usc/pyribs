@@ -116,8 +116,8 @@ jobs:
       - uses: actions/checkout@v4
       # SWIG should not be installed so that we can test that lunar lander is
       # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
-      - name: Remove swig
-        run: sudo apt-get remove swig
+      # - name: Remove swig
+      #   run: sudo apt-get remove swig
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
@@ -126,10 +126,6 @@ jobs:
         run: python -m pip install --upgrade pip
       - name: Install deps
         run: pip install .[visualize]
-      - name: Install swig deps
-        run: |
-          pip install swig
-          pip install gymnasium[box2d]
       - name: Test Examples
         run: bash tests/examples.sh
   tutorials:
