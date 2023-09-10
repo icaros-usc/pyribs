@@ -427,6 +427,8 @@ CONFIG = {
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
+        # Divide by 2 since half of the 36 solutions are used in ask_dqd(), and
+        # the other half are used in ask().
         "batch_size": 36 // 2,
         "archive": {
             "class": GridArchive,
@@ -455,6 +457,8 @@ CONFIG = {
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
+        # Divide by 2 since half of the 36 solutions are used in ask_dqd(), and
+        # the other half are used in ask().
         "batch_size": 36 // 2,
         "archive": {
             "class": GridArchive,
