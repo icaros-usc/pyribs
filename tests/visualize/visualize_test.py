@@ -254,9 +254,10 @@ def test_heatmap_fails_on_unsupported_dims(archive_type):
 
 
 @pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
-@pytest.mark.parametrize("invalid_arg_cbar",
-                         ["None", 3.2, True, (3.2, None), [3.2, None]]
-                        )  # some random but invalid inputs
+@pytest.mark.parametrize(
+    "invalid_arg_cbar",
+    ["None", 3.2, True,
+     (3.2, None), [3.2, None]])  # some random but invalid inputs
 def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
     archive = {
         "grid":
@@ -286,9 +287,9 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
 
 
 @pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
-@pytest.mark.parametrize("invalid_arg_aspect",
-                         ["None", True, (3.2, None), [3.2, None]]
-                        )  # some random but invalid inputs
+@pytest.mark.parametrize(
+    "invalid_arg_aspect",
+    ["None", True, (3.2, None), [3.2, None]])  # some random but invalid inputs
 def test_heatmap_fails_on_invalid_aspect_option(archive_type,
                                                 invalid_arg_aspect):
     archive = {
@@ -354,17 +355,17 @@ def test_heatmap_archive__grid_1d(grid_archive_1d):
 @image_comparison(baseline_images=["grid_archive_heatmap_1d_aspect_gt_1"],
                   remove_text=False,
                   extensions=["png"])
-def test_heatmap_archive__grid_1d_aspect_gt_1(grid_archive):
+def test_heatmap_archive__grid_1d_aspect_gt_1(grid_archive_1d):
     plt.figure(figsize=(8, 6))
-    grid_archive_heatmap(grid_archive, aspect=2.5)
+    grid_archive_heatmap(grid_archive_1d, aspect=2.5)
 
 
 @image_comparison(baseline_images=["grid_archive_heatmap_1d_aspect_lt_1"],
                   remove_text=False,
                   extensions=["png"])
-def test_heatmap_archive__grid_1d_aspect_lt_1(grid_archive):
+def test_heatmap_archive__grid_1d_aspect_lt_1(grid_archive_1d):
     plt.figure(figsize=(8, 6))
-    grid_archive_heatmap(grid_archive, aspect=0.5)
+    grid_archive_heatmap(grid_archive_1d, aspect=0.1)
 
 
 @image_comparison(baseline_images=["grid_archive_heatmap_no_cbar"],
