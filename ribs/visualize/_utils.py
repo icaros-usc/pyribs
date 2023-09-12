@@ -103,10 +103,9 @@ def archive_heatmap_1d(
     ax.set_yticks([])
 
     # Create the plot.
-    objective_batch = archive.as_pandas().objective_batch()
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-    vmin = np.min(objective_batch) if vmin is None else vmin
-    vmax = np.max(objective_batch) if vmax is None else vmax
+    vmin = np.nanmin(cell_objectives) if vmin is None else vmin
+    vmax = np.nanmax(cell_objectives) if vmax is None else vmax
     t = ax.pcolormesh(
         cell_boundaries,
         np.array([0, 1]),  # y-bounds
