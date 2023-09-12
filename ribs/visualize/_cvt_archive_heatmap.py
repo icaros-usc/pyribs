@@ -150,18 +150,39 @@ def cvt_archive_heatmap(archive,
     cmap = retrieve_cmap(cmap)
 
     if archive.measure_dim == 1:
-
         # Read in pcm kwargs -- the linewidth and edgecolor are overwritten by
         # our arguments.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs.copy()
         pcm_kwargs["linewidth"] = pcm_kwargs["lw"] = lw
         pcm_kwargs["edgecolor"] = pcm_kwargs["ec"] = ec
 
-        ax = archive_heatmap_1d(archive, ax, cmap, aspect, vmin, vmax, cbar,
-                                cbar_kwargs, rasterized, pcm_kwargs)
+        # Sort centroids so they line up left-to-right along the x-axis.
+        centroids_1d = archive.centroids.squeeze()
+        centroid_sort_idx = np.argsort(centroids_1d)
+        sorted_centroids_1d = centroids_1d[centroid_sort_idx]
 
-        # Samples and centroids are plotted at y=0.5 so that they appear in the
-        # middle of the diagram.
+        cell_boundaries = np.concatenate((
+            # Concatenate lower bound.
+            [archive.lower_bounds[0]],
+            # The boundaries can be found by taking the midpoints between the
+            # centroids.
+            (sorted_centroids_1d[:-1] + sorted_centroids_1d[1:]) / 2.0,
+            # Concatenate upper bound.
+            [archive.upper_bounds[0]],
+        ))
+
+        df = archive.as_pandas()
+        objective_batch = df.objective_batch()
+        cell_objectives = np.full((1, archive.cells), np.nan)
+        cell_idx = centroid_sort_idx[df.index_batch()]
+        cell_objectives[0, cell_idx] = objective_batch
+
+        ax = archive_heatmap_1d(archive, cell_boundaries, cell_objectives, ax,
+                                cmap, aspect, vmin, vmax, cbar, cbar_kwargs,
+                                rasterized, pcm_kwargs)
+
+        # Samples and centroids are plotted at y=0.5 so that they appear along
+        # the center of the diagram.
         if plot_samples:
             ax.plot(archive.samples[:, 0],
                     np.full(len(archive.samples), 0.5),

@@ -3,8 +3,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ribs.archives import CVTArchive, GridArchive
-
 
 def retrieve_cmap(cmap):
     """Retrieves colormap from Matplotlib."""
@@ -52,6 +50,8 @@ def set_cbar(t, ax, cbar, cbar_kwargs):
 
 def archive_heatmap_1d(
     archive,
+    cell_boundaries,
+    cell_objectives,
     ax,
     cmap,
     aspect,
@@ -70,6 +70,11 @@ def archive_heatmap_1d(
 
     Args:
         archive (ribs.archives.ArchiveBase): A 1D archive to plot.
+        cell_boundaries (np.ndarray): 1D array with the boundaries of the cells.
+            Length should be archive.cells + 1.
+        cell_objectives (np.ndarray): Objectives of all cells in the archive,
+            with the cells going from left to right. Length should be
+            archive.cells. Empty cells should have objective of NaN.
         ax (matplotlib.axes.Axes): See heatmap methods, e.g.,
             grid_archive_heatmap.
         cmap (matplotlib.colors.Colormap): The colormap to use when
@@ -89,64 +94,28 @@ def archive_heatmap_1d(
         The Axes where the heatmap was plotted. This may be used to further
         modify the plot.
     """
-
-    # Retrieve data from archive. There should be only 2 bounds; upper and
-    # lower, since it is 1D.
-    df = archive.as_pandas()
-    objective_batch = df.objective_batch()
-    lower_bounds = archive.lower_bounds
-    upper_bounds = archive.upper_bounds
-    y_bounds = np.array([0, 1])  # To facilitate default x-y aspect ratio.
-
-    # Compute the bounds of the archive cells for the heatmap.
-    if isinstance(archive, GridArchive):
-        x_bounds = archive.boundaries[0]
-    elif isinstance(archive, CVTArchive):
-        # Sort centroids so they line up left-to-right along the x-axis.
-        centroids_1d = archive.centroids.squeeze()
-        centroid_sort_idx = np.argsort(centroids_1d)
-        sorted_centroids_1d = centroids_1d[centroid_sort_idx]
-
-        x_bounds = np.concatenate((
-            # Concatenate lower bound.
-            [archive.lower_bounds[0]],
-            # The boundaries can be found by taking the midpoints between the
-            # centroids.
-            (sorted_centroids_1d[:-1] + sorted_centroids_1d[1:]) / 2.0,
-            # Concatenate upper bound.
-            [archive.upper_bounds[0]],
-        ))
-
-    # Color for each cell in the heatmap -- the default NaN causes cells to have
-    # no color.
-    colors = np.full((1, archive.cells), np.nan)
-    if isinstance(archive, GridArchive):
-        region_idx = archive.int_to_grid_index(df.index_batch()).squeeze()
-    elif isinstance(archive, CVTArchive):
-        region_idx = centroid_sort_idx[df.index_batch()]
-    colors[0, region_idx] = objective_batch
-
     # Initialize the axis.
     ax = plt.gca() if ax is None else ax
-    ax.set_xlim(lower_bounds[0], upper_bounds[0])
-
+    ax.set_xlim(archive.lower_bounds[0], archive.upper_bounds[0])
     ax.set_aspect(aspect)
 
     # Turn off yticks because we only want x labels.
     ax.set_yticks([])
 
     # Create the plot.
+    objective_batch = archive.as_pandas().objective_batch()
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
     vmin = np.min(objective_batch) if vmin is None else vmin
     vmax = np.max(objective_batch) if vmax is None else vmax
-    t = ax.pcolormesh(x_bounds,
-                      y_bounds,
-                      colors,
-                      cmap=cmap,
-                      vmin=vmin,
-                      vmax=vmax,
-                      rasterized=rasterized,
-                      **pcm_kwargs)
+    t = ax.pcolormesh(
+        cell_boundaries,
+        np.array([0, 1]),  # y-bounds
+        cell_objectives,
+        cmap=cmap,
+        vmin=vmin,
+        vmax=vmax,
+        rasterized=rasterized,
+        **pcm_kwargs)
 
     # Create color bar.
     set_cbar(t, ax, cbar, cbar_kwargs)

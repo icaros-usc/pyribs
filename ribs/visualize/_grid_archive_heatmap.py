@@ -115,8 +115,15 @@ def grid_archive_heatmap(archive,
     cmap = retrieve_cmap(cmap)
 
     if archive.measure_dim == 1:
+        df = archive.as_pandas()
+        cell_objectives = np.full((1, archive.cells), np.nan)
+        cell_idx = archive.int_to_grid_index(df.index_batch()).squeeze()
+        cell_objectives[0, cell_idx] = df.objective_batch()
+
         archive_heatmap_1d(
             archive,
+            archive.boundaries[0],
+            cell_objectives,
             ax,
             cmap,
             aspect,
