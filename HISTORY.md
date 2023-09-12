@@ -15,6 +15,7 @@
   parallel_axes_plot ({pr}`358`)
   - Removes cbar_orientaton and cbar_pad args for parallel_axes_plot
 - Add `rasterized` arg for heatmaps (#359)
+- Support 1D cvt_archive_heatmap ({pr}`362`)
 
 #### Documentation
 

@@ -76,7 +76,8 @@ def sliding_boundaries_archive_heatmap(archive,
             :class:`~matplotlib.colors.Colormap` object.
         aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
             height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
-            ``aspect=1``.
+            ``aspect=1``. See :meth:`matplotlib.axes.Axes.set_aspect` for more
+            info.
         ms (float): Marker size for the solutions.
         boundary_lw (float): Line width when plotting the boundaries.
             Set to ``0`` to have no boundaries.
@@ -102,7 +103,7 @@ def sliding_boundaries_archive_heatmap(archive,
     """
     validate_heatmap_visual_args(
         aspect, cbar, archive.measure_dim, [2],
-        "Heatmaps can only be plotted for 2D SlidingBoundariesArchive")
+        "Heatmap can only be plotted for a 2D SlidingBoundariesArchive")
 
     if aspect is None:
         aspect = "auto"

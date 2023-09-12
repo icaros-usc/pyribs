@@ -124,7 +124,7 @@ def add_random_sphere(archive, x_range, y_range):
 #
 @pytest.fixture(scope="module")
 def grid_archive_1d():
-    """Deterministically created GridArchive with 1 measure."""
+    """Deterministically-created GridArchive with 1 measure."""
     # The archive must be low-res enough that we can tell if the number of cells
     # is correct, yet high-res enough that we can see different colors.
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1, 1)], seed=42)
@@ -134,7 +134,7 @@ def grid_archive_1d():
 
 @pytest.fixture(scope="module")
 def grid_archive():
-    """Deterministically created GridArchive."""
+    """Deterministically-created GridArchive."""
     # The archive must be low-res enough that we can tell if the number of cells
     # is correct, yet high-res enough that we can see different colors.
     archive = GridArchive(solution_dim=2,
@@ -169,8 +169,38 @@ def three_d_grid_archive():
 
 
 @pytest.fixture(scope="module")
+def cvt_archive_1d():
+    """Deterministically-created CVTArchive with 1 measure."""
+    # The archive must be low-res enough that we can tell if the number of cells
+    # is correct, yet high-res enough that we can see different colors.
+
+    # The centroids are chosen in a descending order so that their indices do
+    # not line up with the indices in the heatmap.
+    centroids = np.array(
+        [0.95, 0.7, 0.35, 0.3, 0.0, -0.1, -0.3, -0.5, -0.8, -0.9])
+
+    archive = CVTArchive(
+        solution_dim=1,
+        cells=10,
+        ranges=[(-1, 1)],
+        seed=42,
+        custom_centroids=centroids[:, None],
+    )
+
+    # Add with gaps -- this way, some cells are left unoccupied so that we can
+    # check unoccupied cells.
+    archive.add(
+        np.zeros((8, 1)),
+        np.array([0, 1, 2, 3, 4, 5, 6, 7]),
+        np.array([-0.9, -0.8, -0.3, -0.1, 0.0, 0.3, 0.35, 0.95])[:, None],
+    )
+
+    return archive
+
+
+@pytest.fixture(scope="module")
 def cvt_archive():
-    """Deterministically created CVTArchive."""
+    """Deterministically-created CVTArchive."""
     archive = CVTArchive(solution_dim=2,
                          cells=100,
                          ranges=[(-1, 1), (-1, 1)],
@@ -196,7 +226,7 @@ def long_cvt_archive():
 
 @pytest.fixture(scope="module")
 def sliding_archive():
-    """Deterministically created SlidingBoundariesArchive."""
+    """Deterministically-created SlidingBoundariesArchive."""
     archive = SlidingBoundariesArchive(solution_dim=2,
                                        dims=[10, 20],
                                        ranges=[(-1, 1), (-1, 1)],
@@ -254,9 +284,10 @@ def test_heatmap_fails_on_unsupported_dims(archive_type):
 
 
 @pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
-@pytest.mark.parametrize("invalid_arg_cbar",
-                         ["None", 3.2, True, (3.2, None), [3.2, None]]
-                        )  # some random but invalid inputs
+@pytest.mark.parametrize(
+    "invalid_arg_cbar",
+    ["None", 3.2, True,
+     (3.2, None), [3.2, None]])  # some random but invalid inputs
 def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
     archive = {
         "grid":
@@ -286,9 +317,9 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
 
 
 @pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
-@pytest.mark.parametrize("invalid_arg_aspect",
-                         ["None", True, (3.2, None), [3.2, None]]
-                        )  # some random but invalid inputs
+@pytest.mark.parametrize(
+    "invalid_arg_aspect",
+    ["None", True, (3.2, None), [3.2, None]])  # some random but invalid inputs
 def test_heatmap_fails_on_invalid_aspect_option(archive_type,
                                                 invalid_arg_aspect):
     archive = {
@@ -354,17 +385,17 @@ def test_heatmap_archive__grid_1d(grid_archive_1d):
 @image_comparison(baseline_images=["grid_archive_heatmap_1d_aspect_gt_1"],
                   remove_text=False,
                   extensions=["png"])
-def test_heatmap_archive__grid_1d_aspect_gt_1(grid_archive):
+def test_heatmap_archive__grid_1d_aspect_gt_1(grid_archive_1d):
     plt.figure(figsize=(8, 6))
-    grid_archive_heatmap(grid_archive, aspect=2.5)
+    grid_archive_heatmap(grid_archive_1d, aspect=2.5)
 
 
 @image_comparison(baseline_images=["grid_archive_heatmap_1d_aspect_lt_1"],
                   remove_text=False,
                   extensions=["png"])
-def test_heatmap_archive__grid_1d_aspect_lt_1(grid_archive):
+def test_heatmap_archive__grid_1d_aspect_lt_1(grid_archive_1d):
     plt.figure(figsize=(8, 6))
-    grid_archive_heatmap(grid_archive, aspect=0.5)
+    grid_archive_heatmap(grid_archive_1d, aspect=0.1)
 
 
 @image_comparison(baseline_images=["grid_archive_heatmap_no_cbar"],
@@ -675,6 +706,82 @@ def test_cvt_archive_heatmap_voronoi_style(cvt_archive):
 
 
 #
+# CVTArchive heatmap 1D
+#
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d(cvt_archive_1d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive_1d)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d_style"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d_style(cvt_archive_1d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive_1d, lw=3.0, ec="grey")
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d_with_points"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d_with_points():
+    """Adds in centroids and samples to the plot."""
+    archive = CVTArchive(
+        solution_dim=1,
+        cells=10,
+        ranges=[(-1, 1)],
+        seed=42,
+        samples=100,
+    )
+    add_uniform_sphere_1d(archive, (-1, 1))
+
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(archive,
+                        plot_centroids=True,
+                        plot_samples=True,
+                        ms=10.0)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d_sphere"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d_sphere():
+    """More complex setting."""
+    archive = CVTArchive(
+        solution_dim=1,
+        cells=20,
+        ranges=[(-1, 1)],
+        seed=42,
+        samples=100,
+    )
+    add_uniform_sphere_1d(archive, (-1, 1))
+
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(archive)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d_aspect_gt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d_aspect_gt_1(cvt_archive_1d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive_1d, aspect=2.5)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d_aspect_lt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d_aspect_lt_1(cvt_archive_1d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive_1d, aspect=0.1)
+
+
+#
 # Rasterization tests
 #
 
@@ -799,7 +906,7 @@ def test_cvt_archive_heatmap_clip_polygon_with_hole(cvt_archive):
 
 
 #
-# Parallel coordinate plot test
+# Parallel axes plot test
 #
 
 

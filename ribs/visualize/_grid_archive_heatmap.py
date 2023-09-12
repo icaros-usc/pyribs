@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ribs.visualize._utils import (retrieve_cmap, set_cbar,
+from ribs.visualize._utils import (archive_heatmap_1d, retrieve_cmap, set_cbar,
                                    validate_heatmap_visual_args)
 
 # Matplotlib functions tend to have a ton of args.
@@ -59,13 +59,13 @@ def grid_archive_heatmap(archive,
             >>> plt.show()
 
     Args:
-        archive (GridArchive): A 2D :class:`~ribs.archives.GridArchive`.
+        archive (GridArchive): A 1D or 2D :class:`~ribs.archives.GridArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
             If ``None``, the current axis will be used.
         transpose_measures (bool): By default, the first measure in the archive
             will appear along the x-axis, and the second will be along the
             y-axis. To switch this behavior (i.e. to transpose the axes), set
-            this to ``True``.
+            this to ``True``. Does not apply for 1D archives.
         cmap (str, list, matplotlib.colors.Colormap): The colormap to use when
             plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
@@ -73,7 +73,8 @@ def grid_archive_heatmap(archive,
             :class:`~matplotlib.colors.Colormap` object.
         aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
             height/width). Defaults to ``'auto'`` for 2D and ``0.5`` for 1D.
-            ``'equal'`` is the same as ``aspect=1``.
+            ``'equal'`` is the same as ``aspect=1``. See
+            :meth:`matplotlib.axes.Axes.set_aspect` for more info.
         vmin (float): Minimum objective value to use in the plot. If ``None``,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
@@ -97,11 +98,11 @@ def grid_archive_heatmap(archive,
             :func:`~matplotlib.pyplot.pcolormesh`.
 
     Raises:
-        ValueError: The archive's dimension must be 1D or 2D.
+        ValueError: The archive's measure dimension must be 1D or 2D.
     """
     validate_heatmap_visual_args(
         aspect, cbar, archive.measure_dim, [1, 2],
-        "Heatmaps can only be plotted for 1D or 2D GridArchive")
+        "Heatmap can only be plotted for a 1D or 2D GridArchive")
 
     if aspect is None:
         # Handles default aspects for different dims.
@@ -113,44 +114,31 @@ def grid_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
 
-    # Useful to have these data available.
-    df = archive.as_pandas()
-    objective_batch = df.objective_batch()
-
     if archive.measure_dim == 1:
-        # Retrieve data from archive. There should be only 2 bounds; upper and
-        # lower, since it is 1D.
-        lower_bounds = archive.lower_bounds
-        upper_bounds = archive.upper_bounds
-        x_dim = archive.dims[0]
-        x_bounds = archive.boundaries[0]
-        y_bounds = np.array([0, 1])  # To facilitate default x-y aspect ratio.
+        df = archive.as_pandas()
+        cell_objectives = np.full(archive.cells, np.nan)
+        cell_idx = archive.int_to_grid_index(df.index_batch()).squeeze()
+        cell_objectives[cell_idx] = df.objective_batch()
 
-        # Color for each cell in the heatmap.
-        colors = np.full((1, x_dim), np.nan)
-        grid_index_batch = archive.int_to_grid_index(df.index_batch())
-        colors[0, grid_index_batch[:, 0]] = objective_batch
+        archive_heatmap_1d(
+            archive,
+            archive.boundaries[0],
+            cell_objectives,
+            ax,
+            cmap,
+            aspect,
+            vmin,
+            vmax,
+            cbar,
+            cbar_kwargs,
+            rasterized,
+            pcm_kwargs,
+        )
 
-        # Initialize the axis.
-        ax = plt.gca() if ax is None else ax
-        ax.set_xlim(lower_bounds[0], upper_bounds[0])
-
-        ax.set_aspect(aspect)
-
-        # Create the plot.
-        pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        vmin = np.min(objective_batch) if vmin is None else vmin
-        vmax = np.max(objective_batch) if vmax is None else vmax
-        t = ax.pcolormesh(x_bounds,
-                          y_bounds,
-                          colors,
-                          cmap=cmap,
-                          vmin=vmin,
-                          vmax=vmax,
-                          rasterized=rasterized,
-                          **pcm_kwargs)
     elif archive.measure_dim == 2:
         # Retrieve data from archive.
+        df = archive.as_pandas()
+        objective_batch = df.objective_batch()
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
         x_dim, y_dim = archive.dims
@@ -191,5 +179,5 @@ def grid_archive_heatmap(archive,
                           rasterized=rasterized,
                           **pcm_kwargs)
 
-    # Create color bar.
-    set_cbar(t, ax, cbar, cbar_kwargs)
+        # Create color bar.
+        set_cbar(t, ax, cbar, cbar_kwargs)
