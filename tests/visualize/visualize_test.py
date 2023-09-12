@@ -726,6 +726,27 @@ def test_heatmap_archive__cvt_1d_style(cvt_archive_1d):
     cvt_archive_heatmap(cvt_archive_1d, lw=3.0, ec="grey")
 
 
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d_with_points"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d_with_points():
+    """Adds in centroids and samples to the plot."""
+    archive = CVTArchive(
+        solution_dim=1,
+        cells=10,
+        ranges=[(-1, 1)],
+        seed=42,
+        samples=100,
+    )
+    add_uniform_sphere_1d(archive, (-1, 1))
+
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(archive,
+                        plot_centroids=True,
+                        plot_samples=True,
+                        ms=10.0)
+
+
 @image_comparison(baseline_images=["cvt_archive_heatmap_1d_aspect_gt_1"],
                   remove_text=False,
                   extensions=["png"])
