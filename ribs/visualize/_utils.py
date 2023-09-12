@@ -86,6 +86,9 @@ def archive_heatmap_1d(
         rasterized (bool): See heatmap methods, e.g., grid_archive_heatmap.
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
+    Returns:
+        The Axes where the heatmap was plotted. This may be used to further
+        modify the plot.
     """
 
     # Retrieve data from archive. There should be only 2 bounds; upper and
@@ -136,3 +139,5 @@ def archive_heatmap_1d(
 
     # Create color bar.
     set_cbar(t, ax, cbar, cbar_kwargs)
+
+    return ax
