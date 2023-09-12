@@ -109,7 +109,7 @@ def archive_heatmap_1d(
     t = ax.pcolormesh(
         cell_boundaries,
         np.array([0, 1]),  # y-bounds
-        cell_objectives,
+        cell_objectives[None, :],
         cmap=cmap,
         vmin=vmin,
         vmax=vmax,
