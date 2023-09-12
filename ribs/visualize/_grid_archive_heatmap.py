@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ribs.visualize._utils import (retrieve_cmap, set_cbar,
+from ribs.visualize._utils import (archive_heatmap_1d, retrieve_cmap, set_cbar,
                                    validate_heatmap_visual_args)
 
 # Matplotlib functions tend to have a ton of args.
@@ -119,37 +119,20 @@ def grid_archive_heatmap(archive,
     objective_batch = df.objective_batch()
 
     if archive.measure_dim == 1:
-        # Retrieve data from archive. There should be only 2 bounds; upper and
-        # lower, since it is 1D.
-        lower_bounds = archive.lower_bounds
-        upper_bounds = archive.upper_bounds
-        x_dim = archive.dims[0]
-        x_bounds = archive.boundaries[0]
-        y_bounds = np.array([0, 1])  # To facilitate default x-y aspect ratio.
+        archive_heatmap_1d(
+            archive,
+            archive.boundaries[0],
+            ax,
+            cmap,
+            aspect,
+            vmin,
+            vmax,
+            cbar,
+            cbar_kwargs,
+            rasterized,
+            pcm_kwargs,
+        )
 
-        # Color for each cell in the heatmap.
-        colors = np.full((1, x_dim), np.nan)
-        grid_index_batch = archive.int_to_grid_index(df.index_batch())
-        colors[0, grid_index_batch[:, 0]] = objective_batch
-
-        # Initialize the axis.
-        ax = plt.gca() if ax is None else ax
-        ax.set_xlim(lower_bounds[0], upper_bounds[0])
-
-        ax.set_aspect(aspect)
-
-        # Create the plot.
-        pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        vmin = np.min(objective_batch) if vmin is None else vmin
-        vmax = np.max(objective_batch) if vmax is None else vmax
-        t = ax.pcolormesh(x_bounds,
-                          y_bounds,
-                          colors,
-                          cmap=cmap,
-                          vmin=vmin,
-                          vmax=vmax,
-                          rasterized=rasterized,
-                          **pcm_kwargs)
     elif archive.measure_dim == 2:
         # Retrieve data from archive.
         lower_bounds = archive.lower_bounds
@@ -192,5 +175,5 @@ def grid_archive_heatmap(archive,
                           rasterized=rasterized,
                           **pcm_kwargs)
 
-    # Create color bar.
-    set_cbar(t, ax, cbar, cbar_kwargs)
+        # Create color bar.
+        set_cbar(t, ax, cbar, cbar_kwargs)
