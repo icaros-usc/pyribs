@@ -150,16 +150,6 @@ def cvt_archive_heatmap(archive,
     cmap = retrieve_cmap(cmap)
 
     if archive.measure_dim == 1:
-        # The boundaries can be found by taking the midpoint between the
-        # centroids. We also concatenate the lower and upper bound.
-        centroids_1d = archive.centroids.squeeze()
-        centroid_sort_idx = np.argsort(centroids_1d)
-        sorted_centroids_1d = centroids_1d[centroid_sort_idx]
-        boundaries = np.concatenate((
-            [archive.lower_bounds[0]],
-            (sorted_centroids_1d[:-1] + sorted_centroids_1d[1:]) / 2.0,
-            [archive.upper_bounds[0]],
-        ))
 
         # Read in pcm kwargs -- the linewidth and edgecolor are overwritten by
         # our arguments.
@@ -167,8 +157,8 @@ def cvt_archive_heatmap(archive,
         pcm_kwargs["linewidth"] = pcm_kwargs["lw"] = lw
         pcm_kwargs["edgecolor"] = pcm_kwargs["ec"] = ec
 
-        ax = archive_heatmap_1d(archive, boundaries, ax, cmap, aspect, vmin,
-                                vmax, cbar, cbar_kwargs, rasterized, pcm_kwargs)
+        ax = archive_heatmap_1d(archive, ax, cmap, aspect, vmin, vmax, cbar,
+                                cbar_kwargs, rasterized, pcm_kwargs)
 
         # Samples and centroids are plotted at y=0.5 so that they appear in the
         # middle of the diagram.

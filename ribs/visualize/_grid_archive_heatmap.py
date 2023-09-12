@@ -117,7 +117,6 @@ def grid_archive_heatmap(archive,
     if archive.measure_dim == 1:
         archive_heatmap_1d(
             archive,
-            archive.boundaries[0],
             ax,
             cmap,
             aspect,

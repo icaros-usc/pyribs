@@ -52,7 +52,6 @@ def set_cbar(t, ax, cbar, cbar_kwargs):
 
 def archive_heatmap_1d(
     archive,
-    boundaries,
     ax,
     cmap,
     aspect,
@@ -67,10 +66,10 @@ def archive_heatmap_1d(
 
     The y-bounds of the plot are set to [0, 1].
 
+    Currently, this function supports GridArchive and CVTArchive.
+
     Args:
         archive (ribs.archives.ArchiveBase): A 1D archive to plot.
-        boundaries (np.ndarray): 1D array with the cell boundaries of the
-            heatmap.
         ax (matplotlib.axes.Axes): See heatmap methods, e.g.,
             grid_archive_heatmap.
         cmap (matplotlib.colors.Colormap): The colormap to use when
@@ -97,23 +96,35 @@ def archive_heatmap_1d(
     objective_batch = df.objective_batch()
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
-    x_bounds = boundaries
     y_bounds = np.array([0, 1])  # To facilitate default x-y aspect ratio.
+
+    # Compute the bounds of the archive cells for the heatmap.
+    if isinstance(archive, GridArchive):
+        x_bounds = archive.boundaries[0]
+    elif isinstance(archive, CVTArchive):
+        # Sort centroids so they line up left-to-right along the x-axis.
+        centroids_1d = archive.centroids.squeeze()
+        centroid_sort_idx = np.argsort(centroids_1d)
+        sorted_centroids_1d = centroids_1d[centroid_sort_idx]
+
+        x_bounds = np.concatenate((
+            # Concatenate lower bound.
+            [archive.lower_bounds[0]],
+            # The boundaries can be found by taking the midpoints between the
+            # centroids.
+            (sorted_centroids_1d[:-1] + sorted_centroids_1d[1:]) / 2.0,
+            # Concatenate upper bound.
+            [archive.upper_bounds[0]],
+        ))
 
     # Color for each cell in the heatmap -- the default NaN causes cells to have
     # no color.
     colors = np.full((1, archive.cells), np.nan)
     if isinstance(archive, GridArchive):
-        grid_index_batch = archive.int_to_grid_index(df.index_batch()).squeeze()
-        colors[0, grid_index_batch] = objective_batch
+        region_idx = archive.int_to_grid_index(df.index_batch()).squeeze()
     elif isinstance(archive, CVTArchive):
-        centroids_1d = archive.centroids.squeeze()
-        centroid_sort_idx = np.argsort(centroids_1d)
-        colors[0, centroid_sort_idx[df.index_batch()]] = df.objective_batch()
-
-        #  for idx, obj in zip(df.index_batch(), df.objective_batch()):
-        #      region_idx = centroid_sort_idx[idx]
-        #      colors[0, region_idx] = obj
+        region_idx = centroid_sort_idx[df.index_batch()]
+    colors[0, region_idx] = objective_batch
 
     # Initialize the axis.
     ax = plt.gca() if ax is None else ax

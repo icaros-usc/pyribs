@@ -191,7 +191,7 @@ def cvt_archive_1d():
     # check unoccupied cells.
     archive.add(
         np.zeros((8, 1)),
-        np.array([0, 1, 2, 3, 4, 2, 1, 0]),
+        np.array([0, 1, 2, 3, 4, 5, 6, 7]),
         np.array([-0.9, -0.8, -0.3, -0.1, 0.0, 0.3, 0.35, 0.95])[:, None],
     )
 
