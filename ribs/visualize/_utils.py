@@ -105,6 +105,9 @@ def archive_heatmap_1d(
 
     ax.set_aspect(aspect)
 
+    # Turn off yticks because we only want x labels.
+    ax.set_yticks([])
+
     # Create the plot.
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
     vmin = np.min(objective_batch) if vmin is None else vmin
