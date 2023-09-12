@@ -30,11 +30,12 @@ def cvt_archive_heatmap(archive,
                         plot_centroids=False,
                         plot_samples=False,
                         ms=1):
-    """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 2D measure
-    space.
+    """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 1D or 2D
+    measure space.
 
-    Essentially, we create a Voronoi diagram and shade in each cell with a
-    color corresponding to the objective value of that cell's elite.
+    In the 2D case, we create a Voronoi diagram and shade in each cell with a
+    color corresponding to the objective value of that cell's elite. In the 1D
+    case, we plot a horizontal series of cells.
 
     Depending on how many cells are in the archive, ``ms`` and ``lw`` may need
     to be tuned. If there are too many cells, the Voronoi diagram and centroid
@@ -75,15 +76,16 @@ def cvt_archive_heatmap(archive,
         transpose_measures (bool): By default, the first measure in the archive
             will appear along the x-axis, and the second will be along the
             y-axis. To switch this behavior (i.e. to transpose the axes), set
-            this to ``True``.
+            this to ``True``. Does not apply for 1D archives.
         cmap (str, list, matplotlib.colors.Colormap): The colormap to use when
             plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
         aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
-            height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
-            ``aspect=1``.
+            height/width). Defaults to ``'auto'`` for 2D and ``0.5`` for 1D.
+            ``'equal'`` is the same as ``aspect=1``. See
+            :meth:`matplotlib.axes.Axes.set_aspect` for more info.
         lw (float): Line width when plotting the Voronoi diagram.
         ec (matplotlib color): Edge color of the cells in the Voronoi diagram.
             See `here
@@ -120,20 +122,24 @@ def cvt_archive_heatmap(archive,
         ms (float): Marker size for both centroids and samples.
 
     Raises:
-        ValueError: The archive is not 2D.
+        ValueError: The archive's measure dimension must be 1D or 2D.
         ValueError: ``plot_samples`` is passed in but the archive does not have
             samples (e.g., due to using custom centroids during construction).
     """
     validate_heatmap_visual_args(
         aspect, cbar, archive.measure_dim, [2],
-        "Heatmaps can only be plotted for 2D CVTArchive")
+        "Heatmap can only be plotted for a 1D or 2D CVTArchive")
 
     if plot_samples and archive.samples is None:
         raise ValueError("Samples are not available for this archive, but "
                          "`plot_samples` was passed in.")
 
     if aspect is None:
-        aspect = "auto"
+        # Handles default aspects for different dims.
+        if archive.measure_dim == 1:
+            aspect = 0.5
+        else:
+            aspect = "auto"
 
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)

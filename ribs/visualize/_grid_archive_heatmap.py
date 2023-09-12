@@ -65,7 +65,7 @@ def grid_archive_heatmap(archive,
         transpose_measures (bool): By default, the first measure in the archive
             will appear along the x-axis, and the second will be along the
             y-axis. To switch this behavior (i.e. to transpose the axes), set
-            this to ``True``.
+            this to ``True``. Does not apply for 1D archives.
         cmap (str, list, matplotlib.colors.Colormap): The colormap to use when
             plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
@@ -73,7 +73,8 @@ def grid_archive_heatmap(archive,
             :class:`~matplotlib.colors.Colormap` object.
         aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
             height/width). Defaults to ``'auto'`` for 2D and ``0.5`` for 1D.
-            ``'equal'`` is the same as ``aspect=1``.
+            ``'equal'`` is the same as ``aspect=1``. See
+            :meth:`matplotlib.axes.Axes.set_aspect` for more info.
         vmin (float): Minimum objective value to use in the plot. If ``None``,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
@@ -97,11 +98,11 @@ def grid_archive_heatmap(archive,
             :func:`~matplotlib.pyplot.pcolormesh`.
 
     Raises:
-        ValueError: The archive's dimension must be 1D or 2D.
+        ValueError: The archive's measure dimension must be 1D or 2D.
     """
     validate_heatmap_visual_args(
         aspect, cbar, archive.measure_dim, [1, 2],
-        "Heatmaps can only be plotted for 1D or 2D GridArchive")
+        "Heatmap can only be plotted for a 1D or 2D GridArchive")
 
     if aspect is None:
         # Handles default aspects for different dims.
