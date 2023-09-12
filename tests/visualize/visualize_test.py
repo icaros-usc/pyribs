@@ -124,7 +124,7 @@ def add_random_sphere(archive, x_range, y_range):
 #
 @pytest.fixture(scope="module")
 def grid_archive_1d():
-    """Deterministically created GridArchive with 1 measure."""
+    """Deterministically-created GridArchive with 1 measure."""
     # The archive must be low-res enough that we can tell if the number of cells
     # is correct, yet high-res enough that we can see different colors.
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1, 1)], seed=42)
@@ -134,7 +134,7 @@ def grid_archive_1d():
 
 @pytest.fixture(scope="module")
 def grid_archive():
-    """Deterministically created GridArchive."""
+    """Deterministically-created GridArchive."""
     # The archive must be low-res enough that we can tell if the number of cells
     # is correct, yet high-res enough that we can see different colors.
     archive = GridArchive(solution_dim=2,
@@ -170,17 +170,37 @@ def three_d_grid_archive():
 
 @pytest.fixture(scope="module")
 def cvt_archive_1d():
-    """Deterministically created GridArchive with 1 measure."""
+    """Deterministically-created CVTArchive with 1 measure."""
     # The archive must be low-res enough that we can tell if the number of cells
     # is correct, yet high-res enough that we can see different colors.
-    archive = CVTArchive(solution_dim=1, cells=10, ranges=[(-1, 1)], seed=42)
-    add_uniform_sphere_1d(archive, (-1, 1))
+
+    # The centroids are chosen in a descending order so that their indices do
+    # not line up with the indices in the heatmap.
+    centroids = np.array(
+        [0.95, 0.7, 0.35, 0.3, 0.0, -0.1, -0.3, -0.5, -0.8, -0.9])
+
+    archive = CVTArchive(
+        solution_dim=1,
+        cells=10,
+        ranges=[(-1, 1)],
+        seed=42,
+        custom_centroids=centroids[:, None],
+    )
+
+    # Add with gaps -- this way, some cells are left unoccupied so that we can
+    # check unoccupied cells.
+    archive.add(
+        np.zeros((8, 1)),
+        np.array([0, 1, 2, 3, 4, 2, 1, 0]),
+        np.array([-0.9, -0.8, -0.3, -0.1, 0.0, 0.3, 0.35, 0.95])[:, None],
+    )
+
     return archive
 
 
 @pytest.fixture(scope="module")
 def cvt_archive():
-    """Deterministically created CVTArchive."""
+    """Deterministically-created CVTArchive."""
     archive = CVTArchive(solution_dim=2,
                          cells=100,
                          ranges=[(-1, 1), (-1, 1)],
@@ -206,7 +226,7 @@ def long_cvt_archive():
 
 @pytest.fixture(scope="module")
 def sliding_archive():
-    """Deterministically created SlidingBoundariesArchive."""
+    """Deterministically-created SlidingBoundariesArchive."""
     archive = SlidingBoundariesArchive(solution_dim=2,
                                        dims=[10, 20],
                                        ranges=[(-1, 1), (-1, 1)],
@@ -696,6 +716,14 @@ def test_cvt_archive_heatmap_voronoi_style(cvt_archive):
 def test_heatmap_archive__cvt_1d(cvt_archive_1d):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive_1d)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d_style"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d_style(cvt_archive_1d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive_1d, lw=3.0, ec="grey")
 
 
 @image_comparison(baseline_images=["cvt_archive_heatmap_1d_aspect_gt_1"],
