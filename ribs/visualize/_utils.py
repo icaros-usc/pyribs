@@ -3,6 +3,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ribs.archives import CVTArchive, GridArchive
+
 
 def retrieve_cmap(cmap):
     """Retrieves colormap from Matplotlib."""
@@ -63,6 +65,8 @@ def archive_heatmap_1d(
 ):
     """Plots a heatmap of a 1D archive.
 
+    The y-bounds of the plot are set to [0, 1].
+
     Args:
         archive (ribs.archives.ArchiveBase): A 1D archive to plot.
         boundaries (np.ndarray): 1D array with the cell boundaries of the
@@ -90,14 +94,23 @@ def archive_heatmap_1d(
     objective_batch = df.objective_batch()
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
-    x_dim = archive.dims[0]
     x_bounds = boundaries
     y_bounds = np.array([0, 1])  # To facilitate default x-y aspect ratio.
 
-    # Color for each cell in the heatmap.
-    colors = np.full((1, x_dim), np.nan)
-    grid_index_batch = archive.int_to_grid_index(df.index_batch())
-    colors[0, grid_index_batch[:, 0]] = objective_batch
+    # Color for each cell in the heatmap -- the default NaN causes cells to have
+    # no color.
+    colors = np.full((1, archive.cells), np.nan)
+    if isinstance(archive, GridArchive):
+        grid_index_batch = archive.int_to_grid_index(df.index_batch()).squeeze()
+        colors[0, grid_index_batch] = objective_batch
+    elif isinstance(archive, CVTArchive):
+        centroids_1d = archive.centroids.squeeze()
+        centroid_sort_idx = np.argsort(centroids_1d)
+        colors[0, centroid_sort_idx[df.index_batch()]] = df.objective_batch()
+
+        #  for idx, obj in zip(df.index_batch(), df.objective_batch()):
+        #      region_idx = centroid_sort_idx[idx]
+        #      colors[0, region_idx] = obj
 
     # Initialize the axis.
     ax = plt.gca() if ax is None else ax
