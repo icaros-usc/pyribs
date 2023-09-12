@@ -747,6 +747,24 @@ def test_heatmap_archive__cvt_1d_with_points():
                         ms=10.0)
 
 
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d_sphere"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d_sphere():
+    """More complex setting."""
+    archive = CVTArchive(
+        solution_dim=1,
+        cells=20,
+        ranges=[(-1, 1)],
+        seed=42,
+        samples=100,
+    )
+    add_uniform_sphere_1d(archive, (-1, 1))
+
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(archive)
+
+
 @image_comparison(baseline_images=["cvt_archive_heatmap_1d_aspect_gt_1"],
                   remove_text=False,
                   extensions=["png"])
