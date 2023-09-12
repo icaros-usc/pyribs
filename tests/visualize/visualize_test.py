@@ -169,6 +169,16 @@ def three_d_grid_archive():
 
 
 @pytest.fixture(scope="module")
+def cvt_archive_1d():
+    """Deterministically created GridArchive with 1 measure."""
+    # The archive must be low-res enough that we can tell if the number of cells
+    # is correct, yet high-res enough that we can see different colors.
+    archive = CVTArchive(solution_dim=1, cells=10, ranges=[(-1, 1)], seed=42)
+    add_uniform_sphere_1d(archive, (-1, 1))
+    return archive
+
+
+@pytest.fixture(scope="module")
 def cvt_archive():
     """Deterministically created CVTArchive."""
     archive = CVTArchive(solution_dim=2,
@@ -676,6 +686,35 @@ def test_cvt_archive_heatmap_voronoi_style(cvt_archive):
 
 
 #
+# CVTArchive heatmap 1D
+#
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d(cvt_archive_1d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive_1d)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d_aspect_gt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d_aspect_gt_1(cvt_archive_1d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive_1d, aspect=2.5)
+
+
+@image_comparison(baseline_images=["cvt_archive_heatmap_1d_aspect_lt_1"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_heatmap_archive__cvt_1d_aspect_lt_1(cvt_archive_1d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(cvt_archive_1d, aspect=0.1)
+
+
+#
 # Rasterization tests
 #
 
@@ -800,7 +839,7 @@ def test_cvt_archive_heatmap_clip_polygon_with_hole(cvt_archive):
 
 
 #
-# Parallel coordinate plot test
+# Parallel axes plot test
 #
 
 
