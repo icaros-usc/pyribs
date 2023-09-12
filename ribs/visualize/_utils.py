@@ -108,7 +108,8 @@ def archive_heatmap_1d(
     vmax = np.nanmax(cell_objectives) if vmax is None else vmax
     t = ax.pcolormesh(
         cell_boundaries,
-        np.array([0, 1]),  # y-bounds
+        # y-bounds; needs a sensible default so that aspect ratio is consistent.
+        np.array([0, 1]),
         cell_objectives[None, :],
         cmap=cmap,
         vmin=vmin,
