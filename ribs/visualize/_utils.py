@@ -99,7 +99,7 @@ def archive_heatmap_1d(
     ax.set_xlim(archive.lower_bounds[0], archive.upper_bounds[0])
     ax.set_aspect(aspect)
 
-    # Turn off yticks because we only want x labels.
+    # Turn off yticks; this is a 1D plot so only the x-axis matters.
     ax.set_yticks([])
 
     # Create the plot.
