@@ -114,10 +114,6 @@ def grid_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
 
-    # Useful to have these data available.
-    df = archive.as_pandas()
-    objective_batch = df.objective_batch()
-
     if archive.measure_dim == 1:
         archive_heatmap_1d(
             archive,
@@ -135,6 +131,8 @@ def grid_archive_heatmap(archive,
 
     elif archive.measure_dim == 2:
         # Retrieve data from archive.
+        df = archive.as_pandas()
+        objective_batch = df.objective_batch()
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
         x_dim, y_dim = archive.dims

@@ -83,11 +83,11 @@ def archive_heatmap_1d(
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
     """
-    df = archive.as_pandas()
-    objective_batch = df.objective_batch()
 
     # Retrieve data from archive. There should be only 2 bounds; upper and
     # lower, since it is 1D.
+    df = archive.as_pandas()
+    objective_batch = df.objective_batch()
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
     x_dim = archive.dims[0]
