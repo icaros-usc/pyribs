@@ -173,10 +173,9 @@ def cvt_archive_3d_plot(archive,
     ymax_reflec[:, 1] = ymax + (ymax - centroids[:, 1])
     zmax_reflec[:, 2] = zmax + (zmax - centroids[:, 2])
 
-    centroids = np.concatenate(
-        (centroids, xmin_reflec, ymin_reflec, zmin_reflec, xmax_reflec,
-         ymax_reflec, zmax_reflec))
-    vor = Voronoi(centroids)
+    vor = Voronoi(
+        np.concatenate((centroids, xmin_reflec, ymin_reflec, zmin_reflec,
+                        xmax_reflec, ymax_reflec, zmax_reflec)))
 
     #  print("Centroids:", len(centroids))
     #  print("Vertices:", vor.vertices)
@@ -197,9 +196,63 @@ def cvt_archive_3d_plot(archive,
     ax.add_collection(
         Poly3DCollection(
             vertices,
-            edgecolor=[(0.0, 0.0, 0.0, 0.2) for _ in vertices],
+            edgecolor=[(0.0, 0.0, 0.0, 0.1) for _ in vertices],
             facecolor=["none" for _ in vertices],
         ))
+
+    # TODO: This doesn't need to be list of lists; it can just be a list because
+    # we don't really care about the value of each cell.
+
+    # Collect the vertices and colors for each cell.
+    vertices = [[] for _ in centroids]
+    objs = [[] for _ in centroids]
+    pt_to_obj = {elite.index: elite.objective for elite in archive}
+    # We placed the centroids first when creating the Voronoi diagram, so the
+    # centroid points have indices less than len(centroids).
+    max_idx = len(centroids)
+    for ridge_points, ridge_vertices in zip(vor.ridge_points,
+                                            vor.ridge_vertices):
+        a, b = ridge_points
+        # Collect vertices and objectives for each point. We are only interested
+        # in a ridge if it involves one of our centroid points, hence the check
+        # for max_idx.
+        if a < max_idx:
+            vertices[a].append(vor.vertices[ridge_vertices])
+            objs[a].append(pt_to_obj.get(a, np.nan))
+        if b < max_idx:
+            vertices[b].append(vor.vertices[ridge_vertices])
+            objs[b].append(pt_to_obj.get(b, np.nan))
+
+    all_vertices = sum(vertices, start=[])
+
+    all_objs = np.concatenate(objs)
+    cmap_idx = ~np.isnan(all_objs)
+    # Collect objs that need to be passed through cmap.
+    cmap_objs = all_objs[cmap_idx]
+
+    # Override objective value range.
+    min_obj = np.nanmax(all_objs) if vmin is None else vmin
+    max_obj = np.nanmin(all_objs) if vmax is None else vmax
+
+    # If the min and max are the same, we set a sensible default range.
+    if min_obj == max_obj:
+        min_obj, max_obj = min_obj - 0.01, max_obj + 0.01
+
+    normalized_objs = np.clip(
+        (np.asarray(cmap_objs) - min_obj) / (max_obj - min_obj), 0.0, 1.0)
+
+    # Create an array of facecolors that defaults to transparent white.
+    facecolors = np.full((len(all_objs), 4), [1.0, 1.0, 1.0, 0.0])
+    facecolors[cmap_idx] = cmap(normalized_objs)
+
+    ax.add_collection(
+        Poly3DCollection(
+            all_vertices,
+            edgecolor=[(0.0, 0.0, 0.0, 0.0) for _ in all_vertices],
+            facecolor=facecolors,
+        ))
+
+    # TODO: Remove earlier collection call?
 
     #  # Calculate objective value for each region. `vor.point_region` contains
     #  # the region index of each point.
