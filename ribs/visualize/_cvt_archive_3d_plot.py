@@ -22,6 +22,9 @@ def cvt_archive_3d_plot(
     vmax=None,
     cbar="auto",
     cbar_kwargs=None,
+    plot_elites=False,
+    elite_ms=100,
+    elite_alpha=0.5,
     plot_centroids=False,
     plot_samples=False,
     ms=1,
@@ -103,6 +106,11 @@ def cvt_archive_3d_plot(
             the colorbar on the specified Axes.
         cbar_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.colorbar`.
+        plot_elites (bool): If True, we will plot a scatter plot of the elites
+            in the archive. The elites will be colored according to their
+            objective value.
+        elite_ms (float): Marker size for plotting elites.
+        elite_alpha (float): Alpha value for plotting elites.
         plot_centroids (bool): Whether to plot the cluster centroids.
         plot_samples (bool): Whether to plot the samples used when generating
             the clusters.
@@ -255,7 +263,17 @@ def cvt_archive_3d_plot(
             lw=lw,
         ))
 
-    # Plot the sample points and centroids.
+    if plot_elites:
+        ax.scatter(measures_batch[:, 0],
+                   measures_batch[:, 1],
+                   measures_batch[:, 2],
+                   s=elite_ms,
+                   c=objective_batch,
+                   cmap=cmap,
+                   vmin=vmin,
+                   vmax=vmax,
+                   lw=0.0,
+                   alpha=elite_alpha)
     if plot_samples:
         ax.plot(samples[:, 0],
                 samples[:, 1],
@@ -275,19 +293,3 @@ def cvt_archive_3d_plot(
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(min_obj, max_obj)
     set_cbar(mappable, ax, cbar, cbar_kwargs)
-
-    # TODO: Clean up this point plotting code.
-
-    # Retrieve data from archive.
-    x = measures_batch[:, 0]
-    y = measures_batch[:, 1]
-    z = measures_batch[:, 2]
-
-    #  t = ax.scatter(x,
-    #                 y,
-    #                 z,
-    #                 s=ms,
-    #                 c=objective_batch,
-    #                 cmap=cmap,
-    #                 vmin=vmin,
-    #                 vmax=vmax)

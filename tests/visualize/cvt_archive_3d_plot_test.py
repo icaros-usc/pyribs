@@ -191,3 +191,12 @@ def test_cell_alpha(cvt_archive_3d):
 def test_transparent(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
     cvt_archive_3d_plot(cvt_archive_3d, cell_alpha=0.0)
+
+
+@image_comparison(baseline_images=["plot_elites"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_plot_elites(cvt_archive_3d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_3d_plot(cvt_archive_3d, cell_alpha=0.0, plot_elites=True)
