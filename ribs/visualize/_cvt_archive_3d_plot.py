@@ -1,4 +1,10 @@
 """Provides cvt_archive_3d_plot."""
+import matplotlib.pyplot as plt
+import numpy as np
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
+
+from ribs.visualize._utils import retrieve_cmap, validate_heatmap_visual_args
 
 
 def cvt_archive_3d_plot(archive,
@@ -87,23 +93,25 @@ def cvt_archive_3d_plot(archive,
             :func:`~matplotlib.pyplot.colorbar`.
 
     Raises:
-        ValueError: The archive is not 2D.
+        ValueError: The archive is not 3D.
     """
-    _validate_heatmap_visual_args(
+    validate_heatmap_visual_args(
         aspect, cbar, archive.measure_dim, [3],
-        "Heatmaps can only be plotted for 3D CVTArchive")
+        "This plot can only be made for a 3D CVTArchive")
 
     if aspect is None:
         aspect = "auto"
 
     # Try getting the colormap early in case it fails.
-    cmap = _retrieve_cmap(cmap)
+    cmap = retrieve_cmap(cmap)
 
     # Retrieve data from archive.
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
     centroids = archive.centroids
     samples = archive.samples
+
+    # TODO: Measure order
     if transpose_measures:
         lower_bounds = np.flip(lower_bounds)
         upper_bounds = np.flip(upper_bounds)
@@ -145,21 +153,47 @@ def cvt_archive_3d_plot(archive,
 
     # TODO: Try point reflections as is done here:
     # https://stackoverflow.com/questions/28665491/getting-a-bounded-polygon-coordinates-from-voronoi-cells
+
+    # Point reflections
+    xmin, ymin, zmin = lower_bounds
+    xmax, ymax, zmax = upper_bounds
+    (
+        xmin_reflec,
+        ymin_reflec,
+        zmin_reflec,
+        xmax_reflec,
+        ymax_reflec,
+        zmax_reflec,
+    ) = [centroids.copy() for _ in range(6)]
+
+    xmin_reflec[:, 0] = xmin - (centroids[:, 0] - xmin)
+    ymin_reflec[:, 1] = ymin - (centroids[:, 1] - ymin)
+    zmin_reflec[:, 2] = zmin - (centroids[:, 2] - zmin)
+    xmax_reflec[:, 0] = xmax + (xmax - centroids[:, 0])
+    ymax_reflec[:, 1] = ymax + (ymax - centroids[:, 1])
+    zmax_reflec[:, 2] = zmax + (zmax - centroids[:, 2])
+
+    centroids = np.concatenate(
+        (centroids, xmin_reflec, ymin_reflec, zmin_reflec, xmax_reflec,
+         ymax_reflec, zmax_reflec))
     vor = Voronoi(centroids)
 
     #  print("Centroids:", len(centroids))
     #  print("Vertices:", vor.vertices)
 
+    vertices = []
     for ridge in vor.ridge_vertices:
         if -1 in ridge:
             continue
         p = vor.vertices[ridge]
         if np.any((p < lower_bounds) | (p > upper_bounds)):
             continue
+        vertices.append(p)
         # TODO: We could also use plot_trisurf here to plot the surface as a
         # polygon with a fill color.
-        plt.plot(p[:, 0], p[:, 1], p[:, 2], color="black", alpha=0.2)
+        #  plt.plot(p[:, 0], p[:, 1], p[:, 2], color="black", alpha=0.2)
         #  plt.plot(p[:, 0], p[:, 1], p[:, 2])
+    ax.add_collection(Poly3DCollection(vertices, edgecolor="black"))
 
     #  # Calculate objective value for each region. `vor.point_region` contains
     #  # the region index of each point.
@@ -223,11 +257,11 @@ def cvt_archive_3d_plot(archive,
     objective_batch = df.objective_batch()
     vmin = np.min(objective_batch) if vmin is None else vmin
     vmax = np.max(objective_batch) if vmax is None else vmax
-    t = ax.scatter(x,
-                   y,
-                   z,
-                   s=ms,
-                   c=objective_batch,
-                   cmap=cmap,
-                   vmin=vmin,
-                   vmax=vmax)
+    #  t = ax.scatter(x,
+    #                 y,
+    #                 z,
+    #                 s=ms,
+    #                 c=objective_batch,
+    #                 cmap=cmap,
+    #                 vmin=vmin,
+    #                 vmax=vmax)
