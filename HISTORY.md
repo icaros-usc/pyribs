@@ -28,6 +28,7 @@
 
 - Improve developer workflow with pre-commit ({pr}`351`, {pr}`363`)
 - Refactor visualize module into multiple files ({pr}`357`)
+- Refactor visualize tests into multiple files ({pr}`370`)
 - Add GitHub link roles in documentation ({pr}`361`)
 - Refactor argument validation utilities ({pr}`365`)
 - Use Conda envs in all CI jobs ({pr}`368`)
