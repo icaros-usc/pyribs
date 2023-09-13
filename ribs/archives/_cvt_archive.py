@@ -54,7 +54,7 @@ class CVTArchive(ArchiveBase):
         the ``learning_rate`` and ``threshold_min`` parameters.
 
     .. note:: For more information on our choice of k-D tree implementation, see
-        `#38 <https://github.com/icaros-usc/pyribs/issues/38>`_.
+        :pr:`38`.
 
     Args:
         solution_dim (int): Dimension of the solution space.
@@ -142,16 +142,16 @@ class CVTArchive(ArchiveBase):
         # particularly if they want higher quality clusters.
         self._k_means_kwargs = ({} if k_means_kwargs is None else
                                 k_means_kwargs.copy())
-        if "n_init" not in self._k_means_kwargs:
+        self._k_means_kwargs.setdefault(
             # Only run one iter to be fast.
-            self._k_means_kwargs["n_init"] = 1
-        if "init" not in self._k_means_kwargs:
-            # The default, "k-means++", takes very long to init.
-            self._k_means_kwargs["init"] = "random"
-        if "algorithm" not in self._k_means_kwargs:
-            self._k_means_kwargs["algorithm"] = "lloyd"
-        if "random_state" not in self._k_means_kwargs:
-            self._k_means_kwargs["random_state"] = seed
+            "n_init",
+            1)
+        self._k_means_kwargs.setdefault(
+            # The default "k-means++" takes very long to init.
+            "init",
+            "random")
+        self._k_means_kwargs.setdefault("algorithm", "lloyd")
+        self._k_means_kwargs.setdefault("random_state", seed)
 
         self._use_kd_tree = use_kd_tree
         self._centroid_kd_tree = None

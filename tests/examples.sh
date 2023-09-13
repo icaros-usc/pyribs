@@ -15,8 +15,11 @@ if [ ! -d "${TMPDIR}" ]; then
 fi
 
 function install_deps() {
-  install_cmd=$(grep "pip install" "$1")
-  $install_cmd
+  # Loop through all instances of `pip install` in the script and run the
+  # installation commands.
+  grep '^\s*pip install' "$1" | while read -r install_cmd ; do
+      $install_cmd
+  done
 }
 
 # Single-threaded for consistency.

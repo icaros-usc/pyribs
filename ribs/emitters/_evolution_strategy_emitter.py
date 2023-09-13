@@ -213,24 +213,22 @@ class EvolutionStrategyEmitter(EmitterBase):
             metadata_batch (array-like): 1D object array containing a metadata
                 object for each solution.
         """
-        # Preprocessing arguments.
-        solution_batch = np.asarray(solution_batch)
-        objective_batch = np.asarray(objective_batch)
-        measures_batch = np.asarray(measures_batch)
-        status_batch = np.asarray(status_batch)
-        value_batch = np.asarray(value_batch)
-        batch_size = solution_batch.shape[0]
-        metadata_batch = (np.empty(batch_size, dtype=object) if metadata_batch
-                          is None else np.asarray(metadata_batch, dtype=object))
-
-        # Validate arguments.
-        validate_batch_args(archive=self.archive,
-                            solution_batch=solution_batch,
-                            objective_batch=objective_batch,
-                            measures_batch=measures_batch,
-                            status_batch=status_batch,
-                            value_batch=value_batch,
-                            metadata_batch=metadata_batch)
+        (
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            status_batch,
+            value_batch,
+            metadata_batch,
+        ) = validate_batch_args(
+            archive=self.archive,
+            solution_batch=solution_batch,
+            objective_batch=objective_batch,
+            measures_batch=measures_batch,
+            status_batch=status_batch,
+            value_batch=value_batch,
+            metadata_batch=metadata_batch,
+        )
 
         # Increase iteration counter.
         self._itrs += 1
