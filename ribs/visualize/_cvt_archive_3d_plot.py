@@ -141,8 +141,8 @@ def cvt_archive_3d_plot(
                 "measure_order should be a permutation of [0, 1, 2] but "
                 f"received {measure_order}")
         measures_batch = measures_batch[:, measure_order]
-        lower_bounds = lower_bounds[:, measure_order]
-        upper_bounds = upper_bounds[:, measure_order]
+        lower_bounds = lower_bounds[measure_order]
+        upper_bounds = upper_bounds[measure_order]
         centroids = centroids[:, measure_order]
         samples = samples[:, measure_order]
 

@@ -27,14 +27,30 @@ CVT_IMAGE_TOLERANCE = 1.0
 @pytest.fixture(scope="module")
 def cvt_archive_3d():
     """Deterministically-created CVTArchive."""
+    ranges = np.array([(-1, 1), (-1, 1), (-1, 1)])
     archive = CVTArchive(
         solution_dim=3,
         cells=500,
-        ranges=np.array([(-1, 1), (-1, 1), (-1, 1)]),
+        ranges=ranges,
         samples=10_000,
         seed=42,
     )
-    add_uniform_sphere_3d(archive, (-1, 1), (-1, 1), (-1, 1))
+    add_uniform_sphere_3d(archive, *ranges)
+    return archive
+
+
+@pytest.fixture(scope="module")
+def cvt_archive_3d_rect():
+    """Same as above, but the dimensions have different ranges."""
+    ranges = [(-1, 1), (-2, 0), (1, 3)]
+    archive = CVTArchive(
+        solution_dim=3,
+        cells=500,
+        ranges=ranges,
+        samples=10_000,
+        seed=42,
+    )
+    add_uniform_sphere_3d(archive, *ranges)
     return archive
 
 
@@ -78,37 +94,31 @@ def test_3d_custom_axis(cvt_archive_3d):
     cvt_archive_3d_plot(cvt_archive_3d, ax=ax)
 
 
-#  @image_comparison(baseline_images=["2d_long"],
-#                    remove_text=False,
-#                    extensions=["png"],
-#                    tol=CVT_IMAGE_TOLERANCE)
-#  def test_2d_long(cvt_archive_2d_long):
-#      plt.figure(figsize=(8, 6))
-#      cvt_archive_heatmap(cvt_archive_2d_long)
+@image_comparison(baseline_images=["3d_rect"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_3d_rect(cvt_archive_3d_rect):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_3d_plot(cvt_archive_3d_rect)
 
-#  @image_comparison(baseline_images=["2d_long_square"],
-#                    remove_text=False,
-#                    extensions=["png"],
-#                    tol=CVT_IMAGE_TOLERANCE)
-#  def test_2d_long_square(cvt_archive_2d_long):
-#      plt.figure(figsize=(8, 6))
-#      cvt_archive_heatmap(cvt_archive_2d_long, aspect="equal")
 
-#  @image_comparison(baseline_images=["2d_long_transpose"],
-#                    remove_text=False,
-#                    extensions=["png"],
-#                    tol=CVT_IMAGE_TOLERANCE)
-#  def test_2d_long_transpose(cvt_archive_2d_long):
-#      plt.figure(figsize=(8, 6))
-#      cvt_archive_heatmap(cvt_archive_2d_long, transpose_measures=True)
+@image_comparison(baseline_images=["3d_rect_reorder"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_3d_rect_reorder(cvt_archive_3d_rect):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_3d_plot(cvt_archive_3d_rect, measure_order=[1, 2, 0])
 
-#  @image_comparison(baseline_images=["limits"],
-#                    remove_text=False,
-#                    extensions=["png"],
-#                    tol=CVT_IMAGE_TOLERANCE)
-#  def test_limits(cvt_archive_2d):
-#      plt.figure(figsize=(8, 6))
-#      cvt_archive_heatmap(cvt_archive_2d, vmin=-1.0, vmax=-0.5)
+
+@image_comparison(baseline_images=["limits"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_limits(cvt_archive_3d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_3d_plot(cvt_archive_3d, vmin=-1.0, vmax=-0.5)
 
 
 @image_comparison(baseline_images=["listed_cmap"],
@@ -172,3 +182,12 @@ def test_voronoi_style(cvt_archive_3d):
 def test_cell_alpha(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
     cvt_archive_3d_plot(cvt_archive_3d, cell_alpha=0.1)
+
+
+@image_comparison(baseline_images=["transparent"],
+                  remove_text=False,
+                  extensions=["png"],
+                  tol=CVT_IMAGE_TOLERANCE)
+def test_transparent(cvt_archive_3d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_3d_plot(cvt_archive_3d, cell_alpha=0.0)
