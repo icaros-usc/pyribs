@@ -16,12 +16,13 @@
   - Removes cbar_orientaton and cbar_pad args for parallel_axes_plot
 - Add `rasterized` arg for heatmaps (#359)
 - Support 1D cvt_archive_heatmap ({pr}`362`)
+- Add 3D plots for CVTArchive ({pr}`371`)
 
 #### Documentation
 
 - Use dask instead of multiprocessing for lunar lander tutorial ({pr}`346`)
 - pip install swig before gymnasium[box2d] in lunar lander tutorial ({pr}`346`)
-- Fix lunar lander dependency issues ({pr}`366`, {pr}`377`)
+- Fix lunar lander dependency issues ({pr}`366`, {pr}`367`)
 - Simplify DQD tutorial imports ({pr}`369`)
 
 #### Improvements
