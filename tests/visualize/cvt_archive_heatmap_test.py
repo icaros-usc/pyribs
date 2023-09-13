@@ -125,7 +125,7 @@ def test_2d_custom_axis(cvt_archive_2d):
                   remove_text=False,
                   extensions=["png"],
                   tol=CVT_IMAGE_TOLERANCE)
-def test_heatmap_long__cvt(cvt_archive_2d_long):
+def test_2d_long(cvt_archive_2d_long):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive_2d_long)
 
