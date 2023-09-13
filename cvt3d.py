@@ -4,23 +4,26 @@ from matplotlib import cm
 from scipy.spatial import Voronoi
 
 from ribs.archives import CVTArchive
-from ribs.visualize import cvt_archive_heatmap_3d
+from ribs.visualize import cvt_archive_3d_plot
 
 archive = CVTArchive(
     solution_dim=3,
     cells=100,
-    ranges=[(-1, 1)] * 3,
+    ranges=[(-1, 1), (-2, 0), (1, 3)],
     samples=10_000,
+    seed=42,
 )
 
-x = y = z = np.linspace(-1, 1, 30)
+x = np.linspace(-1, 1)
+y = np.linspace(-2, 0)
+z = np.linspace(1, 3)
 xxs, yys, zzs = np.meshgrid(x, y, z)
 xxs, yys, zzs = xxs.flatten(), yys.flatten(), zzs.flatten()
 archive.add(solution_batch=np.stack((xxs, yys, zzs), axis=1),
             objective_batch=-(xxs**2 + yys**2 + zzs**2),
             measures_batch=np.stack((xxs, yys, zzs), axis=1))
 
-cvt_archive_heatmap_3d(
+cvt_archive_3d_plot(
     archive,
     plot_centroids=False,
     ms=100,
