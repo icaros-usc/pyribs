@@ -6,12 +6,13 @@ invalid arguments to these functions results in an error.
 import pytest
 
 from ribs.archives import CVTArchive, GridArchive, SlidingBoundariesArchive
-from ribs.visualize import (cvt_archive_heatmap, grid_archive_heatmap,
+from ribs.visualize import (cvt_archive_3d_plot, cvt_archive_heatmap,
+                            grid_archive_heatmap,
                             sliding_boundaries_archive_heatmap)
 
 
-@pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
-def test_heatmap_fails_on_unsupported_dims(archive_type):
+@pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding", "cvt_3d"])
+def test_fails_on_unsupported_dims(archive_type):
     archive = {
         "grid":
             lambda: GridArchive(
@@ -26,6 +27,13 @@ def test_heatmap_fails_on_unsupported_dims(archive_type):
         "sliding":
             lambda: SlidingBoundariesArchive(
                 solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3),
+        "cvt_3d":
+            lambda: CVTArchive(
+                solution_dim=2,
+                cells=100,
+                ranges=[(-1, 1)] * 4,
+                samples=100,
+            ),
     }[archive_type]()
 
     with pytest.raises(ValueError):
@@ -33,10 +41,11 @@ def test_heatmap_fails_on_unsupported_dims(archive_type):
             "grid": grid_archive_heatmap,
             "cvt": cvt_archive_heatmap,
             "sliding": sliding_boundaries_archive_heatmap,
+            "cvt_3d": cvt_archive_3d_plot,
         }[archive_type](archive)
 
 
-@pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
+@pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding", "cvt_3d"])
 @pytest.mark.parametrize(
     "invalid_arg_cbar",
     ["None", 3.2, True,
@@ -59,6 +68,13 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
                 dims=[20, 20, 20],
                 ranges=[(-1, 1)] * 3,
             ),
+        "cvt_3d":
+            lambda: CVTArchive(
+                solution_dim=2,
+                cells=100,
+                ranges=[(-1, 1)] * 3,
+                samples=100,
+            ),
     }[archive_type]()
 
     with pytest.raises(ValueError):
@@ -66,9 +82,12 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
             "grid": grid_archive_heatmap,
             "cvt": cvt_archive_heatmap,
             "sliding": sliding_boundaries_archive_heatmap,
+            "cvt_3d": cvt_archive_3d_plot,
         }[archive_type](archive=archive, cbar=invalid_arg_cbar)
 
 
+# Note: cvt_3d is not included because cvt_archive_3d_plot does not have an
+# aspect parameter.
 @pytest.mark.parametrize("archive_type", ["grid", "cvt", "sliding"])
 @pytest.mark.parametrize(
     "invalid_arg_aspect",
