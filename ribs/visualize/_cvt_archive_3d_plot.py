@@ -15,19 +15,16 @@ def cvt_archive_3d_plot(
     *,
     measure_order=None,
     cmap="magma",
-    aspect=None,
     lw=0.5,
     ec=(0.0, 0.0, 0.0, 0.1),
+    cell_alpha=1.0,
     vmin=None,
     vmax=None,
     cbar="auto",
     cbar_kwargs=None,
-    # TODO
-    rasterized=False,
     plot_centroids=False,
     plot_samples=False,
     ms=1,
-    pcm_kwargs=None,
 ):
     """Plots a :class:`~ribs.archives.CVTArchive` with 3D measure space.
 
@@ -88,15 +85,13 @@ def cvt_archive_3d_plot(
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
-            height/width). Defaults to ``'auto'`` for 2D and ``0.5`` for 1D.
-            ``'equal'`` is the same as ``aspect=1``. See
-            :meth:`matplotlib.axes.Axes.set_aspect` for more info.
         lw (float): Line width when plotting the Voronoi diagram.
         ec (matplotlib color): Edge color of the cells in the Voronoi diagram.
             See `here
             <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ for
             more info on specifying colors in Matplotlib.
+        cell_alpha: Alpha value for the cell colors. Set to 1.0 for opaque
+            cells; set to 0.0 for fully transparent cells.
         vmin (float): Minimum objective value to use in the plot. If ``None``,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
@@ -108,23 +103,10 @@ def cvt_archive_3d_plot(
             the colorbar on the specified Axes.
         cbar_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.colorbar`.
-
-        # TODO
-
-        rasterized (bool): Whether to rasterize the heatmap. This can be useful
-            for saving to a vector format like PDF. Essentially, only the
-            heatmap will be converted to a raster graphic so that the archive
-            cells will not have to be individually rendered. Meanwhile, the
-            surrounding axes, particularly text labels, will remain in vector
-            format.
         plot_centroids (bool): Whether to plot the cluster centroids.
         plot_samples (bool): Whether to plot the samples used when generating
             the clusters.
         ms (float): Marker size for both centroids and samples.
-        pcm_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.pyplot.pcolormesh`. Only applicable to 1D
-            heatmaps. linewidth and edgecolor are set with the ``lw`` and
-            ``ec`` args.
 
     Raises:
         ValueError: The archive's measure dimension must be 1D or 2D.
@@ -132,16 +114,14 @@ def cvt_archive_3d_plot(
         ValueError: ``plot_samples`` is passed in but the archive does not have
             samples (e.g., due to using custom centroids during construction).
     """
+    # We don't have an aspect arg here so we just pass None.
     validate_heatmap_visual_args(
-        aspect, cbar, archive.measure_dim, [3],
+        None, cbar, archive.measure_dim, [3],
         "This plot can only be made for a 3D CVTArchive")
 
     if plot_samples and archive.samples is None:
         raise ValueError("Samples are not available for this archive, but "
                          "`plot_samples` was passed in.")
-
-    if aspect is None:
-        aspect = "auto"
 
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
@@ -181,9 +161,6 @@ def cvt_archive_3d_plot(
     ax.set_xlim(lower_bounds[0], upper_bounds[0])
     ax.set_ylim(lower_bounds[1], upper_bounds[1])
     ax.set_zlim(lower_bounds[2], upper_bounds[2])
-
-    # TODO: aspect?
-    ax.set_aspect(aspect)
 
     # Create reflections of the points so that we can easily find the polygons
     # at the edge of the Voronoi diagram. See here for the basic idea in 2D:
@@ -261,11 +238,14 @@ def cvt_archive_3d_plot(
     normalized_objs = np.clip(
         (np.asarray(cmap_objs) - min_obj) / (max_obj - min_obj), 0.0, 1.0)
 
-    # TODO: facecolor alpha
-
-    # Create an array of facecolors that defaults to transparent white.
+    # Create an array of facecolors in RGBA format that defaults to transparent
+    # white.
     facecolors = np.full((len(objs), 4), [1.0, 1.0, 1.0, 0.0])
+
+    # Set colors based on objectives. Also set alpha, which is located in index
+    # 3 since this is RGBA format.
     facecolors[cmap_idx] = cmap(normalized_objs)
+    facecolors[cmap_idx, 3] = cell_alpha
 
     ax.add_collection(
         Poly3DCollection(
@@ -273,7 +253,6 @@ def cvt_archive_3d_plot(
             edgecolor=[ec for _ in vertices],
             facecolor=facecolors,
             lw=lw,
-            rasterized=rasterized,
         ))
 
     # Plot the sample points and centroids.
