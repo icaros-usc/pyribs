@@ -181,12 +181,14 @@ def cvt_archive_3d_plot(archive,
     #  print("Centroids:", len(centroids))
     #  print("Vertices:", vor.vertices)
 
+    eps = 1e-6  # TODO: Parameter
+
     vertices = []
     for ridge in vor.ridge_vertices:
         if -1 in ridge:
             continue
         p = vor.vertices[ridge]
-        if np.any((p < lower_bounds) | (p > upper_bounds)):
+        if np.any((p < (lower_bounds - eps)) | (p > (upper_bounds + eps))):
             continue
         vertices.append(p)
         # TODO: We could also use plot_trisurf here to plot the surface as a
