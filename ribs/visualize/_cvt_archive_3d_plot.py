@@ -188,14 +188,18 @@ def cvt_archive_3d_plot(archive,
         if -1 in ridge:
             continue
         p = vor.vertices[ridge]
+        # Using epsilon makes us more tolerant to polygons at the edge of the
+        # plot -- due to numerical errors, surfaces at the edges of the plot
+        # tended to get clipped.
         if np.any((p < (lower_bounds - eps)) | (p > (upper_bounds + eps))):
             continue
         vertices.append(p)
-        # TODO: We could also use plot_trisurf here to plot the surface as a
-        # polygon with a fill color.
-        #  plt.plot(p[:, 0], p[:, 1], p[:, 2], color="black", alpha=0.2)
-        #  plt.plot(p[:, 0], p[:, 1], p[:, 2])
-    ax.add_collection(Poly3DCollection(vertices, edgecolor="black"))
+    ax.add_collection(
+        Poly3DCollection(
+            vertices,
+            edgecolor=[(0.0, 0.0, 0.0, 0.2) for _ in vertices],
+            facecolor=["none" for _ in vertices],
+        ))
 
     #  # Calculate objective value for each region. `vor.point_region` contains
     #  # the region index of each point.
