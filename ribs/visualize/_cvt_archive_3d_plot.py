@@ -1,17 +1,20 @@
-def cvt_archive_heatmap_3d(archive,
-                           ax=None,
-                           *,
-                           plot_centroids=False,
-                           plot_samples=False,
-                           transpose_measures=False,
-                           cmap="magma",
-                           aspect="auto",
-                           ms=1,
-                           lw=0.5,
-                           vmin=None,
-                           vmax=None,
-                           cbar="auto",
-                           cbar_kwargs=None):
+"""Provides cvt_archive_3d_plot."""
+
+
+def cvt_archive_3d_plot(archive,
+                        ax=None,
+                        *,
+                        plot_centroids=False,
+                        plot_samples=False,
+                        transpose_measures=False,
+                        cmap="magma",
+                        aspect="auto",
+                        ms=1,
+                        lw=0.5,
+                        vmin=None,
+                        vmax=None,
+                        cbar="auto",
+                        cbar_kwargs=None):
     """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 3D measure
     space.
 
