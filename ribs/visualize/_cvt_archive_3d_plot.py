@@ -1,31 +1,42 @@
 """Provides cvt_archive_3d_plot."""
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.cm import ScalarMappable
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
-from ribs.visualize._utils import retrieve_cmap, validate_heatmap_visual_args
+from ribs.visualize._utils import (retrieve_cmap, set_cbar,
+                                   validate_heatmap_visual_args)
 
 
-def cvt_archive_3d_plot(archive,
-                        ax=None,
-                        *,
-                        plot_centroids=False,
-                        plot_samples=False,
-                        transpose_measures=False,
-                        cmap="magma",
-                        aspect="auto",
-                        ms=1,
-                        lw=0.5,
-                        vmin=None,
-                        vmax=None,
-                        cbar="auto",
-                        cbar_kwargs=None):
-    """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 3D measure
-    space.
+def cvt_archive_3d_plot(
+    archive,
+    ax=None,
+    *,
+    measure_order=None,
+    cmap="magma",
+    aspect=None,
+    lw=0.5,
+    ec=(0.0, 0.0, 0.0, 0.1),
+    vmin=None,
+    vmax=None,
+    cbar="auto",
+    cbar_kwargs=None,
+    # TODO
+    rasterized=False,
+    plot_centroids=False,
+    plot_samples=False,
+    ms=1,
+    pcm_kwargs=None,
+):
+    """Plots a :class:`~ribs.archives.CVTArchive` with 3D measure space.
 
-    Essentially, we create a Voronoi diagram and shade in each cell with a
-    color corresponding to the objective value of that cell's elite.
+    This function relies on Matplotlib's `mplot3d
+    <https://matplotlib.org/stable/tutorials/toolkits/mplot3d.html>`_ toolkit.
+    By default, this function plots a 3D Voronoi diagram of the cells in the
+    archive and shades each cell based on its objective value. It is also
+    possible to plot a "wireframe" with only the cells' boundaries, with a dot
+    inside each cell indicating its objective value.
 
     Depending on how many cells are in the archive, ``ms`` and ``lw`` may need
     to be tuned. If there are too many cells, the Voronoi diagram and centroid
@@ -34,6 +45,8 @@ def cvt_archive_3d_plot(archive,
     completely with ``lw=0``.
 
     Examples:
+
+        # TODO
 
         .. plot::
             :context: close-figs
@@ -54,32 +67,36 @@ def cvt_archive_3d_plot(archive,
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_heatmap(archive)
-            >>> plt.title("Negative sphere function")
+            >>> plt.title("Negative sphere function with 2D measures")
             >>> plt.xlabel("x coords")
             >>> plt.ylabel("y coords")
             >>> plt.show()
 
     Args:
-        archive (CVTArchive): A 2D :class:`~ribs.archives.CVTArchive`.
+        archive (CVTArchive): A 3D :class:`~ribs.archives.CVTArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
-            If ``None``, the current axis will be used.
-        plot_centroids (bool): Whether to plot the cluster centroids.
-        plot_samples (bool): Whether to plot the samples used when generating
-            the clusters.
-        transpose_measures (bool): By default, the first measure in the archive
-            will appear along the x-axis, and the second will be along the
-            y-axis. To switch this behavior (i.e. to transpose the axes), set
-            this to ``True``.
+            If ``None``, we will create a new 3D axis.
+        measure_order (array-like of int): Specifies the axes order for plotting
+            the measures. By default, the first measure (measure 0) in the
+            archive appears on the x-axis, the second (measure 1) on y-axis, and
+            third (measure 2) on z-axis. This argument is an array of length 3
+            that specifies which measure should appear on the x, y, and z axes.
+            For instance, [2, 1, 0] will put measure 2 on the x-axis, measure 1
+            on the y-axis, and measure 0 on the z-axis.
         cmap (str, list, matplotlib.colors.Colormap): The colormap to use when
             plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
         aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
-            height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
-            ``aspect=1``.
-        ms (float): Marker size for both centroids and samples.
-        lw (float): Line width when plotting the voronoi diagram.
+            height/width). Defaults to ``'auto'`` for 2D and ``0.5`` for 1D.
+            ``'equal'`` is the same as ``aspect=1``. See
+            :meth:`matplotlib.axes.Axes.set_aspect` for more info.
+        lw (float): Line width when plotting the Voronoi diagram.
+        ec (matplotlib color): Edge color of the cells in the Voronoi diagram.
+            See `here
+            <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ for
+            more info on specifying colors in Matplotlib.
         vmin (float): Minimum objective value to use in the plot. If ``None``,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
@@ -92,12 +109,36 @@ def cvt_archive_3d_plot(archive,
         cbar_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.colorbar`.
 
+        # TODO
+
+        rasterized (bool): Whether to rasterize the heatmap. This can be useful
+            for saving to a vector format like PDF. Essentially, only the
+            heatmap will be converted to a raster graphic so that the archive
+            cells will not have to be individually rendered. Meanwhile, the
+            surrounding axes, particularly text labels, will remain in vector
+            format.
+        plot_centroids (bool): Whether to plot the cluster centroids.
+        plot_samples (bool): Whether to plot the samples used when generating
+            the clusters.
+        ms (float): Marker size for both centroids and samples.
+        pcm_kwargs (dict): Additional kwargs to pass to
+            :func:`~matplotlib.pyplot.pcolormesh`. Only applicable to 1D
+            heatmaps. linewidth and edgecolor are set with the ``lw`` and
+            ``ec`` args.
+
     Raises:
-        ValueError: The archive is not 3D.
+        ValueError: The archive's measure dimension must be 1D or 2D.
+        ValueError: ``measure_order`` is not a permutation of ``[0, 1, 2]``.
+        ValueError: ``plot_samples`` is passed in but the archive does not have
+            samples (e.g., due to using custom centroids during construction).
     """
     validate_heatmap_visual_args(
         aspect, cbar, archive.measure_dim, [3],
         "This plot can only be made for a 3D CVTArchive")
+
+    if plot_samples and archive.samples is None:
+        raise ValueError("Samples are not available for this archive, but "
+                         "`plot_samples` was passed in.")
 
     if aspect is None:
         aspect = "auto"
@@ -106,55 +147,60 @@ def cvt_archive_3d_plot(archive,
     cmap = retrieve_cmap(cmap)
 
     # Retrieve data from archive.
+    df = archive.as_pandas()
+    objective_batch = df.objective_batch()
+    measures_batch = df.measures_batch()
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
     centroids = archive.centroids
     samples = archive.samples
 
-    # TODO: Measure order
-    if transpose_measures:
-        lower_bounds = np.flip(lower_bounds)
-        upper_bounds = np.flip(upper_bounds)
-        centroids = np.flip(centroids, axis=1)
-        samples = np.flip(samples, axis=1)
+    if measure_order is not None:
+        if sorted(measure_order) != [0, 1, 2]:
+            raise ValueError(
+                "measure_order should be a permutation of [0, 1, 2] but "
+                f"received {measure_order}")
+        measures_batch = measures_batch[:, measure_order]
+        lower_bounds = lower_bounds[:, measure_order]
+        upper_bounds = upper_bounds[:, measure_order]
+        centroids = centroids[:, measure_order]
+        samples = samples[:, measure_order]
 
-    # Retrieve and initialize the axis.
-    # TODO: Is this the best way to get the 3D axes? Maybe we can get gca() and
-    # check if it is 3D before creating our own, or even just throw an error if
-    # current axis is not 3D.
-    ax = plt.axes(projection="3d") if ax is None else ax
-    #  ax.set_xlim(-10, 10)
-    #  ax.set_ylim(-10, 10)
-    #  ax.set_zlim(-10, 10)
+    # Compute objective value range.
+    min_obj = np.min(objective_batch) if vmin is None else vmin
+    max_obj = np.max(objective_batch) if vmax is None else vmax
+
+    # If the min and max are the same, we set a sensible default range.
+    if min_obj == max_obj:
+        min_obj, max_obj = min_obj - 0.01, max_obj + 0.01
+
+    # Default ax behavior.
+    if ax is None:
+        ax = plt.axes(projection="3d")
+
     ax.set_xlim(lower_bounds[0], upper_bounds[0])
     ax.set_ylim(lower_bounds[1], upper_bounds[1])
     ax.set_zlim(lower_bounds[2], upper_bounds[2])
+
+    # TODO: aspect?
     ax.set_aspect(aspect)
 
-    # TODO: Figure out what points should be added here, if any.
-
-    # Add faraway points so that the edge regions of the Voronoi diagram are
-    # filled in. Refer to
-    # https://stackoverflow.com/questions/20515554/colorize-voronoi-diagram
-    # for more info.
-    #  interval = upper_bounds - lower_bounds
-    #  scale = 1000
-    #  faraway_pts = [
-    #      upper_bounds + interval * [1, 1, 1] * scale,
-    #      upper_bounds + interval * [1, 1, -1] * scale,
-    #      lower_bounds + interval * [1, -1, 1] * scale,
-    #      lower_bounds + interval * [1, -1, -1] * scale,
-    #      upper_bounds + interval * [-1, 1, 1] * scale,
-    #      upper_bounds + interval * [-1, 1, -1] * scale,
-    #      lower_bounds + interval * [-1, -1, 1] * scale,
-    #      lower_bounds + interval * [-1, -1, -1] * scale,
-    #  ]
-    #  vor = Voronoi(np.append(centroids, faraway_pts, axis=0))
-
-    # TODO: Try point reflections as is done here:
+    # Create reflections of the points so that we can easily find the polygons
+    # at the edge of the Voronoi diagram. See here for the basic idea in 2D:
     # https://stackoverflow.com/questions/28665491/getting-a-bounded-polygon-coordinates-from-voronoi-cells
-
-    # Point reflections
+    #
+    # Note that this indeed results in us creating a Voronoi diagram with 7
+    # times the cells we need. However, the Voronoi creation is still pretty
+    # fast.
+    #
+    # Note that the above StackOverflow approach proposes filtering the points
+    # after creating the Voronoi diagram by checking if they are outside the
+    # upper or lower bounds. We found that this approach works fine, but it
+    # requires subtracting an epsilon from the lower bounds and adding an
+    # epsilon to the upper bounds, to allow for some margin of error due to
+    # numerical stability. Otherwise, some of the edge polygons will be clipped.
+    # Below, we do not filter with this method; instead, we just check whether
+    # the point on each side of the ridge is one of the original centroids.
     xmin, ymin, zmin = lower_bounds
     xmax, ymax, zmax = upper_bounds
     (
@@ -177,145 +223,87 @@ def cvt_archive_3d_plot(archive,
         np.concatenate((centroids, xmin_reflec, ymin_reflec, zmin_reflec,
                         xmax_reflec, ymax_reflec, zmax_reflec)))
 
-    #  print("Centroids:", len(centroids))
-    #  print("Vertices:", vor.vertices)
-
-    eps = 1e-6  # TODO: Parameter
-
+    # Collect the vertices of the ridges of each cell -- the boundary between
+    # two points in a Voronoi diagram is referred to as a ridge; in 3D, the
+    # ridge is a planar polygon; in 2D, the ridge is a line.
     vertices = []
-    for ridge in vor.ridge_vertices:
-        if -1 in ridge:
-            continue
-        p = vor.vertices[ridge]
-        # Using epsilon makes us more tolerant to polygons at the edge of the
-        # plot -- due to numerical errors, surfaces at the edges of the plot
-        # tended to get clipped.
-        if np.any((p < (lower_bounds - eps)) | (p > (upper_bounds + eps))):
-            continue
-        vertices.append(p)
-    ax.add_collection(
-        Poly3DCollection(
-            vertices,
-            edgecolor=[(0.0, 0.0, 0.0, 0.1) for _ in vertices],
-            facecolor=["none" for _ in vertices],
-        ))
+    objs = []  # Also record objective for each ridge so we can color it.
 
-    # TODO: This doesn't need to be list of lists; it can just be a list because
-    # we don't really care about the value of each cell.
-
-    # Collect the vertices and colors for each cell.
-    vertices = [[] for _ in centroids]
-    objs = [[] for _ in centroids]
+    # Map from centroid index to objective.
     pt_to_obj = {elite.index: elite.objective for elite in archive}
-    # We placed the centroids first when creating the Voronoi diagram, so the
-    # centroid points have indices less than len(centroids).
-    max_idx = len(centroids)
+
+    # The points in the Voronoi diagram are indexed by their placement in the
+    # input list. Above, when we called Voronoi, `centroids` were placed first,
+    # so the centroid points all have indices less than len(centroids).
+    max_centroid_idx = len(centroids)
+
     for ridge_points, ridge_vertices in zip(vor.ridge_points,
                                             vor.ridge_vertices):
         a, b = ridge_points
-        # Collect vertices and objectives for each point. We are only interested
-        # in a ridge if it involves one of our centroid points, hence the check
-        # for max_idx.
-        if a < max_idx:
-            vertices[a].append(vor.vertices[ridge_vertices])
-            objs[a].append(pt_to_obj.get(a, np.nan))
-        if b < max_idx:
-            vertices[b].append(vor.vertices[ridge_vertices])
-            objs[b].append(pt_to_obj.get(b, np.nan))
+        # Record the ridge. We are only interested in a ridge if it involves one
+        # of our centroid points, hence the check for max_idx.
+        #
+        # Note that we record the ridge twice if a and b are both valid points,
+        # so we end up plotting the same polygon twice. Unclear how to resolve
+        # this, but it seems to show up fine as is.
+        if a < max_centroid_idx:
+            vertices.append(vor.vertices[ridge_vertices])
+            # NaN indicates the cell was not filled and thus had no objective.
+            objs.append(pt_to_obj.get(a, np.nan))
+        if b < max_centroid_idx:
+            vertices.append(vor.vertices[ridge_vertices])
+            objs.append(pt_to_obj.get(b, np.nan))
 
-    all_vertices = sum(vertices, start=[])
-
-    all_objs = np.concatenate(objs)
-    cmap_idx = ~np.isnan(all_objs)
-    # Collect objs that need to be passed through cmap.
-    cmap_objs = all_objs[cmap_idx]
-
-    # Override objective value range.
-    min_obj = np.nanmax(all_objs) if vmin is None else vmin
-    max_obj = np.nanmin(all_objs) if vmax is None else vmax
-
-    # If the min and max are the same, we set a sensible default range.
-    if min_obj == max_obj:
-        min_obj, max_obj = min_obj - 0.01, max_obj + 0.01
-
+    # Collect and normalize objs that need to be passed through cmap.
+    objs = np.asarray(objs)
+    cmap_idx = ~np.isnan(objs)
+    cmap_objs = objs[cmap_idx]
     normalized_objs = np.clip(
         (np.asarray(cmap_objs) - min_obj) / (max_obj - min_obj), 0.0, 1.0)
 
+    # TODO: facecolor alpha
+
     # Create an array of facecolors that defaults to transparent white.
-    facecolors = np.full((len(all_objs), 4), [1.0, 1.0, 1.0, 0.0])
+    facecolors = np.full((len(objs), 4), [1.0, 1.0, 1.0, 0.0])
     facecolors[cmap_idx] = cmap(normalized_objs)
 
     ax.add_collection(
         Poly3DCollection(
-            all_vertices,
-            edgecolor=[(0.0, 0.0, 0.0, 0.0) for _ in all_vertices],
+            vertices,
+            edgecolor=[ec for _ in vertices],
             facecolor=facecolors,
+            lw=lw,
+            rasterized=rasterized,
         ))
 
-    # TODO: Remove earlier collection call?
-
-    #  # Calculate objective value for each region. `vor.point_region` contains
-    #  # the region index of each point.
-    #  region_obj = [None] * len(vor.regions)
-    #  min_obj, max_obj = np.inf, -np.inf
-    #  pt_to_obj = {elite.index: elite.objective for elite in archive}
-    #  for pt_idx, region_idx in enumerate(
-    #          vor.point_region[:-4]):  # Exclude faraway_pts.
-    #      if region_idx != -1 and pt_idx in pt_to_obj:
-    #          obj = pt_to_obj[pt_idx]
-    #          min_obj = min(min_obj, obj)
-    #          max_obj = max(max_obj, obj)
-    #          region_obj[region_idx] = obj
-
-    #  # Override objective value range.
-    #  min_obj = min_obj if vmin is None else vmin
-    #  max_obj = max_obj if vmax is None else vmax
-
-    #  # Shade the regions.
-    #  #
-    #  # Note: by default, the first region will be an empty list -- see:
-    #  # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Voronoi.html
-    #  # However, this empty region is ignored by ax.fill since `polygon` is also
-    #  # an empty list in this case.
-    #  for region, objective in zip(vor.regions, region_obj):
-    #      # This check is O(n), but n is typically small, and creating
-    #      # `polygon` is also O(n) anyway.
-    #      if -1 not in region:
-    #          if objective is None:
-    #              color = "white"
-    #          else:
-    #              normalized_obj = np.clip(
-    #                  (objective - min_obj) / (max_obj - min_obj), 0.0, 1.0)
-    #              color = cmap(normalized_obj)
-    #          polygon = vor.vertices[region]
-    #          ax.fill(*zip(*polygon), color=color, ec="k", lw=lw)
-
-    #  # Create a colorbar.
-    #  mappable = ScalarMappable(cmap=cmap)
-    #  mappable.set_clim(min_obj, max_obj)
-
-    #  # Plot the sample points and centroids.
-    #  if plot_samples:
-    #      ax.plot(samples[:, 0], samples[:, 1], "o", c="gray", ms=ms)
+    # Plot the sample points and centroids.
+    if plot_samples:
+        ax.plot(samples[:, 0],
+                samples[:, 1],
+                samples[:, 2],
+                "o",
+                c="grey",
+                ms=ms)
     if plot_centroids:
-        ax.plot(centroids[:, 0], centroids[:, 1], centroids[:, 2], "ko", ms=ms)
+        ax.plot(centroids[:, 0],
+                centroids[:, 1],
+                centroids[:, 2],
+                "o",
+                c="black",
+                ms=ms)
 
-    #  # Create color bar.
-    #  _set_cbar(mappable, ax, cbar, cbar_kwargs)
+    # Create color bar.
+    mappable = ScalarMappable(cmap=cmap)
+    mappable.set_clim(min_obj, max_obj)
+    set_cbar(mappable, ax, cbar, cbar_kwargs)
 
     # TODO: Clean up this point plotting code.
-    # TODO: Account for different axes orders.
 
     # Retrieve data from archive.
-    df = archive.as_pandas()
-    measures_batch = df.measures_batch()
     x = measures_batch[:, 0]
     y = measures_batch[:, 1]
     z = measures_batch[:, 2]
 
-    objective_batch = df.objective_batch()
-    vmin = np.min(objective_batch) if vmin is None else vmin
-    vmax = np.max(objective_batch) if vmax is None else vmax
     #  t = ax.scatter(x,
     #                 y,
     #                 z,
