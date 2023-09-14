@@ -40,7 +40,7 @@ class GradientOperatorEmitter(EmitterBase):
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        sigma0 (float or array-like): Standard deviation of the Gaussian
+        sigma (float or array-like): Standard deviation of the Gaussian
             perturbation used to generate new solutions in ask_dqd().
             Note we assume the Gaussian is diagonal, so if this argument is
             an array, it must be 1D.
@@ -82,7 +82,7 @@ class GradientOperatorEmitter(EmitterBase):
 
     def __init__(self,
                  archive,
-                 sigma0,
+                 sigma,
                  sigma_g,
                  initial_solutions=None,
                  x0=None,
@@ -120,8 +120,8 @@ class GradientOperatorEmitter(EmitterBase):
                               archive.solution_dim, "archive.solution_dim")
 
         self._rng = np.random.default_rng(seed)
-        self._sigma0 = archive.dtype(sigma0) if isinstance(
-            sigma0, (float, np.floating)) else np.array(sigma0)
+        self._sigma = archive.dtype(sigma) if isinstance(
+            sigma, (float, np.floating)) else np.array(sigma)
         self._sigma_g = archive.dtype(sigma_g)
         self._line_sigma = line_sigma
         self._use_isolinedd = operator_type != 'isotropic'
@@ -147,10 +147,10 @@ class GradientOperatorEmitter(EmitterBase):
         return self._x0
 
     @property
-    def sigma0(self):
+    def sigma(self):
         """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
         distribution."""
-        return self._sigma0
+        return self._sigma
 
     @property
     def batch_size(self):
@@ -194,7 +194,7 @@ class GradientOperatorEmitter(EmitterBase):
         if self._use_isolinedd:
             noise = self._rng.normal(
                 loc=0.0,
-                scale=self.sigma0,
+                scale=self.sigma,
                 size=(self.batch_size, self.solution_dim),
             ).astype(self.archive.dtype)
 
@@ -211,7 +211,7 @@ class GradientOperatorEmitter(EmitterBase):
         else:
             noise = self._rng.normal(
                 loc=0.0,
-                scale=self.sigma0,
+                scale=self.sigma,
                 size=(self.batch_size, self.solution_dim),
             ).astype(self.archive.dtype)
 

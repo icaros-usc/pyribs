@@ -439,7 +439,7 @@ CONFIG = {
         "emitters": [{
             "class": GradientOperatorEmitter,
             "kwargs": {
-                "sigma0": 0.5,
+                "sigma": 0.5,
                 "sigma_g": 0.5,
                 "measure_gradients": False,
                 "normalize_grad": False,
@@ -469,7 +469,7 @@ CONFIG = {
         "emitters": [{
             "class": GradientOperatorEmitter,
             "kwargs": {
-                "sigma0": 0.0,
+                "sigma": 0.0,
                 "sigma_g": 10.0,
                 "measure_gradients": True,
                 "normalize_grad": True,
