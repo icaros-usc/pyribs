@@ -49,6 +49,8 @@ def cvt_archive_heatmap(archive,
         .. plot::
             :context: close-figs
 
+            Heatmap of a 2D CVTArchive
+
             >>> import numpy as np
             >>> import matplotlib.pyplot as plt
             >>> from ribs.archives import CVTArchive
@@ -72,6 +74,8 @@ def cvt_archive_heatmap(archive,
 
         .. plot::
             :context: close-figs
+
+            Heatmap of a 1D CVTArchive
 
             >>> import numpy as np
             >>> import matplotlib.pyplot as plt
