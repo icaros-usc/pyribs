@@ -17,6 +17,7 @@
 - Add `rasterized` arg for heatmaps (#359)
 - Support 1D cvt_archive_heatmap ({pr}`362`)
 - Add 3D plots for CVTArchive ({pr}`371`)
+- Add visualization of 3D QDax repertoires ({pr}`372`)
 
 #### Documentation
 
