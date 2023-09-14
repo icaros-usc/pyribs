@@ -58,12 +58,11 @@ def cvt_archive_heatmap(archive,
             >>> # Populate the archive with the negative sphere function.
             >>> archive = CVTArchive(solution_dim=2,
             ...                      cells=100, ranges=[(-1, 1), (-1, 1)])
-            >>> x = y = np.linspace(-1, 1, 100)
-            >>> xxs, yys = np.meshgrid(x, y)
-            >>> xxs, yys = xxs.flatten(), yys.flatten()
-            >>> archive.add(solution_batch=np.stack((xxs, yys), axis=1),
-            ...             objective_batch=-(xxs**2 + yys**2),
-            ...             measures_batch=np.stack((xxs, yys), axis=1))
+            >>> x = np.random.uniform(-1, 1, 10000)
+            >>> y = np.random.uniform(-1, 1, 10000)
+            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
+            ...             objective_batch=-(x**2 + y**2),
+            ...             measures_batch=np.stack((x, y), axis=1))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_heatmap(archive)
@@ -84,7 +83,7 @@ def cvt_archive_heatmap(archive,
             >>> # Populate the archive with the negative sphere function.
             >>> archive = CVTArchive(solution_dim=2,
             ...                      cells=20, ranges=[(-1, 1)])
-            >>> x = np.linspace(-1, 1, 100)
+            >>> x = np.random.uniform(-1, 1, 1000)
             >>> archive.add(solution_batch=np.stack((x, x), axis=1),
             ...             objective_batch=-x**2,
             ...             measures_batch=x[:, None])

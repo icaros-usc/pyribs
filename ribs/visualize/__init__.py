@@ -19,8 +19,8 @@ parameter to these functions.
     ribs.visualize.cvt_archive_heatmap
     ribs.visualize.grid_archive_heatmap
     ribs.visualize.parallel_axes_plot
-    ribs.visualize.qdax_repertoire_heatmap
     ribs.visualize.sliding_boundaries_archive_heatmap
+    ribs.visualize.qdax_repertoire_heatmap
 """
 from ribs.visualize._cvt_archive_3d_plot import cvt_archive_3d_plot
 from ribs.visualize._cvt_archive_heatmap import cvt_archive_heatmap
@@ -35,6 +35,6 @@ __all__ = [
     "cvt_archive_heatmap",
     "grid_archive_heatmap",
     "parallel_axes_plot",
-    "qdax_repertoire_heatmap",
     "sliding_boundaries_archive_heatmap",
+    "qdax_repertoire_heatmap",
 ]

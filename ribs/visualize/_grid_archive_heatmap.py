@@ -36,6 +36,8 @@ def grid_archive_heatmap(archive,
         .. plot::
             :context: close-figs
 
+            Heatmap of a 2D GridArchive
+
             >>> import numpy as np
             >>> import matplotlib.pyplot as plt
             >>> from ribs.archives import GridArchive
@@ -44,18 +46,40 @@ def grid_archive_heatmap(archive,
             >>> archive = GridArchive(solution_dim=2,
             ...                       dims=[20, 20],
             ...                       ranges=[(-1, 1), (-1, 1)])
-            >>> x = y = np.linspace(-1, 1, 100)
-            >>> xxs, yys = np.meshgrid(x, y)
-            >>> xxs, yys = xxs.flatten(), yys.flatten()
-            >>> archive.add(solution_batch=np.stack((xxs, yys), axis=1),
-            ...             objective_batch=-(xxs**2 + yys**2),
-            ...             measures_batch=np.stack((xxs, yys), axis=1))
+            >>> x = np.random.uniform(-1, 1, 10000)
+            >>> y = np.random.uniform(-1, 1, 10000)
+            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
+            ...             objective_batch=-(x**2 + y**2),
+            ...             measures_batch=np.stack((x, y), axis=1))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> grid_archive_heatmap(archive)
             >>> plt.title("Negative sphere function")
             >>> plt.xlabel("x coords")
             >>> plt.ylabel("y coords")
+            >>> plt.show()
+
+        .. plot::
+            :context: close-figs
+
+            Heatmap of a 1D GridArchive
+
+            >>> import numpy as np
+            >>> import matplotlib.pyplot as plt
+            >>> from ribs.archives import GridArchive
+            >>> from ribs.visualize import grid_archive_heatmap
+            >>> # Populate the archive with the negative sphere function.
+            >>> archive = GridArchive(solution_dim=2,
+            ...                       dims=[20], ranges=[(-1, 1)])
+            >>> x = np.random.uniform(-1, 1, 1000)
+            >>> archive.add(solution_batch=np.stack((x, x), axis=1),
+            ...             objective_batch=-x**2,
+            ...             measures_batch=x[:, None])
+            >>> # Plot a heatmap of the archive.
+            >>> plt.figure(figsize=(8, 6))
+            >>> grid_archive_heatmap(archive)
+            >>> plt.title("Negative sphere function with 1D measures")
+            >>> plt.xlabel("x coords")
             >>> plt.show()
 
     Args:
