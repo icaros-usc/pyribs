@@ -24,6 +24,7 @@
 - pip install swig before gymnasium[box2d] in lunar lander tutorial ({pr}`346`)
 - Fix lunar lander dependency issues ({pr}`366`, {pr}`367`)
 - Simplify DQD tutorial imports ({pr}`369`)
+- Improve visualization docs examples ({pr}`372`)
 
 #### Improvements
 
