@@ -43,11 +43,10 @@ def sliding_boundaries_archive_heatmap(archive,
             ...                                    ranges=[(-1, 1), (-1, 1)],
             ...                                    seed=42)
             >>> # Populate the archive with the negative sphere function.
-            >>> rng = np.random.default_rng(seed=10)
-            >>> coords = np.clip(rng.standard_normal((1000, 2)), -1.5, 1.5)
-            >>> archive.add(solution_batch=coords,
-            ...             objective_batch=-np.sum(coords**2, axis=1),
-            ...             measures_batch=coords)
+            >>> xy = np.clip(np.random.standard_normal((1000, 2)), -1.5, 1.5)
+            >>> archive.add(solution_batch=xy,
+            ...             objective_batch=-np.sum(xy**2, axis=1),
+            ...             measures_batch=xy)
             >>> # Plot heatmaps of the archive.
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
             >>> fig.suptitle("Negative sphere function")
