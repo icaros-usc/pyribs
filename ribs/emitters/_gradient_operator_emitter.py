@@ -40,12 +40,6 @@ class GradientOperatorEmitter(EmitterBase):
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        initial_solutions (array-like): An (n, solution_dim) array of solutions
-            to be used when the archive is empty. If this argument is None, then
-            solutions will be sampled from a Gaussian distribution centered at
-            ``x0`` with standard deviation ``sigma``.
-        x0 (array-like): Center of the Gaussian distribution from which to
-            sample solutions when the archive is empty.
         sigma0 (float or array-like): Standard deviation of the Gaussian
             perturbation used to generate new solutions in ask_dqd().
             Note we assume the Gaussian is diagonal, so if this argument is
@@ -55,6 +49,12 @@ class GradientOperatorEmitter(EmitterBase):
             gradients are used, this acts as the standard deviation of the
             Gaussian from which to sample the step size.
             Other wise, this acts as the step size itself.
+        initial_solutions (array-like): An (n, solution_dim) array of solutions
+            to be used when the archive is empty. If this argument is None, then
+            solutions will be sampled from a Gaussian distribution centered at
+            ``x0`` with standard deviation ``sigma``.
+        x0 (array-like): Center of the Gaussian distribution from which to
+            sample solutions when the archive is empty.
         line_sigma (float): the standard deviation of the line Gaussian for
             Iso+LineDD operator.
         measure_gradients (bool): Signals if measure gradients will be used.
@@ -82,10 +82,10 @@ class GradientOperatorEmitter(EmitterBase):
 
     def __init__(self,
                  archive,
+                 sigma0,
+                 sigma_g,
                  initial_solutions=None,
                  x0=None,
-                 sigma0=0.1,
-                 sigma_g=0.05,
                  line_sigma=0.0,
                  measure_gradients=False,
                  normalize_grad=False,
@@ -261,10 +261,7 @@ class GradientOperatorEmitter(EmitterBase):
             sols = offsets + self._parents
         else:
             # Transform the Jacobian
-            if len(self._jacobian_batch.shape) == 3:
-                self._jacobian_batch = np.squeeze(self._jacobian_batch[:,
-                                                                       0:1, :],
-                                                  axis=1)
+            self._jacobian_batch = self._jacobian_batch[:, :1, :].squeeze(1)
             sols = self._parents + self._jacobian_batch * self._sigma_g
 
         return sols
