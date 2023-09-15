@@ -40,6 +40,8 @@ def add_uniform_sphere_2d(archive, x_range, y_range):
     The solutions are the same as the measures (the (x,y) coordinates).
 
     x_range and y_range are tuples of (lower_bound, upper_bound).
+
+    The metadata contains the positive sphere function for the points.
     """
     xxs, yys = np.meshgrid(
         np.linspace(x_range[0], x_range[1], 100),
@@ -47,10 +49,12 @@ def add_uniform_sphere_2d(archive, x_range, y_range):
     )
     xxs, yys = xxs.ravel(), yys.ravel()
     coords = np.stack((xxs, yys), axis=1)
+    sphere = xxs**2 + yys**2
     archive.add(
         solution_batch=coords,
-        objective_batch=-(xxs**2 + yys**2),  # Negative sphere.
+        objective_batch=-sphere,  # Negative sphere.
         measures_batch=coords,
+        metadata_batch=sphere,  # Positive sphere.
     )
 
 
