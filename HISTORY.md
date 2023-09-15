@@ -18,7 +18,7 @@
 - Support 1D cvt_archive_heatmap ({pr}`362`)
 - Add 3D plots for CVTArchive ({pr}`371`)
 - Add visualization of 3D QDax repertoires ({pr}`373`)
-- Enable plotting custom data in visualize functions ({pr}`374`)
+- Enable plotting custom data in visualizations ({pr}`374`)
 
 #### Documentation
 
