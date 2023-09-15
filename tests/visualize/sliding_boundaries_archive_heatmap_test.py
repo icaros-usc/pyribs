@@ -29,10 +29,12 @@ def add_random_sphere(archive, x_range, y_range):
         (x_range[1], y_range[1]),
         (1000, 2),
     )
+    sphere = np.sum(np.square(solutions), axis=1)
     archive.add(
         solution_batch=solutions,
-        objective_batch=-np.sum(np.square(solutions), axis=1),
+        objective_batch=-sphere,
         measures_batch=solutions,
+        metadata_batch=sphere,
     )
 
 
@@ -158,3 +160,13 @@ def test_rasterized(sliding_archive_2d):
     sliding_boundaries_archive_heatmap(sliding_archive_2d,
                                        boundary_lw=1.0,
                                        rasterized=True)
+
+
+@image_comparison(baseline_images=["plot_metadata_with_df"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_plot_metadata_with_df(sliding_archive_2d):
+    plt.figure(figsize=(8, 6))
+    df = sliding_archive_2d.as_pandas(include_metadata=True)
+    df["objective"] = df["metadata"]
+    sliding_boundaries_archive_heatmap(sliding_archive_2d, df=df)
