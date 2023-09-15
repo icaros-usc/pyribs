@@ -156,7 +156,8 @@ def cvt_archive_3d_plot(
             data can be obtained by, for instance, calling
             :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
             resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
-            data must contain columns for index, objective, and measures.
+            data must contain columns for index, objective, and measures. To
+            display a custom metric, replace the "objective" column.
         measure_order (array-like of int): Specifies the axes order for plotting
             the measures. By default, the first measure (measure 0) in the
             archive appears on the x-axis, the second (measure 1) on y-axis, and
