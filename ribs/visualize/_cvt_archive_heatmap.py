@@ -7,7 +7,7 @@ from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 from ribs.visualize._utils import (archive_heatmap_1d, retrieve_cmap, set_cbar,
-                                   validate_heatmap_visual_args)
+                                   validate_df, validate_heatmap_visual_args)
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
@@ -16,6 +16,7 @@ from ribs.visualize._utils import (archive_heatmap_1d, retrieve_cmap, set_cbar,
 def cvt_archive_heatmap(archive,
                         ax=None,
                         *,
+                        df=None,
                         transpose_measures=False,
                         cmap="magma",
                         aspect=None,
@@ -98,6 +99,12 @@ def cvt_archive_heatmap(archive,
         archive (CVTArchive): A 1D or 2D :class:`~ribs.archives.CVTArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
             If ``None``, the current axis will be used.
+        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
+            this argument instead of the data currently in the archive. This
+            data can be obtained by, for instance, calling
+            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
+            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
+            data must contain columns for index, objective, and measures.
         transpose_measures (bool): By default, the first measure in the archive
             will appear along the x-axis, and the second will be along the
             y-axis. To switch this behavior (i.e. to transpose the axes), set
@@ -173,6 +180,9 @@ def cvt_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
 
+    # Retrieve archive data.
+    df = archive.as_pandas() if df is None else validate_df(df)
+
     if archive.measure_dim == 1:
         # Read in pcm kwargs -- the linewidth and edgecolor are overwritten by
         # our arguments.
@@ -194,8 +204,6 @@ def cvt_archive_heatmap(archive,
             # Concatenate upper bound.
             [archive.upper_bounds[0]],
         ))
-
-        df = archive.as_pandas()
 
         # centroid_sort_idx tells us which index to place the centroid at such
         # that it is sorted, i.e., it maps from the indices in the centroid
@@ -279,7 +287,7 @@ def cvt_archive_heatmap(archive,
         # the region index of each point.
         region_obj = [None] * len(vor.regions)
         min_obj, max_obj = np.inf, -np.inf
-        pt_to_obj = {elite.index: elite.objective for elite in archive}
+        pt_to_obj = dict(zip(df.index_batch(), df.objective_batch()))
         for pt_idx, region_idx in enumerate(
                 vor.point_region[:-4]):  # Exclude faraway_pts.
             if region_idx != -1 and pt_idx in pt_to_obj:

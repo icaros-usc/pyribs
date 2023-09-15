@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ribs.visualize._utils import (retrieve_cmap, set_cbar,
+from ribs.visualize._utils import (retrieve_cmap, set_cbar, validate_df,
                                    validate_heatmap_visual_args)
 
 # Matplotlib functions tend to have a ton of args.
@@ -12,6 +12,7 @@ from ribs.visualize._utils import (retrieve_cmap, set_cbar,
 def sliding_boundaries_archive_heatmap(archive,
                                        ax=None,
                                        *,
+                                       df=None,
                                        transpose_measures=False,
                                        cmap="magma",
                                        aspect="auto",
@@ -64,6 +65,12 @@ def sliding_boundaries_archive_heatmap(archive,
             :class:`~ribs.archives.SlidingBoundariesArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
             If ``None``, the current axis will be used.
+        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
+            this argument instead of the data currently in the archive. This
+            data can be obtained by, for instance, calling
+            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
+            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
+            data must contain columns for index, objective, and measures.
         transpose_measures (bool): By default, the first measure in the archive
             will appear along the x-axis, and the second will be along the
             y-axis. To switch this behavior (i.e. to transpose the axes), set
@@ -110,8 +117,8 @@ def sliding_boundaries_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
 
-    # Retrieve data from archive.
-    df = archive.as_pandas()
+    # Retrieve archive data.
+    df = archive.as_pandas() if df is None else validate_df(df)
     measures_batch = df.measures_batch()
     x = measures_batch[:, 0]
     y = measures_batch[:, 1]
