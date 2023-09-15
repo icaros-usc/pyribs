@@ -80,7 +80,7 @@ in pyribs operates as follows:
 
 ## Paper
 
-Two years after the initial release of pyribs, we released a paper which
+Two years after the initial release of pyribs, we released a paper that
 elaborates on the RIBS framework and the design decisions behind pyribs! For
 more information on this paper, see [here](https://pyribs.org/paper).
 
