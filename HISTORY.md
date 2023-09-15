@@ -1,6 +1,6 @@
 # History
 
-## (Upcoming)
+## 0.6.0
 
 ### Changelog
 
