@@ -133,6 +133,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
+      - uses: actions/checkout@v4
       - id: set-matrix
         run: |
           TUTORIALS=($(ls tutorials/*.ipynb tutorials/*/*.ipynb))
