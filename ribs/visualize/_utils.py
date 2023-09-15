@@ -3,6 +3,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ribs.archives import ArchiveDataFrame
+
 
 def retrieve_cmap(cmap):
     """Retrieves colormap from Matplotlib."""
@@ -37,6 +39,17 @@ def validate_heatmap_visual_args(aspect, cbar, measure_dim, valid_dims,
             cbar is None):
         raise ValueError(f"Invalid arg cbar={cbar}; must be 'auto', None, "
                          "or matplotlib.axes.Axes")
+
+
+def validate_df(df):
+    """Helper to validate the df passed into visualization functions."""
+
+    # Cast to an ArchiveDataFrame in case someone passed in a regular DataFrame
+    # or other object.
+    if not isinstance(df, ArchiveDataFrame):
+        df = ArchiveDataFrame(df)
+
+    return df
 
 
 def set_cbar(t, ax, cbar, cbar_kwargs):
@@ -119,5 +132,4 @@ def archive_heatmap_1d(
 
     # Create color bar.
     set_cbar(t, ax, cbar, cbar_kwargs)
-
     return ax

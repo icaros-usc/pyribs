@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ribs.visualize._utils import (archive_heatmap_1d, retrieve_cmap, set_cbar,
-                                   validate_heatmap_visual_args)
+                                   validate_df, validate_heatmap_visual_args)
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
@@ -12,6 +12,7 @@ from ribs.visualize._utils import (archive_heatmap_1d, retrieve_cmap, set_cbar,
 def grid_archive_heatmap(archive,
                          ax=None,
                          *,
+                         df=None,
                          transpose_measures=False,
                          cmap="magma",
                          aspect=None,
@@ -86,6 +87,13 @@ def grid_archive_heatmap(archive,
         archive (GridArchive): A 1D or 2D :class:`~ribs.archives.GridArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
             If ``None``, the current axis will be used.
+        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
+            this argument instead of the data currently in the archive. This
+            data can be obtained by, for instance, calling
+            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
+            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
+            data must contain columns for index, objective, and measures. To
+            display a custom metric, replace the "objective" column.
         transpose_measures (bool): By default, the first measure in the archive
             will appear along the x-axis, and the second will be along the
             y-axis. To switch this behavior (i.e. to transpose the axes), set
@@ -138,8 +146,10 @@ def grid_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
 
+    # Retrieve archive data.
+    df = archive.as_pandas() if df is None else validate_df(df)
+
     if archive.measure_dim == 1:
-        df = archive.as_pandas()
         cell_objectives = np.full(archive.cells, np.nan)
         cell_idx = archive.int_to_grid_index(df.index_batch()).squeeze()
         cell_objectives[cell_idx] = df.objective_batch()
@@ -161,7 +171,6 @@ def grid_archive_heatmap(archive,
 
     elif archive.measure_dim == 2:
         # Retrieve data from archive.
-        df = archive.as_pandas()
         objective_batch = df.objective_batch()
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds

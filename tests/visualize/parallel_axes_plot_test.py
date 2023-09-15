@@ -86,3 +86,13 @@ def test_3d_sorted(grid_archive_3d):
 def test_3d_vertical_cbar(grid_archive_3d):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(grid_archive_3d, cbar_kwargs={"orientation": "vertical"})
+
+
+@image_comparison(baseline_images=["plot_metadata_with_df"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_plot_metadata_with_df(grid_archive_3d):
+    plt.figure(figsize=(8, 6))
+    df = grid_archive_3d.as_pandas(include_metadata=True)
+    df["objective"] = df["metadata"]
+    parallel_axes_plot(grid_archive_3d, df=df)

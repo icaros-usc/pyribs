@@ -5,7 +5,7 @@ from matplotlib.cm import ScalarMappable
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
-from ribs.visualize._utils import (retrieve_cmap, set_cbar,
+from ribs.visualize._utils import (retrieve_cmap, set_cbar, validate_df,
                                    validate_heatmap_visual_args)
 
 
@@ -13,6 +13,7 @@ def cvt_archive_3d_plot(
     archive,
     ax=None,
     *,
+    df=None,
     measure_order=None,
     cmap="magma",
     lw=0.5,
@@ -150,6 +151,13 @@ def cvt_archive_3d_plot(
         archive (CVTArchive): A 3D :class:`~ribs.archives.CVTArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
             If ``None``, we will create a new 3D axis.
+        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
+            this argument instead of the data currently in the archive. This
+            data can be obtained by, for instance, calling
+            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
+            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
+            data must contain columns for index, objective, and measures. To
+            display a custom metric, replace the "objective" column.
         measure_order (array-like of int): Specifies the axes order for plotting
             the measures. By default, the first measure (measure 0) in the
             archive appears on the x-axis, the second (measure 1) on y-axis, and
@@ -208,8 +216,8 @@ def cvt_archive_3d_plot(
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
 
-    # Retrieve data from archive.
-    df = archive.as_pandas()
+    # Retrieve archive data.
+    df = archive.as_pandas() if df is None else validate_df(df)
     objective_batch = df.objective_batch()
     measures_batch = df.measures_batch()
     lower_bounds = archive.lower_bounds
@@ -289,7 +297,7 @@ def cvt_archive_3d_plot(
     objs = []  # Also record objective for each ridge so we can color it.
 
     # Map from centroid index to objective.
-    pt_to_obj = {elite.index: elite.objective for elite in archive}
+    pt_to_obj = dict(zip(df.index_batch(), objective_batch))
 
     # The points in the Voronoi diagram are indexed by their placement in the
     # input list. Above, when we called Voronoi, `centroids` were placed first,
