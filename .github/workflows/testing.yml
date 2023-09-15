@@ -41,10 +41,18 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11"]
         exclude:
-          # To cut down on runtime since Mac seems to take the longest.
+          # Avoid these jobs since they tend to take longer.
+          - os: macos-latest
+            python-version: "3.8"
           - os: macos-latest
             python-version: "3.9"
           - os: macos-latest
+            python-version: "3.10"
+          - os: windows-latest
+            python-version: "3.8"
+          - os: windows-latest
+            python-version: "3.9"
+          - os: windows-latest
             python-version: "3.10"
     runs-on: ${{ matrix.os }}
     steps:
