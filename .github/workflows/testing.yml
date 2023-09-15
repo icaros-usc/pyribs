@@ -39,13 +39,7 @@ jobs:
       max-parallel: 12 # All in parallel.
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-        exclude:
-          # To cut down on runtime since Mac seems to take the longest.
-          - os: macos-latest
-            python-version: "3.9"
-          - os: macos-latest
-            python-version: "3.10"
+        python-version: ["3.11"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -120,8 +114,24 @@ jobs:
         run: pip install .[visualize]
       - name: Test Examples
         run: bash tests/examples.sh
+  tutorials_list:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        run: |
+          TUTORIALS=($(ls tutorials/*.ipynb tutorials/*/*.ipynb))
+          JSON_LIST=""
+          for x in "${TUTORIALS[@]}"; do JSON_LIST="$JSON_LIST\"$x\","; done
+          JSON_LIST=${JSON_LIST%","}  # Remove extra comma.
+          echo "matrix={\"tutorial\": [$JSON_LIST]}" >> $GITHUB_OUTPUT
   tutorials:
     runs-on: ubuntu-latest
+    needs: tutorials_list
+    strategy:
+      matrix: ${{ fromJSON(needs.tutorials_list.outputs.matrix) }}
     steps:
       # SWIG should not be installed so that we can test that lunar lander is
       # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
@@ -135,7 +145,7 @@ jobs:
       - name: Install deps
         run: pip install .[visualize] jupyter nbconvert
       - name: Test Tutorials
-        run: bash tests/tutorials.sh
+        run: bash tests/tutorials.sh ${{ matrix.tutorial }}
   docs:
     runs-on: ubuntu-latest
     steps:

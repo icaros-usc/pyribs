@@ -36,6 +36,7 @@
 - Add GitHub link roles in documentation ({pr}`361`)
 - Refactor argument validation utilities ({pr}`365`)
 - Use Conda envs in all CI jobs ({pr}`368`)
+- Split tutorial CI into multiple jobs ({pr}`375`)
 
 ## 0.5.2
 
