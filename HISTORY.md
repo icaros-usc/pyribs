@@ -9,7 +9,6 @@
 - Drop Python 3.7 support and upgrade dependencies ({pr}`350`)
 - Add visualization of QDax repertoires ({pr}`353`)
 - Improve cvt_archive_heatmap flexibility ({pr}`354`)
-- Speed up 2D cvt_archive_heatmap by order of magnitude ({pr}`355`)
 - Clip Voronoi regions in cvt_archive_heatmap ({pr}`356`)
 - **Backwards-incompatible:** Allow using kwargs for colorbar in
   parallel_axes_plot ({pr}`358`)
@@ -31,6 +30,7 @@
 #### Improvements
 
 - Improve developer workflow with pre-commit ({pr}`351`, {pr}`363`)
+- Speed up 2D cvt_archive_heatmap by order of magnitude ({pr}`355`)
 - Refactor visualize module into multiple files ({pr}`357`)
 - Refactor visualize tests into multiple files ({pr}`370`)
 - Add GitHub link roles in documentation ({pr}`361`)
