@@ -8,6 +8,14 @@
 
 - Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 
+## 0.6.1
+
+### Changelog
+
+#### API
+
+- Import ribs[visualize] in tutorials that need it ({pr}`379`)
+
 ## 0.6.0
 
 ### Changelog
