@@ -1,6 +1,6 @@
 # History
 
-## (Upcoming)
+## 0.6.0
 
 ### Changelog
 
@@ -10,24 +10,34 @@
 - Drop Python 3.7 support and upgrade dependencies ({pr}`350`)
 - Add visualization of QDax repertoires ({pr}`353`)
 - Improve cvt_archive_heatmap flexibility ({pr}`354`)
-- Speed up 2D cvt_archive_heatmap by order of magnitude ({pr}`355`)
 - Clip Voronoi regions in cvt_archive_heatmap ({pr}`356`)
 - **Backwards-incompatible:** Allow using kwargs for colorbar in
   parallel_axes_plot ({pr}`358`)
   - Removes cbar_orientaton and cbar_pad args for parallel_axes_plot
 - Add `rasterized` arg for heatmaps (#359)
+- Support 1D cvt_archive_heatmap ({pr}`362`)
+- Add 3D plots for CVTArchive ({pr}`371`)
+- Add visualization of 3D QDax repertoires ({pr}`373`)
+- Enable plotting custom data in visualizations ({pr}`374`)
 
 #### Documentation
 
 - Use dask instead of multiprocessing for lunar lander tutorial ({pr}`346`)
 - pip install swig before gymnasium[box2d] in lunar lander tutorial ({pr}`346`)
+- Fix lunar lander dependency issues ({pr}`366`, {pr}`367`)
+- Simplify DQD tutorial imports ({pr}`369`)
+- Improve visualization docs examples ({pr}`372`)
 
 #### Improvements
 
 - Improve developer workflow with pre-commit ({pr}`351`, {pr}`363`)
+- Speed up 2D cvt_archive_heatmap by order of magnitude ({pr}`355`)
 - Refactor visualize module into multiple files ({pr}`357`)
+- Refactor visualize tests into multiple files ({pr}`370`)
 - Add GitHub link roles in documentation ({pr}`361`)
 - Refactor argument validation utilities ({pr}`365`)
+- Use Conda envs in all CI jobs ({pr}`368`)
+- Split tutorial CI into multiple jobs ({pr}`375`)
 
 ## 0.5.2
 

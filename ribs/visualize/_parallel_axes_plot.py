@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable
 
-from ribs.visualize._utils import retrieve_cmap, set_cbar
+from ribs.visualize._utils import retrieve_cmap, set_cbar, validate_df
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
@@ -13,6 +13,7 @@ from ribs.visualize._utils import retrieve_cmap, set_cbar
 def parallel_axes_plot(archive,
                        ax=None,
                        *,
+                       df=None,
                        measure_order=None,
                        cmap="magma",
                        linewidth=1.5,
@@ -78,6 +79,13 @@ def parallel_axes_plot(archive,
         archive (ArchiveBase): Any ribs archive.
         ax (matplotlib.axes.Axes): Axes on which to create the plot.
             If ``None``, the current axis will be used.
+        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
+            this argument instead of the data currently in the archive. This
+            data can be obtained by, for instance, calling
+            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
+            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
+            data must contain columns for index, objective, and measures. To
+            display a custom metric, replace the "objective" column.
         measure_order (list of int or list of (int, str)): If this is a list
             of ints, it specifies the axes order for measures (e.g. ``[2, 0,
             1]``). If this is a list of tuples, each tuple takes the form
@@ -155,7 +163,7 @@ def parallel_axes_plot(archive,
         upper_bounds = archive.upper_bounds[cols]
 
     host_ax = plt.gca() if ax is None else ax  # Try to get current axis.
-    df = archive.as_pandas(include_solutions=False)
+    df = archive.as_pandas() if df is None else validate_df(df)
     vmin = df["objective"].min() if vmin is None else vmin
     vmax = df["objective"].max() if vmax is None else vmax
     norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)

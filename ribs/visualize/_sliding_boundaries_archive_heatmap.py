@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ribs.visualize._utils import (retrieve_cmap, set_cbar,
+from ribs.visualize._utils import (retrieve_cmap, set_cbar, validate_df,
                                    validate_heatmap_visual_args)
 
 # Matplotlib functions tend to have a ton of args.
@@ -12,6 +12,7 @@ from ribs.visualize._utils import (retrieve_cmap, set_cbar,
 def sliding_boundaries_archive_heatmap(archive,
                                        ax=None,
                                        *,
+                                       df=None,
                                        transpose_measures=False,
                                        cmap="magma",
                                        aspect="auto",
@@ -43,11 +44,10 @@ def sliding_boundaries_archive_heatmap(archive,
             ...                                    ranges=[(-1, 1), (-1, 1)],
             ...                                    seed=42)
             >>> # Populate the archive with the negative sphere function.
-            >>> rng = np.random.default_rng(seed=10)
-            >>> coords = np.clip(rng.standard_normal((1000, 2)), -1.5, 1.5)
-            >>> archive.add(solution_batch=coords,
-            ...             objective_batch=-np.sum(coords**2, axis=1),
-            ...             measures_batch=coords)
+            >>> xy = np.clip(np.random.standard_normal((1000, 2)), -1.5, 1.5)
+            >>> archive.add(solution_batch=xy,
+            ...             objective_batch=-np.sum(xy**2, axis=1),
+            ...             measures_batch=xy)
             >>> # Plot heatmaps of the archive.
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
             >>> fig.suptitle("Negative sphere function")
@@ -65,6 +65,13 @@ def sliding_boundaries_archive_heatmap(archive,
             :class:`~ribs.archives.SlidingBoundariesArchive`.
         ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
             If ``None``, the current axis will be used.
+        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
+            this argument instead of the data currently in the archive. This
+            data can be obtained by, for instance, calling
+            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
+            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
+            data must contain columns for index, objective, and measures. To
+            display a custom metric, replace the "objective" column.
         transpose_measures (bool): By default, the first measure in the archive
             will appear along the x-axis, and the second will be along the
             y-axis. To switch this behavior (i.e. to transpose the axes), set
@@ -76,7 +83,8 @@ def sliding_boundaries_archive_heatmap(archive,
             :class:`~matplotlib.colors.Colormap` object.
         aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
             height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
-            ``aspect=1``.
+            ``aspect=1``. See :meth:`matplotlib.axes.Axes.set_aspect` for more
+            info.
         ms (float): Marker size for the solutions.
         boundary_lw (float): Line width when plotting the boundaries.
             Set to ``0`` to have no boundaries.
@@ -102,7 +110,7 @@ def sliding_boundaries_archive_heatmap(archive,
     """
     validate_heatmap_visual_args(
         aspect, cbar, archive.measure_dim, [2],
-        "Heatmaps can only be plotted for 2D SlidingBoundariesArchive")
+        "Heatmap can only be plotted for a 2D SlidingBoundariesArchive")
 
     if aspect is None:
         aspect = "auto"
@@ -110,8 +118,8 @@ def sliding_boundaries_archive_heatmap(archive,
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
 
-    # Retrieve data from archive.
-    df = archive.as_pandas()
+    # Retrieve archive data.
+    df = archive.as_pandas() if df is None else validate_df(df)
     measures_batch = df.measures_batch()
     x = measures_batch[:, 0]
     y = measures_batch[:, 1]
