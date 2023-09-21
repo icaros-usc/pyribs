@@ -125,6 +125,9 @@ the repo. To create a tutorial:
    dependencies.
    - Installation cells tend to produce a lot of output. Make sure to clear this
      output in Jupyter lab so that it does not clutter the documentation.
+   - Choose your ribs extra carefully -- in particular, if you use
+     `ribs.visualize` in the tutorial, make sure to use
+     `%pip install ribs[visualize]`.
 1. Before the main loop of the QD algorithm, include a line like
    `total_itrs = 500` (any other integer will work). This line will be replaced
    during testing (see `tests/tutorials.sh`) in order to test that the notebook
