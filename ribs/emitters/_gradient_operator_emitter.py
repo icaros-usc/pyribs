@@ -7,8 +7,8 @@ from ribs.emitters._emitter_base import EmitterBase
 
 
 class GradientOperatorEmitter(EmitterBase):
-    """Generates solutions with a gradient arborescence, with coefficients
-    parameterized by a fixed Gaussian distribution.
+    """Generates solutions by first applying an operator, then applying a
+    gradient arborescence with coefficients parameterized by a fixed Gaussian.
 
     This emitter is from `Fontaine 2021 <https://arxiv.org/abs/2106.03894>`_.
     It proceeds in two stages. The first stage samples a batch of intermediate
