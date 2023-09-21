@@ -17,6 +17,15 @@ class GradientOperatorEmitter(EmitterBase):
     empty and no initial solutions are provided, the sampled solutions will be
     from a Gaussian centered at ``x0``.
 
+    Optionally, an additional operator, Iso+LineDD
+    (`Vassiliades 2018 <https://arxiv.org/abs/1804.03906>`_), can be applied to
+    the intermediate solutions in the first stage by setting
+    ``operator_type='iso_line_dd'``.
+    The operator samples an additional batch of archive solutions to form a
+    line in parameter space starting from the intermediate solutions.
+    A zero-mean Gaussian interpolation along the line is then applied to the
+    intermediate solutions, with standard deviation ``line_sigma``.
+
     The second stage creates new solutions by branching from each of the
     intermediate solutions. It leverages the gradient information of the
     objective and measure functions, generating a new solution from each
@@ -212,6 +221,7 @@ class GradientOperatorEmitter(EmitterBase):
                 self._batch_size).solution_batch - parents
 
             line_gaussian = self._rng.normal(
+                loc=0.0,
                 scale=self._line_sigma,
                 size=(self._batch_size, 1),
             ).astype(self.archive.dtype)
