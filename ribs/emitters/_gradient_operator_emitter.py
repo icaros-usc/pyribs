@@ -10,21 +10,34 @@ class GradientOperatorEmitter(EmitterBase):
     """Generates solutions with a gradient arborescence, with coefficients
     parameterized by a fixed Gaussian distribution.
 
-    This emitter originates in `Fontaine 2021
-    <https://arxiv.org/abs/2106.03894>`_. It leverages the gradient information
-    of the objective and measure functions, generating new solutions around a
-    *solution point* :math:`\\boldsymbol{\\theta}` using *gradient
-    arborescence*, with coefficients drawn from a Gaussian distribution.
+    This emitter is from `Fontaine 2021 <https://arxiv.org/abs/2106.03894>`_.
+    It proceeds in two stages. The first stage samples a batch of intermediate
+    solutions from the archive and (optionally) applies Gaussian perturbation
+    with zero mean and fixed standard deviation ``sigma``. If the archive is
+    empty and no initial solutions are provided, the sampled solutions will be
+    from a Gaussian centered at ``x0``.
+
+    The second stage creates new solutions by branching from each of the
+    intermediate solutions. It leverages the gradient information of the
+    objective and measure functions, generating a new solution from each
+    *solution point* :math:`\\boldsymbol{\\theta_i}` using *gradient
+    arborescence*. The gradient coefficients :math:`\\boldsymbol{c_i}` are drawn
+    from a zero-centered Gaussian distribution with standard deviation
+    ``sigma_g``.  Note that the objective gradient coefficient is forced to be
+    non-negative by taking its absolute value :math:`|c_{i,0}|`.
+
     Essentially, this means that the emitter samples coefficients
     :math:`\\boldsymbol{c_i} \\sim
-    \\mathcal{N}(\\boldsymbol{\\mu}, \\boldsymbol{\\Sigma})`
-    and creates new solutions :math:`\\boldsymbol{\\theta'_i}` according to
+    \\mathcal{N}(\\boldsymbol{0}, \\boldsymbol{\\sigma_g}I)`
+    and creates new solutions :math:`\\boldsymbol{\\theta'_i}` by updating the
+    intermediate solutions :math:`\\boldsymbol{\\theta_i}` from the first stage
+    according to:
 
     .. math::
 
-        \\boldsymbol{\\theta'_i} \\gets \\boldsymbol{\\theta} +
-            |c_{i,0}| \\boldsymbol{\\nabla} f(\\boldsymbol{\\theta}) +
-            \\sum_{j=1}^k c_{i,j}\\boldsymbol{\\nabla}m_j(\\boldsymbol{\\theta})
+        \\boldsymbol{\\theta'_i} \\gets \\boldsymbol{\\theta_i} +
+        |c_{i,0}| \\boldsymbol{\\nabla} f(\\boldsymbol{\\theta_i}) +
+        \\sum_{j=1}^k c_{i,j}\\boldsymbol{\\nabla}m_j(\\boldsymbol{\\theta_i})
 
     Where :math:`k` is the number of measures, and
     :math:`\\boldsymbol{\\nabla} f(\\boldsymbol{\\theta})` and
@@ -32,9 +45,6 @@ class GradientOperatorEmitter(EmitterBase):
     and measure gradients of the solution point :math:`\\boldsymbol{\\theta}`,
     respectively.
 
-    The coefficients :math:`\\boldsymbol{c_i}` are sampled from a fixed
-    multivariate Gaussian distribution, with the objective gradient coefficient
-    forced to be non-negative by taking its absolute value :math:`|c_{i,0}|`.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -255,7 +265,8 @@ class GradientOperatorEmitter(EmitterBase):
                 scale=self._sigma_g,
                 size=self._jacobian_batch.shape[:2],
             )
-            noise[:, 0] = np.abs(noise[:, 0])
+            noise[:, 0] = np.abs(
+                noise[:, 0])  # obj coefficient forced to be non-negative
             noise = np.expand_dims(noise, axis=2)
             offsets = np.sum(self._jacobian_batch * noise, axis=1)
             sols = offsets + self._parents
