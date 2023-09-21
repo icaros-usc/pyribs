@@ -35,6 +35,9 @@ The supported algorithms are:
 - `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, where half (7) of
   the emitter are using TwoStageRandomDirectionRanker and half (8) are
   TwoStageImprovementRanker.
+- `og_map_elites`: GridArchive with GradientOperatorEmitter, does not use
+  measure gradients.
+- `omg_mega`: GridArchive with GradientOperatorEmitter, uses measure gradients.
 - `cma_mega`: GridArchive with GradientArborescenceEmitter.
 - `cma_mega_adam`: GridArchive with GradientArborescenceEmitter using Adam
   Optimizer.
@@ -83,7 +86,8 @@ import tqdm
 
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           GradientArborescenceEmitter, IsoLineEmitter)
+                           GradientArborescenceEmitter, GradientOperatorEmitter,
+                           IsoLineEmitter)
 from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
@@ -411,6 +415,66 @@ CONFIG = {
                 "restart_rule": "basic"
             },
             "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "og_map_elites": {
+        "dim": 1_000,
+        "iters": 10_000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": True,
+        # Divide by 2 since half of the 36 solutions are used in ask_dqd(), and
+        # the other half are used in ask().
+        "batch_size": 36 // 2,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [{
+            "class": GradientOperatorEmitter,
+            "kwargs": {
+                "sigma": 0.5,
+                "sigma_g": 0.5,
+                "measure_gradients": False,
+                "normalize_grad": False,
+            },
+            "num_emitters": 1
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "omg_mega": {
+        "dim": 1_000,
+        "iters": 10_000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": True,
+        # Divide by 2 since half of the 36 solutions are used in ask_dqd(), and
+        # the other half are used in ask().
+        "batch_size": 36 // 2,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "threshold_min": -np.inf
+            }
+        },
+        "emitters": [{
+            "class": GradientOperatorEmitter,
+            "kwargs": {
+                "sigma": 0.0,
+                "sigma_g": 10.0,
+                "measure_gradients": True,
+                "normalize_grad": True,
+            },
+            "num_emitters": 1
         }],
         "scheduler": {
             "class": Scheduler,
@@ -790,8 +854,8 @@ def sphere_main(algorithm,
 
     # Plot metrics.
     print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")
-    for metric in metrics:
-        plt.plot(metrics[metric]["x"], metrics[metric]["y"])
+    for metric, values in metrics.items():
+        plt.plot(values["x"], values["y"])
         plt.title(metric)
         plt.xlabel("Iteration")
         plt.savefig(

@@ -16,8 +16,9 @@ inheriting from :class:`~ribs.emitters.EmitterBase`.
     :toctree:
 
     ribs.emitters.EvolutionStrategyEmitter
-    ribs.emitters.GradientArborescenceEmitter
     ribs.emitters.GaussianEmitter
+    ribs.emitters.GradientArborescenceEmitter
+    ribs.emitters.GradientOperatorEmitter
     ribs.emitters.IsoLineEmitter
     ribs.emitters.EmitterBase
 """
@@ -26,12 +27,14 @@ from ribs.emitters._evolution_strategy_emitter import EvolutionStrategyEmitter
 from ribs.emitters._gaussian_emitter import GaussianEmitter
 from ribs.emitters._gradient_arborescence_emitter import \
     GradientArborescenceEmitter
+from ribs.emitters._gradient_operator_emitter import GradientOperatorEmitter
 from ribs.emitters._iso_line_emitter import IsoLineEmitter
 
 __all__ = [
     "EvolutionStrategyEmitter",
-    "GradientArborescenceEmitter",
     "GaussianEmitter",
+    "GradientArborescenceEmitter",
+    "GradientOperatorEmitter",
     "IsoLineEmitter",
     "EmitterBase",
 ]
