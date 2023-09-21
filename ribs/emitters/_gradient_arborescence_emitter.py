@@ -46,6 +46,11 @@ class GradientArborescenceEmitter(EmitterBase):
         calling :meth:`ask` and :meth:`tell` to communicate the gradient
         information to the emitter.
 
+    See Also:
+
+        Our DQD tutorial goes into detail on how to use this emitter:
+        :doc:`/tutorials/tom_cruise_dqd`
+
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
