@@ -162,7 +162,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         ArchiveBase.__init__(
             self,
             solution_dim=solution_dim,
-            cells=np.product(self._dims),
+            cells=np.prod(self._dims),
             measure_dim=len(self._dims),
             qd_score_offset=qd_score_offset,
             seed=seed,
