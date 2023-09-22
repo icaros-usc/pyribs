@@ -10,6 +10,8 @@
 
 ## 0.6.2
 
+Small patch release due to installation issues in our tutorials.
+
 ### Changelog
 
 #### API
