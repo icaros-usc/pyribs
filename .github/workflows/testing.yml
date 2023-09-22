@@ -143,7 +143,10 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install deps
-        run: pip install .[visualize] jupyter nbconvert
+        run: pip install jupyter nbconvert
+      - name: Replace pyribs installation with local installation
+        run: |
+          sed -ri 's/(\%pip install .*)ribs(.*)/\1.\2/g' ${{ matrix.tutorial }}
       - name: Test Tutorials
         run: bash tests/tutorials.sh ${{ matrix.tutorial }}
   docs:
