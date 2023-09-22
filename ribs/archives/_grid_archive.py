@@ -76,7 +76,7 @@ class GridArchive(ArchiveBase):
         ArchiveBase.__init__(
             self,
             solution_dim=solution_dim,
-            cells=np.product(self._dims),
+            cells=np.prod(self._dims),
             measure_dim=len(self._dims),
             learning_rate=learning_rate,
             threshold_min=threshold_min,
