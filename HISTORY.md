@@ -1,13 +1,5 @@
 # History
 
-## 0.7.0 (Forthcoming)
-
-### Changelog
-
-#### API
-
-- Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
-
 ## 0.6.2
 
 Small patch release due to installation issues in our tutorials.
