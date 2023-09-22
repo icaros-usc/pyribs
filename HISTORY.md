@@ -1,5 +1,15 @@
 # History
 
+## 0.6.3
+
+Small patch release due to deprecation issues.
+
+### Changelog
+
+#### Improvements
+
+- Replace np.product with np.prod due to deprecation ({pr}`385`)
+
 ## 0.6.2
 
 Small patch release due to installation issues in our tutorials.
