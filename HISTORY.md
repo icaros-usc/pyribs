@@ -8,6 +8,10 @@
 
 - Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 
+#### Improvements
+
+- Test pyribs installation in tutorials ({pr}`384`)
+
 ## 0.6.2
 
 Small patch release due to installation issues in our tutorials.
