@@ -1,6 +1,6 @@
 # History
 
-## (Forthcoming)
+## 0.7.0 (Forthcoming)
 
 ### Changelog
 
@@ -8,13 +8,21 @@
 
 - Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 
-## 0.6.1
+## 0.6.2
 
 ### Changelog
 
 #### API
 
 - Import ribs[visualize] in tutorials that need it ({pr}`379`)
+
+#### Improvements
+
+- Switch to a branch-based release model ({pr}`382`)
+
+## 0.6.1
+
+(This release was removed)
 
 ## 0.6.0
 
