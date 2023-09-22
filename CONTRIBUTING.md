@@ -238,7 +238,7 @@ from `master` into the corresponding release branch.
    corresponding minor version, e.g., for `0.6.2`, check out `release/0.6.0`.
 1. On the release branch, cherry-pick the commit for the PR you just created.
    Also cherry pick any other bug fixes which need to be released in this patch.
-1. On the release branch, edit `HISTORY.md` to remove any irrelevant history;
+1. On the release branch, edit `HISTORY.md` to remove any irrelevant history,
    e.g., if there are upcoming changes that will be included only in the next
    version.
 1. (Optional) On the release branch, run `make release-test`. This uploads the
