@@ -12,6 +12,14 @@
 
 - Test pyribs installation in tutorials ({pr}`384`)
 
+## 0.6.3
+
+### Changelog
+
+#### Improvements
+
+- Replace np.product with np.prod due to deprecation ({pr}`385`)
+
 ## 0.6.2
 
 Small patch release due to installation issues in our tutorials.
