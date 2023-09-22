@@ -189,46 +189,70 @@ Also, prefer to link to the paper's website, rather than just the PDF.
 
 ### Deploying
 
+We roughly follow the trunk-based release model described
+[here](https://trunkbaseddevelopment.com/branch-for-release/). Namely, we create
+release branches for minor versions (e.g., `release/0.6.x`) from our trunk
+(`master` branch). For patch releases, e.g., `0.6.2`, we cherry pick bug fixes
+from `master`.
+
+#### Minor Versions
+
 1. Create a PR into master after doing the following:
-   1. Switch tutorial links from latest to stable with:
-      ```bash
-      make tutorial_links
-      ```
-      See [#300](https://github.com/icaros-usc/pyribs/pull/300) for why we do
-      this.
-   1. Update the version with `bump2version` by running the following for minor
-      versions:
+   1. Update the version with `bump2version`:
       ```bash
       bump2version minor
       ```
-      or the following for patch versions:
-      ```bash
-      bump2version patch
-      ```
    1. Add all necessary info on the version to `HISTORY.md`.
-1. (Optional) Once the PR has passed CI/CD and been squashed-and-merged into
-   master, check out the squash commit and locally run `make release-test`. This
-   uploads the code to TestPyPI to check that the deployment works. If this
-   fails, make fixes as appropriate.
-1. Once the PR in step 1 and any changes in step 2 have passed CI/CD and been
-   squashed-and-merged into master, locally tag the master branch with a tag
-   like `v0.2.1`, e.g.
+1. Once the PR above has been merged, create a release branch from master called
+   `release/0.<NUM>.x`, e.g., `release/0.6.x`.
+1. On the release branch, switch tutorial links from latest to stable with:
    ```bash
-   git tag v0.2.1 HEAD
+   make tutorial_links
+   ```
+   See [#300](https://github.com/icaros-usc/pyribs/pull/300) for why we do this.
+1. (Optional) On the release branch, run `make release-test`. This uploads the
+   code to TestPyPI to check that the deployment works. If this fails, make
+   fixes as appropriate.
+1. Locally tag the head of the release branch, e.g.,
+   ```bash
+   git tag v0.6.0 HEAD
    ```
 1. Now push the tag with
    ```bash
    git push --tags
    ```
-1. Check that the version was deployed to PyPI. If it failed, delete the tag,
-   make appropriate fixes, and repeat steps 2 and 3.
+1. Check that the version was deployed to PyPI. If it failed, delete the tag and
+   make appropriate fixes on master. Then, cherry pick the fixes into the
+   release branch. Finally, tag the HEAD again and push the tag.
 1. Write up the release on GitHub, and attach it to the tag.
-1. Submit another PR which reverts the changes to the tutorial links.
-   Specifically, while on master, make sure your workspace is clean, then revert
-   the changes with:
-   ```bash
-   git checkout HEAD~ tutorials/
-   ```
-   And commit the result.
 
-Our deployment process may change in the future as pyribs becomes more complex.
+#### Patch Versions
+
+1. Create a PR into master after doing the following:
+   1. Update the version with `bump2version`:
+      ```bash
+      bump2version patch
+      ```
+   1. Add all necessary info on the version to `HISTORY.md`.
+1. Once the PR above has been merged, checkout the release branch for the
+   corresponding minor version, e.g., for `0.6.2`, check out `release/0.6.0`.
+1. On the release branch, cherry-pick the commit for the PR you just created.
+   Also cherry pick any other bug fixes which need to be released in this patch.
+1. On the release branch, edit `HISTORY.md` to remove any irrelevant history;
+   e.g., if there are upcoming changes that will be included only in the next
+   version.
+1. (Optional) On the release branch, run `make release-test`. This uploads the
+   code to TestPyPI to check that the deployment works. If this fails, make
+   fixes as appropriate.
+1. Locally tag the head of the release branch, e.g.,
+   ```bash
+   git tag v0.6.2 HEAD
+   ```
+1. Now push the tag with
+   ```bash
+   git push --tags
+   ```
+1. Check that the version was deployed to PyPI. If it failed, delete the tag and
+   make appropriate fixes on master. Then, cherry pick the fixes into the
+   release branch. Finally, tag the HEAD again and push the tag.
+1. Write up the release on GitHub, and attach it to the tag.
