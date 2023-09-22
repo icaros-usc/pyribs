@@ -193,7 +193,7 @@ We roughly follow the trunk-based release model described
 [here](https://trunkbaseddevelopment.com/branch-for-release/). Namely, we create
 release branches for minor versions (e.g., `release/0.6.x`) from our trunk
 (`master` branch). For patch releases, e.g., `0.6.2`, we cherry pick bug fixes
-from `master`.
+from `master` into the corresponding release branch.
 
 #### Minor Versions
 
