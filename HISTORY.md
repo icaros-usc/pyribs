@@ -14,6 +14,8 @@
 
 ## 0.6.3
 
+Small patch release due to deprecation issues.
+
 ### Changelog
 
 #### Improvements
