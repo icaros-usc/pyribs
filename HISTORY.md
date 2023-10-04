@@ -6,6 +6,7 @@
 
 #### API
 
+- Support Python 3.12 ({pr}`390`)
 - Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 
 #### Improvements
