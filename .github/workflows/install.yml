@@ -3,9 +3,10 @@ name: Install
 
 on:
   schedule:
-    # Every day at 7PM UTC (11AM PST, 12PM PDT)
+    # Every day at 7PM UTC (11AM PST, 12PM PDT).
     - cron: "0 19 * * *"
   push:
+    # Push to the schedule-install branch to test this cron job.
     branches:
       - schedule-install
 
