@@ -3,8 +3,8 @@ name: Install
 
 on:
   schedule:
-    # Every day at 2AM UTC (6PM PST, 7PM PDT)
-    - cron: "0 2 * * *"
+    # Every day at 7PM UTC (11AM PST, 12PM PDT)
+    - cron: "0 19 * * *"
   push:
     branches:
       - schedule-install
@@ -23,14 +23,15 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.11"]
+        command: ["pip install ribs[all]", "conda install pyribs-all"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install core deps
-        run: pip install ribs[all]
-      - name: Test install
+      - name: Install pyribs
+        run: ${{ matrix.command }}
+      - name: Try importing ribs
         run: |
           python -c "import ribs; import ribs.visualize; print(ribs.__version__)"
