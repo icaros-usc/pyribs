@@ -11,6 +11,7 @@
 #### Improvements
 
 - Test pyribs installation in tutorials ({pr}`384`)
+- Add cron job for testing installation ({pr}`389`)
 
 ## 0.6.3
 
