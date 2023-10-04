@@ -5,6 +5,9 @@ on:
   schedule:
     # Every day at 2AM UTC (6PM PST, 7PM PDT)
     - cron: "0 2 * * *"
+  push:
+    branches:
+      - schedule-install
 
 defaults:
   run:
