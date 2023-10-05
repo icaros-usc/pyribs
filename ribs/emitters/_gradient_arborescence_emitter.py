@@ -59,12 +59,14 @@ class GradientArborescenceEmitter(EmitterBase):
         sigma0 (float): Initial step size / standard deviation of the
             distribution of gradient coefficients.
         lr (float): Learning rate for the gradient optimizer.
-        ranker (Callable or str): The ranker is a :class:`RankerBase` object
-            that orders the solutions after they have been evaluated in the
-            environment. This parameter may be a callable (e.g. a class or a
-            lambda function) that takes in no parameters and returns an instance
-            of :class:`RankerBase`, or it may be a full or abbreviated ranker
-            name as described in :mod:`ribs.emitters.rankers`.
+        ranker (Callable or str): The ranker is a
+            :class:`~ribs.emitters.rankers.RankerBase` object that orders the
+            solutions after they have been evaluated in the environment. This
+            parameter may be a callable (e.g. a class or a lambda function) that
+            takes in no parameters and returns an instance of
+            :class:`~ribs.emitters.rankers.RankerBase`, or it may be a full or
+            abbreviated ranker name as described in
+            :mod:`ribs.emitters.rankers`.
         selection_rule ("mu" or "filter"): Method for selecting parents in
             CMA-ES. With "mu" selection, the first half of the solutions will be
             selected as parents, while in "filter", any solutions that were
@@ -87,13 +89,13 @@ class GradientArborescenceEmitter(EmitterBase):
             :mod:`ribs.emitters.opt` for the arguments allowed by each
             optimizer. Note that we already pass in ``theta0`` and ``lr``.
         es (Callable or str): The evolution strategy is an
-            :class:`EvolutionStrategyBase` object that is used to adapt the
-            distribution from which new gradient coefficients are sampled. This
-            parameter may be a callable (e.g. a class or a lambda function) that
-            takes in the parameters of :class:`EvolutionStrategyBase` along with
-            kwargs provided by the ``es_kwargs`` argument, or it may be a full
-            or abbreviated optimizer name as described in
-            :mod:`ribs.emitters.opt`.
+            :class:`~ribs.emitters.opt.EvolutionStrategyBase` object that is
+            used to adapt the distribution from which new solutions are sampled.
+            This parameter may be a callable (e.g. a class or a lambda function)
+            that takes in the parameters of
+            :class:`~ribs.emitters.opt.EvolutionStrategyBase` along with kwargs
+            provided by the ``es_kwargs`` argument, or it may be a full or
+            abbreviated optimizer name as described in :mod:`ribs.emitters.opt`.
         es_kwargs (dict): Additional arguments to pass to the evolution
             strategy optimizer. See the evolution-strategy-based optimizers in
             :mod:`ribs.emitters.opt` for the arguments allowed by each
