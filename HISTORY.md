@@ -12,6 +12,7 @@
 
 - Test pyribs installation in tutorials ({pr}`384`)
 - Add cron job for testing installation ({pr}`389`)
+- Fix broken cross-refs in docs ({pr}`393`)
 
 ## 0.6.3
 
