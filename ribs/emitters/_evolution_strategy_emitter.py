@@ -23,18 +23,20 @@ class EvolutionStrategyEmitter(EmitterBase):
         x0 (np.ndarray): Initial solution. Must be 1-dimensional.
         sigma0 (float): Initial step size / standard deviation of the
             distribution from which solutions are sampled.
-        ranker (Callable or str): The ranker is a :class:`RankerBase` object
-            that orders the solutions after they have been evaluated in the
-            environment. This parameter may be a callable (e.g. a class or
-            a lambda function) that takes in no parameters and returns an
-            instance of :class:`RankerBase`, or it may be a full or abbreviated
-            ranker name as described in
-            :meth:`ribs.emitters.rankers.get_ranker`.
+        ranker (Callable or str): The ranker is a
+            :class:`~ribs.emitters.rankers.RankerBase` object that orders the
+            solutions after they have been evaluated in the environment. This
+            parameter may be a callable (e.g. a class or a lambda function) that
+            takes in no parameters and returns an instance of
+            :class:`~ribs.emitters.rankers.RankerBase`, or it may be a full or
+            abbreviated ranker name as described in
+            :mod:`ribs.emitters.rankers`.
         es (Callable or str): The evolution strategy is an
-            :class:`EvolutionStrategyBase` object that is used to adapt the
-            distribution from which new solutions are sampled. This parameter
-            may be a callable (e.g. a class or a lambda function) that takes in
-            the parameters of :class:`EvolutionStrategyBase` along with kwargs
+            :class:`~ribs.emitters.opt.EvolutionStrategyBase` object that is
+            used to adapt the distribution from which new solutions are sampled.
+            This parameter may be a callable (e.g. a class or a lambda function)
+            that takes in the parameters of
+            :class:`~ribs.emitters.opt.EvolutionStrategyBase` along with kwargs
             provided by the ``es_kwargs`` argument, or it may be a full or
             abbreviated optimizer name as described in :mod:`ribs.emitters.opt`.
         es_kwargs (dict): Additional arguments to pass to the evolution

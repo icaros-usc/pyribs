@@ -2,9 +2,10 @@
 
 The rankers implemented in this file are intended to be used with emitters.
 Specifically, a ranker object should be initialized or passed in the emitters.
-The ``Ranker`` object will define the :meth:`rank` method which returns the
-result of a descending argsort of the solutions. It will also define a
-:meth:`reset` method which resets the internal state of the object.
+The ``Ranker`` object will define the :meth:`~RankerBase.rank` method which
+returns the result of a descending argsort of the solutions. It will also define
+a :meth:`~RankerBase.reset` method which resets the internal state of the
+object.
 
 When specifying which ranker to use for each emitter, one could either pass in
 the full name of a ranker, e.g. "ImprovementRanker", or the abbreviated name of
@@ -46,21 +47,21 @@ __all__ = [
 ]
 
 # Define common docstrings
-_args = DocstringComponents(core_args)
+_ARGS = DocstringComponents(core_args)
 
-_rank_args = f"""
+_RANK_ARGS = f"""
 Args:
     emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker``
         object belongs to.
     archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
         when creating and inserting solutions.
     rng (numpy.random.Generator): A random number generator.
-{_args.solution_batch}
-{_args.objective_batch}
-{_args.measures_batch}
-{_args.status_batch}
-{_args.value_batch}
-{_args.metadata_batch}
+{_ARGS.solution_batch}
+{_ARGS.objective_batch}
+{_ARGS.measures_batch}
+{_ARGS.status_batch}
+{_ARGS.value_batch}
+{_ARGS.metadata_batch}
 
 Returns:
     tuple(numpy.ndarray, numpy.ndarray): the first array (shape
@@ -71,7 +72,7 @@ Returns:
     the number of values that the rank function used.
 """
 
-_reset_args = """
+_RESET_ARGS = """
 Args:
     emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker``
         object belongs to.
@@ -87,7 +88,7 @@ class RankerBase(ABC):
     Every ranker has a :meth:`rank` method that returns a list of indices
     that indicate how the solutions should be ranked and a :meth:`reset` method
     that resets the internal state of the ranker
-    (e.g. in :class:`ribs.emitters.rankers._random_direction_ranker`).
+    (e.g. in :class:`~ribs.emitters.rankers.RandomDirectionRanker`).
 
     Child classes are only required to override :meth:`rank`.
     """
@@ -102,7 +103,7 @@ class RankerBase(ABC):
     rank.__doc__ = f"""
 Generates a batch of indices that represents an ordering of ``solution_batch``.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
     def reset(self, emitter, archive, rng):
@@ -112,7 +113,7 @@ Generates a batch of indices that represents an ordering of ``solution_batch``.
     reset.__doc__ = f"""
 Resets the internal state of the ranker.
 
-{_reset_args}
+{_RESET_ARGS}
    """
 
 
@@ -139,7 +140,7 @@ class ImprovementRanker(RankerBase):
     rank.__doc__ = f"""
 Generates a list of indices that represents an ordering of solutions.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
 
@@ -179,7 +180,7 @@ class TwoStageImprovementRanker(RankerBase):
     rank.__doc__ = f"""
 Generates a list of indices that represents an ordering of solutions.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
 
@@ -222,7 +223,7 @@ class RandomDirectionRanker(RankerBase):
     rank.__doc__ = f"""
 Ranks the solutions based on projection onto a direction in the archive.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
     def reset(self, emitter, archive, rng):
@@ -240,7 +241,7 @@ Gaussian is isotropic, there is equal probability for any direction. The
 direction is then scaled to the archive bounds so that it is a random archive
 direction.
 
-{_reset_args}
+{_RESET_ARGS}
    """
 
 
@@ -288,7 +289,7 @@ class TwoStageRandomDirectionRanker(RankerBase):
 Ranks the solutions first by whether they are added, then by their projection
 onto a random direction in the archive.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
     def reset(self, emitter, archive, rng):
@@ -316,7 +317,7 @@ class ObjectiveRanker(RankerBase):
     rank.__doc__ = f"""
 Ranks the solutions based on their objective values.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
 
@@ -345,7 +346,7 @@ class TwoStageObjectiveRanker(RankerBase):
 Ranks the solutions based on their objective values, while prioritizing newly
 added solutions.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
 
