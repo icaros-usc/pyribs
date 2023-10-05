@@ -1,8 +1,12 @@
 # pyribs
 
-|             Website              |                     Source                     |                    Docs                    |                    Paper                     |                                                                   Twitter                                                                    |
-| :------------------------------: | :--------------------------------------------: | :----------------------------------------: | :------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------: |
-| [pyribs.org](https://pyribs.org) | [GitHub](https://github.com/icaros-usc/pyribs) | [docs.pyribs.org](https://docs.pyribs.org) | [pyribs.org/paper](https://pyribs.org/paper) | [![Twitter](https://img.shields.io/badge/twitter-%231DA1F2.svg?&style=flat-square&logo=twitter&logoColor=white)](https://twitter.com/pyribs) |
+|                                                        Discord                                                        |                     Mailing List                     |                                                                   Twitter                                                                    |
+| :-------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------: |
+| [![](https://dcbadge.vercel.app/api/server/QxhcJSqZ8G?compact=true&style=flat-square)](https://discord.gg/QxhcJSqZ8G) | [Google Groups](https://groups.google.com/g/pyribs/) | [![Twitter](https://img.shields.io/badge/twitter-%231DA1F2.svg?&style=flat-square&logo=twitter&logoColor=white)](https://twitter.com/pyribs) |
+
+|             Website              |                     Source                     |                    Docs                    |                    Paper                     |
+| :------------------------------: | :--------------------------------------------: | :----------------------------------------: | :------------------------------------------: |
+| [pyribs.org](https://pyribs.org) | [GitHub](https://github.com/icaros-usc/pyribs) | [docs.pyribs.org](https://docs.pyribs.org) | [pyribs.org/paper](https://pyribs.org/paper) |
 
 |                                                       PyPI                                                        |                                                               Conda                                                                |                                                                                                      CI/CD                                                                                                       |                                                                   Docs Status                                                                    |
 | :---------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -14,6 +18,18 @@ framework for QD optimization. Pyribs is also the official implementation of
 Covariance Matrix Adaptation MAP-Elites (CMA-ME), Covariance Matrix Adaptation
 MAP-Elites via a Gradient Arborescence (CMA-MEGA), Covariance Matrix Adaptation
 MAP-Annealing (CMA-MAE), and scalable variants of CMA-MAE.
+
+## Community
+
+**Join the
+[Pyribs Announcements mailing list](https://groups.google.com/g/pyribs/)** for
+infrequent updates (less than 1/month) on the status of the project and new
+releases.
+
+Need some help? Want to ask if pyribs is right for your project? Have a question
+that is not quite a bug and not quite a feature request?
+
+**Join the [community Discord](https://discord.gg/QxhcJSqZ8G)!**
 
 ## Overview
 
@@ -38,7 +54,7 @@ framework. RIBS divides a QD algorithm into three components:
 - One or more **emitters**, where each emitter is an algorithm which generates
   new candidate solutions and responds to feedback about how the solutions were
   evaluated and how they were inserted into the archive.
-- A **scheduler** which controls the interaction of the **archive** and
+- A **scheduler** that controls the interaction of the **archive** and
   **emitters**. The **scheduler** also provides an interface for requesting new
   candidate solutions and telling the algorithm how candidates performed.
 
@@ -63,7 +79,7 @@ In contrast to other QD libraries, pyribs is "bare-bones." For example, like
 fixed-dimensional continuous domains. Focusing on this one commonly-occurring
 problem allows us to optimize the library for performance as well as ease of
 use. Refer to the list of [additional QD libraries](#additional-qd-libraries)
-below if you need greater performance or have additional use cases.
+below if you need to handle additional use cases.
 
 Following the RIBS framework (shown in the figure below), a standard algorithm
 in pyribs operates as follows:
@@ -78,38 +94,34 @@ in pyribs operates as follows:
 
 ![The RIBS framework](readme_assets/ribs.png)
 
-## Paper
+## Installation
 
-Two years after the initial release of pyribs, we released a paper that
-elaborates on the RIBS framework and the design decisions behind pyribs! For
-more information on this paper, see [here](https://pyribs.org/paper).
+pyribs supports Python 3.8 and above. The vast majority of users can install
+pyribs by running:
 
-## Citation
-
-If you use pyribs in your research, please consider citing our
-[GECCO 2023 paper](https://dl.acm.org/doi/10.1145/3583131.3590374) as follows.
-Also consider citing any algorithms you use as shown
-[below](#citing-algorithms-in-pyribs).
-
+```bash
+pip install ribs[visualize]
 ```
-@inproceedings{10.1145/3583131.3590374,
-  author = {Tjanaka, Bryon and Fontaine, Matthew C and Lee, David H and Zhang, Yulun and Balam, Nivedit Reddy and Dennler, Nathaniel and Garlanka, Sujay S and Klapsis, Nikitas Dimitri and Nikolaidis, Stefanos},
-  title = {Pyribs: A Bare-Bones Python Library for Quality Diversity Optimization},
-  year = {2023},
-  isbn = {9798400701191},
-  publisher = {Association for Computing Machinery},
-  address = {New York, NY, USA},
-  url = {https://doi.org/10.1145/3583131.3590374},
-  doi = {10.1145/3583131.3590374},
-  abstract = {Recent years have seen a rise in the popularity of quality diversity (QD) optimization, a branch of optimization that seeks to find a collection of diverse, high-performing solutions to a given problem. To grow further, we believe the QD community faces two challenges: developing a framework to represent the field's growing array of algorithms, and implementing that framework in software that supports a range of researchers and practitioners. To address these challenges, we have developed pyribs, a library built on a highly modular conceptual QD framework. By replacing components in the conceptual framework, and hence in pyribs, users can compose algorithms from across the QD literature; equally important, they can identify unexplored algorithm variations. Furthermore, pyribs makes this framework simple, flexible, and accessible, with a user-friendly API supported by extensive documentation and tutorials. This paper overviews the creation of pyribs, focusing on the conceptual framework that it implements and the design principles that have guided the library's development. Pyribs is available at https://pyribs.org},
-  booktitle = {Proceedings of the Genetic and Evolutionary Computation Conference},
-  pages = {220–229},
-  numpages = {10},
-  keywords = {framework, quality diversity, software library},
-  location = {Lisbon, Portugal},
-  series = {GECCO '23}
-}
+
+The command above includes the `visualize` extra. If you will not be using the
+pyribs visualization tools, you can install the base version of pyribs with:
+
+```bash
+pip install ribs
 ```
+
+For more specific installation commands (e.g., installing from Conda or
+installing from source), visit the
+[installation selector](https://pyribs.org/#installation) on our website.
+
+To test your installation, import pyribs and print the version with this
+command:
+
+```bash
+python -c "import ribs; print(ribs.__version__)"
+```
+
+You should see a version number in the output.
 
 ## Usage
 
@@ -179,44 +191,40 @@ plt.show()
 
 ![Sphere heatmap](readme_assets/sphere_heatmap.png)
 
-For more information, refer to the [documentation](https://docs.pyribs.org/).
-
-## Installation
-
-pyribs supports Python 3.8 and above. Earlier Python versions may work but are
-not officially supported. To find the installation command for your system
-(including for installing from source), visit the
-[installation selector](https://pyribs.org/#installation) on our website.
-
-To test your installation, import pyribs and print the version with this
-command:
-
-```bash
-python -c "import ribs; print(ribs.__version__)"
-```
-
-You should see a version number in the output.
-
 ## Documentation
 
-See here for the documentation: <https://docs.pyribs.org>
+**The documentation is available online [here](https://docs.pyribs.org/). We
+suggest that new users start with the
+[tutorials](https://docs.pyribs.org/en/stable/tutorials.html).**
 
-To serve the documentation locally, clone the repo and install the development
-requirements with
+## Paper and Citation
 
-```bash
-pip install -e .[dev]
+Two years after the initial release of pyribs, we released a paper that
+elaborates on the RIBS framework and the design decisions behind pyribs. For
+more information on this paper, see [here](https://pyribs.org/paper). If you use
+pyribs in your research, please consider citing this paper as follows. Also
+consider citing any algorithms you use as shown
+[below](#citing-algorithms-in-pyribs).
+
 ```
-
-Then run
-
-```bash
-make servedocs
+@inproceedings{10.1145/3583131.3590374,
+  author = {Tjanaka, Bryon and Fontaine, Matthew C and Lee, David H and Zhang, Yulun and Balam, Nivedit Reddy and Dennler, Nathaniel and Garlanka, Sujay S and Klapsis, Nikitas Dimitri and Nikolaidis, Stefanos},
+  title = {Pyribs: A Bare-Bones Python Library for Quality Diversity Optimization},
+  year = {2023},
+  isbn = {9798400701191},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3583131.3590374},
+  doi = {10.1145/3583131.3590374},
+  abstract = {Recent years have seen a rise in the popularity of quality diversity (QD) optimization, a branch of optimization that seeks to find a collection of diverse, high-performing solutions to a given problem. To grow further, we believe the QD community faces two challenges: developing a framework to represent the field's growing array of algorithms, and implementing that framework in software that supports a range of researchers and practitioners. To address these challenges, we have developed pyribs, a library built on a highly modular conceptual QD framework. By replacing components in the conceptual framework, and hence in pyribs, users can compose algorithms from across the QD literature; equally important, they can identify unexplored algorithm variations. Furthermore, pyribs makes this framework simple, flexible, and accessible, with a user-friendly API supported by extensive documentation and tutorials. This paper overviews the creation of pyribs, focusing on the conceptual framework that it implements and the design principles that have guided the library's development. Pyribs is available at https://pyribs.org},
+  booktitle = {Proceedings of the Genetic and Evolutionary Computation Conference},
+  pages = {220–229},
+  numpages = {10},
+  keywords = {framework, quality diversity, software library},
+  location = {Lisbon, Portugal},
+  series = {GECCO '23}
+}
 ```
-
-This will open a window in your browser with the documentation automatically
-loaded. Furthermore, every time you make changes to the documentation, the
-preview will also reload.
 
 ## Contributors
 
@@ -263,7 +271,7 @@ pyribs users include:
 
 ### Publications
 
-For the list of publications which use pyribs, refer to our
+For the list of publications that use pyribs, refer to our
 [Google Scholar entry](https://scholar.google.com/scholar?cites=1780392371068190395).
 
 ### Software
