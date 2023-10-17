@@ -4,14 +4,14 @@
 
 ### Changelog
 
-- Added chunk computation in CVT brute force calculation
-
 #### API
 
 - Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 
 #### Improvements
 
+- Use chunk computation in CVT brute force calculation to reduce memory usage
+  ({pr}`394`)
 - Test pyribs installation in tutorials ({pr}`384`)
 - Add cron job for testing installation ({pr}`389`)
 - Fix broken cross-refs in docs ({pr}`393`)
