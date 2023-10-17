@@ -270,7 +270,7 @@ class CVTArchive(ArchiveBase):
                 expanded_dims[0:min(len(measures_batch), self.chunk_size)] -
                 self.centroids),
                                axis=2)
-            indicies = np.argmin(distances, axis=1).astype(np.int32)
+            indices = np.argmin(distances, axis=1).astype(np.int32)
             for i in range(
                     2,
                     len(measures_batch) // self.chunk_size +
@@ -281,8 +281,8 @@ class CVTArchive(ArchiveBase):
                 current_res = np.argmin(np.sum(np.square(current_batch),
                                                axis=2),
                                         axis=1).astype(np.int32)
-                indicies = np.concatenate((indicies, current_res))
-            return indicies
+                indices = np.concatenate((indices, current_res))
+            return indices
 
         # Brute force distance calculation -- start by taking the difference
         # between each measure i and all the centroids.
