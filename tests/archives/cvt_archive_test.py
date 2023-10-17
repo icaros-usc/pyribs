@@ -136,3 +136,40 @@ def test_add_single_without_overwrite(data, add_mode):
     assert np.isclose(value, low_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
                          data.measures, data.centroid, data.metadata)
+
+
+def test_chunked_calculation_short():
+    """Testing accuracy of chunked computation"""
+    archive = CVTArchive(solution_dim=0,
+                         cells=10,
+                         ranges=[(-1, 1), (-1, 1)],
+                         samples=10,
+                         chunk_size=1000,
+                         chunk_distances=False,
+                         seed=1,
+                         use_kd_tree=False)
+    measure_batch = [[-1, -1], [-.75, -.75], [-.5, -.5], [-.25, -.25], [0, 0],
+                     [.25, .25], [.5, .5], [.75, .75], [1, 1]]
+    closest_centroids = archive.index_of(measure_batch)
+    correct_centroids = [9, 9, 9, 8, 1, 5, 5, 5, 2]
+
+    for i, c in enumerate(closest_centroids):
+        assert c == correct_centroids[i]
+
+
+def test_chunked_calculation_long():  # index_of crashes on input of len 1e8
+    """Testing OOM on chunked computation"""
+    archive = CVTArchive(solution_dim=0,
+                         cells=10,
+                         ranges=[(-1, 1), (-1, 1)],
+                         samples=10,
+                         chunk_size=100000,
+                         chunk_distances=True,
+                         use_kd_tree=False)
+
+    rng = np.random.default_rng()
+    measure_batch = rng.uniform(-1, 1, size=(100000000, 2))
+    measure_batch = [tuple(row) for row in measure_batch]
+    print("Length: ", len(measure_batch))
+    archive.index_of(measure_batch)
+    print("Finished")
