@@ -4,7 +4,6 @@
 
 ### Changelog
 
-
 #### API
 
 - Added chunk computation in CVT brute force calculation ({pr}`394`)
