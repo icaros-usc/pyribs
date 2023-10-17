@@ -4,10 +4,10 @@
 
 ### Changelog
 
-- Added chunk computation in CVT brute force calculation
 
 #### API
 
+- Added chunk computation in CVT brute force calculation ({pr}`394`)
 - Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 
 #### Improvements
