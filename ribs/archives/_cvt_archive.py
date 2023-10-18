@@ -269,22 +269,14 @@ class CVTArchive(ArchiveBase):
             if self._chunk_size is not None and \
             self._chunk_size < measures_batch.shape[
                     0]:  # Compute indices chunks at a time
-                distances = np.sum(
-                    np.square(expanded_measures[0:min(len(measures_batch), self.
-                                                      _chunk_size)] -
-                              self.centroids),
-                    axis=2)
-                indices = [np.argmin(distances, axis=1).astype(np.int32)]
-                for i in range(
-                        2,
-                        np.ceil(len(measures_batch) /
-                                self._chunk_size).astype(int) + 1):
-                    l = (i - 1) * self._chunk_size
-                    r = min(len(measures_batch), i * self._chunk_size)
-                    current_batch = expanded_measures[l:r] - self.centroids
-                    current_res = np.argmin(np.sum(np.square(current_batch),
-                                                   axis=2),
-                                            axis=1).astype(np.int32)
+                indices = []
+                chunks = np.array_split(
+                    expanded_measures,
+                    np.ceil(len(expanded_measures) / self._chunk_size))
+                for _, chunk in enumerate(chunks):
+                    distances = chunk - self.centroids
+                    distances = np.sum(np.square(distances), axis=2)
+                    current_res = np.argmin(distances, axis=1).astype(np.int32)
                     indices.append(current_res)
                 return np.concatenate(tuple(indices))
             else:
