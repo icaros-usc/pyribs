@@ -121,7 +121,7 @@ class CVTArchive(ArchiveBase):
                  dtype=np.float64,
                  samples=100_000,
                  custom_centroids=None,
-                 chunk_size=np.inf,
+                 chunk_size=None,
                  k_means_kwargs=None,
                  use_kd_tree=True,
                  ckdtree_kwargs=None):
@@ -264,32 +264,36 @@ class CVTArchive(ArchiveBase):
         if self._use_kd_tree:
             _, indices = self._centroid_kd_tree.query(measures_batch)
             return indices.astype(np.int32)
-
-        expanded_measures = np.expand_dims(measures_batch, axis=1)
-        if self._chunk_size != np.inf:  # Compute indices chunks at a time
-            distances = np.sum(
-                np.square(expanded_measures[0:min(len(measures_batch), self.
-                                                  _chunk_size)] -
-                          self.centroids),
-                axis=2)
-            indices = [np.argmin(distances, axis=1).astype(np.int32)]
-            for i in range(
-                    2,
-                    np.ceil(len(measures_batch) / self._chunk_size).astype(int)
-                    + 1):
-                l = (i - 1) * self._chunk_size
-                r = min(len(measures_batch), i * self._chunk_size)
-                current_batch = expanded_measures[l:r] - self.centroids
-                current_res = np.argmin(np.sum(np.square(current_batch),
-                                               axis=2),
-                                        axis=1).astype(np.int32)
-                indices.append(current_res)
-            return np.concatenate(tuple(indices))
-
-        # Brute force distance calculation -- start by taking the difference
-        # between each measure i and all the centroids.
-        distances = expanded_measures - self.centroids
-        # Compute the total squared distance -- no need to compute actual
-        # distance with a sqrt.
-        distances = np.sum(np.square(distances), axis=2)
-        return np.argmin(distances, axis=1).astype(np.int32)
+        else:
+            expanded_measures = np.expand_dims(measures_batch, axis=1)
+            if self._chunk_size is not None and \
+            self._chunk_size < measures_batch.shape[
+                    0]:  # Compute indices chunks at a time
+                distances = np.sum(
+                    np.square(expanded_measures[0:min(len(measures_batch), self.
+                                                      _chunk_size)] -
+                              self.centroids),
+                    axis=2)
+                indices = [np.argmin(distances, axis=1).astype(np.int32)]
+                for i in range(
+                        2,
+                        np.ceil(len(measures_batch) /
+                                self._chunk_size).astype(int) + 1):
+                    l = (i - 1) * self._chunk_size
+                    r = min(len(measures_batch), i * self._chunk_size)
+                    current_batch = expanded_measures[l:r] - self.centroids
+                    current_res = np.argmin(np.sum(np.square(current_batch),
+                                                   axis=2),
+                                            axis=1).astype(np.int32)
+                    indices.append(current_res)
+                return np.concatenate(tuple(indices))
+            else:
+                # Brute force distance calculation --
+                # start by taking the difference
+                # between each measure i and all the centroids.
+                distances = expanded_measures - self.centroids
+                # Compute the total squared distance --
+                # no need to compute actual
+                # distance with a sqrt.
+                distances = np.sum(np.square(distances), axis=2)
+                return np.argmin(distances, axis=1).astype(np.int32)
