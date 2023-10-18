@@ -266,9 +266,9 @@ class CVTArchive(ArchiveBase):
             return indices.astype(np.int32)
         else:
             expanded_measures = np.expand_dims(measures_batch, axis=1)
-            if self._chunk_size is not None and \
-            self._chunk_size < measures_batch.shape[
-                    0]:  # Compute indices chunks at a time
+            # Compute indices chunks at a time
+            if (self._chunk_size is not None and
+                    self._chunk_size < measures_batch.shape[0]):
                 distances = np.sum(
                     np.square(expanded_measures[0:min(len(measures_batch), self.
                                                       _chunk_size)] -
