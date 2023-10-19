@@ -273,7 +273,7 @@ class CVTArchive(ArchiveBase):
                 chunks = np.array_split(
                     expanded_measures,
                     np.ceil(len(expanded_measures) / self._chunk_size))
-                for _, chunk in enumerate(chunks):
+                for chunk in chunks:
                     distances = chunk - self.centroids
                     distances = np.sum(np.square(distances), axis=2)
                     current_res = np.argmin(distances, axis=1).astype(np.int32)

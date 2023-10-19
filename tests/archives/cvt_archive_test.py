@@ -140,23 +140,20 @@ def test_add_single_without_overwrite(data, add_mode):
 
 def test_chunked_calculation_short():
     """Testing accuracy of chunked computation"""
-    centroids = [[0.09918738, -0.94488177], [-0.39361034, -0.09300422],
-                 [0.02364325, 0.90092739], [0.65540519, -0.18160173],
-                 [-0.71168077, 0.89729889], [0.50702622, 0.07628663],
-                 [-0.34053657, 0.57685741], [-0.73191661, -0.19377403],
-                 [-0.3763371, -0.1533471], [-0.59308952, -0.47537332]]
+    centroids = [[-1, 1], [0, 1], [1, 1], [-1, 0], [0, 0], [1, 0], [-1, -1],
+                 [0, -1], [1, -1]]
 
     archive = CVTArchive(solution_dim=0,
-                         cells=10,
+                         cells=9,
                          ranges=[(-1, 1), (-1, 1)],
                          samples=10,
                          chunk_size=2,
                          custom_centroids=centroids,
                          use_kd_tree=False)
-    measure_batch = [[-1, -1], [-.75, -.75], [-.5, -.5], [-.25, -.25], [0, 0],
-                     [.25, .25], [.5, .5], [.75, .75], [1, 1]]
+    measure_batch = [[-1, 1], [-1, .9], [-.1, 1], [.9, .9], [-.9, 0], [.1, 0],
+                     [1, 0], [-1, -.9], [.1, -.9], [.9, -.9]]
     closest_centroids = archive.index_of(measure_batch)
-    correct_centroids = [9, 9, 9, 8, 1, 5, 5, 5, 2]
+    correct_centroids = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8]
 
     for i, c in enumerate(closest_centroids):
         assert c == correct_centroids[i]
