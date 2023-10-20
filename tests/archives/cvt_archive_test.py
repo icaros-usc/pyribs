@@ -155,5 +155,4 @@ def test_chunked_calculation_short():
     closest_centroids = archive.index_of(measure_batch)
     correct_centroids = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8]
 
-    for i, c in enumerate(closest_centroids):
-        assert c == correct_centroids[i]
+    assert np.all(closest_centroids == correct_centroids)

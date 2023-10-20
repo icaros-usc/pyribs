@@ -280,12 +280,10 @@ class CVTArchive(ArchiveBase):
                     indices.append(current_res)
                 return np.concatenate(tuple(indices))
             else:
-                # Brute force distance calculation --
-                # start by taking the difference
-                # between each measure i and all the centroids.
+                # Brute force distance calculation -- start by taking the
+                # difference between each measure i and all the centroids.
                 distances = expanded_measures - self.centroids
-                # Compute the total squared distance --
-                # no need to compute actual
-                # distance with a sqrt.
+                # Compute the total squared distance -- no need to compute
+                # actual distance with a sqrt.
                 distances = np.sum(np.square(distances), axis=2)
                 return np.argmin(distances, axis=1).astype(np.int32)
