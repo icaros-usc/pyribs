@@ -136,3 +136,23 @@ def test_add_single_without_overwrite(data, add_mode):
     assert np.isclose(value, low_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
                          data.measures, data.centroid, data.metadata)
+
+
+def test_chunked_calculation_short():
+    """Testing accuracy of chunked computation"""
+    centroids = [[-1, 1], [0, 1], [1, 1], [-1, 0], [0, 0], [1, 0], [-1, -1],
+                 [0, -1], [1, -1]]
+
+    archive = CVTArchive(solution_dim=0,
+                         cells=9,
+                         ranges=[(-1, 1), (-1, 1)],
+                         samples=10,
+                         chunk_size=2,
+                         custom_centroids=centroids,
+                         use_kd_tree=False)
+    measure_batch = [[-1, 1], [-1, .9], [-.1, 1], [.9, .9], [-.9, 0], [.1, 0],
+                     [1, 0], [-1, -.9], [.1, -.9], [.9, -.9]]
+    closest_centroids = archive.index_of(measure_batch)
+    correct_centroids = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+
+    assert np.all(closest_centroids == correct_centroids)
