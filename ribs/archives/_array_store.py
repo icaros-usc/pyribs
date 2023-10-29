@@ -1,4 +1,5 @@
 """Provides ArrayStore."""
+import numpy as np
 
 
 class ArrayStore:
@@ -22,13 +23,37 @@ class ArrayStore:
     :meth:`add` method that inserts entries into the ArrayStore.
 
     Args:
-        field_desc: TODO
-        capacity: TODO
+        field_desc (dict): Description of fields in the array store. The
+            description is a dict mapping from str to tuple of ``(shape,
+            dtype)``. For instance, ``{"objective": ((), np.float32),
+            "measures": ((10,), np.float32)}`` will create an "objective" field
+            with shape ``(capacity,)`` and a "measures" field with shape
+            ``(capacity, 10)``.
+        capacity (int): Total possible cells in the store.
 
     Attributes:
-        _props: TODO
-        _fields: TODO
+        _props: Dict with properties that are common to every ArrayStore.
+
+            * "capacity": Maximum number of cells in the store.
+            * "occupied": Boolean array of size ``(capacity,)`` indicating
+              whether each index has an entry.
+            * "n_occupied": Number of entries currently in the store.
+            * "occupied_list": Array of size ``(capacity,)`` storing the indices
+              of all occupied cells in the store. Only the first ``n_occupied``
+              entries will be valid.
+
+        _fields: Dict holding all the arrays with their data.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, field_desc, capacity):
+        self._props = {
+            "capacity": capacity,
+            "occupied": np.zeros(capacity, dtype=bool),
+            "n_occupied": 0,
+            "occupied_list": np.empty(capacity, dtype=int),
+        }
+
+        self._fields = {}
+        for name, (field_shape, dtype) in field_desc.items():
+            array_shape = (capacity,) + tuple(field_shape)
+            self._fields[name] = np.empty(array_shape, dtype)
