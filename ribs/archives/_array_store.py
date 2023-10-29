@@ -12,9 +12,9 @@ class ArrayStore:
     dimension of ``(capacity, ...)`` and can be of any type.
 
     Since the arrays all share a common first dimension, they also share a
-    common index. For instance, if we :meth:`retrieve` the entries at indices
-    ``[0, 2, 1]``, we would get a dict that contains the objective and measures
-    at indices 0, 2, and 1, e.g.::
+    common index. For instance, if we :meth:`retrieve` the data at indices ``[0,
+    2, 1]``, we would get a dict that contains the objective and measures at
+    indices 0, 2, and 1, e.g.::
 
         {
             "objective": [-1, 3, -5],
@@ -22,7 +22,7 @@ class ArrayStore:
         }
 
     The ArrayStore supports several further operations, in particular a flexible
-    :meth:`add` method that inserts entries into the ArrayStore.
+    :meth:`add` method that inserts data into the ArrayStore.
 
     Args:
         field_desc (dict): Description of fields in the array store. The
@@ -36,13 +36,13 @@ class ArrayStore:
     Attributes:
         _props: Dict with properties that are common to every ArrayStore.
 
-            * "capacity": Maximum number of entries in the store.
+            * "capacity": Maximum number of data entries in the store.
             * "occupied": Boolean array of size ``(capacity,)`` indicating
-              whether each index has an entry.
-            * "n_occupied": Number of entries currently in the store.
+              whether each index has data associated with it.
+            * "n_occupied": Number of data entries currently in the store.
             * "occupied_list": Array of size ``(capacity,)`` listing all
               occupied indices in the store. Only the first ``n_occupied``
-              entries will be valid.
+              elements will be valid.
 
         _fields: Dict holding all the arrays with their data.
     """
@@ -62,18 +62,18 @@ class ArrayStore:
 
     def __len__(self):
         """Number of occupied indices in the store, i.e.g, number of indices
-        that have a corresponding entry."""
+        that have a corresponding data entry."""
         return self._props["n_occupied"]
 
     @property
     def capacity(self):
-        """int: Maximum number of entries in the store."""
+        """int: Maximum number of data entries in the store."""
         return self._props["capacity"]
 
     @property
     def occupied(self):
         """numpy.ndarray: Boolean array of size ``(capacity,)`` indicating
-        whether each index has an entry."""
+        whether each index has an data entry."""
         return self._props["occupied"]
 
     @property
@@ -82,3 +82,54 @@ class ArrayStore:
         store."""
         return readonly(
             self._props["occupied_list"][:self._props["n_occupied"]])
+
+    def retrieve(self, indices):
+        """Collects the data at the given indices.
+
+        Args:
+            indices (array-like): List of indices at which to collect data.
+        Returns:
+            - **occupied**: Array indicating which indices, among those passed,
+              in have an associated data entry. For instance, if ``indices`` is
+              ``[0, 1, 2]`` and only index 2 has data, then ``occupied`` will be
+              ``[False, False, True]``.
+            - **data**: Dict mapping from the field name to the field data at
+              the given indices. For instance, if we have an ``objective`` field
+              and request data at indices ``[4, 1, 0]``, we might get ``data``
+              that looks like ``{"objective": [1.5, 6.0, 2.3]}``. Note that if a
+              given index is not marked as occupied, it can have any data value
+              associated with it. For instance, if index 1 was not occupied,
+              then the 6.0 returned above should be ignored.
+        """
+        occupied = readonly(self._props["occupied"][indices])
+        data = {
+            name: readonly(arr[indices]) for name, arr in self._fields.items()
+        }
+        return occupied, data
+
+    def add(self, indices, new_data, transforms):
+        """Adds new data to the archive at the given indices.
+
+        Raise:
+            ValueError: The final version of ``new_data`` does not have the same
+                keys as the fields of this store.
+        """
+
+        # TODO: Use transforms
+        # pylint: disable = unused-argument
+
+        # TODO
+        add_info = {}
+
+        # Verify that new_data ends up with the correct fields after the
+        # transforms.
+        if new_data.keys() != self._fields.keys():
+            raise ValueError(
+                f"`new_data` had keys {new_data.keys()} but should have the "
+                f"same keys as this ArrayStore, i.e., {self._fields.keys()}")
+
+        # Insert into the ArrayStore.
+        for name, arr in self._fields.items():
+            arr[indices] = new_data[name][indices]
+
+        return add_info
