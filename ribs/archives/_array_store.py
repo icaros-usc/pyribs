@@ -1,5 +1,6 @@
 """Provides ArrayStore."""
 import numpy as np
+from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import readonly
 
@@ -113,6 +114,8 @@ class ArrayStore:
         Raise:
             ValueError: The final version of ``new_data`` does not have the same
                 keys as the fields of this store.
+            ValueError: The final version of ``new_data`` has fields that have a
+                different length than ``indices``.
         """
 
         # TODO: Use transforms
@@ -128,8 +131,25 @@ class ArrayStore:
                 f"`new_data` had keys {new_data.keys()} but should have the "
                 f"same keys as this ArrayStore, i.e., {self._fields.keys()}")
 
+        for name, arr in new_data.items():
+            if len(arr) != len(indices):
+                raise ValueError(
+                    f"In `new_data`, the array for `{name}` has length "
+                    f"{len(arr)} but should be the same length as indices "
+                    f"({len(indices)})")
+
+        # Update occupancy data.
+        unique_indices = np.where(aggregate(indices, 1, func="len") != 0)[0]
+        cur_occupied = self._props["occupied"][unique_indices]
+        new_indices = unique_indices[~cur_occupied]
+        n_occupied = self._props["n_occupied"]
+        self._props["occupied"][new_indices] = True
+        self._props["occupied_list"][n_occupied:n_occupied +
+                                     len(new_indices)] = new_indices
+        self._props["n_occupied"] = n_occupied + len(new_indices)
+
         # Insert into the ArrayStore.
         for name, arr in self._fields.items():
-            arr[indices] = new_data[name][indices]
+            arr[indices] = new_data[name]
 
         return add_info
