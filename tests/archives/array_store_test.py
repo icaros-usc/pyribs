@@ -63,8 +63,8 @@ def test_add_mismatch_indices(store):
         )
 
 
-def test_simple_add_and_retrieve(store):
-    """Add without transforms and then retrieve the data."""
+def test_simple_add_retrieve_clear(store):
+    """Add without transforms, retrieve the data, and clear the archive."""
     store.add(
         [3, 5],
         {
@@ -86,6 +86,12 @@ def test_simple_add_and_retrieve(store):
     assert np.all(data["objective"] == [2.0, 1.0])
     assert np.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
     assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
+
+    store.clear()
+
+    assert len(store) == 0
+    assert np.all(store.occupied == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    assert len(store.occupied_list) == 0
 
 
 def test_add_duplicate_indices(store):

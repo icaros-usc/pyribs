@@ -32,7 +32,7 @@ class ArrayStore:
             "measures": ((10,), np.float32)}`` will create an "objective" field
             with shape ``(capacity,)`` and a "measures" field with shape
             ``(capacity, 10)``.
-        capacity (int): Total possible cells in the store.
+        capacity (int): Total possible entries in the store.
 
     Attributes:
         _props: Dict with properties that are common to every ArrayStore.
@@ -117,12 +117,11 @@ class ArrayStore:
             ValueError: The final version of ``new_data`` has fields that have a
                 different length than ``indices``.
         """
-
-        # TODO: Use transforms
-        # pylint: disable = unused-argument
-
-        # TODO
         add_info = {}
+        for transform in transforms:
+            occupied, cur_data = self.retrieve(indices)
+            indices, new_data, add_info = transform(indices, occupied, cur_data,
+                                                    new_data, add_info)
 
         # Verify that new_data ends up with the correct fields after the
         # transforms.
@@ -131,6 +130,7 @@ class ArrayStore:
                 f"`new_data` had keys {new_data.keys()} but should have the "
                 f"same keys as this ArrayStore, i.e., {self._fields.keys()}")
 
+        # Verify that the array shapes match the indices.
         for name, arr in new_data.items():
             if len(arr) != len(indices):
                 raise ValueError(
@@ -148,8 +148,16 @@ class ArrayStore:
                                      len(new_indices)] = new_indices
         self._props["n_occupied"] = n_occupied + len(new_indices)
 
-        # Insert into the ArrayStore.
+        # Insert into the ArrayStore. Note that we do not assume indices are
+        # unique. Hence, when updating occupancy data above, we computed the
+        # unique indices. In contrast, here we let NumPy's default behavior
+        # handle duplicate indices.
         for name, arr in self._fields.items():
             arr[indices] = new_data[name]
 
         return add_info
+
+    def clear(self):
+        """Removes all entries from the store."""
+        self._props["n_occupied"] = 0  # Effectively clears occupied_list too.
+        self._props["occupied"].fill(False)
