@@ -5,11 +5,17 @@ from ribs.archives import ArrayStore
 
 
 def test_init():
-    ArrayStore(
+    capacity = 10
+    store = ArrayStore(
         {
             "objective": ((), np.float32),
             "measures": ((2,), np.float32),
             "solution": ((10,), np.float32),
         },
-        10,
+        capacity,
     )
+
+    assert len(store) == 0
+    assert store.capacity == capacity
+    assert np.all(~store.occupied)
+    assert len(store.occupied_list) == 0
