@@ -111,6 +111,46 @@ class ArrayStore:
     def add(self, indices, new_data, transforms):
         """Adds new data to the archive at the given indices.
 
+        The indices and new_data are passed through transforms before adding to
+        the archive. The general idea is that these transforms will gradually
+        modify the indices and new_data. For instance, they can add new fields
+        to new_data (new_data may not initially have all the same fields as the
+        archive). Alternatively, they can filter out duplicate indices, eg if
+        multiple entries are being inserted at the same index we can choose one
+        with the best objective.
+
+        The signature of a transform is as follows:
+
+            def transform(indices, new_data, add_info, occupied, cur_data) ->
+                (indices, new_data, add_info):
+
+        Transform parameters:
+
+            * **indices** (array-like): Array of indices at which new_data
+              should be inserted.
+            * **new_data** (dict): New data for the given indices. Maps from
+              field name to the array of new data for that field.
+            * **add_info** (dict): Information to return to the user about the
+              addition process. Example info includes whether each entry was
+              ultimately inserted into the archive, as well as general
+              statistics like update QD score. For the first transform, this
+              will be an empty dict.
+            * **occupied** (array-like): Whether the given indices are currently
+              occupied. Same as that given by :meth:`retrieve`.
+            * **cur_data** (dict): Data at the current indices in the archive.
+              Same as that given by :meth:`retrieve`.
+
+        Transform outputs:
+
+            * **indices** (array-like): Modified indices.
+            * **new_data** (dict): Modified new_data. At the end of the
+              transforms, it should have the same keys as the store.
+            * **add_info** (dict): Modified add_info.
+
+        Args:
+            indices (array-like): Initial list of indices for addition.
+            new_data (dict): Initial data for addition.
+            transforms (list): List of transforms on the data to be added.
         Raise:
             ValueError: The final version of ``new_data`` does not have the same
                 keys as the fields of this store.
@@ -120,8 +160,8 @@ class ArrayStore:
         add_info = {}
         for transform in transforms:
             occupied, cur_data = self.retrieve(indices)
-            indices, new_data, add_info = transform(indices, occupied, cur_data,
-                                                    new_data, add_info)
+            indices, new_data, add_info = transform(indices, new_data, add_info,
+                                                    occupied, cur_data)
 
         # Verify that new_data ends up with the correct fields after the
         # transforms.
@@ -161,3 +201,26 @@ class ArrayStore:
         """Removes all entries from the store."""
         self._props["n_occupied"] = 0  # Effectively clears occupied_list too.
         self._props["occupied"].fill(False)
+
+    def as_dict(self):
+        """Returns the data in the ArrayStore as a one-level dictionary.
+
+        To collapse the dict, we prefix each key with ``props.`` or ``fields.``,
+        so the result looks as follows::
+
+            {
+              "props.capacity": ...,
+              "props.occupied": ...,
+              ...
+              "fields.objective": ...,
+            }
+
+        Returns:
+            dict: See description above.
+        """
+        d = {}
+        for name, prop in self._props.items():
+            d[f"props.{name}"] = prop
+        for name, arr in self._fields.items():
+            d[f"fields.{name}"] = arr
+        return d
