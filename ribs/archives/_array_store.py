@@ -1,8 +1,14 @@
 """Provides ArrayStore."""
+import pickle as pkl
+from contextlib import nullcontext
+from pathlib import Path
+
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import readonly
+
+_FORMATS = ["npz", "npz_compressed", "pkl"]
 
 
 class ArrayStore:
@@ -259,3 +265,112 @@ class ArrayStore:
                 arr = readonly(arr.view())
             d[f"fields.{name}"] = arr
         return d
+
+    def save(self, file, fmt=None):
+        """Saves the store to a given file.
+
+        Supported formats are:
+
+        * `"npz"`: Saves to the `.npz` file format with :func:`numpy.savez`
+        * `"npz_compressed"`: Saves to a compressed `.npz` file format with
+          :func:`numpy.savez_compressed`
+        * `"pkl"`: Saves to a pickle file with :func:`pickle.dump`
+
+        .. note::
+
+            Internally, this method calls :meth:`as_dict` and saves the
+            resulting dictionary to a file. If you need a format that is not
+            supported here, you can save the dict from :meth:`as_dict`. To
+            reload ArrayStore, load the dict from your format and then pass the
+            dict into :meth:`load`.
+
+        Args:
+            file (str, pathlib.Path, file): Filename or file object for saving
+                the data. We do not modify the filename to include the
+                extension.
+            fmt (str): File format for saving the data.
+        Raises:
+            ValueError: Unsupported format.
+        """
+        d = self.as_dict()
+
+        if fmt == "npz":
+            np.savez(file, **d)
+        elif fmt == "npz_compressed":
+            np.savez_compressed(file, **d)
+        elif fmt == "pkl":
+            with (open(file, "wb") if isinstance(file, (str, Path)) else
+                  nullcontext(file)) as file_obj:
+                pkl.dump(d, file_obj)
+        else:
+            raise ValueError(f"Unsupported value `{fmt}` for fmt. Must be "
+                             f"one of {_FORMATS}")
+
+    @staticmethod
+    def load(file, fmt=None, allow_pickle=False):
+        """Loads the ArrayStore from a dict or file.
+
+        Args:
+            file (dict, str, pathlib.Path, file): Data to load. Either a dict
+                like that output by :meth:`as_dict`; a path to a file; or a file
+                object. In the case of a file object, ``fmt`` must be passed
+                (see :meth:`save` for supported formats).
+            fmt (str): Format for the file. If not passed in, we will infer the
+                format from the extension of ``file``.
+            allow_pickle (bool): Only applicable if using ``npz`` or
+                ``npz_compressed`` format and the store contains object arrays.
+                In this case, pickle is necessary since the object arrays are
+                saved with pickle (see :meth:`numpy.load` for more info).
+        Raises:
+            ValueError: Could not infer ``fmt`` from ``file`` as there is no
+                extension.
+            ValueError: The loaded props dict has the wrong keys.
+        """
+
+        if isinstance(file, dict):
+            data = file
+        else:
+            # Load dict from file.
+
+            if isinstance(file, (str, Path)):
+                file = Path(file)
+                if fmt is None:
+                    fmt = file.suffix[1:]
+                    if fmt == "":
+                        raise ValueError(
+                            f"Could not infer fmt from file `{file}`. Please "
+                            "pass the fmt arg.")
+
+            # Now file is either a Path or a file-like object.
+
+            if fmt in ["npz", "npz_compressed"]:
+                data = dict(np.load(file, allow_pickle=allow_pickle))
+            elif fmt == "pkl":
+                with (open(file, "rb") if isinstance(file, (str, Path)) else
+                      nullcontext(file)) as file_obj:
+                    data = pkl.load(file_obj)
+
+        # Load the store. Here, we create a store with no data in it.
+        # pylint: disable = protected-access
+        store = ArrayStore({}, 0)
+
+        props = {
+            name[len("props."):]: arr
+            for name, arr in data.items()
+            if name.startswith("props.")
+        }
+        if props.keys() != store._props.keys():
+            raise ValueError(
+                f"Expected props to have keys {store._props.keys()} but "
+                f"only found {props.keys()}")
+
+        fields = {
+            name[len("fields."):]: arr
+            for name, arr in data.items()
+            if name.startswith("fields.")
+        }
+
+        store._props = props
+        store._fields = fields
+
+        return store
