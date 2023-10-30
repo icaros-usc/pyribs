@@ -217,3 +217,36 @@ def test_as_dict(store):
     assert np.all(d["fields.objective"][[3, 5]] == [1.0, 2.0])
     assert np.all(d["fields.measures"][[3, 5]] == [[1.0, 2.0], [3.0, 4.0]])
     assert np.all(d["fields.solution"][[3, 5]] == [np.zeros(10), np.ones(10)])
+
+
+def test_from_dict_invalid_props(store):
+    d = store.as_dict()
+    del d["props.capacity"]
+    with pytest.raises(ValueError):
+        ArrayStore.from_dict(d)
+
+
+def test_from_dict(store):
+    store.add(
+        [3, 5],
+        {
+            "objective": [1.0, 2.0],
+            "measures": [[1.0, 2.0], [3.0, 4.0]],
+            "solution": [np.zeros(10), np.ones(10)],
+        },
+        [],  # Empty transforms.
+    )
+
+    new_store = ArrayStore.from_dict(store.as_dict())
+
+    assert len(new_store) == 2
+    assert np.all(new_store.occupied == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
+    assert np.all(np.sort(new_store.occupied_list) == [3, 5])
+
+    occupied, data = new_store.retrieve([5, 3])
+
+    assert np.all(occupied == [True, True])
+    assert data.keys() == set(["objective", "measures", "solution"])
+    assert np.all(data["objective"] == [2.0, 1.0])
+    assert np.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
+    assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
