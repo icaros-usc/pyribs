@@ -7,6 +7,16 @@ from ribs.archives import ArrayStore
 # pylint: disable = redefined-outer-name
 
 
+def test_init_invalid_field():
+    with pytest.raises(ValueError):
+        ArrayStore(
+            {
+                "index": ((), np.float32),
+            },
+            10,
+        )
+
+
 def test_init():
     capacity = 10
     store = ArrayStore(
@@ -196,7 +206,7 @@ def test_resize_to_double_capacity(store):
     assert np.all(store._fields["objective"][[3, 5]] == [1.0, 2.0])
 
 
-def test_as_dict(store):
+def test_as_raw_dict(store):
     store.add(
         [3, 5],
         {
@@ -208,7 +218,7 @@ def test_as_dict(store):
         [],  # Empty transforms.
     )
 
-    d = store.as_dict()
+    d = store.as_raw_dict()
 
     assert d.keys() == set([
         "props.capacity",
@@ -228,14 +238,14 @@ def test_as_dict(store):
     assert np.all(d["fields.solution"][[3, 5]] == [np.zeros(10), np.ones(10)])
 
 
-def test_from_dict_invalid_props(store):
-    d = store.as_dict()
+def test_from_raw_dict_invalid_props(store):
+    d = store.as_raw_dict()
     del d["props.capacity"]
     with pytest.raises(ValueError):
-        ArrayStore.from_dict(d)
+        ArrayStore.from_raw_dict(d)
 
 
-def test_from_dict(store):
+def test_from_raw_dict(store):
     store.add(
         [3, 5],
         {
@@ -247,7 +257,7 @@ def test_from_dict(store):
         [],  # Empty transforms.
     )
 
-    new_store = ArrayStore.from_dict(store.as_dict())
+    new_store = ArrayStore.from_raw_dict(store.as_raw_dict())
 
     assert len(new_store) == 2
     assert np.all(new_store.occupied == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
@@ -260,3 +270,44 @@ def test_from_dict(store):
     assert np.all(data["objective"] == [2.0, 1.0])
     assert np.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
     assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
+
+
+def test_as_pandas(store):
+    store.add(
+        [3, 5],
+        {
+            "objective": [1.0, 2.0],
+            "measures": [[1.0, 2.0], [3.0, 4.0]],
+            "solution": [np.zeros(10), np.ones(10)],
+        },
+        {},  # Empty add_info.
+        [],  # Empty transforms.
+    )
+
+    df = store.as_pandas()
+
+    assert (df.columns == [
+        "index",
+        "objective",
+        "measures_0",
+        "measures_1",
+        "solution_0",
+        "solution_1",
+        "solution_2",
+        "solution_3",
+        "solution_4",
+        "solution_5",
+        "solution_6",
+        "solution_7",
+        "solution_8",
+        "solution_9",
+    ]).all()
+    assert (df.dtypes == [int] + [np.float32] * 13).all()
+    assert len(df) == 2
+
+    row0 = np.concatenate(([3, 1.0, 1.0, 2.0], np.zeros(10)))
+    row1 = np.concatenate(([5, 2.0, 3.0, 4.0], np.ones(10)))
+
+    # Either permutation.
+    assert (((df.loc[0] == row0).all() and (df.loc[1] == row1).all()) or
+            ((df.loc[0] == row1).all() and (df.loc[1] == row0).all()))

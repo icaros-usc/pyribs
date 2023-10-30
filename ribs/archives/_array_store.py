@@ -1,6 +1,9 @@
 """Provides ArrayStore."""
+from collections import OrderedDict
+
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
+from pandas import DataFrame
 
 from ribs._utils import readonly
 
@@ -46,6 +49,10 @@ class ArrayStore:
               elements will be valid.
 
         _fields: Dict holding all the arrays with their data.
+
+    Raises:
+        ValueError: One of the fields in ``field_desc`` has an invalid name
+            (currently, "index" is the only invalid name).
     """
 
     def __init__(self, field_desc, capacity):
@@ -58,6 +65,9 @@ class ArrayStore:
 
         self._fields = {}
         for name, (field_shape, dtype) in field_desc.items():
+            if name == "index":
+                raise ValueError(f"`{name}` is an invalid field name.")
+
             array_shape = (capacity,) + tuple(field_shape)
             self._fields[name] = np.empty(array_shape, dtype)
 
@@ -90,6 +100,8 @@ class ArrayStore:
         Args:
             indices (array-like): List of indices at which to collect data.
         Returns:
+            tuple: 2-element tuple consisting of:
+
             - **occupied**: Array indicating which indices, among those passed,
               in have an associated data entry. For instance, if ``indices`` is
               ``[0, 1, 2]`` and only index 2 has data, then ``occupied`` will be
@@ -155,9 +167,9 @@ class ArrayStore:
             add_info (dict): Initial add_info.
             transforms (list): List of transforms on the data to be added.
         Returns:
-            Final ``add_info`` from the transforms. ``new_data`` and ``indices``
-            are not returned; rather, the ``new_data`` is added into the store
-            at ``indices``.
+            dict: Final ``add_info`` from the transforms. ``new_data`` and
+            ``indices`` are not returned; rather, the ``new_data`` is added into
+            the store at ``indices``.
         Raise:
             ValueError: The final version of ``new_data`` does not have the same
                 keys as the fields of this store.
@@ -238,8 +250,8 @@ class ArrayStore:
             self._fields[name] = np.empty(new_shape, old_arr.dtype)
             self._fields[name][:old_capacity] = old_arr
 
-    def as_dict(self):
-        """Returns the data in the ArrayStore as a one-level dictionary.
+    def as_raw_dict(self):
+        """Returns the raw data in the ArrayStore as a one-level dictionary.
 
         To collapse the dict, we prefix each key with ``props.`` or ``fields.``,
         so the result looks as follows::
@@ -266,11 +278,13 @@ class ArrayStore:
         return d
 
     @staticmethod
-    def from_dict(d):
-        """Loads an ArrayStore from a dict.
+    def from_raw_dict(d):
+        """Loads an ArrayStore from a dict of raw info.
 
         Args:
-            d (dict): Dict returned by :meth:`as_dict`.
+            d (dict): Dict returned by :meth:`as_raw_dict`.
+        Returns:
+            ArrayStore: The new ArrayStore created from d.
         Raises:
             ValueError: The loaded props dict has the wrong keys.
         """
@@ -298,3 +312,61 @@ class ArrayStore:
         store._fields = fields
 
         return store
+
+    def as_pandas(self, fields=None):
+        """Creates a DataFrame containing all data entries in the store.
+
+        The returned DataFrame has:
+
+        - 1 column of integers (``np.int32``) for the index, named ``index``.
+        - For fields that are scalars, a single column with the field name. For
+          example, ``objective'' would have a single column called
+          ``"objective"``.
+        - For fields that are 1D arrays, multiple columns with the name suffixed
+          by its index. For instance, if we have a ``measures'' field of length
+          10, we create 10 columns with names ``measures_0``, ``measures_1``,
+          ..., ``measures_9``.
+        - >1D fields are currently not supported.
+
+        In short, the dataframe might look like this:
+
+        +-------+------------+------+------------+
+        | index | measure_0  | ...  | objective  |
+        +=======+============+======+============+
+        |       |            | ...  |            |
+        +-------+------------+------+------------+
+
+        Args:
+            fields (list): List of fields to include. By default, all fields
+                will be included.
+        Returns:
+            pandas.DataFrame: See above.
+        Raises:
+            ValueError: There is a field with >1D data.
+        """
+        if fields is None:
+            fields = self._fields.keys()
+
+        data = OrderedDict()
+        indices = self._props["occupied_list"][:self._props["n_occupied"]]
+
+        # Copy indices so we do not overwrite.
+        data["index"] = np.copy(indices)
+
+        for name in fields:
+            arr = self._fields[name]
+            if len(arr.shape) == 1:  # Scalar entries.
+                data[name] = arr[indices]
+            elif len(arr.shape) == 2:  # 1D array entries.
+                arr = arr[indices]
+                for i in range(arr.shape[1]):
+                    data[f"{name}_{i}"] = arr[:, i]
+            else:
+                raise ValueError(
+                    f"Field `{name}` has shape {arr.shape[1:]} -- "
+                    "cannot convert fields with shape >1D to Pandas")
+
+        return DataFrame(
+            data,
+            copy=False,  # Fancy indexing above already results in copying.
+        )
