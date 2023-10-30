@@ -108,16 +108,18 @@ class ArrayStore:
         }
         return occupied, data
 
-    def add(self, indices, new_data, transforms):
+    def add(self, indices, new_data, add_info, transforms):
         """Adds new data to the archive at the given indices.
 
-        The indices and new_data are passed through transforms before adding to
-        the archive. The general idea is that these transforms will gradually
-        modify the indices and new_data. For instance, they can add new fields
-        to new_data (new_data may not initially have all the same fields as the
-        archive). Alternatively, they can filter out duplicate indices, eg if
-        multiple entries are being inserted at the same index we can choose one
-        with the best objective.
+        The indices, new_data, and add_info are passed through transforms before
+        adding to the archive. The general idea is that these transforms will
+        gradually modify the indices, new_data, and add_info. For instance, they
+        can add new fields to new_data (new_data may not initially have all the
+        same fields as the archive). Alternatively, they can filter out
+        duplicate indices, eg if multiple entries are being inserted at the same
+        index we can choose one with the best objective. As another example, the
+        transforms can add stats to the add_info or delete fields from the
+        add_info.
 
         The signature of a transform is as follows:
 
@@ -150,14 +152,18 @@ class ArrayStore:
         Args:
             indices (array-like): Initial list of indices for addition.
             new_data (dict): Initial data for addition.
+            add_info (dict): Initial add_info.
             transforms (list): List of transforms on the data to be added.
+        Returns:
+            Final ``add_info`` from the transforms. ``new_data`` and ``indices``
+            are not returned; rather, the ``new_data`` is added into the store
+            at ``indices``.
         Raise:
             ValueError: The final version of ``new_data`` does not have the same
                 keys as the fields of this store.
             ValueError: The final version of ``new_data`` has fields that have a
                 different length than ``indices``.
         """
-        add_info = {}
         for transform in transforms:
             occupied, cur_data = self.retrieve(indices)
             indices, new_data, add_info = transform(indices, new_data, add_info,

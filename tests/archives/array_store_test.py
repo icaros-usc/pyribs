@@ -46,6 +46,7 @@ def test_add_wrong_keys(store):
                 "measures": [[1.0, 2.0], [3.0, 4.0]],
                 # Missing `solution` key.
             },
+            {},  # Empty add_info.
             [],  # Empty transforms.
         )
 
@@ -59,6 +60,7 @@ def test_add_mismatch_indices(store):
                 "measures": [[1.0, 2.0], [3.0, 4.0]],
                 "solution": [np.zeros(10), np.ones(10)],
             },
+            {},  # Empty add_info.
             [],  # Empty transforms.
         )
 
@@ -72,6 +74,7 @@ def test_simple_add_retrieve_clear(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
+        {},  # Empty add_info.
         [],  # Empty transforms.
     )
 
@@ -102,6 +105,7 @@ def test_add_duplicate_indices(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
+        {},  # Empty add_info.
         [],  # Empty transforms.
     )
 
@@ -118,6 +122,7 @@ def test_retrieve_duplicate_indices(store):
             "measures": [[3.0, 4.0]],
             "solution": [np.ones(10)],
         },
+        {},  # Empty add_info.
         [],  # Empty transforms.
     )
 
@@ -136,17 +141,19 @@ def test_add_simple_transform(store):
         # pylint: disable = unused-argument
         new_data["objective"] = np.sum(new_data["solution"], axis=1)
         new_data["measures"] = np.asarray(new_data["solution"])[:, :2]
-        return indices, new_data, {"foo": 5}
+        add_info["bar"] = 5
+        return indices, new_data, add_info
 
     add_info = store.add(
         [3, 5],
         {
             "solution": [np.ones(10), 2 * np.ones(10)],
         },
+        {"foo": 4},
         [obj_meas],
     )
 
-    assert add_info == {"foo": 5}
+    assert add_info == {"foo": 4, "bar": 5}
 
     assert len(store) == 2
     assert np.all(store.occupied == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
@@ -174,6 +181,7 @@ def test_resize_to_double_capacity(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
+        {},  # Empty add_info.
         [],  # Empty transforms.
     )
 
@@ -196,6 +204,7 @@ def test_as_dict(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
+        {},  # Empty add_info.
         [],  # Empty transforms.
     )
 
@@ -234,6 +243,7 @@ def test_from_dict(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
+        {},  # Empty add_info.
         [],  # Empty transforms.
     )
 
