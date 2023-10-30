@@ -75,7 +75,7 @@ class ArrayStore:
     def occupied(self):
         """numpy.ndarray: Boolean array of size ``(capacity,)`` indicating
         whether each index has an data entry."""
-        return self._props["occupied"]
+        return readonly(self._props["occupied"])
 
     @property
     def occupied_list(self):
@@ -220,7 +220,11 @@ class ArrayStore:
         """
         d = {}
         for name, prop in self._props.items():
+            if isinstance(prop, np.ndarray):
+                prop = readonly(prop.view())
             d[f"props.{name}"] = prop
         for name, arr in self._fields.items():
+            if isinstance(arr, np.ndarray):
+                arr = readonly(arr.view())
             d[f"fields.{name}"] = arr
         return d
