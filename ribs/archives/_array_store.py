@@ -75,7 +75,7 @@ class ArrayStore:
     def occupied(self):
         """numpy.ndarray: Boolean array of size ``(capacity,)`` indicating
         whether each index has an data entry."""
-        return readonly(self._props["occupied"])
+        return readonly(self._props["occupied"].view())
 
     @property
     def occupied_list(self):
@@ -108,6 +108,7 @@ class ArrayStore:
         }
         return occupied, data
 
+    # TODO: Add cur_add_info
     def add(self, indices, new_data, transforms):
         """Adds new data to the archive at the given indices.
 
@@ -201,6 +202,36 @@ class ArrayStore:
         """Removes all entries from the store."""
         self._props["n_occupied"] = 0  # Effectively clears occupied_list too.
         self._props["occupied"].fill(False)
+
+    def resize(self, capacity):
+        """Resizes the store to the given capacity.
+
+        Args:
+            capacity (int): New capacity.
+        Raises:
+            ValueError: The new capacity is less than or equal to the current
+                capacity.
+        """
+        if capacity <= self._props["capacity"]:
+            raise ValueError(
+                f"New capacity ({capacity}) must be greater than current "
+                f"capacity ({self._props['capacity']}.")
+
+        old_capacity = self._props["capacity"]
+        self._props["capacity"] = capacity
+
+        old_occupied = self._props["occupied"]
+        self._props["occupied"] = np.zeros(capacity, dtype=bool)
+        self._props["occupied"][:old_capacity] = old_occupied
+
+        old_occupied_list = self._props["occupied_list"]
+        self._props["occupied_list"] = np.empty(capacity, dtype=int)
+        self._props["occupied_list"][:old_capacity] = old_occupied_list
+
+        for name, old_arr in self._fields.items():
+            new_shape = (capacity,) + old_arr.shape[1:]
+            self._fields[name] = np.empty(new_shape, old_arr.dtype)
+            self._fields[name][:old_capacity] = old_arr
 
     def as_dict(self):
         """Returns the data in the ArrayStore as a one-level dictionary.

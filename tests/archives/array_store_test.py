@@ -161,6 +161,33 @@ def test_add_simple_transform(store):
     assert np.all(data["solution"] == [np.ones(10), 2 * np.ones(10)])
 
 
+def test_resize_bad_capacity(store):
+    with pytest.raises(ValueError):
+        store.resize(store.capacity)
+
+
+def test_resize_to_double_capacity(store):
+    store.add(
+        [3, 5],
+        {
+            "objective": [1.0, 2.0],
+            "measures": [[1.0, 2.0], [3.0, 4.0]],
+            "solution": [np.zeros(10), np.ones(10)],
+        },
+        [],  # Empty transforms.
+    )
+
+    store.resize(store.capacity * 2)
+
+    assert len(store) == 2
+    assert np.all(store.occupied ==
+                  [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    assert np.all(np.sort(store.occupied_list) == [3, 5])
+
+    # Spot-check the fields.
+    assert np.all(store._fields["objective"][[3, 5]] == [1.0, 2.0])
+
+
 def test_as_dict(store):
     store.add(
         [3, 5],
