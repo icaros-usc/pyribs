@@ -102,22 +102,31 @@ class ArrayStore:
         Returns:
             tuple: 2-element tuple consisting of:
 
-            - **occupied**: Array indicating which indices, among those passed,
-              in have an associated data entry. For instance, if ``indices`` is
+            - **occupied**: Array indicating which indices, among those passed
+              in, have an associated data entry. For instance, if ``indices`` is
               ``[0, 1, 2]`` and only index 2 has data, then ``occupied`` will be
               ``[False, False, True]``.
             - **data**: Dict mapping from the field name to the field data at
               the given indices. For instance, if we have an ``objective`` field
               and request data at indices ``[4, 1, 0]``, we might get ``data``
-              that looks like ``{"objective": [1.5, 6.0, 2.3]}``. Note that if a
-              given index is not marked as occupied, it can have any data value
-              associated with it. For instance, if index 1 was not occupied,
-              then the 6.0 returned above should be ignored.
+              that looks like ``{"index": [4, 1, 0], "objective": [1.5, 6.0,
+              2.3]}``. Observe that we also return the indices as an ``index''
+              entry in the dict.
+
+              Note that if a given index is not marked as occupied, it can have
+              any data value associated with it. For instance, if index 1 was
+              not occupied, then the 6.0 returned above should be ignored.
+
+            All data returned by this method will be a readonly copy, i.e., the
+            data will not update as the store changes.
         """
+        # Note that fancy indexing with indices already creates a copy, so only
+        # indices need to be copied explicitly.
+        indices = np.asarray(indices)
         occupied = readonly(self._props["occupied"][indices])
-        data = {
-            name: readonly(arr[indices]) for name, arr in self._fields.items()
-        }
+        data = {"index": readonly(indices.copy())}
+        for name, arr in self._fields.items():
+            data[name] = readonly(arr[indices])
         return occupied, data
 
     def add(self, indices, new_data, add_info, transforms):
@@ -133,33 +142,33 @@ class ArrayStore:
         transforms can add stats to the add_info or delete fields from the
         add_info.
 
-        The signature of a transform is as follows:
+        The signature of a transform is as follows::
 
             def transform(indices, new_data, add_info, occupied, cur_data) ->
                 (indices, new_data, add_info):
 
         Transform parameters:
 
-            * **indices** (array-like): Array of indices at which new_data
-              should be inserted.
-            * **new_data** (dict): New data for the given indices. Maps from
-              field name to the array of new data for that field.
-            * **add_info** (dict): Information to return to the user about the
-              addition process. Example info includes whether each entry was
-              ultimately inserted into the archive, as well as general
-              statistics like update QD score. For the first transform, this
-              will be an empty dict.
-            * **occupied** (array-like): Whether the given indices are currently
-              occupied. Same as that given by :meth:`retrieve`.
-            * **cur_data** (dict): Data at the current indices in the archive.
-              Same as that given by :meth:`retrieve`.
+        - **indices** (array-like): Array of indices at which new_data should be
+          inserted.
+        - **new_data** (dict): New data for the given indices. Maps from field
+          name to the array of new data for that field.
+        - **add_info** (dict): Information to return to the user about the
+          addition process. Example info includes whether each entry was
+          ultimately inserted into the archive, as well as general statistics
+          like update QD score. For the first transform, this will be an empty
+          dict.
+        - **occupied** (array-like): Whether the given indices are currently
+          occupied. Same as that given by :meth:`retrieve`.
+        - **cur_data** (dict): Data at the current indices in the archive. Same
+          as that given by :meth:`retrieve`.
 
         Transform outputs:
 
-            * **indices** (array-like): Modified indices.
-            * **new_data** (dict): Modified new_data. At the end of the
-              transforms, it should have the same keys as the store.
-            * **add_info** (dict): Modified add_info.
+        - **indices** (array-like): Modified indices.
+        - **new_data** (dict): Modified new_data. At the end of the transforms,
+          it should have the same keys as the store.
+        - **add_info** (dict): Modified add_info.
 
         Args:
             indices (array-like): Initial list of indices for addition.

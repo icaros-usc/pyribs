@@ -95,7 +95,8 @@ def test_simple_add_retrieve_clear(store):
     occupied, data = store.retrieve([5, 3])
 
     assert np.all(occupied == [True, True])
-    assert data.keys() == set(["objective", "measures", "solution"])
+    assert data.keys() == set(["index", "objective", "measures", "solution"])
+    assert np.all(data["index"] == [5, 3])
     assert np.all(data["objective"] == [2.0, 1.0])
     assert np.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
     assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
@@ -139,7 +140,8 @@ def test_retrieve_duplicate_indices(store):
     occupied, data = store.retrieve([3, 3])
 
     assert np.all(occupied == [True, True])
-    assert data.keys() == set(["objective", "measures", "solution"])
+    assert data.keys() == set(["index", "objective", "measures", "solution"])
+    assert np.all(data["index"] == [3, 3])
     assert np.all(data["objective"] == [2.0, 2.0])
     assert np.all(data["measures"] == [[3.0, 4.0], [3.0, 4.0]])
     assert np.all(data["solution"] == [np.ones(10), np.ones(10)])
@@ -172,7 +174,8 @@ def test_add_simple_transform(store):
     occupied, data = store.retrieve([3, 5])
 
     assert np.all(occupied == [True, True])
-    assert data.keys() == set(["objective", "measures", "solution"])
+    assert data.keys() == set(["index", "objective", "measures", "solution"])
+    assert np.all(data["index"] == [3, 5])
     assert np.all(data["objective"] == [10.0, 20.0])
     assert np.all(data["measures"] == [[1.0, 1.0], [2.0, 2.0]])
     assert np.all(data["solution"] == [np.ones(10), 2 * np.ones(10)])
@@ -266,7 +269,8 @@ def test_from_raw_dict(store):
     occupied, data = new_store.retrieve([5, 3])
 
     assert np.all(occupied == [True, True])
-    assert data.keys() == set(["objective", "measures", "solution"])
+    assert data.keys() == set(["index", "objective", "measures", "solution"])
+    assert np.all(data["index"] == [5, 3])
     assert np.all(data["objective"] == [2.0, 1.0])
     assert np.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
     assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
