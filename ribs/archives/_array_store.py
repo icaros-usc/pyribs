@@ -1,4 +1,5 @@
 """Provides ArrayStore."""
+import itertools
 from collections import OrderedDict
 
 import numpy as np
@@ -94,11 +95,14 @@ class ArrayStore:
         return readonly(
             self._props["occupied_list"][:self._props["n_occupied"]])
 
-    def retrieve(self, indices):
+    def retrieve(self, indices, fields=None):
         """Collects the data at the given indices.
 
         Args:
             indices (array-like): List of indices at which to collect data.
+            fields (array-like of str): List of fields to include. By default,
+                all fields will be included. In addition to fields in the store,
+                "index" is also a valid field.
         Returns:
             tuple: 2-element tuple consisting of:
 
@@ -111,7 +115,8 @@ class ArrayStore:
               and request data at indices ``[4, 1, 0]``, we might get ``data``
               that looks like ``{"index": [4, 1, 0], "objective": [1.5, 6.0,
               2.3]}``. Observe that we also return the indices as an ``index''
-              entry in the dict.
+              entry in the dict. The keys in this dict can be modified using the
+              ``fields`` arg.
 
               Note that if a given index is not marked as occupied, it can have
               any data value associated with it. For instance, if index 1 was
@@ -119,26 +124,38 @@ class ArrayStore:
 
             All data returned by this method will be a readonly copy, i.e., the
             data will not update as the store changes.
+
+        Raises:
+            ValueError: Invalid field name provided.
         """
         # Note that fancy indexing with indices already creates a copy, so only
         # indices need to be copied explicitly.
         indices = np.asarray(indices)
         occupied = readonly(self._props["occupied"][indices])
-        data = {"index": readonly(indices.copy())}
-        for name, arr in self._fields.items():
-            data[name] = readonly(arr[indices])
+
+        data = {}
+        fields = (itertools.chain(["index"], self._fields)
+                  if fields is None else fields)
+        for name in fields:
+            if name == "index":
+                data[name] = readonly(np.copy(indices))
+                continue
+            if name not in self._fields:
+                raise ValueError(f"`{name}` is not a field in this ArrayStore.")
+            data[name] = readonly(self._fields[name][indices])
+
         return occupied, data
 
     def add(self, indices, new_data, add_info, transforms):
-        """Adds new data to the archive at the given indices.
+        """Adds new data to the store at the given indices.
 
         The indices, new_data, and add_info are passed through transforms before
-        adding to the archive. The general idea is that these transforms will
+        adding to the store. The general idea is that these transforms will
         gradually modify the indices, new_data, and add_info. For instance, they
         can add new fields to new_data (new_data may not initially have all the
-        same fields as the archive). Alternatively, they can filter out
-        duplicate indices, eg if multiple entries are being inserted at the same
-        index we can choose one with the best objective. As another example, the
+        same fields as the store). Alternatively, they can filter out duplicate
+        indices, eg if multiple entries are being inserted at the same index we
+        can choose one with the best objective. As another example, the
         transforms can add stats to the add_info or delete fields from the
         add_info.
 
@@ -155,13 +172,12 @@ class ArrayStore:
           name to the array of new data for that field.
         - **add_info** (dict): Information to return to the user about the
           addition process. Example info includes whether each entry was
-          ultimately inserted into the archive, as well as general statistics
-          like update QD score. For the first transform, this will be an empty
-          dict.
+          ultimately inserted into the store, as well as general statistics like
+          update QD score. For the first transform, this will be an empty dict.
         - **occupied** (array-like): Whether the given indices are currently
           occupied. Same as that given by :meth:`retrieve`.
-        - **cur_data** (dict): Data at the current indices in the archive. Same
-          as that given by :meth:`retrieve`.
+        - **cur_data** (dict): Data at the current indices in the store. Same as
+          that given by :meth:`retrieve`.
 
         Transform outputs:
 
@@ -322,6 +338,16 @@ class ArrayStore:
 
         return store
 
+    def as_dict(self, fields=None):
+        """Creates a dict containing all data entries in the store.
+
+        Equivalent to calling :meth:`retrieve` with :attr:`occupied_list`.
+
+        Args:
+            fields (array-like of str): See :meth:`retrieve`.
+        """
+        return self.retrieve(self.occupied_list, fields)
+
     def as_pandas(self, fields=None):
         """Creates a DataFrame containing all data entries in the store.
 
@@ -335,7 +361,7 @@ class ArrayStore:
           by its index. For instance, if we have a ``measures'' field of length
           10, we create 10 columns with names ``measures_0``, ``measures_1``,
           ..., ``measures_9``.
-        - >1D fields are currently not supported.
+        - We do not currently support fields with >1D data.
 
         In short, the dataframe might look like this:
 
@@ -346,23 +372,29 @@ class ArrayStore:
         +-------+------------+------+------------+
 
         Args:
-            fields (list): List of fields to include. By default, all fields
-                will be included.
+            fields (array-like of str): List of fields to include. By default,
+                all fields will be included. In addition to fields in the store,
+                "index" is also a valid field.
         Returns:
             pandas.DataFrame: See above.
         Raises:
+            ValueError: Invalid field name provided.
             ValueError: There is a field with >1D data.
         """
-        if fields is None:
-            fields = self._fields.keys()
-
         data = OrderedDict()
         indices = self._props["occupied_list"][:self._props["n_occupied"]]
 
-        # Copy indices so we do not overwrite.
-        data["index"] = np.copy(indices)
+        fields = (itertools.chain(["index"], self._fields)
+                  if fields is None else fields)
 
         for name in fields:
+            if name == "index":
+                data[name] = np.copy(indices)
+                continue
+
+            if name not in self._fields:
+                raise ValueError(f"`{name}` is not a field in this ArrayStore.")
+
             arr = self._fields[name]
             if len(arr.shape) == 1:  # Scalar entries.
                 data[name] = arr[indices]
@@ -377,5 +409,6 @@ class ArrayStore:
 
         return DataFrame(
             data,
-            copy=False,  # Fancy indexing above already results in copying.
+            copy=False,  # Fancy indexing above copies all fields, and
+            # indices is explicitly copied.
         )
