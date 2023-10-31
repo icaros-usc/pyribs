@@ -287,6 +287,10 @@ class ArrayStore:
                     f"{len(arr)} but should be the same length as indices "
                     f"({len(indices)})")
 
+        # Shortcut when there is nothing to add to the store.
+        if len(indices) == 0:
+            return add_info
+
         # Update occupancy data.
         unique_indices = np.where(aggregate(indices, 1, func="len") != 0)[0]
         cur_occupied = self._props["occupied"][unique_indices]
