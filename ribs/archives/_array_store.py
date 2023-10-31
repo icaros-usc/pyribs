@@ -351,6 +351,25 @@ class ArrayStore:
         """
         return self.retrieve(self.occupied_list, fields)[1]
 
+    def iter_entries(self, fields=None):
+        """Creates an iterator over entries in the store.
+
+        Note that this method induces a copy of the data in the store, as it
+        calls :meth:`as_dict`.
+
+        Args:
+            fields (array-like of str): See :meth:`retrieve`.
+        Returns:
+            generator: When iterated over, this generator yields dicts mapping
+                from the fields to the individual entries. For instance, if we
+                had an "objective" field, one entry might look like ``{"index":
+                1, "objective": 6.0}``.
+        """
+        d = self.as_dict(fields)
+        return ({
+            name: arr[i] for name, arr in d.items()
+        } for i in range(self._props["n_occupied"]))
+
     def as_pandas(self, fields=None):
         """Creates a DataFrame containing all data entries in the store.
 
