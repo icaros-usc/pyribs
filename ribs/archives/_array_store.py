@@ -1,12 +1,55 @@
 """Provides ArrayStore."""
 import itertools
 from collections import OrderedDict
+from enum import IntEnum
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 from pandas import DataFrame
 
 from ribs._utils import readonly
+
+
+class Update(IntEnum):
+    """Indices into the updates array in ArrayStore."""
+    ADD = 0
+    CLEAR = 1
+
+
+class ArrayStoreIterator:
+    """An iterator for an ArrayStore's entries."""
+
+    # pylint: disable = protected-access
+
+    def __init__(self, store):
+        self.store = store
+        self.iter_idx = 0
+        self.state = store._props["updates"].copy()
+
+    def __iter__(self):
+        """This is the iterator, so it returns itself."""
+        return self
+
+    def __next__(self):
+        """Raises RuntimeError if the store was modified."""
+        if not np.all(self.state == self.store._props["updates"]):
+            # This check should go first because a call to clear() would clear
+            # _occupied_indices and cause StopIteration to happen early.
+            raise RuntimeError(
+                "ArrayStore was modified with add() or clear() during "
+                "iteration.")
+
+        if self.iter_idx >= len(self.store):
+            raise StopIteration
+
+        idx = self.store._props["occupied_list"][self.iter_idx]
+        self.iter_idx += 1
+
+        d = {"index": idx}
+        for name, arr in self.store._fields.items():
+            d[name] = arr[idx]
+
+        return d
 
 
 class ArrayStore:
@@ -39,7 +82,7 @@ class ArrayStore:
         capacity (int): Total possible entries in the store.
 
     Attributes:
-        _props: Dict with properties that are common to every ArrayStore.
+        _props (dict): Properties that are common to every ArrayStore.
 
             * "capacity": Maximum number of data entries in the store.
             * "occupied": Boolean array of size ``(capacity,)`` indicating
@@ -48,8 +91,10 @@ class ArrayStore:
             * "occupied_list": Array of size ``(capacity,)`` listing all
               occupied indices in the store. Only the first ``n_occupied``
               elements will be valid.
+            * "updates": Int array recording number of calls to functions that
+              modified the store.
 
-        _fields: Dict holding all the arrays with their data.
+        _fields (dict): Holds all the arrays with their data.
 
     Raises:
         ValueError: One of the fields in ``field_desc`` has an invalid name
@@ -62,6 +107,7 @@ class ArrayStore:
             "occupied": np.zeros(capacity, dtype=bool),
             "n_occupied": 0,
             "occupied_list": np.empty(capacity, dtype=int),
+            "updates": np.array([0, 0]),
         }
 
         self._fields = {}
@@ -76,6 +122,24 @@ class ArrayStore:
         """Number of occupied indices in the store, i.e.g, number of indices
         that have a corresponding data entry."""
         return self._props["n_occupied"]
+
+    def __iter__(self):
+        """Iterates over entries in the store.
+
+        When iterated over, this iterator yields dicts mapping from the fields
+        to the individual entries. For instance, if we had an "objective" field,
+        one entry might look like ``{"index": 1, "objective": 6.0}``.
+
+        Example:
+
+            ::
+
+                for entry in store:
+                    entry["index"]
+                    entry["objective"]
+                    ...
+        """
+        return ArrayStoreIterator(self)
 
     @property
     def capacity(self):
@@ -201,6 +265,8 @@ class ArrayStore:
             ValueError: The final version of ``new_data`` has fields that have a
                 different length than ``indices``.
         """
+        self._props["updates"][Update.ADD] += 1
+
         for transform in transforms:
             occupied, cur_data = self.retrieve(indices)
             indices, new_data, add_info = transform(indices, new_data, add_info,
@@ -242,6 +308,7 @@ class ArrayStore:
 
     def clear(self):
         """Removes all entries from the store."""
+        self._props["updates"][Update.CLEAR] += 1
         self._props["n_occupied"] = 0  # Effectively clears occupied_list too.
         self._props["occupied"].fill(False)
 
@@ -286,20 +353,18 @@ class ArrayStore:
               "props.occupied": ...,
               ...
               "fields.objective": ...,
+              ...
             }
 
         Returns:
             dict: See description above.
         """
         d = {}
-        for name, prop in self._props.items():
-            if isinstance(prop, np.ndarray):
-                prop = readonly(prop.view())
-            d[f"props.{name}"] = prop
-        for name, arr in self._fields.items():
-            if isinstance(arr, np.ndarray):
-                arr = readonly(arr.view())
-            d[f"fields.{name}"] = arr
+        for prefix, attr in [("props", self._props), ("fields", self._fields)]:
+            for name, val in attr.items():
+                if isinstance(val, np.ndarray):
+                    val = readonly(val.view())
+                d[f"{prefix}.{name}"] = val
         return d
 
     @staticmethod

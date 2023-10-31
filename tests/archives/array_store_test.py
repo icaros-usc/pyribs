@@ -253,6 +253,7 @@ def test_as_raw_dict(store):
         "props.occupied",
         "props.n_occupied",
         "props.occupied_list",
+        "props.updates",
         "fields.objective",
         "fields.measures",
         "fields.solution",
@@ -261,6 +262,7 @@ def test_as_raw_dict(store):
     assert np.all(d["props.occupied"] == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
     assert d["props.n_occupied"] == 2
     assert np.all(np.sort(d["props.occupied_list"][:2]) == [3, 5])
+    assert np.all(d["props.updates"] == [1, 0])  # 1 add, 0 clear.
     assert np.all(d["fields.objective"][[3, 5]] == [1.0, 2.0])
     assert np.all(d["fields.measures"][[3, 5]] == [[1.0, 2.0], [3.0, 4.0]])
     assert np.all(d["fields.solution"][[3, 5]] == [np.zeros(10), np.ones(10)])
@@ -405,3 +407,96 @@ def test_as_pandas_custom_fields(store):
     # Either permutation.
     assert (((df.loc[0] == row0).all() and (df.loc[1] == row1).all()) or
             ((df.loc[0] == row1).all() and (df.loc[1] == row0).all()))
+
+
+def test_iteration(store):
+    store.add(
+        [3],
+        {
+            "objective": [1.0],
+            "measures": [[1.0, 2.0]],
+            "solution": [np.zeros(10)],
+        },
+        {},  # Empty add_info.
+        [],  # Empty transforms.
+    )
+
+    for entry in store:
+        assert entry.keys() == set(
+            ["index", "objective", "measures", "solution"])
+        assert np.all(entry["index"] == [3])
+        assert np.all(entry["objective"] == [1.0])
+        assert np.all(entry["measures"] == [[1.0, 2.0]])
+        assert np.all(entry["solution"] == [np.zeros(10)])
+
+
+def test_add_during_iteration(store):
+    store.add(
+        [3],
+        {
+            "objective": [1.0],
+            "measures": [[1.0, 2.0]],
+            "solution": [np.zeros(10)],
+        },
+        {},  # Empty add_info.
+        [],  # Empty transforms.
+    )
+
+    # Even with just one entry, adding during iteration should still raise an
+    # error, just like it does in a set.
+    with pytest.raises(RuntimeError):
+        for _ in store:
+            store.add(
+                [4],
+                {
+                    "objective": [2.0],
+                    "measures": [[3.0, 4.0]],
+                    "solution": [np.ones(10)],
+                },
+                {},  # Empty add_info.
+                [],  # Empty transforms.
+            )
+
+
+def test_clear_during_iteration(store):
+    store.add(
+        [3],
+        {
+            "objective": [1.0],
+            "measures": [[1.0, 2.0]],
+            "solution": [np.zeros(10)],
+        },
+        {},  # Empty add_info.
+        [],  # Empty transforms.
+    )
+
+    with pytest.raises(RuntimeError):
+        for _ in store:
+            store.clear()
+
+
+def test_clear_and_add_during_iteration(store):
+    store.add(
+        [3],
+        {
+            "objective": [1.0],
+            "measures": [[1.0, 2.0]],
+            "solution": [np.zeros(10)],
+        },
+        {},  # Empty add_info.
+        [],  # Empty transforms.
+    )
+
+    with pytest.raises(RuntimeError):
+        for _ in store:
+            store.clear()
+            store.add(
+                [4],
+                {
+                    "objective": [2.0],
+                    "measures": [[3.0, 4.0]],
+                    "solution": [np.ones(10)],
+                },
+                {},  # Empty add_info.
+                [],  # Empty transforms.
+            )
