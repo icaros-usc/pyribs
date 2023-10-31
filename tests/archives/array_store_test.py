@@ -147,6 +147,31 @@ def test_retrieve_duplicate_indices(store):
     assert np.all(data["solution"] == [np.ones(10), np.ones(10)])
 
 
+def test_retrieve_invalid_fields(store):
+    with pytest.raises(ValueError):
+        store.retrieve([0, 1], fields=["objective", "foo"])
+
+
+def test_retrieve_custom_fields(store):
+    store.add(
+        [3, 5],
+        {
+            "objective": [1.0, 2.0],
+            "measures": [[1.0, 2.0], [3.0, 4.0]],
+            "solution": [np.zeros(10), np.ones(10)],
+        },
+        {},  # Empty add_info.
+        [],  # Empty transforms.
+    )
+
+    occupied, data = store.retrieve([5, 3], fields=["index", "objective"])
+
+    assert np.all(occupied == [True, True])
+    assert data.keys() == set(["index", "objective"])
+    assert np.all(data["index"] == [5, 3])
+    assert np.all(data["objective"] == [2.0, 1.0])
+
+
 def test_add_simple_transform(store):
 
     def obj_meas(indices, new_data, add_info, occupied, cur_data):
@@ -311,6 +336,41 @@ def test_as_pandas(store):
 
     row0 = np.concatenate(([3, 1.0, 1.0, 2.0], np.zeros(10)))
     row1 = np.concatenate(([5, 2.0, 3.0, 4.0], np.ones(10)))
+
+    # Either permutation.
+    assert (((df.loc[0] == row0).all() and (df.loc[1] == row1).all()) or
+            ((df.loc[0] == row1).all() and (df.loc[1] == row0).all()))
+
+
+def test_as_pandas_invalid_fields(store):
+    with pytest.raises(ValueError):
+        store.as_pandas(fields=["objective", "foo"])
+
+
+def test_as_pandas_custom_fields(store):
+    store.add(
+        [3, 5],
+        {
+            "objective": [1.0, 2.0],
+            "measures": [[1.0, 2.0], [3.0, 4.0]],
+            "solution": [np.zeros(10), np.ones(10)],
+        },
+        {},  # Empty add_info.
+        [],  # Empty transforms.
+    )
+
+    df = store.as_pandas(fields=["objective", "measures"])
+
+    assert (df.columns == [
+        "objective",
+        "measures_0",
+        "measures_1",
+    ]).all()
+    assert (df.dtypes == [np.float32] * 3).all()
+    assert len(df) == 2
+
+    row0 = [1.0, 1.0, 2.0]
+    row1 = [2.0, 3.0, 4.0]
 
     # Either permutation.
     assert (((df.loc[0] == row0).all() and (df.loc[1] == row1).all()) or
