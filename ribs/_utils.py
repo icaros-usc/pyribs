@@ -2,6 +2,27 @@
 import numpy as np
 
 
+def parse_float_dtype(dtype):
+    """Parses a floating point dtype.
+
+    Returns:
+        np.float32 or np.float64
+    Raises:
+        ValueError: There is an error in the bounds configuration.
+    """
+    # First convert str dtype's to np.dtype.
+    if isinstance(dtype, str):
+        dtype = np.dtype(dtype)
+
+    # np.dtype is not np.float32 or np.float64, but it compares equal.
+    if dtype == np.float32:
+        return np.float32
+    if dtype == np.float64:
+        return np.float64
+
+    raise ValueError("Unsupported dtype. Must be np.float32 or np.float64")
+
+
 def check_finite(x, name):
     """Checks that x is finite (i.e. not infinity or NaN).
 
