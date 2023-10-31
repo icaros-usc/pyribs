@@ -20,11 +20,11 @@ def assert_archive_elite(archive, solution, objective, measures, grid_indices,
     """Asserts that the archive has one specific elite."""
     assert len(archive) == 1
     elite = list(archive)[0]
-    assert np.isclose(elite.solution, solution).all()
-    assert np.isclose(elite.objective, objective).all()
-    assert np.isclose(elite.measures, measures).all()
-    assert elite.index == archive.grid_to_int_index([grid_indices])
-    assert elite.metadata == metadata
+    assert np.isclose(elite["solution"], solution).all()
+    assert np.isclose(elite["objective"], objective).all()
+    assert np.isclose(elite["measures"], measures).all()
+    assert elite["index"] == archive.grid_to_int_index([grid_indices])
+    assert elite["metadata"] == metadata
 
 
 def assert_archive_elite_batch(
