@@ -1,14 +1,11 @@
-"""Provides the GridArchive."""
+"""Contains the GridArchive."""
 import numpy as np
 
 from ribs._utils import check_batch_shape, check_finite, check_is_1d
-# TODO: Remove ArchiveBase.
 from ribs.archives._archive_base import ArchiveBase
-from ribs.archives._archive_stats import ArchiveStats
-from ribs.archives._array_store import ArrayStore
 
 
-class GridArchive:
+class OldGridArchive(ArchiveBase):
     """An archive that divides each dimension into uniformly-sized cells.
 
     This archive is the container described in `Mouret 2015
@@ -60,7 +57,6 @@ class GridArchive:
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
-    # TODO: Extra fields.
     def __init__(self,
                  *,
                  solution_dim,
@@ -72,64 +68,22 @@ class GridArchive:
                  qd_score_offset=0.0,
                  seed=None,
                  dtype=np.float64):
-        # TODO: Tidy up initializations.
         self._dims = np.array(dims, dtype=np.int32)
         if len(self._dims) != len(ranges):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
                              f"(length {len(ranges)}) must be the same length")
 
-        # TODO: underscore or regular versions for things like measure_dim,
-        # solution_dim, dtype?
-        self._rng = np.random.default_rng(seed)
-        self._solution_dim = solution_dim
-        self._cells = np.prod(self._dims)
-        self._measure_dim = len(self._dims)
-
-        self._dtype = ArchiveBase._parse_dtype(dtype)
-
-        self._store = ArrayStore(
-            field_desc={
-                "solution": ((solution_dim,), self.dtype),
-                "objective": ((), self.dtype),
-                "measures": ((self._measure_dim,), self.dtype),
-            },
-            capacity=self._cells,
+        ArchiveBase.__init__(
+            self,
+            solution_dim=solution_dim,
+            cells=np.prod(self._dims),
+            measure_dim=len(self._dims),
+            learning_rate=learning_rate,
+            threshold_min=threshold_min,
+            qd_score_offset=qd_score_offset,
+            seed=seed,
+            dtype=dtype,
         )
-
-        # TODO: define transforms
-
-        if threshold_min == -np.inf and learning_rate != 1.0:
-            raise ValueError("threshold_min can only be -np.inf if "
-                             "learning_rate is 1.0")
-        self._learning_rate = self.dtype(learning_rate)
-        self._threshold_min = self.dtype(threshold_min)
-        self._qd_score_offset = self.dtype(qd_score_offset)
-
-        self._stats = None
-        # Sum of all objective values in the archive; useful for computing
-        # qd_score and obj_mean.
-        self._objective_sum = None
-        self._stats_reset()
-
-        self._best_elite = None
-
-        # Tracks archive modifications by counting calls to clear() and add().
-        self._state = {"clear": 0, "add": 0}
-
-        ## Not intended to be accessed by children. ##
-        self._seed = seed
-
-        #  ArchiveBase.__init__(
-        #      self,
-        #      solution_dim=solution_dim,
-        #      cells=np.prod(self._dims),
-        #      measure_dim=len(self._dims),
-        #      learning_rate=learning_rate,
-        #      threshold_min=threshold_min,
-        #      qd_score_offset=qd_score_offset,
-        #      seed=seed,
-        #      dtype=dtype,
-        #  )
 
         ranges = list(zip(*ranges))
         self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
@@ -142,80 +96,6 @@ class GridArchive:
                                                  self._upper_bounds):
             self._boundaries.append(
                 np.linspace(lower_bound, upper_bound, dim + 1))
-
-    def _stats_reset(self):
-        """Resets the archive stats."""
-        self._stats = ArchiveStats(
-            num_elites=0,
-            coverage=self.dtype(0.0),
-            qd_score=self.dtype(0.0),
-            norm_qd_score=self.dtype(0.0),
-            obj_max=None,
-            obj_mean=None,
-        )
-        self._objective_sum = self.dtype(0.0)
-
-    @property
-    def dtype(self):
-        """data-type: The dtype of the solutions, objective, and measures."""
-        return self._dtype
-
-    @property
-    def cells(self):
-        """int: Total number of cells in the archive."""
-        return self._cells
-
-    @property
-    def empty(self):
-        """bool: Whether the archive is empty."""
-        return len(self._store) == 0
-
-    @property
-    def measure_dim(self):
-        """int: Dimensionality of the measure space."""
-        return self._measure_dim
-
-    @property
-    def solution_dim(self):
-        """int: Dimensionality of the solutions in the archive."""
-        return self._solution_dim
-
-    def add(self,
-            solution_batch,
-            objective_batch,
-            measures_batch,
-            metadata_batch=None):
-        pass
-
-    def add_single(self, solution, objective, measures, metadata=None):
-        pass
-
-    def as_pandas(self, fields=None):
-        pass
-
-    def clear(self):
-        pass
-
-    def cqd_score(self,
-                  iterations,
-                  target_points,
-                  penalties,
-                  obj_min,
-                  obj_max,
-                  dist_max=None,
-                  dist_ord=None):
-        pass
-
-    def retrieve(self, measures_batch):
-        pass
-
-    def retrieve_single(self, measures):
-        pass
-
-    def sample_elites(self, n):
-        pass
-
-    ### Original methods below ###
 
     @property
     def dims(self):

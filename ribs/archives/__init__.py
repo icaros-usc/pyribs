@@ -14,6 +14,7 @@ also contains several utilities associated with the archives, such as
     :toctree:
 
     ribs.archives.GridArchive
+    ribs.archives.OldGridArchive
     ribs.archives.CVTArchive
     ribs.archives.SlidingBoundariesArchive
     ribs.archives.ArchiveBase
@@ -34,10 +35,12 @@ from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._elite import Elite, EliteBatch
 from ribs.archives._grid_archive import GridArchive
+from ribs.archives._old_grid_archive import OldGridArchive
 from ribs.archives._sliding_boundaries_archive import SlidingBoundariesArchive
 
 __all__ = [
     "GridArchive",
+    "OldGridArchive",
     "CVTArchive",
     "SlidingBoundariesArchive",
     "ArchiveBase",
