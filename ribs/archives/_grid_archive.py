@@ -1,11 +1,12 @@
 """Provides the GridArchive."""
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_finite, check_is_1d
-# TODO: Remove ArchiveBase.
-from ribs.archives._archive_base import ArchiveBase
+from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
+                         check_is_1d, parse_float_dtype, validate_batch_args,
+                         validate_single_args)
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
+from ribs.archives.transforms import transform_single
 
 
 class GridArchive:
@@ -60,7 +61,7 @@ class GridArchive:
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
-    # TODO: Extra fields.
+    # TODO: Extra fields, get rid of metadata.
     def __init__(self,
                  *,
                  solution_dim,
@@ -81,17 +82,20 @@ class GridArchive:
         # TODO: underscore or regular versions for things like measure_dim,
         # solution_dim, dtype?
         self._rng = np.random.default_rng(seed)
+        self._seed = seed
         self._solution_dim = solution_dim
         self._cells = np.prod(self._dims)
         self._measure_dim = len(self._dims)
 
-        self._dtype = ArchiveBase._parse_dtype(dtype)
+        self._dtype = parse_float_dtype(dtype)
 
         self._store = ArrayStore(
             field_desc={
                 "solution": ((solution_dim,), self.dtype),
                 "objective": ((), self.dtype),
                 "measures": ((self._measure_dim,), self.dtype),
+                "metadata": ((), object),
+                "threshold": ((), self.dtype),
             },
             capacity=self._cells,
         )
@@ -112,12 +116,6 @@ class GridArchive:
         self._stats_reset()
 
         self._best_elite = None
-
-        # Tracks archive modifications by counting calls to clear() and add().
-        self._state = {"clear": 0, "add": 0}
-
-        ## Not intended to be accessed by children. ##
-        self._seed = seed
 
         #  ArchiveBase.__init__(
         #      self,
@@ -143,6 +141,7 @@ class GridArchive:
             self._boundaries.append(
                 np.linspace(lower_bound, upper_bound, dim + 1))
 
+    # TODO: Move somewhere else?
     def _stats_reset(self):
         """Resets the archive stats."""
         self._stats = ArchiveStats(
@@ -154,6 +153,30 @@ class GridArchive:
             obj_mean=None,
         )
         self._objective_sum = self.dtype(0.0)
+
+    def __len__(self):
+        """Number of elites in the archive."""
+        return len(self._store)
+
+    def __iter__(self):
+        """Creates an iterator over the elites in the archive.
+
+        Elites are represented as a dict mapping from properties like
+        "index", "objective", "measures", and "solution" to their relevant
+        contents. Any additional fields included in the constructor will also be
+        included here.
+
+        Example:
+
+            ::
+
+                for elite in archive:
+                    elite["index"]
+                    elite["objective"]
+                    ...
+                    elite["custom_field"]
+        """
+        return iter(self._store)
 
     @property
     def dtype(self):
@@ -180,6 +203,48 @@ class GridArchive:
         """int: Dimensionality of the solutions in the archive."""
         return self._solution_dim
 
+    @property
+    def learning_rate(self):
+        """float: The learning rate for threshold updates."""
+        return self._learning_rate
+
+    @property
+    def threshold_min(self):
+        """float: The initial threshold value for all the cells."""
+        return self._threshold_min
+
+    @property
+    def qd_score_offset(self):
+        """float: The offset which is subtracted from objective values when
+        computing the QD score."""
+        return self._qd_score_offset
+
+    @property
+    def stats(self):
+        """:class:`ArchiveStats`: Statistics about the archive.
+
+        See :class:`ArchiveStats` for more info.
+        """
+        return self._stats
+
+    @property
+    def best_elite(self):
+        """:class:`Elite`: The elite with the highest objective in the archive.
+
+        None if there are no elites in the archive.
+
+        .. note::
+            If the archive is non-elitist (this occurs when using the archive
+            with a learning rate which is not 1.0, as in CMA-MAE), then this
+            best elite may no longer exist in the archive because it was
+            replaced with an elite with a lower objective value. This can happen
+            because in non-elitist archives, new solutions only need to exceed
+            the *threshold* of the cell they are being inserted into, not the
+            *objective* of the elite currently in the cell. See :pr:`314` for
+            more info.
+        """
+        return self._best_elite
+
     def add(self,
             solution_batch,
             objective_batch,
@@ -188,13 +253,109 @@ class GridArchive:
         pass
 
     def add_single(self, solution, objective, measures, metadata=None):
-        pass
+        """Inserts a single solution into the archive.
+
+        The solution is only inserted if it has a higher ``objective`` than the
+        threshold of the corresponding cell. For the default values of
+        ``learning_rate`` and ``threshold_min``, this threshold is simply the
+        objective value of the elite previously in the cell.  The threshold is
+        also updated if the solution was inserted.
+
+        .. note::
+            To make it more amenable to modifications, this method's
+            implementation is designed to be readable at the cost of
+            performance, e.g., none of its operations are modified. If you need
+            performance, we recommend using :meth:`add`.
+
+        Args:
+            solution (array-like): Parameters of the solution.
+            objective (float): Objective function evaluation of the solution.
+            measures (array-like): Coordinates in measure space of the solution.
+            metadata (object): Python object representing metadata for the
+                solution. For instance, this could be a dict with several
+                properties.
+
+                .. warning:: Due to how NumPy's :func:`~numpy.asarray`
+                    automatically converts array-like objects to arrays, passing
+                    array-like objects as metadata may lead to unexpected
+                    behavior. However, the metadata may be a dict or other
+                    object which *contains* arrays.
+        Raises:
+            ValueError: The array arguments do not match their specified shapes.
+            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
+                has non-finite values.
+        Returns:
+            tuple: 2-element tuple of (status, value) describing the result of
+            the add operation. Refer to :meth:`add` for the meaning of the
+            status and value.
+        """
+        (
+            solution,
+            objective,
+            measures,
+        ) = validate_single_args(
+            self,
+            solution=solution,
+            objective=objective,
+            measures=measures,
+        )
+
+        index = self.index_of_single(measures)
+
+        add_info = self._store.add(
+            [index],
+            {
+                "solution": np.expand_dims(solution, axis=0),
+                "objective": np.expand_dims(objective, axis=0),
+                "measures": np.expand_dims(measures, axis=0),
+                "metadata": np.expand_dims(metadata, axis=0),
+            },
+            {
+                "dtype": self._dtype,
+                "learning_rate": self._learning_rate,
+                "threshold_min": self._threshold_min,
+                "objective_sum": self._objective_sum,
+            },
+            [transform_single],
+        )
+
+        # Update archive stats.
+        self._objective_sum = add_info.pop("objective_sum")
+        new_qd_score = (self._objective_sum -
+                        self.dtype(len(self)) * self._qd_score_offset)
+
+        if self._stats.obj_max is None or objective > self._stats.obj_max:
+            new_obj_max = objective
+            self._best_elite = {
+                k: v[0] for k, v in self._store.retrieve([index])[1].items()
+            }
+        else:
+            new_obj_max = self._stats.obj_max
+
+        self._stats = ArchiveStats(
+            num_elites=len(self),
+            coverage=self.dtype(len(self) / self.cells),
+            qd_score=new_qd_score,
+            norm_qd_score=self.dtype(new_qd_score / self.cells),
+            obj_max=new_obj_max,
+            obj_mean=self._objective_sum / self.dtype(len(self)),
+        )
+
+        return add_info["status"], add_info["value"]
 
     def as_pandas(self, fields=None):
         pass
 
     def clear(self):
-        pass
+        """Removes all elites from the archive.
+
+        After this method is called, the archive will be :attr:`empty`.
+        """
+        self._store.clear()
+
+        # TODO: what to do with clearing stats?
+        self._stats_reset()
+        self._best_elite = None
 
     def cqd_score(self,
                   iterations,
@@ -320,6 +481,29 @@ class GridArchive:
         grid_index_batch = np.clip(grid_index_batch, 0, self._dims - 1)
 
         return self.grid_to_int_index(grid_index_batch)
+
+    def index_of_single(self, measures):
+        """Returns the index of the measures for one solution.
+
+        While :meth:`index_of` takes in a *batch* of measures, this method takes
+        in the measures for only *one* solution. If :meth:`index_of` is
+        implemented correctly, this method should work immediately (i.e. `"out
+        of the box" <https://idioms.thefreedictionary.com/Out-of-the-Box>`_).
+
+        Args:
+            measures (array-like): (:attr:`measure_dim`,) array of measures for
+                a single solution.
+        Returns:
+            int or numpy.integer: Integer index of the measures in the archive's
+            storage arrays.
+        Raises:
+            ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
+        """
+        measures = np.asarray(measures)
+        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
+        return self.index_of(measures[None])[0]
 
     def grid_to_int_index(self, grid_index_batch):
         """Converts a batch of grid indices into a batch of integer indices.
