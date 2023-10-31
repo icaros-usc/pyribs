@@ -345,8 +345,11 @@ class ArrayStore:
 
         Args:
             fields (array-like of str): See :meth:`retrieve`.
+        Returns:
+            dict: See ``data`` in :meth:`retrieve`. ``occupied`` is not returned
+                since all indices are known to be occupied in this method.
         """
-        return self.retrieve(self.occupied_list, fields)
+        return self.retrieve(self.occupied_list, fields)[1]
 
     def as_pandas(self, fields=None):
         """Creates a DataFrame containing all data entries in the store.

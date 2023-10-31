@@ -301,6 +301,36 @@ def test_from_raw_dict(store):
     assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
 
 
+def test_as_dict(store):
+    store.add(
+        [3, 5],
+        {
+            "objective": [1.0, 2.0],
+            "measures": [[1.0, 2.0], [3.0, 4.0]],
+            "solution": [np.zeros(10), np.ones(10)],
+        },
+        {},  # Empty add_info.
+        [],  # Empty transforms.
+    )
+
+    d = store.as_dict()
+
+    assert d.keys() == set(["index", "objective", "measures", "solution"])
+    assert all(len(v) == 2 for v in d.values())
+
+    row0 = np.concatenate(([3, 1.0, 1.0, 2.0], np.zeros(10)))
+    row1 = np.concatenate(([5, 2.0, 3.0, 4.0], np.ones(10)))
+
+    flat = [
+        np.concatenate(([d["index"][i]], [d["objective"][i]], d["measures"][i],
+                        d["solution"][i])) for i in range(2)
+    ]
+
+    # Either permutation.
+    assert (((flat[0] == row0).all() and (flat[1] == row1).all()) or
+            ((flat[0] == row1).all() and (flat[1] == row0).all()))
+
+
 def test_as_pandas(store):
     store.add(
         [3, 5],
