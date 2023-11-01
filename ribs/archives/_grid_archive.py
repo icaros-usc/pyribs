@@ -4,9 +4,11 @@ import numpy as np
 from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
                          check_is_1d, parse_float_dtype, validate_batch_args,
                          validate_single_args)
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
-from ribs.archives.transforms import transform_single
+from ribs.archives._elite import EliteBatch
+from ribs.archives.transforms import transform_batch, transform_single
 
 
 class GridArchive:
@@ -250,7 +252,69 @@ class GridArchive:
             objective_batch,
             measures_batch,
             metadata_batch=None):
-        pass
+
+        (
+            solution_batch,
+            objective_batch,
+            measures_batch,
+            metadata_batch,
+        ) = validate_batch_args(
+            archive=self,
+            solution_batch=solution_batch,
+            objective_batch=objective_batch,
+            measures_batch=measures_batch,
+            metadata_batch=metadata_batch,
+        )
+        batch_size = solution_batch.shape[0]
+
+        add_info = self._store.add(
+            self.index_of(measures_batch),
+            {
+                "solution": solution_batch,
+                "objective": objective_batch,
+                "measures": measures_batch,
+                "metadata": metadata_batch,
+            },
+            {
+                "dtype": self._dtype,
+                "learning_rate": self._learning_rate,
+                "threshold_min": self._threshold_min,
+                "objective_sum": self._objective_sum,
+            },
+            [transform_batch],
+        )
+
+        # TODO: Nearly duplicate code with add_single() -- update_stats func?
+
+        # TODO: gracefully detect and handle when nothing inserted
+
+        if not np.all(add_info["status"] == 0):
+            self._objective_sum = add_info.pop("objective_sum")
+            new_qd_score = (self._objective_sum -
+                            self.dtype(len(self)) * self._qd_score_offset)
+            index = add_info.pop("best_index")
+
+            objective = self._store.retrieve([index], fields=["objective"
+                                                             ])[1]["objective"]
+            if self._stats.obj_max is None or objective > self._stats.obj_max:
+                new_obj_max = objective
+                # TODO: Messy.
+                self._best_elite = {
+                    k: v[0] for k, v in self._store.retrieve([index])[1].items()
+                }
+            else:
+                new_obj_max = self._stats.obj_max
+
+            self._stats = ArchiveStats(
+                num_elites=len(self),
+                coverage=self.dtype(len(self) / self.cells),
+                qd_score=new_qd_score,
+                norm_qd_score=self.dtype(new_qd_score / self.cells),
+                obj_max=new_obj_max,
+                obj_mean=self._objective_sum / self.dtype(len(self)),
+            )
+
+        return add_info["status"], add_info["value"]
 
     def add_single(self, solution, objective, measures, metadata=None):
         """Inserts a single solution into the archive.
@@ -319,6 +383,9 @@ class GridArchive:
             [transform_single],
         )
 
+        # TODO: Only update stats if status is true (just like regular
+        # add_single)
+
         # Update archive stats.
         self._objective_sum = add_info.pop("objective_sum")
         new_qd_score = (self._objective_sum -
@@ -326,6 +393,7 @@ class GridArchive:
 
         if self._stats.obj_max is None or objective > self._stats.obj_max:
             new_obj_max = objective
+            # TODO: Messy.
             self._best_elite = {
                 k: v[0] for k, v in self._store.retrieve([index])[1].items()
             }
@@ -341,10 +409,11 @@ class GridArchive:
             obj_mean=self._objective_sum / self.dtype(len(self)),
         )
 
-        return add_info["status"], add_info["value"]
+        return add_info["status"][0], add_info["value"][0]
 
+    # TODO: docstring (mention measures_; mention fields)
     def as_pandas(self, fields=None):
-        pass
+        return ArchiveDataFrame(self._store.as_pandas(fields))
 
     def clear(self):
         """Removes all elites from the archive.
@@ -374,7 +443,48 @@ class GridArchive:
         pass
 
     def sample_elites(self, n):
-        pass
+        """Randomly samples elites from the archive.
+
+        Currently, this sampling is done uniformly at random. Furthermore, each
+        sample is done independently, so elites may be repeated in the sample.
+        Additional sampling methods may be supported in the future.
+
+        Since :namedtuple:`EliteBatch` is a namedtuple, the result can be
+        unpacked (here we show how to ignore some of the fields)::
+
+            solution_batch, objective_batch, measures_batch, *_ = \\
+                archive.sample_elites(32)
+
+        Or the fields may be accessed by name::
+
+            elite = archive.sample_elites(16)
+            elite.solution_batch
+            elite.objective_batch
+            ...
+
+        Args:
+            n (int): Number of elites to sample.
+        Returns:
+            EliteBatch: A batch of elites randomly selected from the archive.
+        Raises:
+            IndexError: The archive is empty.
+        """
+        if self.empty:
+            raise IndexError("No elements in archive.")
+
+        random_indices = self._rng.integers(len(self._store), size=n)
+        selected_indices = self._store.occupied_list[random_indices]
+
+        _, data = self._store.retrieve(selected_indices)
+
+        # TODO: Convert to dict, also account for thresholds and other fields
+        return EliteBatch(
+            data["solution"],
+            data["objective"],
+            data["measures"],
+            data["index"],
+            data["metadata"],
+        )
 
     ### Original methods below ###
 

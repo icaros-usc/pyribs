@@ -246,7 +246,7 @@ def test_index_of_single():
 
 def test_index_of_single_wrong_shape(data):
     with pytest.raises(ValueError):
-        data.archive.retrieve_single(data.measures[:-1])
+        data.archive.index_of_single(data.measures[:-1])
 
 
 #
