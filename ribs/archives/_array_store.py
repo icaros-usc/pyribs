@@ -119,12 +119,15 @@ class ArrayStore:
             if name == "index":
                 raise ValueError(f"`{name}` is an invalid field name.")
 
+            if isinstance(field_shape, (int, np.integer)):
+                field_shape = (field_shape,)
+
             array_shape = (capacity,) + tuple(field_shape)
             self._fields[name] = np.empty(array_shape, dtype)
 
     def __len__(self):
-        """Number of occupied indices in the store, i.e.g, number of indices
-        that have a corresponding data entry."""
+        """Number of occupied indices in the store, i.e., number of indices that
+        have a corresponding data entry."""
         return self._props["n_occupied"]
 
     def __iter__(self):
@@ -132,7 +135,8 @@ class ArrayStore:
 
         When iterated over, this iterator yields dicts mapping from the fields
         to the individual entries. For instance, if we had an "objective" field,
-        one entry might look like ``{"index": 1, "objective": 6.0}``.
+        one entry might look like ``{"index": 1, "objective": 6.0}`` (similar to
+        :meth:`retrieve`, the index is included in the output).
 
         Example:
 
@@ -153,7 +157,7 @@ class ArrayStore:
     @property
     def occupied(self):
         """numpy.ndarray: Boolean array of size ``(capacity,)`` indicating
-        whether each index has an data entry."""
+        whether each index has a data entry."""
         return readonly(self._props["occupied"].view())
 
     @property
@@ -171,6 +175,7 @@ class ArrayStore:
             fields (array-like of str): List of fields to include. By default,
                 all fields will be included. In addition to fields in the store,
                 "index" is also a valid field.
+
         Returns:
             tuple: 2-element tuple consisting of:
 
@@ -196,8 +201,6 @@ class ArrayStore:
         Raises:
             ValueError: Invalid field name provided.
         """
-        # Note that fancy indexing with indices already creates a copy, so only
-        # indices need to be copied explicitly.
         indices = np.asarray(indices)
         occupied = readonly(self._props["occupied"][indices])
 
@@ -205,6 +208,8 @@ class ArrayStore:
         fields = (itertools.chain(["index"], self._fields)
                   if fields is None else fields)
         for name in fields:
+            # Note that fancy indexing with indices already creates a copy, so
+            # only `indices` needs to be copied explicitly.
             if name == "index":
                 data[name] = readonly(np.copy(indices))
                 continue
@@ -214,7 +219,7 @@ class ArrayStore:
 
         return occupied, data
 
-    def add(self, indices, new_data, add_info, transforms):
+    def add(self, indices, new_data, extra_args, transforms):
         """Adds new data to the store at the given indices.
 
         The indices, new_data, and add_info are passed through transforms before
@@ -229,7 +234,8 @@ class ArrayStore:
 
         The signature of a transform is as follows::
 
-            def transform(indices, new_data, add_info, occupied, cur_data) ->
+            def transform(indices, new_data, add_info, extra_args,
+                          occupied, cur_data) ->
                 (indices, new_data, add_info):
 
         Transform parameters:
@@ -240,8 +246,9 @@ class ArrayStore:
           name to the array of new data for that field.
         - **add_info** (dict): Information to return to the user about the
           addition process. Example info includes whether each entry was
-          ultimately inserted into the store, as well as general statistics like
-          update QD score. For the first transform, this will be an empty dict.
+          ultimately inserted into the store, as well as general statistics.
+          For the first transform, this will be an empty dict.
+        - **extra_args** (dict): Additional arguments for the transform.
         - **occupied** (array-like): Whether the given indices are currently
           occupied. Same as that given by :meth:`retrieve`.
         - **cur_data** (dict): Data at the current indices in the store. Same as
@@ -249,7 +256,8 @@ class ArrayStore:
 
         Transform outputs:
 
-        - **indices** (array-like): Modified indices.
+        - **indices** (array-like): Modified indices. We do NOT assume that the
+          final indices will be unique.
         - **new_data** (dict): Modified new_data. At the end of the transforms,
           it should have the same keys as the store. If ``indices`` is empty,
           ``new_data`` will be ignored.
@@ -258,12 +266,16 @@ class ArrayStore:
         Args:
             indices (array-like): Initial list of indices for addition.
             new_data (dict): Initial data for addition.
-            add_info (dict): Initial add_info.
+            extra_args (dict): Dict containing additional arguments to pass to
+                the transforms. The dict is passed directly (i.e., no unpacking
+                like with kwargs).
             transforms (list): List of transforms on the data to be added.
+
         Returns:
             dict: Final ``add_info`` from the transforms. ``new_data`` and
             ``indices`` are not returned; rather, the ``new_data`` is added into
             the store at ``indices``.
+
         Raise:
             ValueError: The final version of ``new_data`` does not have the same
                 keys as the fields of this store.
@@ -272,10 +284,16 @@ class ArrayStore:
         """
         self._props["updates"][Update.ADD] += 1
 
+        add_info = {}
         for transform in transforms:
             occupied, cur_data = self.retrieve(indices)
             indices, new_data, add_info = transform(indices, new_data, add_info,
-                                                    occupied, cur_data)
+                                                    extra_args, occupied,
+                                                    cur_data)
+
+        # Shortcut when there is nothing to add to the store.
+        if len(indices) == 0:
+            return add_info
 
         # Verify that the array shapes match the indices.
         for name, arr in new_data.items():
@@ -284,10 +302,6 @@ class ArrayStore:
                     f"In `new_data`, the array for `{name}` has length "
                     f"{len(arr)} but should be the same length as indices "
                     f"({len(indices)})")
-
-        # Shortcut when there is nothing to add to the store.
-        if len(indices) == 0:
-            return add_info
 
         # Verify that new_data ends up with the correct fields after the
         # transforms.
@@ -335,21 +349,21 @@ class ArrayStore:
                 f"New capacity ({capacity}) must be greater than current "
                 f"capacity ({self._props['capacity']}.")
 
-        old_capacity = self._props["capacity"]
+        cur_capacity = self._props["capacity"]
         self._props["capacity"] = capacity
 
-        old_occupied = self._props["occupied"]
+        cur_occupied = self._props["occupied"]
         self._props["occupied"] = np.zeros(capacity, dtype=bool)
-        self._props["occupied"][:old_capacity] = old_occupied
+        self._props["occupied"][:cur_capacity] = cur_occupied
 
-        old_occupied_list = self._props["occupied_list"]
+        cur_occupied_list = self._props["occupied_list"]
         self._props["occupied_list"] = np.empty(capacity, dtype=int)
-        self._props["occupied_list"][:old_capacity] = old_occupied_list
+        self._props["occupied_list"][:cur_capacity] = cur_occupied_list
 
-        for name, old_arr in self._fields.items():
-            new_shape = (capacity,) + old_arr.shape[1:]
-            self._fields[name] = np.empty(new_shape, old_arr.dtype)
-            self._fields[name][:old_capacity] = old_arr
+        for name, cur_arr in self._fields.items():
+            new_shape = (capacity,) + cur_arr.shape[1:]
+            self._fields[name] = np.empty(new_shape, cur_arr.dtype)
+            self._fields[name][:cur_capacity] = cur_arr
 
     def as_raw_dict(self):
         """Returns the raw data in the ArrayStore as a one-level dictionary.
@@ -433,7 +447,7 @@ class ArrayStore:
         - 1 column of integers (``np.int32``) for the index, named ``index``.
         - For fields that are scalars, a single column with the field name. For
           example, ``objective'' would have a single column called
-          ``"objective"``.
+          ``objective``.
         - For fields that are 1D arrays, multiple columns with the name suffixed
           by its index. For instance, if we have a ``measures'' field of length
           10, we create 10 columns with names ``measures_0``, ``measures_1``,
@@ -442,11 +456,11 @@ class ArrayStore:
 
         In short, the dataframe might look like this:
 
-        +-------+------------+------+------------+
-        | index | measure_0  | ...  | objective  |
-        +=======+============+======+============+
-        |       |            | ...  |            |
-        +-------+------------+------+------------+
+        +-------+------------+------+-----------+
+        | index | measures_0 | ...  | objective |
+        +=======+============+======+===========+
+        |       |            | ...  |           |
+        +-------+------------+------+-----------+
 
         Args:
             fields (array-like of str): List of fields to include. By default,

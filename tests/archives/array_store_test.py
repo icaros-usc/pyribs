@@ -56,7 +56,7 @@ def test_add_wrong_keys(store):
                 "measures": [[1.0, 2.0], [3.0, 4.0]],
                 # Missing `solution` key.
             },
-            {},  # Empty add_info.
+            {},  # Empty extra_args.
             [],  # Empty transforms.
         )
 
@@ -70,7 +70,7 @@ def test_add_mismatch_indices(store):
                 "measures": [[1.0, 2.0], [3.0, 4.0]],
                 "solution": [np.zeros(10), np.ones(10)],
             },
-            {},  # Empty add_info.
+            {},  # Empty extra_args.
             [],  # Empty transforms.
         )
 
@@ -84,7 +84,7 @@ def test_simple_add_retrieve_clear(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -116,7 +116,7 @@ def test_add_duplicate_indices(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -133,7 +133,7 @@ def test_retrieve_duplicate_indices(store):
             "measures": [[3.0, 4.0]],
             "solution": [np.ones(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -160,7 +160,7 @@ def test_retrieve_custom_fields(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -174,10 +174,11 @@ def test_retrieve_custom_fields(store):
 
 def test_add_simple_transform(store):
 
-    def obj_meas(indices, new_data, add_info, occupied, cur_data):
+    def obj_meas(indices, new_data, add_info, extra_args, occupied, cur_data):
         # pylint: disable = unused-argument
         new_data["objective"] = np.sum(new_data["solution"], axis=1)
         new_data["measures"] = np.asarray(new_data["solution"])[:, :2]
+        add_info.update(extra_args)
         add_info["bar"] = 5
         return indices, new_data, add_info
 
@@ -209,7 +210,7 @@ def test_add_simple_transform(store):
 def test_add_empty_transform(store):
     # new_data should be able to take on arbitrary values when no indices are
     # returned, so we make it an empty dict here.
-    def empty(indices, new_data, add_info, occupied, cur_data):
+    def empty(indices, new_data, add_info, extra_args, occupied, cur_data):
         # pylint: disable = unused-argument
         return [], {}, {}
 
@@ -242,7 +243,7 @@ def test_resize_to_double_capacity(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -265,7 +266,7 @@ def test_as_raw_dict(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -306,7 +307,7 @@ def test_from_raw_dict(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -334,7 +335,7 @@ def test_as_dict(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -364,7 +365,7 @@ def test_as_pandas(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -410,7 +411,7 @@ def test_as_pandas_custom_fields(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -432,6 +433,17 @@ def test_as_pandas_custom_fields(store):
             ((df.loc[0] == row1).all() and (df.loc[1] == row0).all()))
 
 
+def test_as_pandas_2d_fields(store):
+    store = ArrayStore(
+        {
+            "solution": ((10, 10), np.float32),
+        },
+        10,
+    )
+    with pytest.raises(ValueError):
+        store.as_pandas()
+
+
 def test_iteration(store):
     store.add(
         [3],
@@ -440,7 +452,7 @@ def test_iteration(store):
             "measures": [[1.0, 2.0]],
             "solution": [np.zeros(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -461,7 +473,7 @@ def test_add_during_iteration(store):
             "measures": [[1.0, 2.0]],
             "solution": [np.zeros(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -476,7 +488,7 @@ def test_add_during_iteration(store):
                     "measures": [[3.0, 4.0]],
                     "solution": [np.ones(10)],
                 },
-                {},  # Empty add_info.
+                {},  # Empty extra_args.
                 [],  # Empty transforms.
             )
 
@@ -489,7 +501,7 @@ def test_clear_during_iteration(store):
             "measures": [[1.0, 2.0]],
             "solution": [np.zeros(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -506,7 +518,7 @@ def test_clear_and_add_during_iteration(store):
             "measures": [[1.0, 2.0]],
             "solution": [np.zeros(10)],
         },
-        {},  # Empty add_info.
+        {},  # Empty extra_args.
         [],  # Empty transforms.
     )
 
@@ -520,6 +532,6 @@ def test_clear_and_add_during_iteration(store):
                     "measures": [[3.0, 4.0]],
                     "solution": [np.ones(10)],
                 },
-                {},  # Empty add_info.
+                {},  # Empty extra_args.
                 [],  # Empty transforms.
             )
