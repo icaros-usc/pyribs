@@ -6,8 +6,10 @@
 
 #### API
 
-- Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
+- **Backwards-incompatible:** Rename `measure_*` columns to `measures_*` in
+  `as_pandas` ({pr}`396`)
 - Add ArrayStore data structure ({pr}`395`)
+- Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 
 #### Improvements
 

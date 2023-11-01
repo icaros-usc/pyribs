@@ -27,7 +27,7 @@ def df(data):
     return ArchiveDataFrame({
         "index": index_batch,
         "objective": objective_batch,
-        "measure_0": measures_batch[:, 0],
+        "measures_0": measures_batch[:, 0],
         "solution_0": solution_batch[:, 0],
         "metadata": metadata_batch,
     })
@@ -55,7 +55,7 @@ def test_batch_methods(data, df):
 
 @pytest.mark.parametrize(
     "remove",
-    ["index", "objective", "measure_0", "metadata", "solution_0"],
+    ["index", "objective", "measures_0", "metadata", "solution_0"],
     ids=["index", "objective", "measures", "metadata", "solutions"],
 )
 def test_batch_methods_can_be_none(df, remove):
@@ -65,7 +65,7 @@ def test_batch_methods_can_be_none(df, remove):
     method = {
         "solution_0": df.solution_batch,
         "objective": df.objective_batch,
-        "measure_0": df.measures_batch,
+        "measures_0": df.measures_batch,
         "index": df.index_batch,
         "metadata": df.metadata_batch,
     }[remove]

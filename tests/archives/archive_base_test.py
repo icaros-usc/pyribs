@@ -392,7 +392,7 @@ def test_as_pandas(name, with_elite, include_solutions, include_metadata,
     data = get_archive_data(name, dtype)
 
     # Set up expected columns and data types.
-    measure_cols = [f"measure_{i}" for i in range(len(data.measures))]
+    measure_cols = [f"measures_{i}" for i in range(len(data.measures))]
     expected_cols = ["index"] + measure_cols + ["objective"]
     expected_dtypes = [np.int32, *[dtype for _ in measure_cols], dtype]
     if include_solutions:
@@ -432,4 +432,4 @@ def test_as_pandas(name, with_elite, include_solutions, include_metadata,
             expected_data += list(data.solution)
         if include_metadata:
             expected_data.append(data.metadata)
-        assert (df.loc[0, "measure_0":] == expected_data).all()
+        assert (df.loc[0, "measures_0":] == expected_data).all()

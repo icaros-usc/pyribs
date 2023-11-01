@@ -133,7 +133,7 @@ def test_initial_remap():
 
     # Check that all the measures are as expected.
     pandas_measures = archive.as_pandas(include_solutions=False)[[
-        "measure_0", "measure_1"
+        "measures_0", "measures_1"
     ]]
     measures = list(pandas_measures.itertuples(name=None, index=False))
     assert np.isclose(sorted(measures), sorted(expected_measures)).all()
