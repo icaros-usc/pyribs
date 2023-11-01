@@ -31,10 +31,14 @@ class ArrayStoreIterator:
         return self
 
     def __next__(self):
-        """Raises RuntimeError if the store was modified."""
+        """Returns dicts with each entry's data.
+
+        Raises RuntimeError if the store was modified.
+        """
         if not np.all(self.state == self.store._props["updates"]):
-            # This check should go first because a call to clear() would clear
-            # _occupied_indices and cause StopIteration to happen early.
+            # This check should go before the StopIteration check because a call
+            # to clear() would cause the len(self.store) to be 0 and thus
+            # trigger StopIteration.
             raise RuntimeError(
                 "ArrayStore was modified with add() or clear() during "
                 "iteration.")
@@ -74,7 +78,7 @@ class ArrayStore:
 
     Args:
         field_desc (dict): Description of fields in the array store. The
-            description is a dict mapping from str to tuple of ``(shape,
+            description is a dict mapping from a str to a tuple of ``(shape,
             dtype)``. For instance, ``{"objective": ((), np.float32),
             "measures": ((10,), np.float32)}`` will create an "objective" field
             with shape ``(capacity,)`` and a "measures" field with shape
