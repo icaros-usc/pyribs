@@ -141,7 +141,7 @@ class ArchiveDataFrame(pd.DataFrame):
         Returns:
             (n, measure_dim) numpy.ndarray: See above.
         """
-        cols = [c for c in self if c.startswith("measure_")]
+        cols = [c for c in self if c.startswith("measures_")]
         return self[cols].to_numpy(copy=True) if cols else None
 
     def index_batch(self):

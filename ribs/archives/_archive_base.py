@@ -1017,8 +1017,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         - 1 column of integers (``np.int32``) for the index, named ``index``.
           See :meth:`index_of` for more info.
-        - :attr:`measure_dim` columns for the measures, named ``measure_0,
-          measure_1, ...``
+        - :attr:`measure_dim` columns for the measures, named ``measures_0,
+          measures_1, ...``
         - 1 column for the objectives, named ``objective``
         - :attr:`solution_dim` columns for the solution parameters, named
           ``solution_0, solution_1, ...``
@@ -1026,11 +1026,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         In short, the dataframe looks like this:
 
-        +-------+------------+------+------------+-------------+-----+----------+
-        | index | measure_0  | ...  | objective  | solution_0  | ... | metadata |
-        +=======+============+======+============+=============+=====+==========+
-        |       |            | ...  |            |             | ... |          |
-        +-------+------------+------+------------+-------------+-----+----------+
+        +-------+------------+------+-----------+------------+-----+----------+
+        | index | measures_0 | ...  | objective | solution_0 | ... | metadata |
+        +=======+============+======+===========+============+=====+==========+
+        |       |            | ...  |           |            | ... |          |
+        +-------+------------+------+-----------+------------+-----+----------+
 
         Compared to :class:`pandas.DataFrame`, the :class:`ArchiveDataFrame`
         adds methods and attributes which make it easier to manipulate archive
@@ -1054,7 +1054,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         measures_batch = self._measures_arr[indices]
         for i in range(self._measure_dim):
-            data[f"measure_{i}"] = measures_batch[:, i]
+            data[f"measures_{i}"] = measures_batch[:, i]
 
         data["objective"] = self._objective_arr[indices]
 
