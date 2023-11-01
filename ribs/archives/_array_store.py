@@ -247,7 +247,8 @@ class ArrayStore:
 
         - **indices** (array-like): Modified indices.
         - **new_data** (dict): Modified new_data. At the end of the transforms,
-          it should have the same keys as the store.
+          it should have the same keys as the store. If ``indices`` is empty,
+          ``new_data`` will be ignored.
         - **add_info** (dict): Modified add_info.
 
         Args:
@@ -272,13 +273,6 @@ class ArrayStore:
             indices, new_data, add_info = transform(indices, new_data, add_info,
                                                     occupied, cur_data)
 
-        # Verify that new_data ends up with the correct fields after the
-        # transforms.
-        if new_data.keys() != self._fields.keys():
-            raise ValueError(
-                f"`new_data` had keys {new_data.keys()} but should have the "
-                f"same keys as this ArrayStore, i.e., {self._fields.keys()}")
-
         # Verify that the array shapes match the indices.
         for name, arr in new_data.items():
             if len(arr) != len(indices):
@@ -290,6 +284,13 @@ class ArrayStore:
         # Shortcut when there is nothing to add to the store.
         if len(indices) == 0:
             return add_info
+
+        # Verify that new_data ends up with the correct fields after the
+        # transforms.
+        if new_data.keys() != self._fields.keys():
+            raise ValueError(
+                f"`new_data` had keys {new_data.keys()} but should have the "
+                f"same keys as this ArrayStore, i.e., {self._fields.keys()}")
 
         # Update occupancy data.
         unique_indices = np.where(aggregate(indices, 1, func="len") != 0)[0]

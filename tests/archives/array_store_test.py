@@ -206,6 +206,29 @@ def test_add_simple_transform(store):
     assert np.all(data["solution"] == [np.ones(10), 2 * np.ones(10)])
 
 
+def test_add_empty_transform(store):
+    # new_data should be able to take on arbitrary values when no indices are
+    # returned, so we make it an empty dict here.
+    def empty(indices, new_data, add_info, occupied, cur_data):
+        # pylint: disable = unused-argument
+        return [], {}, {}
+
+    add_info = store.add(
+        [3, 5],
+        {
+            "solution": [np.ones(10), 2 * np.ones(10)],
+        },
+        {"foo": 4},
+        [empty],
+    )
+
+    assert add_info == {}
+
+    assert len(store) == 0
+    assert np.all(~store.occupied)
+    assert len(store.occupied_list) == 0
+
+
 def test_resize_bad_capacity(store):
     with pytest.raises(ValueError):
         store.resize(store.capacity)
