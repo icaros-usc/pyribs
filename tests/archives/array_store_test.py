@@ -7,11 +7,22 @@ from ribs.archives import ArrayStore
 # pylint: disable = redefined-outer-name
 
 
-def test_init_invalid_field():
+def test_init_reserved_field():
     with pytest.raises(ValueError):
         ArrayStore(
             {
                 "index": ((), np.float32),
+            },
+            10,
+        )
+
+
+def test_init_invalid_field():
+    with pytest.raises(ValueError):
+        ArrayStore(
+            {
+                # The space makes this an invalid identifier.
+                "foo bar": ((), np.float32),
             },
             10,
         )
