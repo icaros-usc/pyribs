@@ -17,13 +17,15 @@ def test_init_invalid_field():
         )
 
 
-def test_init():
+@pytest.mark.parametrize("shape", [((), (2,), (10,)), ((), 2, 10)],
+                         ids=["tuple", "int"])
+def test_init(shape):
     capacity = 10
     store = ArrayStore(
         {
-            "objective": ((), np.float32),
-            "measures": ((2,), np.float32),
-            "solution": ((10,), np.float32),
+            "objective": (shape[0], np.float32),
+            "measures": (shape[1], np.float32),
+            "solution": (shape[2], np.float32),
         },
         capacity,
     )
