@@ -7,19 +7,19 @@ from numpy_groupies import aggregate_nb as aggregate
 
 # TODO: Format docstrings here and everywhere
 # TODO: Generalize to further fields
-# TODO: Create params?
 # TODO: Rename
 # TODO: Tidy up code
-def transform_single(indices, new_data, add_info, occupied, cur_data):
+def transform_single(indices, new_data, add_info, extra_args, occupied,
+                     cur_data):
     """Transform function for adding a single entry to an archive."""
     if len(indices) != 1:
         raise ValueError(
             "This method only supports adding single solutions, but "
             f"indices had a length of {len(indices)}.")
 
-    dtype = add_info["dtype"]
-    threshold_min = add_info["threshold_min"]
-    learning_rate = add_info["learning_rate"]
+    dtype = extra_args["dtype"]
+    threshold_min = extra_args["threshold_min"]
+    learning_rate = extra_args["learning_rate"]
 
     was_occupied = occupied[0]
     objective = new_data["objective"][0]
@@ -40,31 +40,31 @@ def transform_single(indices, new_data, add_info, occupied, cur_data):
         cur_threshold = (dtype(0)
                          if threshold_min == -np.inf else threshold_min)
 
-    new_info = {"status": np.array([0])}  # NOT_ADDED
+    add_info["status"] = np.array([0])  # NOT_ADDED
     # In the case where we want CMA-ME behavior, threshold_arr[index]
     # is -inf for new cells, which satisfies this if condition.
     if ((not was_occupied and threshold_min < objective) or
         (was_occupied and cur_threshold < objective)):
         if was_occupied:
-            new_info["status"] = np.array([1])  # IMPROVE_EXISTING
+            add_info["status"] = np.array([1])  # IMPROVE_EXISTING
         else:
-            new_info["status"] = np.array([2])  # NEW
+            add_info["status"] = np.array([2])  # NEW
 
         # This calculation works in the case where threshold_min is -inf
         # because cur_threshold will be set to 0.0 instead.
         new_data["threshold"] = [
             (cur_threshold * (1.0 - learning_rate) + objective * learning_rate)
         ]
-    new_info["value"] = np.array([objective - cur_threshold])
+    add_info["value"] = np.array([objective - cur_threshold])
 
-    if new_info["status"]:
-        new_info["objective_sum"] = (add_info["objective_sum"] + objective -
+    if add_info["status"]:
+        add_info["objective_sum"] = (extra_args["objective_sum"] + objective -
                                      cur_objective)
-        return indices, new_data, new_info
+        return indices, new_data, add_info
     else:
-        new_info["objective_sum"] = add_info["objective_sum"]
+        add_info["objective_sum"] = extra_args["objective_sum"]
         # new_data is ignored, so make it an empty dict.
-        return [], {}, new_info
+        return [], {}, add_info
 
 
 def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
@@ -115,14 +115,14 @@ def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
     return new_threshold
 
 
-def transform_batch(indices, new_data, add_info, occupied, cur_data):
+def transform_batch(indices, new_data, add_info, extra_args, occupied,
+                    cur_data):
     """Transform function for adding a batch of entries to an archive."""
-    dtype = add_info["dtype"]
-    threshold_min = add_info["threshold_min"]
-    learning_rate = add_info["learning_rate"]
+    dtype = extra_args["dtype"]
+    threshold_min = extra_args["threshold_min"]
+    learning_rate = extra_args["learning_rate"]
 
     batch_size = len(indices)
-    new_info = {}
 
     ## Step 1: Compute status and value ##
 
@@ -139,9 +139,9 @@ def transform_batch(indices, new_data, add_info, occupied, cur_data):
     can_be_added = new_data["objective"] > cur_threshold
     is_new = can_be_added & ~occupied
     improve_existing = can_be_added & occupied
-    new_info["status"] = np.zeros(batch_size, dtype=np.int32)
-    new_info["status"][is_new] = 2
-    new_info["status"][improve_existing] = 1
+    add_info["status"] = np.zeros(batch_size, dtype=np.int32)
+    add_info["status"][is_new] = 2
+    add_info["status"][improve_existing] = 1
 
     # New solutions require special settings for cur_objective and
     # old_threshold.
@@ -152,7 +152,7 @@ def transform_batch(indices, new_data, add_info, occupied, cur_data):
     # Otherwise, we will compute w.r.t. threshold_min.
     cur_threshold[is_new] = (dtype(0)
                              if threshold_min == -np.inf else threshold_min)
-    new_info["value"] = new_data["objective"] - cur_threshold
+    add_info["value"] = new_data["objective"] - cur_threshold
 
     ## Step 2: Insert solutions into archive. ##
 
@@ -161,9 +161,9 @@ def transform_batch(indices, new_data, add_info, occupied, cur_data):
     # be empty.
     can_insert = is_new | improve_existing
     if not np.any(can_insert):
-        new_info["objective_sum"] = add_info["objective_sum"]
+        add_info["objective_sum"] = extra_args["objective_sum"]
         # TODO: best_index here?
-        return [], {}, new_info
+        return [], {}, add_info
 
     # Select only solutions that can be inserted into the archive.
     index_can = indices[can_insert]
@@ -228,9 +228,9 @@ def transform_batch(indices, new_data, add_info, occupied, cur_data):
     # Since we set the new solutions in the old objective batch to have
     # value 0.0, the objectives for new solutions are added in properly
     # here.
-    new_info["objective_sum"] = add_info["objective_sum"] + np.sum(
+    add_info["objective_sum"] = extra_args["objective_sum"] + np.sum(
         new_data["objective"] - cur_objective_insert)
     # TODO: rename
-    new_info["best_index"] = indices[np.argmax(new_data["objective"])]
+    add_info["best_index"] = indices[np.argmax(new_data["objective"])]
 
-    return indices, new_data, new_info
+    return indices, new_data, add_info
