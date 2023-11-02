@@ -6,89 +6,29 @@ import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
-                         check_is_1d, readonly, validate_batch_args,
-                         validate_single_args)
+                         check_is_1d, parse_float_dtype, readonly,
+                         validate_batch_args, validate_single_args)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
+from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._elite import Elite, EliteBatch
 
-_ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() takes in a "
-                "batch of solutions unlike in pyribs 0.4.0, where add() "
-                "only took in a single solution.")
+# TODO: always include threshold field? Say that we at least assume solution,
+# objective, measures (other classes can add other fields if they want).
 
+# TODO: store should be an abstract property?
 
-class ArchiveIterator:
-    """An iterator for an archive's elites."""
-
-    # pylint: disable = protected-access
-
-    def __init__(self, archive):
-        self.archive = archive
-        self.iter_idx = 0
-        self.state = archive._state.copy()
-
-    def __iter__(self):
-        """This is the iterator, so it returns itself."""
-        return self
-
-    def __next__(self):
-        """Raises RuntimeError if the archive was modified with add() or
-        clear()."""
-        if self.state != self.archive._state:
-            # This check should go first because a call to clear() would clear
-            # _occupied_indices and cause StopIteration to happen early.
-            raise RuntimeError(
-                "Archive was modified with add() or clear() during iteration.")
-        if self.iter_idx >= len(self.archive):
-            raise StopIteration
-
-        idx = self.archive._occupied_indices[self.iter_idx]
-        self.iter_idx += 1
-        return Elite(
-            self.archive._solution_arr[idx],
-            self.archive._objective_arr[idx],
-            self.archive._measures_arr[idx],
-            idx,
-            self.archive._metadata_arr[idx],
-        )
+# TODO: Refactor into mixins -- ArchiveBase should just be an interface.
 
 
 class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     """Base class for archives.
 
-    This class assumes all archives use a fixed-size container with cells that
-    hold (1) information about whether the cell is occupied (bool), (2) a
-    solution (1D array), (3) objective function evaluation of the solution
-    (float), (4) measure space coordinates of the solution (1D array), (5)
-    any additional metadata associated with the solution (object), and (6) a
-    threshold which determines how high an objective value must be for a
-    solution to be inserted into a cell (float). In this class, the container is
-    implemented with separate numpy arrays that share common dimensions. Using
-    the ``solution_dim``, ``cells`, and ``measure_dim`` arguments in
-    ``__init__``, these arrays are as follows:
+    This class assumes all archives are composed of an :class:`ArrayStore` with
+    "solution", "objective", and "measures" fields.
 
-    +------------------------+----------------------------+
-    | Name                   |  Shape                     |
-    +========================+============================+
-    | ``_occupied_arr``      |  ``(cells,)``              |
-    +------------------------+----------------------------+
-    | ``_solution_arr``      |  ``(cells, solution_dim)`` |
-    +------------------------+----------------------------+
-    | ``_objective_arr``     |  ``(cells,)``              |
-    +------------------------+----------------------------+
-    | ``_measures_arr``      |  ``(cells, measure_dim)``  |
-    +------------------------+----------------------------+
-    | ``_metadata_arr``      |  ``(cells,)``              |
-    +------------------------+----------------------------+
-    | ``_threshold_arr``     |  ``(cells,)``              |
-    +------------------------+----------------------------+
-
-    All of these arrays are accessed via a common integer index. If we have
-    index ``i``, we access its solution at ``_solution_arr[i]``, its measure
-    values at ``_measures_arr[i]``, etc.
-
-    Thus, child classes typically override the following methods:
+    Child classes typically override the following methods:
 
     - ``__init__``: Child classes must invoke this class's ``__init__`` with the
       appropriate arguments.
@@ -132,24 +72,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             particular for generating random elites.
         _cells (int): See ``cells`` arg.
         _measure_dim (int): See ``measure_dim`` arg.
-        _occupied_arr (numpy.ndarray): Bool array storing whether each cell in
-            the archive is occupied.
-        _solution_arr (numpy.ndarray): Float array storing the solutions
-            themselves.
-        _objective_arr (numpy.ndarray): Float array storing the objective value
-            of each solution.
-        _measures_arr (numpy.ndarray): Float array storing the measure space
-            coordinates of each solution.
-        _metadata_arr (numpy.ndarray): Object array storing the metadata
-            associated with each solution.
-        _threshold_arr (numpy.ndarray): Float array storing the threshold for
-            insertion into each cell.
-        _occupied_indices (numpy.ndarray): A ``(cells,)`` array of integer
-            (``np.int32``) indices that are occupied in the archive. This could
-            be a list, but for efficiency, we make it a fixed-size array, where
-            only the first ``_num_occupied`` entries are valid.
-        _num_occupied (int): Number of elites currently in the archive. This is
-            used to index into ``_occupied_indices``.
     """
 
     def __init__(self,
@@ -163,79 +85,31 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                  seed=None,
                  dtype=np.float64):
 
-        ## Intended to be accessed by child classes. ##
-        self._solution_dim = solution_dim
+        self._dtype = parse_float_dtype(dtype)
+        self._seed = seed
         self._rng = np.random.default_rng(seed)
         self._cells = cells
+        self._solution_dim = solution_dim
         self._measure_dim = measure_dim
-        self._dtype = self._parse_dtype(dtype)
-
-        self._num_occupied = 0
-        self._occupied_arr = np.zeros(self._cells, dtype=bool)
-        self._occupied_indices = np.empty(self._cells, dtype=np.int32)
-
-        self._solution_arr = np.empty((self._cells, solution_dim),
-                                      dtype=self.dtype)
-        self._objective_arr = np.empty(self._cells, dtype=self.dtype)
-        self._measures_arr = np.empty((self._cells, self._measure_dim),
-                                      dtype=self.dtype)
-        self._metadata_arr = np.empty(self._cells, dtype=object)
+        self._qd_score_offset = self._dtype(qd_score_offset)
 
         if threshold_min == -np.inf and learning_rate != 1.0:
             raise ValueError("threshold_min can only be -np.inf if "
                              "learning_rate is 1.0")
         self._learning_rate = self._dtype(learning_rate)
         self._threshold_min = self._dtype(threshold_min)
-        self._threshold_arr = np.full(self._cells,
-                                      threshold_min,
-                                      dtype=self.dtype)
 
-        self._qd_score_offset = self._dtype(qd_score_offset)
-
+        self._best_elite = None
         self._stats = None
         # Sum of all objective values in the archive; useful for computing
         # qd_score and obj_mean.
         self._objective_sum = None
         self._stats_reset()
 
-        self._best_elite = None
-
-        # Tracks archive modifications by counting calls to clear() and add().
-        self._state = {"clear": 0, "add": 0}
-
-        ## Not intended to be accessed by children. ##
-        self._seed = seed
-
-    @staticmethod
-    def _parse_dtype(dtype):
-        """Parses the dtype passed into the constructor.
-
-        Returns:
-            np.float32 or np.float64
-        Raises:
-            ValueError: There is an error in the bounds configuration.
-        """
-        # First convert str dtype's to np.dtype.
-        if isinstance(dtype, str):
-            dtype = np.dtype(dtype)
-
-        # np.dtype is not np.float32 or np.float64, but it compares equal.
-        if dtype == np.float32:
-            return np.float32
-        if dtype == np.float64:
-            return np.float64
-
-        raise ValueError("Unsupported dtype. Must be np.float32 or np.float64")
-
     @property
     def cells(self):
         """int: Total number of cells in the archive."""
         return self._cells
-
-    @property
-    def empty(self):
-        """bool: Whether the archive is empty."""
-        return self._num_occupied == 0
 
     @property
     def measure_dim(self):
@@ -293,6 +167,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     def dtype(self):
         """data-type: The dtype of the solutions, objective, and measures."""
         return self._dtype
+
+    @property
+    def empty(self):
+        """bool: Whether the archive is empty."""
+        return self._num_occupied == 0
 
     def __len__(self):
         """Number of elites in the archive."""
@@ -390,18 +269,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         After this method is called, the archive will be :attr:`empty`.
         """
-        # Clear ``self._occupied_indices`` and ``self._occupied_arr`` since a
-        # cell can have arbitrary values when its index is marked as unoccupied.
-        self._num_occupied = 0  # Corresponds to clearing _occupied_indices.
-        self._occupied_arr.fill(False)
-
-        # We also need to reset thresholds since archive addition is based on
-        # thresholds.
-        self._threshold_arr.fill(self._threshold_min)
-
-        self._state["clear"] += 1
-        self._state["add"] = 0
-
+        # TODO: Fill in.
         self._stats_reset()
         self._best_elite = None
 
