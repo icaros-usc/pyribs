@@ -27,7 +27,7 @@ class ArchiveDataFrame(pd.DataFrame):
 
             df = archive.as_pandas()
 
-        To iterate through every :class:`Elite`, use::
+        To iterate through every elite as a namedtuple, use::
 
             for elite in df.iterelites():
                 elite.solution
@@ -85,7 +85,7 @@ class ArchiveDataFrame(pd.DataFrame):
         return ArchiveDataFrame
 
     def iterelites(self):
-        """Iterator which outputs every :class:`Elite` in the ArchiveDataFrame.
+        """Iterator that outputs every elite in the ArchiveDataFrame.
 
         Data which is unavailable will be turned into None. For example, if
         there are no solution columns, then ``elite.solution`` will be None.
