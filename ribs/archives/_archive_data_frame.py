@@ -84,7 +84,7 @@ class ArchiveDataFrame(pd.DataFrame):
         """Iterator that outputs every elite in the ArchiveDataFrame.
 
         Data which is unavailable will be turned into None. For example, if
-        there are no solution columns, then ``elite.solution`` will be None.
+        there are no solution columns, then ``elite["solution"]`` will be None.
         """
         solution_batch = self.solution_batch()
         objective_batch = self.objective_batch()
