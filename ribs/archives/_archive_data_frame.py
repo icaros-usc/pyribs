@@ -1,6 +1,4 @@
 """Provides ArchiveDataFrame."""
-from collections import namedtuple
-
 import numpy as np
 import pandas as pd
 
@@ -30,8 +28,8 @@ class ArchiveDataFrame(pd.DataFrame):
         To iterate through every elite as a namedtuple, use::
 
             for elite in df.iterelites():
-                elite.solution
-                elite.objective
+                elite["solution"]  # Shape: (solution_dim,)
+                elite["objective"]
                 ...
 
         There are also methods to access the solutions, objectives, etc. of
@@ -77,8 +75,6 @@ class ArchiveDataFrame(pd.DataFrame):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._elite_class = namedtuple(
-            "Elite", ["solution", "objective", "measures", "index", "metadata"])
 
     @property
     def _constructor(self):
@@ -99,7 +95,13 @@ class ArchiveDataFrame(pd.DataFrame):
         none_array = np.empty(len(self), dtype=object)
 
         return map(
-            lambda e: self._elite_class(e[0], e[1], e[2], e[3], e[4]),
+            lambda e: {
+                "solution": e[0],
+                "objective": e[1],
+                "measures": e[2],
+                "index": e[3],
+                "metadata": e[4],
+            },
             zip(
                 none_array if solution_batch is None else solution_batch,
                 none_array if objective_batch is None else objective_batch,
