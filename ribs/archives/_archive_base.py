@@ -1,6 +1,6 @@
 """Provides ArchiveBase."""
 from abc import ABC, abstractmethod
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
@@ -11,7 +11,6 @@ from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._cqd_score_result import CQDScoreResult
-from ribs.archives._elite import Elite, EliteBatch
 
 _ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() takes in a "
                 "batch of solutions unlike in pyribs 0.4.0, where add() "
@@ -23,8 +22,9 @@ class ArchiveIterator:
 
     # pylint: disable = protected-access
 
-    def __init__(self, archive):
+    def __init__(self, archive, elite_class):
         self.archive = archive
+        self.elite_class = elite_class
         self.iter_idx = 0
         self.state = archive._state.copy()
 
@@ -45,7 +45,7 @@ class ArchiveIterator:
 
         idx = self.archive._occupied_indices[self.iter_idx]
         self.iter_idx += 1
-        return Elite(
+        return self.elite_class(
             self.archive._solution_arr[idx],
             self.archive._objective_arr[idx],
             self.archive._measures_arr[idx],
@@ -205,6 +205,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         ## Not intended to be accessed by children. ##
         self._seed = seed
+        self._elite_class = namedtuple(
+            "Elite", ["solution", "objective", "measures", "index", "metadata"])
+        self._elite_batch_class = namedtuple("EliteBatch", [
+            "solution_batch", "objective_batch", "measures_batch",
+            "index_batch", "metadata_batch"
+        ])
 
     @staticmethod
     def _parse_dtype(dtype):
@@ -273,7 +279,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     @property
     def best_elite(self):
-        """:class:`Elite`: The elite with the highest objective in the archive.
+        """namedtuple: The elite with the highest objective in the archive.
 
         None if there are no elites in the archive.
 
@@ -299,18 +305,18 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._num_occupied
 
     def __iter__(self):
-        """Creates an iterator over the :class:`Elite`'s in the archive.
+        """Creates an iterator over the elites in the archive.
 
         Example:
 
             ::
 
                 for elite in archive:
-                    elite.sol
-                    elite.obj
+                    elite.solution
+                    elite.objective
                     ...
         """
-        return ArchiveIterator(self)
+        return ArchiveIterator(self, self._elite_class)
 
     def _stats_reset(self):
         """Resets the archive stats."""
@@ -687,7 +693,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         if self._stats.obj_max is None or max_obj_insert > self._stats.obj_max:
             new_obj_max = max_obj_insert
-            self._best_elite = Elite(
+            self._best_elite = self._elite_class(
                 readonly(np.copy(solution_batch_insert[max_idx])),
                 objective_batch_insert[max_idx],
                 readonly(np.copy(measures_batch_insert[max_idx])),
@@ -811,7 +817,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
             if self._stats.obj_max is None or objective > self._stats.obj_max:
                 new_obj_max = objective
-                self._best_elite = Elite(
+                self._best_elite = self._elite_class(
                     readonly(np.copy(self._solution_arr[index])),
                     objective,
                     readonly(np.copy(self._measures_arr[index])),
@@ -837,8 +843,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         specified.
 
         This method operates in batch, i.e. it takes in a batch of measures and
-        outputs an :namedtuple:`EliteBatch`. Since :namedtuple:`EliteBatch` is a
-        namedtuple, it can be unpacked::
+        outputs a namedtuple that can be unpacked::
 
             solution_batch, objective_batch, measures_batch, \\
                 index_batch, metadata_batch = archive.retrieve(...)
@@ -878,7 +883,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of coordinates in measure space.
         Returns:
-            EliteBatch: See above.
+            self._elite_batch_class: See above.
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
                 :attr:`measure_dim`).
@@ -893,7 +898,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         occupied_batch = self._occupied_arr[index_batch]
         expanded_occupied_batch = occupied_batch[:, None]
 
-        return EliteBatch(
+        return self._elite_batch_class(
             solution_batch=readonly(
                 # For each occupied_batch[i], this np.where selects
                 # self._solution_arr[index_batch][i] if occupied_batch[i] is
@@ -940,16 +945,16 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         While :meth:`retrieve` takes in a *batch* of measures, this method takes
         in the measures for only *one* solution and returns a single
-        :namedtuple:`Elite`.
+        :namedtuple:`self._elite_class`.
 
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures.
         Returns:
             If there is an elite with measures in the same cell as the measures
-            specified, then this method returns an :namedtuple:`Elite` where all
+            specified, then this method returns an elite namedtuple where all
             the fields hold the info of that elite. Otherwise, this method
-            returns an :namedtuple:`Elite` filled with the same "empty" values
-            described in :meth:`retrieve`.
+            returns a namedtuple filled with the same "empty" values described
+            in :meth:`retrieve`.
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -959,7 +964,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_finite(measures, "measures")
 
         elite_batch = self.retrieve(measures[None])
-        return Elite(
+        return self._elite_class(
             elite_batch.solution_batch[0],
             elite_batch.objective_batch[0],
             elite_batch.measures_batch[0],
@@ -974,8 +979,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         sample is done independently, so elites may be repeated in the sample.
         Additional sampling methods may be supported in the future.
 
-        Since :namedtuple:`EliteBatch` is a namedtuple, the result can be
-        unpacked (here we show how to ignore some of the fields)::
+        Since the output is a namedtuple, the result can be unpacked (here we
+        show how to ignore some of the fields)::
 
             solution_batch, objective_batch, measures_batch, *_ = \\
                 archive.sample_elites(32)
@@ -990,7 +995,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         Args:
             n (int): Number of elites to sample.
         Returns:
-            EliteBatch: A batch of elites randomly selected from the archive.
+            namedtuple: A batch of elites randomly selected from the archive.
         Raises:
             IndexError: The archive is empty.
         """
@@ -1000,7 +1005,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         random_indices = self._rng.integers(self._num_occupied, size=n)
         selected_indices = self._occupied_indices[random_indices]
 
-        return EliteBatch(
+        return self._elite_batch_class(
             readonly(self._solution_arr[selected_indices]),
             readonly(self._objective_arr[selected_indices]),
             readonly(self._measures_arr[selected_indices]),
