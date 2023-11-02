@@ -954,7 +954,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
-        return {field: arr[0] for field, arr in self.retrieve(measures[None])}
+        return {
+            field: arr[0]
+            for field, arr in self.retrieve(measures[None]).items()
+        }
 
     def sample_elites(self, n):
         """Randomly samples elites from the archive.
