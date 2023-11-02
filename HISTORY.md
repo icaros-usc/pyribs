@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Replace Elite and EliteBatch with archive-specific
+  namedtuples ({pr}`397`)
 - **Backwards-incompatible:** Rename `measure_*` columns to `measures_*` in
   `as_pandas` ({pr}`396`)
 - Add ArrayStore data structure ({pr}`395`)
