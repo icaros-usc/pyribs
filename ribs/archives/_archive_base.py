@@ -883,7 +883,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of coordinates in measure space.
         Returns:
-            self._elite_batch_class: See above.
+            namedtuple: See above.
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
                 :attr:`measure_dim`).
@@ -944,8 +944,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         specified.
 
         While :meth:`retrieve` takes in a *batch* of measures, this method takes
-        in the measures for only *one* solution and returns a single
-        :namedtuple:`self._elite_class`.
+        in the measures for only *one* solution and returns a namedtuple with
+        single entries.
 
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures.
