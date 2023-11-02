@@ -25,7 +25,7 @@ class ArchiveDataFrame(pd.DataFrame):
 
             df = archive.as_pandas()
 
-        To iterate through every elite as a namedtuple, use::
+        To iterate through every elite as a dict, use::
 
             for elite in df.iterelites():
                 elite["solution"]  # Shape: (solution_dim,)
