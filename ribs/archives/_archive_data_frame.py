@@ -1,8 +1,8 @@
 """Provides ArchiveDataFrame."""
+from collections import namedtuple
+
 import numpy as np
 import pandas as pd
-
-from ribs.archives._elite import Elite
 
 # Developer Notes:
 # - The documentation for this class is hacked -- to add new methods, manually
@@ -77,6 +77,8 @@ class ArchiveDataFrame(pd.DataFrame):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._elite_class = namedtuple(
+            "Elite", ["solution", "objective", "measures", "index", "metadata"])
 
     @property
     def _constructor(self):
@@ -97,7 +99,7 @@ class ArchiveDataFrame(pd.DataFrame):
         none_array = np.empty(len(self), dtype=object)
 
         return map(
-            lambda e: Elite(e[0], e[1], e[2], e[3], e[4]),
+            lambda e: self._elite_class(e[0], e[1], e[2], e[3], e[4]),
             zip(
                 none_array if solution_batch is None else solution_batch,
                 none_array if objective_batch is None else objective_batch,
