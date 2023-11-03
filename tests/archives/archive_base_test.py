@@ -320,21 +320,21 @@ def test_basic_stats(data):
 
 
 def test_retrieve_gets_correct_elite(data):
-    elite_batch = data.archive_with_elite.retrieve([data.measures])
-    assert np.all(elite_batch.solution_batch[0] == data.solution)
-    assert elite_batch.objective_batch[0] == data.objective
-    assert np.all(elite_batch.measures_batch[0] == data.measures)
-    # Avoid checking elite_batch.idx since the meaning varies by archive.
-    assert elite_batch.metadata_batch[0] == data.metadata
+    elites = data.archive_with_elite.retrieve([data.measures])
+    assert np.all(elites["solution"][0] == data.solution)
+    assert elites["objective"][0] == data.objective
+    assert np.all(elites["measures"][0] == data.measures)
+    # Avoid checking elites["index"] since the meaning varies by archive.
+    assert elites["metadata"][0] == data.metadata
 
 
 def test_retrieve_empty_values(data):
-    elite_batch = data.archive.retrieve([data.measures])
-    assert np.all(np.isnan(elite_batch.solution_batch[0]))
-    assert np.isnan(elite_batch.objective_batch)
-    assert np.all(np.isnan(elite_batch.measures_batch[0]))
-    assert elite_batch.index_batch[0] == -1
-    assert elite_batch.metadata_batch[0] is None
+    elites = data.archive.retrieve([data.measures])
+    assert np.all(np.isnan(elites["solution"][0]))
+    assert np.isnan(elites["objective"])
+    assert np.all(np.isnan(elites["measures"][0]))
+    assert elites["index"][0] == -1
+    assert elites["metadata"][0] is None
 
 
 def test_retrieve_wrong_shape(data):
@@ -353,9 +353,9 @@ def test_retrieve_single_gets_correct_elite(data):
 
 def test_retrieve_single_empty_values(data):
     elite = data.archive.retrieve_single(data.measures)
-    assert np.all(np.isnan(elite.solution))
-    assert np.isnan(elite.objective)
-    assert np.all(np.isnan(elite.measures))
+    assert np.all(np.isnan(elite["solution"]))
+    assert np.isnan(elite["objective"])
+    assert np.all(np.isnan(elite["measures"]))
     assert elite["index"] == -1
     assert elite["metadata"] is None
 
@@ -366,12 +366,12 @@ def test_retrieve_single_wrong_shape(data):
 
 
 def test_sample_elites_gets_single_elite(data):
-    elite_batch = data.archive_with_elite.sample_elites(2)
-    assert np.all(elite_batch.solution_batch == data.solution)
-    assert np.all(elite_batch.objective_batch == data.objective)
-    assert np.all(elite_batch.measures_batch == data.measures)
+    elites = data.archive_with_elite.sample_elites(2)
+    assert np.all(elites["solution"] == data.solution)
+    assert np.all(elites["objective"] == data.objective)
+    assert np.all(elites["measures"] == data.measures)
     # Avoid checking elite["index"] since the meaning varies by archive.
-    assert np.all(elite_batch.metadata_batch == data.metadata)
+    assert np.all(elites["metadata"] == data.metadata)
 
 
 def test_sample_elites_fails_when_empty(data):

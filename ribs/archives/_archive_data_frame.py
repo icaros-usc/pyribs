@@ -2,8 +2,6 @@
 import numpy as np
 import pandas as pd
 
-from ribs.archives._elite import Elite
-
 # Developer Notes:
 # - The documentation for this class is hacked -- to add new methods, manually
 #   modify the template in docs/_templates/autosummary/class.rst
@@ -27,11 +25,11 @@ class ArchiveDataFrame(pd.DataFrame):
 
             df = archive.as_pandas()
 
-        To iterate through every :class:`Elite`, use::
+        To iterate through every elite as a dict, use::
 
             for elite in df.iterelites():
-                elite.solution
-                elite.objective
+                elite["solution"]  # Shape: (solution_dim,)
+                elite["objective"]
                 ...
 
         There are also methods to access the solutions, objectives, etc. of
@@ -83,10 +81,10 @@ class ArchiveDataFrame(pd.DataFrame):
         return ArchiveDataFrame
 
     def iterelites(self):
-        """Iterator which outputs every :class:`Elite` in the ArchiveDataFrame.
+        """Iterator that outputs every elite in the ArchiveDataFrame.
 
         Data which is unavailable will be turned into None. For example, if
-        there are no solution columns, then ``elite.solution`` will be None.
+        there are no solution columns, then ``elite["solution"]`` will be None.
         """
         solution_batch = self.solution_batch()
         objective_batch = self.objective_batch()
@@ -97,7 +95,13 @@ class ArchiveDataFrame(pd.DataFrame):
         none_array = np.empty(len(self), dtype=object)
 
         return map(
-            lambda e: Elite(e[0], e[1], e[2], e[3], e[4]),
+            lambda e: {
+                "solution": e[0],
+                "objective": e[1],
+                "measures": e[2],
+                "index": e[3],
+                "metadata": e[4],
+            },
             zip(
                 none_array if solution_batch is None else solution_batch,
                 none_array if objective_batch is None else objective_batch,

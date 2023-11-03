@@ -27,7 +27,7 @@ def assert_archive_elite(archive, solution, objective, measures, grid_indices,
     assert elite["metadata"] == metadata
 
 
-def assert_archive_elite_batch(
+def assert_archive_elites(
     archive,
     batch_size,
     solution_batch=None,
@@ -315,7 +315,7 @@ def test_add_batch_all_new(data):
     assert (status_batch == 2).all()
     assert np.isclose(value_batch, [0, 0, 0, 1]).all()
 
-    assert_archive_elite_batch(
+    assert_archive_elites(
         archive=data.archive,
         batch_size=3,
         solution_batch=[[1, 2, 3]] * 3,
@@ -338,7 +338,7 @@ def test_add_batch_none_inserted(data):
     assert (status_batch == 0).all()
     assert np.isclose(value_batch, -1.0).all()
 
-    assert_archive_elite_batch(
+    assert_archive_elites(
         archive=data.archive_with_elite,
         batch_size=1,
         solution_batch=[data.solution],
@@ -361,7 +361,7 @@ def test_add_batch_with_improvement(data):
     assert (status_batch == 1).all()
     assert np.isclose(value_batch, 1.0).all()
 
-    assert_archive_elite_batch(
+    assert_archive_elites(
         archive=data.archive_with_elite,
         batch_size=1,
         solution_batch=[[1, 2, 3]],
@@ -401,7 +401,7 @@ def test_add_batch_mixed_statuses(data):
     assert (status_batch == [0, 0, 1, 1, 2, 2]).all()
     assert np.isclose(value_batch, [-1, -2, 1, 2, 1, 2]).all()
 
-    assert_archive_elite_batch(
+    assert_archive_elites(
         archive=data.archive_with_elite,
         batch_size=2,
         solution_batch=[[1, 2, 3]] * 2,
@@ -438,7 +438,7 @@ def test_add_batch_first_solution_wins_in_ties(data):
     assert (status_batch == [1, 1, 2, 2]).all()
     assert np.isclose(value_batch, [1, 1, 3, 3]).all()
 
-    assert_archive_elite_batch(
+    assert_archive_elites(
         archive=data.archive_with_elite,
         batch_size=2,
         # The first and third solution should be inserted since they come first.
@@ -470,7 +470,7 @@ def test_add_batch_not_inserted_if_below_threshold_min():
     assert (status_batch == [0, 0, 2, 2]).all()
     assert np.isclose(value_batch, [-10.0, -10.0, 20.0, 20.0]).all()
 
-    assert_archive_elite_batch(
+    assert_archive_elites(
         archive=archive,
         batch_size=1,
         solution_batch=[[1, 2, 3]],
