@@ -82,8 +82,7 @@ class ArrayStore:
             dtype)``. For instance, ``{"objective": ((), np.float32),
             "measures": ((10,), np.float32)}`` will create an "objective" field
             with shape ``(capacity,)`` and a "measures" field with shape
-            ``(capacity, 10)``. Note that field names must be valid Python
-            identifiers.
+            ``(capacity, 10)``.
         capacity (int): Total possible entries in the store.
 
     Attributes:
@@ -102,8 +101,8 @@ class ArrayStore:
         _fields (dict): Holds all the arrays with their data.
 
     Raises:
-        ValueError: One of the fields in ``field_desc`` has a reserved name
-            (currently, "index" is the only reserved name).
+        ValueError: One of the fields in ``field_desc`` has an invalid name
+            (currently, "index" is the only invalid name).
     """
 
     def __init__(self, field_desc, capacity):
@@ -118,10 +117,7 @@ class ArrayStore:
         self._fields = {}
         for name, (field_shape, dtype) in field_desc.items():
             if name == "index":
-                raise ValueError(f"`{name}` is a reserved field name.")
-            if not name.isidentifier():
-                raise ValueError(
-                    f"Field names must be valid identifiers: `{name}`")
+                raise ValueError(f"`{name}` is an invalid field name.")
 
             if isinstance(field_shape, (int, np.integer)):
                 field_shape = (field_shape,)
