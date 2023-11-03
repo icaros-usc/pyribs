@@ -207,7 +207,7 @@ class ArrayStore:
         Raises:
             ValueError: Invalid field name provided.
         """
-        indices = np.asarray(indices)
+        indices = np.asarray(indices, dtype=np.int32)
         occupied = readonly(self._props["occupied"][indices])
 
         data = {}
