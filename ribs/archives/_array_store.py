@@ -113,7 +113,7 @@ class ArrayStore:
             "capacity": capacity,
             "occupied": np.zeros(capacity, dtype=bool),
             "n_occupied": 0,
-            "occupied_list": np.empty(capacity, dtype=int),
+            "occupied_list": np.empty(capacity, dtype=np.int32),
             "updates": np.array([0, 0]),
         }
 
@@ -168,7 +168,7 @@ class ArrayStore:
 
     @property
     def occupied_list(self):
-        """numpy.ndarray: Integer array listing all occupied indices in the
+        """numpy.ndarray: int32 array listing all occupied indices in the
         store."""
         return readonly(
             self._props["occupied_list"][:self._props["n_occupied"]])
@@ -207,7 +207,7 @@ class ArrayStore:
         Raises:
             ValueError: Invalid field name provided.
         """
-        indices = np.asarray(indices)
+        indices = np.asarray(indices, dtype=np.int32)
         occupied = readonly(self._props["occupied"][indices])
 
         data = {}
@@ -363,7 +363,7 @@ class ArrayStore:
         self._props["occupied"][:cur_capacity] = cur_occupied
 
         cur_occupied_list = self._props["occupied_list"]
-        self._props["occupied_list"] = np.empty(capacity, dtype=int)
+        self._props["occupied_list"] = np.empty(capacity, dtype=np.int32)
         self._props["occupied_list"][:cur_capacity] = cur_occupied_list
 
         for name, cur_arr in self._fields.items():

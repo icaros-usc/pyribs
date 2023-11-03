@@ -138,6 +138,28 @@ def test_add_duplicate_indices(store):
     assert np.all(store.occupied_list == [3])
 
 
+def test_dtypes(store):
+    store.add(
+        [3, 5],
+        {
+            "objective": [1.0, 2.0],
+            "measures": [[1.0, 2.0], [3.0, 4.0]],
+            "solution": [np.zeros(10), np.ones(10)],
+        },
+        {},  # Empty extra_args.
+        [],  # Empty transforms.
+    )
+
+    _, data = store.retrieve([5, 3])
+
+    # Index is always int32, and other fields were defined as float32 in the
+    # `store` fixture.
+    assert data["index"].dtype == np.int32
+    assert data["objective"].dtype == np.float32
+    assert data["measures"].dtype == np.float32
+    assert data["solution"].dtype == np.float32
+
+
 def test_retrieve_duplicate_indices(store):
     store.add(
         [3],
@@ -400,7 +422,7 @@ def test_as_pandas(store):
         "solution_8",
         "solution_9",
     ]).all()
-    assert (df.dtypes == [int] + [np.float32] * 13).all()
+    assert (df.dtypes == [np.int32] + [np.float32] * 13).all()
     assert len(df) == 2
 
     row0 = np.concatenate(([3, 1.0, 1.0, 2.0], np.zeros(10)))
