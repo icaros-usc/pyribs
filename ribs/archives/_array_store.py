@@ -113,7 +113,7 @@ class ArrayStore:
             "capacity": capacity,
             "occupied": np.zeros(capacity, dtype=bool),
             "n_occupied": 0,
-            "occupied_list": np.empty(capacity, dtype=int),
+            "occupied_list": np.empty(capacity, dtype=np.int32),
             "updates": np.array([0, 0]),
         }
 
