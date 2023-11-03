@@ -40,7 +40,8 @@ def assert_archive_elites(
 
     Any of the batch items may be excluded by setting to None.
     """
-    archive_df = archive.as_pandas()
+    archive_df = archive.as_pandas(include_solutions=True,
+                                   include_metadata=True)
 
     # Check the number of solutions.
     assert len(archive_df) == batch_size
