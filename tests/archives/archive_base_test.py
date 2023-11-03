@@ -38,12 +38,12 @@ def test_invalid_dtype():
 def test_iteration():
     data = get_archive_data("GridArchive")
     for elite in data.archive_with_elite:
-        assert np.isclose(elite.solution, data.solution).all()
-        assert np.isclose(elite.objective, data.objective)
-        assert np.isclose(elite.measures, data.measures).all()
-        assert elite.index == data.archive_with_elite.grid_to_int_index(
+        assert np.isclose(elite["solution"], data.solution).all()
+        assert np.isclose(elite["objective"], data.objective)
+        assert np.isclose(elite["measures"], data.measures).all()
+        assert elite["index"] == data.archive_with_elite.grid_to_int_index(
             [data.grid_indices])[0]
-        assert elite.metadata == data.metadata
+        assert elite["metadata"] == data.metadata
 
 
 def test_add_during_iteration(add_mode):
@@ -175,9 +175,9 @@ def test_best_elite(add_mode):
     else:
         archive.add([[1, 2, 3]], [1.0], [[0, 0]])
 
-    assert np.isclose(archive.best_elite.solution, [1, 2, 3]).all()
-    assert np.isclose(archive.best_elite.objective, 1.0)
-    assert np.isclose(archive.best_elite.measures, [0, 0]).all()
+    assert np.isclose(archive.best_elite["solution"], [1, 2, 3]).all()
+    assert np.isclose(archive.best_elite["objective"], 1.0)
+    assert np.isclose(archive.best_elite["measures"], [0, 0]).all()
     assert np.isclose(archive.stats.obj_max, 1.0)
 
     # Add an elite into the same cell as the previous elite -- best_elite should
@@ -187,9 +187,9 @@ def test_best_elite(add_mode):
     else:
         archive.add([[4, 5, 6]], [2.0], [[0, 0]])
 
-    assert np.isclose(archive.best_elite.solution, [4, 5, 6]).all()
-    assert np.isclose(archive.best_elite.objective, 2.0).all()
-    assert np.isclose(archive.best_elite.measures, [0, 0]).all()
+    assert np.isclose(archive.best_elite["solution"], [4, 5, 6]).all()
+    assert np.isclose(archive.best_elite["objective"], 2.0).all()
+    assert np.isclose(archive.best_elite["measures"], [0, 0]).all()
     assert np.isclose(archive.stats.obj_max, 2.0)
 
 
@@ -208,9 +208,9 @@ def test_best_elite_with_threshold(add_mode):
 
     # Threshold should now be 0.1 * 1 + (1 - 0.1) * 0.
 
-    assert np.isclose(archive.best_elite.solution, [1, 2, 3]).all()
-    assert np.isclose(archive.best_elite.objective, 1.0).all()
-    assert np.isclose(archive.best_elite.measures, [0, 0]).all()
+    assert np.isclose(archive.best_elite["solution"], [1, 2, 3]).all()
+    assert np.isclose(archive.best_elite["objective"], 1.0).all()
+    assert np.isclose(archive.best_elite["measures"], [0, 0]).all()
     assert np.isclose(archive.stats.obj_max, 1.0)
 
     # Add an elite with lower objective value than best elite but higher
@@ -222,9 +222,9 @@ def test_best_elite_with_threshold(add_mode):
 
     # Best elite remains the same even though this is a non-elitist archive and
     # the best elite is no longer in the archive.
-    assert np.isclose(archive.best_elite.solution, [1, 2, 3]).all()
-    assert np.isclose(archive.best_elite.objective, 1.0)
-    assert np.isclose(archive.best_elite.measures, [0, 0]).all()
+    assert np.isclose(archive.best_elite["solution"], [1, 2, 3]).all()
+    assert np.isclose(archive.best_elite["objective"], 1.0)
+    assert np.isclose(archive.best_elite["measures"], [0, 0]).all()
     assert np.isclose(archive.stats.obj_max, 1.0)
 
 
@@ -320,21 +320,21 @@ def test_basic_stats(data):
 
 
 def test_retrieve_gets_correct_elite(data):
-    elite_batch = data.archive_with_elite.retrieve([data.measures])
-    assert np.all(elite_batch.solution_batch[0] == data.solution)
-    assert elite_batch.objective_batch[0] == data.objective
-    assert np.all(elite_batch.measures_batch[0] == data.measures)
-    # Avoid checking elite_batch.idx since the meaning varies by archive.
-    assert elite_batch.metadata_batch[0] == data.metadata
+    elites = data.archive_with_elite.retrieve([data.measures])
+    assert np.all(elites["solution"][0] == data.solution)
+    assert elites["objective"][0] == data.objective
+    assert np.all(elites["measures"][0] == data.measures)
+    # Avoid checking elites["index"] since the meaning varies by archive.
+    assert elites["metadata"][0] == data.metadata
 
 
 def test_retrieve_empty_values(data):
-    elite_batch = data.archive.retrieve([data.measures])
-    assert np.all(np.isnan(elite_batch.solution_batch[0]))
-    assert np.isnan(elite_batch.objective_batch)
-    assert np.all(np.isnan(elite_batch.measures_batch[0]))
-    assert elite_batch.index_batch[0] == -1
-    assert elite_batch.metadata_batch[0] is None
+    elites = data.archive.retrieve([data.measures])
+    assert np.all(np.isnan(elites["solution"][0]))
+    assert np.isnan(elites["objective"])
+    assert np.all(np.isnan(elites["measures"][0]))
+    assert elites["index"][0] == -1
+    assert elites["metadata"][0] is None
 
 
 def test_retrieve_wrong_shape(data):
@@ -344,20 +344,20 @@ def test_retrieve_wrong_shape(data):
 
 def test_retrieve_single_gets_correct_elite(data):
     elite = data.archive_with_elite.retrieve_single(data.measures)
-    assert np.all(elite.solution == data.solution)
-    assert elite.objective == data.objective
-    assert np.all(elite.measures == data.measures)
-    # Avoid checking elite.idx since the meaning varies by archive.
-    assert elite.metadata == data.metadata
+    assert np.all(elite["solution"] == data.solution)
+    assert elite["objective"] == data.objective
+    assert np.all(elite["measures"] == data.measures)
+    # Avoid checking elite["index"] since the meaning varies by archive.
+    assert elite["metadata"] == data.metadata
 
 
 def test_retrieve_single_empty_values(data):
     elite = data.archive.retrieve_single(data.measures)
-    assert np.all(np.isnan(elite.solution))
-    assert np.isnan(elite.objective)
-    assert np.all(np.isnan(elite.measures))
-    assert elite.index == -1
-    assert elite.metadata is None
+    assert np.all(np.isnan(elite["solution"]))
+    assert np.isnan(elite["objective"])
+    assert np.all(np.isnan(elite["measures"]))
+    assert elite["index"] == -1
+    assert elite["metadata"] is None
 
 
 def test_retrieve_single_wrong_shape(data):
@@ -366,12 +366,12 @@ def test_retrieve_single_wrong_shape(data):
 
 
 def test_sample_elites_gets_single_elite(data):
-    elite_batch = data.archive_with_elite.sample_elites(2)
-    assert np.all(elite_batch.solution_batch == data.solution)
-    assert np.all(elite_batch.objective_batch == data.objective)
-    assert np.all(elite_batch.measures_batch == data.measures)
-    # Avoid checking elite.idx since the meaning varies by archive.
-    assert np.all(elite_batch.metadata_batch == data.metadata)
+    elites = data.archive_with_elite.sample_elites(2)
+    assert np.all(elites["solution"] == data.solution)
+    assert np.all(elites["objective"] == data.objective)
+    assert np.all(elites["measures"] == data.measures)
+    # Avoid checking elite["index"] since the meaning varies by archive.
+    assert np.all(elites["metadata"] == data.metadata)
 
 
 def test_sample_elites_fails_when_empty(data):

@@ -21,7 +21,7 @@ def data():
 
 @pytest.fixture
 def df(data):
-    """Mimics the ArchiveDataFrame which an as_pandas method would generate."""
+    """Mimics the ArchiveDataFrame that an as_pandas method would generate."""
     (solution_batch, objective_batch, measures_batch, index_batch,
      metadata_batch) = data
     return ArchiveDataFrame({
@@ -36,11 +36,11 @@ def df(data):
 def test_iterelites(data, df):
     for elite, (solution, objective, measures, index,
                 metadata) in zip(df.iterelites(), zip(*data)):
-        assert np.isclose(elite.solution, solution).all()
-        assert np.isclose(elite.objective, objective)
-        assert np.isclose(elite.measures, measures).all()
-        assert elite.index == index
-        assert elite.metadata == metadata
+        assert np.isclose(elite["solution"], solution).all()
+        assert np.isclose(elite["objective"], objective)
+        assert np.isclose(elite["measures"], measures).all()
+        assert elite["index"] == index
+        assert elite["metadata"] == metadata
 
 
 def test_batch_methods(data, df):

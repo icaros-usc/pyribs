@@ -152,10 +152,9 @@ class IsoLineEmitter(EmitterBase):
         if self.archive.empty:
             solution_batch = np.expand_dims(self._x0, axis=0) + iso_gaussian
         else:
-            parents = self.archive.sample_elites(
-                self._batch_size).solution_batch
+            parents = self.archive.sample_elites(self._batch_size)["solution"]
             directions = (
-                self.archive.sample_elites(self._batch_size).solution_batch -
+                self.archive.sample_elites(self._batch_size)["solution"] -
                 parents)
             line_gaussian = self._rng.normal(
                 scale=self._line_sigma,

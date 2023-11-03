@@ -6,7 +6,7 @@ from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
 from ribs.schedulers import BanditScheduler, Scheduler
 
-from ..archives.grid_archive_test import assert_archive_elite_batch
+from ..archives.grid_archive_test import assert_archive_elites
 
 # pylint: disable = redefined-outer-name
 
@@ -162,7 +162,7 @@ def test_tell_inserts_solutions_into_archive(add_mode, tell_metadata):
     # the archive.
     scheduler.tell(np.ones(batch_size), measures_batch, metadata)
 
-    assert_archive_elite_batch(
+    assert_archive_elites(
         archive=scheduler.archive,
         batch_size=batch_size,
         objective_batch=np.ones(batch_size),
@@ -195,7 +195,7 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode, tell_metadata):
     _ = scheduler.ask()
     scheduler.tell(np.ones(batch_size), measures_batch, metadata)
 
-    assert_archive_elite_batch(
+    assert_archive_elites(
         archive=scheduler.archive,
         batch_size=batch_size,
         objective_batch=np.ones(batch_size),

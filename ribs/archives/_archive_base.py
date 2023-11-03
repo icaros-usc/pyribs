@@ -11,7 +11,6 @@ from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._cqd_score_result import CQDScoreResult
-from ribs.archives._elite import Elite, EliteBatch
 
 _ADD_WARNING = (" Note that starting in pyribs 0.5.0, add() takes in a "
                 "batch of solutions unlike in pyribs 0.4.0, where add() "
@@ -45,13 +44,13 @@ class ArchiveIterator:
 
         idx = self.archive._occupied_indices[self.iter_idx]
         self.iter_idx += 1
-        return Elite(
-            self.archive._solution_arr[idx],
-            self.archive._objective_arr[idx],
-            self.archive._measures_arr[idx],
-            idx,
-            self.archive._metadata_arr[idx],
-        )
+        return {
+            "solution": self.archive._solution_arr[idx],
+            "objective": self.archive._objective_arr[idx],
+            "measures": self.archive._measures_arr[idx],
+            "index": idx,
+            "metadata": self.archive._metadata_arr[idx],
+        }
 
 
 class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
@@ -273,7 +272,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
     @property
     def best_elite(self):
-        """:class:`Elite`: The elite with the highest objective in the archive.
+        """dict: The elite with the highest objective in the archive.
 
         None if there are no elites in the archive.
 
@@ -299,15 +298,15 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         return self._num_occupied
 
     def __iter__(self):
-        """Creates an iterator over the :class:`Elite`'s in the archive.
+        """Creates an iterator over the elites in the archive.
 
         Example:
 
             ::
 
                 for elite in archive:
-                    elite.sol
-                    elite.obj
+                    elite["solution"]
+                    elite["objective"]
                     ...
         """
         return ArchiveIterator(self)
@@ -687,13 +686,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         if self._stats.obj_max is None or max_obj_insert > self._stats.obj_max:
             new_obj_max = max_obj_insert
-            self._best_elite = Elite(
-                readonly(np.copy(solution_batch_insert[max_idx])),
-                objective_batch_insert[max_idx],
-                readonly(np.copy(measures_batch_insert[max_idx])),
-                index_batch_insert[max_idx],
-                metadata_batch_insert[max_idx],
-            )
+            self._best_elite = {
+                "solution": readonly(np.copy(solution_batch_insert[max_idx])),
+                "objective": objective_batch_insert[max_idx],
+                "measures": readonly(np.copy(measures_batch_insert[max_idx])),
+                "index": index_batch_insert[max_idx],
+                "metadata": metadata_batch_insert[max_idx],
+            }
         else:
             new_obj_max = self._stats.obj_max
 
@@ -811,13 +810,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
             if self._stats.obj_max is None or objective > self._stats.obj_max:
                 new_obj_max = objective
-                self._best_elite = Elite(
-                    readonly(np.copy(self._solution_arr[index])),
-                    objective,
-                    readonly(np.copy(self._measures_arr[index])),
-                    index,
-                    metadata,
-                )
+                self._best_elite = {
+                    "solution": readonly(np.copy(self._solution_arr[index])),
+                    "objective": objective,
+                    "measures": readonly(np.copy(self._measures_arr[index])),
+                    "index": index,
+                    "metadata": metadata,
+                }
             else:
                 new_obj_max = self._stats.obj_max
 
@@ -836,40 +835,33 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """Retrieves the elites with measures in the same cells as the measures
         specified.
 
-        This method operates in batch, i.e. it takes in a batch of measures and
-        outputs an :namedtuple:`EliteBatch`. Since :namedtuple:`EliteBatch` is a
-        namedtuple, it can be unpacked::
+        This method operates in batch, i.e., it takes in a batch of measures and
+        outputs the batched data for the elites::
 
-            solution_batch, objective_batch, measures_batch, \\
-                index_batch, metadata_batch = archive.retrieve(...)
+            elites = archive.retrieve(...)
+            elites["solution"]  # Shape: (batch_size, solution_dim)
+            elites["objective"]
+            elites["measures"]
+            elites["index"]
+            elites["metadata"]
 
-        Or the fields may be accessed by name::
-
-            elite_batch = archive.retrieve(...)
-            elite_batch.solution_batch
-            elite_batch.objective_batch
-            elite_batch.measures_batch
-            elite_batch.index_batch
-            elite_batch.metadata_batch
-
-        If the cell associated with ``measures_batch[i]`` has an elite in it,
-        then ``elite_batch.solution_batch[i]``,
-        ``elite_batch.objective_batch[i]``, ``elite_batch.measures_batch[i]``,
-        ``elite_batch.index_batch[i]``, and ``elite_batch.metadata_batch[i]``
-        will be set to the properties of the elite. Note that
-        ``elite_batch.measures_batch[i]`` may not be equal to
-        ``measures_batch[i]`` since the measures only need to be in the same
-        archive cell.
+        If the cell associated with ``elites["measures"][i]`` has an elite in
+        it, then ``elites["solution"][i]``, ``elites["objective"][i]``,
+        ``elites["measures"][i]``, ``elites["index"][i]``, and
+        ``elites["metadata"][i]`` will be set to the properties of the elite.
+        Note that ``elites["measures"][i]`` may not be equal to the
+        ``measures_batch[i]`` passed as an argument, since the measures only
+        need to be in the same archive cell.
 
         If the cell associated with ``measures_batch[i]`` *does not* have any
         elite in it, then the corresponding outputs are set to empty values --
         namely:
 
-        * ``elite_batch.solution_batch[i]`` will be an array of NaN
-        * ``elite_batch.objective_batch[i]`` will be NaN
-        * ``elite_batch.measures_batch[i]`` will be an array of NaN
-        * ``elite_batch.index_batch[i]`` will be -1
-        * ``elite_batch.metadata_batch[i]`` will be None
+        * ``elites["solution"][i]`` will be an array of NaN
+        * ``elites["objective"][i]`` will be NaN
+        * ``elites["measures"][i]`` will be an array of NaN
+        * ``elites["index"][i]`` will be -1
+        * ``elites["metadata"][i]`` will be None
 
         If you need to retrieve a *single* elite associated with some measures,
         consider using :meth:`retrieve_single`.
@@ -878,7 +870,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of coordinates in measure space.
         Returns:
-            EliteBatch: See above.
+            dict: See above.
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
                 :attr:`measure_dim`).
@@ -893,63 +885,67 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         occupied_batch = self._occupied_arr[index_batch]
         expanded_occupied_batch = occupied_batch[:, None]
 
-        return EliteBatch(
-            solution_batch=readonly(
-                # For each occupied_batch[i], this np.where selects
-                # self._solution_arr[index_batch][i] if occupied_batch[i] is
-                # True. Otherwise, it uses the alternate value (a solution
-                # array consisting of np.nan).
-                np.where(
-                    expanded_occupied_batch,
-                    self._solution_arr[index_batch],
-                    np.full(self._solution_dim, np.nan),
-                )),
-            objective_batch=readonly(
-                np.where(
-                    occupied_batch,
-                    self._objective_arr[index_batch],
-                    # Here the alternative is just a scalar np.nan.
-                    np.nan,
-                )),
-            measures_batch=readonly(
-                np.where(
-                    expanded_occupied_batch,
-                    self._measures_arr[index_batch],
-                    # And here it is a measures array of np.nan.
-                    np.full(self._measure_dim, np.nan),
-                )),
-            index_batch=readonly(
-                np.where(
-                    occupied_batch,
-                    index_batch,
-                    # Indices must be integers, so np.nan would not work, hence
-                    # we use -1.
-                    -1,
-                )),
-            metadata_batch=readonly(
-                np.where(
-                    occupied_batch,
-                    self._metadata_arr[index_batch],
-                    None,
-                )),
-        )
+        return {
+            "solution":
+                readonly(
+                    # For each occupied_batch[i], this np.where selects
+                    # self._solution_arr[index_batch][i] if occupied_batch[i] is
+                    # True. Otherwise, it uses the alternate value (a solution
+                    # array consisting of np.nan).
+                    np.where(
+                        expanded_occupied_batch,
+                        self._solution_arr[index_batch],
+                        np.full(self._solution_dim, np.nan),
+                    )),
+            "objective":
+                readonly(
+                    np.where(
+                        occupied_batch,
+                        self._objective_arr[index_batch],
+                        # Here the alternative is just a scalar np.nan.
+                        np.nan,
+                    )),
+            "measures":
+                readonly(
+                    np.where(
+                        expanded_occupied_batch,
+                        self._measures_arr[index_batch],
+                        # And here it is a measures array of np.nan.
+                        np.full(self._measure_dim, np.nan),
+                    )),
+            "index":
+                readonly(
+                    np.where(
+                        occupied_batch,
+                        index_batch,
+                        # Indices must be integers, so np.nan would not work,
+                        # hence we use -1.
+                        -1,
+                    )),
+            "metadata":
+                readonly(
+                    np.where(
+                        occupied_batch,
+                        self._metadata_arr[index_batch],
+                        None,
+                    )),
+        }
 
     def retrieve_single(self, measures):
         """Retrieves the elite with measures in the same cell as the measures
         specified.
 
         While :meth:`retrieve` takes in a *batch* of measures, this method takes
-        in the measures for only *one* solution and returns a single
-        :namedtuple:`Elite`.
+        in the measures for only *one* solution and returns a dict with single
+        entries.
 
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures.
         Returns:
             If there is an elite with measures in the same cell as the measures
-            specified, then this method returns an :namedtuple:`Elite` where all
-            the fields hold the info of that elite. Otherwise, this method
-            returns an :namedtuple:`Elite` filled with the same "empty" values
-            described in :meth:`retrieve`.
+            specified, then this method returns dict where all the fields hold
+            the info of the elite. Otherwise, this method returns a dict filled
+            with the same "empty" values described in :meth:`retrieve`.
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -958,14 +954,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
-        elite_batch = self.retrieve(measures[None])
-        return Elite(
-            elite_batch.solution_batch[0],
-            elite_batch.objective_batch[0],
-            elite_batch.measures_batch[0],
-            elite_batch.index_batch[0],
-            elite_batch.metadata_batch[0],
-        )
+        return {
+            field: arr[0]
+            for field, arr in self.retrieve(measures[None]).items()
+        }
 
     def sample_elites(self, n):
         """Randomly samples elites from the archive.
@@ -974,23 +966,19 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         sample is done independently, so elites may be repeated in the sample.
         Additional sampling methods may be supported in the future.
 
-        Since :namedtuple:`EliteBatch` is a namedtuple, the result can be
-        unpacked (here we show how to ignore some of the fields)::
+        Example:
 
-            solution_batch, objective_batch, measures_batch, *_ = \\
-                archive.sample_elites(32)
+            ::
 
-        Or the fields may be accessed by name::
-
-            elite = archive.sample_elites(16)
-            elite.solution_batch
-            elite.objective_batch
-            ...
+                elites = archive.sample_elites(16)
+                elites["solution"]  # Shape: (16, solution_dim)
+                elites["objective"]
+                ...
 
         Args:
             n (int): Number of elites to sample.
         Returns:
-            EliteBatch: A batch of elites randomly selected from the archive.
+            dict: Holds a batch of elites randomly selected from the archive.
         Raises:
             IndexError: The archive is empty.
         """
@@ -1000,13 +988,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         random_indices = self._rng.integers(self._num_occupied, size=n)
         selected_indices = self._occupied_indices[random_indices]
 
-        return EliteBatch(
-            readonly(self._solution_arr[selected_indices]),
-            readonly(self._objective_arr[selected_indices]),
-            readonly(self._measures_arr[selected_indices]),
-            readonly(selected_indices),
-            readonly(self._metadata_arr[selected_indices]),
-        )
+        return {
+            "solution": readonly(self._solution_arr[selected_indices]),
+            "objective": readonly(self._objective_arr[selected_indices]),
+            "measures": readonly(self._measures_arr[selected_indices]),
+            "index": readonly(selected_indices),
+            "metadata": readonly(self._metadata_arr[selected_indices]),
+        }
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
         """Converts the archive into an :class:`ArchiveDataFrame` (a child class
