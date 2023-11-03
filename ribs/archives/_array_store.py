@@ -363,7 +363,7 @@ class ArrayStore:
         self._props["occupied"][:cur_capacity] = cur_occupied
 
         cur_occupied_list = self._props["occupied_list"]
-        self._props["occupied_list"] = np.empty(capacity, dtype=int)
+        self._props["occupied_list"] = np.empty(capacity, dtype=np.int32)
         self._props["occupied_list"][:cur_capacity] = cur_occupied_list
 
         for name, cur_arr in self._fields.items():
