@@ -1,22 +1,23 @@
 """Provides ArchiveBase."""
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 
 import numpy as np
-from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
-                         check_is_1d, parse_float_dtype, readonly,
-                         validate_batch_args, validate_single_args)
+                         check_is_1d, parse_float_dtype, validate_batch_args,
+                         validate_single_args)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
+from ribs.archives.transforms import transform_batch, transform_single
 
 # TODO: always include threshold field? Say that we at least assume solution,
 # objective, measures (other classes can add other fields if they want).
 
 # TODO: store should be an abstract property?
+
+# TODO: test threshold field in retrieve() etc.
 
 
 class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
@@ -64,11 +65,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
             ``np.float64``.
     Attributes:
-        _solution_dim (int): See ``solution_dim`` arg.
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
-        _cells (int): See ``cells`` arg.
-        _measure_dim (int): See ``measure_dim`` arg.
     """
 
     def __init__(self,
@@ -102,6 +100,17 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         # qd_score and obj_mean.
         self._objective_sum = None
         self._stats_reset()
+
+        self._store = ArrayStore(
+            field_desc={
+                "solution": ((solution_dim,), self.dtype),
+                "objective": ((), self.dtype),
+                "measures": ((self._measure_dim,), self.dtype),
+                "metadata": ((), object),
+                "threshold": ((), self.dtype),
+            },
+            capacity=self._cells,
+        )
 
     @property
     def cells(self):
@@ -168,11 +177,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     @property
     def empty(self):
         """bool: Whether the archive is empty."""
-        return self._num_occupied == 0
+        return len(self._store) == 0
 
     def __len__(self):
         """Number of elites in the archive."""
-        return self._num_occupied
+        return len(self._store)
 
     def __iter__(self):
         """Creates an iterator over the elites in the archive.
@@ -186,7 +195,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                     elite["objective"]
                     ...
         """
-        return ArchiveIterator(self)
+        return iter(self._store)
 
     def _stats_reset(self):
         """Resets the archive stats."""
@@ -200,73 +209,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         )
         self._objective_sum = self.dtype(0.0)
 
-    def _compute_new_thresholds(self, threshold_arr, objective_batch,
-                                index_batch, learning_rate):
-        """Update thresholds.
-
-        Args:
-            threshold_arr (np.ndarray): The threshold of the cells before
-                updating. 1D array.
-            objective_batch (np.ndarray): The objective values of the solution
-                that is inserted into the archive for each cell. 1D array. We
-                assume that the objective values are all higher than the
-                thresholds of their respective cells.
-            index_batch (np.ndarray): The archive index of the elements in
-                objective batch.
-        Returns:
-            `new_threshold_batch` (A self.dtype array of new
-            thresholds) and `threshold_update_indices` (A boolean
-            array indicating which entries in `threshold_arr` should
-            be updated.
-        """
-        # Even though we do this check, it should not be possible to have
-        # empty objective_batch or index_batch in the add() method since
-        # we check that at least one cell is being updated by seeing if
-        # can_insert has any True values.
-        if objective_batch.size == 0 or index_batch.size == 0:
-            return np.array([], dtype=self.dtype), np.array([], dtype=bool)
-
-        # Compute the number of objectives inserted into each cell.
-        objective_sizes = aggregate(index_batch,
-                                    objective_batch,
-                                    func="len",
-                                    fill_value=0,
-                                    size=threshold_arr.size)
-
-        # These indices are with respect to the archive, so we can directly pass
-        # them to threshold_arr.
-        threshold_update_indices = objective_sizes > 0
-
-        # Compute the sum of the objectives inserted into each cell.
-        objective_sums = aggregate(index_batch,
-                                   objective_batch,
-                                   func="sum",
-                                   fill_value=np.nan,
-                                   size=threshold_arr.size)
-
-        # Throw away indices that we do not care about.
-        objective_sizes = objective_sizes[threshold_update_indices]
-        objective_sums = objective_sums[threshold_update_indices]
-
-        # Unlike in add_single, we do not need to worry about
-        # old_threshold having -np.inf here as a result of threshold_min
-        # being -np.inf. This is because the case with threshold_min =
-        # -np.inf is handled separately since we compute the new
-        # threshold based on the max objective in each cell in that case.
-        old_threshold = np.copy(threshold_arr[threshold_update_indices])
-
-        ratio = self.dtype(1.0 - learning_rate)**objective_sizes
-        new_threshold_batch = (ratio * old_threshold +
-                               (objective_sums / objective_sizes) * (1 - ratio))
-
-        return new_threshold_batch, threshold_update_indices
-
     def clear(self):
         """Removes all elites from the archive.
 
         After this method is called, the archive will be :attr:`empty`.
         """
-        # TODO: Fill in.
+        self._store.clear()
+
+        # TODO: what to do with clearing stats?
         self._stats_reset()
         self._best_elite = None
 
@@ -410,9 +360,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             ValueError: ``objective_batch`` or ``measures_batch`` has non-finite
                 values (inf or NaN).
         """
-        self._state["add"] += 1
-
-        ## Step 1: Validate input. ##
         (
             solution_batch,
             objective_batch,
@@ -427,151 +374,54 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         )
         batch_size = solution_batch.shape[0]
 
-        ## Step 2: Compute status_batch and value_batch ##
-
-        # Retrieve indices.
-        index_batch = self.index_of(measures_batch)
-
-        # Copy old objectives since we will be modifying the objectives storage.
-        old_objective_batch = np.copy(self._objective_arr[index_batch])
-        old_threshold_batch = np.copy(self._threshold_arr[index_batch])
-
-        # Compute the statuses -- these are all boolean arrays of length
-        # batch_size.
-        already_occupied = self._occupied_arr[index_batch]
-        # In the case where we want CMA-ME behavior, threshold_arr[index]
-        # is -inf for new cells, which satisfies the condition for can_be_added.
-        can_be_added = objective_batch > old_threshold_batch
-        is_new = can_be_added & ~already_occupied
-        improve_existing = can_be_added & already_occupied
-        status_batch = np.zeros(batch_size, dtype=np.int32)
-        status_batch[is_new] = 2
-        status_batch[improve_existing] = 1
-
-        # New solutions require special settings for old_objective and
-        # old_threshold.
-        old_objective_batch[is_new] = self.dtype(0)
-
-        # If threshold_min is -inf, then we want CMA-ME behavior, which
-        # will compute the improvement value of new solutions w.r.t zero.
-        # Otherwise, we will compute w.r.t. threshold_min.
-        old_threshold_batch[is_new] = (self.dtype(0) if self._threshold_min
-                                       == -np.inf else self._threshold_min)
-        value_batch = objective_batch - old_threshold_batch
-
-        ## Step 3: Insert solutions into archive. ##
-
-        # Return early if we cannot insert anything -- continuing would actually
-        # throw a ValueError in aggregate() since index_batch[can_insert] would
-        # be empty.
-        can_insert = is_new | improve_existing
-        if not np.any(can_insert):
-            return status_batch, value_batch
-
-        # Select only solutions that can be inserted into the archive.
-        solution_batch_can = solution_batch[can_insert]
-        objective_batch_can = objective_batch[can_insert]
-        measures_batch_can = measures_batch[can_insert]
-        index_batch_can = index_batch[can_insert]
-        metadata_batch_can = metadata_batch[can_insert]
-        old_objective_batch_can = old_objective_batch[can_insert]
-
-        # Retrieve indices of solutions that should be inserted into the
-        # archive. Currently, multiple solutions may be inserted at each
-        # archive index, but we only want to insert the maximum among these
-        # solutions. Thus, we obtain the argmax for each archive index.
-        #
-        # We use a fill_value of -1 to indicate archive indices which were not
-        # covered in the batch. Note that the length of archive_argmax is only
-        # max(index_batch[can_insert]), rather than the total number of grid
-        # cells. However, this is okay because we only need the indices of the
-        # solutions, which we store in should_insert.
-        #
-        # aggregate() always chooses the first item if there are ties, so the
-        # first elite will be inserted if there is a tie. See their default
-        # numpy implementation for more info:
-        # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-        archive_argmax = aggregate(index_batch_can,
-                                   objective_batch_can,
-                                   func="argmax",
-                                   fill_value=-1)
-        should_insert = archive_argmax[archive_argmax != -1]
-
-        # Select only solutions that will be inserted into the archive.
-        solution_batch_insert = solution_batch_can[should_insert]
-        objective_batch_insert = objective_batch_can[should_insert]
-        measures_batch_insert = measures_batch_can[should_insert]
-        index_batch_insert = index_batch_can[should_insert]
-        metadata_batch_insert = metadata_batch_can[should_insert]
-        old_objective_batch_insert = old_objective_batch_can[should_insert]
-
-        # Set archive storage.
-        self._objective_arr[index_batch_insert] = objective_batch_insert
-        self._measures_arr[index_batch_insert] = measures_batch_insert
-        self._solution_arr[index_batch_insert] = solution_batch_insert
-        self._metadata_arr[index_batch_insert] = metadata_batch_insert
-        self._occupied_arr[index_batch_insert] = True
-
-        # Mark new indices as occupied.
-        is_new_and_inserted = is_new[can_insert][should_insert]
-        n_new = np.sum(is_new_and_inserted)
-        self._occupied_indices[self._num_occupied:self._num_occupied +
-                               n_new] = (
-                                   index_batch_insert[is_new_and_inserted])
-        self._num_occupied += n_new
-
-        # Update the thresholds.
-        if self._threshold_min == -np.inf:
-            # Here we want regular archive behavior, so the thresholds
-            # should just be the maximum objective.
-            self._threshold_arr[index_batch_insert] = objective_batch_insert
-        else:
-            # Here we compute the batch threshold update described in the
-            # appendix of Fontaine 2022 https://arxiv.org/abs/2205.10752
-            # This computation is based on the mean objective of all
-            # solutions in the batch that could have been inserted into
-            # each cell. This method is separated out to facilitate
-            # testing.
-            (new_thresholds,
-             update_thresholds_indices) = self._compute_new_thresholds(
-                 self._threshold_arr, objective_batch_can, index_batch_can,
-                 self._learning_rate)
-            self._threshold_arr[update_thresholds_indices] = new_thresholds
-
-        ## Step 4: Update archive stats. ##
-
-        # Since we set the new solutions in the old objective batch to have
-        # value 0.0, the objectives for new solutions are added in properly
-        # here.
-        self._objective_sum += np.sum(objective_batch_insert -
-                                      old_objective_batch_insert)
-        new_qd_score = (self._objective_sum -
-                        self.dtype(len(self)) * self._qd_score_offset)
-        max_idx = np.argmax(objective_batch_insert)
-        max_obj_insert = objective_batch_insert[max_idx]
-
-        if self._stats.obj_max is None or max_obj_insert > self._stats.obj_max:
-            new_obj_max = max_obj_insert
-            self._best_elite = {
-                "solution": readonly(np.copy(solution_batch_insert[max_idx])),
-                "objective": objective_batch_insert[max_idx],
-                "measures": readonly(np.copy(measures_batch_insert[max_idx])),
-                "index": index_batch_insert[max_idx],
-                "metadata": metadata_batch_insert[max_idx],
-            }
-        else:
-            new_obj_max = self._stats.obj_max
-
-        self._stats = ArchiveStats(
-            num_elites=len(self),
-            coverage=self.dtype(len(self) / self.cells),
-            qd_score=new_qd_score,
-            norm_qd_score=self.dtype(new_qd_score / self.cells),
-            obj_max=new_obj_max,
-            obj_mean=self._objective_sum / self.dtype(len(self)),
+        add_info = self._store.add(
+            self.index_of(measures_batch),
+            {
+                "solution": solution_batch,
+                "objective": objective_batch,
+                "measures": measures_batch,
+                "metadata": metadata_batch,
+            },
+            {
+                "dtype": self._dtype,
+                "learning_rate": self._learning_rate,
+                "threshold_min": self._threshold_min,
+                "objective_sum": self._objective_sum,
+            },
+            [transform_batch],
         )
 
-        return status_batch, value_batch
+        # TODO: Nearly duplicate code with add_single() -- update_stats func?
+
+        # TODO: gracefully detect and handle when nothing inserted
+
+        if not np.all(add_info["status"] == 0):
+            self._objective_sum = add_info.pop("objective_sum")
+            new_qd_score = (self._objective_sum -
+                            self.dtype(len(self)) * self._qd_score_offset)
+            index = add_info.pop("best_index")
+
+            objective = self._store.retrieve([index], fields=["objective"
+                                                             ])[1]["objective"]
+            if self._stats.obj_max is None or objective > self._stats.obj_max:
+                new_obj_max = objective
+                # TODO: Messy.
+                self._best_elite = {
+                    k: v[0] for k, v in self._store.retrieve([index])[1].items()
+                }
+            else:
+                new_obj_max = self._stats.obj_max
+
+            self._stats = ArchiveStats(
+                num_elites=len(self),
+                coverage=self.dtype(len(self) / self.cells),
+                qd_score=new_qd_score,
+                norm_qd_score=self.dtype(new_qd_score / self.cells),
+                obj_max=new_obj_max,
+                obj_mean=self._objective_sum / self.dtype(len(self)),
+            )
+
+        return add_info["status"], add_info["value"]
 
     def add_single(self, solution, objective, measures, metadata=None):
         """Inserts a single solution into the archive.
@@ -610,8 +460,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             the add operation. Refer to :meth:`add` for the meaning of the
             status and value.
         """
-        self._state["add"] += 1
-
         (
             solution,
             objective,
@@ -625,77 +473,50 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
 
         index = self.index_of_single(measures)
 
-        # Only used for computing QD score.
-        old_objective = self._objective_arr[index]
+        add_info = self._store.add(
+            [index],
+            {
+                "solution": np.expand_dims(solution, axis=0),
+                "objective": np.expand_dims(objective, axis=0),
+                "measures": np.expand_dims(measures, axis=0),
+                "metadata": np.expand_dims(metadata, axis=0),
+            },
+            {
+                "dtype": self._dtype,
+                "learning_rate": self._learning_rate,
+                "threshold_min": self._threshold_min,
+                "objective_sum": self._objective_sum,
+            },
+            [transform_single],
+        )
 
-        # Used for computing improvement value.
-        old_threshold = self._threshold_arr[index]
+        # TODO: Only update stats if status is true (just like regular
+        # add_single)
 
-        # New solutions require special settings for old_objective and
-        # old_threshold.
-        was_occupied = self._occupied_arr[index]
-        if not was_occupied:
-            old_objective = self.dtype(0)
-            # If threshold_min is -inf, then we want CMA-ME behavior, which will
-            # compute the improvement value w.r.t. zero for new solutions.
-            # Otherwise, we will compute w.r.t. threshold_min.
-            old_threshold = (self.dtype(0) if self._threshold_min == -np.inf
-                             else self._threshold_min)
+        # Update archive stats.
+        self._objective_sum = add_info.pop("objective_sum")
+        new_qd_score = (self._objective_sum -
+                        self.dtype(len(self)) * self._qd_score_offset)
 
-        status = 0  # NOT_ADDED
-        # In the case where we want CMA-ME behavior, threshold_arr[index]
-        # is -inf for new cells, which satisfies this if condition.
-        if self._threshold_arr[index] < objective:
-            if was_occupied:
-                status = 1  # IMPROVE_EXISTING
-            else:
-                # Set this index to be occupied.
-                self._occupied_arr[index] = True
-                self._occupied_indices[self._num_occupied] = index
-                self._num_occupied += 1
+        if self._stats.obj_max is None or objective > self._stats.obj_max:
+            new_obj_max = objective
+            # TODO: Messy.
+            self._best_elite = {
+                k: v[0] for k, v in self._store.retrieve([index])[1].items()
+            }
+        else:
+            new_obj_max = self._stats.obj_max
 
-                status = 2  # NEW
+        self._stats = ArchiveStats(
+            num_elites=len(self),
+            coverage=self.dtype(len(self) / self.cells),
+            qd_score=new_qd_score,
+            norm_qd_score=self.dtype(new_qd_score / self.cells),
+            obj_max=new_obj_max,
+            obj_mean=self._objective_sum / self.dtype(len(self)),
+        )
 
-            # This calculation works in the case where threshold_min is -inf
-            # because old_threshold will be set to 0.0 instead.
-            self._threshold_arr[index] = (old_threshold *
-                                          (1.0 - self._learning_rate) +
-                                          objective * self._learning_rate)
-
-            # Insert into the archive.
-            self._objective_arr[index] = objective
-            self._measures_arr[index] = measures
-            self._solution_arr[index] = solution
-            self._metadata_arr[index] = metadata
-
-        if status:
-            # Update archive stats.
-            self._objective_sum += objective - old_objective
-            new_qd_score = (self._objective_sum -
-                            self.dtype(len(self)) * self._qd_score_offset)
-
-            if self._stats.obj_max is None or objective > self._stats.obj_max:
-                new_obj_max = objective
-                self._best_elite = {
-                    "solution": readonly(np.copy(self._solution_arr[index])),
-                    "objective": objective,
-                    "measures": readonly(np.copy(self._measures_arr[index])),
-                    "index": index,
-                    "metadata": metadata,
-                }
-            else:
-                new_obj_max = self._stats.obj_max
-
-            self._stats = ArchiveStats(
-                num_elites=len(self),
-                coverage=self.dtype(len(self) / self.cells),
-                qd_score=new_qd_score,
-                norm_qd_score=self.dtype(new_qd_score / self.cells),
-                obj_max=new_obj_max,
-                obj_mean=self._objective_sum / self.dtype(len(self)),
-            )
-
-        return status, objective - old_threshold
+        return add_info["status"][0], add_info["value"][0]
 
     def retrieve(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
@@ -747,54 +568,28 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                           "measure_dim")
         check_finite(measures_batch, "measures_batch")
 
-        index_batch = self.index_of(measures_batch)
-        occupied_batch = self._occupied_arr[index_batch]
-        expanded_occupied_batch = occupied_batch[:, None]
+        occupied, data = self._store.retrieve(self.index_of(measures_batch))
 
         return {
+            # For each occupied_batch[i], this np.where selects
+            # self._solution_arr[index_batch][i] if occupied_batch[i] is True.
+            # Otherwise, it uses the alternate value (a solution array
+            # consisting of np.nan).
             "solution":
-                readonly(
-                    # For each occupied_batch[i], this np.where selects
-                    # self._solution_arr[index_batch][i] if occupied_batch[i] is
-                    # True. Otherwise, it uses the alternate value (a solution
-                    # array consisting of np.nan).
-                    np.where(
-                        expanded_occupied_batch,
-                        self._solution_arr[index_batch],
-                        np.full(self._solution_dim, np.nan),
-                    )),
+                np.where(occupied[:, None], data["solution"],
+                         np.full(self._solution_dim, np.nan)),
+            # Here the alternative is just a scalar np.nan.
             "objective":
-                readonly(
-                    np.where(
-                        occupied_batch,
-                        self._objective_arr[index_batch],
-                        # Here the alternative is just a scalar np.nan.
-                        np.nan,
-                    )),
+                np.where(occupied, data["objective"], np.nan),
+            # And here it is a measures array of np.nan.
             "measures":
-                readonly(
-                    np.where(
-                        expanded_occupied_batch,
-                        self._measures_arr[index_batch],
-                        # And here it is a measures array of np.nan.
-                        np.full(self._measure_dim, np.nan),
-                    )),
+                np.where(occupied[:, None], data["measures"],
+                         np.full(self._measure_dim, np.nan)),
+            # Indices must be integers, so np.nan would not work, so we use -1.
             "index":
-                readonly(
-                    np.where(
-                        occupied_batch,
-                        index_batch,
-                        # Indices must be integers, so np.nan would not work,
-                        # hence we use -1.
-                        -1,
-                    )),
+                np.where(occupied, data["index"], -1),
             "metadata":
-                readonly(
-                    np.where(
-                        occupied_batch,
-                        self._metadata_arr[index_batch],
-                        None,
-                    )),
+                np.where(occupied, data["metadata"], None),
         }
 
     def retrieve_single(self, measures):
@@ -851,18 +646,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         if self.empty:
             raise IndexError("No elements in archive.")
 
-        random_indices = self._rng.integers(self._num_occupied, size=n)
-        selected_indices = self._occupied_indices[random_indices]
+        random_indices = self._rng.integers(len(self._store), size=n)
+        selected_indices = self._store.occupied_list[random_indices]
+        _, elites = self._store.retrieve(selected_indices)
+        return elites
 
-        return {
-            "solution": readonly(self._solution_arr[selected_indices]),
-            "objective": readonly(self._objective_arr[selected_indices]),
-            "measures": readonly(self._measures_arr[selected_indices]),
-            "index": readonly(selected_indices),
-            "metadata": readonly(self._metadata_arr[selected_indices]),
-        }
-
-    def as_pandas(self, include_solutions=True, include_metadata=False):
+    # TODO: docstring (mention measures_; mention fields)
+    def as_pandas(self, include_solutions=False, include_metadata=False):
         """Converts the archive into an :class:`ArchiveDataFrame` (a child class
         of :class:`pandas.DataFrame`).
 
@@ -900,30 +690,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         Returns:
             ArchiveDataFrame: See above.
         """  # pylint: disable = line-too-long
-        data = OrderedDict()
-        indices = self._occupied_indices[:self._num_occupied]
-
-        # Copy indices so we do not overwrite.
-        data["index"] = np.copy(indices)
-
-        measures_batch = self._measures_arr[indices]
-        for i in range(self._measure_dim):
-            data[f"measures_{i}"] = measures_batch[:, i]
-
-        data["objective"] = self._objective_arr[indices]
-
+        fields = ["index", "measures", "objective"]
         if include_solutions:
-            solutions = self._solution_arr[indices]
-            for i in range(self._solution_dim):
-                data[f"solution_{i}"] = solutions[:, i]
-
+            fields.append("solution")
         if include_metadata:
-            data["metadata"] = self._metadata_arr[indices]
-
-        return ArchiveDataFrame(
-            data,
-            copy=False,  # Fancy indexing above already results in copying.
-        )
+            fields.append("metadata")
+        return ArchiveDataFrame(self._store.as_pandas(fields))
 
     def cqd_score(self,
                   iterations,
@@ -1021,9 +793,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             penalties = np.copy(penalties)  # Copy since we return this.
             check_is_1d(penalties, "penalties")
 
-        index_batch = self._occupied_indices[:self._num_occupied]
-        measures_batch = self._measures_arr[index_batch]
-        objective_batch = self._objective_arr[index_batch]
+        # TODO: Messy.
+        d = self._store.as_dict(["objective", "measures"])
+        objective_batch = d["objective"]
+        measures_batch = d["measures"]
 
         norm_objectives = objective_batch / (obj_max - obj_min)
 
