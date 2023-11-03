@@ -835,8 +835,8 @@ def sphere_main(algorithm,
         final_itr = itr == itrs
         if itr % log_freq == 0 or final_itr:
             if final_itr:
-                result_archive.as_pandas().to_csv(outdir /
-                                                  f"{name}_archive.csv")
+                result_archive.as_pandas(include_solutions=final_itr).to_csv(
+                    outdir / f"{name}_archive.csv")
 
             # Record and display metrics.
             metrics["QD Score"]["x"].append(itr)
