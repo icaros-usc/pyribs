@@ -168,7 +168,7 @@ class ArrayStore:
 
     @property
     def occupied_list(self):
-        """numpy.ndarray: Integer array listing all occupied indices in the
+        """numpy.ndarray: int32 array listing all occupied indices in the
         store."""
         return readonly(
             self._props["occupied_list"][:self._props["n_occupied"]])
