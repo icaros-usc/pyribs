@@ -695,7 +695,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             fields.append("solution")
         if include_metadata:
             fields.append("metadata")
-        return ArchiveDataFrame(self._store.as_pandas(fields))
+        return ArchiveDataFrame(self._store.data(fields, return_type="pandas"))
 
     def cqd_score(self,
                   iterations,
@@ -793,10 +793,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             penalties = np.copy(penalties)  # Copy since we return this.
             check_is_1d(penalties, "penalties")
 
-        # TODO: Messy.
-        d = self._store.as_dict(["objective", "measures"])
-        objective_batch = d["objective"]
-        measures_batch = d["measures"]
+        objective_batch, measures_batch = self._store.data(
+            ["objective", "measures"],
+            return_type="tuple",
+        )
 
         norm_objectives = objective_batch / (obj_max - obj_min)
 
