@@ -229,7 +229,7 @@ class ArrayStore:
                 following columns (by default):
 
                 - For fields that are scalars, a single column with the field
-                  name. For example, ``objective'' would have a single column
+                  name. For example, ``objective`` would have a single column
                   called ``objective``.
                 - For fields that are 1D arrays, multiple columns with the name
                   suffixed by its index. For instance, if we have a ``measures``
