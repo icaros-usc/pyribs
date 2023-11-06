@@ -1,11 +1,12 @@
-"""Transform functions for ArrayStore."""
+"""Transform functions for :meth:`ribs.archives.ArrayStore.add`.
+
+This module is still fairly unstable, hence why it is private. We may make it
+public in the future once it becomes more stable.
+"""
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
-# TODO: Document signature above
 
-
-# TODO: Format docstrings here and everywhere
 # TODO: Generalize to further fields
 # TODO: Rename
 # TODO: Tidy up code
@@ -41,8 +42,8 @@ def transform_single(indices, new_data, add_info, extra_args, occupied,
                          if threshold_min == -np.inf else threshold_min)
 
     add_info["status"] = np.array([0])  # NOT_ADDED
-    # In the case where we want CMA-ME behavior, threshold_arr[index]
-    # is -inf for new cells, which satisfies this if condition.
+    # In the case where we want CMA-ME behavior, threshold_arr[index] is -inf
+    # for new cells, which satisfies this if condition.
     if ((not was_occupied and threshold_min < objective) or
         (was_occupied and cur_threshold < objective)):
         if was_occupied:
@@ -50,8 +51,8 @@ def transform_single(indices, new_data, add_info, extra_args, occupied,
         else:
             add_info["status"] = np.array([2])  # NEW
 
-        # This calculation works in the case where threshold_min is -inf
-        # because cur_threshold will be set to 0.0 instead.
+        # This calculation works in the case where threshold_min is -inf because
+        # cur_threshold will be set to 0.0 instead.
         new_data["threshold"] = [
             (cur_threshold * (1.0 - learning_rate) + objective * learning_rate)
         ]
@@ -76,10 +77,10 @@ def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
     expected that the new array will have duplicate thresholds that correspond
     to duplicates in indices.
     """
-    # Even though we do this check, it should not be possible to have
-    # empty objective_batch or index_batch in the add() method since
-    # we check that at least one cell is being updated by seeing if
-    # can_insert has any True values.
+    # Even though we do this check, it should not be possible to have empty
+    # objective_batch or index_batch in the add() method since we check that at
+    # least one cell is being updated by seeing if can_insert has any True
+    # values.
     if objective.size == 0 or indices.size == 0:
         return np.array([], dtype=dtype), np.array([], dtype=bool)
 
@@ -147,9 +148,9 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
     # old_threshold.
     cur_objective[is_new] = dtype(0)
 
-    # If threshold_min is -inf, then we want CMA-ME behavior, which
-    # will compute the improvement value of new solutions w.r.t zero.
-    # Otherwise, we will compute w.r.t. threshold_min.
+    # If threshold_min is -inf, then we want CMA-ME behavior, which will compute
+    # the improvement value of new solutions w.r.t zero. Otherwise, we will
+    # compute w.r.t. threshold_min.
     cur_threshold[is_new] = (dtype(0)
                              if threshold_min == -np.inf else threshold_min)
     add_info["value"] = new_data["objective"] - cur_threshold
@@ -157,8 +158,7 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
     ## Step 2: Insert solutions into archive. ##
 
     # Return early if we cannot insert anything -- continuing would actually
-    # throw a ValueError in aggregate() since index[can_insert] would
-    # be empty.
+    # throw a ValueError in aggregate() since index[can_insert] would be empty.
     can_insert = is_new | improve_existing
     if not np.any(can_insert):
         add_info["objective_sum"] = extra_args["objective_sum"]
@@ -174,20 +174,20 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
     cur_threshold_can = cur_threshold[can_insert]
     cur_objective_can = cur_objective[can_insert]
 
-    # Retrieve indices of solutions that should be inserted into the
-    # archive. Currently, multiple solutions may be inserted at each
-    # archive index, but we only want to insert the maximum among these
-    # solutions. Thus, we obtain the argmax for each archive index.
+    # Retrieve indices of solutions that should be inserted into the archive.
+    # Currently, multiple solutions may be inserted at each archive index, but
+    # we only want to insert the maximum among these solutions. Thus, we obtain
+    # the argmax for each archive index.
     #
     # We use a fill_value of -1 to indicate archive indices which were not
     # covered in the batch. Note that the length of archive_argmax is only
-    # max(index[can_insert]), rather than the total number of grid
-    # cells. However, this is okay because we only need the indices of the
-    # solutions, which we store in should_insert.
+    # max(index[can_insert]), rather than the total number of grid cells.
+    # However, this is okay because we only need the indices of the solutions,
+    # which we store in should_insert.
     #
-    # aggregate() always chooses the first item if there are ties, so the
-    # first elite will be inserted if there is a tie. See their default
-    # numpy implementation for more info:
+    # aggregate() always chooses the first item if there are ties, so the first
+    # elite will be inserted if there is a tie. See their default numpy
+    # implementation for more info:
     # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
     archive_argmax = aggregate(index_can,
                                objective_can,
@@ -225,9 +225,8 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
 
     ## Step 3: Update archive stats. ##
 
-    # Since we set the new solutions in the old objective batch to have
-    # value 0.0, the objectives for new solutions are added in properly
-    # here.
+    # Since we set the new solutions in the old objective batch to have value
+    # 0.0, the objectives for new solutions are added in properly here.
     add_info["objective_sum"] = extra_args["objective_sum"] + np.sum(
         new_data["objective"] - cur_objective_insert)
     # TODO: rename
