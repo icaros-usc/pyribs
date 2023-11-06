@@ -1,6 +1,7 @@
 """Provides ArrayStore."""
 import itertools
 from enum import IntEnum
+from functools import cached_property
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
@@ -171,6 +172,29 @@ class ArrayStore:
         store."""
         return readonly(
             self._props["occupied_list"][:self._props["n_occupied"]])
+
+    @cached_property
+    def field_desc(self):
+        """dict: Description of fields in the array store.
+
+        Example:
+
+            ::
+
+                store.field_desc == {
+                    "objective": ((), np.float32),
+                    "measures": ((10,), np.float32)
+                }
+
+        See the constructor ``field_desc`` parameter for more info. Unlike in
+        the field_desc in the constructor, which accepts ints for 1D field
+        shapes (e.g., ``5``), this field_desc shows 1D field shapes as tuples of
+        1 entry (e.g., ``(5,)``).
+        """
+        return {
+            name: (arr.shape[1:], arr.dtype)
+            for name, arr in self._fields.items()
+        }
 
     def retrieve(self, indices, fields=None, return_type="dict"):
         """Collects data at the given indices.
