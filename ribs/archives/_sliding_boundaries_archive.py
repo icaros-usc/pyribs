@@ -350,11 +350,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             # Set the upper bound to be the greatest BC.
             self._boundaries[i][self.dims[i]] = sorted_measures[i][-1]
 
-        indices = self._occupied_indices[:self._num_occupied]
-        old_solution_batch = self._solution_arr[indices].copy()
-        old_objective_batch = self._objective_arr[indices].copy()
-        old_measures_batch = self._measures_arr[indices].copy()
-        old_metadata_batch = self._metadata_arr[indices].copy()
+        cur_data = self._store.data()
 
         (
             new_solution_batch,
@@ -382,10 +378,10 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         ArchiveBase.add(
             self,
-            np.concatenate((old_solution_batch, new_solution_batch)),
-            np.concatenate((old_objective_batch, new_objective_batch)),
-            np.concatenate((old_measures_batch, new_measures_batch)),
-            np.concatenate((old_metadata_batch, new_metadata_batch)),
+            np.concatenate((cur_data["solution"], new_solution_batch)),
+            np.concatenate((cur_data["objective"], new_objective_batch)),
+            np.concatenate((cur_data["measures"], new_measures_batch)),
+            np.concatenate((cur_data["metadata"], new_metadata_batch)),
         )
 
         status, value = ArchiveBase.add_single(self, last_solution,
