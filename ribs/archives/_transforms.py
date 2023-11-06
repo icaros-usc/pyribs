@@ -7,6 +7,33 @@ import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
 
+def compute_best_index(indices, new_data, add_info, extra_args, occupied,
+                       cur_data):
+    """Identifies the index of the best solution among those in new_data.
+
+    This method makes the following assumptions:
+
+    - ``new_data`` has an ``"objective"`` field
+    - The best solution will be the one with the highest objective value.
+
+    The best index will be added to the ``add_info`` dict with the key
+    ``"best_index"``. If there is no best index, then ``"best_index"`` will be
+    None.
+
+    This method should be placed near the end of a chain of transforms so that
+    it only considers solutions that are going to be inserted into the store.
+    """
+    # pylint: disable = unused-argument
+
+    if len(indices) == 0:
+        add_info["best_index"] = None
+    else:
+        item_idx = np.argmax(new_data["objective"])
+        add_info["best_index"] = indices[item_idx]
+
+    return indices, new_data, add_info
+
+
 # TODO: Generalize to further fields
 # TODO: Rename
 # TODO: Tidy up code
@@ -41,22 +68,22 @@ def transform_single(indices, new_data, add_info, extra_args, occupied,
         cur_threshold = (dtype(0)
                          if threshold_min == -np.inf else threshold_min)
 
-    add_info["status"] = np.array([0])  # NOT_ADDED
+    add_info["status"] = 0  # NOT_ADDED
     # In the case where we want CMA-ME behavior, threshold_arr[index] is -inf
     # for new cells, which satisfies this if condition.
     if ((not was_occupied and threshold_min < objective) or
         (was_occupied and cur_threshold < objective)):
         if was_occupied:
-            add_info["status"] = np.array([1])  # IMPROVE_EXISTING
+            add_info["status"] = 1  # IMPROVE_EXISTING
         else:
-            add_info["status"] = np.array([2])  # NEW
+            add_info["status"] = 2  # NEW
 
         # This calculation works in the case where threshold_min is -inf because
         # cur_threshold will be set to 0.0 instead.
         new_data["threshold"] = [
             (cur_threshold * (1.0 - learning_rate) + objective * learning_rate)
         ]
-    add_info["value"] = np.array([objective - cur_threshold])
+    add_info["value"] = objective - cur_threshold
 
     if add_info["status"]:
         add_info["objective_sum"] = (extra_args["objective_sum"] + objective -
@@ -65,7 +92,7 @@ def transform_single(indices, new_data, add_info, extra_args, occupied,
     else:
         add_info["objective_sum"] = extra_args["objective_sum"]
         # new_data is ignored, so make it an empty dict.
-        return [], {}, add_info
+        return np.array([]), {}, add_info
 
 
 def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
@@ -162,8 +189,7 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
     can_insert = is_new | improve_existing
     if not np.any(can_insert):
         add_info["objective_sum"] = extra_args["objective_sum"]
-        # TODO: best_index here?
-        return [], {}, add_info
+        return np.array([]), {}, add_info
 
     # Select only solutions that can be inserted into the archive.
     index_can = indices[can_insert]
@@ -229,7 +255,5 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
     # 0.0, the objectives for new solutions are added in properly here.
     add_info["objective_sum"] = extra_args["objective_sum"] + np.sum(
         new_data["objective"] - cur_objective_insert)
-    # TODO: rename
-    add_info["best_index"] = indices[np.argmax(new_data["objective"])]
 
     return indices, new_data, add_info

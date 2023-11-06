@@ -10,12 +10,13 @@ from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
-from ribs.archives._transforms import transform_batch, transform_single
+from ribs.archives._transforms import (transform_batch, transform_single,
+                                       compute_best_index)
+
+# TODO: pop threshold from outputs for now
 
 # TODO: always include threshold field? Say that we at least assume solution,
 # objective, measures (other classes can add other fields if they want).
-
-# TODO: store should be an abstract property?
 
 # TODO: test threshold field in retrieve() etc.
 
@@ -94,8 +95,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         self._learning_rate = self._dtype(learning_rate)
         self._threshold_min = self._dtype(threshold_min)
 
-        self._best_elite = None
         self._stats = None
+        self._best_elite = None
         # Sum of all objective values in the archive; useful for computing
         # qd_score and obj_mean.
         self._objective_sum = None
@@ -197,28 +198,13 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         """
         return iter(self._store)
 
-    def _stats_reset(self):
-        """Resets the archive stats."""
-        self._stats = ArchiveStats(
-            num_elites=0,
-            coverage=self.dtype(0.0),
-            qd_score=self.dtype(0.0),
-            norm_qd_score=self.dtype(0.0),
-            obj_max=None,
-            obj_mean=None,
-        )
-        self._objective_sum = self.dtype(0.0)
-
     def clear(self):
         """Removes all elites from the archive.
 
         After this method is called, the archive will be :attr:`empty`.
         """
         self._store.clear()
-
-        # TODO: what to do with clearing stats?
         self._stats_reset()
-        self._best_elite = None
 
     @abstractmethod
     def index_of(self, measures_batch):
@@ -257,6 +243,48 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
+
+    def _stats_reset(self):
+        """Resets the archive stats."""
+        self._stats = ArchiveStats(
+            num_elites=0,
+            coverage=self.dtype(0.0),
+            qd_score=self.dtype(0.0),
+            norm_qd_score=self.dtype(0.0),
+            obj_max=None,
+            obj_mean=None,
+        )
+        self._best_elite = None
+        self._objective_sum = self.dtype(0.0)
+
+    def _stats_update(self, new_objective_sum, new_best_index):
+        """Updates statistics based on a new sum of objective values
+        (new_objective_sum) and the index of a potential new best elite
+        (new_best_index)."""
+        self._objective_sum = new_objective_sum
+        new_qd_score = (self._objective_sum -
+                        self.dtype(len(self)) * self._qd_score_offset)
+
+        _, new_best_elite = self._store.retrieve([new_best_index])
+
+        if (self._stats.obj_max is None or
+                new_best_elite["objective"] > self._stats.obj_max):
+            # Convert batched values to single values.
+            new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
+
+            new_obj_max = new_best_elite["objective"]
+            self._best_elite = new_best_elite
+        else:
+            new_obj_max = self._stats.obj_max
+
+        self._stats = ArchiveStats(
+            num_elites=len(self),
+            coverage=self.dtype(len(self) / self.cells),
+            qd_score=new_qd_score,
+            norm_qd_score=self.dtype(new_qd_score / self.cells),
+            obj_max=new_obj_max,
+            obj_mean=self._objective_sum / self.dtype(len(self)),
+        )
 
     def add(self,
             solution_batch,
@@ -372,7 +400,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             measures_batch=measures_batch,
             metadata_batch=metadata_batch,
         )
-        batch_size = solution_batch.shape[0]
 
         add_info = self._store.add(
             self.index_of(measures_batch),
@@ -388,38 +415,12 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 "threshold_min": self._threshold_min,
                 "objective_sum": self._objective_sum,
             },
-            [transform_batch],
+            [transform_batch, compute_best_index],
         )
 
-        # TODO: Nearly duplicate code with add_single() -- update_stats func?
-
-        # TODO: gracefully detect and handle when nothing inserted
-
         if not np.all(add_info["status"] == 0):
-            self._objective_sum = add_info.pop("objective_sum")
-            new_qd_score = (self._objective_sum -
-                            self.dtype(len(self)) * self._qd_score_offset)
-            index = add_info.pop("best_index")
-
-            objective = self._store.retrieve([index], fields=["objective"
-                                                             ])[1]["objective"]
-            if self._stats.obj_max is None or objective > self._stats.obj_max:
-                new_obj_max = objective
-                # TODO: Messy.
-                self._best_elite = {
-                    k: v[0] for k, v in self._store.retrieve([index])[1].items()
-                }
-            else:
-                new_obj_max = self._stats.obj_max
-
-            self._stats = ArchiveStats(
-                num_elites=len(self),
-                coverage=self.dtype(len(self) / self.cells),
-                qd_score=new_qd_score,
-                norm_qd_score=self.dtype(new_qd_score / self.cells),
-                obj_max=new_obj_max,
-                obj_mean=self._objective_sum / self.dtype(len(self)),
-            )
+            self._stats_update(add_info.pop("objective_sum"),
+                               add_info.pop("best_index"))
 
         return add_info["status"], add_info["value"]
 
@@ -474,7 +475,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         index = self.index_of_single(measures)
 
         add_info = self._store.add(
-            [index],
+            np.array([index]),
             {
                 "solution": np.expand_dims(solution, axis=0),
                 "objective": np.expand_dims(objective, axis=0),
@@ -487,36 +488,14 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 "threshold_min": self._threshold_min,
                 "objective_sum": self._objective_sum,
             },
-            [transform_single],
+            [transform_single, compute_best_index],
         )
 
-        # TODO: Only update stats if status is true (just like regular
-        # add_single)
+        if add_info["status"]:
+            self._stats_update(add_info.pop("objective_sum"),
+                               add_info.pop("best_index"))
 
-        # Update archive stats.
-        self._objective_sum = add_info.pop("objective_sum")
-        new_qd_score = (self._objective_sum -
-                        self.dtype(len(self)) * self._qd_score_offset)
-
-        if self._stats.obj_max is None or objective > self._stats.obj_max:
-            new_obj_max = objective
-            # TODO: Messy.
-            self._best_elite = {
-                k: v[0] for k, v in self._store.retrieve([index])[1].items()
-            }
-        else:
-            new_obj_max = self._stats.obj_max
-
-        self._stats = ArchiveStats(
-            num_elites=len(self),
-            coverage=self.dtype(len(self) / self.cells),
-            qd_score=new_qd_score,
-            norm_qd_score=self.dtype(new_qd_score / self.cells),
-            obj_max=new_obj_max,
-            obj_mean=self._objective_sum / self.dtype(len(self)),
-        )
-
-        return add_info["status"][0], add_info["value"][0]
+        return add_info["status"], add_info["value"]
 
     def retrieve(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
@@ -651,7 +630,6 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         _, elites = self._store.retrieve(selected_indices)
         return elites
 
-    # TODO: docstring (mention measures_; mention fields)
     def as_pandas(self, include_solutions=False, include_metadata=False):
         """Converts the archive into an :class:`ArchiveDataFrame` (a child class
         of :class:`pandas.DataFrame`).
