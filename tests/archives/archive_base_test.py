@@ -175,6 +175,13 @@ def test_best_elite(add_mode):
     else:
         archive.add([[1, 2, 3]], [1.0], [[0, 0]])
 
+    assert archive.best_elite["solution"].shape == (3,)
+    assert archive.best_elite["objective"].shape == ()
+    assert archive.best_elite["measures"].shape == (2,)
+    # Seem to be spurious pylint warnings.
+    # pylint: disable-next=use-implicit-booleaness-not-comparison,comparison-with-callable
+    assert archive.stats.obj_max.shape == ()
+
     assert np.isclose(archive.best_elite["solution"], [1, 2, 3]).all()
     assert np.isclose(archive.best_elite["objective"], 1.0)
     assert np.isclose(archive.best_elite["measures"], [0, 0]).all()
