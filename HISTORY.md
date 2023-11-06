@@ -10,7 +10,7 @@
   ({pr}`397`)
 - **Backwards-incompatible:** Rename `measure_*` columns to `measures_*` in
   `as_pandas` ({pr}`396`)
-- Add ArrayStore data structure ({pr}`395`, {pr}`398`, {pr}`400`)
+- Add ArrayStore data structure ({pr}`395`, {pr}`398`, {pr}`400`, {pr}`402`)
 - Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 
 #### Improvements
@@ -18,7 +18,7 @@
 - Use chunk computation in CVT brute force calculation to reduce memory usage
   ({pr}`394`)
 - Test pyribs installation in tutorials ({pr}`384`)
-- Add cron job for testing installation ({pr}`389`)
+- Add cron job for testing installation ({pr}`389`, {pr}`401`)
 - Fix broken cross-refs in docs ({pr}`393`)
 
 ## 0.6.3
