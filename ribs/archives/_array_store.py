@@ -1,6 +1,5 @@
 """Provides ArrayStore."""
 import itertools
-from collections import OrderedDict
 from enum import IntEnum
 
 import numpy as np
@@ -174,7 +173,7 @@ class ArrayStore:
             self._props["occupied_list"][:self._props["n_occupied"]])
 
     def retrieve(self, indices, fields=None, return_type="dict"):
-        """Collects the data at the given indices.
+        """Collects data at the given indices.
 
         Args:
             indices (array-like): List of indices at which to collect data.
@@ -191,40 +190,65 @@ class ArrayStore:
               in, have an associated data entry. For instance, if ``indices`` is
               ``[0, 1, 2]`` and only index 2 has data, then ``occupied`` will be
               ``[False, False, True]``.
+
+              Note that if a given index is not marked as occupied, it can have
+              any data value associated with it. For instance, if index 1 was
+              not occupied, then the 6.0 returned in the ``dict`` example below
+              should be ignored.
+
             - **data**: The data at the given indices. This can take the
               following forms, depending on the ``return_type`` argument:
 
-                - ``return_type="dict"``: Dict mapping from the field name to
-                  the field data at the given indices. For instance, if we have
-                  an ``objective`` field and request data at indices ``[4, 1,
-                  0]``, we would get ``data`` that looks like ``{"objective":
-                  [1.5, 6.0, 2.3], "index": [4, 1, 0]}``. Observe that we also
-                  return the indices as an ``index'' entry in the dict. The keys
-                  in this dict can be modified using the ``fields`` arg;
-                  duplicate keys will be ignored since the dict stores unique
-                  keys.
+              - ``return_type="dict"``: Dict mapping from the field name to the
+                field data at the given indices. For instance, if we have an
+                ``objective`` field and request data at indices ``[4, 1, 0]``,
+                we would get ``data`` that looks like ``{"objective": [1.5, 6.0,
+                2.3], "index": [4, 1, 0]}``. Observe that we also return the
+                indices as an ``index`` entry in the dict. The keys in this dict
+                can be modified using the ``fields`` arg; duplicate keys will be
+                ignored since the dict stores unique keys.
 
-                  Note that if a given index is not marked as occupied, it can
-                  have any data value associated with it. For instance, if index
-                  1 was not occupied, then the 6.0 returned above should be
-                  ignored.
+              - ``return_type="tuple"``: Tuple of arrays matching the order
+                given in ``fields``. For instance, if ``fields`` was
+                ``["objective", "measures"]``, we would receive a tuple of
+                ``(objective_arr, measures_arr)``. In this case, the results
+                from ``retrieve`` could be unpacked as::
 
-                - ``return_type="tuple"``: Tuple of arrays matching the order
-                  given in ``fields``. For instance, if ``fields`` was
-                  ``["objective", "measures"]``, we would receive a tuple of
-                  ``(objective_arr, measures_arr)``. In this case, the results
-                  from ``retrieve`` could be unpacked as::
+                    occupied, (objective, measures) = store.retrieve(...)
 
-                      occupied, (objective, measures) = store.retrieve(...)
+                Unlike with the ``dict`` return type, duplicate fields will show
+                up as duplicate entries in the tuple, e.g.,
+                ``fields=["objective", "objective"]`` will result in two
+                objective arrays being returned.
 
-                  Unlike with the ``dict`` return type, duplicate fields will
-                  show up as duplicate entries in the tuple, e.g.,
-                  ``fields=["objective", "objective"]`` will result in two
-                  objective arrays being returned.
+                By default, (i.e., when ``fields=None``), the fields in the
+                tuple will be ordered according to the ``field_desc`` argument
+                in the constructor, along with ``index`` as the last field.
 
-                  By default, (i.e., when ``fields=None``), the fields in the
-                  tuple will be ordered according to the ``field_desc`` argument
-                  in the constructor, along with ``index`` as the last field.
+              - ``return_type="pandas"``: A :class:`pandas.DataFrame` with the
+                following columns (by default):
+
+                - For fields that are scalars, a single column with the field
+                  name. For example, ``objective'' would have a single column
+                  called ``objective``.
+                - For fields that are 1D arrays, multiple columns with the name
+                  suffixed by its index. For instance, if we have a ``measures``
+                  field of length 10, we create 10 columns with names
+                  ``measures_0``, ``measures_1``, ..., ``measures_9``. We do not
+                  currently support fields with >1D data.
+                - 1 column of integers (``np.int32``) for the index, named
+                  ``index``.
+
+                In short, the dataframe might look like this:
+
+                +-----------+------------+------+-------+
+                | objective | measures_0 | ...  | index |
+                +===========+============+======+=======+
+                |           |            | ...  |       |
+                +-----------+------------+------+-------+
+
+                Like the other return types, the columns can be adjusted with
+                the ``fields`` parameter.
 
             All data returned by this method will be a readonly copy, i.e., the
             data will not update as the store changes.
@@ -236,7 +260,7 @@ class ArrayStore:
         indices = np.asarray(indices, dtype=np.int32)
         occupied = readonly(self._props["occupied"][indices])
 
-        if return_type == "dict":
+        if return_type in ("dict", "pandas"):
             data = {}
         elif return_type == "tuple":
             data = []
@@ -259,11 +283,38 @@ class ArrayStore:
                 data[name] = arr
             elif return_type == "tuple":
                 data.append(arr)
+            elif return_type == "pandas":
+                if len(arr.shape) == 1:  # Scalar entries.
+                    data[name] = arr
+                elif len(arr.shape) == 2:  # 1D array entries.
+                    for i in range(arr.shape[1]):
+                        data[f"{name}_{i}"] = arr[:, i]
+                else:
+                    raise ValueError(
+                        f"Field `{name}` has shape {arr.shape[1:]} -- "
+                        "cannot convert fields with shape >1D to Pandas")
 
         if return_type == "tuple":
             data = tuple(data)
+        elif return_type == "pandas":
+            # Data above are already copied, so no need to copy again.
+            data = DataFrame(data, copy=False)
 
         return occupied, data
+
+    def data(self, fields=None, return_type="dict"):
+        """Retrieves data for all entries in the store.
+
+        Equivalent to calling :meth:`retrieve` with :attr:`occupied_list`.
+
+        Args:
+            fields (array-like of str): See :meth:`retrieve`.
+        Returns:
+            dict or tuple: See ``data`` in :meth:`retrieve`. ``occupied`` is not
+                returned since all indices are known to be occupied in this
+                method.
+        """
+        return self.retrieve(self.occupied_list, fields, return_type)[1]
 
     def add(self, indices, new_data, extra_args, transforms):
         """Adds new data to the store at the given indices.
@@ -471,81 +522,3 @@ class ArrayStore:
         store._fields = fields
 
         return store
-
-    def data(self, fields=None, return_type="dict"):
-        """Retrieves data for all entries in the store.
-
-        Equivalent to calling :meth:`retrieve` with :attr:`occupied_list`.
-
-        Args:
-            fields (array-like of str): See :meth:`retrieve`.
-        Returns:
-            dict or tuple: See ``data`` in :meth:`retrieve`. ``occupied`` is not
-                returned since all indices are known to be occupied in this
-                method.
-        """
-        return self.retrieve(self.occupied_list, fields, return_type)[1]
-
-    def as_pandas(self, fields=None):
-        """Creates a DataFrame containing all data entries in the store.
-
-        The returned DataFrame has:
-
-        - For fields that are scalars, a single column with the field name. For
-          example, ``objective'' would have a single column called
-          ``objective``.
-        - For fields that are 1D arrays, multiple columns with the name suffixed
-          by its index. For instance, if we have a ``measures`` field of length
-          10, we create 10 columns with names ``measures_0``, ``measures_1``,
-          ..., ``measures_9``. We do not currently support fields with >1D data.
-        - 1 column of integers (``np.int32``) for the index, named ``index``.
-
-        In short, the dataframe might look like this:
-
-        +-----------+------------+------+-------+
-        | objective | measures_0 | ...  | index |
-        +===========+============+======+=======+
-        |           |            | ...  |       |
-        +-----------+------------+------+-------+
-
-        Args:
-            fields (array-like of str): List of fields to include. By default,
-                all fields will be included. In addition to fields in the store,
-                "index" is also a valid field.
-        Returns:
-            pandas.DataFrame: See above.
-        Raises:
-            ValueError: Invalid field name provided.
-            ValueError: There is a field with >1D data.
-        """
-        data = OrderedDict()
-        indices = self._props["occupied_list"][:self._props["n_occupied"]]
-
-        fields = (itertools.chain(self._fields, ["index"])
-                  if fields is None else fields)
-
-        for name in fields:
-            if name == "index":
-                data[name] = np.copy(indices)
-                continue
-
-            if name not in self._fields:
-                raise ValueError(f"`{name}` is not a field in this ArrayStore.")
-
-            arr = self._fields[name]
-            if len(arr.shape) == 1:  # Scalar entries.
-                data[name] = arr[indices]
-            elif len(arr.shape) == 2:  # 1D array entries.
-                arr = arr[indices]
-                for i in range(arr.shape[1]):
-                    data[f"{name}_{i}"] = arr[:, i]
-            else:
-                raise ValueError(
-                    f"Field `{name}` has shape {arr.shape[1:]} -- "
-                    "cannot convert fields with shape >1D to Pandas")
-
-        return DataFrame(
-            data,
-            copy=False,  # Fancy indexing above copies all fields, and
-            # indices is explicitly copied.
-        )
