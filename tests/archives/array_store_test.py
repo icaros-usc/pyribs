@@ -45,6 +45,11 @@ def test_init(shape):
     assert store.capacity == capacity
     assert np.all(~store.occupied)
     assert len(store.occupied_list) == 0
+    assert store.field_desc == {
+        "objective": (shape[0], np.float32),
+        "measures": ((shape[1],), np.float32),
+        "solution": ((shape[2],), np.float32),
+    }
 
 
 @pytest.fixture
