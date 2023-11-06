@@ -10,7 +10,7 @@ from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
-from ribs.archives.transforms import transform_batch, transform_single
+from ribs.archives._transforms import transform_batch, transform_single
 
 # TODO: always include threshold field? Say that we at least assume solution,
 # objective, measures (other classes can add other fields if they want).
