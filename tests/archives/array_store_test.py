@@ -47,8 +47,10 @@ def test_init(shape):
     assert len(store.occupied_list) == 0
     assert store.field_desc == {
         "objective": (shape[0], np.float32),
-        "measures": ((shape[1],), np.float32),
-        "solution": ((shape[2],), np.float32),
+        "measures": (
+            (shape[1],) if isinstance(shape[1], int) else shape[1], np.float32),
+        "solution": (
+            (shape[2],) if isinstance(shape[2], int) else shape[2], np.float32),
     }
 
 
