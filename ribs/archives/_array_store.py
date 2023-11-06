@@ -270,6 +270,8 @@ class ArrayStore:
         fields = (itertools.chain(self._fields, ["index"])
                   if fields is None else fields)
         for name in fields:
+            # Collect array data.
+            #
             # Note that fancy indexing with indices already creates a copy, so
             # only `indices` needs to be copied explicitly.
             if name == "index":
@@ -279,6 +281,7 @@ class ArrayStore:
             else:
                 raise ValueError(f"`{name}` is not a field in this ArrayStore.")
 
+            # Accumulate data into the return type.
             if return_type == "dict":
                 data[name] = arr
             elif return_type == "tuple":
@@ -294,6 +297,7 @@ class ArrayStore:
                         f"Field `{name}` has shape {arr.shape[1:]} -- "
                         "cannot convert fields with shape >1D to Pandas")
 
+        # Postprocess return data.
         if return_type == "tuple":
             data = tuple(data)
         elif return_type == "pandas":
