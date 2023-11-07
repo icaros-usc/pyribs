@@ -20,10 +20,13 @@ def single_entry_with_threshold(indices, new_data, add_info, extra_args,
     - ``extra_args`` contains ``"dtype"``, ``"threshold_min"``,
       ``"learning_rate"``, and ``"objective_sum"`` entries.
 
-    In short, this transform  will check if the objective exceeds the current
-    threshold, and if it does, it will update the threshold accordingly. There
-    are also some special cases to handle CMA-ME (as opposed to CMA-MAE) -- this
+    In short, this transform checks if the objective exceeds the current
+    threshold, and if it does, it updates the threshold accordingly. There are
+    also some special cases to handle CMA-ME (as opposed to CMA-MAE) -- this
     case corresponds to when ``threshold_min=-np.inf`` and ``learning_rate=1``.
+
+    The transform also outputs a new sum of objectives via the ``objective_sum``
+    key in ``add_info``.
 
     Since this transform operates on solutions one at a time, we do not
     recommend it when performance is critical. Instead, it is included as a
@@ -79,8 +82,6 @@ def single_entry_with_threshold(indices, new_data, add_info, extra_args,
     # Value is the improvement over the current threshold (can be negative).
     add_info["value"] = np.array([objective - cur_threshold])
 
-    # TODO: Split this out into a separate transform or add to this transform's
-    # documentation.
     if add_info["status"]:
         add_info["objective_sum"] = (cur_objective_sum + objective -
                                      cur_objective)
