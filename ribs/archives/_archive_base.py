@@ -19,7 +19,7 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
 class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     """Base class for archives.
 
-    This class composes archives with an :class:`ArrayStore` that has
+    This class composes archives using an :class:`ArrayStore` that has
     "solution", "objective", "measures", "metadata", and "threshold" fields.
 
     Child classes typically override the following methods:
@@ -63,6 +63,8 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
+        _store (ribs.archives.ArrayStore): The underlying ArrayStore containing
+            data for the archive.
     """
 
     def __init__(self,
