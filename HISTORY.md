@@ -16,6 +16,7 @@
 
 #### Improvements
 
+- Reimplement ArchiveBase using ArrayStore ({pr}`399`)
 - Use chunk computation in CVT brute force calculation to reduce memory usage
   ({pr}`394`)
 - Test pyribs installation in tutorials ({pr}`384`)
