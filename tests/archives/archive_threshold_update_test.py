@@ -5,15 +5,7 @@ import pytest
 from ribs.archives import GridArchive
 from ribs.archives._transforms import _compute_thresholds
 
-from .conftest import get_archive_data
-
 # pylint: disable = redefined-outer-name, missing-function-docstring
-
-
-@pytest.fixture
-def data():
-    """Data for grid archive tests."""
-    return get_archive_data("GridArchive")
 
 
 def update_threshold(threshold, f_val, learning_rate):
@@ -44,7 +36,7 @@ def test_threshold_update_for_one_cell(learning_rate):
     indices = np.zeros(5, dtype=np.int32)
 
     result_test = _compute_thresholds(indices, objective, cur_threshold,
-                                      learning_rate, np.float32)
+                                      learning_rate, np.float64)
     result_true = calc_expected_threshold(objective, cur_threshold[0],
                                           learning_rate)
 
@@ -54,44 +46,35 @@ def test_threshold_update_for_one_cell(learning_rate):
 
 
 @pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
-def test_threshold_update_for_multiple_cells(data, learning_rate):
-    archive = data.archive
-
-    threshold_arr = np.array([-3.1, 0.4, 2.9])
-    objective_batch = np.array([
+def test_threshold_update_for_multiple_cells(learning_rate):
+    cur_threshold = np.repeat([-3.1, 0.4, 2.9], 5)
+    objective = np.array([
         0.1, 0.3, 0.9, 400.0, 42.0, 0.44, 0.53, 0.51, 0.80, 0.71, 33.6, 61.78,
         81.71, 83.48, 41.18
-    ])
-    index_batch = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2])
+    ])  # 15 values.
+    indices = np.repeat([0, 1, 2], 5)
 
-    # pylint: disable = protected-access
-    result_test, _ = archive._compute_new_thresholds(threshold_arr,
-                                                     objective_batch,
-                                                     index_batch, learning_rate)
-
-    result_true = [
-        calc_expected_threshold(objective_batch[5 * i:5 * (i + 1)],
-                                threshold_arr[i], learning_rate)
+    result_test = _compute_thresholds(indices, objective, cur_threshold,
+                                      learning_rate, np.float64)
+    result_true = np.repeat([
+        calc_expected_threshold(objective[5 * i:5 * (i + 1)],
+                                cur_threshold[5 * i], learning_rate)
         for i in range(3)
-    ]
+    ], 5)
 
+    assert result_test.shape == (15,)
     assert np.all(np.isclose(result_test, result_true))
 
 
-def test_threshold_update_for_empty_objective_and_index(data):
-    archive = data.archive
+def test_threshold_update_for_empty_objective_and_index():
+    cur_threshold = np.array([])
+    objective = np.array([])  # Empty objective.
+    indices = np.array([], dtype=np.int32)  # Empty index.
 
-    threshold_arr = np.array([-3.1, 0.4, 2.9])
-    objective_batch = np.array([])  # Empty objective.
-    index_batch = np.array([])  # Empty index.
+    new_threshold = _compute_thresholds(indices, objective, cur_threshold, 0.1,
+                                        np.float64)
 
-    # pylint: disable = protected-access
-    new_threshold_batch, threshold_update_indices = (
-        archive._compute_new_thresholds(threshold_arr, objective_batch,
-                                        index_batch, 0.1))
-
-    assert new_threshold_batch.size == 0
-    assert threshold_update_indices.size == 0
+    assert new_threshold.shape == (0,)
 
 
 def test_init_learning_rate_and_threshold_min():

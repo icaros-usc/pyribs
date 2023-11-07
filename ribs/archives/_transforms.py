@@ -89,24 +89,17 @@ def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
     expected that the new array will have duplicate thresholds that correspond
     to duplicates in indices.
     """
-    # Even though we do this check, it should not be possible to have empty
-    # objective_batch or index_batch in the add() method since we check that at
-    # least one cell is being updated by seeing if can_insert has any True
-    # values.
-    if objective.size == 0 or indices.size == 0:
-        return np.array([], dtype=dtype), np.array([], dtype=bool)
+    if len(indices) == 0:
+        return np.array([], dtype=dtype)
 
     # Compute the number of objectives inserted into each cell. Note that we
     # index with `indices` to place the counts at all relevant indices. For
     # instance, if we had an array [1,2,3,1,5], we would end up with [2,1,1,2,1]
     # (there are 2 1's, 1 2, 1 3, 2 1's, and 1 5).
+    #
+    # All objective_sizes should be > 0 since we only retrieve counts for
+    # indices in `indices`.
     objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]
-
-    # Note: All objective_sizes should be > 0 since we do only retrieve counts
-    # for indices in `indices`.
-
-    # TODO: remove once tests are in place
-    assert np.all(objective_sizes > 0)
 
     # Compute the sum of the objectives inserted into each cell -- again, we
     # index with `indices`.
@@ -115,11 +108,11 @@ def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
                                func="sum",
                                fill_value=np.nan)[indices]
 
-    # Unlike in add_single, we do not need to worry about old_threshold having
-    # -np.inf here as a result of threshold_min being -np.inf. This is because
-    # the case with threshold_min = -np.inf is handled separately since we
-    # compute the new threshold based on the max objective in each cell in that
-    # case.
+    # Unlike in single_entry_with_threshold, we do not need to worry about
+    # cur_threshold having -np.inf here as a result of threshold_min being
+    # -np.inf. This is because the case with threshold_min = -np.inf is handled
+    # separately since we compute the new threshold based on the max objective
+    # in each cell in that case.
 
     ratio = dtype(1.0 - learning_rate)**objective_sizes
     new_threshold = (ratio * cur_threshold +
