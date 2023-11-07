@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
+from ribs.archives._transforms import _compute_thresholds
 
 from .conftest import get_archive_data
 
@@ -37,21 +38,19 @@ def calc_expected_threshold(additions, cell_value, learning_rate):
 
 
 @pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
-def test_threshold_update_for_one_cell(data, learning_rate):
-    archive = data.archive
+def test_threshold_update_for_one_cell(learning_rate):
+    cur_threshold = np.full(5, -3.1)
+    objective = np.array([0.1, 0.3, 0.9, 400.0, 42.0])
+    indices = np.zeros(5, dtype=np.int32)
 
-    threshold_arr = np.array([-3.1])
-    objective_batch = np.array([0.1, 0.3, 0.9, 400.0, 42.0])
-    index_batch = np.array([0, 0, 0, 0, 0])
-
-    # pylint: disable = protected-access
-    result_test, _ = archive._compute_new_thresholds(threshold_arr,
-                                                     objective_batch,
-                                                     index_batch, learning_rate)
-    result_true = calc_expected_threshold(objective_batch, threshold_arr[0],
+    result_test = _compute_thresholds(indices, objective, cur_threshold,
+                                      learning_rate, np.float32)
+    result_true = calc_expected_threshold(objective, cur_threshold[0],
                                           learning_rate)
 
-    assert pytest.approx(result_test[0]) == result_true
+    # The result should have 5 duplicate entries with the new threshold.
+    assert result_test.shape == (5,)
+    assert np.all(np.isclose(result_test, result_true))
 
 
 @pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
