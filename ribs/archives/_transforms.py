@@ -180,22 +180,22 @@ def batch_entries_with_threshold(indices, new_data, add_info, extra_args,
     if not np.any(can_insert):
         return np.array([], dtype=np.int32), {}, add_info
 
-    # Select all solutions that can be inserted into the archive.
+    # Select all solutions that can be inserted -- at this point, there are
+    # still conflicts in the insertions, e.g., multiple solutions can map to
+    # index 0.
     indices = indices[can_insert]
     new_data = {name: arr[can_insert] for name, arr in new_data.items()}
     cur_threshold = cur_threshold[can_insert]
 
-    # Compute new thresholds.
+    # Compute the new threshold associated with each entry.
     if threshold_min == -np.inf:
-        # Here we want regular archive behavior, so the thresholds should just
-        # be the maximum objective.
+        # Regular archive behavior, so the thresholds are just the objective.
         new_threshold = new_data["objective"]
     else:
-        # Here we compute the batch threshold update described in the appendix
-        # of Fontaine 2022 https://arxiv.org/abs/2205.10752 This computation is
-        # based on the mean objective of all solutions in the batch that could
-        # have been inserted into each cell. This method is separated out to
-        # facilitate testing.
+        # Batch threshold update described in Fontaine 2022
+        # https://arxiv.org/abs/2205.10752 This computation is based on the mean
+        # objective of all solutions in the batch that could have been inserted
+        # into each cell.
         new_threshold = _compute_thresholds(indices, new_data["objective"],
                                             cur_threshold, learning_rate, dtype)
 
@@ -204,11 +204,11 @@ def batch_entries_with_threshold(indices, new_data, add_info, extra_args,
     # we only want to insert the maximum among these solutions. Thus, we obtain
     # the argmax for each archive index.
     #
-    # We use a fill_value of -1 to indicate archive indices which were not
+    # We use a fill_value of -1 to indicate archive indices that were not
     # covered in the batch. Note that the length of archive_argmax is only
-    # max(index[can_insert]), rather than the total number of grid cells.
-    # However, this is okay because we only need the indices of the solutions,
-    # which we store in should_insert.
+    # max(indices), rather than the total number of grid cells. However, this is
+    # okay because we only need the indices of the solutions, which we store in
+    # should_insert.
     #
     # aggregate() always chooses the first item if there are ties, so the first
     # elite will be inserted if there is a tie. See their default numpy
