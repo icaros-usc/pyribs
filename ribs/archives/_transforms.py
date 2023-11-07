@@ -9,7 +9,7 @@ from numpy_groupies import aggregate_nb as aggregate
 
 def single_entry_with_threshold(indices, new_data, add_info, extra_args,
                                 occupied, cur_data):
-    """Transform function for adding a single entry to an archive.
+    """Transform function for adding a single entry.
 
     Assumptions:
 
@@ -77,7 +77,7 @@ def single_entry_with_threshold(indices, new_data, add_info, extra_args,
         return indices, new_data, add_info
     else:
         # new_data is ignored, so make it an empty dict.
-        return np.array([]), {}, add_info
+        return np.array([], dtype=np.int32), {}, add_info
 
 
 def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
@@ -85,9 +85,8 @@ def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
     """Computes new thresholds.
 
     The indices, objective, and cur_threshold should all align. Based on these
-    values, we will compute an array that holds the new threshold. It is
-    expected that the new array will have duplicate thresholds that correspond
-    to duplicates in indices.
+    values, we will compute an array that holds the new threshold. The new array
+    will have duplicate thresholds that correspond to duplicates in indices.
     """
     if len(indices) == 0:
         return np.array([], dtype=dtype)
@@ -108,12 +107,14 @@ def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
                                func="sum",
                                fill_value=np.nan)[indices]
 
+    # Update the threshold with the batch update rule from Fontaine 2022:
+    # https://arxiv.org/abs/2205.10752
+    #
     # Unlike in single_entry_with_threshold, we do not need to worry about
     # cur_threshold having -np.inf here as a result of threshold_min being
     # -np.inf. This is because the case with threshold_min = -np.inf is handled
     # separately since we compute the new threshold based on the max objective
     # in each cell in that case.
-
     ratio = dtype(1.0 - learning_rate)**objective_sizes
     new_threshold = (ratio * cur_threshold +
                      (objective_sums / objective_sizes) * (1 - ratio))
@@ -121,17 +122,35 @@ def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
     return new_threshold
 
 
-# TODO: Generalize to further fields
-def transform_batch(indices, new_data, add_info, extra_args, occupied,
-                    cur_data):
-    """Transform function for adding a batch of entries to an archive."""
+def batch_entries_with_threshold(indices, new_data, add_info, extra_args,
+                                 occupied, cur_data):
+    """Transform function for adding a batch of entries.
+
+    Assumptions:
+
+    - ``new_data`` has an ``"objective"`` field and needs a ``"threshold"``
+      field.
+    - ``extra_args`` contains ``"dtype"``, ``"threshold_min"``, and
+      ``"learning_rate"`` entries.
+
+    In short, this transform checks if the batch of solutions exceeds the
+    current thresholds of their cells. Among those that exceed the threshold, we
+    select the solution with the highest objective value. We also update the
+    threshold based on the batch update rule for CMA-MAE:
+    https://arxiv.org/abs/2205.10752
+
+    We also handle some special cases for CMA-ME -- this case corresponds to
+    when ``threshold_min=-np.inf`` and ``learning_rate=1``.
+
+    Since this transform operates on solutions one at a time, we do not
+    recommend it when performance is critical. Instead, it is included as a
+    relatively easy-to-modify example for users creating new archives.
+    """
     dtype = extra_args["dtype"]
     threshold_min = extra_args["threshold_min"]
     learning_rate = extra_args["learning_rate"]
 
     batch_size = len(indices)
-
-    ## Step 1: Compute status and value ##
 
     cur_threshold = cur_data["threshold"]
     cur_threshold[~occupied] = threshold_min  # Default to threshold_min.
@@ -150,27 +169,35 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
 
     # If threshold_min is -inf, then we want CMA-ME behavior, which will compute
     # the improvement value of new solutions w.r.t zero. Otherwise, we will
-    # compute w.r.t. threshold_min.
+    # compute improvement with respect to threshold_min.
     cur_threshold[is_new] = (dtype(0)
                              if threshold_min == -np.inf else threshold_min)
     add_info["value"] = new_data["objective"] - cur_threshold
-
-    ## Step 2: Insert solutions into archive. ##
 
     # Return early if we cannot insert anything -- continuing would actually
     # throw a ValueError in aggregate() since index[can_insert] would be empty.
     can_insert = is_new | improve_existing
     if not np.any(can_insert):
-        add_info["objective_sum"] = extra_args["objective_sum"]
-        return np.array([]), {}, add_info
+        return np.array([], dtype=np.int32), {}, add_info
 
-    # Select only solutions that can be inserted into the archive.
-    index_can = indices[can_insert]
-    solution_can = new_data["solution"][can_insert]
-    objective_can = new_data["objective"][can_insert]
-    measures_can = new_data["measures"][can_insert]
-    metadata_can = new_data["metadata"][can_insert]
-    cur_threshold_can = cur_threshold[can_insert]
+    # Select all solutions that can be inserted into the archive.
+    indices = indices[can_insert]
+    new_data = {name: arr[can_insert] for name, arr in new_data.items()}
+    cur_threshold = cur_threshold[can_insert]
+
+    # Compute new thresholds.
+    if threshold_min == -np.inf:
+        # Here we want regular archive behavior, so the thresholds should just
+        # be the maximum objective.
+        new_threshold = new_data["objective"]
+    else:
+        # Here we compute the batch threshold update described in the appendix
+        # of Fontaine 2022 https://arxiv.org/abs/2205.10752 This computation is
+        # based on the mean objective of all solutions in the batch that could
+        # have been inserted into each cell. This method is separated out to
+        # facilitate testing.
+        new_threshold = _compute_thresholds(indices, new_data["objective"],
+                                            cur_threshold, learning_rate, dtype)
 
     # Retrieve indices of solutions that should be inserted into the archive.
     # Currently, multiple solutions may be inserted at each archive index, but
@@ -187,38 +214,16 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
     # elite will be inserted if there is a tie. See their default numpy
     # implementation for more info:
     # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-    archive_argmax = aggregate(index_can,
-                               objective_can,
+    archive_argmax = aggregate(indices,
+                               new_data["objective"],
                                func="argmax",
                                fill_value=-1)
     should_insert = archive_argmax[archive_argmax != -1]
 
     # Select only solutions that will be inserted into the archive.
-    indices = index_can[should_insert]
-    new_data = {
-        "solution": solution_can[should_insert],
-        "objective": objective_can[should_insert],
-        "measures": measures_can[should_insert],
-        "metadata": metadata_can[should_insert],
-    }
-
-    # Update the thresholds.
-    #
-    # i.e., compute cur_threshold_insert / new_data["threshold"]
-    if threshold_min == -np.inf:
-        # Here we want regular archive behavior, so the thresholds should just
-        # be the maximum objective.
-        new_data["threshold"] = new_data["objective"]
-    else:
-        # Here we compute the batch threshold update described in the appendix
-        # of Fontaine 2022 https://arxiv.org/abs/2205.10752 This computation is
-        # based on the mean objective of all solutions in the batch that could
-        # have been inserted into each cell. This method is separated out to
-        # facilitate testing.
-        new_threshold_can = _compute_thresholds(index_can, objective_can,
-                                                cur_threshold_can,
-                                                learning_rate, dtype)
-        new_data["threshold"] = new_threshold_can[should_insert]
+    indices = indices[should_insert]
+    new_data = {name: arr[should_insert] for name, arr in new_data.items()}
+    new_data["threshold"] = new_threshold[should_insert]
 
     return indices, new_data, add_info
 
