@@ -19,8 +19,8 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
 class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
     """Base class for archives.
 
-    This class assumes all archives are composed of an :class:`ArrayStore` with
-    "solution", "objective", and "measures" fields.
+    This class composes archives with an :class:`ArrayStore` that has
+    "solution", "objective", "measures", "metadata", and "threshold" fields.
 
     Child classes typically override the following methods:
 
