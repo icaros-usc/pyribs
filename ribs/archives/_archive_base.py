@@ -10,8 +10,9 @@ from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
-from ribs.archives._transforms import (transform_batch, transform_single,
-                                       compute_best_index)
+from ribs.archives._transforms import (compute_best_index,
+                                       single_entry_with_threshold,
+                                       transform_batch)
 
 # TODO: pop threshold from outputs for now
 
@@ -415,7 +416,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 "threshold_min": self._threshold_min,
                 "objective_sum": self._objective_sum,
             },
-            [transform_batch, compute_best_index],
+            [
+                transform_batch,
+                compute_best_index,
+            ],
         )
 
         if not np.all(add_info["status"] == 0):
@@ -488,14 +492,17 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 "threshold_min": self._threshold_min,
                 "objective_sum": self._objective_sum,
             },
-            [transform_single, compute_best_index],
+            [
+                single_entry_with_threshold,
+                compute_best_index,
+            ],
         )
 
         if add_info["status"]:
             self._stats_update(add_info.pop("objective_sum"),
                                add_info.pop("best_index"))
 
-        return add_info["status"], add_info["value"]
+        return add_info["status"][0], add_info["value"][0]
 
     def retrieve(self, measures_batch):
         """Retrieves the elites with measures in the same cells as the measures
