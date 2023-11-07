@@ -180,7 +180,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         # Allocate an extra entry in each row so we can put the upper bound at
         # the end.
-        self._boundaries = np.full((self._measure_dim, np.max(self._dims) + 1),
+        self._boundaries = np.full((self.measure_dim, np.max(self._dims) + 1),
                                    np.nan,
                                    dtype=self.dtype)
 
@@ -191,7 +191,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                                                         upper_bound, dim + 1)
 
         # Create buffer.
-        self._buffer = SolutionBuffer(buffer_capacity, self._measure_dim)
+        self._buffer = SolutionBuffer(buffer_capacity, self.measure_dim)
 
         # Total number of solutions encountered.
         self._total_num_sol = 0
@@ -343,7 +343,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         sorted_measures = self._buffer.sorted_measures
 
         # Calculate new boundaries.
-        for i in range(self._measure_dim):
+        for i in range(self.measure_dim):
             for j in range(self.dims[i]):
                 sample_idx = int(j * self._buffer.size / self.dims[i])
                 self._boundaries[i][j] = sorted_measures[i][sample_idx]
