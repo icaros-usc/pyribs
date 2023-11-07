@@ -274,15 +274,15 @@ class ArrayStore:
                 Like the other return types, the columns can be adjusted with
                 the ``fields`` parameter.
 
-            All data returned by this method will be a readonly copy, i.e., the
-            data will not update as the store changes.
+            All data returned by this method will be a copy, i.e., the data will
+            not update as the store changes.
 
         Raises:
             ValueError: Invalid field name provided.
             ValueError: Invalid return_type provided.
         """
         indices = np.asarray(indices, dtype=np.int32)
-        occupied = readonly(self._props["occupied"][indices])
+        occupied = self._props["occupied"][indices]  # Induces copy.
 
         if return_type in ("dict", "pandas"):
             data = {}
@@ -299,9 +299,9 @@ class ArrayStore:
             # Note that fancy indexing with indices already creates a copy, so
             # only `indices` needs to be copied explicitly.
             if name == "index":
-                arr = readonly(np.copy(indices))
+                arr = np.copy(indices)
             elif name in self._fields:
-                arr = readonly(self._fields[name][indices])
+                arr = self._fields[name][indices]  # Induces copy.
             else:
                 raise ValueError(f"`{name}` is not a field in this ArrayStore.")
 
