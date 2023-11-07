@@ -12,7 +12,7 @@ from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._transforms import (compute_best_index,
                                        single_entry_with_threshold,
-                                       transform_batch)
+                                       compute_objective_sum, transform_batch)
 
 # TODO: pop threshold from outputs for now
 
@@ -418,6 +418,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             },
             [
                 transform_batch,
+                compute_objective_sum,
                 compute_best_index,
             ],
         )
@@ -494,6 +495,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             },
             [
                 single_entry_with_threshold,
+                compute_objective_sum,
                 compute_best_index,
             ],
         )

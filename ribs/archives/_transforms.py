@@ -17,16 +17,13 @@ def single_entry_with_threshold(indices, new_data, add_info, extra_args,
       ``indices`` is length 1.
     - ``new_data`` has an ``"objective"`` field and needs a ``"threshold"``
       field.
-    - ``extra_args`` contains ``"dtype"``, ``"threshold_min"``,
-      ``"learning_rate"``, and ``"objective_sum"`` entries.
+    - ``extra_args`` contains ``"dtype"``, ``"threshold_min"``, and
+      ``"learning_rate"`` entries.
 
     In short, this transform checks if the objective exceeds the current
     threshold, and if it does, it updates the threshold accordingly. There are
     also some special cases to handle CMA-ME (as opposed to CMA-MAE) -- this
     case corresponds to when ``threshold_min=-np.inf`` and ``learning_rate=1``.
-
-    The transform also outputs a new sum of objectives via the ``objective_sum``
-    key in ``add_info``.
 
     Since this transform operates on solutions one at a time, we do not
     recommend it when performance is critical. Instead, it is included as a
@@ -39,20 +36,14 @@ def single_entry_with_threshold(indices, new_data, add_info, extra_args,
     dtype = extra_args["dtype"]  # e.g., np.float32 or np.float64
     threshold_min = extra_args["threshold_min"]  # scalar value
     learning_rate = extra_args["learning_rate"]  # scalar value
-    cur_objective_sum = extra_args["objective_sum"]  # scalar value
 
     cur_occupied = occupied[0]
-
-    # Only used for computing QD score.
-    cur_objective = cur_data["objective"][0]
 
     # Used for computing improvement value.
     cur_threshold = cur_data["threshold"][0]
 
-    # New solutions require special settings for cur_objective and
-    # cur_threshold.
+    # New solutions require special settings for the threshold.
     if not cur_occupied:
-        cur_objective = dtype(0)
         # If threshold_min is -inf, then we want CMA-ME behavior, which will
         # compute the improvement value w.r.t. zero for new solutions.
         # Otherwise, we will compute w.r.t. threshold_min.
@@ -83,11 +74,8 @@ def single_entry_with_threshold(indices, new_data, add_info, extra_args,
     add_info["value"] = np.array([objective - cur_threshold])
 
     if add_info["status"]:
-        add_info["objective_sum"] = (cur_objective_sum + objective -
-                                     cur_objective)
         return indices, new_data, add_info
     else:
-        add_info["objective_sum"] = cur_objective_sum
         # new_data is ignored, so make it an empty dict.
         return np.array([]), {}, add_info
 
@@ -152,9 +140,7 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
 
     ## Step 1: Compute status and value ##
 
-    # Copy old objectives since we will be modifying the objectives storage.
-    cur_objective = np.copy(cur_data["objective"])
-    cur_threshold = np.copy(cur_data["threshold"])
+    cur_threshold = cur_data["threshold"]
     cur_threshold[~occupied] = threshold_min  # Default to threshold_min.
 
     # Compute status -- arrays below are all boolean arrays of length
@@ -168,10 +154,6 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
     add_info["status"] = np.zeros(batch_size, dtype=np.int32)
     add_info["status"][is_new] = 2
     add_info["status"][improve_existing] = 1
-
-    # New solutions require special settings for cur_objective and
-    # old_threshold.
-    cur_objective[is_new] = dtype(0)
 
     # If threshold_min is -inf, then we want CMA-ME behavior, which will compute
     # the improvement value of new solutions w.r.t zero. Otherwise, we will
@@ -196,7 +178,6 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
     measures_can = new_data["measures"][can_insert]
     metadata_can = new_data["metadata"][can_insert]
     cur_threshold_can = cur_threshold[can_insert]
-    cur_objective_can = cur_objective[can_insert]
 
     # Retrieve indices of solutions that should be inserted into the archive.
     # Currently, multiple solutions may be inserted at each archive index, but
@@ -227,7 +208,6 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
         "measures": measures_can[should_insert],
         "metadata": metadata_can[should_insert],
     }
-    cur_objective_insert = cur_objective_can[should_insert]
 
     # Update the thresholds.
     #
@@ -247,13 +227,33 @@ def transform_batch(indices, new_data, add_info, extra_args, occupied,
                                                 learning_rate, dtype)
         new_data["threshold"] = new_threshold_can[should_insert]
 
-    ## Step 3: Update archive stats. ##
+    return indices, new_data, add_info
 
-    # Since we set the new solutions in the old objective batch to have value
-    # 0.0, the objectives for new solutions are added in properly here.
-    add_info["objective_sum"] = extra_args["objective_sum"] + np.sum(
-        new_data["objective"] - cur_objective_insert)
 
+def compute_objective_sum(indices, new_data, add_info, extra_args, occupied,
+                          cur_data):
+    """Computes the new sum of objectives after inserting ``new_data``.
+
+    Assumptions:
+    - ``new_data`` and ``cur_data`` have an ``"objective"`` field.
+    - ``extra_args`` contains ``"objective_sum"``, the current sum of
+      objectives.
+
+    The new sum of objectives will be added to ``add_info`` with the key
+    ``"objective_sum"``.
+
+    This transform should be placed near the end of a chain of transforms so
+    that it only considers solutions that are going to be inserted into the
+    store.
+    """
+    cur_objective_sum = extra_args["objective_sum"]
+    if len(indices) == 0:
+        add_info["objective_sum"] = cur_objective_sum
+    else:
+        cur_objective = cur_data["objective"]
+        cur_objective[~occupied] = 0.0  # Unoccupied objectives should be 0.
+        add_info["objective_sum"] = (
+            cur_objective_sum + np.sum(new_data["objective"] - cur_objective))
     return indices, new_data, add_info
 
 
