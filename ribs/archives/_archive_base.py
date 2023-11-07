@@ -636,7 +636,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         _, elites = self._store.retrieve(selected_indices)
         return elites
 
-    def as_pandas(self, include_solutions=False, include_metadata=False):
+    def as_pandas(self, include_solutions=True, include_metadata=False):
         """Converts the archive into an :class:`ArchiveDataFrame` (a child class
         of :class:`pandas.DataFrame`).
 
