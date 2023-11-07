@@ -10,16 +10,10 @@ from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
-from ribs.archives._transforms import (compute_best_index,
-                                       single_entry_with_threshold,
-                                       compute_objective_sum, transform_batch)
-
-# TODO: pop threshold from outputs for now
-
-# TODO: always include threshold field? Say that we at least assume solution,
-# objective, measures (other classes can add other fields if they want).
-
-# TODO: test threshold field in retrieve() etc.
+from ribs.archives._transforms import (batch_entries_with_threshold,
+                                       compute_best_index,
+                                       compute_objective_sum,
+                                       single_entry_with_threshold)
 
 
 class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
@@ -272,6 +266,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 new_best_elite["objective"] > self._stats.obj_max):
             # Convert batched values to single values.
             new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
+            new_best_elite.pop("threshold")
 
             new_obj_max = new_best_elite["objective"]
             self._best_elite = new_best_elite
@@ -417,7 +412,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
                 "objective_sum": self._objective_sum,
             },
             [
-                transform_batch,
+                batch_entries_with_threshold,
                 compute_objective_sum,
                 compute_best_index,
             ],
