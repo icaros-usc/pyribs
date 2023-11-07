@@ -11,7 +11,7 @@
 - **Backwards-incompatible:** Rename `measure_*` columns to `measures_*` in
   `as_pandas` ({pr}`396`)
 - Add ArrayStore data structure ({pr}`395`, {pr}`398`, {pr}`400`, {pr}`402`,
-  {pr}`403`, {pr}`404`, {pr}`405`)
+  {pr}`403`, {pr}`404`, {pr}`406`)
 - Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 
 #### Improvements
