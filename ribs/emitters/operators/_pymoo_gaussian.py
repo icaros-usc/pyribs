@@ -19,7 +19,7 @@ class PymooGaussianOperator(OperatorBase):
                 "PymooGaussian Operator initialization arguments must be \
                 provided.")
 
-    def operate(self, kwargs):
+    def operate(self, **kwargs):
         if ('parents' not in kwargs or 'bounds' not in kwargs or
                 'n_var' not in kwargs):
             raise ValueError("Parents, bounds and n_var must be provided.")

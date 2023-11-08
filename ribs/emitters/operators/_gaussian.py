@@ -47,7 +47,7 @@ class GaussianOperator(OperatorBase):
 
         parents = kwargs['parents']
 
-        noise = self.rng.normal(
+        noise = self._rng.normal(
             scale=self.sigma,
             size=(parents.shape[0], parents.shape[1]),
         ).astype(float)

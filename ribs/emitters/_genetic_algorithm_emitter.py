@@ -51,7 +51,7 @@ class GeneticAlgorithmEmitter(EmitterBase):
                  seed=None,
                  iso_sigma=0.01,
                  line_sigma=0.2,
-                 sigma):
+                 sigma=0.1):
         self._batch_size = batch_size
         self._os = os
         self._x0 = x0
@@ -92,6 +92,30 @@ class GeneticAlgorithmEmitter(EmitterBase):
                                      line_sigma=self._line_sigma)
 
     @property
+    def x0(self):
+        """numpy.ndarray: Initial Solution (if initial_solutions is not
+        set)."""
+        return self._x0
+
+    @property
+    def iso_sigma(self):
+        """float: Scale factor for the isotropic distribution used to
+        generate solutions when the archive is not empty."""
+        return self._iso_sigma
+
+    @property
+    def line_sigma(self):
+        """float: Scale factor for the line distribution used when generating
+        solutions."""
+        return self._line_sigma
+
+    @property
+    def sigma(self):
+        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
+        distribution when the archive is not empty."""
+        return self._sigma
+
+    @property
     def initial_solutions(self):
         """numpy.ndarray: The initial solutions which are returned when the
         archive is empty (if x0 is not set)."""
@@ -123,12 +147,14 @@ class GeneticAlgorithmEmitter(EmitterBase):
                 return np.clip(self._initial_solutions, self.lower_bounds,
                                self.upper_bounds)
             parents = np.expand_dims(self._x0, axis=0)
+
+            directions = np.full((parents.shape[0], parents.shape[1]), 0)
         else:
             parents = self.archive.sample_elites(
                 self._batch_size).solution_batch
-        directions = (
-            self.archive.sample_elites(self._batch_size).solution_batch -
-            parents)
+            directions = (
+                self.archive.sample_elites(self._batch_size).solution_batch -
+                parents)
 
         solution = self._operator.operate(parents=parents,
                                           bounds=(self._lower_bounds[0],
