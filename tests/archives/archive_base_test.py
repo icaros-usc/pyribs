@@ -175,9 +175,14 @@ def test_best_elite(add_mode):
     else:
         archive.add([[1, 2, 3]], [1.0], [[0, 0]])
 
+    assert archive.best_elite.keys() == {
+        "solution", "objective", "measures", "metadata", "threshold", "index"
+    }
+
     assert archive.best_elite["solution"].shape == (3,)
     assert archive.best_elite["objective"].shape == ()
     assert archive.best_elite["measures"].shape == (2,)
+    assert archive.best_elite["threshold"].shape == ()
     # Seem to be spurious pylint warnings.
     # pylint: disable-next=use-implicit-booleaness-not-comparison,comparison-with-callable
     assert archive.stats.obj_max.shape == ()
@@ -185,6 +190,7 @@ def test_best_elite(add_mode):
     assert np.isclose(archive.best_elite["solution"], [1, 2, 3]).all()
     assert np.isclose(archive.best_elite["objective"], 1.0)
     assert np.isclose(archive.best_elite["measures"], [0, 0]).all()
+    assert np.isclose(archive.best_elite["threshold"], 1.0).all()
     assert np.isclose(archive.stats.obj_max, 1.0)
 
     # Add an elite into the same cell as the previous elite -- best_elite should
@@ -197,6 +203,7 @@ def test_best_elite(add_mode):
     assert np.isclose(archive.best_elite["solution"], [4, 5, 6]).all()
     assert np.isclose(archive.best_elite["objective"], 2.0).all()
     assert np.isclose(archive.best_elite["measures"], [0, 0]).all()
+    assert np.isclose(archive.best_elite["threshold"], 2.0).all()
     assert np.isclose(archive.stats.obj_max, 2.0)
 
 
