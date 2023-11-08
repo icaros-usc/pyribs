@@ -164,6 +164,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             the *threshold* of the cell they are being inserted into, not the
             *objective* of the elite currently in the cell. See :pr:`314` for
             more info.
+
+        .. note::
+            The best elite will contain a "threshold" key. This threshold is the
+            threshold of the best elite's cell after the best elite was inserted
+            into the archive.
         """
         return self._best_elite
 
