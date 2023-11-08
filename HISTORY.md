@@ -6,6 +6,7 @@
 
 #### API
 
+- Include threshold in `archive.best_elite` ({pr}`409`)
 - **Backwards-incompatible:** Replace Elite and EliteBatch with dicts
   ({pr}`397`)
 - **Backwards-incompatible:** Rename `measure_*` columns to `measures_*` in
