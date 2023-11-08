@@ -20,19 +20,20 @@ class IsoLineOperator(OperatorBase):
             avoid a fixed seed.
       """
 
-    def __init__(self,
-                 iso_sigma,
-                 line_sigma,
-                 lower_bounds,
-                 upper_bounds,
-                 seed=None):
-        self._iso_sigma = iso_sigma
-        self._line_sigma = line_sigma
-        self._rng = np.random.default_rng(seed)
-        self._lower_bounds = lower_bounds
-        self._upper_bounds = upper_bounds
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
-    def operate(self, parents, directions):
+        class_args = [
+            'iso_sigma', 'line_sigma', 'lower_bounds', 'upper_bounds', 'seed'
+        ]
+
+        if not all(arg in kwargs for arg in class_args):
+            raise ValueError(
+                "IsoLine Operator initialization arguments must be provided.")
+
+        self._rng = np.random.default_rng(self.seed)
+
+    def operate(self, kwargs):
         """ Adds isotropic Guassian noise and directional noise to an elite
 
          Args:
@@ -46,15 +47,21 @@ class IsoLineOperator(OperatorBase):
             -- contains ``batch_size`` mutated solutions
         """
 
+        if ('parents' not in kwargs or 'directions' not in kwargs):
+            raise ValueError("Parents and directions must be provided.")
+
+        parents = kwargs['parents']
+        directions = kwargs['directions']
+
         iso_gaussian = self._rng.normal(
-            scale=self._iso_sigma,
+            scale=self.iso_sigma,
             size=(parents.shape[0], parents.shape[1]),
         ).astype(float)
 
-        line_gaussian = self._rng.normal(
-            scale=self._line_sigma,
+        line_gaussian = self.rng.normal(
+            scale=self.line_sigma,
             size=(parents.shape[0], 1),
         ).astype(float)
         solution_batch = parents + iso_gaussian + line_gaussian * directions
 
-        return np.clip(solution_batch, self._lower_bounds, self._upper_bounds)
+        return np.clip(solution_batch, self.lower_bounds, self.upper_bounds)

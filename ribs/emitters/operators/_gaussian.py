@@ -20,13 +20,18 @@ class GaussianOperator(OperatorBase):
             avoid a fixed seed.
       """
 
-    def __init__(self, sigma, lower_bounds, upper_bounds, seed=None):
-        self._sigma = sigma
-        self._rng = np.random.default_rng(seed)
-        self._lower_bounds = lower_bounds
-        self._upper_bounds = upper_bounds
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
-    def operate(self, parents):
+        class_args = ['sigma', 'seed', 'lower_bounds', 'upper_bounds']
+
+        if not all(arg in kwargs for arg in class_args):
+            raise ValueError(
+                "Gaussian Operator initialization arguments must be provided.")
+
+        self._rng = np.random.default_rng(self.seed)
+
+    def operate(self, **kwargs):
         """Adds Gaussian noise to solution
 
          Args:
@@ -37,10 +42,14 @@ class GaussianOperator(OperatorBase):
             ``(batch_size, solution_dim)`` array
             -- contains ``batch_size`` mutated solutions
         """
+        if 'parents' not in kwargs:
+            raise ValueError("Parents must be provided.")
 
-        noise = self._rng.normal(
-            scale=self._sigma,
+        parents = kwargs['parents']
+
+        noise = self.rng.normal(
+            scale=self.sigma,
             size=(parents.shape[0], parents.shape[1]),
         ).astype(float)
 
-        return np.clip(parents + noise, self._lower_bounds, self._upper_bounds)
+        return np.clip(parents + noise, self.lower_bounds, self.upper_bounds)

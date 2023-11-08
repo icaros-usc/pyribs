@@ -7,17 +7,12 @@ from ribs.emitters.operators import _get_op
 
 
 class GeneticAlgorithmEmitter(EmitterBase):
-    """Emits solutions by adding Gaussian noise to existing archive solutions.
+    """Emits solutions by using operator provided
 
     If the archive is empty and ``self._initial_solutions`` is set, a call to
     :meth:`ask` will return ``self._initial_solutions``. If
-    ``self._initial_solutions`` is not set, we draw from a Gaussian distribution
-    centered at ``self.x0`` with standard deviation ``self.sigma``. Otherwise,
-    each solution is drawn from a distribution centered at a randomly chosen
-    elite with standard deviation ``self.sigma``.
+    ``self._initial_solutions`` is not set, we operate on self.x0.
 
-    This is the classic variation operator presented in `Mouret 2015
-    <https://arxiv.org/pdf/1504.04909.pdf>`_.
 
     Args:
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
@@ -53,12 +48,18 @@ class GeneticAlgorithmEmitter(EmitterBase):
                  bounds=None,
                  batch_size=64,
                  os=None,
-                 seed=None):
+                 seed=None,
+                 iso_sigma=0.01,
+                 line_sigma=0.2,
+                 sigma):
         self._batch_size = batch_size
         self._os = os
         self._x0 = x0
         self._initial_solutions = None
-        self._seed = seed  # remove
+        self._seed = seed
+        self._sigma = sigma
+        self._iso_sigma = iso_sigma
+        self._line_sigma = line_sigma
 
         if x0 is None and initial_solutions is None:
             raise ValueError("Either x0 or initial_solutions must be provided.")
@@ -82,8 +83,13 @@ class GeneticAlgorithmEmitter(EmitterBase):
             solution_dim=archive.solution_dim,
             bounds=bounds,
         )
-        self._operator = _get_op(os)(operator, self._lower_bounds,
-                                     self._upper_bounds)  # pass various args
+        self._operator = _get_op(os)(operator=operator,
+                                     lower_bounds=self._lower_bounds,
+                                     upper_bounds=self._upper_bounds,
+                                     seed=self._seed,
+                                     sigma=self._sigma,
+                                     iso_sigma=self._iso_sigma,
+                                     line_sigma=self._line_sigma)
 
     @property
     def initial_solutions(self):
@@ -120,8 +126,13 @@ class GeneticAlgorithmEmitter(EmitterBase):
         else:
             parents = self.archive.sample_elites(
                 self._batch_size).solution_batch
+        directions = (
+            self.archive.sample_elites(self._batch_size).solution_batch -
+            parents)
 
-        solution = self._operator.operate(
-            parents, (self._lower_bounds[0], self._upper_bounds[0]),
-            len(parents[0]))
+        solution = self._operator.operate(parents=parents,
+                                          bounds=(self._lower_bounds[0],
+                                                  self._upper_bounds[0]),
+                                          n_var=len(parents[0]),
+                                          directions=directions)
         return solution
