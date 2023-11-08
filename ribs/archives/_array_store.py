@@ -175,7 +175,7 @@ class ArrayStore:
 
     @cached_property
     def field_desc(self):
-        """dict: Description of fields in the array store.
+        """dict: Description of fields in the store.
 
         Example:
 
@@ -189,12 +189,25 @@ class ArrayStore:
         See the constructor ``field_desc`` parameter for more info. Unlike in
         the field_desc in the constructor, which accepts ints for 1D field
         shapes (e.g., ``5``), this field_desc shows 1D field shapes as tuples of
-        1 entry (e.g., ``(5,)``).
+        1 entry (e.g., ``(5,)``). Since dicts in Python are ordered, note that
+        this dict will have the same order as in the constructor.
         """
         return {
             name: (arr.shape[1:], arr.dtype)
             for name, arr in self._fields.items()
         }
+
+    @cached_property
+    def field_list(self):
+        """list: List of fields in the store.
+
+        Example:
+
+            ::
+
+                store.field_list == ["objective", "measures"]
+        """
+        return list(self._fields)
 
     def retrieve(self, indices, fields=None, return_type="dict"):
         """Collects data at the given indices.
@@ -337,10 +350,10 @@ class ArrayStore:
 
         Args:
             fields (array-like of str): See :meth:`retrieve`.
+            return_type (str): See :meth:`retrieve`.
         Returns:
-            dict or tuple: See ``data`` in :meth:`retrieve`. ``occupied`` is not
-                returned since all indices are known to be occupied in this
-                method.
+            See ``data`` in :meth:`retrieve`. ``occupied`` is not returned since
+            all indices are known to be occupied in this method.
         """
         return self.retrieve(self.occupied_list, fields, return_type)[1]
 

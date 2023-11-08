@@ -52,6 +52,7 @@ def test_init(shape):
         "solution": (
             (shape[2],) if isinstance(shape[2], int) else shape[2], np.float32),
     }
+    assert store.field_list == ["objective", "measures", "solution"]
 
 
 @pytest.fixture
