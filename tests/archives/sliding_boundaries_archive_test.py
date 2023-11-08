@@ -132,10 +132,7 @@ def test_initial_remap():
     assert np.isclose(archive.boundaries[1], np.linspace(-2, 2, 21)).all()
 
     # Check that all the measures are as expected.
-    pandas_measures = archive.as_pandas(include_solutions=False)[[
-        "measures_0", "measures_1"
-    ]]
-    measures = list(pandas_measures.itertuples(name=None, index=False))
+    measures = map(tuple, archive.data(["measures"], "tuple")[0])
     assert np.isclose(sorted(measures), sorted(expected_measures)).all()
 
 
@@ -184,4 +181,4 @@ def test_adds_solutions_from_old_archive():
 
     # The objective values from the previous archive should remain because they
     # are higher.
-    assert (archive.as_pandas(include_solutions=False)["objective"] == 2).all()
+    assert (archive.data(["objective"], "tuple")[0] == 2).all()
