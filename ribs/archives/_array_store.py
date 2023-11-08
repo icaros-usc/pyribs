@@ -207,6 +207,8 @@ class ArrayStore:
 
                 store.field_list == ["objective", "measures"]
         """
+        # Python dicts are ordered, so this will follow the same order as in the
+        # constructor.
         return list(self._fields)
 
     def retrieve(self, indices, fields=None, return_type="dict"):
