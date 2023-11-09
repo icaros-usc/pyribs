@@ -216,11 +216,12 @@ class ArrayStore:
 
         Args:
             indices (array-like): List of indices at which to collect data.
-            fields (array-like of str): List of fields to include. By default,
-                all fields will be included, with an additional "index" as the
-                last field ("index" can also be placed anywhere in this list).
+            fields (str or array-like of str): List of fields to include. By
+                default, all fields will be included, with an additional "index"
+                as the last field ("index" can also be placed anywhere in this
+                list). This can also be a single str indicating a field name.
             return_type (str): Type of data to return. See the ``data`` returned
-                below.
+                below. Ignored if ``fields`` is a str.
 
         Returns:
             tuple: 2-element tuple consisting of:
@@ -235,8 +236,10 @@ class ArrayStore:
               not occupied, then the 6.0 returned in the ``dict`` example below
               should be ignored.
 
-            - **data**: The data at the given indices. This can take the
-              following forms, depending on the ``return_type`` argument:
+            - **data**: The data at the given indices. If ``fields`` was a
+              single str, this will just be an array holding data for the given
+              field. Otherwise, this data can take the following forms,
+              depending on the ``return_type`` argument:
 
               - ``return_type="dict"``: Dict mapping from the field name to the
                 field data at the given indices. For instance, if we have an
@@ -296,18 +299,24 @@ class ArrayStore:
             ValueError: Invalid field name provided.
             ValueError: Invalid return_type provided.
         """
+        single_field = isinstance(fields, str)
         indices = np.asarray(indices, dtype=np.int32)
         occupied = self._props["occupied"][indices]  # Induces copy.
 
-        if return_type in ("dict", "pandas"):
+        if single_field:
+            data = None
+        elif return_type in ("dict", "pandas"):
             data = {}
         elif return_type == "tuple":
             data = []
         else:
             raise ValueError(f"Invalid return_type {return_type}.")
 
-        fields = (itertools.chain(self._fields, ["index"])
-                  if fields is None else fields)
+        if single_field:
+            fields = [fields]
+        elif fields is None:
+            fields = itertools.chain(self._fields, ["index"])
+
         for name in fields:
             # Collect array data.
             #
@@ -321,7 +330,9 @@ class ArrayStore:
                 raise ValueError(f"`{name}` is not a field in this ArrayStore.")
 
             # Accumulate data into the return type.
-            if return_type == "dict":
+            if single_field:
+                data = arr
+            elif return_type == "dict":
                 data[name] = arr
             elif return_type == "tuple":
                 data.append(arr)
@@ -351,7 +362,7 @@ class ArrayStore:
         Equivalent to calling :meth:`retrieve` with :attr:`occupied_list`.
 
         Args:
-            fields (array-like of str): See :meth:`retrieve`.
+            fields (str or array-like of str): See :meth:`retrieve`.
             return_type (str): See :meth:`retrieve`.
         Returns:
             See ``data`` in :meth:`retrieve`. ``occupied`` is not returned since
