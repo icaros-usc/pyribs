@@ -309,6 +309,24 @@ def test_retrieve_custom_fields(store, return_type):
         assert np.all(df["objective"] == [2.0, 1.0])
 
 
+def test_retrieve_single_field(store):
+    store.add(
+        [3, 5],
+        {
+            "objective": [1.0, 2.0],
+            "measures": [[1.0, 2.0], [3.0, 4.0]],
+            "solution": [np.zeros(10), np.ones(10)],
+        },
+        {},  # Empty extra_args.
+        [],  # Empty transforms.
+    )
+
+    occupied, data = store.retrieve([5, 3], fields="objective")
+
+    assert np.all(occupied == [True, True])
+    assert np.all(data == [2.0, 1.0])
+
+
 def test_add_simple_transform(store):
 
     def obj_meas(indices, new_data, add_info, extra_args, occupied, cur_data):
