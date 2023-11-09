@@ -132,7 +132,7 @@ def test_initial_remap():
     assert np.isclose(archive.boundaries[1], np.linspace(-2, 2, 21)).all()
 
     # Check that all the measures are as expected.
-    measures = map(tuple, archive.data(["measures"], "tuple")[0])
+    measures = map(tuple, archive.data("measures"))
     assert np.isclose(sorted(measures), sorted(expected_measures)).all()
 
 
