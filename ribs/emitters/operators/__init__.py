@@ -1,6 +1,6 @@
 """Operators Act as Mutation Functions to archive solutions
 Used in tandem with emitter classes to alter solutions. Supports
-Pymoo and Pygad external operators
+Pymoo external operators
 """
 
 from ribs.emitters.operators._gaussian import GaussianOperator

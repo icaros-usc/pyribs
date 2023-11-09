@@ -7,9 +7,12 @@
 #### API
 
 - Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
+- Add Operator Interface for internal Gaussian and Isoline Operators and Pymoo Gaussian Mutation
+- Add GeneticAlgorithmEmitter for internal and external operator support
 
 #### Improvements
 
+- Refactored GaussianEmitter to use internal Gaussian operator
 - Use chunk computation in CVT brute force calculation to reduce memory usage
   ({pr}`394`)
 - Test pyribs installation in tutorials ({pr}`384`)
