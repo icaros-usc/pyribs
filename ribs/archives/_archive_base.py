@@ -16,7 +16,8 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
                                        single_entry_with_threshold)
 
 
-class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
+class ArchiveBase(ABC):
+    # pylint: disable = too-many-instance-attributes, too-many-public-methods
     """Base class for archives.
 
     This class composes archives using an :class:`ArrayStore` that has
@@ -109,6 +110,11 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             },
             capacity=self._cells,
         )
+
+    @property
+    def field_list(self):
+        """list: List of data fields in the archive."""
+        return self._store.field_list
 
     @property
     def cells(self):
@@ -639,6 +645,87 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
         selected_indices = self._store.occupied_list[random_indices]
         _, elites = self._store.retrieve(selected_indices)
         return elites
+
+    def data(self, fields=None, return_type="dict"):
+        """Retrieves data for all elites in the archive.
+
+        Args:
+            fields (array-like of str): List of fields to include. By default,
+                all fields will be included (see :attr:`field_list`), with an
+                additional "index" as the last field ("index" can also be placed
+                anywhere in this list).
+            return_type (str): Type of data to return. See below.
+
+        Returns:
+            The data at the given indices. This can take the following forms,
+            depending on the ``return_type`` argument:
+
+            - ``return_type="dict"``: Dict mapping from the field name to the
+              field data at the given indices. An example is::
+
+                  {
+                    "solution": [[1.0, 1.0, ...], ...],
+                    "objective": [1.5, ...],
+                    "measures": [[1.0, 2.0], ...],
+                    "threshold": [0.8, ...],
+                    "index": [4, ...],
+                  }
+
+              Observe that we also return the indices as an ``index`` entry in
+              the dict. The keys in this dict can be modified with the
+              ``fields`` arg; duplicate fields will be ignored since the dict
+              stores unique keys.
+
+            - ``return_type="tuple"``: Tuple of arrays matching the field order
+              given in ``fields``. For instance, if ``fields`` was
+              ``["objective", "measures"]``, we would receive a tuple of
+              ``(objective_arr, measures_arr)``. In this case, the results
+              from ``retrieve`` could be unpacked as::
+
+                  objective, measures = archive.data(["objective", "measures"])
+
+              Unlike with the ``dict`` return type, duplicate fields will show
+              up as duplicate entries in the tuple, e.g.,
+              ``fields=["objective", "objective"]`` will result in two
+              objective arrays being returned.
+
+              By default, (i.e., when ``fields=None``), the fields in the tuple
+              will be ordered according to the :attr:`field_list` along with
+              ``index`` as the last field.
+
+            - ``return_type="pandas"``: A
+              :class:`~ribs.archives.ArchiveDataFrame` with the following
+              columns:
+
+              - For fields that are scalars, a single column with the field
+                name. For example, ``objective`` would have a single column
+                called ``objective``.
+              - For fields that are 1D arrays, multiple columns with the name
+                suffixed by its index. For instance, if we have a ``measures``
+                field of length 10, we create 10 columns with names
+                ``measures_0``, ``measures_1``, ..., ``measures_9``. We do not
+                currently support fields with >1D data.
+              - 1 column of integers (``np.int32``) for the index, named
+                ``index``.
+
+              In short, the dataframe might look like this by default:
+
+              +------------+------+-----------+------------+------+-----------+-------+
+              | solution_0 | ...  | objective | measures_0 | ...  | threshold | index |
+              +============+======+===========+============+======+===========+=======+
+              |            | ...  |           |            | ...  |           |       |
+              +------------+------+-----------+------------+------+-----------+-------+
+
+              Like the other return types, the columns can be adjusted with
+              the ``fields`` parameter.
+
+            All data returned by this method will be a copy, i.e., the data will
+            not update as the archive changes.
+        """ # pylint: disable = line-too-long
+        data = self._store.data(fields, return_type)
+        if return_type == "pandas":
+            data = ArchiveDataFrame(data)
+        return data
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
         """Converts the archive into an :class:`ArchiveDataFrame` (a child class
