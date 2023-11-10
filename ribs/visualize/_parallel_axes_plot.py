@@ -170,8 +170,8 @@ def parallel_axes_plot(archive,
     norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
     if sort_archive:
         df.sort_values("objective", inplace=True)
-    objectives = df.objective_batch()
-    ys = df.measures_batch()[:, cols]
+    objectives = df.get_field("objective")
+    ys = df.get_field("measures")[:, cols]
     y_ranges = upper_bounds - lower_bounds
 
     # Transform all data to be in the first axis coordinates.

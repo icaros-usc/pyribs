@@ -15,10 +15,9 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
                                        compute_objective_sum,
                                        single_entry_with_threshold)
 
-# TODO: What happens to ArchiveDataFrame?
 
-
-class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
+class ArchiveBase(ABC):
+    # pylint: disable = too-many-instance-attributes, too-many-public-methods
     """Base class for archives.
 
     This class composes archives using an :class:`ArrayStore` that has
@@ -694,8 +693,9 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
               will be ordered according to the :attr:`field_list` along with
               ``index`` as the last field.
 
-            - ``return_type="pandas"``: A :class:`pandas.DataFrame` with the
-              following columns (by default):
+            - ``return_type="pandas"``: A
+              :class:`~ribs.archives.ArchiveDataFrame` with the following
+              columns:
 
               - For fields that are scalars, a single column with the field
                 name. For example, ``objective`` would have a single column
@@ -708,7 +708,7 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
               - 1 column of integers (``np.int32``) for the index, named
                 ``index``.
 
-              In short, the dataframe might look like this:
+              In short, the dataframe might look like this by default:
 
               +------------+------+-----------+------------+------+-----------+-------+
               | solution_0 | ...  | objective | measures_0 | ...  | threshold | index |
@@ -722,7 +722,10 @@ class ArchiveBase(ABC):  # pylint: disable = too-many-instance-attributes
             All data returned by this method will be a copy, i.e., the data will
             not update as the archive changes.
         """ # pylint: disable = line-too-long
-        return self._store.data(fields, return_type)
+        data = self._store.data(fields, return_type)
+        if return_type == "pandas":
+            data = ArchiveDataFrame(data)
+        return data
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
         """DEPRECATED."""
