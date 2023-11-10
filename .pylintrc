@@ -312,7 +312,7 @@ max-attributes=100
 min-public-methods=0
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=100
+max-public-methods=20
 
 # Maximum number of boolean expressions in a if statement
 max-bool-expr=5
