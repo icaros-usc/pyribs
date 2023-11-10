@@ -9,8 +9,8 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 from ribs.visualize._utils import (archive_heatmap_1d, retrieve_cmap, set_cbar,
                                    validate_df, validate_heatmap_visual_args)
 
-# Matplotlib functions tend to have a ton of args.
-# pylint: disable = too-many-arguments
+# Matplotlib functions tend to have a ton of args and statements.
+# pylint: disable = too-many-arguments, too-many-statements
 
 
 def cvt_archive_heatmap(archive,
@@ -183,7 +183,13 @@ def cvt_archive_heatmap(archive,
     cmap = retrieve_cmap(cmap)
 
     # Retrieve archive data.
-    df = archive.as_pandas() if df is None else validate_df(df)
+    if df is None:
+        index_batch = archive.data("index")
+        objective_batch = archive.data("objective")
+    else:
+        df = validate_df(df)
+        index_batch = df["index"]
+        objective_batch = df["objective"]
 
     if archive.measure_dim == 1:
         # Read in pcm kwargs -- the linewidth and edgecolor are overwritten by
@@ -221,10 +227,10 @@ def cvt_archive_heatmap(archive,
             inv_idx[x] = i
 
         # We only want inverse indexes that are actually used in the archive.
-        selected_inv_idx = inv_idx[df.get_field("index")]
+        selected_inv_idx = inv_idx[index_batch]
 
         cell_objectives = np.full(archive.cells, np.nan)
-        cell_objectives[selected_inv_idx] = df.get_field("objective")
+        cell_objectives[selected_inv_idx] = objective_batch
 
         ax = archive_heatmap_1d(archive, cell_boundaries, cell_objectives, ax,
                                 cmap, aspect, vmin, vmax, cbar, cbar_kwargs,
@@ -289,7 +295,7 @@ def cvt_archive_heatmap(archive,
         # the region index of each point.
         region_obj = [None] * len(vor.regions)
         min_obj, max_obj = np.inf, -np.inf
-        pt_to_obj = dict(zip(df.get_field("index"), df.get_field("objective")))
+        pt_to_obj = dict(zip(index_batch, objective_batch))
         for pt_idx, region_idx in enumerate(
                 vor.point_region[:-4]):  # Exclude faraway_pts.
             if region_idx != -1 and pt_idx in pt_to_obj:

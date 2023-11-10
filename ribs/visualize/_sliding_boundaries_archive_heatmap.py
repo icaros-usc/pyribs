@@ -120,8 +120,13 @@ def sliding_boundaries_archive_heatmap(archive,
     cmap = retrieve_cmap(cmap)
 
     # Retrieve archive data.
-    df = archive.as_pandas() if df is None else validate_df(df)
-    measures_batch = df.get_field("measures")
+    if df is None:
+        measures_batch = archive.data("measures")
+        objective_batch = archive.data("objective")
+    else:
+        df = validate_df(df)
+        measures_batch = df.get_field("measures")
+        objective_batch = df.get_field("objective")
     x = measures_batch[:, 0]
     y = measures_batch[:, 1]
     x_boundary = archive.boundaries[0]
@@ -145,7 +150,6 @@ def sliding_boundaries_archive_heatmap(archive,
     ax.set_aspect(aspect)
 
     # Create the plot.
-    objective_batch = df.get_field("objective")
     vmin = np.min(objective_batch) if vmin is None else vmin
     vmax = np.max(objective_batch) if vmax is None else vmax
     t = ax.scatter(x,
