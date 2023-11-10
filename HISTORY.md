@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Deprecate `as_pandas` in favor of
+  `data(return_type="pandas")` ({pr}`408`)
 - **Backwards-incompatible:** Replace ArchiveDataFrame batch methods with
   `get_field` ({pr}`413`)
 - Add field_list and data methods to archives ({pr}`412`)
