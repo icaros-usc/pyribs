@@ -1,11 +1,11 @@
 """Quantifies the performance of different centroid generation techniques
 
-To measure how well a generation technique, ie. random centroids, CVT, etc,
+To measure how well a generation technique, i.e., random centroids, CVT, etc,
 performs, we measure the probability of generating a random point within a
 certain region defined by the centroid of that region.
 
-The mathematical equations and foundations of this benchmarking technique is
-found within the paper: https://dl.acm.org/doi/pdf/10.1145/3583133.3590726.
+The equations for this benchmark can be found in Mouret 2023:
+https://dl.acm.org/doi/pdf/10.1145/3583133.3590726.
 
 Usage:
     python benchmarks.py
@@ -25,7 +25,7 @@ def get_score(centroids, num_samples, seed):
     """Returns the performance of generated centroids
 
     Args:
-        centroids (numpy.array): centroids being evaluated
+        centroids (numpy.ndarray): centroids being evaluated
         num_samples (int): number of random points generated
         seed (int): RNG seed
 
@@ -47,8 +47,8 @@ def get_score(centroids, num_samples, seed):
     for idx in closest_idx:
         num_closest_pts[idx] += 1
     # Note: The method in the paper detailed the additional division of
-    # centroid_vol by num_samples. That is included here, however results
-    # remain similar to the paper's.
+    # centroid_vol by num_samples. We did not include that here, however
+    # results remain similar to the paper's.
 
     centroid_vol = num_closest_pts / num_samples
 
