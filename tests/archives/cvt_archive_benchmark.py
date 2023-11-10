@@ -38,26 +38,3 @@ def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
         archive.add(solution_batch, objective_batch, measures_batch)
 
     benchmark.pedantic(add_10k, setup=setup, rounds=5, iterations=1)
-
-
-def benchmark_as_pandas_2000_items(benchmark):
-    cells = 2000
-    archive = CVTArchive(solution_dim=10,
-                         cells=cells,
-                         ranges=[(-1, 1), (-1, 1)],
-                         use_kd_tree=True,
-                         samples=50_000)
-
-    archive.add(
-        solution_batch=np.concatenate(
-            (archive.centroids, np.random.random((cells, 8))),
-            axis=1,
-        ),
-        objective_batch=np.ones(cells),
-        measures_batch=archive.centroids,
-    )
-
-    # Archive should be full.
-    assert len(archive) == cells
-
-    benchmark(archive.as_pandas)

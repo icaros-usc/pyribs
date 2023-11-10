@@ -68,10 +68,11 @@ def sliding_boundaries_archive_heatmap(archive,
         df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
             this argument instead of the data currently in the archive. This
             data can be obtained by, for instance, calling
-            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
-            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
-            data must contain columns for index, objective, and measures. To
-            display a custom metric, replace the "objective" column.
+            :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
+            and modifying the resulting :class:`ArchiveDataFrame`. Note that, at
+            a minimum, the data must contain columns for index, objective, and
+            measures. To display a custom metric, replace the "objective"
+            column.
         transpose_measures (bool): By default, the first measure in the archive
             will appear along the x-axis, and the second will be along the
             y-axis. To switch this behavior (i.e. to transpose the axes), set
@@ -119,8 +120,13 @@ def sliding_boundaries_archive_heatmap(archive,
     cmap = retrieve_cmap(cmap)
 
     # Retrieve archive data.
-    df = archive.as_pandas() if df is None else validate_df(df)
-    measures_batch = df.get_field("measures")
+    if df is None:
+        measures_batch = archive.data("measures")
+        objective_batch = archive.data("objective")
+    else:
+        df = validate_df(df)
+        measures_batch = df.get_field("measures")
+        objective_batch = df.get_field("objective")
     x = measures_batch[:, 0]
     y = measures_batch[:, 1]
     x_boundary = archive.boundaries[0]
@@ -144,7 +150,6 @@ def sliding_boundaries_archive_heatmap(archive,
     ax.set_aspect(aspect)
 
     # Create the plot.
-    objective_batch = df.get_field("objective")
     vmin = np.min(objective_batch) if vmin is None else vmin
     vmax = np.max(objective_batch) if vmax is None else vmax
     t = ax.scatter(x,

@@ -728,49 +728,15 @@ class ArchiveBase(ABC):
         return data
 
     def as_pandas(self, include_solutions=True, include_metadata=False):
-        """Converts the archive into an :class:`ArchiveDataFrame` (a child class
-        of :class:`pandas.DataFrame`).
-
-        The implementation of this method in :class:`ArchiveBase` creates a
-        dataframe consisting of:
-
-        - 1 column of integers (``np.int32``) for the index, named ``index``.
-          See :meth:`index_of` for more info.
-        - :attr:`measure_dim` columns for the measures, named ``measures_0,
-          measures_1, ...``
-        - 1 column for the objectives, named ``objective``
-        - :attr:`solution_dim` columns for the solution parameters, named
-          ``solution_0, solution_1, ...``
-        - 1 column for the metadata objects, named ``metadata``
-
-        In short, the dataframe looks like this:
-
-        +-------+------------+------+-----------+------------+-----+----------+
-        | index | measures_0 | ...  | objective | solution_0 | ... | metadata |
-        +=======+============+======+===========+============+=====+==========+
-        |       |            | ...  |           |            | ... |          |
-        +-------+------------+------+-----------+------------+-----+----------+
-
-        Compared to :class:`pandas.DataFrame`, the :class:`ArchiveDataFrame`
-        adds methods and attributes which make it easier to manipulate archive
-        data. For more information, refer to the :class:`ArchiveDataFrame`
-        documentation.
-
-        Args:
-            include_solutions (bool): Whether to include solution columns.
-            include_metadata (bool): Whether to include the metadata column.
-                Note that methods like :meth:`~pandas.DataFrame.to_csv` may not
-                properly save the dataframe since the metadata objects may not
-                be representable in a CSV.
-        Returns:
-            ArchiveDataFrame: See above.
-        """  # pylint: disable = line-too-long
-        fields = ["index", "measures", "objective"]
-        if include_solutions:
-            fields.append("solution")
-        if include_metadata:
-            fields.append("metadata")
-        return ArchiveDataFrame(self._store.data(fields, return_type="pandas"))
+        """DEPRECATED."""
+        # pylint: disable = unused-argument
+        raise RuntimeError(
+            "as_pandas has been deprecated. Please use "
+            "archive.data(..., return_type='pandas') instead. For more "
+            "info, please see the archive data tutorial: "
+            # pylint: disable = line-too-long
+            "https://docs.pyribs.org/en/stable/tutorials/features/archive_data.html"
+        )
 
     def cqd_score(self,
                   iterations,

@@ -225,7 +225,7 @@ def test_rasterized(cvt_archive_2d):
                   tol=CVT_IMAGE_TOLERANCE)
 def test_plot_metadata_with_df(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
-    df = cvt_archive_2d.as_pandas(include_metadata=True)
+    df = cvt_archive_2d.data(return_type="pandas")
     df["objective"] = df["metadata"]
     cvt_archive_heatmap(cvt_archive_2d, df=df)
 
