@@ -40,40 +40,33 @@ def assert_archive_elites(
 
     Any of the batch items may be excluded by setting to None.
     """
-    archive_df = archive.as_pandas(include_solutions=True,
-                                   include_metadata=True)
+    data = archive.data()
 
     # Check the number of solutions.
-    assert len(archive_df) == batch_size
+    assert len(data["index"]) == batch_size
 
     if grid_indices_batch is not None:
         index_batch = archive.grid_to_int_index(grid_indices_batch)
-
-    archive_solution_batch = archive_df.solution_batch()
-    archive_objective_batch = archive_df.objective_batch()
-    archive_measures_batch = archive_df.measures_batch()
-    archive_index_batch = archive_df.index_batch()
-    archive_metadata_batch = archive_df.metadata_batch()
 
     # Enforce a one-to-one correspondence between entries in the archive and in
     # the provided input -- see
     # https://www.geeksforgeeks.org/check-two-unsorted-array-duplicates-allowed-elements/
     archive_covered = [False for _ in range(batch_size)]
     for i in range(batch_size):
-        for j in range(len(archive_df)):
+        for j in range(len(data["index"])):
             if archive_covered[j]:
                 continue
 
             solution_match = (solution_batch is None or np.isclose(
-                archive_solution_batch[j], solution_batch[i]).all())
+                data["solution"][j], solution_batch[i]).all())
             objective_match = (objective_batch is None or np.isclose(
-                archive_objective_batch[j], objective_batch[i]))
+                data["objective"][j], objective_batch[i]))
             measures_match = (measures_batch is None or np.isclose(
-                archive_measures_batch[j], measures_batch[i]).all())
+                data["measures"][j], measures_batch[i]).all())
             index_match = (grid_indices_batch is None or
-                           archive_index_batch[j] == index_batch[i])
+                           data["index"][j] == index_batch[i])
             metadata_match = (metadata_batch is None or
-                              archive_metadata_batch[j] == metadata_batch[i])
+                              data["metadata"][j] == metadata_batch[i])
 
             if (solution_match and objective_match and measures_match and
                     index_match and metadata_match):

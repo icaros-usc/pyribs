@@ -220,10 +220,10 @@ def cvt_archive_heatmap(archive,
             inv_idx[x] = i
 
         # We only want inverse indexes that are actually used in the archive.
-        selected_inv_idx = inv_idx[df.index_batch()]
+        selected_inv_idx = inv_idx[df.get_field("index")]
 
         cell_objectives = np.full(archive.cells, np.nan)
-        cell_objectives[selected_inv_idx] = df.objective_batch()
+        cell_objectives[selected_inv_idx] = df.get_field("objective")
 
         ax = archive_heatmap_1d(archive, cell_boundaries, cell_objectives, ax,
                                 cmap, aspect, vmin, vmax, cbar, cbar_kwargs,
@@ -288,7 +288,7 @@ def cvt_archive_heatmap(archive,
         # the region index of each point.
         region_obj = [None] * len(vor.regions)
         min_obj, max_obj = np.inf, -np.inf
-        pt_to_obj = dict(zip(df.index_batch(), df.objective_batch()))
+        pt_to_obj = dict(zip(df.get_field("index"), df.get_field("objective")))
         for pt_idx, region_idx in enumerate(
                 vor.point_region[:-4]):  # Exclude faraway_pts.
             if region_idx != -1 and pt_idx in pt_to_obj:
