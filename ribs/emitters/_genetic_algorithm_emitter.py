@@ -89,7 +89,9 @@ class GeneticAlgorithmEmitter(EmitterBase):
                                      seed=self._seed,
                                      sigma=self._sigma,
                                      iso_sigma=self._iso_sigma,
-                                     line_sigma=self._line_sigma)
+                                     line_sigma=self._line_sigma,
+                                     bounds=(self._lower_bounds[0],
+                                             self._upper_bounds[0]))
 
     @property
     def x0(self):
@@ -156,9 +158,5 @@ class GeneticAlgorithmEmitter(EmitterBase):
                 self.archive.sample_elites(self._batch_size).solution_batch -
                 parents)
 
-        solution = self._operator.operate(parents=parents,
-                                          bounds=(self._lower_bounds[0],
-                                                  self._upper_bounds[0]),
-                                          n_var=len(parents[0]),
-                                          directions=directions)
+        solution = self._operator.ask(parents=parents, directions=directions)
         return solution

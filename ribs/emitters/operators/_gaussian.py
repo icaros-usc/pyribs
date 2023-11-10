@@ -31,7 +31,7 @@ class GaussianOperator(OperatorBase):
 
         self._rng = np.random.default_rng(self.seed)
 
-    def operate(self, **kwargs):
+    def ask(self, **kwargs):
         """Adds Gaussian noise to solution
 
          Args:

@@ -140,4 +140,4 @@ class GaussianEmitter(EmitterBase):
             parents = self.archive.sample_elites(
                 self._batch_size).solution_batch
 
-        return self._operator.operate(parents=parents)
+        return self._operator.ask(parents=parents)

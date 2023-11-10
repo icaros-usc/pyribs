@@ -33,7 +33,7 @@ class IsoLineOperator(OperatorBase):
 
         self._rng = np.random.default_rng(self.seed)
 
-    def operate(self, **kwargs):
+    def ask(self, **kwargs):
         """ Adds isotropic Guassian noise and directional noise to an elite
 
          Args:
