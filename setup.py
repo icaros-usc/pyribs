@@ -21,8 +21,6 @@ install_requires = [
     "scikit-learn>=1.1.0",  # Primarily used in CVTArchive.
     "scipy>=1.4.0",  # Primarily used in CVTArchive.
     "threadpoolctl>=3.0.0",
-    "pymoo>=0.6.0.1",  # Primarily used in GeneticAlgorithmEmitter
-    "pygad>=3.2.0",  # Primarily used in GeneticAlgorithmEmitter
 ]
 
 extras_require = {
@@ -64,6 +62,10 @@ extras_require = {
         "wheel==0.40.0",
         "twine==4.0.2",
         "check-wheel-contents==0.4.0",
+    ],
+    "operators": [
+        "pymoo>=0.6.0.1",  # Primarily used in GeneticAlgorithmEmitter
+        "pygad>=3.2.0",  # Primarily used in GeneticAlgorithmEmitter
     ],
 }
 
