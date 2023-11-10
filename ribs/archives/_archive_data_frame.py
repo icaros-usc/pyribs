@@ -1,7 +1,6 @@
 """Provides ArchiveDataFrame."""
 import re
 
-import numpy as np
 import pandas as pd
 
 # Developer Notes:
@@ -82,34 +81,39 @@ class ArchiveDataFrame(pd.DataFrame):
         return ArchiveDataFrame
 
     def iterelites(self):
-        """Iterator that outputs every elite in the ArchiveDataFrame.
-
-        Data which is unavailable will be turned into None. For example, if
-        there are no solution columns, then ``elite["solution"]`` will be None.
+        """Iterator that outputs every elite in the ArchiveDataFrame as a dict.
         """
-        solution_batch = self.solution_batch()
-        objective_batch = self.objective_batch()
-        measures_batch = self.measures_batch()
-        index_batch = self.index_batch()
-        metadata_batch = self.metadata_batch()
+        # Identify fields in the data frame. There are some edge cases here,
+        # such as if someone purposely names their field with an underscore and
+        # a number at the end like "foobar_0", but it covers most cases.
+        fields = {}
+        for col in self:
+            split = col.split("_")
+            if len(split) == 1:
+                # Single column.
+                fields[col] = None
+            elif split[-1].isdigit():
+                # If the last item in the split is numerical, this should match
+                # vector fields like "measures_0".
 
-        none_array = np.empty(len(self), dtype=object)
+                # Exclude last val and underscore - note negative sign.
+                field_name = col[:-(len(split[-1]) + 1)]
+
+                fields[field_name] = None
+            else:
+                fields[col] = None
+
+        # Retrieve field data.
+        for name in fields:
+            fields[name] = self.get_field(name)
+
+        n_elites = len(self)
 
         return map(
-            lambda e: {
-                "solution": e[0],
-                "objective": e[1],
-                "measures": e[2],
-                "index": e[3],
-                "metadata": e[4],
+            lambda i: {
+                name: arr[i] for name, arr in fields.items()
             },
-            zip(
-                none_array if solution_batch is None else solution_batch,
-                none_array if objective_batch is None else objective_batch,
-                none_array if measures_batch is None else measures_batch,
-                none_array if index_batch is None else index_batch,
-                none_array if metadata_batch is None else metadata_batch,
-            ),
+            range(n_elites),
         )
 
     def get_field(self, field):
