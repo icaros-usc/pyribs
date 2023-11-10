@@ -27,7 +27,8 @@ def df(data):
     return ArchiveDataFrame({
         "solution_0": solution_batch[:, 0],
         "objective": objective_batch,
-        "measures_0": measures_batch[:, 0],
+        # Fancy name to test field handling.
+        "foo__bar_measures_3_0": measures_batch[:, 0],
         "metadata": metadata_batch,
         "index": index_batch,
     })
@@ -38,17 +39,17 @@ def test_iterelites(data, df):
                 metadata) in zip(df.iterelites(), zip(*data)):
         assert np.isclose(elite["solution"], solution).all()
         assert np.isclose(elite["objective"], objective)
-        assert np.isclose(elite["measures"], measures).all()
+        assert np.isclose(elite["foo__bar_measures_3"], measures).all()
         assert elite["metadata"] == metadata
         assert elite["index"] == index
 
 
-def test_batch_methods(data, df):
+def test_get_field(data, df):
     (solution_batch, objective_batch, measures_batch, index_batch,
      metadata_batch) = data
     assert np.isclose(df.get_field("solution"), solution_batch).all()
     assert np.isclose(df.get_field("objective"), objective_batch).all()
-    assert np.isclose(df.get_field("measures"), measures_batch).all()
+    assert np.isclose(df.get_field("foo__bar_measures_3"), measures_batch).all()
     assert (df.get_field("metadata") == metadata_batch).all()
     assert (df.get_field("index") == index_batch).all()
 
@@ -58,7 +59,7 @@ def test_batch_methods(data, df):
     [
         ["solution", "solution_0"],
         ["objective", "objective"],
-        ["measures", "measures_0"],
+        ["measures", "foo__bar_measures_3_0"],
         ["metadata", "metadata"],
         ["index", "index"],
     ],
