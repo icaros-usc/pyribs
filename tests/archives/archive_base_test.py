@@ -397,7 +397,7 @@ def test_sample_elites_fails_when_empty(data):
 @pytest.mark.parametrize("with_elite", [True, False], ids=["nonempty", "empty"])
 @pytest.mark.parametrize("dtype", [np.float64, np.float32],
                          ids=["float64", "float32"])
-def test_as_pandas(name, with_elite, dtype):
+def test_pandas_data(name, with_elite, dtype):
     data = get_archive_data(name, dtype)
 
     # Set up expected columns and data types.

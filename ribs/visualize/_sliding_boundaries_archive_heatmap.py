@@ -68,10 +68,11 @@ def sliding_boundaries_archive_heatmap(archive,
         df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
             this argument instead of the data currently in the archive. This
             data can be obtained by, for instance, calling
-            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
-            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
-            data must contain columns for index, objective, and measures. To
-            display a custom metric, replace the "objective" column.
+            :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
+            and modifying the resulting :class:`ArchiveDataFrame`. Note that, at
+            a minimum, the data must contain columns for index, objective, and
+            measures. To display a custom metric, replace the "objective"
+            column.
         transpose_measures (bool): By default, the first measure in the archive
             will appear along the x-axis, and the second will be along the
             y-axis. To switch this behavior (i.e. to transpose the axes), set
