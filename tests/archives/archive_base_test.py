@@ -316,6 +316,12 @@ def test_qd_score_offset_correct(data):
     assert data.archive.qd_score_offset == 0.0  # Default value.
 
 
+def test_field_list_correct(data):
+    assert data.archive.field_list == [
+        "solution", "objective", "measures", "metadata", "threshold"
+    ]
+
+
 def test_basic_stats(data):
     assert data.archive.stats.num_elites == 0
     assert data.archive.stats.coverage == 0.0
