@@ -1,4 +1,6 @@
 """Provides ArchiveDataFrame."""
+import re
+
 import numpy as np
 import pandas as pd
 
@@ -20,10 +22,10 @@ class ArchiveDataFrame(pd.DataFrame):
 
     Example:
 
-        This object is created by :meth:`~ArchiveBase.as_pandas` (i.e. users
+        This object is created by :meth:`~ArchiveBase.data` (i.e. users
         typically do not create it on their own)::
 
-            df = archive.as_pandas()
+            df = archive.data(..., return_type="pandas")
 
         To iterate through every elite as a dict, use::
 
@@ -32,26 +34,25 @@ class ArchiveDataFrame(pd.DataFrame):
                 elite["objective"]
                 ...
 
-        There are also methods to access the solutions, objectives, etc. of
-        all elites in the archive. For instance, the following is an array
-        where entry ``i`` contains the measures of the ``i``'th elite in the
-        DataFrame::
+        Arrays corresponding to individual fields can be accessed with
+        :meth:`get_field`. For instance, the following is an array where entry
+        ``i`` contains the measures of the ``i``'th elite in the DataFrame::
 
-            df.measures_batch()
+            df.get_field("measures")
 
     .. warning::
 
-        Accessing ``batch`` methods (e.g. :meth:`measures_batch`) always
-        creates a copy, so the following will copy the measures 3 times::
+        Calling :meth:`get_field` always creates a copy, so the following will
+        copy the measures 3 times::
 
-            df.measures_batch()[0]
-            df.measures_batch().mean()
-            df.measures_batch().median()
+            df.get_field("measures")[0]
+            df.get_field("measures").mean()
+            df.get_field("measures").median()
 
         **Thus, if you need to use the method several times, we recommend
         storing it first, like so**::
 
-            measures_batch = df.measures_batch()
+            measures_batch = df.get_field("measures")
             measures_batch[0]
             measures_batch.mean()
             measures_batch.median()
@@ -67,10 +68,10 @@ class ArchiveDataFrame(pd.DataFrame):
 
     .. note::
 
-        All the ``batch`` methods "align" with each other -- i.e.
-        ``measures_batch()[i]`` corresponds to ``index_batch()[i]``,
-        ``metadata_batch()[i]``, ``objective_batch()[i]``, and
-        ``solution_batch()[i]``.
+        Results of :meth:`get_field` "align" with each other -- e.g.
+        ``get_field("measures")[i]`` corresponds to ``get_field("index")[i]``,
+        ``get_field("metadata")[i]``, ``get_field("objective")[i]``, and
+        ``get_field("solution")[i]``.
     """
 
     def __init__(self, *args, **kwargs):
@@ -111,61 +112,20 @@ class ArchiveDataFrame(pd.DataFrame):
             ),
         )
 
-    # Note: The slices for batch methods cannot be pre-computed because the
-    # DataFrame columns might change in-place, e.g. when a column is deleted.
+    def get_field(self, field):
+        """Array holding the data for the given field.
 
-    def solution_batch(self):
-        """Array with solutions of all elites.
-
-        None if there are no solutions (e.g. if ``include_solutions=False`` in
-        :meth:`~ArchiveBase.as_pandas`).
-
-        Returns:
-            (n, solution_dim) numpy.ndarray: See above.
+        None if there is no data for the field.
         """
-        cols = [c for c in self if c.startswith("solution_")]
-        return self[cols].to_numpy(copy=True) if cols else None
+        # Note: The column names cannot be pre-computed because the DataFrame
+        # columns might change in-place, e.g., when a column is deleted.
 
-    def objective_batch(self):
-        """Array with objective values of all elites.
-
-        None if there are no objectives in the ``ArchiveDataFrame``.
-
-        Returns:
-            (n,) numpy.ndarray: See above.
-        """
-        return self["objective"].to_numpy(
-            copy=True) if "objective" in self else None
-
-    def measures_batch(self):
-        """Array with measures of all elites.
-
-        None if there are no measures in the ``ArchiveDataFrame``.
-
-        Returns:
-            (n, measure_dim) numpy.ndarray: See above.
-        """
-        cols = [c for c in self if c.startswith("measures_")]
-        return self[cols].to_numpy(copy=True) if cols else None
-
-    def index_batch(self):
-        """Array with indices of all elites.
-
-        None if there are no indices in the ``ArchiveDataFrame``.
-
-        Returns:
-            (n,) numpy.ndarray: See above.
-        """
-        return self["index"].to_numpy(copy=True) if "index" in self else None
-
-    def metadata_batch(self):
-        """Array with metadata of all elites.
-
-        None if there is no metadata (e.g. if ``include_metadata=False`` in
-        :meth:`~ArchiveBase.as_pandas`).
-
-        Returns:
-            (n,) numpy.ndarray: See above.
-        """
-        return self["metadata"].to_numpy(
-            copy=True) if "metadata" in self else None
+        if field in self:
+            # Scalar field -- e.g., "objective"
+            return self[field].to_numpy(copy=True)
+        else:
+            # Vector field -- e.g., field="measures" and we want columns like
+            # "measures_0" and "measures_1"
+            field_re = f"{field}_\\d+"
+            cols = [c for c in self if re.fullmatch(field_re, c)]
+            return self[cols].to_numpy(copy=True) if cols else None
