@@ -151,8 +151,8 @@ def grid_archive_heatmap(archive,
 
     if archive.measure_dim == 1:
         cell_objectives = np.full(archive.cells, np.nan)
-        cell_idx = archive.int_to_grid_index(df.index_batch()).squeeze()
-        cell_objectives[cell_idx] = df.objective_batch()
+        cell_idx = archive.int_to_grid_index(df.get_field("index")).squeeze()
+        cell_objectives[cell_idx] = df.get_field("objective")
 
         archive_heatmap_1d(
             archive,
@@ -171,7 +171,7 @@ def grid_archive_heatmap(archive,
 
     elif archive.measure_dim == 2:
         # Retrieve data from archive.
-        objective_batch = df.objective_batch()
+        objective_batch = df.get_field("objective")
         lower_bounds = archive.lower_bounds
         upper_bounds = archive.upper_bounds
         x_dim, y_dim = archive.dims
@@ -180,7 +180,7 @@ def grid_archive_heatmap(archive,
 
         # Color for each cell in the heatmap.
         colors = np.full((y_dim, x_dim), np.nan)
-        grid_index_batch = archive.int_to_grid_index(df.index_batch())
+        grid_index_batch = archive.int_to_grid_index(df.get_field("index"))
         colors[grid_index_batch[:, 1], grid_index_batch[:, 0]] = objective_batch
 
         if transpose_measures:

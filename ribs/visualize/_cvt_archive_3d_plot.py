@@ -218,8 +218,8 @@ def cvt_archive_3d_plot(
 
     # Retrieve archive data.
     df = archive.as_pandas() if df is None else validate_df(df)
-    objective_batch = df.objective_batch()
-    measures_batch = df.measures_batch()
+    objective_batch = df.get_field("objective")
+    measures_batch = df.get_field("measures")
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
     centroids = archive.centroids
@@ -297,7 +297,7 @@ def cvt_archive_3d_plot(
     objs = []  # Also record objective for each ridge so we can color it.
 
     # Map from centroid index to objective.
-    pt_to_obj = dict(zip(df.index_batch(), objective_batch))
+    pt_to_obj = dict(zip(df.get_field("index"), objective_batch))
 
     # The points in the Voronoi diagram are indexed by their placement in the
     # input list. Above, when we called Voronoi, `centroids` were placed first,

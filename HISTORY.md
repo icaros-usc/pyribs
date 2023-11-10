@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Replace ArchiveDataFrame batch methods with
+  `get_field` ({pr}`413`)
 - Add field_list and data methods to archives ({pr}`412`)
 - Include threshold in `archive.best_elite` ({pr}`409`)
 - **Backwards-incompatible:** Replace Elite and EliteBatch with dicts
