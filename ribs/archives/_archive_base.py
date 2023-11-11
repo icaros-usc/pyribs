@@ -520,15 +520,16 @@ class ArchiveBase(ABC):
         This method operates in batch, i.e., it takes in a batch of measures and
         outputs the batched data for the elites::
 
-            elites = archive.retrieve(...)
-            elites["solution"]  # Shape: (batch_size, solution_dim)
+            occupied, elites = archive.retrieve(...)
+            elites["solution"]  # Shape: (len(measures_batch), solution_dim)
             elites["objective"]
             elites["measures"]
             elites["index"]
             elites["metadata"]
 
         If the cell associated with ``elites["measures"][i]`` has an elite in
-        it, then ``elites["solution"][i]``, ``elites["objective"][i]``,
+        it, then ``occupied[i]`` will be True. Furthermore,
+        ``elites["solution"][i]``, ``elites["objective"][i]``,
         ``elites["measures"][i]``, ``elites["index"][i]``, and
         ``elites["metadata"][i]`` will be set to the properties of the elite.
         Note that ``elites["measures"][i]`` may not be equal to the
@@ -536,14 +537,13 @@ class ArchiveBase(ABC):
         need to be in the same archive cell.
 
         If the cell associated with ``measures_batch[i]`` *does not* have any
-        elite in it, then the corresponding outputs are set to empty values --
-        namely:
+        elite in it, then ``occupied[i]`` will be set to False. Furthermore, the
+        corresponding outputs will be set to empty values -- namely:
 
-        * ``elites["solution"][i]`` will be an array of NaN
-        * ``elites["objective"][i]`` will be NaN
-        * ``elites["measures"][i]`` will be an array of NaN
-        * ``elites["index"][i]`` will be -1
-        * ``elites["metadata"][i]`` will be None
+        * NaN for floating-point fields
+        * -1 for the "index" field
+        * 0 for integer fields
+        * None for object fields
 
         If you need to retrieve a *single* elite associated with some measures,
         consider using :meth:`retrieve_single`.
@@ -552,7 +552,11 @@ class ArchiveBase(ABC):
             measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array of coordinates in measure space.
         Returns:
-            dict: See above.
+            tuple: 2-element tuple of (occupied array, dict). The occupied array
+            indicates whether each of the cells indicated by the measures in
+            measures_batch has an elite, while the dict contains the data of
+            those elites. The dict maps from field name to the corresponding
+            array.
         Raises:
             ValueError: ``measures_batch`` is not of shape (batch_size,
                 :attr:`measure_dim`).
@@ -564,44 +568,38 @@ class ArchiveBase(ABC):
         check_finite(measures_batch, "measures_batch")
 
         occupied, data = self._store.retrieve(self.index_of(measures_batch))
+        unoccupied = ~occupied
 
-        return {
-            # For each occupied_batch[i], this np.where selects
-            # self._solution_arr[index_batch][i] if occupied_batch[i] is True.
-            # Otherwise, it uses the alternate value (a solution array
-            # consisting of np.nan).
-            "solution":
-                np.where(occupied[:, None], data["solution"],
-                         np.full(self._solution_dim, np.nan)),
-            # Here the alternative is just a scalar np.nan.
-            "objective":
-                np.where(occupied, data["objective"], np.nan),
-            # And here it is a measures array of np.nan.
-            "measures":
-                np.where(occupied[:, None], data["measures"],
-                         np.full(self._measure_dim, np.nan)),
-            # Indices must be integers, so np.nan would not work, so we use -1.
-            "index":
-                np.where(occupied, data["index"], -1),
-            "metadata":
-                np.where(occupied, data["metadata"], None),
-        }
+        for name, arr in data.items():
+            if arr.dtype == object:
+                fill_val = None
+            elif name == "index":
+                fill_val = -1
+            elif np.issubdtype(arr.dtype, np.integer):
+                fill_val = 0
+            else:  # Floating-point and other fields.
+                fill_val = np.nan
+
+            data[unoccupied] = fill_val
+
+        return occupied, data
 
     def retrieve_single(self, measures):
         """Retrieves the elite with measures in the same cell as the measures
         specified.
 
         While :meth:`retrieve` takes in a *batch* of measures, this method takes
-        in the measures for only *one* solution and returns a dict with single
-        entries.
+        in the measures for only *one* solution and returns a single bool and a
+        dict with single entries.
 
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures.
         Returns:
-            If there is an elite with measures in the same cell as the measures
-            specified, then this method returns dict where all the fields hold
-            the info of the elite. Otherwise, this method returns a dict filled
-            with the same "empty" values described in :meth:`retrieve`.
+            tuple: If there is an elite with measures in the same cell as the
+            measures specified, then this method returns a True value and a dict
+            where all the fields hold the info of the elite. Otherwise, this
+            method returns a False value and a dict filled with the same "empty"
+            values described in :meth:`retrieve`.
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -610,10 +608,9 @@ class ArchiveBase(ABC):
         check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
-        return {
-            field: arr[0]
-            for field, arr in self.retrieve(measures[None]).items()
-        }
+        occupied, data = self.retrieve(measures[None])
+
+        return occupied[0], {field: arr[0] for field, arr in data.items()}
 
     def sample_elites(self, n):
         """Randomly samples elites from the archive.
@@ -834,10 +831,8 @@ class ArchiveBase(ABC):
             penalties = np.copy(penalties)  # Copy since we return this.
             check_is_1d(penalties, "penalties")
 
-        objective_batch, measures_batch = self._store.data(
-            ["objective", "measures"],
-            return_type="tuple",
-        )
+        objective_batch = self._store.data("objective")
+        measures_batch = self._store.data("measures")
 
         norm_objectives = objective_batch / (obj_max - obj_min)
 
