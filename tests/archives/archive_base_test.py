@@ -340,19 +340,23 @@ def test_basic_stats(data):
 
 
 def test_retrieve_gets_correct_elite(data):
-    elites = data.archive_with_elite.retrieve([data.measures])
+    occupied, elites = data.archive_with_elite.retrieve([data.measures])
+    assert occupied[0]
     assert np.all(elites["solution"][0] == data.solution)
     assert elites["objective"][0] == data.objective
     assert np.all(elites["measures"][0] == data.measures)
+    assert elites["threshold"][0] == data.objective
     # Avoid checking elites["index"] since the meaning varies by archive.
     assert elites["metadata"][0] == data.metadata
 
 
 def test_retrieve_empty_values(data):
-    elites = data.archive.retrieve([data.measures])
+    occupied, elites = data.archive.retrieve([data.measures])
+    assert not occupied[0]
     assert np.all(np.isnan(elites["solution"][0]))
     assert np.isnan(elites["objective"])
     assert np.all(np.isnan(elites["measures"][0]))
+    assert np.isnan(elites["threshold"])
     assert elites["index"][0] == -1
     assert elites["metadata"][0] is None
 
@@ -363,19 +367,23 @@ def test_retrieve_wrong_shape(data):
 
 
 def test_retrieve_single_gets_correct_elite(data):
-    elite = data.archive_with_elite.retrieve_single(data.measures)
+    occupied, elite = data.archive_with_elite.retrieve_single(data.measures)
+    assert occupied
     assert np.all(elite["solution"] == data.solution)
     assert elite["objective"] == data.objective
     assert np.all(elite["measures"] == data.measures)
+    assert elite["threshold"] == data.objective
     # Avoid checking elite["index"] since the meaning varies by archive.
     assert elite["metadata"] == data.metadata
 
 
 def test_retrieve_single_empty_values(data):
-    elite = data.archive.retrieve_single(data.measures)
+    occupied, elite = data.archive.retrieve_single(data.measures)
+    assert not occupied
     assert np.all(np.isnan(elite["solution"]))
     assert np.isnan(elite["objective"])
     assert np.all(np.isnan(elite["measures"]))
+    assert np.isnan(elite["threshold"])
     assert elite["index"] == -1
     assert elite["metadata"] is None
 
