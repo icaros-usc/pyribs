@@ -580,7 +580,7 @@ class ArchiveBase(ABC):
             else:  # Floating-point and other fields.
                 fill_val = np.nan
 
-            data[unoccupied] = fill_val
+            arr[unoccupied] = fill_val
 
         return occupied, data
 
