@@ -521,7 +521,7 @@ class ArchiveBase(ABC):
         outputs the batched data for the elites::
 
             occupied, elites = archive.retrieve(...)
-            elites["solution"]  # Shape: (len(measures_batch), solution_dim)
+            elites["solution"]  # Shape: (batch_size, solution_dim)
             elites["objective"]
             elites["measures"]
             elites["index"]
