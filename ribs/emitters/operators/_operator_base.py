@@ -11,7 +11,7 @@ class OperatorBase(ABC):
 
     @abstractmethod
     def __init__(self):
-        """Pass"""
+        """Init"""
 
     @abstractmethod
     def ask(self):
