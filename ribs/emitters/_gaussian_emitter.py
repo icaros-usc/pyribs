@@ -3,7 +3,6 @@ import numpy as np
 
 from ribs._utils import check_1d_shape, check_batch_shape
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.operators._gaussian import GaussianOperator
 
 
 class GaussianEmitter(EmitterBase):
@@ -86,10 +85,6 @@ class GaussianEmitter(EmitterBase):
             solution_dim=archive.solution_dim,
             bounds=bounds,
         )
-        self._operator = GaussianOperator(sigma=self._sigma,
-                                          lower_bounds=self._lower_bounds,
-                                          upper_bounds=self._upper_bounds,
-                                          seed=seed)
 
     @property
     def x0(self):
@@ -140,4 +135,9 @@ class GaussianEmitter(EmitterBase):
             parents = self.archive.sample_elites(
                 self._batch_size).solution_batch
 
-        return self._operator.ask(parents=parents)
+        noise = self._rng.normal(
+            scale=self._sigma,
+            size=(self._batch_size, self.solution_dim),
+        ).astype(self.archive.dtype)
+
+        return np.clip(parents + noise, self.lower_bounds, self.upper_bounds)

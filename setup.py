@@ -63,10 +63,6 @@ extras_require = {
         "twine==4.0.2",
         "check-wheel-contents==0.4.0",
     ],
-    "operators": [
-        "pymoo>=0.6.0.1",  # Primarily used in GeneticAlgorithmEmitter
-        "pygad>=3.2.0",  # Primarily used in GeneticAlgorithmEmitter
-    ],
 }
 
 setup(
