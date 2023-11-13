@@ -137,7 +137,6 @@ class GaussianEmitter(EmitterBase):
                                self.upper_bounds)
             parents = np.expand_dims(self.x0, axis=0)
         else:
-            parents = self.archive.sample_elites(
-                self._batch_size).solution_batch
+            parents = self.archive.sample_elites(self._batch_size)["solution"]
 
         return self._operator.ask(parents=parents)
