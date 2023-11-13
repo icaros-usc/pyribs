@@ -6,6 +6,7 @@
 
 #### API
 
+- Add Base Operator Interface and Emitter Operator Retrieval ({pr}`416`)
 - **Backwards-incompatible:** Return occupied booleans in retrieve ({pr}`414`)
 - **Backwards-incompatible:** Deprecate `as_pandas` in favor of
   `data(return_type="pandas")` ({pr}`408`)
