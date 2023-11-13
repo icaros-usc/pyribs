@@ -8,9 +8,15 @@ operators such as mutation and crossover.
 
     ribs.emitters.operators.OperatorBase
 """
+from ribs.emitters.operators._gaussian import GaussianOperator
+from ribs.emitters.operators._iso_line import IsoLineOperator
 from ribs.emitters.operators._operator_base import OperatorBase
 
-__all__ = ["OperatorBase"]
+__all__ = [
+    "OperatorBase",
+    "GaussianOperator",
+    "IsoLineOperator",
+]
 
 _NAME_TO_OP_MAP = {}
 
