@@ -1,27 +1,24 @@
-"""Operator Base Class"""
+"""Provides OperatorBase."""
 from abc import ABC, abstractmethod
 
 
 class OperatorBase(ABC):
-    """Operator interface for GeneticAlgorithmEmitter (GAE). User passes
-        operator string to GAE which maps to appropriate operator class.
+    """Base class for operators.
 
-        Provides ask function which mutates emitter-passed solutions.
-        """
-
-    @abstractmethod
-    def __init__(self):
-        """Init"""
+    Operators take in parents and output new solutions when their ask method
+    is called. They can also be instantiated with any arguments.
+    """
 
     @abstractmethod
-    def ask(self):
-        """Mutates solutions provided with class-defined mutation
+    def ask(self, parents):
+        """Operates on parents to generate new solutions.
 
-         Args:
-            parents (np-array): (batch_size, :attr:`solution_dim`)
-                array of solutions selected by emitter
+        Args:
+            parents (array-like): (batch_size, solution_dim) array of
+                solutions to be mutated. Typically passed in by an emitter
+                after selection from an archive.
 
         Returns:
-            ``(batch_size, solution_dim)`` array
-            -- contains ``batch_size`` mutated solutions
+            numpy.ndarray: ``(batch_size, solution_dim)`` array that contains
+            ``batch_size`` mutated solutions.
         """

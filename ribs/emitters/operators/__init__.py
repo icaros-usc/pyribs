@@ -1,7 +1,16 @@
-"""Operators Act as Mutation Functions to archive solutions
-Used in tandem with emitter classes to alter solutions. Supports
-Pymoo external operators
+"""Various operators which are employed across emitters.
+
+Operators take in one or more parent solutions and output new solutions via
+operators such as mutation and crossover.
+
+.. autosummary::
+    :toctree:
+
+    ribs.emitters.operators.OperatorBase
 """
+from ribs.emitters.operators._operator_base import OperatorBase
+
+__all__ = ["OperatorBase"]
 
 _NAME_TO_OP_MAP = {}
 
