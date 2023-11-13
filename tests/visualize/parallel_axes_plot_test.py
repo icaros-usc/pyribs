@@ -93,6 +93,6 @@ def test_3d_vertical_cbar(grid_archive_3d):
                   extensions=["png"])
 def test_plot_metadata_with_df(grid_archive_3d):
     plt.figure(figsize=(8, 6))
-    df = grid_archive_3d.as_pandas(include_metadata=True)
+    df = grid_archive_3d.data(return_type="pandas")
     df["objective"] = df["metadata"]
     parallel_axes_plot(grid_archive_3d, df=df)

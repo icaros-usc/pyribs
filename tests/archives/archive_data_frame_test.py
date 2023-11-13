@@ -21,56 +21,61 @@ def data():
 
 @pytest.fixture
 def df(data):
-    """Mimics the ArchiveDataFrame which an as_pandas method would generate."""
+    """Mimics an ArchiveDataFrame that a data method would generate."""
     (solution_batch, objective_batch, measures_batch, index_batch,
      metadata_batch) = data
     return ArchiveDataFrame({
-        "index": index_batch,
-        "objective": objective_batch,
-        "measure_0": measures_batch[:, 0],
         "solution_0": solution_batch[:, 0],
+        "objective": objective_batch,
+        # Fancy name to test field handling.
+        "foo__bar_measures_3_0": measures_batch[:, 0],
         "metadata": metadata_batch,
+        "index": index_batch,
     })
 
 
 def test_iterelites(data, df):
     for elite, (solution, objective, measures, index,
                 metadata) in zip(df.iterelites(), zip(*data)):
-        assert np.isclose(elite.solution, solution).all()
-        assert np.isclose(elite.objective, objective)
-        assert np.isclose(elite.measures, measures).all()
-        assert elite.index == index
-        assert elite.metadata == metadata
+        assert np.isclose(elite["solution"], solution).all()
+        assert np.isclose(elite["objective"], objective)
+        assert np.isclose(elite["foo__bar_measures_3"], measures).all()
+        assert elite["metadata"] == metadata
+        assert elite["index"] == index
 
 
-def test_batch_methods(data, df):
+def test_get_field(data, df):
     (solution_batch, objective_batch, measures_batch, index_batch,
      metadata_batch) = data
-    assert np.isclose(df.solution_batch(), solution_batch).all()
-    assert np.isclose(df.objective_batch(), objective_batch).all()
-    assert np.isclose(df.measures_batch(), measures_batch).all()
-    assert (df.index_batch() == index_batch).all()
-    assert (df.metadata_batch() == metadata_batch).all()
+    assert np.isclose(df.get_field("solution"), solution_batch).all()
+    assert np.isclose(df.get_field("objective"), objective_batch).all()
+    assert np.isclose(df.get_field("foo__bar_measures_3"), measures_batch).all()
+    assert (df.get_field("metadata") == metadata_batch).all()
+    assert (df.get_field("index") == index_batch).all()
 
 
 @pytest.mark.parametrize(
-    "remove",
-    ["index", "objective", "measure_0", "metadata", "solution_0"],
-    ids=["index", "objective", "measures", "metadata", "solutions"],
+    "field_col",
+    [
+        ["solution", "solution_0"],
+        ["objective", "objective"],
+        ["measures", "foo__bar_measures_3_0"],
+        ["metadata", "metadata"],
+        ["index", "index"],
+    ],
+    ids=[
+        "solutions",
+        "objective",
+        "measures",
+        "metadata",
+        "index",
+    ],
 )
-def test_batch_methods_can_be_none(df, remove):
-    """Removes a column so that the corresponding batch method returns None."""
-    del df[remove]
-
-    method = {
-        "solution_0": df.solution_batch,
-        "objective": df.objective_batch,
-        "measure_0": df.measures_batch,
-        "index": df.index_batch,
-        "metadata": df.metadata_batch,
-    }[remove]
-
-    assert method() is None
+def test_field_can_be_none(df, field_col):
+    """Removes a column so that get_field returns None."""
+    field, col = field_col
+    del df[col]
+    assert df.get_field(field) is None
 
 
 def test_correct_constructor(df):
