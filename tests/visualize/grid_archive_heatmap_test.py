@@ -199,7 +199,7 @@ def test_rasterized(grid_archive_2d):
                   extensions=["png"])
 def test_plot_metadata_with_df(grid_archive_2d):
     plt.figure(figsize=(8, 6))
-    df = grid_archive_2d.as_pandas(include_metadata=True)
+    df = grid_archive_2d.data(return_type="pandas")
     df["objective"] = df["metadata"]
     grid_archive_heatmap(grid_archive_2d, df=df)
 

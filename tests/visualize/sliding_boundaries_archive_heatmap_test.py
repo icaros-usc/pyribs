@@ -167,6 +167,6 @@ def test_rasterized(sliding_archive_2d):
                   extensions=["png"])
 def test_plot_metadata_with_df(sliding_archive_2d):
     plt.figure(figsize=(8, 6))
-    df = sliding_archive_2d.as_pandas(include_metadata=True)
+    df = sliding_archive_2d.data(return_type="pandas")
     df["objective"] = df["metadata"]
     sliding_boundaries_archive_heatmap(sliding_archive_2d, df=df)

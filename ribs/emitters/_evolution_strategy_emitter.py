@@ -253,7 +253,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         # Check for reset.
         if (self._opt.check_stop(ranking_values[indices]) or
                 self._check_restart(new_sols)):
-            new_x0 = self.archive.sample_elites(1).solution_batch[0]
+            new_x0 = self.archive.sample_elites(1)["solution"][0]
             self._opt.reset(new_x0)
             self._ranker.reset(self, self.archive, self._rng)
             self._restarts += 1
