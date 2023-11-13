@@ -5,5 +5,3 @@ sortedcontainers==2.0.0
 scikit-learn==1.1.0
 scipy==1.4.0
 threadpoolctl==3.0.0
-pymoo==0.6.0.1
-pygad==3.2.0

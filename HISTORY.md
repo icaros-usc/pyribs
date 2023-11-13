@@ -6,7 +6,7 @@
 
 #### API
 
-- Add Base Operator Interface and Emitter Operator Retrieval
+- Add Base Operator Interface and Emitter Operator Retrieval ({pr}`416`)
 
 #### Improvements
 
