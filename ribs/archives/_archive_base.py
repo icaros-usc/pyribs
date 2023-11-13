@@ -104,7 +104,7 @@ class ArchiveBase(ABC):
             field_desc={
                 "solution": ((solution_dim,), self.dtype),
                 "objective": ((), self.dtype),
-                "measures": ((self._measure_dim,), self.dtype),
+                "measures": ((measure_dim,), self.dtype),
                 "threshold": ((), self.dtype),
             },
             capacity=self._cells,
