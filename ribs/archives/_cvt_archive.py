@@ -1,6 +1,7 @@
 """Contains the CVTArchive class."""
 import numpy as np
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
+from scipy.stats.qmc import Halton, Sobol
 from sklearn.cluster import k_means
 
 from ribs._utils import check_batch_shape, check_finite
@@ -124,7 +125,8 @@ class CVTArchive(ArchiveBase):
                  chunk_size=None,
                  k_means_kwargs=None,
                  use_kd_tree=True,
-                 ckdtree_kwargs=None):
+                 ckdtree_kwargs=None,
+                 centroid_method="kmeans"):
 
         ArchiveBase.__init__(
             self,
@@ -164,16 +166,55 @@ class CVTArchive(ArchiveBase):
         self._chunk_size = chunk_size
 
         if custom_centroids is None:
-            if not isinstance(samples, int):
-                # Validate shape of custom samples. These are ignored when
-                # `custom_centroids` is provided.
-                samples = np.asarray(samples, dtype=self.dtype)
-                if samples.shape[1] != self._measure_dim:
-                    raise ValueError(
-                        f"Samples has shape {samples.shape} but must be of "
-                        f"shape (n_samples, len(ranges)={self._measure_dim})")
-            self._samples = samples
-            self._centroids = None
+            if centroid_method == "kmeans":
+                if not isinstance(samples, int):
+                    # Validate shape of custom samples. These are ignored when
+                    # `custom_centroids` is provided.
+                    samples = np.asarray(samples, dtype=self.dtype)
+                    if samples.shape[1] != self._measure_dim:
+                        raise ValueError(
+                            f"Samples has shape {samples.shape} but must be of "
+                            f"shape (n_samples, len(ranges)="
+                            f"{self._measure_dim})")
+                self._samples = samples
+                self._centroids = None
+                if self._centroids is None:
+                    self._samples = self._rng.uniform(
+                        self._lower_bounds,
+                        self._upper_bounds,
+                        size=(self._samples, self._measure_dim),
+                    ).astype(self.dtype) if isinstance(self._samples,
+                                                       int) else self._samples
+
+                    self._centroids = k_means(self._samples, self._cells,
+                                              **self._k_means_kwargs)[0]
+
+                    if self._centroids.shape[0] < self._cells:
+                        raise RuntimeError(
+                            "While generating the CVT, k-means clustering "
+                            f"found {self._centroids.shape[0]} centroids, "
+                            f"but this archive needs {self._cells} cells. "
+                            f"This most likely happened because there are "
+                            "too few samples and/or too many cells.")
+            elif centroid_method == "random":
+                # generates random centroids across two ranges
+                self._centroids = self._rng.uniform(self._lower_bounds,
+                                                    self._upper_bounds,
+                                                    size=(self._cells, 2))
+            elif centroid_method == "sobol":
+                # generates Sobol numbers
+                sampler = Sobol(d=2, scramble=False)
+                num_points = np.log2(self._cells).astype(int)
+                self._centroids = sampler.random_base2(num_points)
+            elif centroid_method == "scrambled sobol":
+                # generates scrambled Sobol numbers
+                sampler = Sobol(d=2, scramble=True)
+                num_points = np.log2(self._cells).astype(int)
+                self._centroids = sampler.random_base2(num_points)
+            elif centroid_method == "halton":
+                # generates Halton numbers
+                sampler = Halton(d=2)
+                self._centroids = sampler.random(n=self._cells)
         else:
             # Validate shape of `custom_centroids` when they are provided.
             custom_centroids = np.asarray(custom_centroids, dtype=self.dtype)
@@ -184,24 +225,6 @@ class CVTArchive(ArchiveBase):
                     f"{self._measure_dim})")
             self._centroids = custom_centroids
             self._samples = None
-
-        if self._centroids is None:
-            self._samples = self._rng.uniform(
-                self._lower_bounds,
-                self._upper_bounds,
-                size=(self._samples, self._measure_dim),
-            ).astype(self.dtype) if isinstance(self._samples,
-                                               int) else self._samples
-
-            self._centroids = k_means(self._samples, self._cells,
-                                      **self._k_means_kwargs)[0]
-
-            if self._centroids.shape[0] < self._cells:
-                raise RuntimeError(
-                    "While generating the CVT, k-means clustering found "
-                    f"{self._centroids.shape[0]} centroids, but this archive "
-                    f"needs {self._cells} cells. This most likely happened "
-                    "because there are too few samples and/or too many cells.")
 
         if self._use_kd_tree:
             self._centroid_kd_tree = cKDTree(self._centroids,

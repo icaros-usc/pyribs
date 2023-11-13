@@ -62,28 +62,67 @@ def main():
     techniques used in the aforementioned paper.
     """
 
-    score_seed = 1
-    num_samples = 10000
-    archive = CVTArchive(
-        solution_dim=20,
-        cells=512,
-        ranges=[(0., 1.), (0., 1.)],
-    )
-    cvt_centroids = archive.centroids
+    # default settings to be used for all benchmarking tests
+    score_seed = 1823170571
+    num_samples = 100000
+
+    # original kmeans centroid generation
+    kmeans_archive = CVTArchive(solution_dim=20,
+                                cells=512,
+                                ranges=[(0., 1.), (0., 1.)],
+                                centroid_method="kmeans")
+    kmeans_centroids = kmeans_archive.centroids
     print(
         "Score for CVT generation: ",
-        get_score(centroids=cvt_centroids,
+        get_score(centroids=kmeans_centroids,
                   num_samples=num_samples,
                   seed=score_seed))
 
-    centroid_gen_seed = 100
-    num_centroids = 1024
-    dim = 2
-    rng = np.random.default_rng(seed=centroid_gen_seed)
-    random_centroids = rng.random((num_centroids, dim))
+    # random generation of centroids
+    random_archive = CVTArchive(solution_dim=20,
+                                cells=512,
+                                ranges=[(0., 1.), (0., 1.)],
+                                centroid_method="random")
+    random_centroids = random_archive.centroids
     print(
         "Score for random generation: ",
         get_score(centroids=random_centroids,
+                  num_samples=num_samples,
+                  seed=score_seed))
+
+    # generating centroids using Sobol sequence
+    sobol_archive = CVTArchive(solution_dim=20,
+                               cells=512,
+                               ranges=[(0., 1.), (0., 1.)],
+                               centroid_method="sobol")
+    sobol_centroids = sobol_archive.centroids
+    print(
+        "Score for sobol generation: ",
+        get_score(centroids=sobol_centroids,
+                  num_samples=num_samples,
+                  seed=score_seed))
+
+    # generating centroids using scrambled Sobol sequence
+    s_sobol_archive = CVTArchive(solution_dim=20,
+                                 cells=512,
+                                 ranges=[(0., 1.), (0., 1.)],
+                                 centroid_method="scrambled sobol")
+    s_sobol_centroids = s_sobol_archive.centroids
+    print(
+        "Score for scrambled sobol generation: ",
+        get_score(centroids=s_sobol_centroids,
+                  num_samples=num_samples,
+                  seed=score_seed))
+
+    # generating centroids using Halton sequence
+    halton_archive = CVTArchive(solution_dim=20,
+                                cells=512,
+                                ranges=[(0., 1.), (0., 1.)],
+                                centroid_method="halton")
+    halton_centroids = halton_archive.centroids
+    print(
+        "Score for halton sobol generation: ",
+        get_score(centroids=halton_centroids,
                   num_samples=num_samples,
                   seed=score_seed))
 
