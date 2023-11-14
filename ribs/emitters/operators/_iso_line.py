@@ -17,7 +17,7 @@ class IsoLineOperator(OperatorBase):
             by emitter
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-      """
+    """
 
     def __init__(self, iso_sigma, line_sigma, lower_bounds, upper_bounds, seed):
 
