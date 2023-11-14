@@ -1,4 +1,5 @@
 """Provides the GradientOperatorEmitter."""
+import numbers
 
 import numpy as np
 
@@ -140,7 +141,7 @@ class GradientOperatorEmitter(EmitterBase):
 
         self._rng = np.random.default_rng(seed)
         self._sigma = archive.dtype(sigma) if isinstance(
-            sigma, (float, np.floating)) else np.array(sigma)
+            sigma, numbers.Real) else np.array(sigma)
         self._sigma_g = archive.dtype(sigma_g)
         self._line_sigma = line_sigma
         self._use_isolinedd = operator_type != 'isotropic'
