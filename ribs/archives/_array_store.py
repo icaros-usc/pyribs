@@ -1,5 +1,6 @@
 """Provides ArrayStore."""
 import itertools
+import numbers
 from enum import IntEnum
 from functools import cached_property
 
@@ -125,7 +126,7 @@ class ArrayStore:
                 raise ValueError(
                     f"Field names must be valid identifiers: `{name}`")
 
-            if isinstance(field_shape, (int, np.integer)):
+            if isinstance(field_shape, numbers.Integral):
                 field_shape = (field_shape,)
 
             array_shape = (capacity,) + tuple(field_shape)
