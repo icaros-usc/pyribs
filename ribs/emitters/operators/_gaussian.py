@@ -38,6 +38,7 @@ class GaussianOperator(OperatorBase):
             numpy.ndarray: ``(batch_size, solution_dim)`` array that contains
             ``batch_size`` mutated solutions.
         """
+        parents = np.asarray(parents)
 
         noise = self._rng.normal(
             scale=self._sigma,

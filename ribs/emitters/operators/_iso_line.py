@@ -42,9 +42,10 @@ class IsoLineOperator(OperatorBase):
             numpy.ndarray: ``(batch_size, solution_dim)`` array that contains
             ``batch_size`` mutated solutions.
         """
+        parents = np.asarray(parents)
 
-        elites = parents[0]
-        directions = parents[1]
+        elites = np.asarray(parents[0])
+        directions = np.asarray(parents[1])
 
         iso_gaussian = self._rng.normal(
             scale=self._iso_sigma,
