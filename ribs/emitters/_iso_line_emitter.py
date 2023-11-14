@@ -160,4 +160,4 @@ class IsoLineEmitter(EmitterBase):
                 self.archive.sample_elites(self._batch_size)["solution"] -
                 parents)
 
-        return self._operator.ask(parents=parents, directions=directions)
+        return self._operator.ask(parents=np.vstack((parents, directions)))

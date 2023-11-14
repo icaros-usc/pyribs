@@ -28,7 +28,7 @@ class GaussianOperator(OperatorBase):
         self._rng = np.random.default_rng(seed)
 
     def ask(self, parents):
-        """Adds Gaussian noise to solution
+        """Adds Gaussian noise to parents.
 
          Args:
             parents (array-like): (batch_size, solution_dim) array of
@@ -42,6 +42,6 @@ class GaussianOperator(OperatorBase):
         noise = self._rng.normal(
             scale=self._sigma,
             size=(parents.shape[0], parents.shape[1]),
-        ).astype(float)
+        ).astype(parents.dtype)
 
         return np.clip(parents + noise, self._lower_bounds, self._upper_bounds)

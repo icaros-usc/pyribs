@@ -28,12 +28,13 @@ class IsoLineOperator(OperatorBase):
 
         self._rng = np.random.default_rng(seed)
 
-    def ask(self, parents, directions):
-        """ Adds Isotropic Guassian noise and directional noise to an elite
+    def ask(self, parents):
+        """ Adds Isotropic Guassian noise and directional noise to parents.
 
          Args:
-            parents (array-like): (batch_size, solution_dim)
-                array of solutions selected by emitter
+            parents (array-like): (2, batch_size, solution_dim)
+                parents[0] array of solutions selected by emitter
+                parents[1] array of directions passed by emitter
             directions (array-like): (batch_size, solution_dim)
                 array of directions to random elites selected by emitter
 
@@ -42,15 +43,18 @@ class IsoLineOperator(OperatorBase):
             ``batch_size`` mutated solutions.
         """
 
+        elites = parents[0]
+        directions = parents[1]
+
         iso_gaussian = self._rng.normal(
             scale=self._iso_sigma,
-            size=(parents.shape[0], parents.shape[1]),
-        ).astype(float)
+            size=(elites.shape[0], elites.shape[1]),
+        ).astype(elites.dtype)
 
         line_gaussian = self._rng.normal(
             scale=self._line_sigma,
-            size=(parents.shape[0], 1),
-        ).astype(float)
-        solution_batch = parents + iso_gaussian + line_gaussian * directions
+            size=(elites.shape[0], 1),
+        ).astype(elites.dtype)
+        solution_batch = elites + iso_gaussian + line_gaussian * directions
 
         return np.clip(solution_batch, self._lower_bounds, self._upper_bounds)
