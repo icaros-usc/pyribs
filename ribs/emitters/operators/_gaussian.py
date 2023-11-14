@@ -5,10 +5,9 @@ from ribs.emitters.operators._operator_base import OperatorBase
 
 
 class GaussianOperator(OperatorBase):
-    """Args:
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
-            :class:`ribs.archives.GridArchive`.
+    """Adds Gaussian noise to solutions.
+
+    Args:
         sigma (float or array-like): Standard deviation of the Gaussian
             distribution. Note we assume the Gaussian is diagonal, so if this
             argument is an array, it must be 1D.
@@ -18,7 +17,7 @@ class GaussianOperator(OperatorBase):
             by emitter
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-      """
+    """
 
     def __init__(self, sigma, seed, lower_bounds, upper_bounds):
 

@@ -5,10 +5,9 @@ from ribs.emitters.operators._operator_base import OperatorBase
 
 
 class IsoLineOperator(OperatorBase):
-    """Args:
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
-            :class:`ribs.archives.GridArchive`.
+    """Adds Isotropic Gaussian noise and directional noise to parents.
+
+    Args:
         sigma (float or array-like): Standard deviation of the Gaussian
             distribution. Note we assume the Gaussian is diagonal, so if this
             argument is an array, it must be 1D.
@@ -30,7 +29,7 @@ class IsoLineOperator(OperatorBase):
         self._rng = np.random.default_rng(seed)
 
     def ask(self, parents, directions):
-        """ Adds isotropic Guassian noise and directional noise to an elite
+        """ Adds Isotropic Guassian noise and directional noise to an elite
 
          Args:
             parents (array-like): (batch_size, solution_dim)
