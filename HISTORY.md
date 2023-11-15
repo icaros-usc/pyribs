@@ -6,7 +6,8 @@
 
 #### API
 
-- Add Gaussian, IsoLine Operators and Refactor GaussianEmitter ({pr}`418`)
+- Add Gaussian, IsoLine Operators and Refactor GaussianEmitter/IsoLineEmitter
+  ({pr}`418`)
 - Add Base Operator Interface and Emitter Operator Retrieval ({pr}`416`)
 - **Backwards-incompatible:** Return occupied booleans in retrieve ({pr}`414`)
 - **Backwards-incompatible:** Deprecate `as_pandas` in favor of
