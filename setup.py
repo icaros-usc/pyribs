@@ -19,7 +19,7 @@ install_requires = [
     "pandas>=1.0.0",
     "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
     "scikit-learn>=1.1.0",  # Primarily used in CVTArchive.
-    "scipy>=1.4.0",  # Primarily used in CVTArchive.
+    "scipy>=1.7.0",  # Primarily used in CVTArchive.
     "threadpoolctl>=3.0.0",
 ]
 
