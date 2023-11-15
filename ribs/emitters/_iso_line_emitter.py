@@ -154,12 +154,9 @@ class IsoLineEmitter(EmitterBase):
         if self.archive.empty:
             parents = np.expand_dims(self.x0, axis=0)
             parents = np.repeat(parents, repeats=self._batch_size, axis=0)
-            directions = np.expand_dims(np.full(parents.shape[-1], 0), axis=0)
-            directions = np.repeat(directions, repeats=self._batch_size, axis=0)
+            parents2 = parents
         else:
             parents = self.archive.sample_elites(self._batch_size)["solution"]
-            directions = (
-                self.archive.sample_elites(self._batch_size)["solution"] -
-                parents)
+            parents2 = self.archive.sample_elites(self._batch_size)["solution"]
 
-        return self._operator.ask(parents=np.array([parents, directions]))
+        return self._operator.ask(parents=np.array([parents, parents2]))

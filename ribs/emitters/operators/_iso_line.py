@@ -34,9 +34,8 @@ class IsoLineOperator(OperatorBase):
          Args:
             parents (array-like): (2, batch_size, solution_dim)
                 parents[0] array of solutions selected by emitter
-                parents[1] array of directions passed by emitter
-            directions (array-like): (batch_size, solution_dim)
-                array of directions to random elites selected by emitter
+                parents[1] array of second batch of solutions passed by
+                  emitter. Used for calculating directional correlation.
 
         Returns:
             numpy.ndarray: ``(batch_size, solution_dim)`` array that contains
@@ -44,8 +43,8 @@ class IsoLineOperator(OperatorBase):
         """
         parents = np.asarray(parents)
 
-        elites = np.asarray(parents[0])
-        directions = np.asarray(parents[1])
+        elites = parents[0]
+        directions = parents[1] - parents[0]
 
         iso_gaussian = self._rng.normal(
             scale=self._iso_sigma,
