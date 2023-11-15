@@ -18,7 +18,10 @@ __all__ = [
     "IsoLineOperator",
 ]
 
-_NAME_TO_OP_MAP = {}
+_NAME_TO_OP_MAP = {
+    "Gaussian": GaussianOperator,
+    "IsoLine": IsoLineOperator,
+}
 
 
 def _get_op(operator):
