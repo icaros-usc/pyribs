@@ -6,6 +6,8 @@
 
 #### API
 
+- Add Gaussian, IsoLine Operators and Refactor GaussianEmitter/IsoLineEmitter
+  ({pr}`418`)
 - **Backwards-incompatible:** Remove metadata in favor of custom fields
   ({pr}`420`)
 - Add Base Operator Interface and Emitter Operator Retrieval ({pr}`416`)

@@ -3,6 +3,7 @@ import numpy as np
 
 from ribs._utils import check_1d_shape, check_batch_shape
 from ribs.emitters._emitter_base import EmitterBase
+from ribs.emitters.operators import IsoLineOperator
 
 
 class IsoLineEmitter(EmitterBase):
@@ -94,6 +95,12 @@ class IsoLineEmitter(EmitterBase):
             bounds=bounds,
         )
 
+        self._operator = IsoLineOperator(line_sigma=self._line_sigma,
+                                         iso_sigma=self._iso_sigma,
+                                         lower_bounds=self._lower_bounds,
+                                         upper_bounds=self._upper_bounds,
+                                         seed=seed)
+
     @property
     def x0(self):
         """numpy.ndarray: Center of the Gaussian distribution from which to
@@ -144,22 +151,16 @@ class IsoLineEmitter(EmitterBase):
             return np.clip(self._initial_solutions, self.lower_bounds,
                            self.upper_bounds)
 
-        iso_gaussian = self._rng.normal(
-            scale=self._iso_sigma,
-            size=(self._batch_size, self.solution_dim),
-        ).astype(self.archive.dtype)
-
         if self.archive.empty:
-            solution_batch = np.expand_dims(self._x0, axis=0) + iso_gaussian
-        else:
-            parents = self.archive.sample_elites(self._batch_size)["solution"]
-            directions = (
-                self.archive.sample_elites(self._batch_size)["solution"] -
-                parents)
-            line_gaussian = self._rng.normal(
-                scale=self._line_sigma,
-                size=(self._batch_size, 1),
+            iso_gaussian = self._rng.normal(
+                scale=self._iso_sigma,
+                size=(self._batch_size, self.solution_dim),
             ).astype(self.archive.dtype)
-            solution_batch = parents + iso_gaussian + line_gaussian * directions
 
-        return np.clip(solution_batch, self.lower_bounds, self.upper_bounds)
+            solution_batch = np.expand_dims(self._x0, axis=0) + iso_gaussian
+            return np.clip(solution_batch, self.lower_bounds, self.upper_bounds)
+        else:
+            parents = self.archive.sample_elites(2 *
+                                                 self._batch_size)["solution"]
+            return self._operator.ask(
+                parents=parents.reshape(2, self._batch_size, -1))
