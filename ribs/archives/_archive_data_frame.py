@@ -69,8 +69,7 @@ class ArchiveDataFrame(pd.DataFrame):
 
         Results of :meth:`get_field` "align" with each other -- e.g.
         ``get_field("measures")[i]`` corresponds to ``get_field("index")[i]``,
-        ``get_field("metadata")[i]``, ``get_field("objective")[i]``, and
-        ``get_field("solution")[i]``.
+        ``get_field("objective")[i]``, and ``get_field("solution")[i]``.
     """
 
     def __init__(self, *args, **kwargs):
