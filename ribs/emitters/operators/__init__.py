@@ -19,8 +19,8 @@ __all__ = [
 ]
 
 _NAME_TO_OP_MAP = {
-    "Gaussian": GaussianOperator,
-    "IsoLine": IsoLineOperator,
+    "gaussian": GaussianOperator,
+    "isoline": IsoLineOperator,
 }
 
 

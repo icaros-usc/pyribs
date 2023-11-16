@@ -135,8 +135,7 @@ class GaussianEmitter(EmitterBase):
             if self._initial_solutions is not None:
                 return np.clip(self._initial_solutions, self.lower_bounds,
                                self.upper_bounds)
-            parents = np.expand_dims(self.x0, axis=0)
-            parents = np.repeat(parents, repeats=self._batch_size, axis=0)
+            parents = np.repeat(self.x0[None], repeats=self._batch_size, axis=0)
         else:
             parents = self.archive.sample_elites(self._batch_size)["solution"]
 

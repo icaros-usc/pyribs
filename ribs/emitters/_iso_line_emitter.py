@@ -151,16 +151,16 @@ class IsoLineEmitter(EmitterBase):
             return np.clip(self._initial_solutions, self.lower_bounds,
                            self.upper_bounds)
 
-        iso_gaussian = self._rng.normal(
-            scale=self._iso_sigma,
-            size=(self._batch_size, self.solution_dim),
-        ).astype(self.archive.dtype)
-
         if self.archive.empty:
+            iso_gaussian = self._rng.normal(
+                scale=self._iso_sigma,
+                size=(self._batch_size, self.solution_dim),
+            ).astype(self.archive.dtype)
+
             solution_batch = np.expand_dims(self._x0, axis=0) + iso_gaussian
             return np.clip(solution_batch, self.lower_bounds, self.upper_bounds)
         else:
-            parents = self.archive.sample_elites(self._batch_size)["solution"]
-            parents2 = self.archive.sample_elites(self._batch_size)["solution"]
-
-        return self._operator.ask(parents=np.array([parents, parents2]))
+            parents = self.archive.sample_elites(2 *
+                                                 self._batch_size)["solution"]
+            return self._operator.ask(parents=np.array(
+                parents.reshape(2, self._batch_size, len(parents[0]))))
