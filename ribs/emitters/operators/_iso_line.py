@@ -7,6 +7,9 @@ from ribs.emitters.operators._operator_base import OperatorBase
 class IsoLineOperator(OperatorBase):
     """Adds Isotropic Gaussian noise and directional noise to parents.
 
+    This operator was introduced in `Vassiliades 2018
+    <https://arxiv.org/abs/1804.03906>`_.
+
     Args:
         sigma (float or array-like): Standard deviation of the Gaussian
             distribution. Note we assume the Gaussian is diagonal, so if this
