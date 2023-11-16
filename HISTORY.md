@@ -6,6 +6,7 @@
 
 #### API
 
+- Add Base Operator Interface and Emitter Operator Retrieval ({pr}`416`)
 - **Backwards-incompatible:** Return occupied booleans in retrieve ({pr}`414`)
 - **Backwards-incompatible:** Deprecate `as_pandas` in favor of
   `data(return_type="pandas")` ({pr}`408`)
@@ -23,6 +24,7 @@
 
 #### Improvements
 
+- Use numbers types when checking arguments ({pr}`419`)
 - Reimplement ArchiveBase using ArrayStore ({pr}`399`)
 - Use chunk computation in CVT brute force calculation to reduce memory usage
   ({pr}`394`)

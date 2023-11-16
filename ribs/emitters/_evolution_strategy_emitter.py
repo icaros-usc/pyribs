@@ -1,4 +1,6 @@
 """Provides the EvolutionStrategyEmitter."""
+import numbers
+
 import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
@@ -173,7 +175,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         Raises:
           ValueError: If :attr:`restart_rule` is invalid.
         """
-        if isinstance(self._restart_rule, (int, np.integer)):
+        if isinstance(self._restart_rule, numbers.Integral):
             return self._itrs % self._restart_rule == 0
         if self._restart_rule == "no_improvement":
             return num_parents == 0
