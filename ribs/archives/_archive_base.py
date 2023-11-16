@@ -15,6 +15,8 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
                                        compute_objective_sum,
                                        single_entry_with_threshold)
 
+_ARCHIVE_FIELDS = {"index", "solution", "objective", "measures", "threshold"}
+
 
 class ArchiveBase(ABC):
     # pylint: disable = too-many-instance-attributes, too-many-public-methods
@@ -61,11 +63,24 @@ class ArchiveBase(ABC):
         dtype (str or data-type): Data type of the solutions, objectives,
             and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
             ``np.float64``.
+        extra_fields (dict): Description of extra fields of data that is stored
+            next to elite data like solutions and objectives. The description is
+            a dict mapping from a field name (str) to a tuple of ``(shape,
+            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
+            np.float32)}`` will create a "foo" field that contains scalar values
+            and a "bar" field that contains 10D values. Note that field names
+            must be valid Python identifiers, and names already used in the
+            archive are not allowed.
+
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
         _store (ribs.archives.ArrayStore): The underlying ArrayStore containing
             data for the archive.
+
+    Raises:
+        ValueError: Invalid values for learning_rate and threshold_min.
+        ValueError: Invalid names in extra_fields.
     """
 
     def __init__(self,
@@ -77,7 +92,8 @@ class ArchiveBase(ABC):
                  threshold_min=-np.inf,
                  qd_score_offset=0.0,
                  seed=None,
-                 dtype=np.float64):
+                 dtype=np.float64,
+                 extra_fields=None):
 
         self._dtype = parse_float_dtype(dtype)
         self._seed = seed
@@ -100,12 +116,18 @@ class ArchiveBase(ABC):
         self._objective_sum = None
         self._stats_reset()
 
+        extra_fields = extra_fields or {}
+        if _ARCHIVE_FIELDS & extra_fields.keys():
+            raise ValueError("The following names are not allowed in "
+                             f"extra_fields: {_ARCHIVE_FIELDS}")
+
         self._store = ArrayStore(
             field_desc={
                 "solution": ((solution_dim,), self.dtype),
                 "objective": ((), self.dtype),
                 "measures": ((measure_dim,), self.dtype),
                 "threshold": ((), self.dtype),
+                **extra_fields,
             },
             capacity=self._cells,
         )

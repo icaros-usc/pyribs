@@ -53,6 +53,14 @@ class GridArchive(ArchiveBase):
         dtype (str or data-type): Data type of the solutions, objectives,
             and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
             ``np.float64``.
+        extra_fields (dict): Description of extra fields of data that is stored
+            next to elite data like solutions and objectives. The description is
+            a dict mapping from a field name (str) to a tuple of ``(shape,
+            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
+            np.float32)}`` will create a "foo" field that contains scalar values
+            and a "bar" field that contains 10D values. Note that field names
+            must be valid Python identifiers, and names already used in the
+            archive are not allowed.
     Raises:
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """
@@ -67,7 +75,8 @@ class GridArchive(ArchiveBase):
                  epsilon=1e-6,
                  qd_score_offset=0.0,
                  seed=None,
-                 dtype=np.float64):
+                 dtype=np.float64,
+                 extra_fields=None):
         self._dims = np.array(dims, dtype=np.int32)
         if len(self._dims) != len(ranges):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
@@ -83,6 +92,7 @@ class GridArchive(ArchiveBase):
             qd_score_offset=qd_score_offset,
             seed=seed,
             dtype=dtype,
+            extra_fields=extra_fields,
         )
 
         ranges = list(zip(*ranges))
