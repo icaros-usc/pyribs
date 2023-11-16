@@ -162,5 +162,5 @@ class IsoLineEmitter(EmitterBase):
         else:
             parents = self.archive.sample_elites(2 *
                                                  self._batch_size)["solution"]
-            return self._operator.ask(parents=np.array(
-                parents.reshape(2, self._batch_size, len(parents[0]))))
+            return self._operator.ask(
+                parents=parents.reshape(2, self._batch_size, -1))
