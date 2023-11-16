@@ -311,14 +311,8 @@ class GradientArborescenceEmitter(EmitterBase):
             return False
         raise ValueError(f"Invalid restart_rule {self._restart_rule}")
 
-    def tell_dqd(self,
-                 solution_batch,
-                 objective_batch,
-                 measures_batch,
-                 jacobian_batch,
-                 status_batch,
-                 value_batch,
-                 metadata_batch=None):
+    def tell_dqd(self, solution_batch, objective_batch, measures_batch,
+                 jacobian_batch, status_batch, value_batch):
         """Gives the emitter results from evaluating the gradient of the
         solutions.
 
@@ -341,8 +335,6 @@ class GradientArborescenceEmitter(EmitterBase):
             value_batch (array-like): 1d array of floats returned by a series
                 of calls to archive's :meth:`add()` method. for what these
                 floats represent, refer to :meth:`ribs.archives.add()`.
-            metadata_batch (array-like): 1d object array containing a metadata
-                object for each solution.
         """
         (
             solution_batch,
@@ -351,7 +343,6 @@ class GradientArborescenceEmitter(EmitterBase):
             status_batch,
             value_batch,
             jacobian_batch,
-            metadata_batch,
         ) = validate_batch_args(
             archive=self.archive,
             solution_batch=solution_batch,
@@ -360,7 +351,6 @@ class GradientArborescenceEmitter(EmitterBase):
             status_batch=status_batch,
             value_batch=value_batch,
             jacobian_batch=jacobian_batch,
-            metadata_batch=metadata_batch,
         )
 
         if self._normalize_grads:
@@ -369,13 +359,8 @@ class GradientArborescenceEmitter(EmitterBase):
             jacobian_batch /= norms
         self._jacobian_batch = jacobian_batch
 
-    def tell(self,
-             solution_batch,
-             objective_batch,
-             measures_batch,
-             status_batch,
-             value_batch,
-             metadata_batch=None):
+    def tell(self, solution_batch, objective_batch, measures_batch,
+             status_batch, value_batch):
         """Gives the emitter results from evaluating solutions.
 
         The solutions are ranked based on the `rank()` function defined by
@@ -395,8 +380,6 @@ class GradientArborescenceEmitter(EmitterBase):
             value_batch (array-like): 1d array of floats returned by a series
                 of calls to archive's :meth:`add()` method. for what these
                 floats represent, refer to :meth:`ribs.archives.add()`.
-            metadata_batch (array-like): 1d object array containing a metadata
-                object for each solution.
         Raises:
             RuntimeError: This method was called without first passing gradients
                 with calls to ask_dqd() and tell_dqd().
@@ -407,7 +390,6 @@ class GradientArborescenceEmitter(EmitterBase):
             measures_batch,
             status_batch,
             value_batch,
-            metadata_batch,
         ) = validate_batch_args(
             archive=self.archive,
             solution_batch=solution_batch,
@@ -415,7 +397,6 @@ class GradientArborescenceEmitter(EmitterBase):
             measures_batch=measures_batch,
             status_batch=status_batch,
             value_batch=value_batch,
-            metadata_batch=metadata_batch,
         )
 
         if self._jacobian_batch is None:
@@ -429,9 +410,11 @@ class GradientArborescenceEmitter(EmitterBase):
         new_sols = status_batch.astype(bool).sum()
 
         # Sort the solutions using ranker.
-        indices, ranking_values = self._ranker.rank(
-            self, self.archive, self._rng, solution_batch, objective_batch,
-            measures_batch, status_batch, value_batch, metadata_batch)
+        indices, ranking_values = self._ranker.rank(self, self.archive,
+                                                    self._rng, solution_batch,
+                                                    objective_batch,
+                                                    measures_batch,
+                                                    status_batch, value_batch)
 
         # Select the number of parents.
         num_parents = (new_sols if self._selection_rule == "filter" else

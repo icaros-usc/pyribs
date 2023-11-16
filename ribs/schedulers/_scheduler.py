@@ -210,21 +210,14 @@ class Scheduler:
         "archive, i.e., solutions are not being inserted because their "
         "objective value does not exceed `threshold_min`.")
 
-    def _tell_internal(self,
-                       objective_batch,
-                       measures_batch,
-                       metadata_batch=None):
+    def _tell_internal(self, objective_batch, measures_batch):
         """Internal method that handles duplicate subroutine between
         :meth:`tell` and :meth:`tell_dqd`."""
         objective_batch = np.asarray(objective_batch)
         measures_batch = np.asarray(measures_batch)
-        metadata_batch = (np.empty(len(self._solution_batch), dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
 
         self._check_length("objective_batch", objective_batch)
         self._check_length("measures_batch", measures_batch)
-        self._check_length("metadata_batch", metadata_batch)
 
         archive_empty_before = self.archive.empty
         if self._result_archive is not None:
@@ -238,28 +231,27 @@ class Scheduler:
                 self._solution_batch,
                 objective_batch,
                 measures_batch,
-                metadata_batch,
             )
 
             # Add solutions to result_archive.
             if self._result_archive is not None:
                 self._result_archive.add(self._solution_batch, objective_batch,
-                                         measures_batch, metadata_batch)
+                                         measures_batch)
         elif self._add_mode == "single":
             status_batch = []
             value_batch = []
-            for solution, objective, measure, metadata in zip(
-                    self._solution_batch, objective_batch, measures_batch,
-                    metadata_batch):
+            for solution, objective, measure in zip(self._solution_batch,
+                                                    objective_batch,
+                                                    measures_batch):
                 status, value = self.archive.add_single(solution, objective,
-                                                        measure, metadata)
+                                                        measure)
                 status_batch.append(status)
                 value_batch.append(value)
 
                 # Add solutions to result_archive.
                 if self._result_archive is not None:
                     self._result_archive.add_single(solution, objective,
-                                                    measure, metadata)
+                                                    measure)
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
 
@@ -275,22 +267,16 @@ class Scheduler:
             measures_batch,
             status_batch,
             value_batch,
-            metadata_batch,
         )
 
-    def tell_dqd(self,
-                 objective_batch,
-                 measures_batch,
-                 jacobian_batch,
-                 metadata_batch=None):
+    def tell_dqd(self, objective_batch, measures_batch, jacobian_batch):
         """Returns info for solutions from :meth:`ask_dqd`.
 
-        .. note:: The objective batch, measures batch, jacobian batch, and
-            metadata batch must be in the same order as the solutions created by
-            :meth:`ask_dqd`; i.e.  ``objective_batch[i]``,
-            ``measures_batch[i]``, ``jacobian_batch[i]``, and
-            ``metadata_batch[i]`` should be the objective, measures, jacobian,
-            and metadata for ``solution_batch[i]``.
+        .. note:: The objective batch, measures batch, and jacobian batch must
+            be in the same order as the solutions created by :meth:`ask_dqd`;
+            i.e. ``objective_batch[i]``, ``measures_batch[i]``, and
+            ``jacobian_batch[i]`` should be the objective, measures, and
+            jacobian for ``solution_batch[i]``.
 
         Args:
             objective_batch ((batch_size,) array): Each entry of this array
@@ -302,13 +288,10 @@ class Scheduler:
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
-            metadata_batch ((batch_size,) array): Each entry of this array
-                contains an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
-            ValueError: ``objective_batch``, ``measures_batch``, or
-                ``metadata_batch`` has the wrong shape.
+            ValueError: One of the inputs has the wrong shape.
         """
         if self._last_called != "ask_dqd":
             raise RuntimeError(
@@ -320,8 +303,7 @@ class Scheduler:
             measures_batch,
             status_batch,
             value_batch,
-            metadata_batch,
-        ) = self._tell_internal(objective_batch, measures_batch, metadata_batch)
+        ) = self._tell_internal(objective_batch, measures_batch)
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
@@ -330,30 +312,26 @@ class Scheduler:
             emitter.tell_dqd(self._solution_batch[pos:end],
                              objective_batch[pos:end], measures_batch[pos:end],
                              jacobian_batch[pos:end], status_batch[pos:end],
-                             value_batch[pos:end], metadata_batch[pos:end])
+                             value_batch[pos:end])
             pos = end
 
-    def tell(self, objective_batch, measures_batch, metadata_batch=None):
+    def tell(self, objective_batch, measures_batch):
         """Returns info for solutions from :meth:`ask`.
 
-        .. note:: The objective batch, measures batch, and metadata batch must
-            be in the same order as the solutions created by :meth:`ask_dqd`;
-            i.e.  ``objective_batch[i]``, ``measures_batch[i]``, and
-            ``metadata_batch[i]`` should be the objective, measures, and
-            metadata for ``solution_batch[i]``.
+        .. note:: The objective batch and measures batch must be in the same
+            order as the solutions created by :meth:`ask_dqd`; i.e.
+            ``objective_batch[i]`` and ``measures_batch[i]`` should be the
+            objective and measures for ``solution_batch[i]``.
 
         Args:
             objective_batch ((batch_size,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
             measures_batch ((batch_size, measures_dm) array): Each row of
                 this array contains a solution's coordinates in measure space.
-            metadata_batch ((batch_size,) array): Each entry of this array
-                contains an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
-            ValueError: ``objective_batch``, ``measures_batch``, or
-                ``metadata`` has the wrong shape.
+            ValueError: One of the inputs has the wrong shape.
         """
         if self._last_called != "ask":
             raise RuntimeError("tell() was called without calling ask().")
@@ -364,8 +342,7 @@ class Scheduler:
             measures_batch,
             status_batch,
             value_batch,
-            metadata_batch,
-        ) = self._tell_internal(objective_batch, measures_batch, metadata_batch)
+        ) = self._tell_internal(objective_batch, measures_batch)
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
@@ -373,6 +350,5 @@ class Scheduler:
             end = pos + n
             emitter.tell(self._solution_batch[pos:end],
                          objective_batch[pos:end], measures_batch[pos:end],
-                         status_batch[pos:end], value_batch[pos:end],
-                         metadata_batch[pos:end])
+                         status_batch[pos:end], value_batch[pos:end])
             pos = end

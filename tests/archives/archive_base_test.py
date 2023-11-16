@@ -43,7 +43,6 @@ def test_iteration():
         assert np.isclose(elite["measures"], data.measures).all()
         assert elite["index"] == data.archive_with_elite.grid_to_int_index(
             [data.grid_indices])[0]
-        assert elite["metadata"] == data.metadata
 
 
 def test_add_during_iteration(add_mode):
@@ -176,7 +175,7 @@ def test_best_elite(add_mode):
         archive.add([[1, 2, 3]], [1.0], [[0, 0]])
 
     assert archive.best_elite.keys() == {
-        "solution", "objective", "measures", "metadata", "threshold", "index"
+        "solution", "objective", "measures", "threshold", "index"
     }
 
     assert archive.best_elite["solution"].shape == (3,)
@@ -318,7 +317,7 @@ def test_qd_score_offset_correct(data):
 
 def test_field_list_correct(data):
     assert data.archive.field_list == [
-        "solution", "objective", "measures", "metadata", "threshold"
+        "solution", "objective", "measures", "threshold"
     ]
 
 
@@ -347,7 +346,6 @@ def test_retrieve_gets_correct_elite(data):
     assert np.all(elites["measures"][0] == data.measures)
     assert elites["threshold"][0] == data.objective
     # Avoid checking elites["index"] since the meaning varies by archive.
-    assert elites["metadata"][0] == data.metadata
 
 
 def test_retrieve_empty_values(data):
@@ -358,7 +356,6 @@ def test_retrieve_empty_values(data):
     assert np.all(np.isnan(elites["measures"][0]))
     assert np.isnan(elites["threshold"])
     assert elites["index"][0] == -1
-    assert elites["metadata"][0] is None
 
 
 def test_retrieve_wrong_shape(data):
@@ -374,7 +371,6 @@ def test_retrieve_single_gets_correct_elite(data):
     assert np.all(elite["measures"] == data.measures)
     assert elite["threshold"] == data.objective
     # Avoid checking elite["index"] since the meaning varies by archive.
-    assert elite["metadata"] == data.metadata
 
 
 def test_retrieve_single_empty_values(data):
@@ -385,7 +381,6 @@ def test_retrieve_single_empty_values(data):
     assert np.all(np.isnan(elite["measures"]))
     assert np.isnan(elite["threshold"])
     assert elite["index"] == -1
-    assert elite["metadata"] is None
 
 
 def test_retrieve_single_wrong_shape(data):
@@ -399,7 +394,6 @@ def test_sample_elites_gets_single_elite(data):
     assert np.all(elites["objective"] == data.objective)
     assert np.all(elites["measures"] == data.measures)
     # Avoid checking elite["index"] since the meaning varies by archive.
-    assert np.all(elites["metadata"] == data.metadata)
 
 
 def test_sample_elites_fails_when_empty(data):
@@ -420,10 +414,9 @@ def test_pandas_data(name, with_elite, dtype):
     expected_cols = ([f"solution_{i}" for i in range(solution_dim)] +
                      ["objective"] +
                      [f"measures_{i}" for i in range(measure_dim)] +
-                     ["metadata", "threshold", "index"])
+                     ["threshold", "index"])
     expected_dtypes = ([dtype for _ in range(solution_dim)] + [dtype] +
-                       [dtype for _ in range(measure_dim)] +
-                       [object, dtype, np.int32])
+                       [dtype for _ in range(measure_dim)] + [dtype, np.int32])
 
     # Retrieve the dataframe.
     if with_elite:
@@ -447,7 +440,6 @@ def test_pandas_data(name, with_elite, dtype):
                 [data.grid_indices])[0]
 
         expected_data = [
-            *data.solution, data.objective, *data.measures, data.metadata,
-            data.objective
+            *data.solution, data.objective, *data.measures, data.objective
         ]
         assert (df.loc[0, :"threshold"] == expected_data).all()
