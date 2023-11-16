@@ -6,7 +6,8 @@
 
 #### API
 
-- **Backwards-incompatible:** Remove metadata from archives ({pr}`420`)
+- **Backwards-incompatible:** Remove metadata in favor of custom fields
+  ({pr}`420`)
 - Add Base Operator Interface and Emitter Operator Retrieval ({pr}`416`)
 - **Backwards-incompatible:** Return occupied booleans in retrieve ({pr}`414`)
 - **Backwards-incompatible:** Deprecate `as_pandas` in favor of
