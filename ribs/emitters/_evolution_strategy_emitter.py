@@ -1,4 +1,6 @@
 """Provides the EvolutionStrategyEmitter."""
+import numbers
+
 import numpy as np
 
 from ribs._utils import check_1d_shape, validate_batch_args
@@ -173,7 +175,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         Raises:
           ValueError: If :attr:`restart_rule` is invalid.
         """
-        if isinstance(self._restart_rule, (int, np.integer)):
+        if isinstance(self._restart_rule, numbers.Integral):
             return self._itrs % self._restart_rule == 0
         if self._restart_rule == "no_improvement":
             return num_parents == 0
@@ -181,13 +183,8 @@ class EvolutionStrategyEmitter(EmitterBase):
             return False
         raise ValueError(f"Invalid restart_rule {self._restart_rule}")
 
-    def tell(self,
-             solution_batch,
-             objective_batch,
-             measures_batch,
-             status_batch,
-             value_batch,
-             metadata_batch=None):
+    def tell(self, solution_batch, objective_batch, measures_batch,
+             status_batch, value_batch):
         """Gives the emitter results from evaluating solutions.
 
         The solutions are ranked based on the `rank()` function defined by
@@ -212,8 +209,6 @@ class EvolutionStrategyEmitter(EmitterBase):
             value_batch (array-like): 1D array of floats returned by a series
                 of calls to archive's :meth:`add()` method. For what these
                 floats represent, refer to :meth:`ribs.archives.add()`.
-            metadata_batch (array-like): 1D object array containing a metadata
-                object for each solution.
         """
         (
             solution_batch,
@@ -221,7 +216,6 @@ class EvolutionStrategyEmitter(EmitterBase):
             measures_batch,
             status_batch,
             value_batch,
-            metadata_batch,
         ) = validate_batch_args(
             archive=self.archive,
             solution_batch=solution_batch,
@@ -229,7 +223,6 @@ class EvolutionStrategyEmitter(EmitterBase):
             measures_batch=measures_batch,
             status_batch=status_batch,
             value_batch=value_batch,
-            metadata_batch=metadata_batch,
         )
 
         # Increase iteration counter.
@@ -239,9 +232,11 @@ class EvolutionStrategyEmitter(EmitterBase):
         new_sols = status_batch.astype(bool).sum()
 
         # Sort the solutions using ranker.
-        indices, ranking_values = self._ranker.rank(
-            self, self.archive, self._rng, solution_batch, objective_batch,
-            measures_batch, status_batch, value_batch, metadata_batch)
+        indices, ranking_values = self._ranker.rank(self, self.archive,
+                                                    self._rng, solution_batch,
+                                                    objective_batch,
+                                                    measures_batch,
+                                                    status_batch, value_batch)
 
         # Select the number of parents.
         num_parents = (new_sols if self._selection_rule == "filter" else

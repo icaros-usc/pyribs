@@ -21,7 +21,7 @@ class ArchiveBase(ABC):
     """Base class for archives.
 
     This class composes archives using an :class:`ArrayStore` that has
-    "solution", "objective", "measures", "metadata", and "threshold" fields.
+    "solution", "objective", "measures", and "threshold" fields.
 
     Child classes typically override the following methods:
 
@@ -105,7 +105,6 @@ class ArchiveBase(ABC):
                 "solution": ((solution_dim,), self.dtype),
                 "objective": ((), self.dtype),
                 "measures": ((self._measure_dim,), self.dtype),
-                "metadata": ((), object),
                 "threshold": ((), self.dtype),
             },
             capacity=self._cells,
@@ -294,11 +293,7 @@ class ArchiveBase(ABC):
             obj_mean=self._objective_sum / self.dtype(len(self)),
         )
 
-    def add(self,
-            solution_batch,
-            objective_batch,
-            measures_batch,
-            metadata_batch=None):
+    def add(self, solution_batch, objective_batch, measures_batch):
         """Inserts a batch of solutions into the archive.
 
         Each solution is only inserted if it has a higher ``objective`` than the
@@ -319,9 +314,8 @@ class ArchiveBase(ABC):
 
         .. note:: The indices of all arguments should "correspond" to each
             other, i.e. ``solution_batch[i]``, ``objective_batch[i]``,
-            ``measures_batch[i]``, and ``metadata_batch[i]`` should be the
-            solution parameters, objective, measures, and metadata for solution
-            ``i``.
+            ``measures_batch[i]``, and should be the solution parameters,
+            objective, and measures for solution ``i``.
 
         Args:
             solution_batch (array-like): (batch_size, :attr:`solution_dim`)
@@ -330,16 +324,7 @@ class ArchiveBase(ABC):
                 function evaluations of the solutions.
             measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array with measure space coordinates of all the solutions.
-            metadata_batch (array-like): (batch_size,) array of Python objects
-                representing metadata for the solution. For instance, this could
-                be a dict with several properties.
 
-                .. warning:: Due to how NumPy's :func:`~numpy.asarray`
-                    automatically converts array-like objects to arrays, passing
-                    array-like objects as metadata may lead to unexpected
-                    behavior. However, the metadata may be a dict or other
-                    object which *contains* arrays, i.e. ``metadata_batch``
-                    could be an array of dicts which contain arrays.
         Returns:
             tuple: 2-element tuple of (status_batch, value_batch) which
             describes the results of the additions. These outputs are
@@ -400,13 +385,11 @@ class ArchiveBase(ABC):
             solution_batch,
             objective_batch,
             measures_batch,
-            metadata_batch,
         ) = validate_batch_args(
             archive=self,
             solution_batch=solution_batch,
             objective_batch=objective_batch,
             measures_batch=measures_batch,
-            metadata_batch=metadata_batch,
         )
 
         add_info = self._store.add(
@@ -415,7 +398,6 @@ class ArchiveBase(ABC):
                 "solution": solution_batch,
                 "objective": objective_batch,
                 "measures": measures_batch,
-                "metadata": metadata_batch,
             },
             {
                 "dtype": self._dtype,
@@ -436,7 +418,7 @@ class ArchiveBase(ABC):
 
         return add_info["status"], add_info["value"]
 
-    def add_single(self, solution, objective, measures, metadata=None):
+    def add_single(self, solution, objective, measures):
         """Inserts a single solution into the archive.
 
         The solution is only inserted if it has a higher ``objective`` than the
@@ -455,15 +437,6 @@ class ArchiveBase(ABC):
             solution (array-like): Parameters of the solution.
             objective (float): Objective function evaluation of the solution.
             measures (array-like): Coordinates in measure space of the solution.
-            metadata (object): Python object representing metadata for the
-                solution. For instance, this could be a dict with several
-                properties.
-
-                .. warning:: Due to how NumPy's :func:`~numpy.asarray`
-                    automatically converts array-like objects to arrays, passing
-                    array-like objects as metadata may lead to unexpected
-                    behavior. However, the metadata may be a dict or other
-                    object which *contains* arrays.
         Raises:
             ValueError: The array arguments do not match their specified shapes.
             ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
@@ -492,7 +465,6 @@ class ArchiveBase(ABC):
                 "solution": np.expand_dims(solution, axis=0),
                 "objective": np.expand_dims(objective, axis=0),
                 "measures": np.expand_dims(measures, axis=0),
-                "metadata": np.expand_dims(metadata, axis=0),
             },
             {
                 "dtype": self._dtype,
@@ -524,15 +496,15 @@ class ArchiveBase(ABC):
             elites["solution"]  # Shape: (batch_size, solution_dim)
             elites["objective"]
             elites["measures"]
+            elites["threshold"]
             elites["index"]
-            elites["metadata"]
 
         If the cell associated with ``elites["measures"][i]`` has an elite in
         it, then ``occupied[i]`` will be True. Furthermore,
         ``elites["solution"][i]``, ``elites["objective"][i]``,
-        ``elites["measures"][i]``, ``elites["index"][i]``, and
-        ``elites["metadata"][i]`` will be set to the properties of the elite.
-        Note that ``elites["measures"][i]`` may not be equal to the
+        ``elites["measures"][i]``, ``elites["threshold"][i]``, and
+        ``elites["index"][i]`` will be set to the properties of the elite. Note
+        that ``elites["measures"][i]`` may not be equal to the
         ``measures_batch[i]`` passed as an argument, since the measures only
         need to be in the same archive cell.
 

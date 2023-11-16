@@ -219,14 +219,14 @@ def test_rasterized(cvt_archive_2d):
     cvt_archive_heatmap(cvt_archive_2d, rasterized=True)
 
 
-@image_comparison(baseline_images=["plot_metadata_with_df"],
+@image_comparison(baseline_images=["plot_with_df"],
                   remove_text=False,
                   extensions=["png"],
                   tol=CVT_IMAGE_TOLERANCE)
-def test_plot_metadata_with_df(cvt_archive_2d):
+def test_plot_with_df(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
     df = cvt_archive_2d.data(return_type="pandas")
-    df["objective"] = df["metadata"]
+    df["objective"] = -df["objective"]
     cvt_archive_heatmap(cvt_archive_2d, df=df)
 
 

@@ -1,4 +1,5 @@
 """Provides the GradientOperatorEmitter."""
+import numbers
 
 import numpy as np
 
@@ -140,7 +141,7 @@ class GradientOperatorEmitter(EmitterBase):
 
         self._rng = np.random.default_rng(seed)
         self._sigma = archive.dtype(sigma) if isinstance(
-            sigma, (float, np.floating)) else np.array(sigma)
+            sigma, numbers.Real) else np.array(sigma)
         self._sigma_g = archive.dtype(sigma_g)
         self._line_sigma = line_sigma
         self._use_isolinedd = operator_type != 'isotropic'
@@ -287,14 +288,8 @@ class GradientOperatorEmitter(EmitterBase):
 
         return sols
 
-    def tell_dqd(self,
-                 solution_batch,
-                 objective_batch,
-                 measures_batch,
-                 jacobian_batch,
-                 status_batch,
-                 value_batch,
-                 metadata_batch=None):
+    def tell_dqd(self, solution_batch, objective_batch, measures_batch,
+                 jacobian_batch, status_batch, value_batch):
         """Gives the emitter results of evaluating solutions from ask_dqd().
 
         Args:
@@ -317,8 +312,6 @@ class GradientOperatorEmitter(EmitterBase):
             value_batch (array-like): 1d array of floats returned by a series
                 of calls to archive's :meth:`add()` method. for what these
                 floats represent, refer to :meth:`ribs.archives.add()`.
-            metadata_batch (array-like): 1d object array containing a metadata
-                object for each solution.
         """
         (
             solution_batch,
@@ -327,7 +320,6 @@ class GradientOperatorEmitter(EmitterBase):
             status_batch,
             value_batch,
             jacobian_batch,
-            metadata_batch,
         ) = validate_batch_args(
             archive=self.archive,
             solution_batch=solution_batch,
@@ -336,7 +328,6 @@ class GradientOperatorEmitter(EmitterBase):
             status_batch=status_batch,
             value_batch=value_batch,
             jacobian_batch=jacobian_batch,
-            metadata_batch=metadata_batch,
         )
 
         # normalize gradients + set jacobian

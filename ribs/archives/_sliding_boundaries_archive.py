@@ -16,7 +16,7 @@ class SolutionBuffer:
 
     Maintains two data structures:
     - Queue storing the buffer_capacity last entries (solution + objective +
-      measures + metadata). When new items are inserted, the oldest ones are
+      measures). When new items are inserted, the oldest ones are
       popped.
     - Sorted lists with the sorted measures in each dimension. Measures are
       removed from these lists when they are removed from the queue.
@@ -41,19 +41,19 @@ class SolutionBuffer:
         self._iter_idx += 1
         return result
 
-    def add(self, solution, objective, measures, metadata=None):
+    def add(self, solution, objective, measures):
         """Inserts a new entry.
 
         Pops the oldest if it is full.
         """
         if self.full():
             # Remove item from the deque.
-            _, _, measure_deleted, _ = self._queue.popleft()
+            _, _, measure_deleted = self._queue.popleft()
             # Remove measures from sorted lists.
             for i, m in enumerate(measure_deleted):
                 self._measure_lists[i].remove(m)
 
-        self._queue.append((solution, objective, measures, metadata))
+        self._queue.append((solution, objective, measures))
 
         # Add measures to sorted lists.
         for i, m in enumerate(measures):
@@ -356,7 +356,6 @@ class SlidingBoundariesArchive(ArchiveBase):
             new_solution_batch,
             new_objective_batch,
             new_measures_batch,
-            new_metadata_batch,
         ) = map(list, zip(*self._buffer))
 
         # The last solution must be added on its own so that we get an accurate
@@ -366,12 +365,10 @@ class SlidingBoundariesArchive(ArchiveBase):
             last_solution,
             last_objective,
             last_measures,
-            last_metadata,
         ) = (
             new_solution_batch.pop(),
             new_objective_batch.pop(),
             new_measures_batch.pop(),
-            new_metadata_batch.pop(),
         )
 
         self.clear()
@@ -381,19 +378,13 @@ class SlidingBoundariesArchive(ArchiveBase):
             np.concatenate((cur_data["solution"], new_solution_batch)),
             np.concatenate((cur_data["objective"], new_objective_batch)),
             np.concatenate((cur_data["measures"], new_measures_batch)),
-            np.concatenate((cur_data["metadata"], new_metadata_batch)),
         )
 
         status, value = ArchiveBase.add_single(self, last_solution,
-                                               last_objective, last_measures,
-                                               last_metadata)
+                                               last_objective, last_measures)
         return status, value
 
-    def add(self,
-            solution_batch,
-            objective_batch,
-            measures_batch,
-            metadata_batch=None):
+    def add(self, solution_batch, objective_batch, measures_batch):
         """Inserts a batch of solutions into the archive.
 
         .. note:: Unlike in other archives, this method (currently) is not truly
@@ -408,13 +399,11 @@ class SlidingBoundariesArchive(ArchiveBase):
             solution_batch,
             objective_batch,
             measures_batch,
-            metadata_batch,
         ) = validate_batch_args(
             archive=self,
             solution_batch=solution_batch,
             objective_batch=objective_batch,
             measures_batch=measures_batch,
-            metadata_batch=metadata_batch,
         )
         batch_size = solution_batch.shape[0]
 
@@ -425,12 +414,11 @@ class SlidingBoundariesArchive(ArchiveBase):
                 solution_batch[i],
                 objective_batch[i],
                 measures_batch[i],
-                metadata_batch[i],
             )
 
         return status_batch, value_batch
 
-    def add_single(self, solution, objective, measures, metadata=None):
+    def add_single(self, solution, objective, measures):
         """Inserts a single solution into the archive.
 
         This method remaps the archive after every :attr:`remap_frequency`
@@ -453,7 +441,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             measures=measures,
         )
 
-        self._buffer.add(solution, objective, measures, metadata)
+        self._buffer.add(solution, objective, measures)
         self._total_num_sol += 1
 
         if self._total_num_sol % self._remap_frequency == 0:
@@ -465,5 +453,5 @@ class SlidingBoundariesArchive(ArchiveBase):
             ])
         else:
             status, value = ArchiveBase.add_single(self, solution, objective,
-                                                   measures, metadata)
+                                                   measures)
         return status, value
