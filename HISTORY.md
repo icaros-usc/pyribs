@@ -7,8 +7,8 @@
 #### API
 
 - Support custom data fields in archive ({pr}`421`)
-- **Backwards-incompatible:** Remove `_batch` from archive add() parameter names
-  ({pr}`422`)
+- **Backwards-incompatible:** Remove `_batch` from archive method parameter
+  names ({pr}`422`, {pr}`423`)
 - Add Gaussian, IsoLine Operators and Refactor GaussianEmitter/IsoLineEmitter
   ({pr}`418`)
 - **Backwards-incompatible:** Remove metadata in favor of custom fields
