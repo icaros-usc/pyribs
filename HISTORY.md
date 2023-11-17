@@ -8,7 +8,7 @@
 
 - Support custom data fields in archive ({pr}`421`)
 - **Backwards-incompatible:** Remove `_batch` from parameter names ({pr}`422`,
-  {pr}`423`, {pr}`424`)
+  {pr}`423`, {pr}`425`)
 - Add Gaussian, IsoLine Operators and Refactor GaussianEmitter/IsoLineEmitter
   ({pr}`418`)
 - **Backwards-incompatible:** Remove metadata in favor of custom fields
