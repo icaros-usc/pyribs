@@ -1,7 +1,7 @@
 """Provides the GaussianEmitter."""
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_shape
+from ribs._utils import check_1d_shape, check_batch_shape
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.operators import GaussianOperator
 
@@ -72,8 +72,8 @@ class GaussianEmitter(EmitterBase):
 
         if x0 is not None:
             self._x0 = np.array(x0, dtype=archive.dtype)
-            check_shape(self._x0, "x0", archive.solution_dim,
-                        "archive.solution_dim")
+            check_1d_shape(self._x0, "x0", archive.solution_dim,
+                           "archive.solution_dim")
         elif initial_solutions is not None:
             self._initial_solutions = np.asarray(initial_solutions,
                                                  dtype=archive.dtype)

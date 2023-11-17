@@ -3,7 +3,7 @@ import numbers
 
 import numpy as np
 
-from ribs._utils import check_shape, validate_batch_args
+from ribs._utils import check_1d_shape, validate_batch_args
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import _get_es
 from ribs.emitters.rankers import _get_ranker
@@ -94,8 +94,8 @@ class EvolutionStrategyEmitter(EmitterBase):
     ):
         self._rng = np.random.default_rng(seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
-        check_shape(self._x0, "x0", archive.solution_dim,
-                    "archive.solution_dim")
+        check_1d_shape(self._x0, "x0", archive.solution_dim,
+                       "archive.solution_dim")
         self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
