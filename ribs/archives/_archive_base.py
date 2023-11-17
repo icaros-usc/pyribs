@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
-                         check_shape, parse_float_dtype, validate_batch_args,
-                         validate_single_args)
+                         check_shape, parse_float_dtype, validate_batch,
+                         validate_single)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
@@ -14,6 +14,8 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
                                        compute_best_index,
                                        compute_objective_sum,
                                        single_entry_with_threshold)
+
+_ARCHIVE_FIELDS = {"index", "solution", "objective", "measures", "threshold"}
 
 
 class ArchiveBase(ABC):
@@ -61,11 +63,24 @@ class ArchiveBase(ABC):
         dtype (str or data-type): Data type of the solutions, objectives,
             and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
             ``np.float64``.
+        extra_fields (dict): Description of extra fields of data that is stored
+            next to elite data like solutions and objectives. The description is
+            a dict mapping from a field name (str) to a tuple of ``(shape,
+            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
+            np.float32)}`` will create a "foo" field that contains scalar values
+            and a "bar" field that contains 10D values. Note that field names
+            must be valid Python identifiers, and names already used in the
+            archive are not allowed.
+
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
         _store (ribs.archives.ArrayStore): The underlying ArrayStore containing
             data for the archive.
+
+    Raises:
+        ValueError: Invalid values for learning_rate and threshold_min.
+        ValueError: Invalid names in extra_fields.
     """
 
     def __init__(self,
@@ -77,7 +92,8 @@ class ArchiveBase(ABC):
                  threshold_min=-np.inf,
                  qd_score_offset=0.0,
                  seed=None,
-                 dtype=np.float64):
+                 dtype=np.float64,
+                 extra_fields=None):
 
         self._dtype = parse_float_dtype(dtype)
         self._seed = seed
@@ -100,12 +116,18 @@ class ArchiveBase(ABC):
         self._objective_sum = None
         self._stats_reset()
 
+        extra_fields = extra_fields or {}
+        if _ARCHIVE_FIELDS & extra_fields.keys():
+            raise ValueError("The following names are not allowed in "
+                             f"extra_fields: {_ARCHIVE_FIELDS}")
+
         self._store = ArrayStore(
             field_desc={
                 "solution": ((solution_dim,), self.dtype),
                 "objective": ((), self.dtype),
-                "measures": ((self._measure_dim,), self.dtype),
+                "measures": ((measure_dim,), self.dtype),
                 "threshold": ((), self.dtype),
+                **extra_fields,
             },
             capacity=self._cells,
         )
@@ -293,7 +315,7 @@ class ArchiveBase(ABC):
             obj_mean=self._objective_sum / self.dtype(len(self)),
         )
 
-    def add(self, solution, objective, measures):
+    def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
 
         Each solution is only inserted if it has a higher ``objective`` than the
@@ -313,8 +335,8 @@ class ArchiveBase(ABC):
         in the appendix of `Fontaine 2022 <https://arxiv.org/abs/2205.10752>`_.
 
         .. note:: The indices of all arguments should "correspond" to each
-            other, i.e. ``solution_batch[i]``, ``objective_batch[i]``,
-            ``measures_batch[i]``, and should be the solution parameters,
+            other, i.e. ``solution[i]``, ``objective[i]``,
+            ``measures[i]``, and should be the solution parameters,
             objective, and measures for solution ``i``.
 
         Args:
@@ -324,6 +346,9 @@ class ArchiveBase(ABC):
                 evaluations of the solutions.
             measures (array-like): (batch_size, :attr:`measure_dim`) array with
                 measure space coordinates of all the solutions.
+            fields (keyword arguments): Additional data for each solution. Each
+                argument should be an array with batch_size as the first
+                dimension.
 
         Returns:
             tuple: 2-element tuple of (status_batch, value_batch) which
@@ -376,29 +401,25 @@ class ArchiveBase(ABC):
               ``threshold_min``, each value is equivalent to the objective value
               of the solution minus the threshold of its corresponding cell in
               the archive.
+
         Raises:
             ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective_batch`` or ``measures_batch`` has non-finite
-                values (inf or NaN).
+            ValueError: ``objective`` or ``measures`` has non-finite values (inf
+                or NaN).
         """
-        (
-            solution_batch,
-            objective_batch,
-            measures_batch,
-        ) = validate_batch_args(
-            archive=self,
-            solution_batch=solution,
-            objective_batch=objective,
-            measures_batch=measures,
+        new_data = validate_batch(
+            self,
+            {
+                "solution": solution,
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            },
         )
 
         add_info = self._store.add(
-            self.index_of(measures_batch),
-            {
-                "solution": solution_batch,
-                "objective": objective_batch,
-                "measures": measures_batch,
-            },
+            self.index_of(new_data["measures"]),
+            new_data,
             {
                 "dtype": self._dtype,
                 "learning_rate": self._learning_rate,
@@ -418,7 +439,7 @@ class ArchiveBase(ABC):
 
         return add_info["status"], add_info["value"]
 
-    def add_single(self, solution, objective, measures):
+    def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.
 
         The solution is only inserted if it has a higher ``objective`` than the
@@ -437,35 +458,34 @@ class ArchiveBase(ABC):
             solution (array-like): Parameters of the solution.
             objective (float): Objective function evaluation of the solution.
             measures (array-like): Coordinates in measure space of the solution.
-        Raises:
-            ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
-                has non-finite values.
+            fields (keyword arguments): Additional data for the solution.
+
         Returns:
             tuple: 2-element tuple of (status, value) describing the result of
             the add operation. Refer to :meth:`add` for the meaning of the
             status and value.
+
+        Raises:
+            ValueError: The array arguments do not match their specified shapes.
+            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
+                has non-finite values.
         """
-        (
-            solution,
-            objective,
-            measures,
-        ) = validate_single_args(
+        new_data = validate_single(
             self,
-            solution=solution,
-            objective=objective,
-            measures=measures,
+            {
+                "solution": solution,
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            },
         )
 
-        index = self.index_of_single(measures)
+        for name, arr in new_data.items():
+            new_data[name] = np.expand_dims(arr, axis=0)
 
         add_info = self._store.add(
-            np.array([index]),
-            {
-                "solution": np.expand_dims(solution, axis=0),
-                "objective": np.expand_dims(objective, axis=0),
-                "measures": np.expand_dims(measures, axis=0),
-            },
+            np.expand_dims(self.index_of_single(measures), axis=0),
+            new_data,
             {
                 "dtype": self._dtype,
                 "learning_rate": self._learning_rate,

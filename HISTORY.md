@@ -6,6 +6,7 @@
 
 #### API
 
+- Support custom data fields in archive ({pr}`421`)
 - **Backwards-incompatible:** Remove `_batch` from archive add() parameter names
   ({pr}`422`)
 - Add Gaussian, IsoLine Operators and Refactor GaussianEmitter/IsoLineEmitter
