@@ -315,7 +315,7 @@ class ArchiveBase(ABC):
             obj_mean=self._objective_sum / self.dtype(len(self)),
         )
 
-    def add(self, solution_batch, objective_batch, measures_batch):
+    def add(self, solution_batch, objective_batch, measures_batch, **fields):
         """Inserts a batch of solutions into the archive.
 
         Each solution is only inserted if it has a higher ``objective`` than the
@@ -346,6 +346,9 @@ class ArchiveBase(ABC):
                 function evaluations of the solutions.
             measures_batch (array-like): (batch_size, :attr:`measure_dim`)
                 array with measure space coordinates of all the solutions.
+            fields (keyword arguments): Additional data for each solution. Each
+                argument should be an array with batch_size as the first
+                dimension.
 
         Returns:
             tuple: 2-element tuple of (status_batch, value_batch) which
@@ -398,6 +401,7 @@ class ArchiveBase(ABC):
               ``threshold_min``, each value is equivalent to the objective value
               of the solution minus the threshold of its corresponding cell in
               the archive.
+
         Raises:
             ValueError: The array arguments do not match their specified shapes.
             ValueError: ``objective_batch`` or ``measures_batch`` has non-finite
@@ -414,13 +418,16 @@ class ArchiveBase(ABC):
             measures_batch=measures_batch,
         )
 
+        new_data = {
+            "solution": solution_batch,
+            "objective": objective_batch,
+            "measures": measures_batch,
+            **fields,
+        }
+
         add_info = self._store.add(
             self.index_of(measures_batch),
-            {
-                "solution": solution_batch,
-                "objective": objective_batch,
-                "measures": measures_batch,
-            },
+            new_data,
             {
                 "dtype": self._dtype,
                 "learning_rate": self._learning_rate,
@@ -440,7 +447,7 @@ class ArchiveBase(ABC):
 
         return add_info["status"], add_info["value"]
 
-    def add_single(self, solution, objective, measures):
+    def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.
 
         The solution is only inserted if it has a higher ``objective`` than the
@@ -459,14 +466,17 @@ class ArchiveBase(ABC):
             solution (array-like): Parameters of the solution.
             objective (float): Objective function evaluation of the solution.
             measures (array-like): Coordinates in measure space of the solution.
-        Raises:
-            ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
-                has non-finite values.
+            fields (keyword arguments): Additional data for the solution.
+
         Returns:
             tuple: 2-element tuple of (status, value) describing the result of
             the add operation. Refer to :meth:`add` for the meaning of the
             status and value.
+
+        Raises:
+            ValueError: The array arguments do not match their specified shapes.
+            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
+                has non-finite values.
         """
         (
             solution,
@@ -479,15 +489,18 @@ class ArchiveBase(ABC):
             measures=measures,
         )
 
-        index = self.index_of_single(measures)
+        new_data = {
+            "solution": solution,
+            "objective": objective,
+            "measures": measures,
+            **fields,
+        }
+        for name, arr in new_data.items():
+            new_data[name] = np.expand_dims(arr, axis=0)
 
         add_info = self._store.add(
-            np.array([index]),
-            {
-                "solution": np.expand_dims(solution, axis=0),
-                "objective": np.expand_dims(objective, axis=0),
-                "measures": np.expand_dims(measures, axis=0),
-            },
+            np.expand_dims(self.index_of_single(measures), axis=0),
+            new_data,
             {
                 "dtype": self._dtype,
                 "learning_rate": self._learning_rate,
