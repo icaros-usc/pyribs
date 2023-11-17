@@ -202,12 +202,12 @@ def test_plot_elites(cvt_archive_3d):
     cvt_archive_3d_plot(cvt_archive_3d, cell_alpha=0.0, plot_elites=True)
 
 
-@image_comparison(baseline_images=["plot_metadata_with_df"],
+@image_comparison(baseline_images=["plot_with_df"],
                   remove_text=False,
                   extensions=["png"],
                   tol=CVT_IMAGE_TOLERANCE)
-def test_plot_metadata_with_df(cvt_archive_3d):
+def test_plot_with_df(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
     df = cvt_archive_3d.data(return_type="pandas")
-    df["objective"] = df["metadata"]
+    df["objective"] = -df["objective"]
     cvt_archive_3d_plot(cvt_archive_3d, df=df)

@@ -194,13 +194,13 @@ def test_rasterized(grid_archive_2d):
     grid_archive_heatmap(grid_archive_2d, rasterized=True)
 
 
-@image_comparison(baseline_images=["plot_metadata_with_df"],
+@image_comparison(baseline_images=["plot_with_df"],
                   remove_text=False,
                   extensions=["png"])
-def test_plot_metadata_with_df(grid_archive_2d):
+def test_plot_with_df(grid_archive_2d):
     plt.figure(figsize=(8, 6))
     df = grid_archive_2d.data(return_type="pandas")
-    df["objective"] = df["metadata"]
+    df["objective"] = -df["objective"]
     grid_archive_heatmap(grid_archive_2d, df=df)
 
 

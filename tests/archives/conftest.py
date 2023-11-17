@@ -49,7 +49,6 @@ ArchiveFixtureData = namedtuple(
         "solution",  # A solution.
         "objective",  # Float objective value.
         "measures",  # 2D measures for the solution.
-        "metadata",  # Metadata object for the solution.
         "grid_indices",  # Index for GridArchive and SlidingBoundariesArchive.
         "int_index",  # Integer index corresponding to grid_indices.
         "centroid",  # Centroid coordinates for CVTArchive.
@@ -80,7 +79,6 @@ def get_archive_data(name, dtype=np.float64):
     solution = np.array([1., 2., 3.])
     objective = 1.0
     measures = np.array([0.25, 0.25])
-    metadata = {"metadata_key": 42}
     grid_indices = None
     int_index = None
     centroid = None
@@ -143,7 +141,7 @@ def get_archive_data(name, dtype=np.float64):
         grid_indices = (6, 11)
         int_index = 131
 
-    archive_with_elite.add_single(solution, objective, measures, metadata)
+    archive_with_elite.add_single(solution, objective, measures)
 
     return ArchiveFixtureData(
         archive,
@@ -151,7 +149,6 @@ def get_archive_data(name, dtype=np.float64):
         solution,
         objective,
         measures,
-        metadata,
         grid_indices,
         int_index,
         centroid,

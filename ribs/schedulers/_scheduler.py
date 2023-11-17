@@ -105,7 +105,7 @@ class Scheduler:
         # ask() or tell().
         self._last_called = None
         # The last set of solutions returned by ask().
-        self._solution_batch = []
+        self._cur_solutions = []
         # The number of solutions created by each emitter.
         self._num_emitted = [None for _ in self._emitters]
 
@@ -150,18 +150,18 @@ class Scheduler:
                                self._last_called)
         self._last_called = "ask_dqd"
 
-        self._solution_batch = []
+        self._cur_solutions = []
 
         for i, emitter in enumerate(self._emitters):
             emitter_sols = emitter.ask_dqd()
-            self._solution_batch.append(emitter_sols)
+            self._cur_solutions.append(emitter_sols)
             self._num_emitted[i] = len(emitter_sols)
 
         # In case the emitters didn't return any solutions.
-        self._solution_batch = np.concatenate(
-            self._solution_batch, axis=0) if self._solution_batch else np.empty(
+        self._cur_solutions = np.concatenate(
+            self._cur_solutions, axis=0) if self._cur_solutions else np.empty(
                 (0, self._solution_dim))
-        return self._solution_batch
+        return self._cur_solutions
 
     def ask(self):
         """Generates a batch of solutions by calling ask() on all emitters.
@@ -181,27 +181,39 @@ class Scheduler:
                                self._last_called)
         self._last_called = "ask"
 
-        self._solution_batch = []
+        self._cur_solutions = []
 
         for i, emitter in enumerate(self._emitters):
             emitter_sols = emitter.ask()
-            self._solution_batch.append(emitter_sols)
+            self._cur_solutions.append(emitter_sols)
             self._num_emitted[i] = len(emitter_sols)
 
         # In case the emitters didn't return any solutions.
-        self._solution_batch = np.concatenate(
-            self._solution_batch, axis=0) if self._solution_batch else np.empty(
+        self._cur_solutions = np.concatenate(
+            self._cur_solutions, axis=0) if self._cur_solutions else np.empty(
                 (0, self._solution_dim))
-        return self._solution_batch
+        return self._cur_solutions
 
-    def _check_length(self, name, array):
+    def _check_length(self, name, arr):
         """Raises a ValueError if array does not have the same length as the
         solutions."""
-        if len(array) != len(self._solution_batch):
+        if len(arr) != len(self._cur_solutions):
             raise ValueError(
-                f"{name} should have length {len(self._solution_batch)} "
+                f"{name} should have length {len(self._cur_solutions)} "
                 "(this is the number of solutions output by ask()) but "
-                f"has length {len(array)}")
+                f"has length {len(arr)}")
+
+    def _validate_tell_data(self, data):
+        """Preprocesses data passed into tell methods."""
+        for name, arr in data.items():
+            data[name] = np.asarray(arr)
+            self._check_length(name, arr)
+
+        # Convenient to have solutions be part of data, so that everything is
+        # just one dict.
+        data["solution"] = self._cur_solutions
+
+        return data
 
     EMPTY_WARNING = (
         "`{name}` was empty before adding solutions, and it is still empty "
@@ -210,21 +222,8 @@ class Scheduler:
         "archive, i.e., solutions are not being inserted because their "
         "objective value does not exceed `threshold_min`.")
 
-    def _tell_internal(self,
-                       objective_batch,
-                       measures_batch,
-                       metadata_batch=None):
-        """Internal method that handles duplicate subroutine between
-        :meth:`tell` and :meth:`tell_dqd`."""
-        objective_batch = np.asarray(objective_batch)
-        measures_batch = np.asarray(measures_batch)
-        metadata_batch = (np.empty(len(self._solution_batch), dtype=object) if
-                          metadata_batch is None else np.asarray(metadata_batch,
-                                                                 dtype=object))
-
-        self._check_length("objective_batch", objective_batch)
-        self._check_length("measures_batch", measures_batch)
-        self._check_length("metadata_batch", metadata_batch)
+    def _add_to_archives(self, data):
+        """Adds solutions to both the regular archive and the result archive."""
 
         archive_empty_before = self.archive.empty
         if self._result_archive is not None:
@@ -234,32 +233,25 @@ class Scheduler:
 
         # Add solutions to the archive.
         if self._add_mode == "batch":
-            status_batch, value_batch = self.archive.add(
-                self._solution_batch,
-                objective_batch,
-                measures_batch,
-                metadata_batch,
-            )
+            status_batch, value_batch = self.archive.add(**data)
 
             # Add solutions to result_archive.
             if self._result_archive is not None:
-                self._result_archive.add(self._solution_batch, objective_batch,
-                                         measures_batch, metadata_batch)
+                self._result_archive.add(**data)
         elif self._add_mode == "single":
             status_batch = []
             value_batch = []
-            for solution, objective, measure, metadata in zip(
-                    self._solution_batch, objective_batch, measures_batch,
-                    metadata_batch):
-                status, value = self.archive.add_single(solution, objective,
-                                                        measure, metadata)
+
+            for i in range(len(self._cur_solutions)):
+                single_data = {name: arr[i] for name, arr in data.items()}
+                status, value = self.archive.add_single(**single_data)
                 status_batch.append(status)
                 value_batch.append(value)
 
                 # Add solutions to result_archive.
                 if self._result_archive is not None:
-                    self._result_archive.add_single(solution, objective,
-                                                    measure, metadata)
+                    self._result_archive.add_single(**single_data)
+
             status_batch = np.asarray(status_batch)
             value_batch = np.asarray(value_batch)
 
@@ -270,109 +262,90 @@ class Scheduler:
             if result_archive_empty_before and self.result_archive.empty:
                 warnings.warn(self.EMPTY_WARNING.format(name="result_archive"))
 
-        return (
-            objective_batch,
-            measures_batch,
-            status_batch,
-            value_batch,
-            metadata_batch,
-        )
+        return status_batch, value_batch
 
-    def tell_dqd(self,
-                 objective_batch,
-                 measures_batch,
-                 jacobian_batch,
-                 metadata_batch=None):
+    def tell_dqd(self, objective, measures, jacobian):
         """Returns info for solutions from :meth:`ask_dqd`.
 
-        .. note:: The objective batch, measures batch, jacobian batch, and
-            metadata batch must be in the same order as the solutions created by
-            :meth:`ask_dqd`; i.e.  ``objective_batch[i]``,
-            ``measures_batch[i]``, ``jacobian_batch[i]``, and
-            ``metadata_batch[i]`` should be the objective, measures, jacobian,
-            and metadata for ``solution_batch[i]``.
+        .. note:: The objective batch, measures batch, and jacobian batch must
+            be in the same order as the solutions created by :meth:`ask_dqd`;
+            i.e. ``objective[i]``, ``measures[i]``, and ``jacobian[i]`` should
+            be the objective, measures, and jacobian for ``solution[i]``.
 
         Args:
-            objective_batch ((batch_size,) array): Each entry of this array
-                contains the objective function evaluation of a solution.
-            measures_batch ((batch_size, measure_dim) array): Each row of
-                this array contains a solution's coordinates in measure space.
-            jacobian_batch (numpy.ndarray): ``(batch_size, 1 + measure_dim,
+            objective ((batch_size,) array): Each entry of this array contains
+                the objective function evaluation of a solution.
+            measures ((batch_size, measure_dim) array): Each row of this array
+                contains a solution's coordinates in measure space.
+            jacobian (numpy.ndarray): ``(batch_size, 1 + measure_dim,
                 solution_dim)`` array consisting of Jacobian matrices of the
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
-            metadata_batch ((batch_size,) array): Each entry of this array
-                contains an object holding metadata for a solution.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
-            ValueError: ``objective_batch``, ``measures_batch``, or
-                ``metadata_batch`` has the wrong shape.
+            ValueError: One of the inputs has the wrong shape.
         """
         if self._last_called != "ask_dqd":
             raise RuntimeError(
                 "tell_dqd() was called without calling ask_dqd().")
         self._last_called = "tell_dqd"
 
-        (
-            objective_batch,
-            measures_batch,
-            status_batch,
-            value_batch,
-            metadata_batch,
-        ) = self._tell_internal(objective_batch, measures_batch, metadata_batch)
+        data = self._validate_tell_data({
+            "objective": objective,
+            "measures": measures,
+        })
+
+        jacobian = np.asarray(jacobian)
+        self._check_length("jacobian", jacobian)
+
+        status_batch, value_batch = self._add_to_archives(data)
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
         for emitter, n in zip(self._emitters, self._num_emitted):
             end = pos + n
-            emitter.tell_dqd(self._solution_batch[pos:end],
-                             objective_batch[pos:end], measures_batch[pos:end],
-                             jacobian_batch[pos:end], status_batch[pos:end],
-                             value_batch[pos:end], metadata_batch[pos:end])
+            emitter.tell_dqd(self._cur_solutions[pos:end],
+                             data["objective"][pos:end],
+                             data["measures"][pos:end], jacobian[pos:end],
+                             status_batch[pos:end], value_batch[pos:end])
             pos = end
 
-    def tell(self, objective_batch, measures_batch, metadata_batch=None):
+    def tell(self, objective, measures):
         """Returns info for solutions from :meth:`ask`.
 
-        .. note:: The objective batch, measures batch, and metadata batch must
-            be in the same order as the solutions created by :meth:`ask_dqd`;
-            i.e.  ``objective_batch[i]``, ``measures_batch[i]``, and
-            ``metadata_batch[i]`` should be the objective, measures, and
-            metadata for ``solution_batch[i]``.
+        .. note:: The objective batch and measures batch must be in the same
+            order as the solutions created by :meth:`ask_dqd`; i.e.
+            ``objective[i]`` and ``measures[i]`` should be the objective and
+            measures for ``solution[i]``.
 
         Args:
-            objective_batch ((batch_size,) array): Each entry of this array
-                contains the objective function evaluation of a solution.
-            measures_batch ((batch_size, measures_dm) array): Each row of
-                this array contains a solution's coordinates in measure space.
-            metadata_batch ((batch_size,) array): Each entry of this array
-                contains an object holding metadata for a solution.
+            objective ((batch_size,) array): Each entry of this array contains
+                the objective function evaluation of a solution.
+            measures ((batch_size, measures_dm) array): Each row of this array
+                contains a solution's coordinates in measure space.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
-            ValueError: ``objective_batch``, ``measures_batch``, or
-                ``metadata`` has the wrong shape.
+            ValueError: One of the inputs has the wrong shape.
         """
         if self._last_called != "ask":
             raise RuntimeError("tell() was called without calling ask().")
         self._last_called = "tell"
 
-        (
-            objective_batch,
-            measures_batch,
-            status_batch,
-            value_batch,
-            metadata_batch,
-        ) = self._tell_internal(objective_batch, measures_batch, metadata_batch)
+        data = self._validate_tell_data({
+            "objective": objective,
+            "measures": measures,
+        })
+
+        status_batch, value_batch = self._add_to_archives(data)
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
         for emitter, n in zip(self._emitters, self._num_emitted):
             end = pos + n
-            emitter.tell(self._solution_batch[pos:end],
-                         objective_batch[pos:end], measures_batch[pos:end],
-                         status_batch[pos:end], value_batch[pos:end],
-                         metadata_batch[pos:end])
+            emitter.tell(self._cur_solutions[pos:end],
+                         data["objective"][pos:end], data["measures"][pos:end],
+                         status_batch[pos:end], value_batch[pos:end])
             pos = end

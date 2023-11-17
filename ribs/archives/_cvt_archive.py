@@ -85,6 +85,14 @@ class CVTArchive(ArchiveBase):
         dtype (str or data-type): Data type of the solutions, objectives,
             and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
             ``np.float64``.
+        extra_fields (dict): Description of extra fields of data that is stored
+            next to elite data like solutions and objectives. The description is
+            a dict mapping from a field name (str) to a tuple of ``(shape,
+            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
+            np.float32)}`` will create a "foo" field that contains scalar values
+            and a "bar" field that contains 10D values. Note that field names
+            must be valid Python identifiers, and names already used in the
+            archive are not allowed.
         custom_centroids (array-like): If passed in, this (cells, measure_dim)
             array will be used as the centroids of the CVT instead of generating
             new ones. In this case, ``samples`` will be ignored, and
@@ -127,6 +135,7 @@ class CVTArchive(ArchiveBase):
                  qd_score_offset=0.0,
                  seed=None,
                  dtype=np.float64,
+                 extra_fields=None,
                  custom_centroids=None,
                  centroid_method="kmeans",
                  samples=100_000,
@@ -145,6 +154,7 @@ class CVTArchive(ArchiveBase):
             qd_score_offset=qd_score_offset,
             seed=seed,
             dtype=dtype,
+            extra_fields=extra_fields,
         )
 
         ranges = list(zip(*ranges))
@@ -261,42 +271,41 @@ class CVTArchive(ArchiveBase):
         """
         return self._centroids
 
-    def index_of(self, measures_batch):
+    def index_of(self, measures):
         """Finds the indices of the centroid closest to the given coordinates in
         measure space.
 
         If ``index_batch`` is the batch of indices returned by this method, then
         ``archive.centroids[index_batch[i]]`` holds the coordinates of the
-        centroid closest to ``measures_batch[i]``. See :attr:`centroids` for
-        more info.
+        centroid closest to ``measures[i]``. See :attr:`centroids` for more
+        info.
 
         The centroid indices are located using either the k-D tree or brute
         force, depending on the value of ``use_kd_tree`` in the constructor.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array of coordinates in measure space.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of centroid indices
             corresponding to each measure space coordinate.
         Raises:
-            ValueError: ``measures_batch`` is not of shape (batch_size,
+            ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
-            ValueError: ``measures_batch`` has non-finite values (inf or NaN).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
-                          "measure_dim")
-        check_finite(measures_batch, "measures_batch")
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
 
         if self._use_kd_tree:
-            _, indices = self._centroid_kd_tree.query(measures_batch)
+            _, indices = self._centroid_kd_tree.query(measures)
             return indices.astype(np.int32)
         else:
-            expanded_measures = np.expand_dims(measures_batch, axis=1)
+            expanded_measures = np.expand_dims(measures, axis=1)
             # Compute indices chunks at a time
             if self._chunk_size is not None and \
-                    self._chunk_size < measures_batch.shape[0]:
+                    self._chunk_size < measures.shape[0]:
                 indices = []
                 chunks = np.array_split(
                     expanded_measures,

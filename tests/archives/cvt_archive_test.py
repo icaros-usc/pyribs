@@ -18,8 +18,7 @@ def data(use_kd_tree):
             if use_kd_tree else get_archive_data("CVTArchive-brute_force"))
 
 
-def assert_archive_elite(archive, solution, objective, measures, centroid,
-                         metadata):
+def assert_archive_elite(archive, solution, objective, measures, centroid):
     """Asserts that the archive has one specific elite."""
     assert len(archive) == 1
     elite = list(archive)[0]
@@ -27,7 +26,6 @@ def assert_archive_elite(archive, solution, objective, measures, centroid,
     assert np.isclose(elite["objective"], objective).all()
     assert np.isclose(elite["measures"], measures).all()
     assert np.isclose(archive.centroids[elite["index"]], centroid).all()
-    assert elite["metadata"] == metadata
 
 
 def test_samples_bad_shape(use_kd_tree):
@@ -77,65 +75,58 @@ def test_add_single_to_archive(data, use_list, add_mode):
     solution = data.solution
     objective = data.objective
     measures = data.measures
-    metadata = data.metadata
 
     if use_list:
         solution = list(data.solution)
         measures = list(data.measures)
 
     if add_mode == "single":
-        status, value = data.archive.add_single(solution, objective, measures,
-                                                metadata)
+        status, value = data.archive.add_single(solution, objective, measures)
     else:
-        status, value = data.archive.add([solution], [objective], [measures],
-                                         [metadata])
+        status, value = data.archive.add([solution], [objective], [measures])
 
     assert status == AddStatus.NEW
     assert np.isclose(value, data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
-                         data.measures, data.centroid, data.metadata)
+                         data.measures, data.centroid)
 
 
 def test_add_single_and_overwrite(data, add_mode):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
-    arbitrary_metadata = {"foobar": 12}
     high_objective = data.objective + 1.0
 
     if add_mode == "single":
         status, value = data.archive_with_elite.add_single(
-            arbitrary_sol, high_objective, data.measures, arbitrary_metadata)
+            arbitrary_sol, high_objective, data.measures)
     else:
         status, value = data.archive_with_elite.add([arbitrary_sol],
                                                     [high_objective],
-                                                    [data.measures],
-                                                    [arbitrary_metadata])
+                                                    [data.measures])
 
     assert status == AddStatus.IMPROVE_EXISTING
     assert np.isclose(value, high_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
-                         data.measures, data.centroid, arbitrary_metadata)
+                         data.measures, data.centroid)
 
 
 def test_add_single_without_overwrite(data, add_mode):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
-    arbitrary_metadata = {"foobar": 12}
     low_objective = data.objective - 1.0
 
     if add_mode == "single":
         status, value = data.archive_with_elite.add_single(
-            arbitrary_sol, low_objective, data.measures, arbitrary_metadata)
+            arbitrary_sol, low_objective, data.measures)
     else:
         status, value = data.archive_with_elite.add([arbitrary_sol],
                                                     [low_objective],
-                                                    [data.measures],
-                                                    [arbitrary_metadata])
+                                                    [data.measures])
 
     assert status == AddStatus.NOT_ADDED
     assert np.isclose(value, low_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
-                         data.measures, data.centroid, data.metadata)
+                         data.measures, data.centroid)
 
 
 def test_chunked_calculation_short():

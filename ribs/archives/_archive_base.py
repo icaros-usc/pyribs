@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
-                         check_is_1d, parse_float_dtype, validate_batch_args,
-                         validate_single_args)
+from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
+                         check_shape, parse_float_dtype, validate_batch,
+                         validate_single)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
@@ -15,13 +15,15 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
                                        compute_objective_sum,
                                        single_entry_with_threshold)
 
+_ARCHIVE_FIELDS = {"index", "solution", "objective", "measures", "threshold"}
+
 
 class ArchiveBase(ABC):
     # pylint: disable = too-many-instance-attributes, too-many-public-methods
     """Base class for archives.
 
     This class composes archives using an :class:`ArrayStore` that has
-    "solution", "objective", "measures", "metadata", and "threshold" fields.
+    "solution", "objective", "measures", and "threshold" fields.
 
     Child classes typically override the following methods:
 
@@ -61,11 +63,24 @@ class ArchiveBase(ABC):
         dtype (str or data-type): Data type of the solutions, objectives,
             and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
             ``np.float64``.
+        extra_fields (dict): Description of extra fields of data that is stored
+            next to elite data like solutions and objectives. The description is
+            a dict mapping from a field name (str) to a tuple of ``(shape,
+            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
+            np.float32)}`` will create a "foo" field that contains scalar values
+            and a "bar" field that contains 10D values. Note that field names
+            must be valid Python identifiers, and names already used in the
+            archive are not allowed.
+
     Attributes:
         _rng (numpy.random.Generator): Random number generator, used in
             particular for generating random elites.
         _store (ribs.archives.ArrayStore): The underlying ArrayStore containing
             data for the archive.
+
+    Raises:
+        ValueError: Invalid values for learning_rate and threshold_min.
+        ValueError: Invalid names in extra_fields.
     """
 
     def __init__(self,
@@ -77,7 +92,8 @@ class ArchiveBase(ABC):
                  threshold_min=-np.inf,
                  qd_score_offset=0.0,
                  seed=None,
-                 dtype=np.float64):
+                 dtype=np.float64,
+                 extra_fields=None):
 
         self._dtype = parse_float_dtype(dtype)
         self._seed = seed
@@ -100,13 +116,18 @@ class ArchiveBase(ABC):
         self._objective_sum = None
         self._stats_reset()
 
+        extra_fields = extra_fields or {}
+        if _ARCHIVE_FIELDS & extra_fields.keys():
+            raise ValueError("The following names are not allowed in "
+                             f"extra_fields: {_ARCHIVE_FIELDS}")
+
         self._store = ArrayStore(
             field_desc={
                 "solution": ((solution_dim,), self.dtype),
                 "objective": ((), self.dtype),
-                "measures": ((self._measure_dim,), self.dtype),
-                "metadata": ((), object),
+                "measures": ((measure_dim,), self.dtype),
                 "threshold": ((), self.dtype),
+                **extra_fields,
             },
             capacity=self._cells,
         )
@@ -215,15 +236,15 @@ class ArchiveBase(ABC):
         self._stats_reset()
 
     @abstractmethod
-    def index_of(self, measures_batch):
+    def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
 
         If you need to retrieve the index of the measures for a *single*
         solution, consider using :meth:`index_of_single`.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array of coordinates in measure space.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
         Returns:
             (numpy.ndarray): (batch_size,) array with the indices of the
             batch of measures in the archive's storage arrays.
@@ -248,7 +269,7 @@ class ArchiveBase(ABC):
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures)
-        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
 
@@ -294,11 +315,7 @@ class ArchiveBase(ABC):
             obj_mean=self._objective_sum / self.dtype(len(self)),
         )
 
-    def add(self,
-            solution_batch,
-            objective_batch,
-            measures_batch,
-            metadata_batch=None):
+    def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
 
         Each solution is only inserted if it has a higher ``objective`` than the
@@ -318,28 +335,21 @@ class ArchiveBase(ABC):
         in the appendix of `Fontaine 2022 <https://arxiv.org/abs/2205.10752>`_.
 
         .. note:: The indices of all arguments should "correspond" to each
-            other, i.e. ``solution_batch[i]``, ``objective_batch[i]``,
-            ``measures_batch[i]``, and ``metadata_batch[i]`` should be the
-            solution parameters, objective, measures, and metadata for solution
-            ``i``.
+            other, i.e. ``solution[i]``, ``objective[i]``,
+            ``measures[i]``, and should be the solution parameters,
+            objective, and measures for solution ``i``.
 
         Args:
-            solution_batch (array-like): (batch_size, :attr:`solution_dim`)
-                array of solution parameters.
-            objective_batch (array-like): (batch_size,) array with objective
-                function evaluations of the solutions.
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array with measure space coordinates of all the solutions.
-            metadata_batch (array-like): (batch_size,) array of Python objects
-                representing metadata for the solution. For instance, this could
-                be a dict with several properties.
+            solution (array-like): (batch_size, :attr:`solution_dim`) array of
+                solution parameters.
+            objective (array-like): (batch_size,) array with objective function
+                evaluations of the solutions.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array with
+                measure space coordinates of all the solutions.
+            fields (keyword arguments): Additional data for each solution. Each
+                argument should be an array with batch_size as the first
+                dimension.
 
-                .. warning:: Due to how NumPy's :func:`~numpy.asarray`
-                    automatically converts array-like objects to arrays, passing
-                    array-like objects as metadata may lead to unexpected
-                    behavior. However, the metadata may be a dict or other
-                    object which *contains* arrays, i.e. ``metadata_batch``
-                    could be an array of dicts which contain arrays.
         Returns:
             tuple: 2-element tuple of (status_batch, value_batch) which
             describes the results of the additions. These outputs are
@@ -391,32 +401,25 @@ class ArchiveBase(ABC):
               ``threshold_min``, each value is equivalent to the objective value
               of the solution minus the threshold of its corresponding cell in
               the archive.
+
         Raises:
             ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective_batch`` or ``measures_batch`` has non-finite
-                values (inf or NaN).
+            ValueError: ``objective`` or ``measures`` has non-finite values (inf
+                or NaN).
         """
-        (
-            solution_batch,
-            objective_batch,
-            measures_batch,
-            metadata_batch,
-        ) = validate_batch_args(
-            archive=self,
-            solution_batch=solution_batch,
-            objective_batch=objective_batch,
-            measures_batch=measures_batch,
-            metadata_batch=metadata_batch,
+        new_data = validate_batch(
+            self,
+            {
+                "solution": solution,
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            },
         )
 
         add_info = self._store.add(
-            self.index_of(measures_batch),
-            {
-                "solution": solution_batch,
-                "objective": objective_batch,
-                "measures": measures_batch,
-                "metadata": metadata_batch,
-            },
+            self.index_of(new_data["measures"]),
+            new_data,
             {
                 "dtype": self._dtype,
                 "learning_rate": self._learning_rate,
@@ -436,7 +439,7 @@ class ArchiveBase(ABC):
 
         return add_info["status"], add_info["value"]
 
-    def add_single(self, solution, objective, measures, metadata=None):
+    def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.
 
         The solution is only inserted if it has a higher ``objective`` than the
@@ -455,45 +458,34 @@ class ArchiveBase(ABC):
             solution (array-like): Parameters of the solution.
             objective (float): Objective function evaluation of the solution.
             measures (array-like): Coordinates in measure space of the solution.
-            metadata (object): Python object representing metadata for the
-                solution. For instance, this could be a dict with several
-                properties.
+            fields (keyword arguments): Additional data for the solution.
 
-                .. warning:: Due to how NumPy's :func:`~numpy.asarray`
-                    automatically converts array-like objects to arrays, passing
-                    array-like objects as metadata may lead to unexpected
-                    behavior. However, the metadata may be a dict or other
-                    object which *contains* arrays.
-        Raises:
-            ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
-                has non-finite values.
         Returns:
             tuple: 2-element tuple of (status, value) describing the result of
             the add operation. Refer to :meth:`add` for the meaning of the
             status and value.
+
+        Raises:
+            ValueError: The array arguments do not match their specified shapes.
+            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
+                has non-finite values.
         """
-        (
-            solution,
-            objective,
-            measures,
-        ) = validate_single_args(
+        new_data = validate_single(
             self,
-            solution=solution,
-            objective=objective,
-            measures=measures,
+            {
+                "solution": solution,
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            },
         )
 
-        index = self.index_of_single(measures)
+        for name, arr in new_data.items():
+            new_data[name] = np.expand_dims(arr, axis=0)
 
         add_info = self._store.add(
-            np.array([index]),
-            {
-                "solution": np.expand_dims(solution, axis=0),
-                "objective": np.expand_dims(objective, axis=0),
-                "measures": np.expand_dims(measures, axis=0),
-                "metadata": np.expand_dims(metadata, axis=0),
-            },
+            np.expand_dims(self.index_of_single(measures), axis=0),
+            new_data,
             {
                 "dtype": self._dtype,
                 "learning_rate": self._learning_rate,
@@ -513,7 +505,7 @@ class ArchiveBase(ABC):
 
         return add_info["status"][0], add_info["value"][0]
 
-    def retrieve(self, measures_batch):
+    def retrieve(self, measures):
         """Retrieves the elites with measures in the same cells as the measures
         specified.
 
@@ -524,20 +516,20 @@ class ArchiveBase(ABC):
             elites["solution"]  # Shape: (batch_size, solution_dim)
             elites["objective"]
             elites["measures"]
+            elites["threshold"]
             elites["index"]
-            elites["metadata"]
 
         If the cell associated with ``elites["measures"][i]`` has an elite in
         it, then ``occupied[i]`` will be True. Furthermore,
         ``elites["solution"][i]``, ``elites["objective"][i]``,
-        ``elites["measures"][i]``, ``elites["index"][i]``, and
-        ``elites["metadata"][i]`` will be set to the properties of the elite.
-        Note that ``elites["measures"][i]`` may not be equal to the
-        ``measures_batch[i]`` passed as an argument, since the measures only
-        need to be in the same archive cell.
+        ``elites["measures"][i]``, ``elites["threshold"][i]``, and
+        ``elites["index"][i]`` will be set to the properties of the elite. Note
+        that ``elites["measures"][i]`` may not be equal to the ``measures[i]``
+        passed as an argument, since the measures only need to be in the same
+        archive cell.
 
-        If the cell associated with ``measures_batch[i]`` *does not* have any
-        elite in it, then ``occupied[i]`` will be set to False. Furthermore, the
+        If the cell associated with ``measures[i]`` *does not* have any elite in
+        it, then ``occupied[i]`` will be set to False. Furthermore, the
         corresponding outputs will be set to empty values -- namely:
 
         * NaN for floating-point fields
@@ -549,25 +541,23 @@ class ArchiveBase(ABC):
         consider using :meth:`retrieve_single`.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array of coordinates in measure space.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
         Returns:
             tuple: 2-element tuple of (occupied array, dict). The occupied array
-            indicates whether each of the cells indicated by the measures in
-            measures_batch has an elite, while the dict contains the data of
-            those elites. The dict maps from field name to the corresponding
-            array.
+            indicates whether each of the cells indicated by the coordinates in
+            ``measures`` has an elite, while the dict contains the data of those
+            elites. The dict maps from field name to the corresponding array.
         Raises:
-            ValueError: ``measures_batch`` is not of shape (batch_size,
+            ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
-            ValueError: ``measures_batch`` has non-finite values (inf or NaN).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
-                          "measure_dim")
-        check_finite(measures_batch, "measures_batch")
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
 
-        occupied, data = self._store.retrieve(self.index_of(measures_batch))
+        occupied, data = self._store.retrieve(self.index_of(measures))
         unoccupied = ~occupied
 
         for name, arr in data.items():
@@ -605,7 +595,7 @@ class ArchiveBase(ABC):
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures)
-        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
         occupied, data = self.retrieve(measures[None])

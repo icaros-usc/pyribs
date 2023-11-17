@@ -103,13 +103,8 @@ class EmitterBase(ABC):
         """
         return np.empty((0, self.solution_dim), dtype=self.archive.dtype)
 
-    def tell(self,
-             solution_batch,
-             objective_batch,
-             measures_batch,
-             status_batch,
-             value_batch,
-             metadata_batch=None):
+    def tell(self, solution_batch, objective_batch, measures_batch,
+             status_batch, value_batch):
         """Gives the emitter results from evaluating solutions.
 
         This base class implementation (in :class:`~ribs.emitters.EmitterBase`)
@@ -129,8 +124,6 @@ class EmitterBase(ABC):
                 series of calls to archive's :meth:`add_single()` method or by a
                 single call to archive's :meth:`add()`. For what these floats
                 represent, refer to :meth:`ribs.archives.add()`.
-            metadata_batch (numpy.ndarray): 1D object array containing a
-                metadata object for each solution.
         """
 
     def ask_dqd(self):
@@ -142,14 +135,8 @@ class EmitterBase(ABC):
         """
         return np.empty((0, self.solution_dim), dtype=self.archive.dtype)
 
-    def tell_dqd(self,
-                 solution_batch,
-                 objective_batch,
-                 measures_batch,
-                 jacobian_batch,
-                 status_batch,
-                 value_batch,
-                 metadata_batch=None):
+    def tell_dqd(self, solution_batch, objective_batch, measures_batch,
+                 jacobian_batch, status_batch, value_batch):
         """Gives the emitter results from evaluating the gradient of the
         solutions, only used for DQD emitters.
 
@@ -173,6 +160,4 @@ class EmitterBase(ABC):
             value_batch (numpy.ndarray): 1d array of floats returned by a series
                 of calls to archive's :meth:`add()` method. for what these
                 floats represent, refer to :meth:`ribs.archives.add()`.
-            metadata_batch (numpy.ndarray): 1d object array containing a
-                metadata object for each solution.
         """
