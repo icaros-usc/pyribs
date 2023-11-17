@@ -51,10 +51,10 @@ class ArchiveDataFrame(pd.DataFrame):
         **Thus, if you need to use the method several times, we recommend
         storing it first, like so**::
 
-            measures_batch = df.get_field("measures")
-            measures_batch[0]
-            measures_batch.mean()
-            measures_batch.median()
+            measures = df.get_field("measures")
+            measures[0]
+            measures.mean()
+            measures.median()
 
     .. note::
 
