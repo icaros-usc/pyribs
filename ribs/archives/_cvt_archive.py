@@ -166,12 +166,6 @@ class CVTArchive(ArchiveBase):
         self._k_means_kwargs.setdefault("algorithm", "lloyd")
         self._k_means_kwargs.setdefault("random_state", seed)
 
-        self._use_kd_tree = use_kd_tree
-        self._centroid_kd_tree = None
-        self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
-                                ckdtree_kwargs.copy())
-        self._chunk_size = chunk_size
-
         if custom_centroids is None:
             self._samples = None
             if centroid_method == "kmeans":
@@ -188,7 +182,7 @@ class CVTArchive(ArchiveBase):
                     self._samples = self._rng.uniform(
                         self._lower_bounds,
                         self._upper_bounds,
-                        size=(self._samples, self._measure_dim),
+                        size=(samples, self._measure_dim),
                     ).astype(self.dtype)
 
                 self._centroids = k_means(self._samples, self._cells,
@@ -232,6 +226,11 @@ class CVTArchive(ArchiveBase):
             self._centroids = custom_centroids
             self._samples = None
 
+        self._use_kd_tree = use_kd_tree
+        self._centroid_kd_tree = None
+        self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
+                                ckdtree_kwargs.copy())
+        self._chunk_size = chunk_size
         if self._use_kd_tree:
             self._centroid_kd_tree = cKDTree(self._centroids,
                                              **self._ckdtree_kwargs)
