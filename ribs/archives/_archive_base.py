@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
-                         check_is_1d, parse_float_dtype, validate_batch_args,
+                         check_is_1d, parse_float_dtype, validate_batch,
                          validate_single_args)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
@@ -315,7 +315,7 @@ class ArchiveBase(ABC):
             obj_mean=self._objective_sum / self.dtype(len(self)),
         )
 
-    def add(self, solution_batch, objective_batch, measures_batch, **fields):
+    def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
 
         Each solution is only inserted if it has a higher ``objective`` than the
@@ -335,17 +335,17 @@ class ArchiveBase(ABC):
         in the appendix of `Fontaine 2022 <https://arxiv.org/abs/2205.10752>`_.
 
         .. note:: The indices of all arguments should "correspond" to each
-            other, i.e. ``solution_batch[i]``, ``objective_batch[i]``,
-            ``measures_batch[i]``, and should be the solution parameters,
+            other, i.e. ``solution[i]``, ``objective[i]``,
+            ``measures[i]``, and should be the solution parameters,
             objective, and measures for solution ``i``.
 
         Args:
-            solution_batch (array-like): (batch_size, :attr:`solution_dim`)
-                array of solution parameters.
-            objective_batch (array-like): (batch_size,) array with objective
-                function evaluations of the solutions.
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array with measure space coordinates of all the solutions.
+            solution (array-like): (batch_size, :attr:`solution_dim`) array of
+                solution parameters.
+            objective (array-like): (batch_size,) array with objective function
+                evaluations of the solutions.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array with
+                measure space coordinates of all the solutions.
             fields (keyword arguments): Additional data for each solution. Each
                 argument should be an array with batch_size as the first
                 dimension.
@@ -404,29 +404,21 @@ class ArchiveBase(ABC):
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective_batch`` or ``measures_batch`` has non-finite
-                values (inf or NaN).
+            ValueError: ``objective`` or ``measures`` has non-finite values (inf
+                or NaN).
         """
-        (
-            solution_batch,
-            objective_batch,
-            measures_batch,
-        ) = validate_batch_args(
-            archive=self,
-            solution_batch=solution_batch,
-            objective_batch=objective_batch,
-            measures_batch=measures_batch,
+        new_data = validate_batch(
+            self,
+            {
+                "solution": solution,
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            },
         )
 
-        new_data = {
-            "solution": solution_batch,
-            "objective": objective_batch,
-            "measures": measures_batch,
-            **fields,
-        }
-
         add_info = self._store.add(
-            self.index_of(measures_batch),
+            self.index_of(new_data["measures"]),
             new_data,
             {
                 "dtype": self._dtype,

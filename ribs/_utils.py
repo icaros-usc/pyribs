@@ -1,4 +1,6 @@
 """Miscellaneous internal utilities."""
+import numbers
+
 import numpy as np
 
 
@@ -37,15 +39,18 @@ def check_finite(x, name):
 
 
 def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
-    """Checks that the array has shape (batch_size, dim).
+    """Checks that the array has shape (batch_size, dim) or (batch_size, *dim).
 
     `batch_size` can be any value.
 
-    `array` must be a numpy array, and `dim` must be an int.
+    `array` must be a numpy array, and `dim` must be an int or tuple of int.
     """
-    if array.ndim != 2 or array.shape[1] != dim:
+    if isinstance(dim, numbers.Integral):
+        dim = (dim,)
+    if array.ndim != 1 + len(dim) or array.shape[1:] != dim:
+        dim_str = ", ".join(map(str, dim))
         raise ValueError(f"Expected {array_name} to be a 2D array with shape "
-                         f"(batch_size, {dim}) (i.e. shape "
+                         f"(batch_size, {dim_str}) (i.e. shape "
                          f"(batch_size, {dim_name})) but it had shape "
                          f"{array.shape}.{extra_msg}")
 
@@ -69,26 +74,6 @@ def check_is_1d(array, array_name, extra_msg=""):
                          f"shape {array.shape}.{extra_msg}")
 
 
-def check_batch_shape_3d(array,
-                         array_name,
-                         dim1,
-                         dim1_name,
-                         dim2,
-                         dim2_name,
-                         extra_msg=""):
-    """Checks that the array has shape (batch_size, dim1, dim2).
-
-    `batch_size` can be any value.
-
-    `array` must be a numpy array, `dim1` and `dim2` must be int.
-    """
-    if array.ndim != 3 or array.shape[1] != dim1 or array.shape[2] != dim2:
-        raise ValueError(f"Expected {array_name} to be a 3D array with shape "
-                         f"(batch_size, {dim1}, {dim2}) (i.e. shape "
-                         f"(batch_size, {dim1_name}, {dim2_name})) but it had"
-                         f"shape {array.shape}.{extra_msg}")
-
-
 def check_solution_batch_dim(array,
                              array_name,
                              batch_size,
@@ -101,6 +86,86 @@ def check_solution_batch_dim(array,
                          f"({batch_size}, ..), {array_name} should have shape "
                          f"({batch_size},{'' if is_1d else ' ..'}), but it has "
                          f"shape {array.shape}.{extra_msg}")
+
+
+def validate_batch(archive, data):
+    """Preprocesses and validates batch arguments.
+
+    ``data`` is a dict containing arrays with the data of each solution, e.g.,
+    objective and measures. The batch size of each argument in the data is
+    validated with respect to data["solution"].
+
+    The arguments are assumed to come directly from users, so they may not be
+    arrays. Thus, we preprocess each argument by converting it into a numpy
+    array. We then perform checks on the array, including seeing if its batch
+    size matches the batch size of data["solution"].
+    """
+    # Process and validate solution_batch.
+    data["solution"] = np.asarray(data["solution"])
+    check_batch_shape(data["solution"], "solution", archive.solution_dim,
+                      "solution_dim", "")
+
+    # Process and validate the other batch arguments.
+    batch_size = data["solution"].shape[0]
+    for name, arr in data.items():
+        if name == "objective":
+            arr = np.asarray(arr)
+            check_is_1d(arr, "objective", "")
+            check_solution_batch_dim(arr,
+                                     "objective",
+                                     batch_size,
+                                     is_1d=True,
+                                     extra_msg="")
+            check_finite(arr, "objective")
+
+        elif name == "measures":
+            arr = np.asarray(arr)
+            check_batch_shape(arr, "measures", archive.measure_dim,
+                              "measure_dim", "")
+            check_solution_batch_dim(arr,
+                                     "measures",
+                                     batch_size,
+                                     is_1d=False,
+                                     extra_msg="")
+            check_finite(arr, "measures")
+
+        elif name == "jacobian":
+            arr = np.asarray(arr)
+            check_batch_shape(arr, "jacobian",
+                              (archive.measure_dim + 1, archive.solution_dim),
+                              "measure_dim + 1, solution_dim")
+            check_finite(arr, "jacobian")
+
+        elif name == "status":
+            arr = np.asarray(arr)
+            check_is_1d(arr, "status", "")
+            check_solution_batch_dim(arr,
+                                     "status",
+                                     batch_size,
+                                     is_1d=True,
+                                     extra_msg="")
+            check_finite(arr, "status")
+
+        elif name == "value":
+            arr = np.asarray(arr)
+            check_is_1d(arr, "value", "")
+            check_solution_batch_dim(arr,
+                                     "value",
+                                     batch_size,
+                                     is_1d=True,
+                                     extra_msg="")
+
+        else:
+            arr = np.asarray(arr)
+            check_solution_batch_dim(arr,
+                                     name,
+                                     batch_size,
+                                     is_1d=False,
+                                     extra_msg="")
+
+        data[name] = arr
+
+    return data
 
 
 _BATCH_WARNING = (" Note that starting in pyribs 0.5.0, add() and tell() take"
@@ -163,9 +228,9 @@ def validate_batch_args(archive, solution_batch, **batch_kwargs):
             returns.append(measures_batch)
         elif name == "jacobian_batch":
             jacobian_batch = np.asarray(arg)
-            check_batch_shape_3d(jacobian_batch, "jacobian_batch",
-                                 archive.measure_dim + 1, "measure_dim + 1",
-                                 archive.solution_dim, "solution_dim")
+            check_batch_shape(jacobian_batch, "jacobian_batch",
+                              (archive.measure_dim + 1, archive.solution_dim),
+                              "measure_dim + 1, solution_dim")
             check_finite(jacobian_batch, "jacobian_batch")
             returns.append(jacobian_batch)
         elif name == "status_batch":
