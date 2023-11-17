@@ -1,4 +1,6 @@
 """Contains the CVTArchive class."""
+import numbers
+
 import numpy as np
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from scipy.stats.qmc import Halton, Sobol
@@ -88,10 +90,11 @@ class CVTArchive(ArchiveBase):
             new ones. In this case, ``samples`` will be ignored, and
             ``archive.samples`` will be None. This can be useful when one wishes
             to use the same CVT across experiments for fair comparison.
-        centroid_method (string): Pass in the following methods for
+        centroid_method (str): Pass in the following methods for
             generating centroids: "random", "sobol", "scrambled sobol",
-            "halton". Default method is "kmeans". Note: Samples are only used
-            when method is "kmeans".
+            "halton". Default method is "kmeans". These methods are derived from
+            Mouret 2023: https://dl.acm.org/doi/pdf/10.1145/3583133.3590726.
+            Note: Samples are only used when method is "kmeans".
         samples (int or array-like): If it is an int, this specifies the number
             of samples to generate when creating the CVT. Otherwise, this must
             be a (num_samples, measure_dim) array where samples[i] is a sample
@@ -170,10 +173,9 @@ class CVTArchive(ArchiveBase):
         self._chunk_size = chunk_size
 
         if custom_centroids is None:
+            self._samples = None
             if centroid_method == "kmeans":
-                # Samples are set to custom first and then checked or used.
-                self._samples = samples
-                if not isinstance(samples, int):
+                if not isinstance(samples, numbers.Integral):
                     # Validate shape of custom samples.
                     samples = np.asarray(samples, dtype=self.dtype)
                     if samples.shape[1] != self._measure_dim:
@@ -181,13 +183,13 @@ class CVTArchive(ArchiveBase):
                             f"Samples has shape {samples.shape} but must be of "
                             f"shape (n_samples, len(ranges)="
                             f"{self._measure_dim})")
+                    self._samples = samples
                 else:
                     self._samples = self._rng.uniform(
                         self._lower_bounds,
                         self._upper_bounds,
                         size=(self._samples, self._measure_dim),
-                    ).astype(self.dtype) if isinstance(self._samples,
-                                                       int) else self._samples
+                    ).astype(self.dtype)
 
                 self._centroids = k_means(self._samples, self._cells,
                                           **self._k_means_kwargs)[0]
@@ -199,10 +201,6 @@ class CVTArchive(ArchiveBase):
                         f"archive needs {self._cells} cells. This most "
                         "likely happened because there are too few samples "
                         "and/or too many cells.")
-
-                if self._use_kd_tree:
-                    self._centroid_kd_tree = cKDTree(self._centroids,
-                                                     **self._ckdtree_kwargs)
             elif centroid_method == "random":
                 # Generate random centroids for the archive.
                 self._centroids = self._rng.uniform(self._lower_bounds,
@@ -233,6 +231,10 @@ class CVTArchive(ArchiveBase):
                     f"{self._measure_dim})")
             self._centroids = custom_centroids
             self._samples = None
+
+        if self._use_kd_tree:
+            self._centroid_kd_tree = cKDTree(self._centroids,
+                                             **self._ckdtree_kwargs)
 
     @property
     def lower_bounds(self):
