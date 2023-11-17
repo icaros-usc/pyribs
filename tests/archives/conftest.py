@@ -91,7 +91,6 @@ def get_archive_data(name, dtype=np.float64):
                               dims=[10, 20],
                               ranges=[(-1, 1), (-2, 2)],
                               dtype=dtype)
-
         archive_with_elite = GridArchive(solution_dim=len(solution),
                                          dims=[10, 20],
                                          ranges=[(-1, 1), (-2, 2)],
