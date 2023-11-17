@@ -243,7 +243,7 @@ class ArchiveBase(ABC):
         solution, consider using :meth:`index_of_single`.
 
         Args:
-            measures(array-like): (batch_size, :attr:`measure_dim`) array of
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
         Returns:
             (numpy.ndarray): (batch_size,) array with the indices of the
