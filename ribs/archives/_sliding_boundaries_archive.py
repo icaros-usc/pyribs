@@ -384,7 +384,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                                                last_objective, last_measures)
         return status, value
 
-    def add(self, solution_batch, objective_batch, measures_batch):
+    def add(self, solution, objective, measures):
         """Inserts a batch of solutions into the archive.
 
         .. note:: Unlike in other archives, this method (currently) is not truly
@@ -401,9 +401,9 @@ class SlidingBoundariesArchive(ArchiveBase):
             measures_batch,
         ) = validate_batch_args(
             archive=self,
-            solution_batch=solution_batch,
-            objective_batch=objective_batch,
-            measures_batch=measures_batch,
+            solution_batch=solution,
+            objective_batch=objective,
+            measures_batch=measures,
         )
         batch_size = solution_batch.shape[0]
 

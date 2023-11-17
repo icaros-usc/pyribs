@@ -61,9 +61,9 @@ def cvt_archive_heatmap(archive,
             ...                      cells=100, ranges=[(-1, 1), (-1, 1)])
             >>> x = np.random.uniform(-1, 1, 10000)
             >>> y = np.random.uniform(-1, 1, 10000)
-            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
-            ...             objective_batch=-(x**2 + y**2),
-            ...             measures_batch=np.stack((x, y), axis=1))
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2),
+            ...             measures=np.stack((x, y), axis=1))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_heatmap(archive)

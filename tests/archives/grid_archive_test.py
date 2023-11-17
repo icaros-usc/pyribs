@@ -285,11 +285,11 @@ def test_add_single_wrong_shapes(data):
 def test_add_batch_all_new(data):
     status_batch, value_batch = data.archive.add(
         # 4 solutions of arbitrary value.
-        solution_batch=[[1, 2, 3]] * 4,
+        solution=[[1, 2, 3]] * 4,
         # The first two solutions end up in separate cells, and the next two end
         # up in the same cell.
-        objective_batch=[0, 0, 0, 1],
-        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+        objective=[0, 0, 0, 1],
+        measures=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
     )
     assert (status_batch == 2).all()
     assert np.isclose(value_batch, [0, 0, 0, 1]).all()
@@ -306,9 +306,9 @@ def test_add_batch_all_new(data):
 
 def test_add_batch_none_inserted(data):
     status_batch, value_batch = data.archive_with_elite.add(
-        solution_batch=[[1, 2, 3]] * 4,
-        objective_batch=[data.objective - 1 for _ in range(4)],
-        measures_batch=[data.measures for _ in range(4)],
+        solution=[[1, 2, 3]] * 4,
+        objective=[data.objective - 1 for _ in range(4)],
+        measures=[data.measures for _ in range(4)],
     )
 
     # All solutions were inserted into the same cell as the elite already in the
@@ -328,9 +328,9 @@ def test_add_batch_none_inserted(data):
 
 def test_add_batch_with_improvement(data):
     status_batch, value_batch = data.archive_with_elite.add(
-        solution_batch=[[1, 2, 3]] * 4,
-        objective_batch=[data.objective + 1 for _ in range(4)],
-        measures_batch=[data.measures for _ in range(4)],
+        solution=[[1, 2, 3]] * 4,
+        objective=[data.objective + 1 for _ in range(4)],
+        measures=[data.measures for _ in range(4)],
     )
 
     # All solutions were inserted into the same cell as the elite already in the
@@ -350,8 +350,8 @@ def test_add_batch_with_improvement(data):
 
 def test_add_batch_mixed_statuses(data):
     status_batch, value_batch = data.archive_with_elite.add(
-        solution_batch=[[1, 2, 3]] * 6,
-        objective_batch=[
+        solution=[[1, 2, 3]] * 6,
+        objective=[
             # Not added.
             data.objective - 1.0,
             # Not added.
@@ -365,7 +365,7 @@ def test_add_batch_mixed_statuses(data):
             # New and added.
             2.0,
         ],
-        measures_batch=[
+        measures=[
             data.measures,
             data.measures,
             data.measures,
@@ -389,13 +389,13 @@ def test_add_batch_mixed_statuses(data):
 
 def test_add_batch_first_solution_wins_in_ties(data):
     status_batch, value_batch = data.archive_with_elite.add(
-        solution_batch=[
+        solution=[
             [1, 2, 3],
             [4, 5, 6],
             [7, 8, 9],
             [10, 11, 12],
         ],
-        objective_batch=[
+        objective=[
             # Ties for improvement.
             data.objective + 1.0,
             data.objective + 1.0,
@@ -403,7 +403,7 @@ def test_add_batch_first_solution_wins_in_ties(data):
             3.0,
             3.0,
         ],
-        measures_batch=[
+        measures=[
             data.measures,
             data.measures,
             [0, 0],
@@ -434,9 +434,9 @@ def test_add_batch_not_inserted_if_below_threshold_min():
     )
 
     status_batch, value_batch = archive.add(
-        solution_batch=[[1, 2, 3]] * 4,
-        objective_batch=[-20.0, -20.0, 10.0, 10.0],
-        measures_batch=[[0.0, 0.0]] * 4,
+        solution=[[1, 2, 3]] * 4,
+        objective=[-20.0, -20.0, 10.0, 10.0],
+        measures=[[0.0, 0.0]] * 4,
     )
 
     # The first two solutions should not have been inserted since they did not
@@ -556,30 +556,30 @@ def test_add_batch_threshold_update_inf_threshold_min():
 def test_add_batch_wrong_shapes(data):
     with pytest.raises(ValueError):
         data.archive.add(
-            solution_batch=[[1, 1]],  # 2D instead of 3D solution.
-            objective_batch=[0],
-            measures_batch=[[0, 0]],
+            solution=[[1, 1]],  # 2D instead of 3D solution.
+            objective=[0],
+            measures=[[0, 0]],
         )
     with pytest.raises(ValueError):
         data.archive.add(
-            solution_batch=[[0, 0, 0]],
-            objective_batch=[[1]],  # Array instead of scalar objective.
-            measures_batch=[[0, 0]],
+            solution=[[0, 0, 0]],
+            objective=[[1]],  # Array instead of scalar objective.
+            measures=[[0, 0]],
         )
     with pytest.raises(ValueError):
         data.archive.add(
-            solution_batch=[[0, 0, 0]],
-            objective_batch=[0],
-            measures_batch=[[1, 1, 1]],  # 3D instead of 2D measures.
+            solution=[[0, 0, 0]],
+            objective=[0],
+            measures=[[1, 1, 1]],  # 3D instead of 2D measures.
         )
 
 
 def test_add_batch_zero_length(data):
     """Nothing should happen when adding a batch with length 0."""
     status_batch, value_batch = data.archive.add(
-        solution_batch=np.ones((0, 3)),
-        objective_batch=np.ones((0,)),
-        measures_batch=np.ones((0, 2)),
+        solution=np.ones((0, 3)),
+        objective=np.ones((0,)),
+        measures=np.ones((0, 2)),
     )
 
     assert len(status_batch) == 0
@@ -590,15 +590,15 @@ def test_add_batch_zero_length(data):
 def test_add_batch_wrong_batch_size(data):
     with pytest.raises(ValueError):
         data.archive.add(
-            solution_batch=[[0, 0, 0]],
-            objective_batch=[1, 1],  # 2 objectives.
-            measures_batch=[[0, 0, 0]],
+            solution=[[0, 0, 0]],
+            objective=[1, 1],  # 2 objectives.
+            measures=[[0, 0, 0]],
         )
     with pytest.raises(ValueError):
         data.archive.add(
-            solution_batch=[[0, 0, 0]],
-            objective_batch=[0, 0, 0],
-            measures_batch=[[1, 1, 1], [1, 1, 1]],  # 2 measures.
+            solution=[[0, 0, 0]],
+            objective=[0, 0, 0],
+            measures=[[1, 1, 1], [1, 1, 1]],  # 2 measures.
         )
 
 
