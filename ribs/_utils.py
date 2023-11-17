@@ -64,11 +64,10 @@ def check_shape(array, array_name, dim, dim_name, extra_msg=""):
         dim = (dim,)
     if array.ndim != len(dim) or array.shape != dim:
         comma = "," if len(dim) == 1 else ""
-        dim_str = ", ".join(map(str, dim))
         raise ValueError(
             f"Expected {array_name} to be an array with shape "
-            f"({dim_str}{comma}) (i.e. shape ({dim_name}{comma})) but it had "
-            f"shape {array.shape}.{extra_msg}")
+            f"{dim} (i.e. shape ({dim_name}{comma})) but it had shape "
+            f"{array.shape}.{extra_msg}")
 
 
 def check_is_1d(array, array_name, extra_msg=""):
