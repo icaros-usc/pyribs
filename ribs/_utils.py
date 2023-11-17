@@ -55,16 +55,20 @@ def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
                          f"{array.shape}.{extra_msg}")
 
 
-def check_1d_shape(array, array_name, dim, dim_name, extra_msg=""):
-    """Checks that the array has shape (dim,).
+def check_shape(array, array_name, dim, dim_name, extra_msg=""):
+    """Checks that the array has shape dim.
 
-    `array` must be a numpy array, and `dim` must be an int.
+    `array` must be a numpy array, and `dim` must be an int or tuple of int.
     """
-    if array.ndim != 1 or array.shape[0] != dim:
+    if isinstance(dim, numbers.Integral):
+        dim = (dim,)
+    if array.ndim != len(dim) or array.shape != dim:
+        comma = "," if len(dim) == 1 else ""
+        dim_str = ", ".join(map(str, dim))
         raise ValueError(
-            f"Expected {array_name} to be a 1D array with shape "
-            f"({dim},) (i.e. shape ({dim_name},)) but it had shape "
-            f"{array.shape}.{extra_msg}")
+            f"Expected {array_name} to be an array with shape "
+            f"({dim_str}{comma}) (i.e. shape ({dim_name}{comma})) but it had "
+            f"shape {array.shape}.{extra_msg}")
 
 
 def check_is_1d(array, array_name, extra_msg=""):
@@ -256,16 +260,33 @@ def validate_batch_args(archive, solution_batch, **batch_kwargs):
     return returns
 
 
+def validate_single(archive, data):
+    """Performs preprocessing and checks for arguments to add_single()."""
+    data["solution"] = np.asarray(data["solution"])
+    check_shape(data["solution"], "solution", archive.solution_dim,
+                "solution_dim")
+
+    data["objective"] = archive.dtype(data["objective"])
+    check_finite(data["objective"], "objective")
+
+    data["measures"] = np.asarray(data["measures"])
+    check_shape(data["measures"], "measures", archive.measure_dim,
+                "measure_dim")
+    check_finite(data["measures"], "measures")
+
+    return data
+
+
 def validate_single_args(archive, solution, objective, measures):
     """Performs preprocessing and checks for arguments to add_single()."""
     solution = np.asarray(solution)
-    check_1d_shape(solution, "solution", archive.solution_dim, "solution_dim")
+    check_shape(solution, "solution", archive.solution_dim, "solution_dim")
 
     objective = archive.dtype(objective)
     check_finite(objective, "objective")
 
     measures = np.asarray(measures)
-    check_1d_shape(measures, "measures", archive.measure_dim, "measure_dim")
+    check_shape(measures, "measures", archive.measure_dim, "measure_dim")
     check_finite(measures, "measures")
 
     return solution, objective, measures

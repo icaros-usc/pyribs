@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
-                         check_is_1d, parse_float_dtype, validate_batch,
-                         validate_single_args)
+from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
+                         check_shape, parse_float_dtype, validate_batch,
+                         validate_single)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
@@ -269,7 +269,7 @@ class ArchiveBase(ABC):
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures)
-        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
 
@@ -470,23 +470,16 @@ class ArchiveBase(ABC):
             ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
                 has non-finite values.
         """
-        (
-            solution,
-            objective,
-            measures,
-        ) = validate_single_args(
+        new_data = validate_single(
             self,
-            solution=solution,
-            objective=objective,
-            measures=measures,
+            {
+                "solution": solution,
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            },
         )
 
-        new_data = {
-            "solution": solution,
-            "objective": objective,
-            "measures": measures,
-            **fields,
-        }
         for name, arr in new_data.items():
             new_data[name] = np.expand_dims(arr, axis=0)
 
@@ -604,7 +597,7 @@ class ArchiveBase(ABC):
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures)
-        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
         occupied, data = self.retrieve(measures[None])
