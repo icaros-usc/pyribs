@@ -5,7 +5,8 @@ from collections import deque
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs._utils import check_batch_shape, validate_batch, validate_single
+from ribs._utils import (check_batch_shape, check_finite, validate_batch,
+                         validate_single)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._grid_archive import GridArchive
 
@@ -265,7 +266,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             bound[:dim + 1] for bound, dim in zip(self._boundaries, self._dims)
         ]
 
-    def index_of(self, measures_batch):
+    def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
 
         First, values are clipped to the bounds of the measure space. Then, the
@@ -295,28 +296,27 @@ class SlidingBoundariesArchive(ArchiveBase):
         See :attr:`boundaries` for more info.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array of coordinates in measure space.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
             the flattened grid coordinates.
         Raises:
-            ValueError: ``measures_batch`` is not of shape (batch_size,
+            ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
         """
-        measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
-                          "measure_dim")
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
 
-        # Clip measures_batch + epsilon to the range
+        # Clip measures + epsilon to the range
         # [lower_bounds, upper_bounds - epsilon].
-        measures_batch = np.clip(measures_batch + self._epsilon,
-                                 self._lower_bounds,
-                                 self._upper_bounds - self._epsilon)
+        measures = np.clip(measures + self._epsilon, self._lower_bounds,
+                           self._upper_bounds - self._epsilon)
 
         idx_cols = []
         for boundary, dim, measures_col in zip(self._boundaries, self._dims,
-                                               measures_batch.T):
+                                               measures.T):
             idx_col = np.searchsorted(boundary[:dim], measures_col)
             # The maximum index returned by searchsorted is `dim`, and since we
             # subtract 1, the max will be dim - 1 which is within the range of

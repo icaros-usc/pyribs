@@ -236,15 +236,15 @@ class ArchiveBase(ABC):
         self._stats_reset()
 
     @abstractmethod
-    def index_of(self, measures_batch):
+    def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
 
         If you need to retrieve the index of the measures for a *single*
         solution, consider using :meth:`index_of_single`.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array of coordinates in measure space.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
         Returns:
             (numpy.ndarray): (batch_size,) array with the indices of the
             batch of measures in the archive's storage arrays.
@@ -505,7 +505,7 @@ class ArchiveBase(ABC):
 
         return add_info["status"][0], add_info["value"][0]
 
-    def retrieve(self, measures_batch):
+    def retrieve(self, measures):
         """Retrieves the elites with measures in the same cells as the measures
         specified.
 
@@ -524,12 +524,12 @@ class ArchiveBase(ABC):
         ``elites["solution"][i]``, ``elites["objective"][i]``,
         ``elites["measures"][i]``, ``elites["threshold"][i]``, and
         ``elites["index"][i]`` will be set to the properties of the elite. Note
-        that ``elites["measures"][i]`` may not be equal to the
-        ``measures_batch[i]`` passed as an argument, since the measures only
-        need to be in the same archive cell.
+        that ``elites["measures"][i]`` may not be equal to the ``measures[i]``
+        passed as an argument, since the measures only need to be in the same
+        archive cell.
 
-        If the cell associated with ``measures_batch[i]`` *does not* have any
-        elite in it, then ``occupied[i]`` will be set to False. Furthermore, the
+        If the cell associated with ``measures[i]`` *does not* have any elite in
+        it, then ``occupied[i]`` will be set to False. Furthermore, the
         corresponding outputs will be set to empty values -- namely:
 
         * NaN for floating-point fields
@@ -541,25 +541,23 @@ class ArchiveBase(ABC):
         consider using :meth:`retrieve_single`.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array of coordinates in measure space.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
         Returns:
             tuple: 2-element tuple of (occupied array, dict). The occupied array
-            indicates whether each of the cells indicated by the measures in
-            measures_batch has an elite, while the dict contains the data of
-            those elites. The dict maps from field name to the corresponding
-            array.
+            indicates whether each of the cells indicated by the coordinates in
+            ``measures`` has an elite, while the dict contains the data of those
+            elites. The dict maps from field name to the corresponding array.
         Raises:
-            ValueError: ``measures_batch`` is not of shape (batch_size,
+            ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
-            ValueError: ``measures_batch`` has non-finite values (inf or NaN).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
-                          "measure_dim")
-        check_finite(measures_batch, "measures_batch")
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
 
-        occupied, data = self._store.retrieve(self.index_of(measures_batch))
+        occupied, data = self._store.retrieve(self.index_of(measures))
         unoccupied = ~occupied
 
         for name, arr in data.items():

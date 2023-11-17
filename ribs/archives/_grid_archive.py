@@ -152,7 +152,7 @@ class GridArchive(ArchiveBase):
         """
         return self._boundaries
 
-    def index_of(self, measures_batch):
+    def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
 
         First, values are clipped to the bounds of the measure space. Then, the
@@ -182,74 +182,71 @@ class GridArchive(ArchiveBase):
         See :attr:`boundaries` for more info.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array of coordinates in measure space.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
             the flattened grid coordinates.
         Raises:
-            ValueError: ``measures_batch`` is not of shape (batch_size,
+            ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
-            ValueError: ``measures_batch`` has non-finite values (inf or NaN).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
-                          "measure_dim")
-        check_finite(measures_batch, "measures_batch")
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
 
         # Adding epsilon accounts for floating point precision errors from
         # transforming measures. We then cast to int32 to obtain integer
         # indices.
-        grid_index_batch = (
-            (self._dims *
-             (measures_batch - self._lower_bounds) + self._epsilon) /
-            self._interval_size).astype(np.int32)
+        grid_indices = ((self._dims *
+                         (measures - self._lower_bounds) + self._epsilon) /
+                        self._interval_size).astype(np.int32)
 
         # Clip indices to the archive dimensions (for example, for 20 cells, we
         # want indices to run from 0 to 19).
-        grid_index_batch = np.clip(grid_index_batch, 0, self._dims - 1)
+        grid_indices = np.clip(grid_indices, 0, self._dims - 1)
 
-        return self.grid_to_int_index(grid_index_batch)
+        return self.grid_to_int_index(grid_indices)
 
-    def grid_to_int_index(self, grid_index_batch):
+    def grid_to_int_index(self, grid_indices):
         """Converts a batch of grid indices into a batch of integer indices.
 
         Refer to :meth:`index_of` for more info.
 
         Args:
-            grid_index_batch (array-like): (batch_size, :attr:`measure_dim`)
+            grid_indices (array-like): (batch_size, :attr:`measure_dim`)
                 array of indices in the archive grid.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices.
         Raises:
-            ValueError: ``grid_index_batch`` is not of shape (batch_size,
+            ValueError: ``grid_indices`` is not of shape (batch_size,
                 :attr:`measure_dim`)
         """
-        grid_index_batch = np.asarray(grid_index_batch)
-        check_batch_shape(grid_index_batch, "grid_index_batch",
-                          self.measure_dim, "measure_dim")
+        grid_indices = np.asarray(grid_indices)
+        check_batch_shape(grid_indices, "grid_indices", self.measure_dim,
+                          "measure_dim")
 
-        return np.ravel_multi_index(grid_index_batch.T,
-                                    self._dims).astype(np.int32)
+        return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
-    def int_to_grid_index(self, int_index_batch):
+    def int_to_grid_index(self, int_indices):
         """Converts a batch of indices into indices in the archive's grid.
 
         Refer to :meth:`index_of` for more info.
 
         Args:
-            int_index_batch (array-like): (batch_size,) array of integer
+            int_indices (array-like): (batch_size,) array of integer
                 indices such as those output by :meth:`index_of`.
         Returns:
             numpy.ndarray: (batch_size, :attr:`measure_dim`) array of indices
             in the archive grid.
         Raises:
-            ValueError: ``int_index_batch`` is not of shape (batch_size,).
+            ValueError: ``int_indices`` is not of shape (batch_size,).
         """
-        int_index_batch = np.asarray(int_index_batch)
-        check_is_1d(int_index_batch, "int_index_batch")
+        int_indices = np.asarray(int_indices)
+        check_is_1d(int_indices, "int_indices")
 
         return np.asarray(np.unravel_index(
-            int_index_batch,
+            int_indices,
             self._dims,
         )).T.astype(np.int32)
