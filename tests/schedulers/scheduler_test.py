@@ -99,9 +99,9 @@ def test_warn_nothing_added_to_archive(archive_type):
     with pytest.warns(UserWarning):
         scheduler.tell(
             # All objectives are below threshold_min of 1.0.
-            objective_batch=np.zeros(4),
+            objective=np.zeros(4),
             # Arbitrary measures.
-            measures_batch=np.linspace(-1, 1, 4 * 2).reshape((4, 2)),
+            measures=np.linspace(-1, 1, 4 * 2).reshape((4, 2)),
         )
 
 
@@ -134,9 +134,9 @@ def test_warn_nothing_added_to_result_archive(archive_type):
     with pytest.warns(UserWarning):
         scheduler.tell(
             # All objectives are below threshold_min of 1.0.
-            objective_batch=np.zeros(4),
+            objective=np.zeros(4),
             # Arbitrary measures.
-            measures_batch=np.linspace(-1, 1, 4 * 2).reshape((4, 2)),
+            measures=np.linspace(-1, 1, 4 * 2).reshape((4, 2)),
         )
 
 
