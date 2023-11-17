@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from ribs._utils import (check_1d_shape, check_batch_shape, check_finite,
-                         check_is_1d, parse_float_dtype, validate_batch_args,
+from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
+                         check_shape, parse_float_dtype, validate_batch_args,
                          validate_single_args)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
@@ -247,7 +247,7 @@ class ArchiveBase(ABC):
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures)
-        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
 
@@ -577,7 +577,7 @@ class ArchiveBase(ABC):
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures)
-        check_1d_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
         occupied, data = self.retrieve(measures[None])
