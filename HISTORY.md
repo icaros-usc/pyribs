@@ -6,6 +6,7 @@
 
 #### API
 
+- Support custom data fields in archive ({pr}`421`)
 - Add Gaussian, IsoLine Operators and Refactor GaussianEmitter/IsoLineEmitter
   ({pr}`418`)
 - **Backwards-incompatible:** Remove metadata in favor of custom fields
