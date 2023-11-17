@@ -28,9 +28,9 @@ def add_uniform_sphere_1d(archive, x_range):
     """
     x = np.linspace(x_range[0], x_range[1], 100)
     archive.add(
-        solution_batch=x[:, None],
-        objective_batch=-x**2,
-        measures_batch=x[:, None],
+        solution=x[:, None],
+        objective=-x**2,
+        measures=x[:, None],
     )
 
 
@@ -49,9 +49,9 @@ def add_uniform_sphere_2d(archive, x_range, y_range):
     coords = np.stack((xxs, yys), axis=1)
     sphere = xxs**2 + yys**2
     archive.add(
-        solution_batch=coords,
-        objective_batch=-sphere,  # Negative sphere.
-        measures_batch=coords,
+        solution=coords,
+        objective=-sphere,  # Negative sphere.
+        measures=coords,
     )
 
 
@@ -71,7 +71,7 @@ def add_uniform_sphere_3d(archive, x_range, y_range, z_range):
     coords = np.stack((xxs, yys, zzs), axis=1)
     sphere = xxs**2 + yys**2 + zzs**2
     archive.add(
-        solution_batch=coords,
-        objective_batch=-sphere,  # Negative sphere.
-        measures_batch=coords,
+        solution=coords,
+        objective=-sphere,  # Negative sphere.
+        measures=coords,
     )

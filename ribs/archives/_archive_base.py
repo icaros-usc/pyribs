@@ -293,7 +293,7 @@ class ArchiveBase(ABC):
             obj_mean=self._objective_sum / self.dtype(len(self)),
         )
 
-    def add(self, solution_batch, objective_batch, measures_batch):
+    def add(self, solution, objective, measures):
         """Inserts a batch of solutions into the archive.
 
         Each solution is only inserted if it has a higher ``objective`` than the
@@ -318,12 +318,12 @@ class ArchiveBase(ABC):
             objective, and measures for solution ``i``.
 
         Args:
-            solution_batch (array-like): (batch_size, :attr:`solution_dim`)
-                array of solution parameters.
-            objective_batch (array-like): (batch_size,) array with objective
-                function evaluations of the solutions.
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array with measure space coordinates of all the solutions.
+            solution (array-like): (batch_size, :attr:`solution_dim`) array of
+                solution parameters.
+            objective (array-like): (batch_size,) array with objective function
+                evaluations of the solutions.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array with
+                measure space coordinates of all the solutions.
 
         Returns:
             tuple: 2-element tuple of (status_batch, value_batch) which
@@ -387,9 +387,9 @@ class ArchiveBase(ABC):
             measures_batch,
         ) = validate_batch_args(
             archive=self,
-            solution_batch=solution_batch,
-            objective_batch=objective_batch,
-            measures_batch=measures_batch,
+            solution_batch=solution,
+            objective_batch=objective,
+            measures_batch=measures,
         )
 
         add_info = self._store.add(

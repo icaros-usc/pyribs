@@ -31,9 +31,9 @@ def add_random_sphere(archive, x_range, y_range):
     )
     sphere = np.sum(np.square(solutions), axis=1)
     archive.add(
-        solution_batch=solutions,
-        objective_batch=-sphere,
-        measures_batch=solutions,
+        solution=solutions,
+        objective=-sphere,
+        measures=solutions,
     )
 
 
