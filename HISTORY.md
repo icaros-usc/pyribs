@@ -6,6 +6,7 @@
 
 #### API
 
+- Add GeneticAlgorithmEmitter with Internal Operator Support ({pr} `427`)
 - Support custom data fields in archive ({pr}`421`)
 - **Backwards-incompatible:** Remove `_batch` from parameter names ({pr}`422`,
   {pr}`424`, {pr}`425`)
