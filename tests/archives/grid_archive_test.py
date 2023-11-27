@@ -32,6 +32,7 @@ def assert_archive_elites(
     objective_batch=None,
     measures_batch=None,
     grid_indices_batch=None,
+    metadata_batch=None,
 ):
     """Asserts that the archive contains a batch of elites.
 
@@ -63,8 +64,12 @@ def assert_archive_elites(
             index_match = (grid_indices_batch is None or
                            data["index"][j] == index_batch[i])
 
+            # Used for testing custom fields.
+            metadata_match = (metadata_batch is None or np.isclose(
+                data["metadata"][j], metadata_batch[i]).all())
+
             if (solution_match and objective_match and measures_match and
-                    index_match):
+                    index_match and metadata_match):
                 archive_covered[j] = True
 
     assert np.all(archive_covered)
