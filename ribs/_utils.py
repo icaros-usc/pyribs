@@ -91,7 +91,7 @@ def check_solution_batch_dim(array,
                          f"shape {array.shape}.{extra_msg}")
 
 
-def validate_batch(archive, data):
+def validate_batch(archive, data, add_info=None, jacobian=None):
     """Preprocesses and validates batch arguments.
 
     ``data`` is a dict containing arrays with the data of each solution, e.g.,
@@ -107,10 +107,14 @@ def validate_batch(archive, data):
     data["solution"] = np.asarray(data["solution"])
     check_batch_shape(data["solution"], "solution", archive.solution_dim,
                       "solution_dim", "")
-
-    # Process and validate the other batch arguments.
     batch_size = data["solution"].shape[0]
+
+    # Process and validate the other data.
     for name, arr in data.items():
+        if name == "solution":
+            # Already checked above.
+            continue
+
         if name == "objective":
             arr = np.asarray(arr)
             check_is_1d(arr, "objective", "")
@@ -132,32 +136,6 @@ def validate_batch(archive, data):
                                      extra_msg="")
             check_finite(arr, "measures")
 
-        elif name == "jacobian":
-            arr = np.asarray(arr)
-            check_batch_shape(arr, "jacobian",
-                              (archive.measure_dim + 1, archive.solution_dim),
-                              "measure_dim + 1, solution_dim")
-            check_finite(arr, "jacobian")
-
-        elif name == "status":
-            arr = np.asarray(arr)
-            check_is_1d(arr, "status", "")
-            check_solution_batch_dim(arr,
-                                     "status",
-                                     batch_size,
-                                     is_1d=True,
-                                     extra_msg="")
-            check_finite(arr, "status")
-
-        elif name == "value":
-            arr = np.asarray(arr)
-            check_is_1d(arr, "value", "")
-            check_solution_batch_dim(arr,
-                                     "value",
-                                     batch_size,
-                                     is_1d=True,
-                                     extra_msg="")
-
         else:
             arr = np.asarray(arr)
             check_solution_batch_dim(arr,
@@ -168,95 +146,60 @@ def validate_batch(archive, data):
 
         data[name] = arr
 
-    return data
+    extra_returns = []
+
+    # add_info is optional; check it if provided.
+    if add_info is not None:
+        for name, arr in add_info.items():
+            if name == "status":
+                arr = np.asarray(arr)
+                check_is_1d(arr, "status", "")
+                check_solution_batch_dim(arr,
+                                         "status",
+                                         batch_size,
+                                         is_1d=True,
+                                         extra_msg="")
+                check_finite(arr, "status")
+
+            elif name == "value":
+                arr = np.asarray(arr)
+                check_is_1d(arr, "value", "")
+                check_solution_batch_dim(arr,
+                                         "value",
+                                         batch_size,
+                                         is_1d=True,
+                                         extra_msg="")
+
+            else:
+                arr = np.asarray(arr)
+                check_solution_batch_dim(arr,
+                                         name,
+                                         batch_size,
+                                         is_1d=False,
+                                         extra_msg="")
+
+            add_info[name] = arr
+
+        extra_returns.append(add_info)
+
+    # jacobian is optional; check it if provided.
+    if jacobian is not None:
+        jacobian = np.asarray(jacobian)
+        check_batch_shape(jacobian, "jacobian",
+                          (archive.measure_dim + 1, archive.solution_dim),
+                          "measure_dim + 1, solution_dim")
+        check_finite(jacobian, "jacobian")
+        extra_returns.append(jacobian)
+
+    if extra_returns:
+        return data, *extra_returns
+    else:
+        return data
 
 
 _BATCH_WARNING = (" Note that starting in pyribs 0.5.0, add() and tell() take"
                   " in a batch of solutions unlike in pyribs 0.4.0, where add()"
                   " and tell() only took in a single solution.")
-
-
-def validate_batch_args(archive, solution_batch, **batch_kwargs):
-    """Preprocesses and validates batch arguments.
-
-    The batch size of each argument in batch_kwargs is validated with respect to
-    solution_batch.
-
-    The arguments are assumed to come directly from users, so they may not be
-    arrays. Thus, we preprocess each argument by converting it into a numpy
-    array. We then perform checks on the array, including seeing if its batch
-    size matches the batch size of solution_batch. The arguments are then
-    returned in the same order that they were passed into the kwargs, with
-    solution_batch coming first.
-
-    Note that we can guarantee the order is the same as when passed in due to
-    PEP 468 (https://peps.python.org/pep-0468/), which guarantees that kwargs
-    will preserve the same order as they are listed.
-
-    See the for loop for the list of supported kwargs.
-    """
-    # List of args to return.
-    returns = []
-
-    # Process and validate solution_batch.
-    solution_batch = np.asarray(solution_batch)
-    check_batch_shape(solution_batch, "solution_batch", archive.solution_dim,
-                      "solution_dim", _BATCH_WARNING)
-    returns.append(solution_batch)
-
-    # Process and validate the other batch arguments.
-    batch_size = solution_batch.shape[0]
-    for name, arg in batch_kwargs.items():
-        if name == "objective_batch":
-            objective_batch = np.asarray(arg)
-            check_is_1d(objective_batch, "objective_batch", _BATCH_WARNING)
-            check_solution_batch_dim(objective_batch,
-                                     "objective_batch",
-                                     batch_size,
-                                     is_1d=True,
-                                     extra_msg=_BATCH_WARNING)
-            check_finite(objective_batch, "objective_batch")
-            returns.append(objective_batch)
-        elif name == "measures_batch":
-            measures_batch = np.asarray(arg)
-            check_batch_shape(measures_batch, "measures_batch",
-                              archive.measure_dim, "measure_dim",
-                              _BATCH_WARNING)
-            check_solution_batch_dim(measures_batch,
-                                     "measures_batch",
-                                     batch_size,
-                                     is_1d=False,
-                                     extra_msg=_BATCH_WARNING)
-            check_finite(measures_batch, "measures_batch")
-            returns.append(measures_batch)
-        elif name == "jacobian_batch":
-            jacobian_batch = np.asarray(arg)
-            check_batch_shape(jacobian_batch, "jacobian_batch",
-                              (archive.measure_dim + 1, archive.solution_dim),
-                              "measure_dim + 1, solution_dim")
-            check_finite(jacobian_batch, "jacobian_batch")
-            returns.append(jacobian_batch)
-        elif name == "status_batch":
-            status_batch = np.asarray(arg)
-            check_is_1d(status_batch, "status_batch", _BATCH_WARNING)
-            check_solution_batch_dim(status_batch,
-                                     "status_batch",
-                                     batch_size,
-                                     is_1d=True,
-                                     extra_msg=_BATCH_WARNING)
-            check_finite(status_batch, "status_batch")
-            returns.append(status_batch)
-        elif name == "value_batch":
-            value_batch = np.asarray(arg)
-            check_is_1d(value_batch, "value_batch", _BATCH_WARNING)
-            check_solution_batch_dim(value_batch,
-                                     "value_batch",
-                                     batch_size,
-                                     is_1d=True,
-                                     extra_msg=_BATCH_WARNING)
-            returns.append(value_batch)
-
-    return returns
 
 
 def validate_single(archive, data):
