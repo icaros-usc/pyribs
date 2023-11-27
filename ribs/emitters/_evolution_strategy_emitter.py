@@ -227,9 +227,8 @@ class EvolutionStrategyEmitter(EmitterBase):
         new_sols = status_batch.astype(bool).sum()
 
         # Sort the solutions using ranker.
-        indices, ranking_values = self._ranker.rank(
-            self, self.archive, self._rng, data["solution"], data["objective"],
-            data["measures"], add_info["status"], add_info["value"])
+        indices, ranking_values = self._ranker.rank(self, self.archive,
+                                                    self._rng, data, add_info)
 
         # Select the number of parents.
         num_parents = (new_sols if self._selection_rule == "filter" else

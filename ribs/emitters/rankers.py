@@ -34,8 +34,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from ribs._docstrings import DocstringComponents, core_args
-
 __all__ = [
     "ImprovementRanker",
     "TwoStageImprovementRanker",
@@ -46,21 +44,17 @@ __all__ = [
     "RankerBase",
 ]
 
-# Define common docstrings
-_ARGS = DocstringComponents(core_args)
-
-_RANK_ARGS = f"""
+_RANK_ARGS = """
 Args:
     emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker``
         object belongs to.
     archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
         when creating and inserting solutions.
     rng (numpy.random.Generator): A random number generator.
-{_ARGS.solution_batch}
-{_ARGS.objective_batch}
-{_ARGS.measures_batch}
-{_ARGS.status_batch}
-{_ARGS.value_batch}
+    data (dict): Dict mapping from field names like ``solution`` and
+        ``objective`` to arrays with data for the solutions. Rankers at least
+        assume the presence of the ``solution`` key.
+    add_info (dict): Information returned by an archive's add() method.
 
 Returns:
     tuple(numpy.ndarray, numpy.ndarray): the first array (shape
@@ -93,14 +87,13 @@ class RankerBase(ABC):
     """
 
     @abstractmethod
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch):
+    def rank(self, emitter, archive, rng, data, add_info):
         # pylint: disable=missing-function-docstring
         pass
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
-Generates a batch of indices that represents an ordering of ``solution_batch``.
+Generates a batch of indices that represents an ordering of ``data["solution"]``.
 
 {_RANK_ARGS}
     """
@@ -130,11 +123,10 @@ class ImprovementRanker(RankerBase):
     corresponding cell in the archive.
     """
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch):
+    def rank(self, emitter, archive, rng, data, add_info):
         # Note that lexsort sorts the values in ascending order,
         # so we use np.flip to reverse the sorted array.
-        return np.flip(np.argsort(value_batch)), value_batch
+        return np.flip(np.argsort(add_info["value"])), add_info["value"]
 
     rank.__doc__ = f"""
 Generates a list of indices that represents an ordering of solutions.
@@ -156,11 +148,11 @@ class TwoStageImprovementRanker(RankerBase):
     :meth:`ribs.archives.ArchiveBase.add`
     """
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch):
+    def rank(self, emitter, archive, rng, data, add_info):
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, value_0], ..., [status_n, value_n]]
-        ranking_values = np.stack((status_batch, value_batch), axis=-1)
+        ranking_values = np.stack((add_info["status"], add_info["value"]),
+                                  axis=-1)
 
         # New solutions sort ahead of improved ones, which sort ahead of ones
         # that were not added.
@@ -211,11 +203,10 @@ class RandomDirectionRanker(RankerBase):
     def target_measure_dir(self, value):
         self._target_measure_dir = value
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch):
+    def rank(self, emitter, archive, rng, data, add_info):
         if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
-        projections = np.dot(measures_batch, self._target_measure_dir)
+        projections = np.dot(data["measures"], self._target_measure_dir)
         # Sort only by projection; use np.flip to reverse the order
         return np.flip(np.argsort(projections)), projections
 
@@ -267,15 +258,14 @@ class TwoStageRandomDirectionRanker(RankerBase):
     def target_measure_dir(self, value):
         self._target_measure_dir = value
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch):
+    def rank(self, emitter, archive, rng, data, add_info):
         if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
-        projections = np.dot(measures_batch, self._target_measure_dir)
+        projections = np.dot(data["measures"], self._target_measure_dir)
 
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, projection_0], ..., [status_n, projection_n]]
-        ranking_values = np.stack((status_batch, projections), axis=-1)
+        ranking_values = np.stack((add_info["status"], projections), axis=-1)
 
         # Sort by whether the solution was added into the archive,
         # followed by projection.
@@ -308,10 +298,9 @@ class ObjectiveRanker(RankerBase):
     emitter.
     """
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch):
+    def rank(self, emitter, archive, rng, data, add_info):
         # Sort only by objective value.
-        return np.flip(np.argsort(objective_batch)), objective_batch
+        return np.flip(np.argsort(data["objective"])), data["objective"]
 
     rank.__doc__ = f"""
 Ranks the solutions based on their objective values.
@@ -328,11 +317,11 @@ class TwoStageObjectiveRanker(RankerBase):
     <https://arxiv.org/abs/1912.02400>`_ as OptimizingEmitter.
     """
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch):
+    def rank(self, emitter, archive, rng, data, add_info):
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, objective_0], ..., [status_0, objective_n]]
-        ranking_values = np.stack((status_batch, objective_batch), axis=-1)
+        ranking_values = np.stack((add_info["status"], data["objective"]),
+                                  axis=-1)
 
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.

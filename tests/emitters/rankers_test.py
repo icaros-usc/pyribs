@@ -44,9 +44,20 @@ def test_two_stage_improvement_ranker(archive_fixture, emitter, rng):
     value_batch = np.concatenate(([first_value], value_batch))
 
     ranker = TwoStageImprovementRanker()
-    indices, ranking_values = ranker.rank(emitter, archive, rng, solution_batch,
-                                          objective_batch, measures_batch,
-                                          status_batch, value_batch)
+    indices, ranking_values = ranker.rank(
+        emitter,
+        archive,
+        rng,
+        {
+            "solution": solution_batch,
+            "objective": objective_batch,
+            "measures": measures_batch,
+        },
+        {
+            "status": status_batch,
+            "value": value_batch,
+        },
+    )
 
     assert (indices == [0, 3, 2, 1]).all()
     assert (ranking_values == [
@@ -75,9 +86,20 @@ def test_random_direction_ranker(emitter, rng):
 
     ranker = RandomDirectionRanker()
     ranker.target_measure_dir = [0, 1, 0]  # Set the random direction.
-    indices, ranking_values = ranker.rank(emitter, archive, rng, solution_batch,
-                                          objective_batch, measures_batch,
-                                          status_batch, value_batch)
+    indices, ranking_values = ranker.rank(
+        emitter,
+        archive,
+        rng,
+        {
+            "solution": solution_batch,
+            "objective": objective_batch,
+            "measures": measures_batch,
+        },
+        {
+            "status": status_batch,
+            "value": value_batch,
+        },
+    )
 
     assert (indices == [1, 0, 3, 2]).all()
     assert (ranking_values == np.dot(measures_batch, [0, 1, 0])).all()
@@ -110,9 +132,20 @@ def test_two_stage_random_direction(emitter, rng):
 
     ranker = TwoStageRandomDirectionRanker()
     ranker.target_measure_dir = [0, 1, 0]  # Set the random direction.
-    indices, ranking_values = ranker.rank(emitter, archive, rng, solution_batch,
-                                          objective_batch, measures_batch,
-                                          status_batch, value_batch)
+    indices, ranking_values = ranker.rank(
+        emitter,
+        archive,
+        rng,
+        {
+            "solution": solution_batch,
+            "objective": objective_batch,
+            "measures": measures_batch,
+        },
+        {
+            "status": status_batch,
+            "value": value_batch,
+        },
+    )
 
     assert (indices == [0, 3, 2, 1]).all()
     projections = np.dot(measures_batch, [0, 1, 0])
@@ -133,9 +166,20 @@ def test_objective_ranker(archive_fixture, emitter, rng):
                                             measures_batch)
 
     ranker = ObjectiveRanker()
-    indices, ranking_values = ranker.rank(emitter, archive, rng, solution_batch,
-                                          objective_batch, measures_batch,
-                                          status_batch, value_batch)
+    indices, ranking_values = ranker.rank(
+        emitter,
+        archive,
+        rng,
+        {
+            "solution": solution_batch,
+            "objective": objective_batch,
+            "measures": measures_batch,
+        },
+        {
+            "status": status_batch,
+            "value": value_batch,
+        },
+    )
 
     assert (indices == [1, 2, 3, 0]).all()
     assert ranking_values == objective_batch
@@ -159,9 +203,20 @@ def test_two_stage_objective_ranker(archive_fixture, emitter, rng):
     value_batch = np.concatenate((value_batch_1, value_batch_2))
 
     ranker = TwoStageObjectiveRanker()
-    indices, ranking_values = ranker.rank(emitter, archive, rng, solution_batch,
-                                          objective_batch, measures_batch,
-                                          status_batch, value_batch)
+    indices, ranking_values = ranker.rank(
+        emitter,
+        archive,
+        rng,
+        {
+            "solution": solution_batch,
+            "objective": objective_batch,
+            "measures": measures_batch,
+        },
+        {
+            "status": status_batch,
+            "value": value_batch,
+        },
+    )
 
     assert (indices == [1, 0, 2, 3]).all()
     assert (ranking_values == [
