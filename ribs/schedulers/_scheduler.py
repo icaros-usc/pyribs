@@ -310,7 +310,7 @@ class Scheduler:
         pos = 0
         for emitter, n in zip(self._emitters, self._num_emitted):
             end = pos + n
-            emitter.tell(
+            emitter.tell_dqd(
                 **{
                     name: arr[pos:end] for name, arr in data.items()
                 },
