@@ -305,22 +305,25 @@ class BanditScheduler:
         raise NotImplementedError("tell_dqd() is not supported by"
                                   "BanditScheduler.")
 
-    def tell(self, objective, measures):
+    def tell(self, objective, measures, **fields):
         """Returns info for solutions from :meth:`ask`.
 
         The emitters are the same with those used in the last call to
         :meth:`ask`.
 
-        .. note:: The objective batch and measures batch must be in the same
-            order as the solutions created by :meth:`ask_dqd`; i.e.
-            ``objective_batch[i]`` and ``measures_batch[i]`` should be the
-            objective and measures for ``solution_batch[i]``.
+        .. note:: The objective and measures arrays must be in the same order as
+            the solutions created by :meth:`ask_dqd`; i.e. ``objective[i]`` and
+            ``measures[i]`` should be the objective and measures for
+            ``solution[i]``.
 
         Args:
             objective_batch ((batch_size,) array): Each entry of this array
                 contains the objective function evaluation of a solution.
             measures_batch ((batch_size, measures_dm) array): Each row of
                 this array contains a solution's coordinates in measure space.
+            fields (keyword arguments): Additional data for each solution. Each
+                argument should be an array with batch_size as the first
+                dimension.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
@@ -333,6 +336,7 @@ class BanditScheduler:
         data = self._validate_tell_data({
             "objective": objective,
             "measures": measures,
+            **fields,
         })
 
         archive_empty_before = self.archive.empty
@@ -382,7 +386,11 @@ class BanditScheduler:
             end = pos + n
             self._selection[i] += n
             self._success[i] += np.count_nonzero(status_batch[pos:end])
-            emitter.tell(self._cur_solutions[pos:end],
-                         data["objective"][pos:end], data["measures"][pos:end],
-                         status_batch[pos:end], value_batch[pos:end])
+            emitter.tell(
+                **{
+                    name: arr[pos:end] for name, arr in data.items()
+                },
+                status_batch=status_batch[pos:end],
+                value_batch=value_batch[pos:end],
+            )
             pos = end

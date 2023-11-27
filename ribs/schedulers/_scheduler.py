@@ -264,13 +264,13 @@ class Scheduler:
 
         return status_batch, value_batch
 
-    def tell_dqd(self, objective, measures, jacobian):
+    def tell_dqd(self, objective, measures, jacobian, **fields):
         """Returns info for solutions from :meth:`ask_dqd`.
 
-        .. note:: The objective batch, measures batch, and jacobian batch must
-            be in the same order as the solutions created by :meth:`ask_dqd`;
-            i.e. ``objective[i]``, ``measures[i]``, and ``jacobian[i]`` should
-            be the objective, measures, and jacobian for ``solution[i]``.
+        .. note:: The objective, measures, and jacobian arrays must be in the
+            same order as the solutions created by :meth:`ask_dqd`; i.e.
+            ``objective[i]``, ``measures[i]``, and ``jacobian[i]`` should be the
+            objective, measures, and jacobian for ``solution[i]``.
 
         Args:
             objective ((batch_size,) array): Each entry of this array contains
@@ -282,6 +282,9 @@ class Scheduler:
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
+            fields (keyword arguments): Additional data for each solution. Each
+                argument should be an array with batch_size as the first
+                dimension.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
@@ -295,6 +298,7 @@ class Scheduler:
         data = self._validate_tell_data({
             "objective": objective,
             "measures": measures,
+            **fields,
         })
 
         jacobian = np.asarray(jacobian)
@@ -306,25 +310,32 @@ class Scheduler:
         pos = 0
         for emitter, n in zip(self._emitters, self._num_emitted):
             end = pos + n
-            emitter.tell_dqd(self._cur_solutions[pos:end],
-                             data["objective"][pos:end],
-                             data["measures"][pos:end], jacobian[pos:end],
-                             status_batch[pos:end], value_batch[pos:end])
+            emitter.tell(
+                **{
+                    name: arr[pos:end] for name, arr in data.items()
+                },
+                jacobian=jacobian[pos:end],
+                status_batch=status_batch[pos:end],
+                value_batch=value_batch[pos:end],
+            )
             pos = end
 
-    def tell(self, objective, measures):
+    def tell(self, objective, measures, **fields):
         """Returns info for solutions from :meth:`ask`.
 
-        .. note:: The objective batch and measures batch must be in the same
-            order as the solutions created by :meth:`ask_dqd`; i.e.
-            ``objective[i]`` and ``measures[i]`` should be the objective and
-            measures for ``solution[i]``.
+        .. note:: The objective and measures arrays must be in the same order as
+            the solutions created by :meth:`ask_dqd`; i.e. ``objective[i]`` and
+            ``measures[i]`` should be the objective and measures for
+            ``solution[i]``.
 
         Args:
             objective ((batch_size,) array): Each entry of this array contains
                 the objective function evaluation of a solution.
             measures ((batch_size, measures_dm) array): Each row of this array
                 contains a solution's coordinates in measure space.
+            fields (keyword arguments): Additional data for each solution. Each
+                argument should be an array with batch_size as the first
+                dimension.
         Raises:
             RuntimeError: This method is called without first calling
                 :meth:`ask`.
@@ -337,6 +348,7 @@ class Scheduler:
         data = self._validate_tell_data({
             "objective": objective,
             "measures": measures,
+            **fields,
         })
 
         status_batch, value_batch = self._add_to_archives(data)
@@ -345,7 +357,11 @@ class Scheduler:
         pos = 0
         for emitter, n in zip(self._emitters, self._num_emitted):
             end = pos + n
-            emitter.tell(self._cur_solutions[pos:end],
-                         data["objective"][pos:end], data["measures"][pos:end],
-                         status_batch[pos:end], value_batch[pos:end])
+            emitter.tell(
+                **{
+                    name: arr[pos:end] for name, arr in data.items()
+                },
+                status_batch=status_batch[pos:end],
+                value_batch=value_batch[pos:end],
+            )
             pos = end
