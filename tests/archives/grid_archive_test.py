@@ -65,8 +65,8 @@ def assert_archive_elites(
                            data["index"][j] == index_batch[i])
 
             # Used for testing custom fields.
-            metadata_match = (metadata_batch is None or np.isclose(
-                data["metadata"][j], metadata_batch[i]).all())
+            metadata_match = (metadata_batch is None or
+                              data["metadata"][j] == metadata_batch[i])
 
             if (solution_match and objective_match and measures_match and
                     index_match and metadata_match):
