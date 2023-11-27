@@ -183,7 +183,8 @@ class EvolutionStrategyEmitter(EmitterBase):
             return False
         raise ValueError(f"Invalid restart_rule {self._restart_rule}")
 
-    def tell(self, solution, objective, measures, status_batch, value_batch):
+    def tell(self, solution, objective, measures, status_batch, value_batch,
+             **fields):
         """Gives the emitter results from evaluating solutions.
 
         The solutions are ranked based on the `rank()` function defined by
@@ -206,6 +207,9 @@ class EvolutionStrategyEmitter(EmitterBase):
             value_batch (array-like): 1D array of floats returned by a series
                 of calls to archive's :meth:`add()` method. For what these
                 floats represent, refer to :meth:`ribs.archives.add()`.
+            fields (keyword arguments): Additional data for each solution. Each
+                argument should be an array with batch_size as the first
+                dimension.
         """
         data, add_info = validate_batch(
             self.archive,
@@ -213,6 +217,7 @@ class EvolutionStrategyEmitter(EmitterBase):
                 "solution": solution,
                 "objective": objective,
                 "measures": measures,
+                **fields,
             },
             {
                 "status": status_batch,

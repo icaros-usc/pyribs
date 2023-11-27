@@ -103,7 +103,8 @@ class EmitterBase(ABC):
         """
         return np.empty((0, self.solution_dim), dtype=self.archive.dtype)
 
-    def tell(self, solution, objective, measures, status_batch, value_batch):
+    def tell(self, solution, objective, measures, status_batch, value_batch,
+             **fields):
         """Gives the emitter results from evaluating solutions.
 
         This base class implementation (in :class:`~ribs.emitters.EmitterBase`)
@@ -123,6 +124,9 @@ class EmitterBase(ABC):
                 series of calls to archive's :meth:`add_single()` method or by a
                 single call to archive's :meth:`add()`. For what these floats
                 represent, refer to :meth:`ribs.archives.add()`.
+            fields (keyword arguments): Additional data for each solution. Each
+                argument should be an array with batch_size as the first
+                dimension.
         """
 
     def ask_dqd(self):
@@ -135,7 +139,7 @@ class EmitterBase(ABC):
         return np.empty((0, self.solution_dim), dtype=self.archive.dtype)
 
     def tell_dqd(self, solution, objective, measures, jacobian, status_batch,
-                 value_batch):
+                 value_batch, **fields):
         """Gives the emitter results from evaluating the gradient of the
         solutions, only used for DQD emitters.
 
@@ -158,4 +162,7 @@ class EmitterBase(ABC):
             value_batch (numpy.ndarray): 1d array of floats returned by a series
                 of calls to archive's :meth:`add()` method. for what these
                 floats represent, refer to :meth:`ribs.archives.add()`.
+            fields (keyword arguments): Additional data for each solution. Each
+                argument should be an array with batch_size as the first
+                dimension.
         """
