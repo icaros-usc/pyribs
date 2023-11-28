@@ -351,14 +351,13 @@ class ArchiveBase(ABC):
                 dimension.
 
         Returns:
-            tuple: 2-element tuple of (status_batch, value_batch) which
-            describes the results of the additions. These outputs are
-            particularly useful for algorithms such as CMA-ME.
+            dict: Information describing the result of the add operation. The
+            dict contains the following keys:
 
-            - **status_batch** (:class:`numpy.ndarray` of :class:`int`): An
-              array of integers which represent the "status" obtained when
-              attempting to insert each solution in the batch. Each item has the
-              following possible values:
+            - ``"status"`` (:class:`numpy.ndarray` of :class:`int`): An array of
+              integers that represent the "status" obtained when attempting to
+              insert each solution in the batch. Each item has the following
+              possible values:
 
               - ``0``: The solution was not added to the archive.
               - ``1``: The solution improved the objective value of a cell
@@ -378,13 +377,14 @@ class ArchiveBase(ABC):
 
               To convert statuses to a more semantic format, cast all statuses
               to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
-              status_batch]``.
+              add_info["status"]]``.
 
-            - **value_batch** (:attr:`dtype`): An array with values for each
-              solution in the batch. With the default values of ``learning_rate
-              = 1.0`` and ``threshold_min = -np.inf``, the meaning of each value
-              depends on the corresponding ``status`` and is identical to that
-              in CMA-ME (`Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_):
+            - ``"value"`` (:class:`numpy.ndarray` of :attr:`dtype`): An array
+              with values for each solution in the batch. With the default
+              values of ``learning_rate = 1.0`` and ``threshold_min = -np.inf``,
+              the meaning of each value depends on the corresponding ``status``
+              and is identical to that in CMA-ME (`Fontaine 2020
+              <https://arxiv.org/abs/1912.02400>`_):
 
               - ``0`` (not added): The value is the "negative improvement," i.e.
                 the objective of the solution passed in minus the objective of
@@ -433,11 +433,12 @@ class ArchiveBase(ABC):
             ],
         )
 
+        objective_sum = add_info.pop("objective_sum")
+        best_index = add_info.pop("best_index")
         if not np.all(add_info["status"] == 0):
-            self._stats_update(add_info.pop("objective_sum"),
-                               add_info.pop("best_index"))
+            self._stats_update(objective_sum, best_index)
 
-        return add_info["status"], add_info["value"]
+        return add_info
 
     def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.
@@ -461,9 +462,9 @@ class ArchiveBase(ABC):
             fields (keyword arguments): Additional data for the solution.
 
         Returns:
-            tuple: 2-element tuple of (status, value) describing the result of
-            the add operation. Refer to :meth:`add` for the meaning of the
-            status and value.
+            dict: Information describing the result of the add operation. The
+            dict contains ``status`` and ``value`` keys; refer to :meth:`add`
+            for the meaning of status and value.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
@@ -499,11 +500,16 @@ class ArchiveBase(ABC):
             ],
         )
 
-        if add_info["status"]:
-            self._stats_update(add_info.pop("objective_sum"),
-                               add_info.pop("best_index"))
+        objective_sum = add_info.pop("objective_sum")
+        best_index = add_info.pop("best_index")
 
-        return add_info["status"][0], add_info["value"][0]
+        for name, arr in add_info.items():
+            add_info[name] = arr[0]
+
+        if add_info["status"]:
+            self._stats_update(objective_sum, best_index)
+
+        return add_info
 
     def retrieve(self, measures):
         """Retrieves the elites with measures in the same cells as the measures
