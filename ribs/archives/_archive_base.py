@@ -407,7 +407,7 @@ class ArchiveBase(ABC):
             ValueError: ``objective`` or ``measures`` has non-finite values (inf
                 or NaN).
         """
-        new_data = validate_batch(
+        data = validate_batch(
             self,
             {
                 "solution": solution,
@@ -418,8 +418,8 @@ class ArchiveBase(ABC):
         )
 
         add_info = self._store.add(
-            self.index_of(new_data["measures"]),
-            new_data,
+            self.index_of(data["measures"]),
+            data,
             {
                 "dtype": self._dtype,
                 "learning_rate": self._learning_rate,
@@ -471,7 +471,7 @@ class ArchiveBase(ABC):
             ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
                 has non-finite values.
         """
-        new_data = validate_single(
+        data = validate_single(
             self,
             {
                 "solution": solution,
@@ -481,12 +481,12 @@ class ArchiveBase(ABC):
             },
         )
 
-        for name, arr in new_data.items():
-            new_data[name] = np.expand_dims(arr, axis=0)
+        for name, arr in data.items():
+            data[name] = np.expand_dims(arr, axis=0)
 
         add_info = self._store.add(
             np.expand_dims(self.index_of_single(measures), axis=0),
-            new_data,
+            data,
             {
                 "dtype": self._dtype,
                 "learning_rate": self._learning_rate,

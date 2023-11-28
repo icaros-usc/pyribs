@@ -192,6 +192,35 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode):
     )
 
 
+def test_tell_with_fields(add_mode):
+    batch_size = 4
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)],
+                          extra_fields={"metadata": ((), object)})
+    emitters = [
+        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)
+    ]
+    scheduler = Scheduler(archive, emitters, add_mode=add_mode)
+
+    measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
+
+    _ = scheduler.ask()  # Ignore the actual values of the solutions.
+    # We pass in 4 solutions with unique measures, so all should go into
+    # the archive.
+    scheduler.tell(np.ones(batch_size),
+                   measures_batch,
+                   metadata=["a", "b", "c", "d"])
+
+    assert_archive_elites(
+        archive=scheduler.archive,
+        batch_size=batch_size,
+        objective_batch=np.ones(batch_size),
+        measures_batch=measures_batch,
+        metadata_batch=["a", "b", "c", "d"],
+    )
+
+
 ### TESTS FOR OUT-OF-ORDER ASK-TELL ###
 
 

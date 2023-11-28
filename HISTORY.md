@@ -8,7 +8,8 @@
 
 - **Backwards-incompatible:** Return add_info as a dict in archive add method
   ({pr}`430`)
-- Support custom data fields in archive ({pr}`421`)
+- Support custom data fields in archive, emitters, and scheduler ({pr}`421`,
+  {pr}`429`)
 - **Backwards-incompatible:** Remove `_batch` from parameter names ({pr}`422`,
   {pr}`424`, {pr}`425`, {pr}`426`, {pr}`428`)
 - Add Gaussian, IsoLine Operators and Refactor GaussianEmitter/IsoLineEmitter
