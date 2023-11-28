@@ -288,8 +288,8 @@ class GradientOperatorEmitter(EmitterBase):
 
         return sols
 
-    def tell_dqd(self, solution, objective, measures, jacobian, status_batch,
-                 value_batch, **fields):
+    def tell_dqd(self, solution, objective, measures, jacobian, add_info,
+                 **fields):
         """Gives the emitter results of evaluating solutions from ask_dqd().
 
         Args:
@@ -304,12 +304,8 @@ class GradientOperatorEmitter(EmitterBase):
                 from :meth:`ask_dqd`. Each matrix should consist of the
                 objective gradient of the solution followed by the measure
                 gradients.
-            status_batch (array-like): 1d array of
-                :class:`ribs.archive.addstatus` returned by a series of calls
-                to archive's :meth:`add()` method.
-            value_batch (array-like): 1d array of floats returned by a series
-                of calls to archive's :meth:`add()` method. for what these
-                floats represent, refer to :meth:`ribs.archives.add()`.
+            add_info (dict): Data returned from the archive
+                :meth:`~ribs.archives.ArchiveBase.add` method.
             fields (keyword arguments): Additional data for each solution. Each
                 argument should be an array with batch_size as the first
                 dimension.
@@ -322,10 +318,7 @@ class GradientOperatorEmitter(EmitterBase):
                 "measures": measures,
                 **fields,
             },
-            {
-                "status": status_batch,
-                "value": value_batch,
-            },
+            add_info,
             jacobian,
         )
 

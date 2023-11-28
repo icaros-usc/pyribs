@@ -1,5 +1,6 @@
 """Provides the Bandit Scheduler."""
 import warnings
+from collections import defaultdict
 
 import numpy as np
 
@@ -347,27 +348,26 @@ class BanditScheduler:
 
         # Add solutions to the archive.
         if self._add_mode == "batch":
-            status_batch, value_batch = self.archive.add(**data)
+            add_info = self.archive.add(**data)
 
             # Add solutions to result_archive.
             if self._result_archive is not None:
                 self._result_archive.add(**data)
         elif self._add_mode == "single":
-            status_batch = []
-            value_batch = []
+            add_info = defaultdict(list)
 
             for i in range(len(self._cur_solutions)):
                 single_data = {name: arr[i] for name, arr in data.items()}
-                status, value = self.archive.add_single(**single_data)
-                status_batch.append(status)
-                value_batch.append(value)
+                single_info = self.archive.add_single(**single_data)
+                for name, val in single_info.items():
+                    add_info[name].append(val)
 
                 # Add solutions to result_archive.
                 if self._result_archive is not None:
                     self._result_archive.add_single(**single_data)
 
-            status_batch = np.asarray(status_batch)
-            value_batch = np.asarray(value_batch)
+            for name, arr in add_info.items():
+                add_info[name] = np.asarray(arr)
 
         # Warn the user if nothing was inserted into the archives.
         if archive_empty_before and self.archive.empty:
@@ -385,12 +385,13 @@ class BanditScheduler:
 
             end = pos + n
             self._selection[i] += n
-            self._success[i] += np.count_nonzero(status_batch[pos:end])
+            self._success[i] += np.count_nonzero(add_info["status"][pos:end])
             emitter.tell(
                 **{
                     name: arr[pos:end] for name, arr in data.items()
                 },
-                status_batch=status_batch[pos:end],
-                value_batch=value_batch[pos:end],
+                add_info={
+                    name: arr[pos:end] for name, arr in add_info.items()
+                },
             )
             pos = end

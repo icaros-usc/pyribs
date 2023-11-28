@@ -1,5 +1,6 @@
 """Provides the Scheduler."""
 import warnings
+from collections import defaultdict
 
 import numpy as np
 
@@ -233,27 +234,26 @@ class Scheduler:
 
         # Add solutions to the archive.
         if self._add_mode == "batch":
-            status_batch, value_batch = self.archive.add(**data)
+            add_info = self.archive.add(**data)
 
             # Add solutions to result_archive.
             if self._result_archive is not None:
                 self._result_archive.add(**data)
         elif self._add_mode == "single":
-            status_batch = []
-            value_batch = []
+            add_info = defaultdict(list)
 
             for i in range(len(self._cur_solutions)):
                 single_data = {name: arr[i] for name, arr in data.items()}
-                status, value = self.archive.add_single(**single_data)
-                status_batch.append(status)
-                value_batch.append(value)
+                single_info = self.archive.add_single(**single_data)
+                for name, val in single_info.items():
+                    add_info[name].append(val)
 
                 # Add solutions to result_archive.
                 if self._result_archive is not None:
                     self._result_archive.add_single(**single_data)
 
-            status_batch = np.asarray(status_batch)
-            value_batch = np.asarray(value_batch)
+            for name, arr in add_info.items():
+                add_info[name] = np.asarray(arr)
 
         # Warn the user if nothing was inserted into the archives.
         if archive_empty_before and self.archive.empty:
@@ -262,7 +262,7 @@ class Scheduler:
             if result_archive_empty_before and self.result_archive.empty:
                 warnings.warn(self.EMPTY_WARNING.format(name="result_archive"))
 
-        return status_batch, value_batch
+        return add_info
 
     def tell_dqd(self, objective, measures, jacobian, **fields):
         """Returns info for solutions from :meth:`ask_dqd`.
@@ -304,7 +304,7 @@ class Scheduler:
         jacobian = np.asarray(jacobian)
         self._check_length("jacobian", jacobian)
 
-        status_batch, value_batch = self._add_to_archives(data)
+        add_info = self._add_to_archives(data)
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
@@ -315,8 +315,9 @@ class Scheduler:
                     name: arr[pos:end] for name, arr in data.items()
                 },
                 jacobian=jacobian[pos:end],
-                status_batch=status_batch[pos:end],
-                value_batch=value_batch[pos:end],
+                add_info={
+                    name: arr[pos:end] for name, arr in add_info.items()
+                },
             )
             pos = end
 
@@ -351,7 +352,7 @@ class Scheduler:
             **fields,
         })
 
-        status_batch, value_batch = self._add_to_archives(data)
+        add_info = self._add_to_archives(data)
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
@@ -361,7 +362,8 @@ class Scheduler:
                 **{
                     name: arr[pos:end] for name, arr in data.items()
                 },
-                status_batch=status_batch[pos:end],
-                value_batch=value_batch[pos:end],
+                add_info={
+                    name: arr[pos:end] for name, arr in add_info.items()
+                },
             )
             pos = end

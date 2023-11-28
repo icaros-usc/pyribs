@@ -103,8 +103,7 @@ class EmitterBase(ABC):
         """
         return np.empty((0, self.solution_dim), dtype=self.archive.dtype)
 
-    def tell(self, solution, objective, measures, status_batch, value_batch,
-             **fields):
+    def tell(self, solution, objective, measures, add_info, **fields):
         """Gives the emitter results from evaluating solutions.
 
         This base class implementation (in :class:`~ribs.emitters.EmitterBase`)
@@ -117,13 +116,8 @@ class EmitterBase(ABC):
                 function value of each solution.
             measures (numpy.ndarray): ``(n, <measure space dimension>)`` array
                 with the measure space coordinates of each solution.
-            status_batch (numpy.ndarray): An array of integer statuses
-                returned by a series of calls to archive's :meth:`add_single()`
-                method or by a single call to archive's :meth:`add()`.
-            value_batch (numpy.ndarray): 1D array of floats returned by a
-                series of calls to archive's :meth:`add_single()` method or by a
-                single call to archive's :meth:`add()`. For what these floats
-                represent, refer to :meth:`ribs.archives.add()`.
+            add_info (dict): Data returned from the archive
+                :meth:`~ribs.archives.ArchiveBase.add` method.
             fields (keyword arguments): Additional data for each solution. Each
                 argument should be an array with batch_size as the first
                 dimension.
@@ -138,8 +132,8 @@ class EmitterBase(ABC):
         """
         return np.empty((0, self.solution_dim), dtype=self.archive.dtype)
 
-    def tell_dqd(self, solution, objective, measures, jacobian, status_batch,
-                 value_batch, **fields):
+    def tell_dqd(self, solution, objective, measures, jacobian, add_info,
+                 **fields):
         """Gives the emitter results from evaluating the gradient of the
         solutions, only used for DQD emitters.
 
@@ -156,12 +150,8 @@ class EmitterBase(ABC):
                 solutions obtained from :meth:`ask_dqd`. Each matrix should
                 consist of the objective gradient of the solution followed by
                 the measure gradients.
-            status_batch (numpy.ndarray): 1d array of
-                :class:`ribs.archive.addstatus` returned by a series of calls
-                to archive's :meth:`add()` method.
-            value_batch (numpy.ndarray): 1d array of floats returned by a series
-                of calls to archive's :meth:`add()` method. for what these
-                floats represent, refer to :meth:`ribs.archives.add()`.
+            add_info (dict): Data returned from the archive
+                :meth:`~ribs.archives.ArchiveBase.add` method.
             fields (keyword arguments): Additional data for each solution. Each
                 argument should be an array with batch_size as the first
                 dimension.
