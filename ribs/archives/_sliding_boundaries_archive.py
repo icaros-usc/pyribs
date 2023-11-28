@@ -383,8 +383,8 @@ class SlidingBoundariesArchive(ArchiveBase):
         }
         ArchiveBase.add(self, **final_data)
 
-        status, value = ArchiveBase.add_single(self, **last_data)
-        return status, value
+        add_info = ArchiveBase.add_single(self, **last_data)
+        return add_info
 
     def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
@@ -408,14 +408,20 @@ class SlidingBoundariesArchive(ArchiveBase):
         )
         batch_size = new_data["solution"].shape[0]
 
-        status_batch = np.empty(batch_size, dtype=np.int32)
-        value_batch = np.empty(batch_size, dtype=self.dtype)
+        add_info = {}
         for i in range(batch_size):
-            status_batch[i], value_batch[i] = self.add_single(**{
+            single_info = self.add_single(**{
                 name: arr[i] for name, arr in new_data.items()
             })
 
-        return status_batch, value_batch
+            if i == 0:
+                # Initialize add_info.
+                for name, val in single_info.items():
+                    add_info[name] = np.empty(batch_size, dtype=val.dtype)
+            for name, val in single_info.items():
+                add_info[name][i] = val
+
+        return add_info
 
     def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.
@@ -442,12 +448,12 @@ class SlidingBoundariesArchive(ArchiveBase):
         self._total_num_sol += 1
 
         if self._total_num_sol % self._remap_frequency == 0:
-            status, value = self._remap()
+            add_info = self._remap()
             self._lower_bounds = np.array(
                 [bound[0] for bound in self._boundaries])
             self._upper_bounds = np.array([
                 bound[dim] for bound, dim in zip(self._boundaries, self._dims)
             ])
         else:
-            status, value = ArchiveBase.add_single(self, **new_data)
-        return status, value
+            add_info = ArchiveBase.add_single(self, **new_data)
+        return add_info

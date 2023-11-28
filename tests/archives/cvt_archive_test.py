@@ -81,12 +81,12 @@ def test_add_single_to_archive(data, use_list, add_mode):
         measures = list(data.measures)
 
     if add_mode == "single":
-        status, value = data.archive.add_single(solution, objective, measures)
+        add_info = data.archive.add_single(solution, objective, measures)
     else:
-        status, value = data.archive.add([solution], [objective], [measures])
+        add_info = data.archive.add([solution], [objective], [measures])
 
-    assert status == AddStatus.NEW
-    assert np.isclose(value, data.objective)
+    assert add_info["status"] == AddStatus.NEW
+    assert np.isclose(add_info["value"], data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
                          data.measures, data.centroid)
 
@@ -97,15 +97,16 @@ def test_add_single_and_overwrite(data, add_mode):
     high_objective = data.objective + 1.0
 
     if add_mode == "single":
-        status, value = data.archive_with_elite.add_single(
-            arbitrary_sol, high_objective, data.measures)
+        add_info = data.archive_with_elite.add_single(arbitrary_sol,
+                                                      high_objective,
+                                                      data.measures)
     else:
-        status, value = data.archive_with_elite.add([arbitrary_sol],
-                                                    [high_objective],
-                                                    [data.measures])
+        add_info = data.archive_with_elite.add([arbitrary_sol],
+                                               [high_objective],
+                                               [data.measures])
 
-    assert status == AddStatus.IMPROVE_EXISTING
-    assert np.isclose(value, high_objective - data.objective)
+    assert add_info["status"] == AddStatus.IMPROVE_EXISTING
+    assert np.isclose(add_info["value"], high_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
                          data.measures, data.centroid)
 
@@ -116,15 +117,15 @@ def test_add_single_without_overwrite(data, add_mode):
     low_objective = data.objective - 1.0
 
     if add_mode == "single":
-        status, value = data.archive_with_elite.add_single(
-            arbitrary_sol, low_objective, data.measures)
+        add_info = data.archive_with_elite.add_single(arbitrary_sol,
+                                                      low_objective,
+                                                      data.measures)
     else:
-        status, value = data.archive_with_elite.add([arbitrary_sol],
-                                                    [low_objective],
-                                                    [data.measures])
+        add_info = data.archive_with_elite.add([arbitrary_sol], [low_objective],
+                                               [data.measures])
 
-    assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective - data.objective)
+    assert add_info["status"] == AddStatus.NOT_ADDED
+    assert np.isclose(add_info["value"], low_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
                          data.measures, data.centroid)
 
