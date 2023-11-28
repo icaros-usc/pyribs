@@ -17,6 +17,7 @@ inheriting from :class:`~ribs.emitters.EmitterBase`.
 
     ribs.emitters.EvolutionStrategyEmitter
     ribs.emitters.GaussianEmitter
+    ribs.emitters.GeneticAlgorithmEmitter
     ribs.emitters.GradientArborescenceEmitter
     ribs.emitters.GradientOperatorEmitter
     ribs.emitters.IsoLineEmitter
@@ -34,9 +35,9 @@ from ribs.emitters._iso_line_emitter import IsoLineEmitter
 __all__ = [
     "EvolutionStrategyEmitter",
     "GaussianEmitter",
+    "GeneticAlgorithmEmitter",
     "GradientArborescenceEmitter",
     "GradientOperatorEmitter",
     "IsoLineEmitter",
     "EmitterBase",
-    "GeneticAlgorithmEmitter",
 ]

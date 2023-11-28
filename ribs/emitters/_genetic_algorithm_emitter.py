@@ -7,7 +7,7 @@ from ribs.emitters.operators import _get_op
 
 
 class GeneticAlgorithmEmitter(EmitterBase):
-    """Emits solutions by using operator provided
+    """Emits solutions by using operator provided.
 
     If the archive is empty and ``self._initial_solutions`` is set, a call to
     :meth:`ask` will return ``self._initial_solutions``. If
@@ -18,9 +18,9 @@ class GeneticAlgorithmEmitter(EmitterBase):
         archive (ribs.archives.ArchiveBase): An archive to use when creating and
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
-        x0 (np.ndarray): Initial solution.
+        x0 (numpy.ndarray): Initial solution.
         operator (external class): Operator Class from pymoo or pygad
-        os (string): External Library identifier
+        os (str): External Library identifier
         initial_solutions (array-like): An (n, solution_dim) array of solutions
             to be used when the archive is empty. If this argument is None, then
             solutions will be sampled from a Gaussian distribution centered at
@@ -103,19 +103,16 @@ class GeneticAlgorithmEmitter(EmitterBase):
         set)."""
         return self._x0
 
-    @property
     def iso_sigma(self):
         """float: Scale factor for the isotropic distribution used to
         generate solutions when the archive is not empty."""
         return self._iso_sigma
 
-    @property
     def line_sigma(self):
         """float: Scale factor for the line distribution used when generating
         solutions."""
         return self._line_sigma
 
-    @property
     def sigma(self):
         """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
         distribution when the archive is not empty."""
