@@ -171,7 +171,7 @@ class GradientArborescenceEmitter(EmitterBase):
         self._normalize_grads = normalize_grad
         self._jacobian_batch = None
 
-        self._ranker = _get_ranker(ranker, seed=ranker_seed)
+        self._ranker = _get_ranker(ranker, ranker_seed)
         self._ranker.reset(self, archive)
 
         if selection_rule not in ["mu", "filter"]:

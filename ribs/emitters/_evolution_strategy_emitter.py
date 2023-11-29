@@ -127,7 +127,7 @@ class EvolutionStrategyEmitter(EmitterBase):
                             **(es_kwargs if es_kwargs is not None else {}))
         self._opt.reset(self._x0)
 
-        self._ranker = _get_ranker(ranker, seed=ranker_seed)
+        self._ranker = _get_ranker(ranker, ranker_seed)
         self._ranker.reset(self, archive)
 
         self._batch_size = self._opt.batch_size
