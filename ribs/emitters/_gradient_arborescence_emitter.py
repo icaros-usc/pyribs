@@ -161,10 +161,9 @@ class GradientArborescenceEmitter(EmitterBase):
         )
 
         seed_sequence = np.random.SeedSequence(seed)
-        rng_seed, opt_seed = seed_sequence.spawn(2)
+        opt_seed, ranker_seed = seed_sequence.spawn(2)
 
         self._epsilon = epsilon
-        self._rng = np.random.default_rng(rng_seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
         check_shape(self._x0, "x0", archive.solution_dim,
                     "archive.solution_dim")
@@ -172,8 +171,8 @@ class GradientArborescenceEmitter(EmitterBase):
         self._normalize_grads = normalize_grad
         self._jacobian_batch = None
 
-        self._ranker = _get_ranker(ranker)
-        self._ranker.reset(self, archive, self._rng)
+        self._ranker = _get_ranker(ranker, seed=ranker_seed)
+        self._ranker.reset(self, archive)
 
         if selection_rule not in ["mu", "filter"]:
             raise ValueError(f"Invalid selection_rule {selection_rule}")
@@ -398,8 +397,8 @@ class GradientArborescenceEmitter(EmitterBase):
         new_sols = add_info["status"].astype(bool).sum()
 
         # Sort the solutions using ranker.
-        indices, ranking_values = self._ranker.rank(self, self.archive,
-                                                    self._rng, data, add_info)
+        indices, ranking_values = self._ranker.rank(self, self.archive, data,
+                                                    add_info)
 
         # Select the number of parents.
         num_parents = (new_sols if self._selection_rule == "filter" else
@@ -426,5 +425,5 @@ class GradientArborescenceEmitter(EmitterBase):
             new_coeff = self.archive.sample_elites(1)["solution"][0]
             self._grad_opt.reset(new_coeff)
             self._opt.reset(np.zeros(self._num_coefficients))
-            self._ranker.reset(self, self.archive, self._rng)
+            self._ranker.reset(self, self.archive)
             self._restarts += 1
