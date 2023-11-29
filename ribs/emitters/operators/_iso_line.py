@@ -22,10 +22,10 @@ class IsoLineOperator(OperatorBase):
             by emitter
         upper_bounds (array-like): Upper bounds of the solution space. Passed in
             by emitter
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
         parent_type (int): Exposed data member so the selector class knows
              appropriate parent dimensions.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid a fixed seed.
     """
 
     def __init__(self,
