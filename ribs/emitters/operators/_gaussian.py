@@ -19,13 +19,23 @@ class GaussianOperator(OperatorBase):
             avoid a fixed seed.
     """
 
-    def __init__(self, sigma, seed, lower_bounds, upper_bounds):
-
+    def __init__(self,
+                 sigma,
+                 lower_bounds,
+                 upper_bounds,
+                 parent_type=1,
+                 seed=None):
         self._sigma = sigma
         self._lower_bounds = lower_bounds
         self._upper_bounds = upper_bounds
+        self._parent_type = parent_type
 
         self._rng = np.random.default_rng(seed)
+
+    @property
+    def parent_type(self):
+        """int: Parent Type to be used by selector."""
+        return self._parent_type
 
     def ask(self, parents):
         """Adds Gaussian noise to parents.

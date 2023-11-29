@@ -19,8 +19,11 @@ class GeneticAlgorithmEmitter(EmitterBase):
             inserting solutions. For instance, this can be
             :class:`ribs.archives.GridArchive`.
         x0 (numpy.ndarray): Initial solution.
-        operator (external class): Operator Class from pymoo or pygad
-        os (str): External Library identifier
+        operator (str): Internal Operator Class used to Mutate Solutions
+            in ask method.
+        operator_kwargs (dict): Additional arguments to pass to the operator.
+            See :mod:`ribs.emitters.operators` for the arguments allowed by each
+            operator.
         initial_solutions (array-like): An (n, solution_dim) array of solutions
             to be used when the archive is empty. If this argument is None, then
             solutions will be sampled from a Gaussian distribution centered at
@@ -32,8 +35,6 @@ class GeneticAlgorithmEmitter(EmitterBase):
             bound, or a tuple of ``(lower_bound, upper_bound)``, where
             ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to return in :meth:`ask`.
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
@@ -46,20 +47,14 @@ class GeneticAlgorithmEmitter(EmitterBase):
                  initial_solutions=None,
                  bounds=None,
                  batch_size=64,
-                 os=None,
-                 seed=None,
-                 iso_sigma=0.01,
-                 line_sigma=0.2,
-                 sigma=0.1):
+                 operator_kwargs=None,
+                 operator=None):
         self._batch_size = batch_size
-        self._os = os
         self._x0 = x0
         self._initial_solutions = None
-        self._seed = seed
-        self._sigma = sigma
-        self._iso_sigma = iso_sigma
-        self._line_sigma = line_sigma
-        self._rng = np.random.default_rng(seed)
+
+        if operator is None:
+            raise ValueError("Operator must be provided.")
 
         if x0 is None and initial_solutions is None:
             raise ValueError("Either x0 or initial_solutions must be provided.")
@@ -83,40 +78,22 @@ class GeneticAlgorithmEmitter(EmitterBase):
             solution_dim=archive.solution_dim,
             bounds=bounds,
         )
-        if self._os == 'isoline':
-            self._operator = _get_op(os)(lower_bounds=self._lower_bounds,
-                                         upper_bounds=self._upper_bounds,
-                                         seed=self._seed,
-                                         iso_sigma=self._iso_sigma,
-                                         line_sigma=self._line_sigma)
-        elif self._os == 'gaussian':
-            self._operator = _get_op(os)(lower_bounds=self._lower_bounds,
-                                         upper_bounds=self._upper_bounds,
-                                         seed=self._seed,
-                                         sigma=self._sigma)
-        else:
-            raise ValueError(f"{self._os} not a supported operator.")
+
+        supported_operators = ['gaussian', 'isoline']
+
+        if operator not in supported_operators:
+            raise ValueError(f"{operator} is not a supported operator.")
+
+        self._operator = _get_op(operator)(
+            lower_bounds=self._lower_bounds,
+            upper_bounds=self._upper_bounds,
+            **(operator_kwargs if operator_kwargs is not None else {}))
 
     @property
     def x0(self):
         """numpy.ndarray: Initial Solution (if initial_solutions is not
         set)."""
         return self._x0
-
-    def iso_sigma(self):
-        """float: Scale factor for the isotropic distribution used to
-        generate solutions when the archive is not empty."""
-        return self._iso_sigma
-
-    def line_sigma(self):
-        """float: Scale factor for the line distribution used when generating
-        solutions."""
-        return self._line_sigma
-
-    def sigma(self):
-        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
-        distribution when the archive is not empty."""
-        return self._sigma
 
     @property
     def initial_solutions(self):
@@ -146,30 +123,24 @@ class GeneticAlgorithmEmitter(EmitterBase):
             might not have ``batch_size`` solutions.
         """
 
-        if self._os == 'isoline':
-            if self.archive.empty and self._initial_solutions is not None:
-                return np.clip(self._initial_solutions, self.lower_bounds,
-                               self.upper_bounds)
+        if self.archive.empty and self._initial_solutions is not None:
+            return np.clip(self._initial_solutions, self.lower_bounds,
+                           self.upper_bounds)
 
+        if self._operator.parent_type == 2:  # isoline
             if self.archive.empty:
-                iso_gaussian = self._rng.normal(
-                    scale=self._iso_sigma,
-                    size=(self._batch_size, self.solution_dim),
-                ).astype(self.archive.dtype)
-
-                solution_batch = np.expand_dims(self._x0, axis=0) + iso_gaussian
-                return np.clip(solution_batch, self.lower_bounds,
-                               self.upper_bounds)
+                parents = np.repeat(np.repeat(self.x0[None],
+                                              repeats=self._batch_size,
+                                              axis=0)[None],
+                                    2,
+                                    axis=0)
             else:
                 parents = self.archive.sample_elites(
                     2 * self._batch_size)["solution"]
-                return self._operator.ask(
-                    parents=parents.reshape(2, self._batch_size, -1))
-        else:  # self._os == 'gaussian'
+            return self._operator.ask(
+                parents=parents.reshape(2, self._batch_size, -1))
+        else:  # self._operator.parent_type == 1, gaussian
             if self.archive.empty:
-                if self._initial_solutions is not None:
-                    return np.clip(self._initial_solutions, self.lower_bounds,
-                                   self.upper_bounds)
                 parents = np.repeat(self.x0[None],
                                     repeats=self._batch_size,
                                     axis=0)
