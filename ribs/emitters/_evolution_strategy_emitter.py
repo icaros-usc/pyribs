@@ -92,17 +92,21 @@ class EvolutionStrategyEmitter(EmitterBase):
         batch_size=None,
         seed=None,
     ):
-        self._rng = np.random.default_rng(seed)
-        self._x0 = np.array(x0, dtype=archive.dtype)
-        check_shape(self._x0, "x0", archive.solution_dim,
-                    "archive.solution_dim")
-        self._sigma0 = sigma0
         EmitterBase.__init__(
             self,
             archive,
             solution_dim=archive.solution_dim,
             bounds=bounds,
         )
+
+        seed_sequence = np.random.SeedSequence(seed)
+        rng_seed, opt_seed = seed_sequence.spawn(2)
+
+        self._rng = np.random.default_rng(rng_seed)
+        self._x0 = np.array(x0, dtype=archive.dtype)
+        check_shape(self._x0, "x0", archive.solution_dim,
+                    "archive.solution_dim")
+        self._sigma0 = sigma0
 
         if selection_rule not in ["mu", "filter"]:
             raise ValueError(f"Invalid selection_rule {selection_rule}")
@@ -115,7 +119,6 @@ class EvolutionStrategyEmitter(EmitterBase):
         # Check if the restart_rule is valid, discard check_restart result.
         _ = self._check_restart(0)
 
-        opt_seed = None if seed is None else self._rng.integers(10_000)
         self._opt = _get_es(es,
                             sigma0=sigma0,
                             batch_size=batch_size,
