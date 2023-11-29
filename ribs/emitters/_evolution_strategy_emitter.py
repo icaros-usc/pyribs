@@ -100,9 +100,8 @@ class EvolutionStrategyEmitter(EmitterBase):
         )
 
         seed_sequence = np.random.SeedSequence(seed)
-        rng_seed, opt_seed = seed_sequence.spawn(2)
+        opt_seed, ranker_seed = seed_sequence.spawn(2)
 
-        self._rng = np.random.default_rng(rng_seed)
         self._x0 = np.array(x0, dtype=archive.dtype)
         check_shape(self._x0, "x0", archive.solution_dim,
                     "archive.solution_dim")
@@ -128,8 +127,8 @@ class EvolutionStrategyEmitter(EmitterBase):
                             **(es_kwargs if es_kwargs is not None else {}))
         self._opt.reset(self._x0)
 
-        self._ranker = _get_ranker(ranker)
-        self._ranker.reset(self, archive, self._rng)
+        self._ranker = _get_ranker(ranker, ranker_seed)
+        self._ranker.reset(self, archive)
 
         self._batch_size = self._opt.batch_size
 
@@ -227,8 +226,8 @@ class EvolutionStrategyEmitter(EmitterBase):
         new_sols = add_info["status"].astype(bool).sum()
 
         # Sort the solutions using ranker.
-        indices, ranking_values = self._ranker.rank(self, self.archive,
-                                                    self._rng, data, add_info)
+        indices, ranking_values = self._ranker.rank(self, self.archive, data,
+                                                    add_info)
 
         # Select the number of parents.
         num_parents = (new_sols if self._selection_rule == "filter" else
@@ -242,5 +241,5 @@ class EvolutionStrategyEmitter(EmitterBase):
                 self._check_restart(new_sols)):
             new_x0 = self.archive.sample_elites(1)["solution"][0]
             self._opt.reset(new_x0)
-            self._ranker.reset(self, self.archive, self._rng)
+            self._ranker.reset(self, self.archive)
             self._restarts += 1

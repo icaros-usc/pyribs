@@ -56,11 +56,8 @@ class GaussianEmitter(EmitterBase):
                  bounds=None,
                  batch_size=64,
                  seed=None):
-        self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
-
         self._sigma = np.array(sigma, dtype=archive.dtype)
-
         self._x0 = None
         self._initial_solutions = None
 

@@ -6,6 +6,7 @@
 
 #### API
 
+- **Backwards-incompatible:** Use seed instead of rng in ranker ({pr}`432`)
 - **Backwards-incompatible:** Replace status and value with add_info ({pr}`430`)
 - Support custom data fields in archive, emitters, and scheduler ({pr}`421`,
   {pr}`429`)
@@ -33,6 +34,7 @@
 
 #### Improvements
 
+- Use NumPy SeedSequence in emitters ({pr}`431`)
 - Use numbers types when checking arguments ({pr}`419`)
 - Reimplement ArchiveBase using ArrayStore ({pr}`399`)
 - Use chunk computation in CVT brute force calculation to reduce memory usage

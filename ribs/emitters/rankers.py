@@ -50,7 +50,6 @@ Args:
         object belongs to.
     archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
         when creating and inserting solutions.
-    rng (numpy.random.Generator): A random number generator.
     data (dict): Dict mapping from field names like ``solution`` and
         ``objective`` to arrays with data for the solutions. Rankers at least
         assume the presence of the ``solution`` key.
@@ -71,7 +70,6 @@ Args:
         object belongs to.
     archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
         when creating and inserting solutions.
-    rng (numpy.random.Generator): A random number generator.
 """
 
 
@@ -86,8 +84,11 @@ class RankerBase(ABC):
     Child classes are only required to override :meth:`rank`.
     """
 
+    def __init__(self, seed=None):
+        self._rng = np.random.default_rng(seed)
+
     @abstractmethod
-    def rank(self, emitter, archive, rng, data, add_info):
+    def rank(self, emitter, archive, data, add_info):
         # pylint: disable=missing-function-docstring
         pass
 
@@ -98,7 +99,7 @@ Generates a batch of indices that represents an ordering of ``data["solution"]``
 {_RANK_ARGS}
     """
 
-    def reset(self, emitter, archive, rng):
+    def reset(self, emitter, archive):
         # pylint: disable=missing-function-docstring
         pass
 
@@ -123,7 +124,7 @@ class ImprovementRanker(RankerBase):
     corresponding cell in the archive.
     """
 
-    def rank(self, emitter, archive, rng, data, add_info):
+    def rank(self, emitter, archive, data, add_info):
         # Note that lexsort sorts the values in ascending order,
         # so we use np.flip to reverse the sorted array.
         return np.flip(np.argsort(add_info["value"])), add_info["value"]
@@ -148,7 +149,7 @@ class TwoStageImprovementRanker(RankerBase):
     :meth:`ribs.archives.ArchiveBase.add`
     """
 
-    def rank(self, emitter, archive, rng, data, add_info):
+    def rank(self, emitter, archive, data, add_info):
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, value_0], ..., [status_n, value_n]]
         ranking_values = np.stack((add_info["status"], add_info["value"]),
@@ -189,8 +190,8 @@ class RandomDirectionRanker(RankerBase):
     :class:`ribs.emitters.rankers.TwoStageRandomDirectionRanker`.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, seed=None):
+        super().__init__(seed)
         self._target_measure_dir = None
 
     @property
@@ -203,7 +204,7 @@ class RandomDirectionRanker(RankerBase):
     def target_measure_dir(self, value):
         self._target_measure_dir = value
 
-    def rank(self, emitter, archive, rng, data, add_info):
+    def rank(self, emitter, archive, data, add_info):
         if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(data["measures"], self._target_measure_dir)
@@ -216,10 +217,10 @@ Ranks the solutions based on projection onto a direction in the archive.
 {_RANK_ARGS}
     """
 
-    def reset(self, emitter, archive, rng):
+    def reset(self, emitter, archive):
         ranges = archive.upper_bounds - archive.lower_bounds
         measure_dim = len(ranges)
-        unscaled_dir = rng.standard_normal(measure_dim)
+        unscaled_dir = self._rng.standard_normal(measure_dim)
         self._target_measure_dir = unscaled_dir * ranges
 
     # Generates the docstring for reset.
@@ -244,8 +245,8 @@ class TwoStageRandomDirectionRanker(RankerBase):
     <https://arxiv.org/abs/1912.02400>`_ as RandomDirectionEmitter.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, seed=None):
+        super().__init__(seed)
         self._target_measure_dir = None
 
     @property
@@ -258,7 +259,7 @@ class TwoStageRandomDirectionRanker(RankerBase):
     def target_measure_dir(self, value):
         self._target_measure_dir = value
 
-    def rank(self, emitter, archive, rng, data, add_info):
+    def rank(self, emitter, archive, data, add_info):
         if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
         projections = np.dot(data["measures"], self._target_measure_dir)
@@ -281,10 +282,10 @@ onto a random direction in the archive.
 {_RANK_ARGS}
     """
 
-    def reset(self, emitter, archive, rng):
+    def reset(self, emitter, archive):
         ranges = archive.upper_bounds - archive.lower_bounds
         measure_dim = len(ranges)
-        unscaled_dir = rng.standard_normal(measure_dim)
+        unscaled_dir = self._rng.standard_normal(measure_dim)
         self._target_measure_dir = unscaled_dir * ranges
 
     reset.__doc__ = RandomDirectionRanker.reset.__doc__
@@ -298,7 +299,7 @@ class ObjectiveRanker(RankerBase):
     emitter.
     """
 
-    def rank(self, emitter, archive, rng, data, add_info):
+    def rank(self, emitter, archive, data, add_info):
         # Sort only by objective value.
         return np.flip(np.argsort(data["objective"])), data["objective"]
 
@@ -317,7 +318,7 @@ class TwoStageObjectiveRanker(RankerBase):
     <https://arxiv.org/abs/1912.02400>`_ as OptimizingEmitter.
     """
 
-    def rank(self, emitter, archive, rng, data, add_info):
+    def rank(self, emitter, archive, data, add_info):
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, objective_0], ..., [status_0, objective_n]]
         ranking_values = np.stack((add_info["status"], data["objective"]),
@@ -354,7 +355,7 @@ _NAME_TO_RANKER_MAP = {
 }
 
 
-def _get_ranker(klass):
+def _get_ranker(klass, seed):
     """Returns a ranker class based on its name.
 
     ``klass`` can be a reference to the class of the ranker, the full name of
@@ -372,11 +373,11 @@ def _get_ranker(klass):
     """
     if isinstance(klass, str):
         if klass in _NAME_TO_RANKER_MAP:
-            return _NAME_TO_RANKER_MAP[klass]()
+            return _NAME_TO_RANKER_MAP[klass](seed)
         raise ValueError(f"`{klass}` is not the full or abbreviated "
                          "name of a valid ranker")
     if callable(klass):
-        ranker = klass()
+        ranker = klass(seed)
         if isinstance(ranker, RankerBase):
             return ranker
         raise ValueError(f"Callable `{klass}` did not return an instance "
