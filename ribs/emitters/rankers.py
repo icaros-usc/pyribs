@@ -84,7 +84,7 @@ class RankerBase(ABC):
     Child classes are only required to override :meth:`rank`.
     """
 
-    def __init__(self, seed):
+    def __init__(self, seed=None):
         self._rng = np.random.default_rng(seed)
 
     @abstractmethod
@@ -190,7 +190,7 @@ class RandomDirectionRanker(RankerBase):
     :class:`ribs.emitters.rankers.TwoStageRandomDirectionRanker`.
     """
 
-    def __init__(self, seed):
+    def __init__(self, seed=None):
         super().__init__(seed)
         self._target_measure_dir = None
 
@@ -245,7 +245,7 @@ class TwoStageRandomDirectionRanker(RankerBase):
     <https://arxiv.org/abs/1912.02400>`_ as RandomDirectionEmitter.
     """
 
-    def __init__(self, seed):
+    def __init__(self, seed=None):
         super().__init__(seed)
         self._target_measure_dir = None
 
