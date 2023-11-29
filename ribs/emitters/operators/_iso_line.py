@@ -51,7 +51,7 @@ class IsoLineOperator(OperatorBase):
     def ask(self, parents):
         """ Adds Isotropic Guassian noise and directional noise to parents.
 
-         Args:
+        Args:
             parents (array-like): (2, batch_size, solution_dim)
                 parents[0] array of solutions selected by emitter
                 parents[1] array of second batch of solutions passed by

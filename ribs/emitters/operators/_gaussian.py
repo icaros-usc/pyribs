@@ -42,7 +42,7 @@ class GaussianOperator(OperatorBase):
     def ask(self, parents):
         """Adds Gaussian noise to parents.
 
-         Args:
+        Args:
             parents (array-like): (batch_size, solution_dim) array of
                 solutions to be mutated.
 
