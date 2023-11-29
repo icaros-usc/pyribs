@@ -8,6 +8,8 @@ from ribs.emitters.rankers import (ObjectiveRanker, RandomDirectionRanker,
                                    TwoStageObjectiveRanker,
                                    TwoStageRandomDirectionRanker)
 
+# pylint: disable = redefined-outer-name
+
 
 @pytest.fixture
 def emitter():
@@ -16,17 +18,7 @@ def emitter():
     return None
 
 
-@pytest.fixture
-def rng():
-    """An rng for the rankers."""
-    return np.random.default_rng(seed=0)
-
-
-# emitter and rng would be marked by pytest as redefined.
-# pylint: disable = redefined-outer-name
-
-
-def test_two_stage_improvement_ranker(archive_fixture, emitter, rng):
+def test_two_stage_improvement_ranker(archive_fixture, emitter):
     archive, x0 = archive_fixture
     solution_batch = [x0, x0, x0, x0]
     objective_batch = [0, 1, 3, 6]
@@ -47,7 +39,6 @@ def test_two_stage_improvement_ranker(archive_fixture, emitter, rng):
     indices, ranking_values = ranker.rank(
         emitter,
         archive,
-        rng,
         {
             "solution": solution_batch,
             "objective": objective_batch,
@@ -65,7 +56,7 @@ def test_two_stage_improvement_ranker(archive_fixture, emitter, rng):
     ]).all()
 
 
-def test_random_direction_ranker(emitter, rng):
+def test_random_direction_ranker(emitter):
     x0 = np.array([1, 2, 3, 4])
     archive = GridArchive(solution_dim=len(x0),
                           dims=[10, 10, 10],
@@ -85,7 +76,6 @@ def test_random_direction_ranker(emitter, rng):
     indices, ranking_values = ranker.rank(
         emitter,
         archive,
-        rng,
         {
             "solution": solution_batch,
             "objective": objective_batch,
@@ -98,7 +88,7 @@ def test_random_direction_ranker(emitter, rng):
     assert (ranking_values == np.dot(measures_batch, [0, 1, 0])).all()
 
 
-def test_two_stage_random_direction(emitter, rng):
+def test_two_stage_random_direction(emitter):
     x0 = np.array([1, 2, 3, 4])
     archive = GridArchive(solution_dim=len(x0),
                           dims=[10, 10, 10],
@@ -128,7 +118,6 @@ def test_two_stage_random_direction(emitter, rng):
     indices, ranking_values = ranker.rank(
         emitter,
         archive,
-        rng,
         {
             "solution": solution_batch,
             "objective": objective_batch,
@@ -147,7 +136,7 @@ def test_two_stage_random_direction(emitter, rng):
     ]).all()
 
 
-def test_objective_ranker(archive_fixture, emitter, rng):
+def test_objective_ranker(archive_fixture, emitter):
     archive, x0 = archive_fixture
     solution_batch = [x0, x0, x0, x0]
     objective_batch = [0, 3, 2, 1]
@@ -158,7 +147,6 @@ def test_objective_ranker(archive_fixture, emitter, rng):
     indices, ranking_values = ranker.rank(
         emitter,
         archive,
-        rng,
         {
             "solution": solution_batch,
             "objective": objective_batch,
@@ -171,7 +159,7 @@ def test_objective_ranker(archive_fixture, emitter, rng):
     assert ranking_values == objective_batch
 
 
-def test_two_stage_objective_ranker(archive_fixture, emitter, rng):
+def test_two_stage_objective_ranker(archive_fixture, emitter):
     archive, x0 = archive_fixture
     solution_batch = [x0, x0, x0, x0]
     objective_batch = [0, 1, 3, 2]
@@ -192,7 +180,6 @@ def test_two_stage_objective_ranker(archive_fixture, emitter, rng):
     indices, ranking_values = ranker.rank(
         emitter,
         archive,
-        rng,
         {
             "solution": solution_batch,
             "objective": objective_batch,
