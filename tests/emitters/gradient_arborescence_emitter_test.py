@@ -80,4 +80,4 @@ def test_tell_dqd_must_be_called_before_tell():
                                               sigma0=1.0,
                                               lr=1.0)
         # Must call ask_dqd() before calling ask() to set the jacobian.
-        emitter.tell([[0]], [0], [[0]], [0], [0])
+        emitter.tell([[0]], [0], [[0]], {"status": [0], "value": [0]})

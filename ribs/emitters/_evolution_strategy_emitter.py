@@ -183,8 +183,7 @@ class EvolutionStrategyEmitter(EmitterBase):
             return False
         raise ValueError(f"Invalid restart_rule {self._restart_rule}")
 
-    def tell(self, solution, objective, measures, status_batch, value_batch,
-             **fields):
+    def tell(self, solution, objective, measures, add_info, **fields):
         """Gives the emitter results from evaluating solutions.
 
         The solutions are ranked based on the `rank()` function defined by
@@ -201,12 +200,8 @@ class EvolutionStrategyEmitter(EmitterBase):
                 value of each solution.
             measures (array-like): (batch_size, measure space dimension) array
                 with the measure space coordinates of each solution.
-            status_batch (array-like): 1D array of
-                :class:`ribs.archive.AddStatus` returned by a series of calls
-                to archive's :meth:`add()` method.
-            value_batch (array-like): 1D array of floats returned by a series
-                of calls to archive's :meth:`add()` method. For what these
-                floats represent, refer to :meth:`ribs.archives.add()`.
+            add_info (dict): Data returned from the archive
+                :meth:`~ribs.archives.ArchiveBase.add` method.
             fields (keyword arguments): Additional data for each solution. Each
                 argument should be an array with batch_size as the first
                 dimension.
@@ -219,17 +214,14 @@ class EvolutionStrategyEmitter(EmitterBase):
                 "measures": measures,
                 **fields,
             },
-            {
-                "status": status_batch,
-                "value": value_batch,
-            },
+            add_info,
         )
 
         # Increase iteration counter.
         self._itrs += 1
 
         # Count number of new solutions.
-        new_sols = status_batch.astype(bool).sum()
+        new_sols = add_info["status"].astype(bool).sum()
 
         # Sort the solutions using ranker.
         indices, ranking_values = self._ranker.rank(self, self.archive,

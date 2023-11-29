@@ -6,6 +6,7 @@
 
 #### API
 
+- **Backwards-incompatible:** Replace status and value with add_info ({pr}`430`)
 - Support custom data fields in archive, emitters, and scheduler ({pr}`421`,
   {pr}`429`)
 - **Backwards-incompatible:** Remove `_batch` from parameter names ({pr}`422`,

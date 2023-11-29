@@ -5,6 +5,8 @@ import pytest
 from ribs.archives import GridArchive
 from ribs.emitters import EvolutionStrategyEmitter
 
+# pylint: disable = redefined-outer-name
+
 RANKER_LIST = ["imp", "2imp", "rd", "2rd", "obj", "2obj"]
 ES_LIST = ["cma_es", "sep_cma_es", "lm_ma_es", "openai_es"]
 
@@ -71,8 +73,5 @@ def test_dtypes(dtype):
         solution_batch = emitter.ask()
         objective_batch = -np.sum(np.square(solution_batch), axis=1)
         measures_batch = solution_batch[:, :2]
-
-        status_batch, value_batch = archive.add(solution_batch, objective_batch,
-                                                measures_batch)
-        emitter.tell(solution_batch, objective_batch, measures_batch,
-                     status_batch, value_batch)
+        add_info = archive.add(solution_batch, objective_batch, measures_batch)
+        emitter.tell(solution_batch, objective_batch, measures_batch, add_info)
