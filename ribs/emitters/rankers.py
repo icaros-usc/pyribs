@@ -190,8 +190,8 @@ class RandomDirectionRanker(RankerBase):
     :class:`ribs.emitters.rankers.TwoStageRandomDirectionRanker`.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, seed=None):
+        super().__init__(seed)
         self._target_measure_dir = None
 
     @property
@@ -245,8 +245,8 @@ class TwoStageRandomDirectionRanker(RankerBase):
     <https://arxiv.org/abs/1912.02400>`_ as RandomDirectionEmitter.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, seed=None):
+        super().__init__(seed)
         self._target_measure_dir = None
 
     @property
@@ -355,7 +355,7 @@ _NAME_TO_RANKER_MAP = {
 }
 
 
-def _get_ranker(klass):
+def _get_ranker(klass, seed):
     """Returns a ranker class based on its name.
 
     ``klass`` can be a reference to the class of the ranker, the full name of
@@ -373,11 +373,11 @@ def _get_ranker(klass):
     """
     if isinstance(klass, str):
         if klass in _NAME_TO_RANKER_MAP:
-            return _NAME_TO_RANKER_MAP[klass]()
+            return _NAME_TO_RANKER_MAP[klass](seed)
         raise ValueError(f"`{klass}` is not the full or abbreviated "
                          "name of a valid ranker")
     if callable(klass):
-        ranker = klass()
+        ranker = klass(seed)
         if isinstance(ranker, RankerBase):
             return ranker
         raise ValueError(f"Callable `{klass}` did not return an instance "
