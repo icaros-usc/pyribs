@@ -41,15 +41,14 @@ def test_attributes_correctly_constructed(data):
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
 def test_add_to_archive(data, use_list):
     if use_list:
-        status, value = data.archive.add_single(list(data.solution),
-                                                data.objective,
-                                                list(data.measures))
+        add_info = data.archive.add_single(list(data.solution), data.objective,
+                                           list(data.measures))
     else:
-        status, value = data.archive.add_single(data.solution, data.objective,
-                                                data.measures)
+        add_info = data.archive.add_single(data.solution, data.objective,
+                                           data.measures)
 
-    assert status == AddStatus.NEW
-    assert np.isclose(value, data.objective)
+    assert add_info["status"] == AddStatus.NEW
+    assert np.isclose(add_info["value"], data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
                          data.measures, data.grid_indices)
 
@@ -59,11 +58,10 @@ def test_add_and_overwrite(data):
     arbitrary_sol = data.solution + 1
     high_objective = data.objective + 1.0
 
-    status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       high_objective,
-                                                       data.measures)
-    assert status == AddStatus.IMPROVE_EXISTING
-    assert np.isclose(value, high_objective - data.objective)
+    add_info = data.archive_with_elite.add_single(arbitrary_sol, high_objective,
+                                                  data.measures)
+    assert add_info["status"] == AddStatus.IMPROVE_EXISTING
+    assert np.isclose(add_info["value"], high_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
                          data.measures, data.grid_indices)
 
@@ -73,11 +71,10 @@ def test_add_without_overwrite(data):
     arbitrary_sol = data.solution + 1
     low_objective = data.objective - 1.0
 
-    status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       low_objective,
-                                                       data.measures)
-    assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective - data.objective)
+    add_info = data.archive_with_elite.add_single(arbitrary_sol, low_objective,
+                                                  data.measures)
+    assert add_info["status"] == AddStatus.NOT_ADDED
+    assert np.isclose(add_info["value"], low_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
                          data.measures, data.grid_indices)
 

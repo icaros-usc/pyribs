@@ -150,9 +150,16 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
         # Only GradientArborescenceEmitter has tell_dqd method.
         if isinstance(emitter, GradientArborescenceEmitter):
             with pytest.raises(ValueError):
-                emitter.tell_dqd(solution_batch, objective_batch,
-                                 measures_batch, jacobian_batch, status_batch,
-                                 value_batch)
+                emitter.tell_dqd(
+                    solution_batch,
+                    objective_batch,
+                    measures_batch,
+                    jacobian_batch,
+                    {
+                        "status": status_batch,
+                        "value": value_batch,
+                    },
+                )
 
         if wrong_array == "jacobian_batch":
             # tell() does not use jacobian_batch paramter, so we skip calling
@@ -163,8 +170,15 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
             # For GradientArborescenceEmitter, tell is called before tell_dqd,
             # but shape check exception should be thrown before tell complains
             # that tell_dqd is not called.
-            emitter.tell(solution_batch, objective_batch, measures_batch,
-                         status_batch, value_batch)
+            emitter.tell(
+                solution_batch,
+                objective_batch,
+                measures_batch,
+                {
+                    "status": status_batch,
+                    "value": value_batch
+                },
+            )
 
 
 #

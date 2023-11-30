@@ -6,9 +6,12 @@
 
 #### API
 
-- Support custom data fields in archive ({pr}`421`)
+- **Backwards-incompatible:** Use seed instead of rng in ranker ({pr}`432`)
+- **Backwards-incompatible:** Replace status and value with add_info ({pr}`430`)
+- Support custom data fields in archive, emitters, and scheduler ({pr}`421`,
+  {pr}`429`)
 - **Backwards-incompatible:** Remove `_batch` from parameter names ({pr}`422`,
-  {pr}`424`, {pr}`425`)
+  {pr}`424`, {pr}`425`, {pr}`426`, {pr}`428`)
 - Add Gaussian, IsoLine Operators and Refactor GaussianEmitter/IsoLineEmitter
   ({pr}`418`)
 - **Backwards-incompatible:** Remove metadata in favor of custom fields
@@ -31,6 +34,7 @@
 
 #### Improvements
 
+- Use NumPy SeedSequence in emitters ({pr}`431`)
 - Use numbers types when checking arguments ({pr}`419`)
 - Reimplement ArchiveBase using ArrayStore ({pr}`399`)
 - Use chunk computation in CVT brute force calculation to reduce memory usage
