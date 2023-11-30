@@ -53,6 +53,13 @@ class GeneticAlgorithmEmitter(EmitterBase):
         self._x0 = x0
         self._initial_solutions = None
 
+        EmitterBase.__init__(
+            self,
+            archive,
+            solution_dim=archive.solution_dim,
+            bounds=bounds,
+        )
+
         if operator is None:
             raise ValueError("Operator must be provided.")
 
@@ -71,18 +78,6 @@ class GeneticAlgorithmEmitter(EmitterBase):
                                                  dtype=archive.dtype)
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "archive.solution_dim")
-
-        EmitterBase.__init__(
-            self,
-            archive,
-            solution_dim=archive.solution_dim,
-            bounds=bounds,
-        )
-
-        supported_operators = ['gaussian', 'isoline']
-
-        if operator not in supported_operators:
-            raise ValueError(f"{operator} is not a supported operator.")
 
         self._operator = _get_op(operator)(
             lower_bounds=self._lower_bounds,
@@ -109,30 +104,28 @@ class GeneticAlgorithmEmitter(EmitterBase):
     def ask(self):
         """Creates solutions with operator provided.
 
-
         If the archive is empty and ``self._initial_solutions`` is set, we
         return ``self._initial_solutions``. If ``self._initial_solutions`` is
         not set and the archive is still empty, we operate on the initial
         solution (x0) provided. Otherwise, we sample parents from the archive
-        to be used as input to our operator
+        to be used as input to the operator
 
         Returns:
-            If the archive is not empty, ``(batch_size, solution_dim)`` array
-            -- contains ``batch_size`` new solutions to evaluate. If the
-            archive is empty, we return ``self._initial_solutions``, which
-            might not have ``batch_size`` solutions.
+            numpy.ndarray: If the archive is not empty, ``(batch_size,
+            solution_dim)`` array -- contains ``batch_size`` new solutions to
+            evaluate. If the archive is empty, we return
+            ``self._initial_solutions``, which might not have ``batch_size``
+            solutions.
         """
 
         if self.archive.empty and self._initial_solutions is not None:
             return np.clip(self._initial_solutions, self.lower_bounds,
                            self.upper_bounds)
 
-        if self._operator.parent_type == 2:  # isoline
+        if self._operator.parent_type == 2:
             if self.archive.empty:
-                parents = np.repeat(np.repeat(self.x0[None],
-                                              repeats=self._batch_size,
-                                              axis=0)[None],
-                                    2,
+                parents = np.repeat(self.x0[None],
+                                    repeats=2 * self._batch_size,
                                     axis=0)
             else:
                 parents = self.archive.sample_elites(

@@ -15,29 +15,21 @@ class GaussianOperator(OperatorBase):
             by emitter
         upper_bounds (array-like): Upper bounds of the solution space. Passed in
             by emitter
-        parent_type (int): Exposed data member so the selector class knows
-             appropriate parent dimensions.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     """
 
-    def __init__(self,
-                 sigma,
-                 lower_bounds,
-                 upper_bounds,
-                 parent_type=1,
-                 seed=None):
+    def __init__(self, sigma, lower_bounds, upper_bounds, seed=None):
         self._sigma = sigma
         self._lower_bounds = lower_bounds
         self._upper_bounds = upper_bounds
-        self._parent_type = parent_type
 
         self._rng = np.random.default_rng(seed)
 
     @property
     def parent_type(self):
         """int: Parent Type to be used by selector."""
-        return self._parent_type
+        return 1
 
     def ask(self, parents):
         """Adds Gaussian noise to parents.

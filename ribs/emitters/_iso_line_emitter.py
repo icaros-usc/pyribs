@@ -152,10 +152,8 @@ class IsoLineEmitter(EmitterBase):
                            self.upper_bounds)
 
         if self.archive.empty:
-            parents = np.repeat(np.repeat(self.x0[None],
-                                          repeats=self._batch_size,
-                                          axis=0)[None],
-                                2,
+            parents = np.repeat(self.x0[None],
+                                repeats=2 * self._batch_size,
                                 axis=0)
         else:
             parents = self.archive.sample_elites(2 *
