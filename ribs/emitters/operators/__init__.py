@@ -6,6 +6,8 @@ operators such as mutation and crossover.
 .. autosummary::
     :toctree:
 
+    ribs.emitters.operators.GaussianOperator
+    ribs.emitters.operators.IsoLineOperator
     ribs.emitters.operators.OperatorBase
 """
 from ribs.emitters.operators._gaussian import GaussianOperator
