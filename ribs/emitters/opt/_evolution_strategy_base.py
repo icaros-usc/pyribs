@@ -24,6 +24,13 @@ class EvolutionStrategyBase(ABC):
         batch_size (int): Number of solutions to evaluate at a time.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
+            indicating lower bounds of the solution space. Scalars specify
+            the same bound for the entire space, while arrays specify a
+            bound for each dimension. Pass -np.inf in the array or scalar to
+            indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper
+            bounds (and pass np.inf instead of -np.inf).
     """
 
     def __init__(self,
@@ -31,7 +38,9 @@ class EvolutionStrategyBase(ABC):
                  solution_dim,
                  batch_size=None,
                  seed=None,
-                 dtype=np.float64):
+                 dtype=np.float64,
+                 lower_bounds=-np.inf,
+                 upper_bounds=np.inf):
         pass
 
     @abstractmethod
@@ -55,17 +64,13 @@ class EvolutionStrategyBase(ABC):
         """
 
     @abstractmethod
-    def ask(self, lower_bounds, upper_bounds):
+    def ask(self, batch_size=None):
         """Samples new solutions from the Gaussian distribution.
 
         Args:
-            lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-                indicating lower bounds of the solution space. Scalars specify
-                the same bound for the entire space, while arrays specify a
-                bound for each dimension. Pass -np.inf in the array or scalar to
-                indicated unbounded space.
-            upper_bounds (float or np.ndarray): Same as above, but for upper
-                bounds (and pass np.inf instead of -np.inf).
+            batch_size (int): If passed in, the ES will be asked to return this
+                number of solutions instead of the number specified during
+                initialization.
         """
 
     @abstractmethod
