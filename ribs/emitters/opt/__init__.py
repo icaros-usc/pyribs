@@ -16,7 +16,7 @@ For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
 * ``cma_es``: :class:`CMAEvolutionStrategy`
 * ``lm_ma_es``: :class:`LMMAEvolutionStrategy`
 * ``openai_es``: :class:`OpenAIEvolutionStrategy`
-* ``pycma``: :class:`PyCMAEvolutionStrategy`
+* ``pycma_es``: :class:`PyCMAEvolutionStrategy`
 * ``sep_cma_es``: :class:`SeparableCMAEvolutionStrategy`
 
 .. autosummary::
