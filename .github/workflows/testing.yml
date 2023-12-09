@@ -83,7 +83,7 @@ jobs:
         with:
           python-version: "3.8"
       - name: Install deps
-        run: pip install .[visualize,dev]
+        run: pip install .[all,dev]
       - name: Test coverage
         env:
           NUMBA_DISABLE_JIT: 1
