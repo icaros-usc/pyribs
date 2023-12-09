@@ -97,7 +97,7 @@ _NAME_TO_ES_MAP = {
     "sep_cma_es": SeparableCMAEvolutionStrategy,
     "lm_ma_es": LMMAEvolutionStrategy,
     "openai_es": OpenAIEvolutionStrategy,
-    "pycma": PyCMAEvolutionStrategy,
+    "pycma_es": PyCMAEvolutionStrategy,
 }
 
 
