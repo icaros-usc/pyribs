@@ -45,10 +45,7 @@ def test_list_as_initial_solution():
     archive = GridArchive(solution_dim=10,
                           dims=[20, 20],
                           ranges=[(-1.0, 1.0)] * 2)
-    emitter = EvolutionStrategyEmitter(archive,
-                                       x0=[0.0] * 10,
-                                       sigma0=1.0,
-                                       ranker="obj")
+    emitter = EvolutionStrategyEmitter(archive, x0=[0.0] * 10, sigma0=1.0)
 
     # The list was passed in but should be converted to a numpy array.
     assert isinstance(emitter.x0, np.ndarray)
@@ -62,10 +59,7 @@ def test_dtypes(dtype):
                           dims=[20, 20],
                           ranges=[(-1.0, 1.0)] * 2,
                           dtype=dtype)
-    emitter = EvolutionStrategyEmitter(archive,
-                                       x0=np.zeros(10),
-                                       sigma0=1.0,
-                                       ranker="obj")
+    emitter = EvolutionStrategyEmitter(archive, x0=np.zeros(10), sigma0=1.0)
     assert emitter.x0.dtype == dtype
 
 
@@ -77,7 +71,6 @@ def test_sphere(es):
     emitter = EvolutionStrategyEmitter(archive,
                                        x0=np.zeros(10),
                                        sigma0=1.0,
-                                       ranker="obj",
                                        es=es)
 
     # Try running with the negative sphere function for a few iterations.
