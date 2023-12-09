@@ -23,6 +23,13 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
+            indicating lower bounds of the solution space. Scalars specify
+            the same bound for the entire space, while arrays specify a
+            bound for each dimension. Pass -np.inf in the array or scalar to
+            indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper
+            bounds (and pass np.inf instead of -np.inf).
         n_vectors (int): Number of vectors to use in the approximation. If None,
             this defaults to be equal to the batch size.
     """
@@ -34,12 +41,17 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
             batch_size=None,
             seed=None,
             dtype=np.float64,
+            lower_bounds=-np.inf,
+            upper_bounds=np.inf,
             n_vectors=None):
         self.batch_size = (4 + int(3 * np.log(solution_dim))
                            if batch_size is None else batch_size)
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
+        self.lower_bounds = lower_bounds
+        self.upper_bounds = upper_bounds
+
         self._rng = np.random.default_rng(seed)
         self._solutions = None
 
@@ -137,17 +149,10 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def ask(self, lower_bounds, upper_bounds, batch_size=None):
+    def ask(self, batch_size=None):
         """Samples new solutions from the Gaussian distribution.
 
         Args:
-            lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-                indicating lower bounds of the solution space. Scalars specify
-                the same bound for the entire space, while arrays specify a
-                bound for each dimension. Pass -np.inf in the array or scalar to
-                indicated unbounded space.
-            upper_bounds (float or np.ndarray): Same as above, but for upper
-                bounds (and pass np.inf instead of -np.inf).
             batch_size (int): batch size of the sample. Defaults to
                 ``self.batch_size``.
         """
@@ -170,7 +175,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
             new_solutions, out_of_bounds = self._transform_and_check_sol(
                 z, min(self.current_gens, self.n_vectors), self.cd, self.m,
-                self.mean, self.sigma, lower_bounds, upper_bounds)
+                self.mean, self.sigma, self.lower_bounds, self.upper_bounds)
             self._solutions[remaining_indices] = new_solutions
 
             # Find indices in remaining_indices that are still out of bounds

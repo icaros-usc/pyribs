@@ -22,6 +22,13 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
+            indicating lower bounds of the solution space. Scalars specify
+            the same bound for the entire space, while arrays specify a
+            bound for each dimension. Pass -np.inf in the array or scalar to
+            indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper
+            bounds (and pass np.inf instead of -np.inf).
         mirror_sampling (bool): Whether to use mirror sampling when gathering
             solutions. Defaults to True.
         adam_kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
@@ -34,6 +41,8 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             batch_size=None,
             seed=None,
             dtype=np.float64,
+            lower_bounds=-np.inf,
+            upper_bounds=np.inf,
             mirror_sampling=True,
             **adam_kwargs):
         self.batch_size = (4 + int(3 * np.log(solution_dim))
@@ -41,6 +50,9 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
+        self.lower_bounds = lower_bounds
+        self.upper_bounds = upper_bounds
+
         self._rng = np.random.default_rng(seed)
         self._solutions = None
 
@@ -99,19 +111,10 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def ask(self, lower_bounds, upper_bounds, batch_size=None):
+    def ask(self, batch_size=None):
         """Samples new solutions from the Gaussian distribution.
 
-        Note: Bounds are currently not enforced.
-
         Args:
-            lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-                indicating lower bounds of the solution space. Scalars specify
-                the same bound for the entire space, while arrays specify a
-                bound for each dimension. Pass -np.inf in the array or scalar to
-                indicated unbounded space.
-            upper_bounds (float or np.ndarray): Same as above, but for upper
-                bounds (and pass np.inf instead of -np.inf).
             batch_size (int): batch size of the sample. Defaults to
                 ``self.batch_size``.
         """
@@ -133,12 +136,11 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
                 self.noise = self._rng.standard_normal(
                     (batch_size, self.solution_dim), dtype=self.dtype)
 
-            # TODO Numba
             new_solutions = (self.adam_opt.theta[None] +
                              self.sigma0 * self.noise)
             out_of_bounds = np.logical_or(
-                new_solutions < np.expand_dims(lower_bounds, axis=0),
-                new_solutions > np.expand_dims(upper_bounds, axis=0),
+                new_solutions < np.expand_dims(self.lower_bounds, axis=0),
+                new_solutions > np.expand_dims(self.upper_bounds, axis=0),
             )
 
             self._solutions[remaining_indices] = new_solutions

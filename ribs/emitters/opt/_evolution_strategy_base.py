@@ -68,9 +68,8 @@ class EvolutionStrategyBase(ABC):
         """Samples new solutions from the Gaussian distribution.
 
         Args:
-            batch_size (int): If passed in, the ES will be asked to return this
-                number of solutions instead of the number specified during
-                initialization.
+            batch_size (int): batch size of the sample. Defaults to
+                ``self.batch_size``.
         """
 
     @abstractmethod
