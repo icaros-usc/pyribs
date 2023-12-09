@@ -57,8 +57,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         self._rng = np.random.default_rng(seed)
         self._solutions = None
-        self._ranking_indices = None
-        self._ranking_values = None
 
         self.mirror_sampling = mirror_sampling
 
@@ -84,6 +82,18 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self.adam_opt.reset(x0)
         self.last_update_ratio = np.inf  # Updated at end of tell().
         self.noise = None  # Becomes (batch_size, solution_dim) array in ask().
+
+    def check_stop(self, ranking_values):
+        if self.last_update_ratio < 1e-9:
+            return True
+
+        # Fitness is too flat (only applies if there are at least 2 parents).
+        # NOTE: We use norm here because we may have multiple ranking values.
+        if (len(ranking_values) >= 2 and
+                np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12):
+            return True
+
+        return False
 
     def ask(self, batch_size=None):
         if batch_size is None:
@@ -120,10 +130,11 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         return readonly(self._solutions)
 
-    def tell(self, ranking_indices, ranking_values, num_parents):
-        self._ranking_indices = ranking_indices
-        self._ranking_values = ranking_values
-
+    def tell(
+            self,
+            ranking_indices,
+            num_parents,  # pylint: disable = unused-argument
+    ):
         # Indices come in decreasing order, so we reverse to get them to
         # increasing order.
         ranks = np.empty(self.batch_size, dtype=np.int32)
@@ -154,16 +165,3 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self.last_update_ratio = (
             np.linalg.norm(self.adam_opt.theta - theta_prev) /
             np.linalg.norm(self.adam_opt.theta))
-
-    def check_stop(self):
-        if self.last_update_ratio < 1e-9:
-            return True
-
-        # Fitness is too flat (only applies if there are at least 2 parents).
-        # NOTE: We use norm here because we may have multiple ranking values.
-        sorted_values = self._ranking_values[self._ranking_indices]
-        if (len(sorted_values) >= 2 and
-                np.linalg.norm(sorted_values[0] - sorted_values[-1]) < 1e-12):
-            return True
-
-        return False

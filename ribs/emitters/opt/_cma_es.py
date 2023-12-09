@@ -117,8 +117,6 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
 
         self._rng = np.random.default_rng(seed)
         self._solutions = None
-        self._ranking_indices = None
-        self._ranking_values = None
 
         # Calculate gap between covariance matrix updates.
         num_parents = self.batch_size // 2
@@ -146,7 +144,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         # Setup the covariance matrix.
         self.cov = DecompMatrix(self.solution_dim, self.dtype)
 
-    def check_stop(self):
+    def check_stop(self, ranking_values):
         # Tolerances from pycma CMA-ES.
         if self.cov.condition_number > 1e14:
             return True
@@ -158,9 +156,8 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
 
         # Fitness is too flat (only applies if there are at least 2 parents).
         # NOTE: We use norm here because we may have multiple ranking values.
-        sorted_values = self._ranking_values[self._ranking_indices]
-        if (len(sorted_values) >= 2 and
-                np.linalg.norm(sorted_values[0] - sorted_values[-1]) < 1e-12):
+        if (len(ranking_values) >= 2 and
+                np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12):
             return True
 
         return False
@@ -247,10 +244,8 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def tell(self, ranking_indices, ranking_values, num_parents):
+    def tell(self, ranking_indices, num_parents):
         self.current_eval += len(self._solutions[ranking_indices])
-        self._ranking_indices = ranking_indices
-        self._ranking_values = ranking_values
 
         if num_parents == 0:
             return
