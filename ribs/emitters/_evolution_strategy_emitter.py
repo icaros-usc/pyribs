@@ -118,13 +118,17 @@ class EvolutionStrategyEmitter(EmitterBase):
         # Check if the restart_rule is valid, discard check_restart result.
         _ = self._check_restart(0)
 
-        self._opt = _get_es(es,
-                            sigma0=sigma0,
-                            batch_size=batch_size,
-                            solution_dim=self._solution_dim,
-                            seed=opt_seed,
-                            dtype=self.archive.dtype,
-                            **(es_kwargs if es_kwargs is not None else {}))
+        self._opt = _get_es(
+            es,
+            sigma0=sigma0,
+            batch_size=batch_size,
+            solution_dim=self._solution_dim,
+            seed=opt_seed,
+            dtype=self.archive.dtype,
+            lower_bounds=self.lower_bounds,
+            upper_bounds=self.upper_bounds,
+            **(es_kwargs if es_kwargs is not None else {}),
+        )
         self._opt.reset(self._x0)
 
         self._ranker = _get_ranker(ranker, ranker_seed)
@@ -163,7 +167,7 @@ class EvolutionStrategyEmitter(EmitterBase):
             (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
         """
-        return self._opt.ask(self.lower_bounds, self.upper_bounds)
+        return self._opt.ask()
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
