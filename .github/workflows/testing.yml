@@ -63,7 +63,7 @@ jobs:
       - name: Test core
         run: >
           pytest tests/archives tests/emitters tests/schedulers
-      - name: Install extras deps
+      - name: Install visualize deps
         run: pip install -r pinned_reqs/extras_visualize.txt
       - name: Test visualize extra
         run: pytest tests/visualize
@@ -71,6 +71,10 @@ jobs:
         run: pip install qdax
       - name: Test visualize extra for QDax
         run: pytest tests/visualize_qdax
+      - name: Install cma dep
+        run: pip install .[cma]
+      - name: Test cma extra
+        run: pytest tests/emitters_pycma
   coverage:
     runs-on: ubuntu-latest
     steps:
