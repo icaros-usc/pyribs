@@ -6,7 +6,6 @@
 
 #### API
 
-- Allow overriding ES in sphere example ({pr}`439`)
 - Add PyCMAEvolutionStrategy for using pycma in ES emitters ({pr}`434`)
 - **Backwards-incompatible:** Add ranking values to evolution strategy tell
   method ({pr}`438`)
@@ -39,6 +38,7 @@
 
 #### Improvements
 
+- Allow overriding ES in sphere example ({pr}`439`)
 - Use NumPy SeedSequence in emitters ({pr}`431`)
 - Use numbers types when checking arguments ({pr}`419`)
 - Reimplement ArchiveBase using ArrayStore ({pr}`399`)
