@@ -6,6 +6,7 @@
 
 #### API
 
+- Add PyCMAEvolutionStrategy for using pycma in ES emitters ({pr}`434`)
 - **Backwards-incompatible:** Add ranking values to evolution strategy tell
   method ({pr}`438`)
 - **Backwards-incompatible:** Move evolution strategy bounds to init ({pr}`436`)

@@ -7,10 +7,14 @@ dependencies for ribs with `pip install ribs[dev]` or `pip install -e .[dev]`
 
 For information on running tests, see [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-## Visualization Tests
+## External Libraries
 
-We divide the visualization tests into `visualize` and `visualize_qdax`, where
-`visualize_qdax` tests visualizations of QDax components.
+Some features of pyribs require external libraries that are optional and thus
+not specified in the default installation command. We separate these tests into
+separate directories:
+
+- `visualize_qdax/` tests visualization of QDax components
+- `emitters_pycma/` holds emitter tests that require pycma
 
 ## Additional Tests
 

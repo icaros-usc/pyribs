@@ -28,12 +28,16 @@ extras_require = {
         "matplotlib>=3.0.0",
         "shapely>=2.0.0",
     ],
+    "pycma": ["cma"],
     # All dependencies except for dev. Don't worry if there are duplicate
     # dependencies, since setuptools automatically handles duplicates.
     "all": [
         ### visualize ###
         "matplotlib>=3.0.0",
         "shapely>=2.0.0",
+
+        ### cma ###
+        "cma",
     ],
     "dev": [
         "pip>=20.3",
