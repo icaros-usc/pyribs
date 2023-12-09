@@ -5,6 +5,8 @@ import pytest
 from ribs.archives import GridArchive
 from ribs.emitters import GradientArborescenceEmitter
 
+from .evolution_strategy_emitter_test import ES_LIST
+
 
 def test_auto_batch_size():
     archive = GridArchive(solution_dim=10,
@@ -81,3 +83,34 @@ def test_tell_dqd_must_be_called_before_tell():
                                               lr=1.0)
         # Must call ask_dqd() before calling ask() to set the jacobian.
         emitter.tell([[0]], [0], [[0]], {"status": [0], "value": [0]})
+
+
+@pytest.mark.parametrize("es", ES_LIST)
+def test_sphere(es):
+    archive = GridArchive(solution_dim=10,
+                          dims=[20, 20],
+                          ranges=[(-1.0, 1.0)] * 2)
+    emitter = GradientArborescenceEmitter(
+        archive,
+        x0=np.zeros(10),
+        sigma0=1.0,
+        lr=1.0,
+        # Must be 2 to accommodate restrictions from LM-MA-ES.
+        batch_size=2,
+        es=es,
+    )
+
+    # Try running with the negative sphere function for a few iterations.
+    for _ in range(5):
+        solution = emitter.ask_dqd()
+        objective = -np.sum(np.square(solution), axis=1)
+        measures = solution[:, :2]
+        jacobian = np.random.uniform(-1, 1, (1, 3, 10))
+        add_info = archive.add(solution, objective, measures)
+        emitter.tell_dqd(solution, objective, measures, jacobian, add_info)
+
+        solution = emitter.ask()
+        objective = -np.sum(np.square(solution), axis=1)
+        measures = solution[:, :2]
+        add_info = archive.add(solution, objective, measures)
+        emitter.tell(solution, objective, measures, add_info)
