@@ -99,7 +99,7 @@ class CVTArchive(ArchiveBase):
             ``archive.samples`` will be None. This can be useful when one wishes
             to use the same CVT across experiments for fair comparison.
         centroid_method (str): Pass in the following methods for
-            generating centroids: "random", "sobol", "scrambled sobol",
+            generating centroids: "random", "sobol", "scrambled_sobol",
             "halton". Default method is "kmeans". These methods are derived from
             Mouret 2023: https://dl.acm.org/doi/pdf/10.1145/3583133.3590726.
             Note: Samples are only used when method is "kmeans".
