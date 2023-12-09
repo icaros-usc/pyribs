@@ -52,18 +52,6 @@ class EvolutionStrategyBase(ABC):
         """
 
     @abstractmethod
-    def check_stop(self, ranking_values):
-        """Checks if the ES should stop and be reset.
-
-        Args:
-            ranking_values (numpy.ndarray): Array of objective values of the
-                solutions, sorted in the same order that the solutions were
-                sorted when passed to tell().
-        Returns:
-            True if any of the stopping conditions are satisfied.
-        """
-
-    @abstractmethod
     def ask(self, batch_size=None):
         """Samples new solutions.
 
@@ -82,9 +70,25 @@ class EvolutionStrategyBase(ABC):
                 NOT the ranks of the solutions. Rather, they are indices such
                 that ``solutions[ranking_indices]`` will correctly rank the
                 solutions (think of an argsort).
-            ranking_values (numpy.ndarray): Array of objective values of the
-                solutions, sorted in the same order that the solutions were
-                sorted when passed to tell().
+            ranking_values (numpy.ndarray): Array of values that were used to
+                rank the solutions. Shape can be either ``(batch_size,)`` or
+                (batch_size, n_values)``, where ``batch_size`` is the number of
+                solutions and ``n_values`` is the number of values that the
+                ranker used.
             num_parents (int): Number of top solutions to select from the
                 ranked solutions.
+        """
+
+    @abstractmethod
+    def check_stop(self, ranking_values):
+        """Checks if the ES should stop and be reset.
+
+        Args:
+            ranking_values (numpy.ndarray): Array of values that were used to
+                rank the solutions. Shape can be either ``(batch_size,)`` or
+                (batch_size, n_values)``, where ``batch_size`` is the number of
+                solutions and ``n_values`` is the number of values that the
+                ranker used.
+        Returns:
+            True if any of the stopping conditions are satisfied.
         """
