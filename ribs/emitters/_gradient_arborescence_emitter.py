@@ -196,13 +196,17 @@ class GradientArborescenceEmitter(EmitterBase):
             lr=lr,
             **(grad_opt_kwargs if grad_opt_kwargs is not None else {}))
 
-        self._opt = _get_es(es,
-                            sigma0=sigma0,
-                            batch_size=batch_size,
-                            solution_dim=self._num_coefficients,
-                            seed=opt_seed,
-                            dtype=self.archive.dtype,
-                            **(es_kwargs if es_kwargs is not None else {}))
+        self._opt = _get_es(
+            es,
+            sigma0=sigma0,
+            batch_size=batch_size,
+            solution_dim=self._num_coefficients,
+            seed=opt_seed,
+            dtype=self.archive.dtype,
+            lower_bounds=-np.inf,  # No bounds for gradient coefficients.
+            upper_bounds=np.inf,
+            **(es_kwargs if es_kwargs is not None else {}),
+        )
 
         self._opt.reset(np.zeros(self._num_coefficients))
 
@@ -276,20 +280,7 @@ class GradientArborescenceEmitter(EmitterBase):
             raise RuntimeError("Please call ask_dqd() and tell_dqd() "
                                "before calling ask().")
 
-        coeff_lower_bounds = np.full(
-            self._num_coefficients,
-            -np.inf,
-            dtype=self._archive.dtype,
-        )
-        coeff_upper_bounds = np.full(
-            self._num_coefficients,
-            np.inf,
-            dtype=self._archive.dtype,
-        )
-        grad_coeffs = self._opt.ask(
-            coeff_lower_bounds,
-            coeff_upper_bounds,
-        )[:, :, None]
+        grad_coeffs = self._opt.ask()[:, :, None]
         return (self._grad_opt.theta +
                 np.sum(self._jacobian_batch * grad_coeffs, axis=1))
 
