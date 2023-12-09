@@ -70,6 +70,24 @@ def test_custom_centroids_bad_shape(use_kd_tree):
                    use_kd_tree=use_kd_tree)
 
 
+@pytest.mark.parametrize("method",
+                         ["random", "sobol", "scrambled_sobol", "halton"])
+def test_alternative_centroids(method):
+    archive = CVTArchive(
+        solution_dim=10,
+        cells=100,
+        ranges=[(0.1, 0.5), (-0.6, -0.2)],
+        centroid_method=method,
+    )
+
+    centroid_x = archive.centroids[:, 0]
+    centroid_y = archive.centroids[:, 1]
+
+    assert archive.centroids.shape == (100, 2)
+    assert np.all(centroid_x >= 0.1) and np.all(centroid_x <= 0.5)
+    assert np.all(centroid_y >= -0.6) and np.all(centroid_y <= -0.2)
+
+
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
 def test_add_single_to_archive(data, use_list, add_mode):
     solution = data.solution
@@ -130,8 +148,8 @@ def test_add_single_without_overwrite(data, add_mode):
                          data.measures, data.centroid)
 
 
-def test_chunked_calculation_short():
-    """Testing accuracy of chunked computation"""
+def test_chunked_calculation():
+    """Testing accuracy of chunked computation for nearest neighbors."""
     centroids = [[-1, 1], [0, 1], [1, 1], [-1, 0], [0, 0], [1, 0], [-1, -1],
                  [0, -1], [1, -1]]
 
