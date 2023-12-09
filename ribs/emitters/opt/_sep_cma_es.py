@@ -234,7 +234,7 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
         return (cov * (1 - c1a - cmu * np.sum(weights)) + rank_one_update * c1 +
                 rank_mu_update * cmu / (sigma**2))
 
-    def tell(self, ranking_indices, num_parents):
+    def tell(self, ranking_indices, ranking_values, num_parents):
         self.current_eval += len(self._solutions[ranking_indices])
 
         if num_parents == 0:

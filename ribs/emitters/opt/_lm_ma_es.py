@@ -175,7 +175,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
         return weights, mueff
 
-    def tell(self, ranking_indices, num_parents):
+    def tell(self, ranking_indices, ranking_values, num_parents):
         self.current_gens += 1
 
         if num_parents == 0:

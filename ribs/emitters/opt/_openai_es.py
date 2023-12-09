@@ -130,11 +130,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         return readonly(self._solutions)
 
-    def tell(
-            self,
-            ranking_indices,
-            num_parents,  # pylint: disable = unused-argument
-    ):
+    def tell(self, ranking_indices, ranking_values, num_parents):
         # Indices come in decreasing order, so we reverse to get them to
         # increasing order.
         ranks = np.empty(self.batch_size, dtype=np.int32)

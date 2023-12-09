@@ -244,7 +244,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def tell(self, ranking_indices, num_parents):
+    def tell(self, ranking_indices, ranking_values, num_parents):
         self.current_eval += len(self._solutions[ranking_indices])
 
         if num_parents == 0:
