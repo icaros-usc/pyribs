@@ -84,11 +84,6 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         self.m = None
 
     def reset(self, x0):
-        """Resets the optimizer to start at x0.
-
-        Args:
-            x0 (np.ndarray): Initial mean.
-        """
         self.current_gens = 0
         self.sigma = self.sigma0
         self.mean = np.array(x0, self.dtype)
@@ -100,18 +95,6 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         self.m = np.zeros((self.n_vectors, self.solution_dim))
 
     def check_stop(self, ranking_values):
-        """Checks if the optimization should stop and be reset.
-
-        Tolerances come from CMA-ES.
-
-        Args:
-            ranking_values (np.ndarray): Array of objective values of the
-                solutions, sorted in the same order that the solutions were
-                sorted when passed to ``tell()``.
-
-        Returns:
-            True if any of the stopping conditions are satisfied.
-        """
         # Sigma too small - Note: this was 1e-20 in the reference LM-MA-ES code.
         if self.sigma < 1e-12:
             return True
@@ -149,12 +132,6 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         return new_solutions, out_of_bounds
 
     def ask(self, batch_size=None):
-        """Samples new solutions from the Gaussian distribution.
-
-        Args:
-            batch_size (int): batch size of the sample. Defaults to
-                ``self.batch_size``.
-        """
         # NOTE: The LM-MA-ES uses mirror sampling by default, but we do not.
         if batch_size is None:
             batch_size = self.batch_size
@@ -199,14 +176,6 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         return weights, mueff
 
     def tell(self, ranking_indices, num_parents):
-        """Passes the solutions back to the optimizer.
-
-        Args:
-            ranking_indices (array-like of int): Indices that indicate the
-                ranking of the original solutions returned in ``ask()``.
-            num_parents (int): Number of top solutions to select from the
-                ranked solutions.
-        """
         self.current_gens += 1
 
         if num_parents == 0:
