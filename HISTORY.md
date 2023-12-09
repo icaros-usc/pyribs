@@ -6,6 +6,7 @@
 
 #### API
 
+- **Backwards-incompatible:** Move evolution strategy bounds to init ({pr}`436`)
 - **Backwards-incompatible:** Use seed instead of rng in ranker ({pr}`432`)
 - **Backwards-incompatible:** Replace status and value with add_info ({pr}`430`)
 - Support custom data fields in archive, emitters, and scheduler ({pr}`421`,
