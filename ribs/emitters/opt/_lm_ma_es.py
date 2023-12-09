@@ -56,6 +56,8 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
         self._rng = np.random.default_rng(seed)
         self._solutions = None
+        self._ranking_indices = None
+        self._ranking_values = None
 
         if self.batch_size > self.solution_dim:
             raise ValueError(f"batch_size ({self.batch_size}) is greater than"
@@ -94,14 +96,16 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         # Setup the matrix vectors.
         self.m = np.zeros((self.n_vectors, self.solution_dim))
 
-    def check_stop(self, ranking_values):
+    def check_stop(self):
         # Sigma too small - Note: this was 1e-20 in the reference LM-MA-ES code.
         if self.sigma < 1e-12:
             return True
 
+        # Fitness is too flat (only applies if there are at least 2 parents).
         # NOTE: We use norm here because we may have multiple ranking values.
-        if (len(ranking_values) >= 2 and
-                np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12):
+        sorted_values = self._ranking_values[self._ranking_indices]
+        if (len(sorted_values) >= 2 and
+                np.linalg.norm(sorted_values[0] - sorted_values[-1]) < 1e-12):
             return True
 
         return False
@@ -175,8 +179,10 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
         return weights, mueff
 
-    def tell(self, ranking_indices, num_parents):
+    def tell(self, ranking_indices, ranking_values, num_parents):
         self.current_gens += 1
+        self._ranking_indices = ranking_indices
+        self._ranking_values = ranking_values
 
         if num_parents == 0:
             return
