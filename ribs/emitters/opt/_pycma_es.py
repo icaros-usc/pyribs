@@ -26,7 +26,8 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             bounds (and pass np.inf instead of -np.inf).
         opts (dict): Additional options for pycma. Note that ``popsize``,
             ``bounds``, ``randn``, and ``seed`` are overwritten by us and thus
-            should not be provided in this dict.
+            should not be provided in this dict. We also make ``verbose``
+            default to -9, but you can also pass in a custom value here.
     """
 
     def __init__(  # pylint: disable = super-init-not-called
