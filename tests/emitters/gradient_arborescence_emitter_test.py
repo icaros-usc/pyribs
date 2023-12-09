@@ -5,7 +5,7 @@ import pytest
 from ribs.archives import GridArchive
 from ribs.emitters import GradientArborescenceEmitter
 
-ES_LIST = ["cma_es", "sep_cma_es", "lm_ma_es", "openai_es"]
+from .evolution_strategy_emitter_test import ES_LIST
 
 
 def test_auto_batch_size():
