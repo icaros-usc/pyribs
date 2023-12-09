@@ -6,6 +6,7 @@
 
 #### API
 
+- Allow overriding ES in sphere example ({pr}`439`)
 - Add PyCMAEvolutionStrategy for using pycma in ES emitters ({pr}`434`)
 - **Backwards-incompatible:** Add ranking values to evolution strategy tell
   method ({pr}`438`)
