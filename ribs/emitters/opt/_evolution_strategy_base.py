@@ -60,7 +60,9 @@ class EvolutionStrategyBase(ABC):
                 rank the solutions. Shape can be either ``(batch_size,)`` or
                 (batch_size, n_values)``, where ``batch_size`` is the number of
                 solutions and ``n_values`` is the number of values that the
-                ranker used.
+                ranker used. Note that unlike in :meth:`tell`, these values must
+                be sorted according to the ``ranking_indices`` passed to
+                :meth:`tell`.
         Returns:
             True if any of the stopping conditions are satisfied.
         """
