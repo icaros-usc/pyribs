@@ -17,9 +17,16 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
+            indicating lower bounds of the solution space. Scalars specify
+            the same bound for the entire space, while arrays specify a
+            bound for each dimension. Pass -np.inf in the array or scalar to
+            indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper
+            bounds (and pass np.inf instead of -np.inf).
         opts (dict): Additional options for pycma. Note that ``popsize``,
-            ``randn``, and ``seed`` are overwritten by us and thus should not be
-            provided in this dict.
+            ``bounds``, ``randn``, and ``seed`` are overwritten by us and thus
+            should not be provided in this dict.
     """
 
     def __init__(  # pylint: disable = super-init-not-called
@@ -29,6 +36,8 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             batch_size=None,
             seed=None,
             dtype=np.float64,
+            lower_bounds=None,
+            upper_bounds=None,
             opts=None):
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
@@ -39,6 +48,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         self._es = None
         self._opts = opts or {}
         self._opts["popsize"] = batch_size
+        self._opts["bounds"] = [lower_bounds, upper_bounds]
 
         # Default CMAEvolutionStrategy uses global seed. To avoid this, we must
         # provide a randn function tied to our rng -- see:
@@ -47,6 +57,8 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         self._opts["randn"] = lambda batch_size, n: self._rng.standard_normal(
             (batch_size, n))
         self._opts["seed"] = np.nan
+
+        self._opts.setdefault("verbose", -9)
 
     @property
     def batch_size(self):
@@ -84,47 +96,52 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         Returns:
             Output of cma.CMAEvolutionStrategy.stop
         """
-        return self._es.stop()
+        if self._es.condition_number > 1e14:
+            print("STOP CONDITION")
+            return True
 
-    # TODO: Need threadpool limits?
+        # Area of distribution too small.
+        area = self._es.sigma * np.sqrt(np.max(self._es.sm.eigenspectrum))
+        if area < 1e-11:
+            print("STOP AREA")
+            return True
+
+        # Fitness is too flat (only applies if there are at least 2 parents).
+        # NOTE: We use norm here because we may have multiple ranking values.
+        if (len(ranking_values) >= 2 and
+                np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12):
+            print("STOP FLAT")
+            return True
+
+        #  if self._es.stop():
+        #      print("STOP")
+        #  return self._es.stop()
+
+        return False
 
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def ask(self, lower_bounds, upper_bounds, batch_size=None):
+    def ask(self, batch_size=None):
         """Samples new solutions from the Gaussian distribution.
 
         Args:
-            lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-                indicating lower bounds of the solution space. Scalars specify
-                the same bound for the entire space, while arrays specify a
-                bound for each dimension. Pass -np.inf in the array or scalar to
-                indicated unbounded space.
-            upper_bounds (float or np.ndarray): Same as above, but for upper
-                bounds (and pass np.inf instead of -np.inf).
             batch_size (int): batch size of the sample. Defaults to
                 ``self.batch_size``.
         """
 
-        self._solutions = self._es.ask(
-            batch_size,  # Defaults to popsize.
-        )
+        self._solutions = np.asarray(
+            self._es.ask(
+                batch_size,  # Defaults to popsize.
+            ))
 
-        # TODO: bounds?
-
-        return readonly(self._solutions.astype(self.dtype, copy=False))
+        return readonly(self._solutions.astype(self.dtype))
 
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def tell(self, ranking_indices, num_parents):
-        """Passes the solutions back to the optimizer.
-
-        Args:
-            ranking_indices (array-like of int): Indices that indicate the
-                ranking of the original solutions returned in ``ask()``.
-            num_parents (int): Number of top solutions to select from the
-                ranked solutions.
-        """
-
-        # TODO
+    def tell(self, ranking_indices, num_parents, ranking_values):
+        #  self._es.tell(self._solutions, -ranking_values)
+        #  self._es.tell(self._solutions[ranking_indices],
+        #                np.arange(len(ranking_indices)))
+        self._es.tell(self._solutions, ranking_indices)
