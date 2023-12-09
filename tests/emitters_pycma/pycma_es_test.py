@@ -10,7 +10,9 @@ from ribs.emitters.opt import PyCMAEvolutionStrategy
 
 def test_randomness():
     """If you create two separate ES's, they should not interfere with each
-    other, and thus they should produce the same results."""
+    other, and thus they should produce the same results. Good test to have
+    since pycma by default uses the global np.random, so we should make sure
+    that we are correctly injecting a generator."""
     es1 = PyCMAEvolutionStrategy(sigma0=0.1, solution_dim=10, seed=42)
     es2 = PyCMAEvolutionStrategy(sigma0=0.1, solution_dim=10, seed=42)
     es1.reset(np.zeros(10))
