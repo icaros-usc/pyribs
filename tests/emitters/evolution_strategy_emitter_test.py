@@ -68,6 +68,18 @@ def test_dtypes(dtype):
                                        ranker="obj")
     assert emitter.x0.dtype == dtype
 
+
+@pytest.mark.parametrize("es", ES_LIST)
+def test_sphere(es):
+    archive = GridArchive(solution_dim=10,
+                          dims=[20, 20],
+                          ranges=[(-1.0, 1.0)] * 2)
+    emitter = EvolutionStrategyEmitter(archive,
+                                       x0=np.zeros(10),
+                                       sigma0=1.0,
+                                       ranker="obj",
+                                       es=es)
+
     # Try running with the negative sphere function for a few iterations.
     for _ in range(10):
         solution_batch = emitter.ask()
