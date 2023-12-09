@@ -5,7 +5,6 @@ https://github.com/CMA-ES/pycma/blob/master/cma/purecma.py
 """
 import numba as nb
 import numpy as np
-from threadpoolctl import threadpool_limits
 
 from ribs._utils import readonly
 from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
@@ -146,9 +145,6 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
         return new_solutions, out_of_bounds
 
-    # Limit OpenBLAS to single thread. This is typically faster than
-    # multithreading because our data is too small.
-    @threadpool_limits.wrap(limits=1, user_api="blas")
     def ask(self, batch_size=None):
         """Samples new solutions from the Gaussian distribution.
 
@@ -199,9 +195,6 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
         return weights, mueff
 
-    # Limit OpenBLAS to single thread. This is typically faster than
-    # multithreading because our data is too small.
-    @threadpool_limits.wrap(limits=1, user_api="blas")
     def tell(self, ranking_indices, num_parents):
         """Passes the solutions back to the optimizer.
 

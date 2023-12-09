@@ -3,7 +3,6 @@
 See here for more info: https://arxiv.org/abs/1703.03864
 """
 import numpy as np
-from threadpoolctl import threadpool_limits
 
 from ribs._utils import readonly
 from ribs.emitters.opt._adam_opt import AdamOpt
@@ -108,9 +107,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         return False
 
-    # Limit OpenBLAS to single thread. This is typically faster than
-    # multithreading because our data is too small.
-    @threadpool_limits.wrap(limits=1, user_api="blas")
     def ask(self, batch_size=None):
         """Samples new solutions from the Gaussian distribution.
 
@@ -152,9 +148,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         return readonly(self._solutions)
 
-    # Limit OpenBLAS to single thread. This is typically faster than
-    # multithreading because our data is too small.
-    @threadpool_limits.wrap(limits=1, user_api="blas")
     def tell(
             self,
             ranking_indices,
