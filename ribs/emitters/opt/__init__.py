@@ -39,7 +39,7 @@ from ribs.emitters.opt._gradient_ascent_opt import GradientAscentOpt
 from ribs.emitters.opt._gradient_opt_base import GradientOptBase
 from ribs.emitters.opt._lm_ma_es import LMMAEvolutionStrategy
 from ribs.emitters.opt._openai_es import OpenAIEvolutionStrategy
-from ribs.emitters.opt._pycma import PyCMAEvolutionStrategy
+from ribs.emitters.opt._pycma_es import PyCMAEvolutionStrategy
 from ribs.emitters.opt._sep_cma_es import SeparableCMAEvolutionStrategy
 
 __all__ = [
