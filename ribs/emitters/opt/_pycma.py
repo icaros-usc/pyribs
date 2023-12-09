@@ -96,26 +96,33 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         Returns:
             Output of cma.CMAEvolutionStrategy.stop
         """
+        # Convert (batch_size, 1) array into (batch_size,).
+        if ranking_values.ndim == 2 and ranking_values.shape[1] == 1:
+            ranking_values = ranking_values[:, 0]
+
+        # If ranking_values are scalar, we use pycma's termination criterion
+        # directly.
+        if ranking_values.ndim == 1:
+            return self._es.stop()
+
+        # Otherwise, we check our own criteria like in CMAEvolutionStrategy,
+        # since the objectives passed into tell() were fictitious and thus we
+        # need to check ranking_values on our own.
+
+        # Tolerances from pycma CMA-ES.
         if self._es.condition_number > 1e14:
-            print("STOP CONDITION")
             return True
 
         # Area of distribution too small.
         area = self._es.sigma * np.sqrt(np.max(self._es.sm.eigenspectrum))
         if area < 1e-11:
-            print("STOP AREA")
             return True
 
         # Fitness is too flat (only applies if there are at least 2 parents).
         # NOTE: We use norm here because we may have multiple ranking values.
         if (len(ranking_values) >= 2 and
                 np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12):
-            print("STOP FLAT")
             return True
-
-        #  if self._es.stop():
-        #      print("STOP")
-        #  return self._es.stop()
 
         return False
 
@@ -129,19 +136,29 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             batch_size (int): batch size of the sample. Defaults to
                 ``self.batch_size``.
         """
-
-        self._solutions = np.asarray(
-            self._es.ask(
-                batch_size,  # Defaults to popsize.
-            ))
-
+        # batch_size defaults to popsize in CMA-ES.
+        self._solutions = np.asarray(self._es.ask(batch_size))
         return readonly(self._solutions.astype(self.dtype))
 
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def tell(self, ranking_indices, num_parents, ranking_values):
-        #  self._es.tell(self._solutions, -ranking_values)
-        #  self._es.tell(self._solutions[ranking_indices],
-        #                np.arange(len(ranking_indices)))
-        self._es.tell(self._solutions, ranking_indices)
+    def tell(self, ranking_indices, ranking_values, num_parents):
+        # Convert (batch_size, 1) array into (batch_size,).
+        if ranking_values.ndim == 2 and ranking_values.shape[1] == 1:
+            ranking_values = ranking_values[:, 0]
+
+        if ranking_values.ndim == 1:
+            # Directly tell values to ES since these are just 1D. The
+            # ranking_values are presented with higher being better, but CMA-ES
+            # minimizes, so we need to invert all values.
+            self._es.tell(self._solutions, -ranking_values)
+        else:
+            # This case is when ranking_values is 2D. In this case, we cannot
+            # tell the values to the ES because the ES expects scalars. Thus, we
+            # make up our own scalars, which is fine because CMA-ES only looks
+            # at the ranks of the solutions during search. However, it does look
+            # at values in the termination criterion, hence we use custom
+            # conditions in check_stop.
+            self._es.tell(self._solutions[ranking_indices],
+                          np.arange(len(ranking_indices)))
