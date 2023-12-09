@@ -801,6 +801,8 @@ def sphere_main(algorithm,
                 e["kwargs"]["es"] = es
 
     name = f"{algorithm}_{config['dim']}"
+    if es is not None:
+        name += f"_{es}"
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
