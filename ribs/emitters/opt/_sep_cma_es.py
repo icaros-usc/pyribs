@@ -77,8 +77,11 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
-        self.lower_bounds = lower_bounds
-        self.upper_bounds = upper_bounds
+
+        # Even scalars must be converted into 0-dim arrays so that they work
+        # with the bound check in numba.
+        self.lower_bounds = np.asarray(lower_bounds, dtype=self.dtype)
+        self.upper_bounds = np.asarray(upper_bounds, dtype=self.dtype)
 
         self._rng = np.random.default_rng(seed)
         self._solutions = None

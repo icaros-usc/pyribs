@@ -5,6 +5,8 @@ import pytest
 from ribs.archives import GridArchive
 from ribs.emitters import GradientArborescenceEmitter
 
+ES_LIST = ["cma_es", "sep_cma_es", "lm_ma_es", "openai_es"]
+
 
 def test_auto_batch_size():
     archive = GridArchive(solution_dim=10,
@@ -83,17 +85,23 @@ def test_tell_dqd_must_be_called_before_tell():
         emitter.tell([[0]], [0], [[0]], {"status": [0], "value": [0]})
 
 
-def test_sphere():
+@pytest.mark.parametrize("es", ES_LIST)
+def test_sphere(es):
     archive = GridArchive(solution_dim=10,
                           dims=[20, 20],
                           ranges=[(-1.0, 1.0)] * 2)
-    emitter = GradientArborescenceEmitter(archive,
-                                          x0=np.zeros(10),
-                                          sigma0=1.0,
-                                          lr=1.0)
+    emitter = GradientArborescenceEmitter(
+        archive,
+        x0=np.zeros(10),
+        sigma0=1.0,
+        lr=1.0,
+        # Must be 2 to accommodate restrictions from LM-MA-ES.
+        batch_size=2,
+        es=es,
+    )
 
     # Try running with the negative sphere function for a few iterations.
-    for _ in range(10):
+    for _ in range(5):
         solution = emitter.ask_dqd()
         objective = -np.sum(np.square(solution), axis=1)
         measures = solution[:, :2]

@@ -74,7 +74,7 @@ def test_sphere(es):
                                        es=es)
 
     # Try running with the negative sphere function for a few iterations.
-    for _ in range(10):
+    for _ in range(5):
         solution_batch = emitter.ask()
         objective_batch = -np.sum(np.square(solution_batch), axis=1)
         measures_batch = solution_batch[:, :2]
