@@ -125,7 +125,7 @@ class ImprovementRanker(RankerBase):
     """
 
     def rank(self, emitter, archive, data, add_info):
-        # Note that lexsort sorts the values in ascending order,
+        # Note that argsort sorts the values in ascending order,
         # so we use np.flip to reverse the sorted array.
         return np.flip(np.argsort(add_info["value"])), add_info["value"]
 

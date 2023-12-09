@@ -79,26 +79,11 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self.noise = None
 
     def reset(self, x0):
-        """Resets the optimizer to start at x0.
-
-        Args:
-            x0 (np.ndarray): Initial mean.
-        """
         self.adam_opt.reset(x0)
         self.last_update_ratio = np.inf  # Updated at end of tell().
         self.noise = None  # Becomes (batch_size, solution_dim) array in ask().
 
     def check_stop(self, ranking_values):
-        """Checks if the optimization should stop and be reset.
-
-        Args:
-            ranking_values (np.ndarray): Array of objective values of the
-                solutions, sorted in the same order that the solutions were
-                sorted when passed to ``tell()``.
-
-        Returns:
-            True if any of the stopping conditions are satisfied.
-        """
         if self.last_update_ratio < 1e-9:
             return True
 
@@ -111,12 +96,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         return False
 
     def ask(self, batch_size=None):
-        """Samples new solutions from the Gaussian distribution.
-
-        Args:
-            batch_size (int): batch size of the sample. Defaults to
-                ``self.batch_size``.
-        """
         if batch_size is None:
             batch_size = self.batch_size
 
@@ -151,19 +130,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         return readonly(self._solutions)
 
-    def tell(
-            self,
-            ranking_indices,
-            num_parents,  # pylint: disable = unused-argument
-    ):
-        """Passes the solutions back to the optimizer.
-
-        Args:
-            ranking_indices (array-like of int): Indices that indicate the
-                ranking of the original solutions returned in ``ask()``.
-            num_parents (int): Number of top solutions to select from the
-                ranked solutions.
-        """
+    def tell(self, ranking_indices, ranking_values, num_parents):
         # Indices come in decreasing order, so we reverse to get them to
         # increasing order.
         ranks = np.empty(self.batch_size, dtype=np.int32)
