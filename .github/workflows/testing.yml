@@ -72,7 +72,7 @@ jobs:
       - name: Test visualize extra for QDax
         run: pytest tests/visualize_qdax
       - name: Install cma dep
-        run: pip install .[cma]
+        run: pip install .[pycma]
       - name: Test cma extra
         run: pytest tests/emitters_pycma
   coverage:
