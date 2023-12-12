@@ -206,35 +206,29 @@ class CVTArchive(ArchiveBase):
                         "likely happened because there are too few samples "
                         "and/or too many cells.")
             elif centroid_method == "random":
-                # Generate random centroids for the archive.
+                # Generates random centroids.
                 self._centroids = self._rng.uniform(self._lower_bounds,
                                                     self._upper_bounds,
                                                     size=(self._cells,
                                                           self._measure_dim))
             elif centroid_method == "sobol":
-                # Generate self._cells number of centroids as a Sobol sequence.
+                # Generates centroids as a Sobol sequence.
                 sampler = Sobol(d=self._measure_dim, scramble=False)
                 sobol_nums = sampler.random(n=self._cells)
-                lower = self._lower_bounds
-                upper = self._upper_bounds
-                scaled_sobol_nums = lower + sobol_nums * (upper - lower)
-                self._centroids = scaled_sobol_nums
+                self._centroids = (self._lower_bounds + sobol_nums *
+                                   (self._upper_bounds - self._lower_bounds))
             elif centroid_method == "scrambled_sobol":
                 # Generates centroids as a scrambled Sobol sequence.
                 sampler = Sobol(d=self._measure_dim, scramble=True)
                 sobol_nums = sampler.random(n=self._cells)
-                lower = self._lower_bounds
-                upper = self._upper_bounds
-                scaled_sobol_nums = lower + sobol_nums * (upper - lower)
-                self._centroids = scaled_sobol_nums
+                self._centroids = (self._lower_bounds + sobol_nums *
+                                   (self._upper_bounds - self._lower_bounds))
             elif centroid_method == "halton":
-                # Generates centroids using a Halton sequence.
+                # Generates centroids with a Halton sequence.
                 sampler = Halton(d=self._measure_dim)
                 halton_nums = sampler.random(n=self._cells)
-                lower = self._lower_bounds
-                upper = self._upper_bounds
-                scaled_halton_nums = lower + halton_nums * (upper - lower)
-                self._centroids = scaled_halton_nums
+                self._centroids = (self._lower_bounds + halton_nums *
+                                   (self._upper_bounds - self._lower_bounds))
         else:
             # Validate shape of `custom_centroids` when they are provided.
             custom_centroids = np.asarray(custom_centroids, dtype=self.dtype)
