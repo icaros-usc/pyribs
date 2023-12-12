@@ -28,7 +28,6 @@ jobs:
           ["pip install ribs[all]", "conda install -c conda-forge pyribs-all"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}

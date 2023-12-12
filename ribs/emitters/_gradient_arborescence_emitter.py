@@ -453,7 +453,7 @@ class GradientArborescenceEmitter(EmitterBase):
         # Check for reset.
         if (self._opt.check_stop(ranking_values[indices]) or
                 self._check_restart(new_sols)):
-            new_coeff = self.archive.sample_elites(1).solution_batch[0]
+            new_coeff = self.archive.sample_elites(1)["solution"][0]
             self._grad_opt.reset(new_coeff)
             self._opt.reset(np.zeros(self._num_coefficients))
             self._ranker.reset(self, self.archive, self._rng)

@@ -208,7 +208,7 @@ class GradientOperatorEmitter(EmitterBase):
         if self.archive.empty:
             parents = np.expand_dims(self.x0, axis=0)
         else:
-            parents = self.archive.sample_elites(self.batch_size).solution_batch
+            parents = self.archive.sample_elites(self.batch_size)["solution"]
 
         if self._use_isolinedd:
             noise = self._rng.normal(
@@ -218,7 +218,7 @@ class GradientOperatorEmitter(EmitterBase):
             ).astype(self.archive.dtype)
 
             directions = self.archive.sample_elites(
-                self._batch_size).solution_batch - parents
+                self._batch_size)["solution"] - parents
 
             line_gaussian = self._rng.normal(
                 loc=0.0,

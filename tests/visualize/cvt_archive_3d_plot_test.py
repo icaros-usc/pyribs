@@ -208,6 +208,6 @@ def test_plot_elites(cvt_archive_3d):
                   tol=CVT_IMAGE_TOLERANCE)
 def test_plot_metadata_with_df(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
-    df = cvt_archive_3d.as_pandas(include_metadata=True)
+    df = cvt_archive_3d.data(return_type="pandas")
     df["objective"] = df["metadata"]
     cvt_archive_3d_plot(cvt_archive_3d, df=df)
