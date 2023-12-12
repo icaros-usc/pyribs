@@ -83,6 +83,7 @@ def test_alternative_centroids(method):
     centroid_x = archive.centroids[:, 0]
     centroid_y = archive.centroids[:, 1]
 
+    # Centroids should have correct shape and be within bounds.
     assert archive.centroids.shape == (100, 2)
     assert np.all(centroid_x >= 0.1) and np.all(centroid_x <= 0.5)
     assert np.all(centroid_y >= -0.6) and np.all(centroid_y <= -0.2)
