@@ -8,7 +8,11 @@ from ribs.emitters.opt import (_NAME_TO_ES_MAP, _NAME_TO_GRAD_OPT_MAP, _get_es,
 # Evolution Strategy Tests
 
 
-@pytest.mark.parametrize("es_name", _NAME_TO_ES_MAP.keys())
+@pytest.mark.parametrize(
+    "es_name",
+    # Exclude since we only test core library in these tests.
+    _NAME_TO_ES_MAP.keys() - {"PyCMAEvolutionStrategy", "pycma_es"},
+)
 def test_init_with_get_es(es_name):
     es_kwargs = {
         "sigma0": 1.0,

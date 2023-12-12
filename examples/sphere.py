@@ -757,6 +757,7 @@ def sphere_main(algorithm,
                 itrs=None,
                 archive_dims=None,
                 learning_rate=None,
+                es=None,
                 outdir="sphere_output",
                 log_freq=250,
                 seed=None):
@@ -768,6 +769,8 @@ def sphere_main(algorithm,
         itrs (int): Iterations to run.
         archive_dims (tuple): Dimensionality of the archive.
         learning_rate (float): The archive learning rate.
+        es (str): If passed, this will set the ES for all
+            EvolutionStrategyEmitter instances.
         outdir (str): Directory to save output.
         log_freq (int): Number of iterations to wait before recording metrics
             and saving heatmap.
@@ -791,7 +794,15 @@ def sphere_main(algorithm,
     if learning_rate is not None:
         config["archive"]["kwargs"]["learning_rate"] = learning_rate
 
+    # Set ES for all EvolutionStrategyEmitter.
+    if es is not None:
+        for e in config["emitters"]:
+            if e["class"] == EvolutionStrategyEmitter:
+                e["kwargs"]["es"] = es
+
     name = f"{algorithm}_{config['dim']}"
+    if es is not None:
+        name += f"_{es}"
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()

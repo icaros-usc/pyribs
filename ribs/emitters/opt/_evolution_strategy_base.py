@@ -14,7 +14,7 @@ class EvolutionStrategyBase(ABC):
 
         - Request new solutions with ``ask()``
         - Rank the solutions in the emitter (better solutions come first) and
-          pass the indices back with ``tell()``.
+          pass the indices and values back with ``tell()``.
         - Use ``check_stop()`` to see if the optimizer has reached a stopping
           condition, and if so, call ``reset()``.
 
@@ -24,12 +24,12 @@ class EvolutionStrategyBase(ABC):
         batch_size (int): Number of solutions to evaluate at a time.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
-        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
+        lower_bounds (float or numpy.ndarray): scalar or (solution_dim,) array
             indicating lower bounds of the solution space. Scalars specify
             the same bound for the entire space, while arrays specify a
             bound for each dimension. Pass -np.inf in the array or scalar to
             indicated unbounded space.
-        upper_bounds (float or np.ndarray): Same as above, but for upper
+        upper_bounds (float or numpy.ndarray): Same as above, but for upper
             bounds (and pass np.inf instead of -np.inf).
     """
 
@@ -45,27 +45,31 @@ class EvolutionStrategyBase(ABC):
 
     @abstractmethod
     def reset(self, x0):
-        """Resets the optimizer to start at x0.
+        """Resets the ES to start at x0.
 
         Args:
-            x0 (np.ndarray): Initial mean.
+            x0 (numpy.ndarray): Initial mean.
         """
 
     @abstractmethod
     def check_stop(self, ranking_values):
-        """Checks if the optimizer should stop and be reset.
+        """Checks if the ES should stop and be reset.
 
         Args:
-            ranking_values (np.ndarray): Array of objective values of the
-                solutions, sorted in the same order that the solutions were
-                sorted when passed to tell().
+            ranking_values (numpy.ndarray): Array of values that were used to
+                rank the solutions. Shape can be either ``(batch_size,)`` or
+                (batch_size, n_values)``, where ``batch_size`` is the number of
+                solutions and ``n_values`` is the number of values that the
+                ranker used. Note that unlike in :meth:`tell`, these values must
+                be sorted according to the ``ranking_indices`` passed to
+                :meth:`tell`.
         Returns:
             True if any of the stopping conditions are satisfied.
         """
 
     @abstractmethod
     def ask(self, batch_size=None):
-        """Samples new solutions from the Gaussian distribution.
+        """Samples new solutions.
 
         Args:
             batch_size (int): batch size of the sample. Defaults to
@@ -73,12 +77,21 @@ class EvolutionStrategyBase(ABC):
         """
 
     @abstractmethod
-    def tell(self, ranking_indices, num_parents):
-        """Passes the solutions back to the optimizer.
+    def tell(self, ranking_indices, ranking_values, num_parents):
+        """Passes the solutions back to the ES.
 
         Args:
-            ranking_indices (array-like of int): Indices that indicate the
-                ranking of the original solutions returned in ``ask()``.
+            ranking_indices (numpy.ndarray): Integer indices that are used to
+                rank the solutions returned in :meth:`ask`. Note that these are
+                NOT the ranks of the solutions. Rather, they are indices such
+                that ``solutions[ranking_indices]`` will correctly rank the
+                solutions (think of an argsort).
+            ranking_values (numpy.ndarray): Array of values that were used to
+                rank the solutions. Shape can be either ``(batch_size,)`` or
+                (batch_size, n_values)``, where ``batch_size`` is the number of
+                solutions and ``n_values`` is the number of values that the
+                ranker used. Note that we assume a descending sort, i.e., higher
+                values should come first.
             num_parents (int): Number of top solutions to select from the
                 ranked solutions.
         """
