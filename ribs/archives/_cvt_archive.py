@@ -99,7 +99,7 @@ class CVTArchive(ArchiveBase):
             ``archive.samples`` will be None. This can be useful when one wishes
             to use the same CVT across experiments for fair comparison.
         centroid_method (str): Pass in the following methods for
-            generating centroids: "random", "sobol", "scrambled sobol",
+            generating centroids: "random", "sobol", "scrambled_sobol",
             "halton". Default method is "kmeans". These methods are derived from
             Mouret 2023: https://dl.acm.org/doi/pdf/10.1145/3583133.3590726.
             Note: Samples are only used when method is "kmeans".
@@ -206,25 +206,29 @@ class CVTArchive(ArchiveBase):
                         "likely happened because there are too few samples "
                         "and/or too many cells.")
             elif centroid_method == "random":
-                # Generate random centroids for the archive.
+                # Generates random centroids.
                 self._centroids = self._rng.uniform(self._lower_bounds,
                                                     self._upper_bounds,
                                                     size=(self._cells,
                                                           self._measure_dim))
             elif centroid_method == "sobol":
-                # Generate self._cells number of centroids as a Sobol sequence.
+                # Generates centroids as a Sobol sequence.
                 sampler = Sobol(d=self._measure_dim, scramble=False)
-                num_points = np.log2(self._cells).astype(int)
-                self._centroids = sampler.random_base2(num_points)
+                sobol_nums = sampler.random(n=self._cells)
+                self._centroids = (self._lower_bounds + sobol_nums *
+                                   (self._upper_bounds - self._lower_bounds))
             elif centroid_method == "scrambled_sobol":
                 # Generates centroids as a scrambled Sobol sequence.
                 sampler = Sobol(d=self._measure_dim, scramble=True)
-                num_points = np.log2(self._cells).astype(int)
-                self._centroids = sampler.random_base2(num_points)
+                sobol_nums = sampler.random(n=self._cells)
+                self._centroids = (self._lower_bounds + sobol_nums *
+                                   (self._upper_bounds - self._lower_bounds))
             elif centroid_method == "halton":
-                # Generates centroids using a Halton sequence.
+                # Generates centroids with a Halton sequence.
                 sampler = Halton(d=self._measure_dim)
-                self._centroids = sampler.random(n=self._cells)
+                halton_nums = sampler.random(n=self._cells)
+                self._centroids = (self._lower_bounds + halton_nums *
+                                   (self._upper_bounds - self._lower_bounds))
         else:
             # Validate shape of `custom_centroids` when they are provided.
             custom_centroids = np.asarray(custom_centroids, dtype=self.dtype)
