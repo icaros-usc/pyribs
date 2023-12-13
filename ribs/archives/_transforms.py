@@ -141,10 +141,6 @@ def batch_entries_with_threshold(indices, new_data, add_info, extra_args,
 
     We also handle some special cases for CMA-ME -- this case corresponds to
     when ``threshold_min=-np.inf`` and ``learning_rate=1``.
-
-    Since this transform operates on solutions one at a time, we do not
-    recommend it when performance is critical. Instead, it is included as a
-    relatively easy-to-modify example for users creating new archives.
     """
     dtype = extra_args["dtype"]
     threshold_min = extra_args["threshold_min"]
