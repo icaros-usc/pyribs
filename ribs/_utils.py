@@ -197,11 +197,6 @@ def validate_batch(archive, data, add_info=None, jacobian=None):
         return data
 
 
-_BATCH_WARNING = (" Note that starting in pyribs 0.5.0, add() and tell() take"
-                  " in a batch of solutions unlike in pyribs 0.4.0, where add()"
-                  " and tell() only took in a single solution.")
-
-
 def validate_single(archive, data):
     """Performs preprocessing and checks for arguments to add_single()."""
     data["solution"] = np.asarray(data["solution"])
