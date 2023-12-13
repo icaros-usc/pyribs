@@ -49,7 +49,7 @@ def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
         dim = (dim,)
     if array.ndim != 1 + len(dim) or array.shape[1:] != dim:
         dim_str = ", ".join(map(str, dim))
-        raise ValueError(f"Expected {array_name} to be a 2D array with shape "
+        raise ValueError(f"Expected {array_name} to be an array with shape "
                          f"(batch_size, {dim_str}) (i.e. shape "
                          f"(batch_size, {dim_name})) but it had shape "
                          f"{array.shape}.{extra_msg}")
