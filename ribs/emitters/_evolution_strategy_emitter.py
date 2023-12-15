@@ -99,7 +99,8 @@ class EvolutionStrategyEmitter(EmitterBase):
             bounds=bounds,
         )
 
-        seed_sequence = np.random.SeedSequence(seed)
+        seed_sequence = (seed if isinstance(seed, np.random.SeedSequence) else
+                         np.random.SeedSequence(seed))
         opt_seed, ranker_seed = seed_sequence.spawn(2)
 
         self._x0 = np.array(x0, dtype=archive.dtype)
