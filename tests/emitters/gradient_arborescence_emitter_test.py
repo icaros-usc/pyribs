@@ -85,6 +85,22 @@ def test_tell_dqd_must_be_called_before_tell():
         emitter.tell([[0]], [0], [[0]], {"status": [0], "value": [0]})
 
 
+def test_seed_sequence():
+    archive = GridArchive(
+        solution_dim=10,
+        dims=[20, 20],
+        ranges=[(-1.0, 1.0)] * 2,
+    )
+    GradientArborescenceEmitter(
+        archive,
+        x0=np.zeros(10),
+        sigma0=1.0,
+        lr=1.0,
+        # Passing a SeedSequence here used to throw a TypeError.
+        seed=np.random.SeedSequence(42),
+    )
+
+
 @pytest.mark.parametrize("es", ES_LIST)
 def test_sphere(es):
     archive = GridArchive(solution_dim=10,
