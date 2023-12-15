@@ -1,5 +1,6 @@
 """Provides ArrayStore."""
 import itertools
+import numbers
 from enum import IntEnum
 from functools import cached_property
 
@@ -125,7 +126,7 @@ class ArrayStore:
                 raise ValueError(
                     f"Field names must be valid identifiers: `{name}`")
 
-            if isinstance(field_shape, (int, np.integer)):
+            if isinstance(field_shape, numbers.Integral):
                 field_shape = (field_shape,)
 
             array_shape = (capacity,) + tuple(field_shape)
@@ -459,7 +460,10 @@ class ArrayStore:
         if new_data.keys() != self._fields.keys():
             raise ValueError(
                 f"`new_data` had keys {new_data.keys()} but should have the "
-                f"same keys as this ArrayStore, i.e., {self._fields.keys()}")
+                f"same keys as this ArrayStore, i.e., {self._fields.keys()}. "
+                "You may be seeing this error if your archive has "
+                "extra_fields but the fields were not passed into "
+                "archive.add() or scheduler.tell().")
 
         # Update occupancy data.
         unique_indices = np.where(aggregate(indices, 1, func="len") != 0)[0]

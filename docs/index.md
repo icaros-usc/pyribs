@@ -19,6 +19,7 @@ whats-new
 
 api/ribs.archives
 api/ribs.emitters
+api/ribs.emitters.operators
 api/ribs.emitters.opt
 api/ribs.emitters.rankers
 api/ribs.schedulers

@@ -63,9 +63,9 @@ def cvt_archive_3d_plot(
             >>> x = np.random.uniform(-2, 0, 5000)
             >>> y = np.random.uniform(-2, 0, 5000)
             >>> z = np.random.uniform(-2, 0, 5000)
-            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
-            ...             objective_batch=-(x**2 + y**2 + z**2),
-            ...             measures_batch=np.stack((x, y, z), axis=1))
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2 + z**2),
+            ...             measures=np.stack((x, y, z), axis=1))
             >>> # Plot the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_3d_plot(archive)
@@ -88,9 +88,9 @@ def cvt_archive_3d_plot(
             >>> x = np.random.uniform(-2, 0, 5000)
             >>> y = np.random.uniform(-2, 0, 5000)
             >>> z = np.random.uniform(-2, 0, 5000)
-            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
-            ...             objective_batch=-(x**2 + y**2 + z**2),
-            ...             measures_batch=np.stack((x, y, z), axis=1))
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2 + z**2),
+            ...             measures=np.stack((x, y, z), axis=1))
             >>> # Plot the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_3d_plot(archive, cell_alpha=0.1)
@@ -113,9 +113,9 @@ def cvt_archive_3d_plot(
             >>> x = np.random.uniform(-2, 0, 1000)
             >>> y = np.random.uniform(-2, 0, 1000)
             >>> z = np.random.uniform(-2, 0, 1000)
-            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
-            ...             objective_batch=-(x**2 + y**2 + z**2),
-            ...             measures_batch=np.stack((x, y, z), axis=1))
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2 + z**2),
+            ...             measures=np.stack((x, y, z), axis=1))
             >>> # Plot the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_3d_plot(archive, cell_alpha=0.0)
@@ -138,9 +138,9 @@ def cvt_archive_3d_plot(
             >>> x = np.random.uniform(-2, 0, 1000)
             >>> y = np.random.uniform(-2, 0, 1000)
             >>> z = np.random.uniform(-2, 0, 1000)
-            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
-            ...             objective_batch=-(x**2 + y**2 + z**2),
-            ...             measures_batch=np.stack((x, y, z), axis=1))
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2 + z**2),
+            ...             measures=np.stack((x, y, z), axis=1))
             >>> # Plot the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_3d_plot(archive, cell_alpha=0.0, plot_elites=True)

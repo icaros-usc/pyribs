@@ -664,8 +664,8 @@ def create_scheduler(config, algorithm, seed=None):
     Args:
         config (dict): Configuration dictionary with parameters for the various
             components.
-        algorithm (string): Name of the algorithm
-        seed (int): Main seed or the various components.
+        algorithm (string): Name of the algorithm.
+        seed (int): Main seed for the various components.
     Returns:
         ribs.schedulers.Scheduler: A ribs scheduler for running the algorithm.
     """
@@ -690,6 +690,7 @@ def create_scheduler(config, algorithm, seed=None):
     else:
         archive = archive_class(solution_dim=solution_dim,
                                 ranges=bounds,
+                                seed=seed,
                                 **config["archive"]["kwargs"])
 
     # Create result archive.
@@ -703,17 +704,18 @@ def create_scheduler(config, algorithm, seed=None):
     # Create emitters. Each emitter needs a different seed so that they do not
     # all do the same thing, hence we create an rng here to generate seeds. The
     # rng may be seeded with None or with a user-provided seed.
-    rng = np.random.default_rng(seed)
+    seed_sequence = np.random.SeedSequence(seed)
     emitters = []
     for e in config["emitters"]:
         emitter_class = e["class"]
         emitters += [
-            emitter_class(archive,
-                          x0=initial_sol,
-                          **e["kwargs"],
-                          batch_size=config["batch_size"],
-                          seed=s)
-            for s in rng.integers(0, 1_000_000, e["num_emitters"])
+            emitter_class(
+                archive,
+                x0=initial_sol,
+                **e["kwargs"],
+                batch_size=config["batch_size"],
+                seed=s,
+            ) for s in seed_sequence.spawn(e["num_emitters"])
         ]
 
     # Create Scheduler
@@ -757,6 +759,7 @@ def sphere_main(algorithm,
                 itrs=None,
                 archive_dims=None,
                 learning_rate=None,
+                es=None,
                 outdir="sphere_output",
                 log_freq=250,
                 seed=None):
@@ -768,6 +771,8 @@ def sphere_main(algorithm,
         itrs (int): Iterations to run.
         archive_dims (tuple): Dimensionality of the archive.
         learning_rate (float): The archive learning rate.
+        es (str): If passed, this will set the ES for all
+            EvolutionStrategyEmitter instances.
         outdir (str): Directory to save output.
         log_freq (int): Number of iterations to wait before recording metrics
             and saving heatmap.
@@ -791,7 +796,15 @@ def sphere_main(algorithm,
     if learning_rate is not None:
         config["archive"]["kwargs"]["learning_rate"] = learning_rate
 
+    # Set ES for all EvolutionStrategyEmitter.
+    if es is not None:
+        for e in config["emitters"]:
+            if e["class"] == EvolutionStrategyEmitter:
+                e["kwargs"]["es"] = es
+
     name = f"{algorithm}_{config['dim']}"
+    if es is not None:
+        name += f"_{es}"
     outdir = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()

@@ -141,10 +141,6 @@ def batch_entries_with_threshold(indices, new_data, add_info, extra_args,
 
     We also handle some special cases for CMA-ME -- this case corresponds to
     when ``threshold_min=-np.inf`` and ``learning_rate=1``.
-
-    Since this transform operates on solutions one at a time, we do not
-    recommend it when performance is critical. Instead, it is included as a
-    relatively easy-to-modify example for users creating new archives.
     """
     dtype = extra_args["dtype"]
     threshold_min = extra_args["threshold_min"]
@@ -159,10 +155,10 @@ def batch_entries_with_threshold(indices, new_data, add_info, extra_args,
     # batch_size.
     #
     # In the case where we want CMA-ME behavior, the threshold defaults to -inf
-    # for new cells, which satisfies the condition for can_be_added.
-    can_be_added = new_data["objective"] > cur_threshold
-    is_new = can_be_added & ~occupied
-    improve_existing = can_be_added & occupied
+    # for new cells, which satisfies the condition for can_insert.
+    can_insert = new_data["objective"] > cur_threshold
+    is_new = can_insert & ~occupied
+    improve_existing = can_insert & occupied
     add_info["status"] = np.zeros(batch_size, dtype=np.int32)
     add_info["status"][is_new] = 2
     add_info["status"][improve_existing] = 1
@@ -176,7 +172,6 @@ def batch_entries_with_threshold(indices, new_data, add_info, extra_args,
 
     # Return early if we cannot insert anything -- continuing would actually
     # throw a ValueError in aggregate() since index[can_insert] would be empty.
-    can_insert = is_new | improve_existing
     if not np.any(can_insert):
         return np.array([], dtype=np.int32), {}, add_info
 

@@ -19,7 +19,7 @@ install_requires = [
     "pandas>=1.0.0",
     "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
     "scikit-learn>=1.1.0",  # Primarily used in CVTArchive.
-    "scipy>=1.4.0",  # Primarily used in CVTArchive.
+    "scipy>=1.7.0",  # Primarily used in CVTArchive.
     "threadpoolctl>=3.0.0",
 ]
 
@@ -28,12 +28,16 @@ extras_require = {
         "matplotlib>=3.0.0",
         "shapely>=2.0.0",
     ],
+    "pycma": ["cma"],
     # All dependencies except for dev. Don't worry if there are duplicate
     # dependencies, since setuptools automatically handles duplicates.
     "all": [
         ### visualize ###
         "matplotlib>=3.0.0",
         "shapely>=2.0.0",
+
+        ### cma ###
+        "cma",
     ],
     "dev": [
         "pip>=20.3",

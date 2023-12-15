@@ -1,4 +1,6 @@
 """Miscellaneous internal utilities."""
+import numbers
+
 import numpy as np
 
 
@@ -37,28 +39,34 @@ def check_finite(x, name):
 
 
 def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
-    """Checks that the array has shape (batch_size, dim).
+    """Checks that the array has shape (batch_size, dim) or (batch_size, *dim).
 
     `batch_size` can be any value.
 
-    `array` must be a numpy array, and `dim` must be an int.
+    `array` must be a numpy array, and `dim` must be an int or tuple of int.
     """
-    if array.ndim != 2 or array.shape[1] != dim:
-        raise ValueError(f"Expected {array_name} to be a 2D array with shape "
-                         f"(batch_size, {dim}) (i.e. shape "
+    if isinstance(dim, numbers.Integral):
+        dim = (dim,)
+    if array.ndim != 1 + len(dim) or array.shape[1:] != dim:
+        dim_str = ", ".join(map(str, dim))
+        raise ValueError(f"Expected {array_name} to be an array with shape "
+                         f"(batch_size, {dim_str}) (i.e. shape "
                          f"(batch_size, {dim_name})) but it had shape "
                          f"{array.shape}.{extra_msg}")
 
 
-def check_1d_shape(array, array_name, dim, dim_name, extra_msg=""):
-    """Checks that the array has shape (dim,).
+def check_shape(array, array_name, dim, dim_name, extra_msg=""):
+    """Checks that the array has shape dim.
 
-    `array` must be a numpy array, and `dim` must be an int.
+    `array` must be a numpy array, and `dim` must be an int or tuple of int.
     """
-    if array.ndim != 1 or array.shape[0] != dim:
+    if isinstance(dim, numbers.Integral):
+        dim = (dim,)
+    if array.ndim != len(dim) or array.shape != dim:
+        comma = "," if len(dim) == 1 else ""
         raise ValueError(
-            f"Expected {array_name} to be a 1D array with shape "
-            f"({dim},) (i.e. shape ({dim_name},)) but it had shape "
+            f"Expected {array_name} to be an array with shape "
+            f"{dim} (i.e. shape ({dim_name}{comma})) but it had shape "
             f"{array.shape}.{extra_msg}")
 
 
@@ -66,26 +74,6 @@ def check_is_1d(array, array_name, extra_msg=""):
     """Checks that an array is 1D."""
     if array.ndim != 1:
         raise ValueError(f"Expected {array_name} to be a 1D array but it had "
-                         f"shape {array.shape}.{extra_msg}")
-
-
-def check_batch_shape_3d(array,
-                         array_name,
-                         dim1,
-                         dim1_name,
-                         dim2,
-                         dim2_name,
-                         extra_msg=""):
-    """Checks that the array has shape (batch_size, dim1, dim2).
-
-    `batch_size` can be any value.
-
-    `array` must be a numpy array, `dim1` and `dim2` must be int.
-    """
-    if array.ndim != 3 or array.shape[1] != dim1 or array.shape[2] != dim2:
-        raise ValueError(f"Expected {array_name} to be a 3D array with shape "
-                         f"(batch_size, {dim1}, {dim2}) (i.e. shape "
-                         f"(batch_size, {dim1_name}, {dim2_name})) but it had"
                          f"shape {array.shape}.{extra_msg}")
 
 
@@ -103,119 +91,127 @@ def check_solution_batch_dim(array,
                          f"shape {array.shape}.{extra_msg}")
 
 
-_BATCH_WARNING = (" Note that starting in pyribs 0.5.0, add() and tell() take"
-                  " in a batch of solutions unlike in pyribs 0.4.0, where add()"
-                  " and tell() only took in a single solution.")
-
-
-def validate_batch_args(archive, solution_batch, **batch_kwargs):
+def validate_batch(archive, data, add_info=None, jacobian=None):
     """Preprocesses and validates batch arguments.
 
-    The batch size of each argument in batch_kwargs is validated with respect to
-    solution_batch.
+    ``data`` is a dict containing arrays with the data of each solution, e.g.,
+    objective and measures. The batch size of each argument in the data is
+    validated with respect to data["solution"].
 
     The arguments are assumed to come directly from users, so they may not be
     arrays. Thus, we preprocess each argument by converting it into a numpy
     array. We then perform checks on the array, including seeing if its batch
-    size matches the batch size of solution_batch. The arguments are then
-    returned in the same order that they were passed into the kwargs, with
-    solution_batch coming first.
-
-    Note that we can guarantee the order is the same as when passed in due to
-    PEP 468 (https://peps.python.org/pep-0468/), which guarantees that kwargs
-    will preserve the same order as they are listed.
-
-    See the for loop for the list of supported kwargs.
+    size matches the batch size of data["solution"].
     """
-    # List of args to return.
-    returns = []
-
     # Process and validate solution_batch.
-    solution_batch = np.asarray(solution_batch)
-    check_batch_shape(solution_batch, "solution_batch", archive.solution_dim,
-                      "solution_dim", _BATCH_WARNING)
-    returns.append(solution_batch)
+    data["solution"] = np.asarray(data["solution"])
+    check_batch_shape(data["solution"], "solution", archive.solution_dim,
+                      "solution_dim", "")
+    batch_size = data["solution"].shape[0]
 
-    # Process and validate the other batch arguments.
-    batch_size = solution_batch.shape[0]
-    for name, arg in batch_kwargs.items():
-        if name == "objective_batch":
-            objective_batch = np.asarray(arg)
-            check_is_1d(objective_batch, "objective_batch", _BATCH_WARNING)
-            check_solution_batch_dim(objective_batch,
-                                     "objective_batch",
+    # Process and validate the other data.
+    for name, arr in data.items():
+        if name == "solution":
+            # Already checked above.
+            continue
+
+        if name == "objective":
+            arr = np.asarray(arr)
+            check_is_1d(arr, "objective", "")
+            check_solution_batch_dim(arr,
+                                     "objective",
                                      batch_size,
                                      is_1d=True,
-                                     extra_msg=_BATCH_WARNING)
-            check_finite(objective_batch, "objective_batch")
-            returns.append(objective_batch)
-        elif name == "measures_batch":
-            measures_batch = np.asarray(arg)
-            check_batch_shape(measures_batch, "measures_batch",
-                              archive.measure_dim, "measure_dim",
-                              _BATCH_WARNING)
-            check_solution_batch_dim(measures_batch,
-                                     "measures_batch",
+                                     extra_msg="")
+            check_finite(arr, "objective")
+
+        elif name == "measures":
+            arr = np.asarray(arr)
+            check_batch_shape(arr, "measures", archive.measure_dim,
+                              "measure_dim", "")
+            check_solution_batch_dim(arr,
+                                     "measures",
                                      batch_size,
                                      is_1d=False,
-                                     extra_msg=_BATCH_WARNING)
-            check_finite(measures_batch, "measures_batch")
-            returns.append(measures_batch)
-        elif name == "jacobian_batch":
-            jacobian_batch = np.asarray(arg)
-            check_batch_shape_3d(jacobian_batch, "jacobian_batch",
-                                 archive.measure_dim + 1, "measure_dim + 1",
-                                 archive.solution_dim, "solution_dim")
-            check_finite(jacobian_batch, "jacobian_batch")
-            returns.append(jacobian_batch)
-        elif name == "status_batch":
-            status_batch = np.asarray(arg)
-            check_is_1d(status_batch, "status_batch", _BATCH_WARNING)
-            check_solution_batch_dim(status_batch,
-                                     "status_batch",
-                                     batch_size,
-                                     is_1d=True,
-                                     extra_msg=_BATCH_WARNING)
-            check_finite(status_batch, "status_batch")
-            returns.append(status_batch)
-        elif name == "value_batch":
-            value_batch = np.asarray(arg)
-            check_is_1d(value_batch, "value_batch", _BATCH_WARNING)
-            check_solution_batch_dim(value_batch,
-                                     "value_batch",
-                                     batch_size,
-                                     is_1d=True,
-                                     extra_msg=_BATCH_WARNING)
-            returns.append(value_batch)
-        elif name == "metadata_batch":
-            # Special case -- metadata_batch defaults to None in our methods,
-            # but we make it into an array of None if it is not provided.
-            metadata_batch = (np.empty(batch_size, dtype=object)
-                              if arg is None else np.asarray(arg, dtype=object))
-            check_is_1d(metadata_batch, "metadata_batch", _BATCH_WARNING)
-            check_solution_batch_dim(metadata_batch,
-                                     "metadata_batch",
-                                     batch_size,
-                                     is_1d=True,
-                                     extra_msg=_BATCH_WARNING)
-            returns.append(metadata_batch)
+                                     extra_msg="")
+            check_finite(arr, "measures")
 
-    return returns
+        else:
+            arr = np.asarray(arr)
+            check_solution_batch_dim(arr,
+                                     name,
+                                     batch_size,
+                                     is_1d=False,
+                                     extra_msg="")
+
+        data[name] = arr
+
+    extra_returns = []
+
+    # add_info is optional; check it if provided.
+    if add_info is not None:
+        for name, arr in add_info.items():
+            if name == "status":
+                arr = np.asarray(arr)
+                check_is_1d(arr, "status", "")
+                check_solution_batch_dim(arr,
+                                         "status",
+                                         batch_size,
+                                         is_1d=True,
+                                         extra_msg="")
+                check_finite(arr, "status")
+
+            elif name == "value":
+                arr = np.asarray(arr)
+                check_is_1d(arr, "value", "")
+                check_solution_batch_dim(arr,
+                                         "value",
+                                         batch_size,
+                                         is_1d=True,
+                                         extra_msg="")
+
+            else:
+                arr = np.asarray(arr)
+                check_solution_batch_dim(arr,
+                                         name,
+                                         batch_size,
+                                         is_1d=False,
+                                         extra_msg="")
+
+            add_info[name] = arr
+
+        extra_returns.append(add_info)
+
+    # jacobian is optional; check it if provided.
+    if jacobian is not None:
+        jacobian = np.asarray(jacobian)
+        check_batch_shape(jacobian, "jacobian",
+                          (archive.measure_dim + 1, archive.solution_dim),
+                          "measure_dim + 1, solution_dim")
+        check_finite(jacobian, "jacobian")
+        extra_returns.append(jacobian)
+
+    if extra_returns:
+        return data, *extra_returns
+    else:
+        return data
 
 
-def validate_single_args(archive, solution, objective, measures):
+def validate_single(archive, data):
     """Performs preprocessing and checks for arguments to add_single()."""
-    solution = np.asarray(solution)
-    check_1d_shape(solution, "solution", archive.solution_dim, "solution_dim")
+    data["solution"] = np.asarray(data["solution"])
+    check_shape(data["solution"], "solution", archive.solution_dim,
+                "solution_dim")
 
-    objective = archive.dtype(objective)
-    check_finite(objective, "objective")
+    data["objective"] = archive.dtype(data["objective"])
+    check_finite(data["objective"], "objective")
 
-    measures = np.asarray(measures)
-    check_1d_shape(measures, "measures", archive.measure_dim, "measure_dim")
-    check_finite(measures, "measures")
+    data["measures"] = np.asarray(data["measures"])
+    check_shape(data["measures"], "measures", archive.measure_dim,
+                "measure_dim")
+    check_finite(data["measures"], "measures")
 
-    return solution, objective, measures
+    return data
 
 
 def readonly(arr):
