@@ -63,6 +63,21 @@ def test_dtypes(dtype):
     assert emitter.x0.dtype == dtype
 
 
+def test_seed_sequence():
+    archive = GridArchive(
+        solution_dim=10,
+        dims=[20, 20],
+        ranges=[(-1.0, 1.0)] * 2,
+    )
+    EvolutionStrategyEmitter(
+        archive,
+        x0=np.zeros(10),
+        sigma0=1.0,
+        # Passing a SeedSequence here used to throw a TypeError.
+        seed=np.random.SeedSequence(42),
+    )
+
+
 @pytest.mark.parametrize("es", ES_LIST)
 def test_sphere(es):
     archive = GridArchive(solution_dim=10,
