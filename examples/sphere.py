@@ -664,8 +664,8 @@ def create_scheduler(config, algorithm, seed=None):
     Args:
         config (dict): Configuration dictionary with parameters for the various
             components.
-        algorithm (string): Name of the algorithm
-        seed (int): Main seed or the various components.
+        algorithm (string): Name of the algorithm.
+        seed (int): Main seed for the various components.
     Returns:
         ribs.schedulers.Scheduler: A ribs scheduler for running the algorithm.
     """
@@ -704,17 +704,18 @@ def create_scheduler(config, algorithm, seed=None):
     # Create emitters. Each emitter needs a different seed so that they do not
     # all do the same thing, hence we create an rng here to generate seeds. The
     # rng may be seeded with None or with a user-provided seed.
-    rng = np.random.default_rng(seed)
+    seed_sequence = np.random.SeedSequence(seed)
     emitters = []
     for e in config["emitters"]:
         emitter_class = e["class"]
         emitters += [
-            emitter_class(archive,
-                          x0=initial_sol,
-                          **e["kwargs"],
-                          batch_size=config["batch_size"],
-                          seed=s)
-            for s in rng.integers(0, 1_000_000, e["num_emitters"])
+            emitter_class(
+                archive,
+                x0=initial_sol,
+                **e["kwargs"],
+                batch_size=config["batch_size"],
+                seed=s,
+            ) for s in seed_sequence.spawn(e["num_emitters"])
         ]
 
     # Create Scheduler
