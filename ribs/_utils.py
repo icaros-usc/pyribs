@@ -49,7 +49,7 @@ def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
         dim = (dim,)
     if array.ndim != 1 + len(dim) or array.shape[1:] != dim:
         dim_str = ", ".join(map(str, dim))
-        raise ValueError(f"Expected {array_name} to be a 2D array with shape "
+        raise ValueError(f"Expected {array_name} to be an array with shape "
                          f"(batch_size, {dim_str}) (i.e. shape "
                          f"(batch_size, {dim_name})) but it had shape "
                          f"{array.shape}.{extra_msg}")
@@ -195,11 +195,6 @@ def validate_batch(archive, data, add_info=None, jacobian=None):
         return data, *extra_returns
     else:
         return data
-
-
-_BATCH_WARNING = (" Note that starting in pyribs 0.5.0, add() and tell() take"
-                  " in a batch of solutions unlike in pyribs 0.4.0, where add()"
-                  " and tell() only took in a single solution.")
 
 
 def validate_single(archive, data):
