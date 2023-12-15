@@ -690,6 +690,7 @@ def create_scheduler(config, algorithm, seed=None):
     else:
         archive = archive_class(solution_dim=solution_dim,
                                 ranges=bounds,
+                                seed=seed,
                                 **config["archive"]["kwargs"])
 
     # Create result archive.
