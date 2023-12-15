@@ -41,7 +41,7 @@
 #### Improvements
 
 - Allow overriding ES in sphere example ({pr}`439`)
-- Use NumPy SeedSequence in emitters ({pr}`431`)
+- Use NumPy SeedSequence in emitters ({pr}`431`, {pr}`440`)
 - Use numbers types when checking arguments ({pr}`419`)
 - Reimplement ArchiveBase using ArrayStore ({pr}`399`)
 - Use chunk computation in CVT brute force calculation to reduce memory usage
