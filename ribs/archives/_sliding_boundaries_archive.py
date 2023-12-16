@@ -5,8 +5,8 @@ from collections import deque
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs._utils import (check_batch_shape, validate_batch_args,
-                         validate_single_args)
+from ribs._utils import (check_batch_shape, check_finite, validate_batch,
+                         validate_single)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._grid_archive import GridArchive
 
@@ -16,7 +16,7 @@ class SolutionBuffer:
 
     Maintains two data structures:
     - Queue storing the buffer_capacity last entries (solution + objective +
-      measures + metadata). When new items are inserted, the oldest ones are
+      measures). When new items are inserted, the oldest ones are
       popped.
     - Sorted lists with the sorted measures in each dimension. Measures are
       removed from these lists when they are removed from the queue.
@@ -41,22 +41,22 @@ class SolutionBuffer:
         self._iter_idx += 1
         return result
 
-    def add(self, solution, objective, measures, metadata=None):
+    def add(self, data):
         """Inserts a new entry.
 
         Pops the oldest if it is full.
         """
         if self.full():
             # Remove item from the deque.
-            _, _, measure_deleted, _ = self._queue.popleft()
+            deleted_data = self._queue.popleft()
             # Remove measures from sorted lists.
-            for i, m in enumerate(measure_deleted):
+            for i, m in enumerate(deleted_data["measures"]):
                 self._measure_lists[i].remove(m)
 
-        self._queue.append((solution, objective, measures, metadata))
+        self._queue.append(data)
 
         # Add measures to sorted lists.
-        for i, m in enumerate(measures):
+        for i, m in enumerate(data["measures"]):
             self._measure_lists[i].add(m)
 
     def full(self):
@@ -136,6 +136,14 @@ class SlidingBoundariesArchive(ArchiveBase):
         dtype (str or data-type): Data type of the solutions, objectives,
             and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
             ``np.float64``.
+        extra_fields (dict): Description of extra fields of data that is stored
+            next to elite data like solutions and objectives. The description is
+            a dict mapping from a field name (str) to a tuple of ``(shape,
+            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
+            np.float32)}`` will create a "foo" field that contains scalar values
+            and a "bar" field that contains 10D values. Note that field names
+            must be valid Python identifiers, and names already used in the
+            archive are not allowed.
         remap_frequency (int): Frequency of remapping. Archive will remap once
             after ``remap_frequency`` number of solutions has been found.
         buffer_capacity (int): Number of solutions to keep in the buffer.
@@ -152,6 +160,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                  qd_score_offset=0.0,
                  seed=None,
                  dtype=np.float64,
+                 extra_fields=None,
                  remap_frequency=100,
                  buffer_capacity=1000):
         self._dims = np.array(dims)
@@ -167,6 +176,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             qd_score_offset=qd_score_offset,
             seed=seed,
             dtype=dtype,
+            extra_fields=extra_fields,
         )
 
         ranges = list(zip(*ranges))
@@ -180,7 +190,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         # Allocate an extra entry in each row so we can put the upper bound at
         # the end.
-        self._boundaries = np.full((self._measure_dim, np.max(self._dims) + 1),
+        self._boundaries = np.full((self.measure_dim, np.max(self._dims) + 1),
                                    np.nan,
                                    dtype=self.dtype)
 
@@ -191,7 +201,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                                                         upper_bound, dim + 1)
 
         # Create buffer.
-        self._buffer = SolutionBuffer(buffer_capacity, self._measure_dim)
+        self._buffer = SolutionBuffer(buffer_capacity, self.measure_dim)
 
         # Total number of solutions encountered.
         self._total_num_sol = 0
@@ -256,7 +266,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             bound[:dim + 1] for bound, dim in zip(self._boundaries, self._dims)
         ]
 
-    def index_of(self, measures_batch):
+    def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
 
         First, values are clipped to the bounds of the measure space. Then, the
@@ -286,28 +296,27 @@ class SlidingBoundariesArchive(ArchiveBase):
         See :attr:`boundaries` for more info.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array of coordinates in measure space.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
             the flattened grid coordinates.
         Raises:
-            ValueError: ``measures_batch`` is not of shape (batch_size,
+            ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
         """
-        measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
-                          "measure_dim")
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
 
-        # Clip measures_batch + epsilon to the range
+        # Clip measures + epsilon to the range
         # [lower_bounds, upper_bounds - epsilon].
-        measures_batch = np.clip(measures_batch + self._epsilon,
-                                 self._lower_bounds,
-                                 self._upper_bounds - self._epsilon)
+        measures = np.clip(measures + self._epsilon, self._lower_bounds,
+                           self._upper_bounds - self._epsilon)
 
         idx_cols = []
         for boundary, dim, measures_col in zip(self._boundaries, self._dims,
-                                               measures_batch.T):
+                                               measures.T):
             idx_col = np.searchsorted(boundary[:dim], measures_col)
             # The maximum index returned by searchsorted is `dim`, and since we
             # subtract 1, the max will be dim - 1 which is within the range of
@@ -343,61 +352,41 @@ class SlidingBoundariesArchive(ArchiveBase):
         sorted_measures = self._buffer.sorted_measures
 
         # Calculate new boundaries.
-        for i in range(self._measure_dim):
+        for i in range(self.measure_dim):
             for j in range(self.dims[i]):
                 sample_idx = int(j * self._buffer.size / self.dims[i])
                 self._boundaries[i][j] = sorted_measures[i][sample_idx]
             # Set the upper bound to be the greatest BC.
             self._boundaries[i][self.dims[i]] = sorted_measures[i][-1]
 
-        indices = self._occupied_indices[:self._num_occupied]
-        old_solution_batch = self._solution_arr[indices].copy()
-        old_objective_batch = self._objective_arr[indices].copy()
-        old_measures_batch = self._measures_arr[indices].copy()
-        old_metadata_batch = self._metadata_arr[indices].copy()
+        cur_data = self._store.data()
 
-        (
-            new_solution_batch,
-            new_objective_batch,
-            new_measures_batch,
-            new_metadata_batch,
-        ) = map(list, zip(*self._buffer))
+        # These fields are only computed by the archive.
+        cur_data.pop("threshold")
+        cur_data.pop("index")
+
+        new_data_single = list(self._buffer)  # List of dicts.
+        new_data = {name: None for name in new_data_single[0]}
+        for name in new_data:
+            new_data[name] = [d[name] for d in new_data_single]
 
         # The last solution must be added on its own so that we get an accurate
         # status and value to return to the user; hence we pop it from all the
         # batches (note that pop removes the last value and returns it).
-        (
-            last_solution,
-            last_objective,
-            last_measures,
-            last_metadata,
-        ) = (
-            new_solution_batch.pop(),
-            new_objective_batch.pop(),
-            new_measures_batch.pop(),
-            new_metadata_batch.pop(),
-        )
+        last_data = {name: arr.pop() for name, arr in new_data.items()}
 
         self.clear()
 
-        ArchiveBase.add(
-            self,
-            np.concatenate((old_solution_batch, new_solution_batch)),
-            np.concatenate((old_objective_batch, new_objective_batch)),
-            np.concatenate((old_measures_batch, new_measures_batch)),
-            np.concatenate((old_metadata_batch, new_metadata_batch)),
-        )
+        final_data = {
+            name: np.concatenate((cur_data[name], new_data[name]))
+            for name in cur_data
+        }
+        ArchiveBase.add(self, **final_data)
 
-        status, value = ArchiveBase.add_single(self, last_solution,
-                                               last_objective, last_measures,
-                                               last_metadata)
-        return status, value
+        add_info = ArchiveBase.add_single(self, **last_data)
+        return add_info
 
-    def add(self,
-            solution_batch,
-            objective_batch,
-            measures_batch,
-            metadata_batch=None):
+    def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
 
         .. note:: Unlike in other archives, this method (currently) is not truly
@@ -408,33 +397,33 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         See :meth:`ArchiveBase.add` for arguments and return values.
         """
-        (
-            solution_batch,
-            objective_batch,
-            measures_batch,
-            metadata_batch,
-        ) = validate_batch_args(
-            archive=self,
-            solution_batch=solution_batch,
-            objective_batch=objective_batch,
-            measures_batch=measures_batch,
-            metadata_batch=metadata_batch,
+        new_data = validate_batch(
+            self,
+            {
+                "solution": solution,
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            },
         )
-        batch_size = solution_batch.shape[0]
+        batch_size = new_data["solution"].shape[0]
 
-        status_batch = np.empty(batch_size, dtype=np.int32)
-        value_batch = np.empty(batch_size, dtype=self.dtype)
+        add_info = {}
         for i in range(batch_size):
-            status_batch[i], value_batch[i] = self.add_single(
-                solution_batch[i],
-                objective_batch[i],
-                measures_batch[i],
-                metadata_batch[i],
-            )
+            single_info = self.add_single(**{
+                name: arr[i] for name, arr in new_data.items()
+            })
 
-        return status_batch, value_batch
+            if i == 0:
+                # Initialize add_info.
+                for name, val in single_info.items():
+                    add_info[name] = np.empty(batch_size, dtype=val.dtype)
+            for name, val in single_info.items():
+                add_info[name][i] = val
 
-    def add_single(self, solution, objective, measures, metadata=None):
+        return add_info
+
+    def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.
 
         This method remaps the archive after every :attr:`remap_frequency`
@@ -445,29 +434,26 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         See :meth:`ArchiveBase.add_single` for arguments and return values.
         """
-
-        (
-            solution,
-            objective,
-            measures,
-        ) = validate_single_args(
+        new_data = validate_single(
             self,
-            solution=solution,
-            objective=objective,
-            measures=measures,
+            {
+                "solution": solution,
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            },
         )
 
-        self._buffer.add(solution, objective, measures, metadata)
+        self._buffer.add(new_data)
         self._total_num_sol += 1
 
         if self._total_num_sol % self._remap_frequency == 0:
-            status, value = self._remap()
+            add_info = self._remap()
             self._lower_bounds = np.array(
                 [bound[0] for bound in self._boundaries])
             self._upper_bounds = np.array([
                 bound[dim] for bound, dim in zip(self._boundaries, self._dims)
             ])
         else:
-            status, value = ArchiveBase.add_single(self, solution, objective,
-                                                   measures, metadata)
-        return status, value
+            add_info = ArchiveBase.add_single(self, **new_data)
+        return add_info

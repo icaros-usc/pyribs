@@ -1,8 +1,9 @@
 """Provides the IsoLineEmitter."""
 import numpy as np
 
-from ribs._utils import check_1d_shape, check_batch_shape
+from ribs._utils import check_batch_shape, check_shape
 from ribs.emitters._emitter_base import EmitterBase
+from ribs.emitters.operators import IsoLineOperator
 
 
 class IsoLineEmitter(EmitterBase):
@@ -79,8 +80,8 @@ class IsoLineEmitter(EmitterBase):
 
         if x0 is not None:
             self._x0 = np.array(x0, dtype=archive.dtype)
-            check_1d_shape(self._x0, "x0", archive.solution_dim,
-                           "archive.solution_dim")
+            check_shape(self._x0, "x0", archive.solution_dim,
+                        "archive.solution_dim")
         elif initial_solutions is not None:
             self._initial_solutions = np.asarray(initial_solutions,
                                                  dtype=archive.dtype)
@@ -93,6 +94,12 @@ class IsoLineEmitter(EmitterBase):
             solution_dim=archive.solution_dim,
             bounds=bounds,
         )
+
+        self._operator = IsoLineOperator(line_sigma=self._line_sigma,
+                                         iso_sigma=self._iso_sigma,
+                                         lower_bounds=self._lower_bounds,
+                                         upper_bounds=self._upper_bounds,
+                                         seed=seed)
 
     @property
     def x0(self):
@@ -144,23 +151,12 @@ class IsoLineEmitter(EmitterBase):
             return np.clip(self._initial_solutions, self.lower_bounds,
                            self.upper_bounds)
 
-        iso_gaussian = self._rng.normal(
-            scale=self._iso_sigma,
-            size=(self._batch_size, self.solution_dim),
-        ).astype(self.archive.dtype)
-
         if self.archive.empty:
-            solution_batch = np.expand_dims(self._x0, axis=0) + iso_gaussian
+            parents = np.repeat(self.x0[None],
+                                repeats=2 * self._batch_size,
+                                axis=0)
         else:
-            parents = self.archive.sample_elites(
-                self._batch_size).solution_batch
-            directions = (
-                self.archive.sample_elites(self._batch_size).solution_batch -
-                parents)
-            line_gaussian = self._rng.normal(
-                scale=self._line_sigma,
-                size=(self._batch_size, 1),
-            ).astype(self.archive.dtype)
-            solution_batch = parents + iso_gaussian + line_gaussian * directions
-
-        return np.clip(solution_batch, self.lower_bounds, self.upper_bounds)
+            parents = self.archive.sample_elites(2 *
+                                                 self._batch_size)["solution"]
+        return self._operator.ask(
+            parents=parents.reshape(2, self._batch_size, -1))

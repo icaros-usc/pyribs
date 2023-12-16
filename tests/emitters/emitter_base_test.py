@@ -89,7 +89,6 @@ def test_ask_emits_correct_num_sols_on_nonempty_archive(emitter_fixture):
         ("jacobian_batch", [(0, 0, 1), (0, 1, 0), (1, 0, 0)]),
         ("status_batch", [(1,)]),
         ("value_batch", [(1,)]),
-        ("metadata_batch", [(1,)]),
     ],
 )
 def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
@@ -123,7 +122,6 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
         (batch_size, archive.measure_dim + 1, archive.solution_dim))
     status_batch = np.ones(batch_size)
     value_batch = np.ones(batch_size)
-    metadata_batch = np.ones(batch_size)
 
     for offset in offsets:
         if wrong_array == "solution_batch":
@@ -148,15 +146,20 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
             status_batch = np.ones(batch_size + offset[0])
         elif wrong_array == "value_batch":
             value_batch = np.ones(batch_size + offset[0])
-        elif wrong_array == "metadata_batch":
-            metadata_batch = np.ones(batch_size + offset[0])
 
         # Only GradientArborescenceEmitter has tell_dqd method.
         if isinstance(emitter, GradientArborescenceEmitter):
             with pytest.raises(ValueError):
-                emitter.tell_dqd(solution_batch, objective_batch,
-                                 measures_batch, jacobian_batch, status_batch,
-                                 value_batch, metadata_batch)
+                emitter.tell_dqd(
+                    solution_batch,
+                    objective_batch,
+                    measures_batch,
+                    jacobian_batch,
+                    {
+                        "status": status_batch,
+                        "value": value_batch,
+                    },
+                )
 
         if wrong_array == "jacobian_batch":
             # tell() does not use jacobian_batch paramter, so we skip calling
@@ -167,8 +170,15 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
             # For GradientArborescenceEmitter, tell is called before tell_dqd,
             # but shape check exception should be thrown before tell complains
             # that tell_dqd is not called.
-            emitter.tell(solution_batch, objective_batch, measures_batch,
-                         status_batch, value_batch, metadata_batch)
+            emitter.tell(
+                solution_batch,
+                objective_batch,
+                measures_batch,
+                {
+                    "status": status_batch,
+                    "value": value_batch
+                },
+            )
 
 
 #

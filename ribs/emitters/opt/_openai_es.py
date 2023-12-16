@@ -3,7 +3,6 @@
 See here for more info: https://arxiv.org/abs/1703.03864
 """
 import numpy as np
-from threadpoolctl import threadpool_limits
 
 from ribs._utils import readonly
 from ribs.emitters.opt._adam_opt import AdamOpt
@@ -22,6 +21,13 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
+            indicating lower bounds of the solution space. Scalars specify
+            the same bound for the entire space, while arrays specify a
+            bound for each dimension. Pass -np.inf in the array or scalar to
+            indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper
+            bounds (and pass np.inf instead of -np.inf).
         mirror_sampling (bool): Whether to use mirror sampling when gathering
             solutions. Defaults to True.
         adam_kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
@@ -34,6 +40,8 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             batch_size=None,
             seed=None,
             dtype=np.float64,
+            lower_bounds=-np.inf,
+            upper_bounds=np.inf,
             mirror_sampling=True,
             **adam_kwargs):
         self.batch_size = (4 + int(3 * np.log(solution_dim))
@@ -41,6 +49,12 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
+
+        # Even scalars must be converted into 0-dim arrays so that they work
+        # with the bound check in numba.
+        self.lower_bounds = np.asarray(lower_bounds, dtype=self.dtype)
+        self.upper_bounds = np.asarray(upper_bounds, dtype=self.dtype)
+
         self._rng = np.random.default_rng(seed)
         self._solutions = None
 
@@ -65,26 +79,11 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self.noise = None
 
     def reset(self, x0):
-        """Resets the optimizer to start at x0.
-
-        Args:
-            x0 (np.ndarray): Initial mean.
-        """
         self.adam_opt.reset(x0)
         self.last_update_ratio = np.inf  # Updated at end of tell().
         self.noise = None  # Becomes (batch_size, solution_dim) array in ask().
 
     def check_stop(self, ranking_values):
-        """Checks if the optimization should stop and be reset.
-
-        Args:
-            ranking_values (np.ndarray): Array of objective values of the
-                solutions, sorted in the same order that the solutions were
-                sorted when passed to ``tell()``.
-
-        Returns:
-            True if any of the stopping conditions are satisfied.
-        """
         if self.last_update_ratio < 1e-9:
             return True
 
@@ -96,25 +95,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         return False
 
-    # Limit OpenBLAS to single thread. This is typically faster than
-    # multithreading because our data is too small.
-    @threadpool_limits.wrap(limits=1, user_api="blas")
-    def ask(self, lower_bounds, upper_bounds, batch_size=None):
-        """Samples new solutions from the Gaussian distribution.
-
-        Note: Bounds are currently not enforced.
-
-        Args:
-            lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-                indicating lower bounds of the solution space. Scalars specify
-                the same bound for the entire space, while arrays specify a
-                bound for each dimension. Pass -np.inf in the array or scalar to
-                indicated unbounded space.
-            upper_bounds (float or np.ndarray): Same as above, but for upper
-                bounds (and pass np.inf instead of -np.inf).
-            batch_size (int): batch size of the sample. Defaults to
-                ``self.batch_size``.
-        """
+    def ask(self, batch_size=None):
         if batch_size is None:
             batch_size = self.batch_size
 
@@ -133,12 +114,11 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
                 self.noise = self._rng.standard_normal(
                     (batch_size, self.solution_dim), dtype=self.dtype)
 
-            # TODO Numba
             new_solutions = (self.adam_opt.theta[None] +
                              self.sigma0 * self.noise)
             out_of_bounds = np.logical_or(
-                new_solutions < np.expand_dims(lower_bounds, axis=0),
-                new_solutions > np.expand_dims(upper_bounds, axis=0),
+                new_solutions < np.expand_dims(self.lower_bounds, axis=0),
+                new_solutions > np.expand_dims(self.upper_bounds, axis=0),
             )
 
             self._solutions[remaining_indices] = new_solutions
@@ -150,22 +130,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         return readonly(self._solutions)
 
-    # Limit OpenBLAS to single thread. This is typically faster than
-    # multithreading because our data is too small.
-    @threadpool_limits.wrap(limits=1, user_api="blas")
-    def tell(
-            self,
-            ranking_indices,
-            num_parents,  # pylint: disable = unused-argument
-    ):
-        """Passes the solutions back to the optimizer.
-
-        Args:
-            ranking_indices (array-like of int): Indices that indicate the
-                ranking of the original solutions returned in ``ask()``.
-            num_parents (int): Number of top solutions to select from the
-                ranked solutions.
-        """
+    def tell(self, ranking_indices, ranking_values, num_parents):
         # Indices come in decreasing order, so we reverse to get them to
         # increasing order.
         ranks = np.empty(self.batch_size, dtype=np.int32)

@@ -41,50 +41,42 @@ def test_attributes_correctly_constructed(data):
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
 def test_add_to_archive(data, use_list):
     if use_list:
-        status, value = data.archive.add_single(list(data.solution),
-                                                data.objective,
-                                                list(data.measures),
-                                                data.metadata)
+        add_info = data.archive.add_single(list(data.solution), data.objective,
+                                           list(data.measures))
     else:
-        status, value = data.archive.add_single(data.solution, data.objective,
-                                                data.measures, data.metadata)
+        add_info = data.archive.add_single(data.solution, data.objective,
+                                           data.measures)
 
-    assert status == AddStatus.NEW
-    assert np.isclose(value, data.objective)
+    assert add_info["status"] == AddStatus.NEW
+    assert np.isclose(add_info["value"], data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
-                         data.measures, data.grid_indices, data.metadata)
+                         data.measures, data.grid_indices)
 
 
 def test_add_and_overwrite(data):
     """Test adding a new solution with a higher objective value."""
     arbitrary_sol = data.solution + 1
-    arbitrary_metadata = {"foobar": 12}
     high_objective = data.objective + 1.0
 
-    status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       high_objective,
-                                                       data.measures,
-                                                       arbitrary_metadata)
-    assert status == AddStatus.IMPROVE_EXISTING
-    assert np.isclose(value, high_objective - data.objective)
+    add_info = data.archive_with_elite.add_single(arbitrary_sol, high_objective,
+                                                  data.measures)
+    assert add_info["status"] == AddStatus.IMPROVE_EXISTING
+    assert np.isclose(add_info["value"], high_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
-                         data.measures, data.grid_indices, arbitrary_metadata)
+                         data.measures, data.grid_indices)
 
 
 def test_add_without_overwrite(data):
     """Test adding a new solution with a lower objective value."""
     arbitrary_sol = data.solution + 1
-    arbitrary_metadata = {"foobar": 12}
     low_objective = data.objective - 1.0
 
-    status, value = data.archive_with_elite.add_single(arbitrary_sol,
-                                                       low_objective,
-                                                       data.measures,
-                                                       arbitrary_metadata)
-    assert status == AddStatus.NOT_ADDED
-    assert np.isclose(value, low_objective - data.objective)
+    add_info = data.archive_with_elite.add_single(arbitrary_sol, low_objective,
+                                                  data.measures)
+    assert add_info["status"] == AddStatus.NOT_ADDED
+    assert np.isclose(add_info["value"], low_objective - data.objective)
     assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
-                         data.measures, data.grid_indices, data.metadata)
+                         data.measures, data.grid_indices)
 
 
 def test_initial_remap():
@@ -132,31 +124,26 @@ def test_initial_remap():
     assert np.isclose(archive.boundaries[1], np.linspace(-2, 2, 21)).all()
 
     # Check that all the measures are as expected.
-    pandas_measures = archive.as_pandas(include_solutions=False)[[
-        "measure_0", "measure_1"
-    ]]
-    measures = list(pandas_measures.itertuples(name=None, index=False))
+    measures = map(tuple, archive.data("measures"))
     assert np.isclose(sorted(measures), sorted(expected_measures)).all()
 
 
 def test_add_to_archive_with_full_buffer(data):
     for _ in range(data.archive.buffer_capacity + 1):
-        data.archive.add_single(data.solution, data.objective, data.measures,
-                                data.metadata)
+        data.archive.add_single(data.solution, data.objective, data.measures)
 
     # After adding the same elite multiple times, there should only be one
     # elite, and it should be at (0, 0).
     assert_archive_elite(data.archive, data.solution, data.objective,
-                         data.measures, (0, 0), data.metadata)
+                         data.measures, (0, 0))
 
     # Even if another elite is added, it should still go to the same cell
     # because the measures are clipped to the boundaries before being
     # inserted.
-    arbitrary_metadata = {"foobar": 12}
     data.archive.add_single(2 * data.solution, 2 * data.objective,
-                            2 * data.measures, arbitrary_metadata)
+                            2 * data.measures)
     assert_archive_elite(data.archive, 2 * data.solution, 2 * data.objective,
-                         2 * data.measures, (0, 0), arbitrary_metadata)
+                         2 * data.measures, (0, 0))
 
 
 def test_adds_solutions_from_old_archive():
@@ -184,4 +171,4 @@ def test_adds_solutions_from_old_archive():
 
     # The objective values from the previous archive should remain because they
     # are higher.
-    assert (archive.as_pandas(include_solutions=False)["objective"] == 2).all()
+    assert (archive.data(["objective"], "tuple")[0] == 2).all()

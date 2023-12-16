@@ -261,4 +261,5 @@ intersphinx_mapping = {
     "sklearn": ("https://scikit-learn.org/stable/", None),
     "qdax": ("https://qdax.readthedocs.io/en/latest/", None),
     "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
+    "cma": ("https://cma-es.github.io/apidocs-pycma/", None),
 }

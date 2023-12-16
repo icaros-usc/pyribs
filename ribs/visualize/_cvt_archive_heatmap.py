@@ -9,8 +9,8 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 from ribs.visualize._utils import (archive_heatmap_1d, retrieve_cmap, set_cbar,
                                    validate_df, validate_heatmap_visual_args)
 
-# Matplotlib functions tend to have a ton of args.
-# pylint: disable = too-many-arguments
+# Matplotlib functions tend to have a ton of args and statements.
+# pylint: disable = too-many-arguments, too-many-statements
 
 
 def cvt_archive_heatmap(archive,
@@ -61,9 +61,9 @@ def cvt_archive_heatmap(archive,
             ...                      cells=100, ranges=[(-1, 1), (-1, 1)])
             >>> x = np.random.uniform(-1, 1, 10000)
             >>> y = np.random.uniform(-1, 1, 10000)
-            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
-            ...             objective_batch=-(x**2 + y**2),
-            ...             measures_batch=np.stack((x, y), axis=1))
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2),
+            ...             measures=np.stack((x, y), axis=1))
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_heatmap(archive)
@@ -85,9 +85,9 @@ def cvt_archive_heatmap(archive,
             >>> archive = CVTArchive(solution_dim=2,
             ...                      cells=20, ranges=[(-1, 1)])
             >>> x = np.random.uniform(-1, 1, 1000)
-            >>> archive.add(solution_batch=np.stack((x, x), axis=1),
-            ...             objective_batch=-x**2,
-            ...             measures_batch=x[:, None])
+            >>> archive.add(solution=np.stack((x, x), axis=1),
+            ...             objective=-x**2,
+            ...             measures=x[:, None])
             >>> # Plot a heatmap of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_heatmap(archive)
@@ -102,10 +102,11 @@ def cvt_archive_heatmap(archive,
         df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
             this argument instead of the data currently in the archive. This
             data can be obtained by, for instance, calling
-            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
-            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
-            data must contain columns for index, objective, and measures. To
-            display a custom metric, replace the "objective" column.
+            :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
+            and modifying the resulting :class:`ArchiveDataFrame`. Note that, at
+            a minimum, the data must contain columns for index, objective, and
+            measures. To display a custom metric, replace the "objective"
+            column.
         transpose_measures (bool): By default, the first measure in the archive
             will appear along the x-axis, and the second will be along the
             y-axis. To switch this behavior (i.e. to transpose the axes), set
@@ -182,7 +183,13 @@ def cvt_archive_heatmap(archive,
     cmap = retrieve_cmap(cmap)
 
     # Retrieve archive data.
-    df = archive.as_pandas() if df is None else validate_df(df)
+    if df is None:
+        index_batch = archive.data("index")
+        objective_batch = archive.data("objective")
+    else:
+        df = validate_df(df)
+        index_batch = df["index"]
+        objective_batch = df["objective"]
 
     if archive.measure_dim == 1:
         # Read in pcm kwargs -- the linewidth and edgecolor are overwritten by
@@ -220,10 +227,10 @@ def cvt_archive_heatmap(archive,
             inv_idx[x] = i
 
         # We only want inverse indexes that are actually used in the archive.
-        selected_inv_idx = inv_idx[df.index_batch()]
+        selected_inv_idx = inv_idx[index_batch]
 
         cell_objectives = np.full(archive.cells, np.nan)
-        cell_objectives[selected_inv_idx] = df.objective_batch()
+        cell_objectives[selected_inv_idx] = objective_batch
 
         ax = archive_heatmap_1d(archive, cell_boundaries, cell_objectives, ax,
                                 cmap, aspect, vmin, vmax, cbar, cbar_kwargs,
@@ -288,7 +295,7 @@ def cvt_archive_heatmap(archive,
         # the region index of each point.
         region_obj = [None] * len(vor.regions)
         min_obj, max_obj = np.inf, -np.inf
-        pt_to_obj = dict(zip(df.index_batch(), df.objective_batch()))
+        pt_to_obj = dict(zip(index_batch, objective_batch))
         for pt_idx, region_idx in enumerate(
                 vor.point_region[:-4]):  # Exclude faraway_pts.
             if region_idx != -1 and pt_idx in pt_to_obj:

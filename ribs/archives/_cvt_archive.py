@@ -1,6 +1,9 @@
 """Contains the CVTArchive class."""
+import numbers
+
 import numpy as np
 from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
+from scipy.stats.qmc import Halton, Sobol
 from sklearn.cluster import k_means
 
 from ribs._utils import check_batch_shape, check_finite
@@ -49,9 +52,9 @@ class CVTArchive(ArchiveBase):
     subsequent experiments.
 
     .. note:: The idea of archive thresholds was introduced in `Fontaine 2022
-        <https://arxiv.org/abs/2205.10752>`_. Refer to our `CMA-MAE tutorial
-        <../../tutorials/cma_mae.html>`_ for more info on thresholds, including
-        the ``learning_rate`` and ``threshold_min`` parameters.
+        <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds,
+        including the ``learning_rate`` and ``threshold_min`` parameters, refer
+        to our tutorial :doc:`/tutorials/cma_mae`.
 
     .. note:: For more information on our choice of k-D tree implementation, see
         :pr:`38`.
@@ -82,17 +85,30 @@ class CVTArchive(ArchiveBase):
         dtype (str or data-type): Data type of the solutions, objectives,
             and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
             ``np.float64``.
+        extra_fields (dict): Description of extra fields of data that is stored
+            next to elite data like solutions and objectives. The description is
+            a dict mapping from a field name (str) to a tuple of ``(shape,
+            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
+            np.float32)}`` will create a "foo" field that contains scalar values
+            and a "bar" field that contains 10D values. Note that field names
+            must be valid Python identifiers, and names already used in the
+            archive are not allowed.
+        custom_centroids (array-like): If passed in, this (cells, measure_dim)
+            array will be used as the centroids of the CVT instead of generating
+            new ones. In this case, ``samples`` will be ignored, and
+            ``archive.samples`` will be None. This can be useful when one wishes
+            to use the same CVT across experiments for fair comparison.
+        centroid_method (str): Pass in the following methods for
+            generating centroids: "random", "sobol", "scrambled_sobol",
+            "halton". Default method is "kmeans". These methods are derived from
+            Mouret 2023: https://dl.acm.org/doi/pdf/10.1145/3583133.3590726.
+            Note: Samples are only used when method is "kmeans".
         samples (int or array-like): If it is an int, this specifies the number
             of samples to generate when creating the CVT. Otherwise, this must
             be a (num_samples, measure_dim) array where samples[i] is a sample
             to use when creating the CVT. It can be useful to pass in custom
             samples when there are restrictions on what samples in the measure
             space are (physically) possible.
-        custom_centroids (array-like): If passed in, this (cells, measure_dim)
-            array will be used as the centroids of the CVT instead of generating
-            new ones. In this case, ``samples`` will be ignored, and
-            ``archive.samples`` will be None. This can be useful when one wishes
-            to use the same CVT across experiments for fair comparison.
         k_means_kwargs (dict): kwargs for :func:`~sklearn.cluster.k_means`. By
             default, we pass in `n_init=1`, `init="random"`,
             `algorithm="lloyd"`, and `random_state=seed`.
@@ -119,12 +135,14 @@ class CVTArchive(ArchiveBase):
                  qd_score_offset=0.0,
                  seed=None,
                  dtype=np.float64,
-                 samples=100_000,
+                 extra_fields=None,
                  custom_centroids=None,
-                 chunk_size=None,
+                 centroid_method="kmeans",
+                 samples=100_000,
                  k_means_kwargs=None,
                  use_kd_tree=True,
-                 ckdtree_kwargs=None):
+                 ckdtree_kwargs=None,
+                 chunk_size=None):
 
         ArchiveBase.__init__(
             self,
@@ -136,6 +154,7 @@ class CVTArchive(ArchiveBase):
             qd_score_offset=qd_score_offset,
             seed=seed,
             dtype=dtype,
+            extra_fields=extra_fields,
         )
 
         ranges = list(zip(*ranges))
@@ -157,23 +176,59 @@ class CVTArchive(ArchiveBase):
         self._k_means_kwargs.setdefault("algorithm", "lloyd")
         self._k_means_kwargs.setdefault("random_state", seed)
 
-        self._use_kd_tree = use_kd_tree
-        self._centroid_kd_tree = None
-        self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
-                                ckdtree_kwargs.copy())
-        self._chunk_size = chunk_size
-
         if custom_centroids is None:
-            if not isinstance(samples, int):
-                # Validate shape of custom samples. These are ignored when
-                # `custom_centroids` is provided.
-                samples = np.asarray(samples, dtype=self.dtype)
-                if samples.shape[1] != self._measure_dim:
-                    raise ValueError(
-                        f"Samples has shape {samples.shape} but must be of "
-                        f"shape (n_samples, len(ranges)={self._measure_dim})")
-            self._samples = samples
-            self._centroids = None
+            self._samples = None
+            if centroid_method == "kmeans":
+                if not isinstance(samples, numbers.Integral):
+                    # Validate shape of custom samples.
+                    samples = np.asarray(samples, dtype=self.dtype)
+                    if samples.shape[1] != self._measure_dim:
+                        raise ValueError(
+                            f"Samples has shape {samples.shape} but must be of "
+                            f"shape (n_samples, len(ranges)="
+                            f"{self._measure_dim})")
+                    self._samples = samples
+                else:
+                    self._samples = self._rng.uniform(
+                        self._lower_bounds,
+                        self._upper_bounds,
+                        size=(samples, self._measure_dim),
+                    ).astype(self.dtype)
+
+                self._centroids = k_means(self._samples, self._cells,
+                                          **self._k_means_kwargs)[0]
+
+                if self._centroids.shape[0] < self._cells:
+                    raise RuntimeError(
+                        "While generating the CVT, k-means clustering found "
+                        f"{self._centroids.shape[0]} centroids, but this "
+                        f"archive needs {self._cells} cells. This most "
+                        "likely happened because there are too few samples "
+                        "and/or too many cells.")
+            elif centroid_method == "random":
+                # Generates random centroids.
+                self._centroids = self._rng.uniform(self._lower_bounds,
+                                                    self._upper_bounds,
+                                                    size=(self._cells,
+                                                          self._measure_dim))
+            elif centroid_method == "sobol":
+                # Generates centroids as a Sobol sequence.
+                sampler = Sobol(d=self._measure_dim, scramble=False)
+                sobol_nums = sampler.random(n=self._cells)
+                self._centroids = (self._lower_bounds + sobol_nums *
+                                   (self._upper_bounds - self._lower_bounds))
+            elif centroid_method == "scrambled_sobol":
+                # Generates centroids as a scrambled Sobol sequence.
+                sampler = Sobol(d=self._measure_dim, scramble=True)
+                sobol_nums = sampler.random(n=self._cells)
+                self._centroids = (self._lower_bounds + sobol_nums *
+                                   (self._upper_bounds - self._lower_bounds))
+            elif centroid_method == "halton":
+                # Generates centroids with a Halton sequence.
+                sampler = Halton(d=self._measure_dim)
+                halton_nums = sampler.random(n=self._cells)
+                self._centroids = (self._lower_bounds + halton_nums *
+                                   (self._upper_bounds - self._lower_bounds))
         else:
             # Validate shape of `custom_centroids` when they are provided.
             custom_centroids = np.asarray(custom_centroids, dtype=self.dtype)
@@ -185,24 +240,11 @@ class CVTArchive(ArchiveBase):
             self._centroids = custom_centroids
             self._samples = None
 
-        if self._centroids is None:
-            self._samples = self._rng.uniform(
-                self._lower_bounds,
-                self._upper_bounds,
-                size=(self._samples, self._measure_dim),
-            ).astype(self.dtype) if isinstance(self._samples,
-                                               int) else self._samples
-
-            self._centroids = k_means(self._samples, self._cells,
-                                      **self._k_means_kwargs)[0]
-
-            if self._centroids.shape[0] < self._cells:
-                raise RuntimeError(
-                    "While generating the CVT, k-means clustering found "
-                    f"{self._centroids.shape[0]} centroids, but this archive "
-                    f"needs {self._cells} cells. This most likely happened "
-                    "because there are too few samples and/or too many cells.")
-
+        self._use_kd_tree = use_kd_tree
+        self._centroid_kd_tree = None
+        self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
+                                ckdtree_kwargs.copy())
+        self._chunk_size = chunk_size
         if self._use_kd_tree:
             self._centroid_kd_tree = cKDTree(self._centroids,
                                              **self._ckdtree_kwargs)
@@ -233,42 +275,41 @@ class CVTArchive(ArchiveBase):
         """
         return self._centroids
 
-    def index_of(self, measures_batch):
+    def index_of(self, measures):
         """Finds the indices of the centroid closest to the given coordinates in
         measure space.
 
         If ``index_batch`` is the batch of indices returned by this method, then
         ``archive.centroids[index_batch[i]]`` holds the coordinates of the
-        centroid closest to ``measures_batch[i]``. See :attr:`centroids` for
-        more info.
+        centroid closest to ``measures[i]``. See :attr:`centroids` for more
+        info.
 
         The centroid indices are located using either the k-D tree or brute
         force, depending on the value of ``use_kd_tree`` in the constructor.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array of coordinates in measure space.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of centroid indices
             corresponding to each measure space coordinate.
         Raises:
-            ValueError: ``measures_batch`` is not of shape (batch_size,
+            ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
-            ValueError: ``measures_batch`` has non-finite values (inf or NaN).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
-                          "measure_dim")
-        check_finite(measures_batch, "measures_batch")
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
 
         if self._use_kd_tree:
-            _, indices = self._centroid_kd_tree.query(measures_batch)
+            _, indices = self._centroid_kd_tree.query(measures)
             return indices.astype(np.int32)
         else:
-            expanded_measures = np.expand_dims(measures_batch, axis=1)
+            expanded_measures = np.expand_dims(measures, axis=1)
             # Compute indices chunks at a time
             if self._chunk_size is not None and \
-                    self._chunk_size < measures_batch.shape[0]:
+                    self._chunk_size < measures.shape[0]:
                 indices = []
                 chunks = np.array_split(
                     expanded_measures,

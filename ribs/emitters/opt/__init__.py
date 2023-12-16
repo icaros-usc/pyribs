@@ -14,9 +14,10 @@ For gradient-based optimizers (inheriting from :class:`GradientOptBase`):
 For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
 
 * ``cma_es``: :class:`CMAEvolutionStrategy`
-* ``sep_cma_es``: :class:`SeparableCMAEvolutionStrategy`
 * ``lm_ma_es``: :class:`LMMAEvolutionStrategy`
 * ``openai_es``: :class:`OpenAIEvolutionStrategy`
+* ``pycma_es``: :class:`PyCMAEvolutionStrategy`
+* ``sep_cma_es``: :class:`SeparableCMAEvolutionStrategy`
 
 .. autosummary::
     :toctree:
@@ -24,6 +25,7 @@ For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
     ribs.emitters.opt.CMAEvolutionStrategy
     ribs.emitters.opt.LMMAEvolutionStrategy
     ribs.emitters.opt.OpenAIEvolutionStrategy
+    ribs.emitters.opt.PyCMAEvolutionStrategy
     ribs.emitters.opt.SeparableCMAEvolutionStrategy
     ribs.emitters.opt.EvolutionStrategyBase
     ribs.emitters.opt.AdamOpt
@@ -37,12 +39,14 @@ from ribs.emitters.opt._gradient_ascent_opt import GradientAscentOpt
 from ribs.emitters.opt._gradient_opt_base import GradientOptBase
 from ribs.emitters.opt._lm_ma_es import LMMAEvolutionStrategy
 from ribs.emitters.opt._openai_es import OpenAIEvolutionStrategy
+from ribs.emitters.opt._pycma_es import PyCMAEvolutionStrategy
 from ribs.emitters.opt._sep_cma_es import SeparableCMAEvolutionStrategy
 
 __all__ = [
     "CMAEvolutionStrategy",
     "LMMAEvolutionStrategy",
     "OpenAIEvolutionStrategy",
+    "PyCMAEvolutionStrategy",
     "SeparableCMAEvolutionStrategy",
     "EvolutionStrategyBase",
     "AdamOpt",
@@ -88,10 +92,12 @@ _NAME_TO_ES_MAP = {
     "SeparableCMAEvolutionStrategy": SeparableCMAEvolutionStrategy,
     "LMMAEvolutionStrategy": LMMAEvolutionStrategy,
     "OpenAIEvolutionStrategy": OpenAIEvolutionStrategy,
+    "PyCMAEvolutionStrategy": PyCMAEvolutionStrategy,
     "cma_es": CMAEvolutionStrategy,
     "sep_cma_es": SeparableCMAEvolutionStrategy,
     "lm_ma_es": LMMAEvolutionStrategy,
     "openai_es": OpenAIEvolutionStrategy,
+    "pycma_es": PyCMAEvolutionStrategy,
 }
 
 

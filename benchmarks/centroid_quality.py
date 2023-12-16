@@ -62,30 +62,31 @@ def main():
     techniques used in the aforementioned paper.
     """
 
-    score_seed = 1
-    num_samples = 10000
-    archive = CVTArchive(
-        solution_dim=20,
-        cells=512,
-        ranges=[(0., 1.), (0., 1.)],
-    )
-    cvt_centroids = archive.centroids
-    print(
-        "Score for CVT generation: ",
-        get_score(centroids=cvt_centroids,
-                  num_samples=num_samples,
-                  seed=score_seed))
+    # Default settings to benchmark different centroid generation techniques.
+    score_seed = 1823170571
+    num_samples = 100000
 
-    centroid_gen_seed = 100
-    num_centroids = 1024
-    dim = 2
-    rng = np.random.default_rng(seed=centroid_gen_seed)
-    random_centroids = rng.random((num_centroids, dim))
-    print(
-        "Score for random generation: ",
-        get_score(centroids=random_centroids,
-                  num_samples=num_samples,
-                  seed=score_seed))
+    # Settings for creating the CVTArchive.
+    solution_dim = 20
+    cells = 512
+    ranges = [(0., 1.), (0., 1.)]
+
+    # Different methods for generating centroids.
+    generation_methods = [
+        "kmeans", "random", "sobol", "scrambled_sobol", "halton"
+    ]
+
+    # Benchmark each centroid generation technique.
+    for method in generation_methods:
+        archive = CVTArchive(solution_dim=solution_dim,
+                             cells=cells,
+                             ranges=ranges,
+                             centroid_method=method)
+        print(
+            f"Score for {method} generation: ",
+            get_score(centroids=archive.centroids,
+                      num_samples=num_samples,
+                      seed=score_seed))
 
 
 if __name__ == "__main__":
