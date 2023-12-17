@@ -1,5 +1,15 @@
 # History
 
+## 0.6.4
+
+Small release that adds the scalable CMA-MAE tutorial.
+
+### Changelog
+
+#### Documentation
+
+- Add tutorial on scalable CMA-MAE variants ({pr}`433`)
+
 ## 0.6.3
 
 Small patch release due to deprecation issues.
