@@ -8,7 +8,7 @@ Small release that adds the scalable CMA-MAE tutorial.
 
 #### Documentation
 
-- Add tutorial on scalable CMA-MAE variants ({pr}`433`)
+- Add tutorial on scalable CMA-MAE variants ({pr}`433`, {pr}`443`)
 
 ## 0.6.3
 
