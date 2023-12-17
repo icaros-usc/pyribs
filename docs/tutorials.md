@@ -13,6 +13,7 @@ tutorial page has a link to open the tutorial in Google Colab.
 tutorials/lunar_lander
 tutorials/cma_mae
 tutorials/tom_cruise_dqd
+tutorials/scalable_cma_mae
 ```
 
 These tutorials demonstrate how to use the key algorithms in pyribs. We
