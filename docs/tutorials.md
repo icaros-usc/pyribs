@@ -5,7 +5,7 @@ may be [run locally](running-locally) or on
 [Google Colab](https://colab.research.google.com/notebooks/intro.ipynb). Each
 tutorial page has a link to open the tutorial in Google Colab.
 
-## Key Algorithms
+## Algorithms
 
 ```{toctree}
 :hidden:
@@ -15,16 +15,19 @@ tutorials/cma_mae
 tutorials/tom_cruise_dqd
 ```
 
-We recommend new users start with these tutorials which demonstrate how to use
-the key algorithms in pyribs.
+These tutorials demonstrate how to use the key algorithms in pyribs. We
+recommend that new users start with the lunar lander tutorial and one or more of
+the other algorithm tutorials.
 
-- {doc}`tutorials/lunar_lander`: Covers the CMA-ME algorithm and various basic
-  library features.
+- {doc}`tutorials/lunar_lander`: Our introductory tutorial. Covers the CMA-ME
+  algorithm and various basic library features.
 - {doc}`tutorials/cma_mae`: Shows how to implement CMA-MAE, a powerful algorithm
   built on CMA-ME, on the sphere linear projection benchmark.
 - {doc}`tutorials/tom_cruise_dqd`: Covers CMA-MEGA and CMA-MAEGA, two algorithms
   designed for differentiable quality diversity problems (QD problems where
   gradients are available).
+- {doc}`tutorials/scalable_cma_mae`: How to use variants of CMA-MAE that scale
+  to thousands or even millions of parameters.
 
 ## Applications
 
