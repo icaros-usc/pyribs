@@ -50,6 +50,10 @@
 - Add cron job for testing installation ({pr}`389`, {pr}`401`)
 - Fix broken cross-refs in docs ({pr}`393`)
 
+#### Documentation
+
+- Tidy up LSI MNIST notebook ({pr}`444`)
+
 ## 0.6.4
 
 Small release that adds the scalable CMA-MAE tutorial.
