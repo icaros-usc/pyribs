@@ -68,7 +68,8 @@ jobs:
       - name: Test visualize extra
         run: pytest tests/visualize
       - name: Install QDax
-        run: pip install qdax
+        # Brax 0.9.4 fails with Python 3.8 due to mujoco-mjx
+        run: pip install qdax brax==0.9.3
       - name: Test visualize extra for QDax
         run: pytest tests/visualize_qdax
       - name: Install cma dep

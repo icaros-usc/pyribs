@@ -18,8 +18,8 @@ Usage:
 import sys
 
 import torch
-import torch.nn as nn
 import torchvision
+from torch import nn
 
 MEAN_TRANSFORM = 0.1307
 STD_DEV_TRANSFORM = 0.3081

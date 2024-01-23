@@ -83,10 +83,10 @@ def parallel_axes_plot(archive,
             this argument instead of the data currently in the archive. This
             data can be obtained by, for instance, calling
             :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
-            and modifying the resulting :class:`ArchiveDataFrame`. Note that, at
-            a minimum, the data must contain columns for index, objective, and
-            measures. To display a custom metric, replace the "objective"
-            column.
+            and modifying the resulting
+            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum,
+            the data must contain columns for index, objective, and measures. To
+            display a custom metric, replace the "objective" column.
         measure_order (list of int or list of (int, str)): If this is a list
             of ints, it specifies the axes order for measures (e.g. ``[2, 0,
             1]``). If this is a list of tuples, each tuple takes the form
