@@ -9,8 +9,8 @@ the full list of changes, please refer to our [History page](./history).
 We refactored our archives to build on a data structure we call an
 {class}`~ribs.archives.ArrayStore`, which stores archive data in several
 fixed-size arrays. This new data structure enabled us to create a more flexible
-API, which also mean introducing several **breaking changes.** Below we list all
-the updates to the archives, ordered by how likely they are to affect users.
+API, which also meant introducing several **breaking changes.** Below we list
+all the updates to the archives, ordered by how likely they are to affect users.
 
 ### as_pandas() is deprecated in favor of data()
 
@@ -30,8 +30,8 @@ examples of the {meth}`~ribs.archives.ArchiveBase.data` method:
 # }
 archive.data()
 
-# Returns just a single array -- we think this will be the most useful for
-# users.
+# Returns a single array -- in this case, the shape will be (num elites,).
+# We think this will be the most useful variant of data().
 objective = archive.data("objective")
 
 # Returns a dict with just the listed fields, e.g.,
@@ -44,11 +44,14 @@ archive.data(["objective", "measures"])
 
 # Returns a tuple with just the listed fields, e.g.,
 #
-# (objective, measures)
+# (
+#   [1.5, ...],
+#   [[1.0, 2.0], ...],
+# )
 archive.data(["objective", "measures"], return_type="tuple")
 
-# Returns an ArchiveDataFrame (note the order of the columns differs from the
-# old as_pandas method).
+# Returns an ArchiveDataFrame -- see below for several differences from the
+# as_pandas ArchiveDataFrame.
 archive.data(return_type="pandas")
 ```
 
@@ -72,7 +75,7 @@ returned by `data()`:
 Previously, archives stored `metadata`, which were arbitrary objects associated
 with each solution or elite. In pyribs 0.7.0, we have removed metadata and
 instead support custom fields in archives. The example below shows how to use
-this feature -- pay attention to the `extra_fields` in the archive definition,
+custom fields -- pay attention to the `extra_fields` in the archive definition,
 and the kwargs in `scheduler.tell()`.
 
 ```python
@@ -164,9 +167,9 @@ by {meth}`~ribs.archives.ArchiveBase.retrieve` ({pr}`414`).
 #### Elite and EliteBatch namedtuples are deprecated
 
 The Elite and EliteBatch namedtuples have been removed, and methods will now
-return dicts instead (as described for several methods above). This allows us to
-support custom field names. In particular, iteration over an archive will now
-yield a dict instead of the Elite namedtuple. More info: {pr}`397`
+return dicts instead). This allows us to support custom field names. In
+particular, iteration over an archive will now yield a dict instead of the Elite
+namedtuple. More info: {pr}`397`
 
 #### add() methods now return add_info dict
 
