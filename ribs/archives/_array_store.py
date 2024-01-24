@@ -257,7 +257,10 @@ class ArrayStore:
                 ``(objective_arr, measures_arr)``. In this case, the results
                 from ``retrieve`` could be unpacked as::
 
-                    occupied, (objective, measures) = store.retrieve(...)
+                    occupied, (objective, measures) = store.retrieve(
+                        ...,
+                        return_type="tuple",
+                    )
 
                 Unlike with the ``dict`` return type, duplicate fields will show
                 up as duplicate entries in the tuple, e.g.,
