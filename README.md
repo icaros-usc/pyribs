@@ -282,7 +282,8 @@ for the public GitHub repositories which depend on pyribs.
 
 ## Citing Algorithms in pyribs
 
-If you use the following algorithms, please also cite their relevant papers:
+If you use the following algorithms, please consider citing their relevant
+papers:
 
 - **CMA-ME:** [Fontaine 2020](https://dl.acm.org/doi/10.1145/3377930.3390232)
   ```
@@ -332,13 +333,16 @@ If you use the following algorithms, please also cite their relevant papers:
   ```
 - **Scalable CMA-MAE:** [Tjanaka 2022](https://arxiv.org/abs/2210.02622)
   ```
-  @misc{scalablecmamae,
-        title={Training Diverse High-Dimensional Controllers by Scaling Covariance Matrix Adaptation MAP-Annealing},
-        author={Bryon Tjanaka and Matthew C. Fontaine and Aniruddha Kalkar and Stefanos Nikolaidis},
-        year={2022},
-        eprint={2210.02622},
-        archivePrefix={arXiv},
-        primaryClass={cs.RO}
+  @ARTICLE{10243102,
+    author={Tjanaka, Bryon and Fontaine, Matthew C. and Lee, David H. and Kalkar, Aniruddha and Nikolaidis, Stefanos},
+    journal={IEEE Robotics and Automation Letters},
+    title={Training Diverse High-Dimensional Controllers by Scaling Covariance Matrix Adaptation MAP-Annealing},
+    year={2023},
+    volume={8},
+    number={10},
+    pages={6771-6778},
+    keywords={Covariance matrices;Training;Neural networks;Legged locomotion;Reinforcement learning;Evolutionary robotics;Evolutionary robotics;reinforcement learning},
+    doi={10.1109/LRA.2023.3313012}
   }
   ```
 
