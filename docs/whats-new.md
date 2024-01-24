@@ -7,10 +7,12 @@ the full list of changes, please refer to our [History page](./history).
 ## More Flexible Archives
 
 We refactored our archives to build on a data structure we call an
-{class}`~ribs.archives.ArrayStore`, which stores archive data in several
-fixed-size arrays. This new data structure enabled us to create a more flexible
-API, which also meant introducing several **breaking changes.** Below we list
-all the updates to the archives, ordered by how likely they are to affect users.
+{class}`~ribs.archives.ArrayStore`. An ArrayStore is essentially a dict mapping
+from names ("fields") to fixed-size arrays. Archives store data like solutions,
+objectives, and measures as fields in the ArrayStore. Building on ArrayStore
+enabled us to create a more flexible API, which also meant introducing several
+**breaking changes.** Below we list all the updates to the archives, ordered by
+how likely they are to affect users.
 
 ### as_pandas() is deprecated in favor of data()
 
