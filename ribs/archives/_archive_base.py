@@ -643,15 +643,18 @@ class ArchiveBase(ABC):
         """Retrieves data for all elites in the archive.
 
         Args:
-            fields (array-like of str): List of fields to include. By default,
-                all fields will be included (see :attr:`field_list`), with an
-                additional "index" as the last field ("index" can also be placed
-                anywhere in this list).
-            return_type (str): Type of data to return. See below.
+            fields (str or array-like of str): List of fields to include. By
+                default, all fields will be included, with an additional "index"
+                as the last field ("index" can also be placed anywhere in this
+                list). This can also be a single str indicating a field name.
+            return_type (str): Type of data to return. See below. Ignored if
+                ``fields`` is a str.
 
         Returns:
-            The data at the given indices. This can take the following forms,
-            depending on the ``return_type`` argument:
+            The data for all entries in the archive. If ``fields`` was a single
+            str, this will just be an array holding data for the given field.
+            Otherwise, this data can take the following forms, depending on the
+            ``return_type`` argument:
 
             - ``return_type="dict"``: Dict mapping from the field name to the
               field data at the given indices. An example is::
@@ -675,7 +678,8 @@ class ArchiveBase(ABC):
               ``(objective_arr, measures_arr)``. In this case, the results
               from ``retrieve`` could be unpacked as::
 
-                  objective, measures = archive.data(["objective", "measures"])
+                  objective, measures = archive.data(["objective", "measures"],
+                                                     return_type="tuple")
 
               Unlike with the ``dict`` return type, duplicate fields will show
               up as duplicate entries in the tuple, e.g.,
