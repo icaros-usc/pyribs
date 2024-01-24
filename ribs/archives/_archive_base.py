@@ -729,11 +729,9 @@ class ArchiveBase(ABC):
         # pylint: disable = unused-argument
         raise RuntimeError(
             "as_pandas has been deprecated. Please use "
-            "archive.data(..., return_type='pandas') instead. For more "
-            "info, please see the archive data tutorial: "
-            # pylint: disable = line-too-long
-            "https://docs.pyribs.org/en/stable/tutorials/features/archive_data.html"
-        )
+            "archive.data(..., return_type='pandas') instead, or consider "
+            "retrieving individual fields, e.g., "
+            "objective = archive.data('objective')")
 
     def cqd_score(self,
                   iterations,
