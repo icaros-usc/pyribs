@@ -14,9 +14,8 @@ class OperatorBase(ABC):
         """Operates on parents to generate new solutions.
 
         Args:
-            parents (array-like): (batch_size, solution_dim) array of
-                solutions to be mutated. Typically passed in by an emitter
-                after selection from an archive.
+            parents (array-like): Array of solutions to be mutated. Typically
+                passed in by an emitter after selection from an archive.
 
         Returns:
             numpy.ndarray: ``(batch_size, solution_dim)`` array that contains
