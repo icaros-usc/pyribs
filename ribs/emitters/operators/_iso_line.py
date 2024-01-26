@@ -12,7 +12,7 @@ class IsoLineOperator(OperatorBase):
 
     Args:
         iso_sigma (float): Scale factor for the isotropic distribution used to
-                generate solutions.
+            generate solutions.
         line_sigma (float): Scale factor for the line distribution used when
             generating solutions.
         sigma (float or array-like): Standard deviation of the Gaussian
@@ -48,10 +48,10 @@ class IsoLineOperator(OperatorBase):
         """ Adds Isotropic Guassian noise and directional noise to parents.
 
         Args:
-            parents (array-like): (2, batch_size, solution_dim)
-                parents[0] array of solutions selected by emitter
-                parents[1] array of second batch of solutions passed by
-                  emitter. Used for calculating directional correlation.
+            parents (array-like): (2, batch_size, solution_dim) parents[0] array
+                of solutions selected by emitter parents[1] array of second
+                batch of solutions passed by emitter. Used for calculating
+                directional correlation.
 
         Returns:
             numpy.ndarray: ``(batch_size, solution_dim)`` array that contains
