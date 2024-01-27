@@ -1,6 +1,9 @@
 # History
 
-## 0.7.0 (Forthcoming)
+## 0.7.0
+
+To learn about this release, see our page on What's New in v0.7.0:
+https://docs.pyribs.org/en/stable/whats-new.html
 
 ### Changelog
 
