@@ -88,7 +88,8 @@ def test_warn_nothing_added_to_archive(archive_type):
     archive = GridArchive(solution_dim=2,
                           dims=[100, 100],
                           ranges=[(-1, 1), (-1, 1)],
-                          threshold_min=1.0)
+                          threshold_min=1.0,
+                          learning_rate=1.0)
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
     if archive_type == "Scheduler":
         scheduler = Scheduler(archive, emitters)
@@ -110,11 +111,13 @@ def test_warn_nothing_added_to_result_archive(archive_type):
     archive = GridArchive(solution_dim=2,
                           dims=[100, 100],
                           ranges=[(-1, 1), (-1, 1)],
-                          threshold_min=-np.inf)
+                          threshold_min=-np.inf,
+                          learning_rate=1.0)
     result_archive = GridArchive(solution_dim=2,
                                  dims=[100, 100],
                                  ranges=[(-1, 1), (-1, 1)],
-                                 threshold_min=10.0)
+                                 threshold_min=10.0,
+                                 learning_rate=1.0)
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
     if archive_type == "Scheduler":
         scheduler = Scheduler(
