@@ -63,6 +63,7 @@ extras_require = {
         "sphinxcontrib-applehelp==1.0.4",
         "sphinxcontrib-devhelp==1.0.2",
         "sphinxcontrib-htmlhelp==2.0.1",
+        "sphinxcontrib-serializinghtml==1.1.5",
 
         # Distribution
         "bump2version==1.0.1",
