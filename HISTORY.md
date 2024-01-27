@@ -40,6 +40,7 @@
 
 #### Improvements
 
+- Raise error when threshold_min is set but learning_rate is not ({pr}`453`)
 - Fix interval_size in CVTArchive and SlidingBoundariesArchive ({pr}`452`)
 - Allow overriding ES in sphere example ({pr}`439`)
 - Use NumPy SeedSequence in emitters ({pr}`431`, {pr}`440`)

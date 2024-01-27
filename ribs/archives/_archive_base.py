@@ -47,7 +47,8 @@ class ArchiveBase(ABC):
         cells (int): Number of cells in the archive. This is used to create the
             numpy arrays described above for storing archive info.
         measure_dim (int): The dimension of the measure space.
-        learning_rate (float): The learning rate for threshold updates.
+        learning_rate (float): The learning rate for threshold updates. Defaults
+            to 1.0.
         threshold_min (float): The initial threshold value for all the cells.
         qd_score_offset (float): Archives often contain negative objective
             values, and if the QD score were to be computed with these negative
@@ -88,7 +89,7 @@ class ArchiveBase(ABC):
                  solution_dim,
                  cells,
                  measure_dim,
-                 learning_rate=1.0,
+                 learning_rate=None,
                  threshold_min=-np.inf,
                  qd_score_offset=0.0,
                  seed=None,
@@ -103,6 +104,15 @@ class ArchiveBase(ABC):
         self._measure_dim = measure_dim
         self._qd_score_offset = self._dtype(qd_score_offset)
 
+        if threshold_min != -np.inf and learning_rate is None:
+            raise ValueError(
+                "You set threshold_min without setting learning_rate. "
+                "Please note that threshold_min is only used in CMA-MAE; "
+                "it is not intended to be used for only filtering archive "
+                "solutions. If you would like to run CMA-MAE, please also set "
+                "learning_rate.")
+        if learning_rate is None:
+            learning_rate = 1.0  # Default value.
         if threshold_min == -np.inf and learning_rate != 1.0:
             raise ValueError("threshold_min can only be -np.inf if "
                              "learning_rate is 1.0")

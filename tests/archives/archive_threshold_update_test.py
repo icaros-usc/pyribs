@@ -78,24 +78,25 @@ def test_threshold_update_for_empty_objective_and_index():
 
 
 def test_init_learning_rate_and_threshold_min():
-    # Setting threshold_min while not setting the learning_rate should not
-    # raise an error.
-    _ = GridArchive(solution_dim=2,
+    # Setting threshold_min while not setting the learning_rate should raise an
+    # error.
+    with pytest.raises(ValueError):
+        GridArchive(solution_dim=2,
                     dims=[10, 20],
                     ranges=[(-1, 1), (-2, 2)],
                     threshold_min=0)
 
     # Setting both learning_rate and threshold_min should not raise an error.
-    _ = GridArchive(solution_dim=2,
-                    dims=[10, 20],
-                    ranges=[(-1, 1), (-2, 2)],
-                    learning_rate=0.1,
-                    threshold_min=0)
+    GridArchive(solution_dim=2,
+                dims=[10, 20],
+                ranges=[(-1, 1), (-2, 2)],
+                learning_rate=0.1,
+                threshold_min=0)
 
     # Setting learning_rate while not setting the threshold_min should raise an
     # error.
     with pytest.raises(ValueError):
-        _ = GridArchive(solution_dim=2,
-                        dims=[10, 20],
-                        ranges=[(-1, 1), (-2, 2)],
-                        learning_rate=0.1)
+        GridArchive(solution_dim=2,
+                    dims=[10, 20],
+                    ranges=[(-1, 1), (-2, 2)],
+                    learning_rate=0.1)
