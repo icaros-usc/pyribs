@@ -454,6 +454,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             self._upper_bounds = np.array([
                 bound[dim] for bound, dim in zip(self._boundaries, self._dims)
             ])
+            self._interval_size = self._upper_bounds - self._lower_bounds
         else:
             add_info = ArchiveBase.add_single(self, **new_data)
         return add_info
