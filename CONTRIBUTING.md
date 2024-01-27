@@ -197,6 +197,7 @@ from `master` into the corresponding release branch.
 
 #### Minor Versions
 
+1. Check that the latest version of the docs is building on Read the Docs.
 1. Create a PR into master after doing the following:
    1. Update the version with `bump2version`:
       ```bash
@@ -228,6 +229,7 @@ from `master` into the corresponding release branch.
 
 #### Patch Versions
 
+1. Check that the latest version of the docs is building on Read the Docs.
 1. Create a PR into master after doing the following:
    1. Update the version with `bump2version`:
       ```bash

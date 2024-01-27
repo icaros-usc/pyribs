@@ -60,6 +60,7 @@ extras_require = {
         "sphinx-toolbox==3.1.0",
         "sphinx-autodoc-typehints==1.18.2",
         "sphinx-codeautolink==0.12.1",
+        "sphinxcontrib-applehelp==1.0.4",
 
         # Distribution
         "bump2version==1.0.1",
