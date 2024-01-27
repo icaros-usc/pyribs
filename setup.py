@@ -52,15 +52,23 @@ extras_require = {
         "pytest-xdist==2.5.0",
 
         # Documentation
-        "Sphinx==4.5.0",
-        "sphinx-material==0.0.32",
-        "sphinx-autobuild==2021.3.14",
-        "sphinx-copybutton==0.3.1",
         "myst-nb==0.17.1",
-        "sphinx-toolbox==3.1.0",
+        "Sphinx==4.5.0",
+        "sphinx-autobuild==2021.3.14",
         "sphinx-autodoc-typehints==1.18.2",
         "sphinx-codeautolink==0.12.1",
+        "sphinx-copybutton==0.3.1",
+        "sphinx-jinja2-compat==0.2.0",
+        "sphinx-material==0.0.32",
+        "sphinx-prompt==1.5.0",
+        "sphinx-tabs==3.3.1",
+        "sphinx-toolbox==3.1.0",
         "sphinxcontrib-applehelp==1.0.4",
+        "sphinxcontrib-devhelp==1.0.2",
+        "sphinxcontrib-htmlhelp==2.0.1",
+        "sphinxcontrib-jsmath==1.0.1",
+        "sphinxcontrib-qthelp==1.0.3",
+        "sphinxcontrib-serializinghtml==1.1.5",
 
         # Distribution
         "bump2version==1.0.1",
