@@ -41,6 +41,7 @@ def test_samples_bad_shape(use_kd_tree):
 def test_properties_are_correct(data):
     assert np.all(data.archive.lower_bounds == [-1, -1])
     assert np.all(data.archive.upper_bounds == [1, 1])
+    assert np.all(data.archive.interval_size == [2, 2])
 
     points = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
     unittest.TestCase().assertCountEqual(data.archive.samples.tolist(), points)

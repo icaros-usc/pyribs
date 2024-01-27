@@ -160,6 +160,7 @@ class CVTArchive(ArchiveBase):
         ranges = list(zip(*ranges))
         self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
         self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
+        self._interval_size = self._upper_bounds - self._lower_bounds
 
         # Apply default args for k-means. Users can easily override these,
         # particularly if they want higher quality clusters.
@@ -258,6 +259,12 @@ class CVTArchive(ArchiveBase):
     def upper_bounds(self):
         """(measure_dim,) numpy.ndarray: Upper bound of each dimension."""
         return self._upper_bounds
+
+    @property
+    def interval_size(self):
+        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds -
+        lower_bounds)."""
+        return self._interval_size
 
     @property
     def samples(self):
