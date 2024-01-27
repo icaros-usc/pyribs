@@ -69,7 +69,8 @@ class CVTArchive(ArchiveBase):
             (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
             ``dims``.
-        learning_rate (float): The learning rate for threshold updates.
+        learning_rate (float): The learning rate for threshold updates. Defaults
+            to 1.0.
         threshold_min (float): The initial threshold value for all the cells.
         qd_score_offset (float): Archives often contain negative objective
             values, and if the QD score were to be computed with these negative

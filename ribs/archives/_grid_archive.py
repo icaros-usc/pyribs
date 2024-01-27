@@ -37,7 +37,8 @@ class GridArchive(ArchiveBase):
             method -- refer to the implementation `here
             <../_modules/ribs/archives/_grid_archive.html#GridArchive.index_of>`_.
             Pass this parameter to configure that epsilon.
-        learning_rate (float): The learning rate for threshold updates.
+        learning_rate (float): The learning rate for threshold updates. Defaults
+            to 1.0.
         threshold_min (float): The initial threshold value for all the cells.
         qd_score_offset (float): Archives often contain negative objective
             values, and if the QD score were to be computed with these negative
@@ -70,7 +71,7 @@ class GridArchive(ArchiveBase):
                  solution_dim,
                  dims,
                  ranges,
-                 learning_rate=1.0,
+                 learning_rate=None,
                  threshold_min=-np.inf,
                  epsilon=1e-6,
                  qd_score_offset=0.0,
