@@ -1,5 +1,13 @@
 # History
 
+## 0.7.1 (Forthcoming)
+
+### Changelog
+
+#### Bugs
+
+- Fix solution retrieval in lunar lander eval ({pr}`457`)
+
 ## 0.7.0
 
 To learn about this release, see our page on What's New in v0.7.0:
