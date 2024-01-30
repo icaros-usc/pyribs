@@ -61,7 +61,7 @@ import pandas as pd
 import tqdm
 from dask.distributed import Client, LocalCluster
 
-from ribs.archives import GridArchive
+from ribs.archives import ArchiveDataFrame, GridArchive
 from ribs.emitters import EvolutionStrategyEmitter
 from ribs.schedulers import Scheduler
 from ribs.visualize import grid_archive_heatmap
@@ -318,7 +318,8 @@ def run_evaluation(outdir, env_seed):
             retrieve the archive and save videos.
         env_seed (int): Seed for the environment.
     """
-    df = pd.read_csv(outdir / "archive.csv")
+    df = ArchiveDataFrame(pd.read_csv(outdir / "archive.csv"))
+    solutions = df.get_field("solution")
     indices = np.random.permutation(len(df))[:10]
 
     # Use a single env so that all the videos go to the same directory.
@@ -330,7 +331,7 @@ def run_evaluation(outdir, env_seed):
     )
 
     for idx in indices:
-        model = np.array(df.loc[idx, "solution_0":])
+        model = solutions[idx]
         reward, impact_x_pos, impact_y_vel = simulate(model, env_seed,
                                                       video_env)
         print(f"=== Index {idx} ===\n"
