@@ -1,335 +1,239 @@
-# What's New in v0.5.0
+# What's New in v0.7.0
 
-The new version of pyribs is here! Much has changed since our last version,
-v0.4.0. Most of these changes can be categorized under two goals: (1) integrate
-new algorithms via new emitters and schedulers, and (2) improve archive
-performance via batched operations. We will review the changes related to these
-goals and several other changes made to pyribs. For the full list of changes,
-refer to our [History page](./history).
+The updates in v0.7.0 centered around making the archives more flexible and
+adding new algorithmic features. Below we describe some of the key changes. For
+the full list of changes, please refer to our [History page](./history).
 
-```{note}
-To improve the pyribs API, many of these changes are backwards-incompatible and
-break existing v0.4.0 code. In the future, we anticipate that we will introduce
-fewer breaking changes as pyribs matures to have a clean, stable API.
-```
+## More Flexible Archives
 
-## General
+We refactored our archives to build on a data structure we call an
+{class}`~ribs.archives.ArrayStore`. An ArrayStore is essentially a dict mapping
+from names ("fields") to fixed-size arrays. Archives store data like solutions,
+objectives, and measures as fields in the ArrayStore. Building on ArrayStore
+enabled us to create a more flexible API, which also meant introducing several
+**breaking changes.** Below we list all the updates to the archives, ordered by
+how likely they are to affect users.
 
-We'll start with some important general changes.
+### as_pandas() is deprecated in favor of data()
 
-### Tutorials
-
-We've added new tutorials and expanded our old ones! We recommend going over the
-updated version of our introductory tutorial, {doc}`tutorials/lunar_lander`, to
-get a feel for the new API. Then, learn how we have integrated the
-[CMA-MAE](https://arxiv.org/abs/2205.10752) algorithm in
-{doc}`tutorials/cma_mae`, and implement
-[Differentiable Quality Diversity (DQD) algorithms](https://arxiv.org/abs/2106.03894)
-in the tutorial {doc}`tutorials/tom_cruise_dqd`.
-
-### Terminology
-
-- **measures vs behaviors:** We have adopted the `measures` terminology of
-  recent literature over the `behaviors` terminology in pyribs 0.4.0. Names such
-  as `behavior_values` are now referred to as `measures`. While QD originated in
-  neuroevolution with the purpose of producing diverse collections of agents, QD
-  optimization has grown into a general-purpose optimization paradigm. For
-  example, in an application where QD generates images of a face with varying
-  age and hair length, it seems odd to refer to age and hair length as
-  behaviors. Our new terminology instead refers to the age and hair length as
-  measures of the solutions, where QD optimization must vary the outputs of
-  those measures.
-- **Batch arguments:** Many of our methods now operate in batch. The batch
-  arguments are referred to as `solution_batch`, `objective_batch`,
-  `measures_batch`, and `metadata_batch`, while individual arguments are
-  referred to as `solution`, `objective`, `measures`, and `metadata`.
-- **cells vs bins:** For consistency with the literature, we have replaced the
-  term `bins` with `cells` when discussing archives.
-- **optimizers are now schedulers:** To better reflect their role, the
-  "optimizers" from pyribs v0.4.0 are now referred to as "schedulers". All
-  schedulers are under the {mod}`ribs.schedulers` module, including
-  {class}`~ribs.schedulers.Scheduler` and
-  {class}`~ribs.schedulers.BanditScheduler`.
-
-### Installation
-
-There are now three distributions of pyribs, as shown in the table below. If you
-do not use {mod}`ribs.visualize`, we recommend installing the default
-distribution with with `pip install ribs` or `conda install pyribs`. If you do
-use {mod}`ribs.visualize`, you can install pyribs with
-`pip install ribs[visualize]` or `conda install pyribs-visualize`.
-
-| Name      | PyPI Package      | Conda Package      | Description                                                                             |
-| --------- | ----------------- | ------------------ | --------------------------------------------------------------------------------------- |
-| Default   | `ribs`            | `pyribs`           | Basic pyribs package.                                                                   |
-| Visualize | `ribs[visualize]` | `pyribs-visualize` | Adds visualization dependencies, currently just Matplotlib.                             |
-| All       | `ribs[all]`       | `pyribs-all`       | Installs dependencies for all extra distributions (currently just the Visualize extra). |
-
-## Goal 1: Implement New Algorithms
-
-Our first major goal in pyribs v0.5.0 has been to implement an array of new
-algorithms via new emitters and schedulers.
-
-### Flexible CMA-ME and CMA-MAE with EvolutionStrategyEmitter
-
-We introduce the {class}`~ribs.emitters.EvolutionStrategyEmitter` which replaces
-the earlier `ImprovementEmitter`, `RandomDirectionEmitter`, and
-`OptimizingEmitter`. This emitter may be used in both
-[CMA-ME](https://arxiv.org/abs/1912.02400) and
-[CMA-MAE](https://arxiv.org/abs/2205.10752). The behaviors of these earlier
-emitters may be replicated by selecting an appropriate _ranker_ from the
-{mod}`ribs.emitters.rankers` module. For example:
+`archive.as_pandas()` has now been deprecated in favor of calling
+`archive.data()`, which is a much more flexible method. Below are several
+examples of the {meth}`~ribs.archives.ArchiveBase.data` method:
 
 ```python
-EvolutionStrategyEmitter(archive, ..., ranker="2imp")  # Equivalent to ImprovementEmitter.
-EvolutionStrategyEmitter(archive, ..., ranker="imp")  # Single-stage improvement ranking as is used in CMA-MAE.
-EvolutionStrategyEmitter(archive, ..., ranker="2rd")  # Two-stage random direction ranking.
-EvolutionStrategyEmitter(archive, ..., ranker="obj")  # Objective ranking as was done in OptimizingEmitter.
+# Returns a dict with all fields in the archive, e.g.,
+#
+# {
+#   "solution": [[1.0, 1.0, ...], ...],
+#   "objective": [1.5, ...],
+#   "measures": [[1.0, 2.0], ...],
+#   "threshold": [0.8, ...],
+#   "index": [4, ...],
+# }
+archive.data()
+
+# Returns a single array -- in this case, the shape will be (num elites,).
+# We think this will be the most useful variant of data().
+objective = archive.data("objective")
+
+# Returns a dict with just the listed fields, e.g.,
+#
+# {
+#   "objective": [1.5, ...],
+#   "measures": [[1.0, 2.0], ...],
+# }
+archive.data(["objective", "measures"])
+
+# Returns a tuple with just the listed fields, e.g.,
+#
+# (
+#   [1.5, ...],
+#   [[1.0, 2.0], ...],
+# )
+archive.data(["objective", "measures"], return_type="tuple")
+
+# Returns an ArchiveDataFrame -- see below for several differences from the
+# as_pandas ArchiveDataFrame.
+archive.data(return_type="pandas")
 ```
 
-{class}`~ribs.emitters.EvolutionStrategyEmitter` also supports evolution
-strategies other than CMA-ES, thus enabling it to implement scalable variants of
-CMA-ME and CMA-MAE described in
-[Tjanaka 2022](https://arxiv.org/abs/2210.02622). These evolution strategies are
-available in the {mod}`ribs.emitters.opt` module. For example:
+In general, we believe users will find the single-field version (e.g.,
+`archive.data("objective")` the most useful, with
+`archive.data(return_type="pandas")` serving as a close replacement for
+`as_pandas`. However, we note several differences in the ArchiveDataFrame
+returned by `data()`:
+
+1. Columns previously named `measure_X` are now named `measures_X` for
+   consistency with other fields.
+1. The columns are in a different order from before.
+1. Iterating over an ArchiveDataFrame now returns a dict rather than the
+   previous `Elite` namedtuple.
+1. ArchiveDataFrame no longer has batch() methods. Instead, it has a get_field()
+   method that converts columns back into their arrays, e.g.,
+   `df.get_field("objective")`.
+
+### Metadata has been removed in favor of custom archive fields
+
+Previously, archives stored `metadata`, which were arbitrary objects associated
+with each solution or elite. In pyribs 0.7.0, we have removed metadata and
+instead support custom fields in archives. The example below shows how to use
+custom fields -- pay attention to the `extra_fields` in the archive definition,
+and the kwargs in `scheduler.tell()`.
 
 ```python
-EvolutionStrategyEmitter(archive, ..., es="sep_cma_es")  # sep-CMA-ES instead of CMA-ES.
-```
+import numpy as np
 
-### DQD Algorithms with GradientArborescenceEmitter
+from ribs.archives import GridArchive
+from ribs.emitters import EvolutionStrategyEmitter
+from ribs.schedulers import Scheduler
 
-We have added a {class}`~ribs.emitters.GradientArborescenceEmitter` which
-supports [DQD algorithms](https://arxiv.org/abs/2106.03894). For usage examples,
-see the tutorial {doc}`tutorials/tom_cruise_dqd`.
+archive = GridArchive(
+    solution_dim=10,
+    dims=[20, 20],
+    ranges=[(-1, 1), (-1, 1)],
+    # `extra_fields` is a dict mapping from "name" to a tuple of (shape, dtype).
+    # Thus, extra_scalar is a scalar field of type float32, while extra_vector
+    # is a length 10 vector field of type int32. This also works for other
+    # archives.
+    extra_fields={
+        "extra_scalar": ((), np.float32),
+        "extra_vector": ((10,), np.int32),
+    },
+)
 
-### Custom Initial Solutions in Emitters
-
-By default, on the first iteration (the first iteration is detected by checking
-that the archive is empty), both {class}`~ribs.emitters.GaussianEmitter` and
-{class}`~ribs.emitters.IsoLineEmitter` sample solutions from a Gaussian
-distribution. However, many implementations of MAP-Elites sample solutions from
-a uniform distribution on the first iteration. More generally, users may seek to
-provide any custom population of solutions for the first iteration.
-
-Before, it was possible to provide custom initial solutions by evaluating the
-initial solutions and directly {meth}`~ribs.archives.ArchiveBase.add`'ing them
-to the archive, like so:
-
-```python
-archive = ...
-emitters = [GaussianEmitter(archive, ...)]
+# Emitter and scheduler definition -- feel free to skip over.
+emitters = [
+    EvolutionStrategyEmitter(
+        archive,
+        x0=[0.0] * 10,
+        sigma0=0.1,
+    ) for _ in range(3)
+]
 scheduler = Scheduler(archive, emitters)
 
-initial_solutions = ...
-objectives, measures = evaluate(initial_solutions)
-archive.add(initial_solutions, objectives, measures)
+solutions = scheduler.ask()
 
-for itr in range(1000):
-    ...
+# The extra_fields become important in scheduler.tell(), when they must be
+# passed in along with the usual objectives and measures. This also works for
+# tell_dqd() in the case of DQD algorithms.
+scheduler.tell(
+    # The objective is the negative Sphere function, while the measures are the
+    # first two coordinates of the 10D solution. Note that keyword arguments are
+    # optional here (i.e., objective= and measures=).
+    -np.sum(np.square(solutions), axis=1),
+    solutions[:, :2],
+    # The extra_fields specified in the archive must be passed in as kwargs.
+    extra_scalar=solutions[:, 0],
+    extra_vector=np.zeros((len(solutions), 10), dtype=np.int32),
+)
 ```
 
-However, it can be inconvenient to have to add this special case before the main
-pyribs loop, e.g., if the evaluation function is more complex than a single
-line. Thus, we now make it possible to pass the initial solutions to the
-emitters so that on the first iteration of the QD algorithm (more specifically,
-when the archive is empty), these initial solutions are returned.
+Notably, it is possible to recover the original metadata behavior by defining a
+`metadata` field as follows:
 
 ```python
-archive = ...
-emitters = [GaussianEmitter(archive, ..., initial_solutions=[[0.0, 1.0], [1.3, 2.0]])]
-scheduler = Scheduler(archive, emitters)
-
-for itr in range(1000):
-    # On the first iteration, `solutions` will be the `initial_solutions` that
-    # were passed into GaussianEmitter.
-    solutions = scheduler.ask()
+archive = GridArchive(
+    solution_dim=10,
+    dims=[20, 20],
+    ranges=[(-1, 1), (-1, 1)],
+    extra_fields={
+        "metadata": ((), object),
+    },
+)
 ```
 
-### ME-MAP-Elites with BanditScheduler
+### Additional Changes
 
-We have added a new {class}`~ribs.schedulers.BanditScheduler` which maintains a
-pool of emitters and only asks a subset of emitters for solutions on each
-iteration. The emitters to ask are selected with a multi-armed bandit algorithm.
-This scheduler is our implementation of the
-[ME-MAP-Elites](https://arxiv.org/abs/2007.05352) algorithm.
+#### retrieve() no longer returns EliteBatch
 
-## Goal 2: Improve Archive Performance via Batching
+{meth}`~ribs.archives.ArchiveBase.retrieve` now returns a tuple of two objects:
+(1) an `occupied` array indicating whether the given cells were occupied, and
+(2) a dict containing the data of the elites in the given cells. Entries in the
+dict are only valid if their corresponding cell was occupied. More info:
+{pr}`414`.
 
-Before, pyribs archives operated on solutions one at a time. Now, most archives
-(with the exception of SlidingBoundariesArchive) improve performance by relying
-on batch operations.
+#### Parameter names no longer include \_batch
 
-### New Archive Methods
+Parameters for methods like {meth}`~ribs.archives.ArchiveBase.add` and
+{meth}`~ribs.schedulers.Scheduler.tell` have been renamed to remove the `_batch`
+suffix, as it is usually clear that we take in batch arguments. Methods that
+require single arguments are already named with the `_single` suffix, e.g.,
+`add_single` and `retrieve_single`.
 
-The following table shows the old methods and the names of the new methods which
-operate on batched inputs. As a convenience, we have also included "single"
-methods which can operate on single inputs.
+#### Thresholds now included in elite data
 
-| Old Method              | New Batched Method                               | New Single Method                                  |
-| ----------------------- | ------------------------------------------------ | -------------------------------------------------- |
-| `add()`                 | {meth}`~ribs.archives.ArchiveBase.add`           | {meth}`~ribs.archives.ArchiveBase.add_single`      |
-| `get_index()`           | {meth}`~ribs.archives.ArchiveBase.index_of`      | {meth}`~ribs.archives.ArchiveBase.index_of_single` |
-| `get_random_elite()`    | {meth}`~ribs.archives.ArchiveBase.sample_elites` | N/A                                                |
-| `elite_with_behavior()` | {meth}`~ribs.archives.ArchiveBase.retrieve`      | {meth}`~ribs.archives.ArchiveBase.retrieve_single` |
+The archive threshold is now included in
+{attr}`~ribs.archives.ArchiveBase.best_elite` ({pr}`409`) and in data returned
+by {meth}`~ribs.archives.ArchiveBase.retrieve` ({pr}`414`).
 
-To elaborate on these changes:
+#### Elite and EliteBatch namedtuples are deprecated
 
-- All archive indices must now be integers (before, indices could be tuples of
-  integers). Thus, the `get_index()` method has been replaced with
-  {meth}`~ribs.archives.ArchiveBase.index_of`, which takes in a batch of
-  measures (i.e. a `(batch_size, measure_dim)` array) and returns a batch of
-  integer indices. Furthermore, whereas {class}`~ribs.archives.ArchiveBase` used
-  to take in a `storage_dims` argument, it now takes in a single `storage_dim`
-  argument because indices are all integers.
-  - Since grid indices have meaning in {class}`~ribs.archives.GridArchive` and
-    {class}`~ribs.archives.SlidingBoundariesArchive`, we have also added a
-    {meth}`~ribs.archives.GridArchive.grid_to_int_index` and
-    {meth}`~ribs.archives.GridArchive.int_to_grid_index` method to convert to
-    and from grid indices in these archives.
-- {meth}`~ribs.archives.ArchiveBase.add` formerly operated on single solutions.
-  Now, it inserts solutions into the archive in batch. There is also an
-  {meth}`~ribs.archives.ArchiveBase.add_single` which inserts solutions one at a
-  time. The source code for {meth}`~ribs.archives.ArchiveBase.add_single` is
-  more amenable to modifications than that of the batched
-  {meth}`~ribs.archives.ArchiveBase.add` method.
-- `get_random_elite()`, which sampled one elite from the archive, has been
-  replaced with a batched {meth}`~ribs.archives.ArchiveBase.sample_elites`
-  method which samples multiple elites at once.
-- The `elite_with_behavior()` method which retrieved one elite with given
-  measures has been replaced with {meth}`~ribs.archives.ArchiveBase.retrieve`,
-  which retrieves a batch of such elites.
+The Elite and EliteBatch namedtuples have been removed, and methods will now
+return dicts instead). This allows us to support custom field names. In
+particular, iteration over an archive will now yield a dict instead of the Elite
+namedtuple. More info: {pr}`397`
 
-Some of these methods also include "single" versions which operate on single
-solutions, e.g., {meth}`~ribs.archives.ArchiveBase.index_of_single` returns the
-integer index of a single measures array.
+#### add() methods now return add_info dict
 
-### EliteBatch
+Instead of returning separate status and value arrays, the archive
+{meth}`~ribs.archives.ArchiveBase.add` method now returns a dict that we refer
+to as `add_info`. The `add_info` contains keys for `status` and `value` and may
+contain further info in the future. Correspondingly, emitter methods like
+{meth}`~ribs.emitters.EmitterBase.tell` now take in `add_info` instead of
+separate `status_batch` and `value_batch` arguments. More info: {pr}`430`
 
-We have added an {class}`~ribs.archives.EliteBatch` class to represent batches
-of elites.
+## New Algorithmic Features
 
-### ArchiveDataFrame Column Renaming
+### Using pycma in Emitters
 
-To reflect the terminology changes and the switch to integer indices in
-archives, columns in {class}`~ribs.archives.ArchiveDataFrame` (returned by
-{meth}`~ribs.archives.ArchiveBase.as_pandas`) are as follows:
+We added the {class}`~ribs.emitters.opt.PyCMAEvolutionStrategy` to support using
+[pycma](https://github.com/CMA-ES/pycma) in emitters like the
+{class}`~ribs.emitters.EvolutionStrategyEmitter`. The ES may be used by passing
+`es="pycma_es"` to such emitters. Before using this, make sure that pycma is
+installed, either by running `pip install cma` or `pip install ribs[pycma]`.
 
-| index | measure_0 | ... | objective | solution_0 | ... | metadata |
-| ----- | --------- | --- | --------- | ---------- | --- | -------- |
+### New centroid generation methods in CVTArchive
 
-Before, they were:
-
-| index_0 | ... | behavior_0 | ... | objective | solution_0 | ... | metadata |
-| ------- | --- | ---------- | --- | --------- | ---------- | --- | -------- |
-
-We have also renamed the `ArchiveDataFrame` methods as follows:
-
-| Old Name             | New Name                                                |
-| -------------------- | ------------------------------------------------------- |
-| `batch_behaviors()`  | {meth}`~ribs.archives.ArchiveDataFrame.measures_batch`  |
-| `batch_indices()`    | {meth}`~ribs.archives.ArchiveDataFrame.index_batch`     |
-| `batch_metadata()`   | {meth}`~ribs.archives.ArchiveDataFrame.metadata_batch`  |
-| `batch_objectives()` | {meth}`~ribs.archives.ArchiveDataFrame.objective_batch` |
-| `batch_solutions()`  | {meth}`~ribs.archives.ArchiveDataFrame.solution_batch`  |
-
-## Miscellaneous
-
-Finally, here are several miscellaneous improvements we have made to pyribs.
-
-### Removal of initialize() Method for Archives
-
-Previously, archives required calling `initialize(solution_dim)` after being
-constructed. This method was typically called by the Optimizer/Scheduler. Now,
-archives are directly constructed with the `solution_dim` argument for
-simplicity.
+Drawing from [Mouret 2023](https://dl.acm.org/doi/10.1145/3583133.3590726), we
+now support alternative methods for generating centroids in
+{class}`~ribs.archives.CVTArchive`. These methods may be specified via the
+`centroid_method` parameter, for example:
 
 ```python
-# v0.4.0 (OLD)
-archive = GridArchive(...)
-archive.initialize(solution_dim)  # Would be called by Optimizer / Scheduler.
+from ribs.archives import CVTArchive
 
-# v0.5.0 (NEW)
-archive = GridArchive(solution_dim, ...)
+archive = CVTArchive(
+    solution_dim=10,
+    cells=100,
+    ranges=[(0.1, 0.5), (-0.6, -0.2)],
+    # Alternatives: "kmeans" (default), "sobol", "scrambled_sobol", "halton"
+    centroid_method="random",
+)
 ```
 
-### More Flexible Visualization Tools
+### OMG-MEGA and OG-MAP-Elites
 
-In all heatmap visualization tools, we have made the colorbar more flexible by
-adding a `cbar` option to control which axes the colorbar appears on and a
-`cbar_kwargs` option to pass arguments directly to Matplotlib's
-{func}`~matplotlib.pyplot.colorbar`.
+We have added the {class}`~ribs.emitters.GradientOperatorEmitter` to support the
+OMG-MEGA and OG-MAP-Elites baseline algorithms from
+[Fontaine 2021](https://arxiv.org/abs/2106.03894). The emitter may be used as
+follows:
 
 ```python
-from ribs.visualize import grid_archive_heatmap  # cvt_archive_heatmap and sliding_boundaries_archive_heatmap also work
+from ribs.emitters import GradientOperatorEmitter
 
-archive = ...
+# For OMG-MEGA
+GradientOperatorEmitter(
+  sigma=0.0,
+  sigma_g=10.0,
+  measure_gradients=True,
+  normalize_grad=True,
+)
 
-grid_archive_heatmap(archive, cbar="auto")  # Display the colorbar as part of the current axes (default).
-grid_archive_heatmap(archive, cbar=None)  # Don't display the colorbar at all.
-grid_archive_heatmap(archive, cbar=cbar_ax)  # Display colorbar on a custom Axes.
-grid_archive_heatmap(archive, ..., cbar_kwargs={...})  # Pass arguments to the colorbar.
+# For OG-MAP-Elites
+GradientOperatorEmitter(
+  sigma=0.5,
+  sigma_g=0.5,
+  measure_gradients=False,
+  normalize_grad=False,
+)
 ```
-
-In addition:
-
-- We have added an `aspect` argument which can set the aspect ratio of the
-  heatmap, i.e., the ratio `height / width`.
-- We now support heatmaps for 1D grid archives.
-
-### Continuous Quality Diversity (CQD) Score
-
-We support computing the
-[Continuous Quality Diversity (CQD) Score](https://dl.acm.org/doi/10.1145/3520304.3534018)
-in all archives with the {meth}`~ribs.archives.ArchiveBase.cqd_score` method.
-
-### ArchiveStats
-
-The {class}`~ribs.archives.ArchiveStats` object now includes the normalized QD
-score (i.e., the QD score divided by the number of cells in the archive).
-Furthermore, {class}`~ribs.archives.ArchiveStats` is now a dataclass rather than
-a namedtuple.
-
-```python
-archive.stats.norm_qd_score  # Normalized QD score.
-```
-
-### Deprecation of Positional Arguments
-
-Following
-[scikit-learn](https://scikit-learn-enhancement-proposals.readthedocs.io/en/latest/slep009/proposal.html),
-almost all constructor arguments must now be passed in as keyword arguments.
-Given the many parameters that these objects have, this makes it easier to see
-what each parameter means.
-
-To illustrate, the signature for
-{class}`~ribs.emitters.EvolutionStrategyEmitter` is:
-
-```python
-EvolutionStrategyEmitter(archive, *, x0, sigma0, ranker='2imp', es='cma_es', es_kwargs=None, selection_rule='filter', restart_rule='no_improvement', bounds=None, batch_size=None, seed=None)
-```
-
-All parameters after the `*` are keyword-only. The following will result in an
-error:
-
-```python
-EvolutionStrategyEmitter(archive, np.zeros(10), 0.1)
-```
-
-While the following will be accepted:
-
-```python
-EvolutionStrategyEmitter(archive, x0=np.zeros(10), sigma=0.1)
-```
-
-### Input Validation
-
-Many of our methods, e.g., the archives' {meth}`~ribs.archives.ArchiveBase.add`
-method and schedulers' {meth}`~ribs.schedulers.Scheduler.ask` and
-{meth}`~ribs.schedulers.Scheduler.tell` methods, now have input validation to
-help catch common argument errors. For example, we check that arguments are the
-correct shape, and we check that they do not have `NaN` or `inf` values.
-
-### Deprecation of ribs.factory
-
-We have removed `ribs.factory` as it is out of scope for the current library.

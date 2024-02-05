@@ -1,17 +1,85 @@
 # History
 
-## 0.7.0 (Forthcoming)
+## 0.7.1 (Forthcoming)
 
 ### Changelog
 
 #### API
 
 - Support Python 3.12 ({pr}`390`)
+
+#### Bugs
+
+- Fix solution retrieval in lunar lander eval ({pr}`457`)
+
+## 0.7.0
+
+To learn about this release, see our page on What's New in v0.7.0:
+https://docs.pyribs.org/en/stable/whats-new.html
+
+### Changelog
+
+#### API
+
+- Support alternative centroid generation methods in CVTArchive ({pr}`417`,
+  {pr}`437`)
+- Add PyCMAEvolutionStrategy for using pycma in ES emitters ({pr}`434`)
+- **Backwards-incompatible:** Add ranking values to evolution strategy tell
+  method ({pr}`438`)
+- **Backwards-incompatible:** Move evolution strategy bounds to init ({pr}`436`)
+- **Backwards-incompatible:** Use seed instead of rng in ranker ({pr}`432`)
+- **Backwards-incompatible:** Replace status and value with add_info ({pr}`430`)
+- Support custom data fields in archive, emitters, and scheduler ({pr}`421`,
+  {pr}`429`)
+- **Backwards-incompatible:** Remove `_batch` from parameter names ({pr}`422`,
+  {pr}`424`, {pr}`425`, {pr}`426`, {pr}`428`)
+- Add Gaussian, IsoLine Operators and Refactor GaussianEmitter/IsoLineEmitter
+  ({pr}`418`)
+- **Backwards-incompatible:** Remove metadata in favor of custom fields
+  ({pr}`420`)
+- Add Base Operator Interface and Emitter Operator Retrieval ({pr}`416`)
+- **Backwards-incompatible:** Return occupied booleans in retrieve ({pr}`414`)
+- **Backwards-incompatible:** Deprecate `as_pandas` in favor of
+  `data(return_type="pandas")` ({pr}`408`)
+- **Backwards-incompatible:** Replace ArchiveDataFrame batch methods with
+  `get_field` ({pr}`413`)
+- Add field_list and data methods to archives ({pr}`412`)
+- Include threshold in `archive.best_elite` ({pr}`409`)
+- **Backwards-incompatible:** Replace Elite and EliteBatch with dicts
+  ({pr}`397`)
+- **Backwards-incompatible:** Rename `measure_*` columns to `measures_*` in
+  `as_pandas` ({pr}`396`)
+- Add ArrayStore data structure ({pr}`395`, {pr}`398`, {pr}`400`, {pr}`402`,
+  {pr}`403`, {pr}`404`, {pr}`406`, {pr}`407`, {pr}`411`)
 - Add GradientOperatorEmitter to support OMG-MEGA and OG-MAP-Elites ({pr}`348`)
 
 #### Improvements
 
+- Raise error when threshold_min is set but learning_rate is not ({pr}`453`)
+- Fix interval_size in CVTArchive and SlidingBoundariesArchive ({pr}`452`)
+- Allow overriding ES in sphere example ({pr}`439`)
+- Use NumPy SeedSequence in emitters ({pr}`431`, {pr}`440`)
+- Use numbers types when checking arguments ({pr}`419`)
+- Reimplement ArchiveBase using ArrayStore ({pr}`399`)
+- Use chunk computation in CVT brute force calculation to reduce memory usage
+  ({pr}`394`)
 - Test pyribs installation in tutorials ({pr}`384`)
+- Add cron job for testing installation ({pr}`389`, {pr}`401`)
+- Fix broken cross-refs in docs ({pr}`393`)
+
+#### Documentation
+
+- Tidy up LSI MNIST notebook ({pr}`444`)
+
+## 0.6.4
+
+Small release that adds the scalable CMA-MAE tutorial.
+
+### Changelog
+
+#### Documentation
+
+- Add tutorial on scalable CMA-MAE variants ({pr}`433`, {pr}`443`)
 
 ## 0.6.3
 

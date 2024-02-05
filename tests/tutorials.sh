@@ -44,10 +44,6 @@ function test_notebook {
       # Reduce samples so that CVTArchive runs quickly.
       sed -i 's/use_kd_tree=True,/use_kd_tree=True, samples=10000,/g' "${TMP_FILE}"
       ;;
-    tutorials/lsi_mnist.ipynb)
-      # Reduce data for the discriminator archive.
-      sed -i 's/original_data = archive.as_pandas()/original_data = archive.as_pandas().loc[:5]/g' "${TMP_FILE}"
-      ;;
   esac
 
   # Run the notebook. Timeout is long since some notebook cells take a while,

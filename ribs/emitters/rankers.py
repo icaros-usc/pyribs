@@ -2,9 +2,10 @@
 
 The rankers implemented in this file are intended to be used with emitters.
 Specifically, a ranker object should be initialized or passed in the emitters.
-The ``Ranker`` object will define the :meth:`rank` method which returns the
-result of a descending argsort of the solutions. It will also define a
-:meth:`reset` method which resets the internal state of the object.
+The ``Ranker`` object will define the :meth:`~RankerBase.rank` method which
+returns the result of a descending argsort of the solutions. It will also define
+a :meth:`~RankerBase.reset` method which resets the internal state of the
+object.
 
 When specifying which ranker to use for each emitter, one could either pass in
 the full name of a ranker, e.g. "ImprovementRanker", or the abbreviated name of
@@ -33,8 +34,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from ribs._docstrings import DocstringComponents, core_args
-
 __all__ = [
     "ImprovementRanker",
     "TwoStageImprovementRanker",
@@ -45,22 +44,16 @@ __all__ = [
     "RankerBase",
 ]
 
-# Define common docstrings
-_args = DocstringComponents(core_args)
-
-_rank_args = f"""
+_RANK_ARGS = """
 Args:
     emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker``
         object belongs to.
     archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
         when creating and inserting solutions.
-    rng (numpy.random.Generator): A random number generator.
-{_args.solution_batch}
-{_args.objective_batch}
-{_args.measures_batch}
-{_args.status_batch}
-{_args.value_batch}
-{_args.metadata_batch}
+    data (dict): Dict mapping from field names like ``solution`` and
+        ``objective`` to arrays with data for the solutions. Rankers at least
+        assume the presence of the ``solution`` key.
+    add_info (dict): Information returned by an archive's add() method.
 
 Returns:
     tuple(numpy.ndarray, numpy.ndarray): the first array (shape
@@ -71,13 +64,12 @@ Returns:
     the number of values that the rank function used.
 """
 
-_reset_args = """
+_RESET_ARGS = """
 Args:
     emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker``
         object belongs to.
     archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
         when creating and inserting solutions.
-    rng (numpy.random.Generator): A random number generator.
 """
 
 
@@ -87,32 +79,34 @@ class RankerBase(ABC):
     Every ranker has a :meth:`rank` method that returns a list of indices
     that indicate how the solutions should be ranked and a :meth:`reset` method
     that resets the internal state of the ranker
-    (e.g. in :class:`ribs.emitters.rankers._random_direction_ranker`).
+    (e.g. in :class:`~ribs.emitters.rankers.RandomDirectionRanker`).
 
     Child classes are only required to override :meth:`rank`.
     """
 
+    def __init__(self, seed=None):
+        self._rng = np.random.default_rng(seed)
+
     @abstractmethod
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch, metadata_batch):
+    def rank(self, emitter, archive, data, add_info):
         # pylint: disable=missing-function-docstring
         pass
 
     # Generates the docstring for rank
     rank.__doc__ = f"""
-Generates a batch of indices that represents an ordering of ``solution_batch``.
+Generates a batch of indices that represents an ordering of ``data["solution"]``.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
-    def reset(self, emitter, archive, rng):
+    def reset(self, emitter, archive):
         # pylint: disable=missing-function-docstring
         pass
 
     reset.__doc__ = f"""
 Resets the internal state of the ranker.
 
-{_reset_args}
+{_RESET_ARGS}
    """
 
 
@@ -130,16 +124,15 @@ class ImprovementRanker(RankerBase):
     corresponding cell in the archive.
     """
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch, metadata_batch):
-        # Note that lexsort sorts the values in ascending order,
+    def rank(self, emitter, archive, data, add_info):
+        # Note that argsort sorts the values in ascending order,
         # so we use np.flip to reverse the sorted array.
-        return np.flip(np.argsort(value_batch)), value_batch
+        return np.flip(np.argsort(add_info["value"])), add_info["value"]
 
     rank.__doc__ = f"""
 Generates a list of indices that represents an ordering of solutions.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
 
@@ -156,11 +149,11 @@ class TwoStageImprovementRanker(RankerBase):
     :meth:`ribs.archives.ArchiveBase.add`
     """
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch, metadata_batch):
+    def rank(self, emitter, archive, data, add_info):
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, value_0], ..., [status_n, value_n]]
-        ranking_values = np.stack((status_batch, value_batch), axis=-1)
+        ranking_values = np.stack((add_info["status"], add_info["value"]),
+                                  axis=-1)
 
         # New solutions sort ahead of improved ones, which sort ahead of ones
         # that were not added.
@@ -179,7 +172,7 @@ class TwoStageImprovementRanker(RankerBase):
     rank.__doc__ = f"""
 Generates a list of indices that represents an ordering of solutions.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
 
@@ -197,8 +190,8 @@ class RandomDirectionRanker(RankerBase):
     :class:`ribs.emitters.rankers.TwoStageRandomDirectionRanker`.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, seed=None):
+        super().__init__(seed)
         self._target_measure_dir = None
 
     @property
@@ -211,24 +204,23 @@ class RandomDirectionRanker(RankerBase):
     def target_measure_dir(self, value):
         self._target_measure_dir = value
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch, metadata_batch):
+    def rank(self, emitter, archive, data, add_info):
         if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
-        projections = np.dot(measures_batch, self._target_measure_dir)
+        projections = np.dot(data["measures"], self._target_measure_dir)
         # Sort only by projection; use np.flip to reverse the order
         return np.flip(np.argsort(projections)), projections
 
     rank.__doc__ = f"""
 Ranks the solutions based on projection onto a direction in the archive.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
-    def reset(self, emitter, archive, rng):
+    def reset(self, emitter, archive):
         ranges = archive.upper_bounds - archive.lower_bounds
         measure_dim = len(ranges)
-        unscaled_dir = rng.standard_normal(measure_dim)
+        unscaled_dir = self._rng.standard_normal(measure_dim)
         self._target_measure_dir = unscaled_dir * ranges
 
     # Generates the docstring for reset.
@@ -240,7 +232,7 @@ Gaussian is isotropic, there is equal probability for any direction. The
 direction is then scaled to the archive bounds so that it is a random archive
 direction.
 
-{_reset_args}
+{_RESET_ARGS}
    """
 
 
@@ -253,8 +245,8 @@ class TwoStageRandomDirectionRanker(RankerBase):
     <https://arxiv.org/abs/1912.02400>`_ as RandomDirectionEmitter.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, seed=None):
+        super().__init__(seed)
         self._target_measure_dir = None
 
     @property
@@ -267,15 +259,14 @@ class TwoStageRandomDirectionRanker(RankerBase):
     def target_measure_dir(self, value):
         self._target_measure_dir = value
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch, metadata_batch):
+    def rank(self, emitter, archive, data, add_info):
         if self._target_measure_dir is None:
             raise RuntimeError("target measure direction not set")
-        projections = np.dot(measures_batch, self._target_measure_dir)
+        projections = np.dot(data["measures"], self._target_measure_dir)
 
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, projection_0], ..., [status_n, projection_n]]
-        ranking_values = np.stack((status_batch, projections), axis=-1)
+        ranking_values = np.stack((add_info["status"], projections), axis=-1)
 
         # Sort by whether the solution was added into the archive,
         # followed by projection.
@@ -288,13 +279,13 @@ class TwoStageRandomDirectionRanker(RankerBase):
 Ranks the solutions first by whether they are added, then by their projection
 onto a random direction in the archive.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
-    def reset(self, emitter, archive, rng):
+    def reset(self, emitter, archive):
         ranges = archive.upper_bounds - archive.lower_bounds
         measure_dim = len(ranges)
-        unscaled_dir = rng.standard_normal(measure_dim)
+        unscaled_dir = self._rng.standard_normal(measure_dim)
         self._target_measure_dir = unscaled_dir * ranges
 
     reset.__doc__ = RandomDirectionRanker.reset.__doc__
@@ -308,15 +299,14 @@ class ObjectiveRanker(RankerBase):
     emitter.
     """
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch, metadata_batch):
+    def rank(self, emitter, archive, data, add_info):
         # Sort only by objective value.
-        return np.flip(np.argsort(objective_batch)), objective_batch
+        return np.flip(np.argsort(data["objective"])), data["objective"]
 
     rank.__doc__ = f"""
 Ranks the solutions based on their objective values.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
 
@@ -328,11 +318,11 @@ class TwoStageObjectiveRanker(RankerBase):
     <https://arxiv.org/abs/1912.02400>`_ as OptimizingEmitter.
     """
 
-    def rank(self, emitter, archive, rng, solution_batch, objective_batch,
-             measures_batch, status_batch, value_batch, metadata_batch):
+    def rank(self, emitter, archive, data, add_info):
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, objective_0], ..., [status_0, objective_n]]
-        ranking_values = np.stack((status_batch, objective_batch), axis=-1)
+        ranking_values = np.stack((add_info["status"], data["objective"]),
+                                  axis=-1)
 
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.
@@ -345,7 +335,7 @@ class TwoStageObjectiveRanker(RankerBase):
 Ranks the solutions based on their objective values, while prioritizing newly
 added solutions.
 
-{_rank_args}
+{_RANK_ARGS}
     """
 
 
@@ -365,7 +355,7 @@ _NAME_TO_RANKER_MAP = {
 }
 
 
-def _get_ranker(klass):
+def _get_ranker(klass, seed):
     """Returns a ranker class based on its name.
 
     ``klass`` can be a reference to the class of the ranker, the full name of
@@ -383,11 +373,11 @@ def _get_ranker(klass):
     """
     if isinstance(klass, str):
         if klass in _NAME_TO_RANKER_MAP:
-            return _NAME_TO_RANKER_MAP[klass]()
+            return _NAME_TO_RANKER_MAP[klass](seed)
         raise ValueError(f"`{klass}` is not the full or abbreviated "
                          "name of a valid ranker")
     if callable(klass):
-        ranker = klass()
+        ranker = klass(seed)
         if isinstance(ranker, RankerBase):
             return ranker
         raise ValueError(f"Callable `{klass}` did not return an instance "

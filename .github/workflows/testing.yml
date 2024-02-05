@@ -63,14 +63,19 @@ jobs:
       - name: Test core
         run: >
           pytest tests/archives tests/emitters tests/schedulers
-      - name: Install extras deps
+      - name: Install visualize deps
         run: pip install -r pinned_reqs/extras_visualize.txt
       - name: Test visualize extra
         run: pytest tests/visualize
       - name: Install QDax
-        run: pip install qdax
+        # Brax 0.9.4 fails with Python 3.8 due to mujoco-mjx
+        run: pip install qdax brax==0.9.3
       - name: Test visualize extra for QDax
         run: pytest tests/visualize_qdax
+      - name: Install cma dep
+        run: pip install .[pycma]
+      - name: Test cma extra
+        run: pytest tests/emitters_pycma
   coverage:
     runs-on: ubuntu-latest
     steps:
@@ -79,7 +84,7 @@ jobs:
         with:
           python-version: "3.8"
       - name: Install deps
-        run: pip install .[visualize,dev]
+        run: pip install .[all,dev]
       - name: Test coverage
         env:
           NUMBA_DISABLE_JIT: 1

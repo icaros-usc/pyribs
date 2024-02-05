@@ -63,9 +63,9 @@ def cvt_archive_3d_plot(
             >>> x = np.random.uniform(-2, 0, 5000)
             >>> y = np.random.uniform(-2, 0, 5000)
             >>> z = np.random.uniform(-2, 0, 5000)
-            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
-            ...             objective_batch=-(x**2 + y**2 + z**2),
-            ...             measures_batch=np.stack((x, y, z), axis=1))
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2 + z**2),
+            ...             measures=np.stack((x, y, z), axis=1))
             >>> # Plot the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_3d_plot(archive)
@@ -88,9 +88,9 @@ def cvt_archive_3d_plot(
             >>> x = np.random.uniform(-2, 0, 5000)
             >>> y = np.random.uniform(-2, 0, 5000)
             >>> z = np.random.uniform(-2, 0, 5000)
-            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
-            ...             objective_batch=-(x**2 + y**2 + z**2),
-            ...             measures_batch=np.stack((x, y, z), axis=1))
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2 + z**2),
+            ...             measures=np.stack((x, y, z), axis=1))
             >>> # Plot the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_3d_plot(archive, cell_alpha=0.1)
@@ -113,9 +113,9 @@ def cvt_archive_3d_plot(
             >>> x = np.random.uniform(-2, 0, 1000)
             >>> y = np.random.uniform(-2, 0, 1000)
             >>> z = np.random.uniform(-2, 0, 1000)
-            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
-            ...             objective_batch=-(x**2 + y**2 + z**2),
-            ...             measures_batch=np.stack((x, y, z), axis=1))
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2 + z**2),
+            ...             measures=np.stack((x, y, z), axis=1))
             >>> # Plot the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_3d_plot(archive, cell_alpha=0.0)
@@ -138,9 +138,9 @@ def cvt_archive_3d_plot(
             >>> x = np.random.uniform(-2, 0, 1000)
             >>> y = np.random.uniform(-2, 0, 1000)
             >>> z = np.random.uniform(-2, 0, 1000)
-            >>> archive.add(solution_batch=np.stack((x, y), axis=1),
-            ...             objective_batch=-(x**2 + y**2 + z**2),
-            ...             measures_batch=np.stack((x, y, z), axis=1))
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2 + z**2),
+            ...             measures=np.stack((x, y, z), axis=1))
             >>> # Plot the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> cvt_archive_3d_plot(archive, cell_alpha=0.0, plot_elites=True)
@@ -154,9 +154,10 @@ def cvt_archive_3d_plot(
         df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
             this argument instead of the data currently in the archive. This
             data can be obtained by, for instance, calling
-            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
-            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
-            data must contain columns for index, objective, and measures. To
+            :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
+            and modifying the resulting
+            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum,
+            the data must contain columns for index, objective, and measures. To
             display a custom metric, replace the "objective" column.
         measure_order (array-like of int): Specifies the axes order for plotting
             the measures. By default, the first measure (measure 0) in the
@@ -217,9 +218,15 @@ def cvt_archive_3d_plot(
     cmap = retrieve_cmap(cmap)
 
     # Retrieve archive data.
-    df = archive.as_pandas() if df is None else validate_df(df)
-    objective_batch = df.objective_batch()
-    measures_batch = df.measures_batch()
+    if df is None:
+        objective_batch = archive.data("objective")
+        measures_batch = archive.data("measures")
+        index_batch = archive.data("index")
+    else:
+        df = validate_df(df)
+        objective_batch = df.get_field("objective")
+        measures_batch = df.get_field("measures")
+        index_batch = df.get_field("index")
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
     centroids = archive.centroids
@@ -297,7 +304,7 @@ def cvt_archive_3d_plot(
     objs = []  # Also record objective for each ridge so we can color it.
 
     # Map from centroid index to objective.
-    pt_to_obj = dict(zip(df.index_batch(), objective_batch))
+    pt_to_obj = dict(zip(index_batch, objective_batch))
 
     # The points in the Voronoi diagram are indexed by their placement in the
     # input list. Above, when we called Voronoi, `centroids` were placed first,

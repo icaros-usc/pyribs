@@ -18,7 +18,7 @@ This script creates an output directory (defaults to `lunar_lander_output/`, see
 the --outdir flag) with the following files:
 
     - archive.csv: The CSV representation of the final archive, obtained with
-      as_pandas().
+      data().
     - archive_ccdf.png: A plot showing the (unnormalized) complementary
       cumulative distribution function of objectives in the archive. For
       each objective p on the x-axis, this plot shows the number of
@@ -61,7 +61,7 @@ import pandas as pd
 import tqdm
 from dask.distributed import Client, LocalCluster
 
-from ribs.archives import GridArchive
+from ribs.archives import ArchiveDataFrame, GridArchive
 from ribs.emitters import EvolutionStrategyEmitter
 from ribs.schedulers import Scheduler
 from ribs.visualize import grid_archive_heatmap
@@ -297,7 +297,7 @@ def save_ccdf(archive, filename):
     """
     fig, ax = plt.subplots()
     ax.hist(
-        archive.as_pandas(include_solutions=False)["objective"],
+        archive.data("objective"),
         50,  # Number of cells.
         histtype="step",
         density=False,
@@ -318,7 +318,8 @@ def run_evaluation(outdir, env_seed):
             retrieve the archive and save videos.
         env_seed (int): Seed for the environment.
     """
-    df = pd.read_csv(outdir / "archive.csv")
+    df = ArchiveDataFrame(pd.read_csv(outdir / "archive.csv"))
+    solutions = df.get_field("solution")
     indices = np.random.permutation(len(df))[:10]
 
     # Use a single env so that all the videos go to the same directory.
@@ -330,7 +331,7 @@ def run_evaluation(outdir, env_seed):
     )
 
     for idx in indices:
-        model = np.array(df.loc[idx, "solution_0":])
+        model = solutions[idx]
         reward, impact_x_pos, impact_y_vel = simulate(model, env_seed,
                                                       video_env)
         print(f"=== Index {idx} ===\n"
@@ -395,7 +396,7 @@ def lunar_lander_main(workers=4,
     metrics = run_search(client, scheduler, env_seed, iterations, log_freq)
 
     # Outputs.
-    scheduler.archive.as_pandas().to_csv(outdir / "archive.csv")
+    scheduler.archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
     save_ccdf(scheduler.archive, str(outdir / "archive_ccdf.png"))
     save_heatmap(scheduler.archive, str(outdir / "heatmap.png"))
     save_metrics(outdir, metrics)

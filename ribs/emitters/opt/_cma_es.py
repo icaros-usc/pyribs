@@ -86,6 +86,13 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
+            indicating lower bounds of the solution space. Scalars specify
+            the same bound for the entire space, while arrays specify a
+            bound for each dimension. Pass -np.inf in the array or scalar to
+            indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper
+            bounds (and pass np.inf instead of -np.inf).
     """
 
     def __init__(  # pylint: disable = super-init-not-called
@@ -94,12 +101,20 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
             solution_dim,
             batch_size=None,
             seed=None,
-            dtype=np.float64):
+            dtype=np.float64,
+            lower_bounds=-np.inf,
+            upper_bounds=np.inf):
         self.batch_size = (4 + int(3 * np.log(solution_dim))
                            if batch_size is None else batch_size)
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
+
+        # Even scalars must be converted into 0-dim arrays so that they work
+        # with the bound check in numba.
+        self.lower_bounds = np.asarray(lower_bounds, dtype=self.dtype)
+        self.upper_bounds = np.asarray(upper_bounds, dtype=self.dtype)
+
         self._rng = np.random.default_rng(seed)
         self._solutions = None
 
@@ -118,11 +133,6 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         self.cov = None
 
     def reset(self, x0):
-        """Resets the optimizer to start at x0.
-
-        Args:
-            x0 (np.ndarray): Initial mean.
-        """
         self.current_eval = 0
         self.sigma = self.sigma0
         self.mean = np.array(x0, self.dtype)
@@ -135,18 +145,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         self.cov = DecompMatrix(self.solution_dim, self.dtype)
 
     def check_stop(self, ranking_values):
-        """Checks if the optimization should stop and be reset.
-
-        Tolerances come from CMA-ES.
-
-        Args:
-            ranking_values (np.ndarray): Array of objective values of the
-                solutions, sorted in the same order that the solutions were
-                sorted when passed to ``tell()``.
-
-        Returns:
-            True if any of the stopping conditions are satisfied.
-        """
+        # Tolerances from pycma CMA-ES.
         if self.cov.condition_number > 1e14:
             return True
 
@@ -182,20 +181,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def ask(self, lower_bounds, upper_bounds, batch_size=None):
-        """Samples new solutions from the Gaussian distribution.
-
-        Args:
-            lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-                indicating lower bounds of the solution space. Scalars specify
-                the same bound for the entire space, while arrays specify a
-                bound for each dimension. Pass -np.inf in the array or scalar to
-                indicated unbounded space.
-            upper_bounds (float or np.ndarray): Same as above, but for upper
-                bounds (and pass np.inf instead of -np.inf).
-            batch_size (int): batch size of the sample. Defaults to
-                ``self.batch_size``.
-        """
+    def ask(self, batch_size=None):
         if batch_size is None:
             batch_size = self.batch_size
 
@@ -214,8 +200,8 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
                 (len(remaining_indices), self.solution_dim),
             ).astype(self.dtype)
             new_solutions, out_of_bounds = self._transform_and_check_sol(
-                unscaled_params, transform_mat, self.mean, lower_bounds,
-                upper_bounds)
+                unscaled_params, transform_mat, self.mean, self.lower_bounds,
+                self.upper_bounds)
             self._solutions[remaining_indices] = new_solutions
 
             # Find indices in remaining_indices that are still out of bounds
@@ -258,15 +244,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def tell(self, ranking_indices, num_parents):
-        """Passes the solutions back to the optimizer.
-
-        Args:
-            ranking_indices (array-like of int): Indices that indicate the
-                ranking of the original solutions returned in ``ask()``.
-            num_parents (int): Number of top solutions to select from the
-                ranked solutions.
-        """
+    def tell(self, ranking_indices, ranking_values, num_parents):
         self.current_eval += len(self._solutions[ranking_indices])
 
         if num_parents == 0:

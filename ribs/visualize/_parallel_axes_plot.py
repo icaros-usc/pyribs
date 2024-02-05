@@ -82,9 +82,10 @@ def parallel_axes_plot(archive,
         df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
             this argument instead of the data currently in the archive. This
             data can be obtained by, for instance, calling
-            :meth:`ribs.archives.ArchiveBase.as_pandas()` and modifying the
-            resulting :class:`ArchiveDataFrame`. Note that, at a minimum, the
-            data must contain columns for index, objective, and measures. To
+            :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
+            and modifying the resulting
+            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum,
+            the data must contain columns for index, objective, and measures. To
             display a custom metric, replace the "objective" column.
         measure_order (list of int or list of (int, str)): If this is a list
             of ints, it specifies the axes order for measures (e.g. ``[2, 0,
@@ -163,14 +164,14 @@ def parallel_axes_plot(archive,
         upper_bounds = archive.upper_bounds[cols]
 
     host_ax = plt.gca() if ax is None else ax  # Try to get current axis.
-    df = archive.as_pandas() if df is None else validate_df(df)
+    df = archive.data(return_type="pandas") if df is None else validate_df(df)
     vmin = df["objective"].min() if vmin is None else vmin
     vmax = df["objective"].max() if vmax is None else vmax
     norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
     if sort_archive:
         df.sort_values("objective", inplace=True)
-    objectives = df.objective_batch()
-    ys = df.measures_batch()[:, cols]
+    objectives = df.get_field("objective")
+    ys = df.get_field("measures")[:, cols]
     y_ranges = upper_bounds - lower_bounds
 
     # Transform all data to be in the first axis coordinates.

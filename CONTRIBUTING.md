@@ -197,6 +197,7 @@ from `master` into the corresponding release branch.
 
 #### Minor Versions
 
+1. Check that the latest version of the docs is building on Read the Docs.
 1. Create a PR into master after doing the following:
    1. Update the version with `bump2version`:
       ```bash
@@ -228,6 +229,7 @@ from `master` into the corresponding release branch.
 
 #### Patch Versions
 
+1. Check that the latest version of the docs is building on Read the Docs.
 1. Create a PR into master after doing the following:
    1. Update the version with `bump2version`:
       ```bash
@@ -235,7 +237,7 @@ from `master` into the corresponding release branch.
       ```
    1. Add all necessary info on the version to `HISTORY.md`.
 1. Once the PR above has been merged, checkout the release branch for the
-   corresponding minor version, e.g., for `0.6.2`, check out `release/0.6.0`.
+   corresponding minor version, e.g., for `0.6.2`, check out `release/0.6.x`.
 1. On the release branch, cherry-pick the commit for the PR you just created.
    Also cherry pick any other bug fixes which need to be released in this patch.
 1. On the release branch, edit `HISTORY.md` to remove any irrelevant history,

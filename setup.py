@@ -19,7 +19,7 @@ install_requires = [
     "pandas>=1.0.0",
     "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
     "scikit-learn>=1.1.0",  # Primarily used in CVTArchive.
-    "scipy>=1.4.0",  # Primarily used in CVTArchive.
+    "scipy>=1.7.0",  # Primarily used in CVTArchive.
     "threadpoolctl>=3.0.0",
 ]
 
@@ -28,12 +28,16 @@ extras_require = {
         "matplotlib>=3.0.0",
         "shapely>=2.0.0",
     ],
+    "pycma": ["cma"],
     # All dependencies except for dev. Don't worry if there are duplicate
     # dependencies, since setuptools automatically handles duplicates.
     "all": [
         ### visualize ###
         "matplotlib>=3.0.0",
         "shapely>=2.0.0",
+
+        ### cma ###
+        "cma",
     ],
     "dev": [
         "pip>=20.3",
@@ -48,14 +52,23 @@ extras_require = {
         "pytest-xdist==2.5.0",
 
         # Documentation
-        "Sphinx==4.5.0",
-        "sphinx-material==0.0.32",
-        "sphinx-autobuild==2021.3.14",
-        "sphinx-copybutton==0.3.1",
         "myst-nb==0.17.1",
-        "sphinx-toolbox==3.1.0",
+        "Sphinx==4.5.0",
+        "sphinx-autobuild==2021.3.14",
         "sphinx-autodoc-typehints==1.18.2",
         "sphinx-codeautolink==0.12.1",
+        "sphinx-copybutton==0.3.1",
+        "sphinx-jinja2-compat==0.2.0",
+        "sphinx-material==0.0.32",
+        "sphinx-prompt==1.5.0",
+        "sphinx-tabs==3.3.1",
+        "sphinx-toolbox==3.1.0",
+        "sphinxcontrib-applehelp==1.0.4",
+        "sphinxcontrib-devhelp==1.0.2",
+        "sphinxcontrib-htmlhelp==2.0.1",
+        "sphinxcontrib-jsmath==1.0.1",
+        "sphinxcontrib-qthelp==1.0.3",
+        "sphinxcontrib-serializinghtml==1.1.5",
 
         # Distribution
         "bump2version==1.0.1",
@@ -99,6 +112,6 @@ setup(
     python_requires=">=3.8.0",
     test_suite="tests",
     url="https://github.com/icaros-usc/pyribs",
-    version="0.6.3",
+    version="0.7.0",
     zip_safe=False,
 )

@@ -16,9 +16,9 @@ class GridArchive(ArchiveBase):
     cell.
 
     .. note:: The idea of archive thresholds was introduced in `Fontaine 2022
-        <https://arxiv.org/abs/2205.10752>`_. Refer to our `CMA-MAE tutorial
-        <../../tutorials/cma_mae.html>`_ for more info on thresholds, including
-        the ``learning_rate`` and ``threshold_min`` parameters.
+        <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds,
+        including the ``learning_rate`` and ``threshold_min`` parameters, refer
+        to our tutorial :doc:`/tutorials/cma_mae`.
 
     Args:
         solution_dim (int): Dimension of the solution space.
@@ -37,7 +37,8 @@ class GridArchive(ArchiveBase):
             method -- refer to the implementation `here
             <../_modules/ribs/archives/_grid_archive.html#GridArchive.index_of>`_.
             Pass this parameter to configure that epsilon.
-        learning_rate (float): The learning rate for threshold updates.
+        learning_rate (float): The learning rate for threshold updates. Defaults
+            to 1.0.
         threshold_min (float): The initial threshold value for all the cells.
         qd_score_offset (float): Archives often contain negative objective
             values, and if the QD score were to be computed with these negative
@@ -53,6 +54,14 @@ class GridArchive(ArchiveBase):
         dtype (str or data-type): Data type of the solutions, objectives,
             and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
             ``np.float64``.
+        extra_fields (dict): Description of extra fields of data that is stored
+            next to elite data like solutions and objectives. The description is
+            a dict mapping from a field name (str) to a tuple of ``(shape,
+            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
+            np.float32)}`` will create a "foo" field that contains scalar values
+            and a "bar" field that contains 10D values. Note that field names
+            must be valid Python identifiers, and names already used in the
+            archive are not allowed.
     Raises:
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """
@@ -62,12 +71,13 @@ class GridArchive(ArchiveBase):
                  solution_dim,
                  dims,
                  ranges,
-                 learning_rate=1.0,
+                 learning_rate=None,
                  threshold_min=-np.inf,
                  epsilon=1e-6,
                  qd_score_offset=0.0,
                  seed=None,
-                 dtype=np.float64):
+                 dtype=np.float64,
+                 extra_fields=None):
         self._dims = np.array(dims, dtype=np.int32)
         if len(self._dims) != len(ranges):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
@@ -83,6 +93,7 @@ class GridArchive(ArchiveBase):
             qd_score_offset=qd_score_offset,
             seed=seed,
             dtype=dtype,
+            extra_fields=extra_fields,
         )
 
         ranges = list(zip(*ranges))
@@ -142,7 +153,7 @@ class GridArchive(ArchiveBase):
         """
         return self._boundaries
 
-    def index_of(self, measures_batch):
+    def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
 
         First, values are clipped to the bounds of the measure space. Then, the
@@ -172,74 +183,71 @@ class GridArchive(ArchiveBase):
         See :attr:`boundaries` for more info.
 
         Args:
-            measures_batch (array-like): (batch_size, :attr:`measure_dim`)
-                array of coordinates in measure space.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
             the flattened grid coordinates.
         Raises:
-            ValueError: ``measures_batch`` is not of shape (batch_size,
+            ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
-            ValueError: ``measures_batch`` has non-finite values (inf or NaN).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures_batch = np.asarray(measures_batch)
-        check_batch_shape(measures_batch, "measures_batch", self.measure_dim,
-                          "measure_dim")
-        check_finite(measures_batch, "measures_batch")
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
 
         # Adding epsilon accounts for floating point precision errors from
         # transforming measures. We then cast to int32 to obtain integer
         # indices.
-        grid_index_batch = (
-            (self._dims *
-             (measures_batch - self._lower_bounds) + self._epsilon) /
-            self._interval_size).astype(np.int32)
+        grid_indices = ((self._dims *
+                         (measures - self._lower_bounds) + self._epsilon) /
+                        self._interval_size).astype(np.int32)
 
         # Clip indices to the archive dimensions (for example, for 20 cells, we
         # want indices to run from 0 to 19).
-        grid_index_batch = np.clip(grid_index_batch, 0, self._dims - 1)
+        grid_indices = np.clip(grid_indices, 0, self._dims - 1)
 
-        return self.grid_to_int_index(grid_index_batch)
+        return self.grid_to_int_index(grid_indices)
 
-    def grid_to_int_index(self, grid_index_batch):
+    def grid_to_int_index(self, grid_indices):
         """Converts a batch of grid indices into a batch of integer indices.
 
         Refer to :meth:`index_of` for more info.
 
         Args:
-            grid_index_batch (array-like): (batch_size, :attr:`measure_dim`)
+            grid_indices (array-like): (batch_size, :attr:`measure_dim`)
                 array of indices in the archive grid.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices.
         Raises:
-            ValueError: ``grid_index_batch`` is not of shape (batch_size,
+            ValueError: ``grid_indices`` is not of shape (batch_size,
                 :attr:`measure_dim`)
         """
-        grid_index_batch = np.asarray(grid_index_batch)
-        check_batch_shape(grid_index_batch, "grid_index_batch",
-                          self.measure_dim, "measure_dim")
+        grid_indices = np.asarray(grid_indices)
+        check_batch_shape(grid_indices, "grid_indices", self.measure_dim,
+                          "measure_dim")
 
-        return np.ravel_multi_index(grid_index_batch.T,
-                                    self._dims).astype(np.int32)
+        return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
-    def int_to_grid_index(self, int_index_batch):
+    def int_to_grid_index(self, int_indices):
         """Converts a batch of indices into indices in the archive's grid.
 
         Refer to :meth:`index_of` for more info.
 
         Args:
-            int_index_batch (array-like): (batch_size,) array of integer
+            int_indices (array-like): (batch_size,) array of integer
                 indices such as those output by :meth:`index_of`.
         Returns:
             numpy.ndarray: (batch_size, :attr:`measure_dim`) array of indices
             in the archive grid.
         Raises:
-            ValueError: ``int_index_batch`` is not of shape (batch_size,).
+            ValueError: ``int_indices`` is not of shape (batch_size,).
         """
-        int_index_batch = np.asarray(int_index_batch)
-        check_is_1d(int_index_batch, "int_index_batch")
+        int_indices = np.asarray(int_indices)
+        check_is_1d(int_indices, "int_indices")
 
         return np.asarray(np.unravel_index(
-            int_index_batch,
+            int_indices,
             self._dims,
         )).T.astype(np.int32)

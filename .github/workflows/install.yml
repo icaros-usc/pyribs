@@ -1,0 +1,38 @@
+# Test installation from vendors like PyPI and Conda.
+name: Install
+
+on:
+  schedule:
+    # Every day at 7PM UTC (11AM PST, 12PM PDT).
+    - cron: "0 19 * * *"
+  push:
+    # Push to the schedule-install branch to test this cron job.
+    branches:
+      - schedule-install
+
+defaults:
+  run:
+    # The default shell must be set like this so that bash will source the
+    # profile, which contains settings initialized by Conda:
+    # https://github.com/marketplace/actions/setup-miniconda#important
+    shell: bash -el {0}
+
+jobs:
+  test:
+    strategy:
+      max-parallel: 12 # All in parallel.
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11"]
+        command:
+          ["pip install ribs[all]", "conda install -c conda-forge pyribs-all"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pyribs
+        run: ${{ matrix.command }}
+      - name: Try importing ribs
+        run: |
+          python -c "import ribs; import ribs.visualize; print(ribs.__version__)"
