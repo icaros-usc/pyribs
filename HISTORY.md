@@ -4,6 +4,10 @@
 
 ### Changelog
 
+#### API
+
+- Support Python 3.12 ({pr}`390`)
+
 #### Bugs
 
 - Fix solution retrieval in lunar lander eval ({pr}`457`)
