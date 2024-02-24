@@ -8,6 +8,10 @@
 
 - Support Python 3.12 ({pr}`390`)
 
+#### Improvements
+
+- Add qd score to lunar lander example ({pr}`458`)
+
 #### Bugs
 
 - Fix solution retrieval in lunar lander eval ({pr}`457`)
