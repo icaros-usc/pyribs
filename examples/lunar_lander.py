@@ -155,7 +155,9 @@ def create_scheduler(seed, n_emitters, sigma0, batch_size):
         dims=[50, 50],  # 50 cells in each dimension.
         # (-1, 1) for x-pos and (-3, 0) for y-vel.
         ranges=[(-1.0, 1.0), (-3.0, 0.0)],
-        seed=seed)
+        seed=seed,
+        qd_score_offset=-600,
+    )
 
     # If we create the emitters with identical seeds, they will all output the
     # same initial solutions. The algorithm should still work -- eventually, the
@@ -209,6 +211,10 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
             "x": [0],
             "y": [0],
         },
+        "QD Score": {
+            "x": [0],
+            "y": [0],
+        },
     }
 
     start_time = time.time()
@@ -239,10 +245,13 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
             metrics["Max Score"]["y"].append(scheduler.archive.stats.obj_max)
             metrics["Archive Size"]["x"].append(itr)
             metrics["Archive Size"]["y"].append(len(scheduler.archive))
+            metrics["QD Score"]["x"].append(itr)
+            metrics["QD Score"]["y"].append(scheduler.archive.stats.qd_score)
             tqdm.tqdm.write(
                 f"> {itr} itrs completed after {elapsed_time:.2f} s\n"
                 f"  - Max Score: {metrics['Max Score']['y'][-1]}\n"
-                f"  - Archive Size: {metrics['Archive Size']['y'][-1]}")
+                f"  - Archive Size: {metrics['Archive Size']['y'][-1]}\n"
+                f"  - QD Score: {metrics['QD Score']['y'][-1]}")
 
     return metrics
 
