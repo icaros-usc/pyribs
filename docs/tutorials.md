@@ -53,9 +53,7 @@ for different problems.
 - {doc}`tutorials/fooling_mnist`: Searches for misclassified MNIST images with
   MAP-Elites.
 
-<!-- How MyST handles section labels: https://jupyterbook.org/en/stable/content/references.html -->
-
-(running-locally)=
+<!--
 
 ## Features
 
@@ -69,6 +67,12 @@ tutorials/features/example
 ```
 
 - {doc}`tutorials/features/example`: Placeholder for upcoming tutorials!
+
+-->
+
+<!-- How MyST handles section labels: https://jupyterbook.org/en/stable/content/references.html -->
+
+(running-locally)=
 
 ## Running Locally
 
