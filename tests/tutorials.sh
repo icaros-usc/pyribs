@@ -52,7 +52,7 @@ function test_notebook {
     --to notebook \
     --execute "${TMP_FILE}" \
     --output "${TMP_OUTPUT}" \
-    --ExecutePreprocessor.timeout=600
+    --ExecutePreprocessor.timeout=60
   rm -f "${TMP_FILE}" "${TMP_OUTPUT}"
 }
 
