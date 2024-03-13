@@ -133,7 +133,8 @@ the repo. To create a tutorial:
    during testing (see `tests/tutorials.sh`) in order to test that the notebook
    runs end-to-end. By default, the tests run the notebook with
    `total_itrs = 5`. If this tutorial needs more (or less), modify the
-   switch-case statement in `tests/tutorials.sh`.
+   switch-case statement in `tests/tutorials.sh`. The name `TOTAL_ITRS` can also
+   be used.
 1. Make sure that the only level 1 heading (e.g. `# Awesome Tutorial`) is the
    title at the top of the notebook. Subsequent titles should be level 2 (e.g.
    `## Level 2 Heading`) or higher.
