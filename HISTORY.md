@@ -4,7 +4,7 @@
 
 This release introduces the
 [QDHF tutorial](https://docs.pyribs.org/en/stable/tutorials/qdhf.html)! It also
-makes a couple of minor usability improvements such as better error checking.
+makes a couple of minor usability improvements, such as better error checking.
 
 ### Changelog
 
