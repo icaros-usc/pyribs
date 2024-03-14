@@ -247,6 +247,8 @@ from `master` into the corresponding release branch.
 1. On the release branch, edit `HISTORY.md` to remove any irrelevant history,
    e.g., if there are upcoming changes that will be included only in the next
    version.
+1. If any tutorials were added in this release, run `make tutorial_links` to
+   make the links point to the stable version of pyribs.
 1. (Optional) On the release branch, run `make release-test`. This uploads the
    code to TestPyPI to check that the deployment works. If this fails, make
    fixes as appropriate.
