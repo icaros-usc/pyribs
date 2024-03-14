@@ -3,12 +3,15 @@
 Adapted from Nikolaus Hansen's pycma:
 https://github.com/CMA-ES/pycma/blob/master/cma/purecma.py
 """
+import warnings
+
 import numba as nb
 import numpy as np
 from threadpoolctl import threadpool_limits
 
 from ribs._utils import readonly
-from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
+from ribs.emitters.opt._evolution_strategy_base import (
+    BOUNDS_SAMPLING_THRESHOLD, BOUNDS_WARNING, EvolutionStrategyBase)
 
 
 class DecompMatrix:
@@ -193,6 +196,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         # Resampling method for bound constraints -> sample new solutions until
         # all solutions are within bounds.
         remaining_indices = np.arange(batch_size)
+        sampling_itrs = 0
         while len(remaining_indices) > 0:
             unscaled_params = self._rng.normal(
                 0.0,
@@ -208,6 +212,11 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
             # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
             remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
+
+            # Warn if we have resampled too many times.
+            sampling_itrs += 1
+            if sampling_itrs > BOUNDS_SAMPLING_THRESHOLD:
+                warnings.warn(BOUNDS_WARNING)
 
         return readonly(self._solutions)
 

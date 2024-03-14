@@ -3,6 +3,17 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+# Number of times solutions can be resampled before triggering a warning.
+BOUNDS_SAMPLING_THRESHOLD = 100
+
+# Warning for resampling solutions too many times.
+BOUNDS_WARNING = (
+    "During bounds handling, this ES resampled at least "
+    f"{BOUNDS_SAMPLING_THRESHOLD} times. This may indicate that your solution "
+    "space bounds are too tight. When bounds are passed in, the ES resamples "
+    "until all solutions are within the bounds -- if the bounds are too tight "
+    "or the distribution is too large, the ES will resample forever.")
+
 
 class EvolutionStrategyBase(ABC):
     """Base class for evolution strategy optimizers for use with emitters.
