@@ -6,7 +6,7 @@
 
 #### Improvements
 
-- Upgrade setup-miniconda to v3 due to deprecation ({pr}`463`)
+- Upgrade setup-miniconda to v3 due to deprecation ({pr}`464`)
 
 ## 0.7.1
 
