@@ -13,6 +13,7 @@
 - Add qd score to lunar lander example ({pr}`458`)
 - Raise error if `result_archive` and `archive` have different fields
   ({pr}`461`)
+- Warn user if resampling for bounds takes too long in ESs ({pr}`462`)
 
 #### Documentation
 
