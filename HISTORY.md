@@ -12,6 +12,10 @@
 
 - Add qd score to lunar lander example ({pr}`458`)
 
+#### Documentation
+
+- Add QDHF tutorial ({pr}`459`)
+
 #### Bugs
 
 - Fix solution retrieval in lunar lander eval ({pr}`457`)
