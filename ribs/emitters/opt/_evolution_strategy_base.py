@@ -3,7 +3,10 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+# Number of times solutions can be resampled before triggering a warning.
 BOUNDS_SAMPLING_THRESHOLD = 100
+
+# Warning for resampling solutions too many times.
 BOUNDS_WARNING = (
     "During bounds handling, this ES resampled at least "
     f"{BOUNDS_SAMPLING_THRESHOLD} times. This may indicate that your solution "
