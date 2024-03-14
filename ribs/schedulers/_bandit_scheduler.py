@@ -58,10 +58,10 @@ class BanditScheduler:
             since it is significantly faster.
         result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
             CMA-MAE, the archive does not store all the best-performing
-            solutions. The `result_archive` is a secondary archive where we can
-            store all the best-performing solutions.
+            solutions. The ``result_archive`` is a secondary archive where we
+            can store all the best-performing solutions.
     Raises:
-        TypeError: The `emitter_pool` argument was not a list of emitters.
+        TypeError: The ``emitter_pool`` argument was not a list of emitters.
         ValueError: Number of active emitters is less than one.
         ValueError: Less emitters in the pool than the number of active
             emitters.
@@ -69,7 +69,11 @@ class BanditScheduler:
             dimensions.
         ValueError: The same emitter instance was passed in multiple times.
             Each emitter should be a unique instance (see the warning above).
-        ValueError: Invalid value for `add_mode`.
+        ValueError: Invalid value for ``add_mode``.
+        ValueError: The ``result_archive`` and ``archive`` are the same object
+            (``result_archive`` should not be passed in in this case).
+        ValueError: The ``result_archive`` and ``archive`` have different
+            fields.
     """
 
     def __init__(self,
@@ -127,6 +131,13 @@ class BanditScheduler:
                              "Note that `Scheduler.result_archive` already "
                              "defaults to be the same as `archive` if you pass "
                              "`result_archive=None`")
+
+        if (result_archive is not None and
+                set(archive.field_list) != set(result_archive.field_list)):
+            raise ValueError("`archive` and `result_archive` should have the "
+                             "same set of fields. This may be the result of "
+                             "passing extra_fields to archive but not to "
+                             "result_archive.")
 
         self._archive = archive
         self._emitter_pool = np.array(emitter_pool)

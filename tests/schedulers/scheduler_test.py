@@ -83,15 +83,15 @@ def test_ask_fails_when_called_twice(scheduler_fixture):
         scheduler.ask()
 
 
-@pytest.mark.parametrize("archive_type", ["Scheduler", "BanditScheduler"])
-def test_warn_nothing_added_to_archive(archive_type):
+@pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
+def test_warn_nothing_added_to_archive(scheduler_type):
     archive = GridArchive(solution_dim=2,
                           dims=[100, 100],
                           ranges=[(-1, 1), (-1, 1)],
                           threshold_min=1.0,
                           learning_rate=1.0)
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
-    if archive_type == "Scheduler":
+    if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters)
     else:
         scheduler = BanditScheduler(archive, emitters, 1)
@@ -106,8 +106,8 @@ def test_warn_nothing_added_to_archive(archive_type):
         )
 
 
-@pytest.mark.parametrize("archive_type", ["Scheduler", "BanditScheduler"])
-def test_warn_nothing_added_to_result_archive(archive_type):
+@pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
+def test_warn_nothing_added_to_result_archive(scheduler_type):
     archive = GridArchive(solution_dim=2,
                           dims=[100, 100],
                           ranges=[(-1, 1), (-1, 1)],
@@ -119,7 +119,7 @@ def test_warn_nothing_added_to_result_archive(archive_type):
                                  threshold_min=10.0,
                                  learning_rate=1.0)
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
-    if archive_type == "Scheduler":
+    if scheduler_type == "Scheduler":
         scheduler = Scheduler(
             archive,
             emitters,
@@ -141,6 +141,38 @@ def test_warn_nothing_added_to_result_archive(archive_type):
             # Arbitrary measures.
             measures=np.linspace(-1, 1, 4 * 2).reshape((4, 2)),
         )
+
+
+@pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
+def test_result_archive_mismatch_fields(scheduler_type):
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)],
+                          threshold_min=-np.inf,
+                          learning_rate=1.0,
+                          extra_fields={
+                              "metadata": ((), object),
+                              "square": ((2, 2), np.int32)
+                          })
+    result_archive = GridArchive(solution_dim=2,
+                                 dims=[100, 100],
+                                 ranges=[(-1, 1), (-1, 1)])
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
+
+    with pytest.raises(ValueError):
+        if scheduler_type == "Scheduler":
+            Scheduler(
+                archive,
+                emitters,
+                result_archive=result_archive,
+            )
+        else:
+            BanditScheduler(
+                archive,
+                emitters,
+                1,
+                result_archive=result_archive,
+            )
 
 
 def test_tell_inserts_solutions_into_archive(add_mode):

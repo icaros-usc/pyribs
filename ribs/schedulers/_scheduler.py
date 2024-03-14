@@ -39,16 +39,20 @@ class Scheduler:
             since it is significantly faster.
         result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
             CMA-MAE, the archive does not store all the best-performing
-            solutions. The `result_archive` is a secondary archive where we can
-            store all the best-performing solutions.
+            solutions. The ``result_archive`` is a secondary archive where we
+            can store all the best-performing solutions.
     Raises:
-        TypeError: The `emitters` argument was not a list of emitters.
+        TypeError: The ``emitters`` argument was not a list of emitters.
         ValueError: The emitters passed in do not have the same solution
             dimensions.
         ValueError: There is no emitter passed in.
         ValueError: The same emitter instance was passed in multiple times. Each
             emitter should be a unique instance (see the warning above).
-        ValueError: Invalid value for `add_mode`.
+        ValueError: Invalid value for ``add_mode``.
+        ValueError: The ``result_archive`` and ``archive`` are the same object
+            (``result_archive`` should not be passed in in this case).
+        ValueError: The ``result_archive`` and ``archive`` have different
+            fields.
     """
 
     def __init__(self,
@@ -95,6 +99,13 @@ class Scheduler:
                              "Note that `Scheduler.result_archive` already "
                              "defaults to be the same as `archive` if you pass "
                              "`result_archive=None`")
+
+        if (result_archive is not None and
+                set(archive.field_list) != set(result_archive.field_list)):
+            raise ValueError("`archive` and `result_archive` should have the "
+                             "same set of fields. This may be the result of "
+                             "passing extra_fields to archive but not to "
+                             "result_archive.")
 
         self._archive = archive
         self._emitters = emitters
