@@ -1,5 +1,13 @@
 # History
 
+## (Forthcoming)
+
+### Changelog
+
+#### Improvements
+
+- Upgrade setup-miniconda to v3 due to deprecation ({pr}`463`)
+
 ## 0.7.1
 
 This release introduces the
