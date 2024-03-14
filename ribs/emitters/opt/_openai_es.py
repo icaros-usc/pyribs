@@ -2,11 +2,14 @@
 
 See here for more info: https://arxiv.org/abs/1703.03864
 """
+import warnings
+
 import numpy as np
 
 from ribs._utils import readonly
 from ribs.emitters.opt._adam_opt import AdamOpt
-from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
+from ribs.emitters.opt._evolution_strategy_base import (
+    BOUNDS_SAMPLING_THRESHOLD, BOUNDS_WARNING, EvolutionStrategyBase)
 
 
 class OpenAIEvolutionStrategy(EvolutionStrategyBase):
@@ -111,6 +114,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         # Resampling method for bound constraints -> sample new solutions until
         # all solutions are within bounds.
         remaining_indices = np.arange(batch_size)
+        sampling_itrs = 0
         while len(remaining_indices) > 0:
             if self.mirror_sampling:
                 # Note that we sample batch_size // 2 here. It is unclear how to
@@ -138,6 +142,11 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
             remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
+
+            # Warn if we have resampled too many times.
+            sampling_itrs += 1
+            if sampling_itrs > BOUNDS_SAMPLING_THRESHOLD:
+                warnings.warn(BOUNDS_WARNING)
 
         return readonly(self._solutions)
 

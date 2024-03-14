@@ -95,3 +95,39 @@ def test_sphere(es):
         measures_batch = solution_batch[:, :2]
         add_info = archive.add(solution_batch, objective_batch, measures_batch)
         emitter.tell(solution_batch, objective_batch, measures_batch, add_info)
+
+
+if __name__ == "__main__":
+    # For testing bounds handling. Run this file:
+    # python tests/emitters/evolution_strategy_emitter_test.py
+    # The below code should show the resampling warning indicating that the ES
+    # resampled too many times. This test cannot be included in pytest because
+    # it is designed to hang. Comment out the different emitters to test
+    # different ESs.
+
+    archive = GridArchive(solution_dim=31,
+                          dims=[20, 20],
+                          ranges=[(-1.0, 1.0)] * 2)
+    emitter = EvolutionStrategyEmitter(archive,
+                                       x0=np.zeros(31),
+                                       sigma0=1.0,
+                                       bounds=[(0, 1.0)] * 31,
+                                       es="cma_es")
+    #  emitter = EvolutionStrategyEmitter(archive,
+    #                                     x0=np.zeros(31),
+    #                                     sigma0=1.0,
+    #                                     bounds=[(0, 1.0)] * 31,
+    #                                     es="sep_cma_es")
+    #  emitter = EvolutionStrategyEmitter(archive,
+    #                                     x0=np.zeros(31),
+    #                                     sigma0=1.0,
+    #                                     bounds=[(0, 1.0)] * 31,
+    #                                     es="lm_ma_es")
+    #  emitter = EvolutionStrategyEmitter(archive,
+    #                                     x0=np.zeros(31),
+    #                                     sigma0=1.0,
+    #                                     bounds=[(0, 1.0)] * 31,
+    #                                     es="openai_es",
+    #                                     es_kwargs={"mirror_sampling": False})
+
+    emitter.ask()
