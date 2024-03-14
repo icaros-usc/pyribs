@@ -35,8 +35,10 @@ function test_notebook {
   esac
   echo "Test Iterations: ${test_itrs}"
 
-  # Generate a copy of the notebook with reduced iterations.
+  # Generate a copy of the notebook with reduced iterations. Either total_itrs
+  # or TOTAL_ITRS can be used.
   sed "s/total_itrs = [0-9]\\+/total_itrs = ${test_itrs}/g" < "$notebook" > "${TMP_FILE}"
+  sed "s/TOTAL_ITRS = [0-9]\\+/TOTAL_ITRS = ${test_itrs}/g" < "$notebook" > "${TMP_FILE}"
 
   # Any further special replacements for testing.
   case "$notebook" in
