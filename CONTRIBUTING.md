@@ -146,6 +146,9 @@ the repo. To create a tutorial:
 1. Add an entry into the toctree in `docs/tutorials.md` and add it to one of the
    lists of tutorials.
 1. Check that the tutorial shows up on the Tutorials page when serving the docs.
+1. If the tutorial should be excluded from testing (e.g., because it takes too
+   long to run), add it to the list of excluded tutorials in
+   `tests/tutorials_list.sh`.
 1. Create a PR into the website repo that adds the tutorial onto the home page,
    specifically
    [this file](https://github.com/icaros-usc/pyribs.org/blob/master/src/index.liquid).
