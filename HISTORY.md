@@ -11,6 +11,8 @@
 #### Improvements
 
 - Add qd score to lunar lander example ({pr}`458`)
+- Raise error if `result_archive` and `archive` have different fields
+  ({pr}`461`)
 
 #### Bugs
 
