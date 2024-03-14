@@ -58,6 +58,12 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self._rng = np.random.default_rng(seed)
         self._solutions = None
 
+        if mirror_sampling and not (np.all(lower_bounds == -np.inf) and
+                                    np.all(upper_bounds == np.inf)):
+            raise ValueError("Bounds are currently not supported when using "
+                             "mirror_sampling in OpenAI-ES; see "
+                             "OpenAIEvolutionStrategy.ask() for more info.")
+
         self.mirror_sampling = mirror_sampling
 
         # Default batch size should be an even number for mirror sampling.
@@ -107,12 +113,17 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         remaining_indices = np.arange(batch_size)
         while len(remaining_indices) > 0:
             if self.mirror_sampling:
+                # Note that we sample batch_size // 2 here. It is unclear how to
+                # do bounds handling when mirror sampling is involved since the
+                # two entries need to be mirrored. For instance, should we throw
+                # out both solutions if one is out of bounds?
                 noise_half = self._rng.standard_normal(
                     (batch_size // 2, self.solution_dim), dtype=self.dtype)
                 self.noise = np.concatenate((noise_half, -noise_half))
             else:
                 self.noise = self._rng.standard_normal(
-                    (batch_size, self.solution_dim), dtype=self.dtype)
+                    (len(remaining_indices), self.solution_dim),
+                    dtype=self.dtype)
 
             new_solutions = (self.adam_opt.theta[None] +
                              self.sigma0 * self.noise)
