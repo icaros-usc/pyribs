@@ -132,7 +132,8 @@ class BanditScheduler:
                              "defaults to be the same as `archive` if you pass "
                              "`result_archive=None`")
 
-        if set(archive.field_list) != set(result_archive.field_list):
+        if (result_archive is not None and
+                set(archive.field_list) != set(result_archive.field_list)):
             raise ValueError("`archive` and `result_archive` should have the "
                              "same set of fields. This may be the result of "
                              "passing extra_fields to archive but not to "
