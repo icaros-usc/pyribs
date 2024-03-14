@@ -2,11 +2,14 @@
 
 See here for more info: https://arxiv.org/abs/1703.03864
 """
+import warnings
+
 import numpy as np
 
 from ribs._utils import readonly
 from ribs.emitters.opt._adam_opt import AdamOpt
-from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
+from ribs.emitters.opt._evolution_strategy_base import (
+    BOUNDS_SAMPLING_THRESHOLD, BOUNDS_WARNING, EvolutionStrategyBase)
 
 
 class OpenAIEvolutionStrategy(EvolutionStrategyBase):
@@ -58,6 +61,12 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self._rng = np.random.default_rng(seed)
         self._solutions = None
 
+        if mirror_sampling and not (np.all(lower_bounds == -np.inf) and
+                                    np.all(upper_bounds == np.inf)):
+            raise ValueError("Bounds are currently not supported when using "
+                             "mirror_sampling in OpenAI-ES; see "
+                             "OpenAIEvolutionStrategy.ask() for more info.")
+
         self.mirror_sampling = mirror_sampling
 
         # Default batch size should be an even number for mirror sampling.
@@ -105,14 +114,23 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         # Resampling method for bound constraints -> sample new solutions until
         # all solutions are within bounds.
         remaining_indices = np.arange(batch_size)
+        sampling_itrs = 0
         while len(remaining_indices) > 0:
             if self.mirror_sampling:
+                # Note that we sample batch_size // 2 here rather than
+                # accounting for len(remaining_indices). This is because we
+                # assume we only run this loop once when mirror_sampling is
+                # True. It is unclear how to do bounds handling when mirror
+                # sampling is involved since the two entries need to be
+                # mirrored. For instance, should we throw out both solutions if
+                # one is out of bounds?
                 noise_half = self._rng.standard_normal(
                     (batch_size // 2, self.solution_dim), dtype=self.dtype)
                 self.noise = np.concatenate((noise_half, -noise_half))
             else:
                 self.noise = self._rng.standard_normal(
-                    (batch_size, self.solution_dim), dtype=self.dtype)
+                    (len(remaining_indices), self.solution_dim),
+                    dtype=self.dtype)
 
             new_solutions = (self.adam_opt.theta[None] +
                              self.sigma0 * self.noise)
@@ -127,6 +145,11 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             # (out_of_bounds indicates whether each value in each solution is
             # out of bounds).
             remaining_indices = remaining_indices[np.any(out_of_bounds, axis=1)]
+
+            # Warn if we have resampled too many times.
+            sampling_itrs += 1
+            if sampling_itrs > BOUNDS_SAMPLING_THRESHOLD:
+                warnings.warn(BOUNDS_WARNING)
 
         return readonly(self._solutions)
 
