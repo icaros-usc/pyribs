@@ -117,10 +117,13 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         sampling_itrs = 0
         while len(remaining_indices) > 0:
             if self.mirror_sampling:
-                # Note that we sample batch_size // 2 here. It is unclear how to
-                # do bounds handling when mirror sampling is involved since the
-                # two entries need to be mirrored. For instance, should we throw
-                # out both solutions if one is out of bounds?
+                # Note that we sample batch_size // 2 here rather than
+                # accounting for len(remaining_indices). This is because we
+                # assume we only run this loop once when mirror_sampling is
+                # True. It is unclear how to do bounds handling when mirror
+                # sampling is involved since the two entries need to be
+                # mirrored. For instance, should we throw out both solutions if
+                # one is out of bounds?
                 noise_half = self._rng.standard_normal(
                     (batch_size // 2, self.solution_dim), dtype=self.dtype)
                 self.noise = np.concatenate((noise_half, -noise_half))
