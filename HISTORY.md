@@ -14,6 +14,10 @@
 - Raise error if `result_archive` and `archive` have different fields
   ({pr}`461`)
 
+#### Documentation
+
+- Add QDHF tutorial ({pr}`459`)
+
 #### Bugs
 
 - Fix solution retrieval in lunar lander eval ({pr}`457`)
