@@ -100,6 +100,7 @@ pyribs supports Python 3.8 and above. The vast majority of users can install
 pyribs by running:
 
 ```bash
+# If you are on Mac, you may need to use quotations, e.g., pip install "ribs[visualize]"
 pip install ribs[visualize]
 ```
 
