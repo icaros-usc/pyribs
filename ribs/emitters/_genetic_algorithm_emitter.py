@@ -70,12 +70,12 @@ class GeneticAlgorithmEmitter(EmitterBase):
                 "x0 and initial_solutions cannot both be provided.")
 
         if x0 is not None:
-            self._x0 = np.array(x0, dtype=archive.dtype)
+            self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
             check_shape(self._x0, "x0", archive.solution_dim,
                         "archive.solution_dim")
         elif initial_solutions is not None:
-            self._initial_solutions = np.asarray(initial_solutions,
-                                                 dtype=archive.dtype)
+            self._initial_solutions = np.asarray(
+                initial_solutions, dtype=archive.dtypes["solution"])
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "archive.solution_dim")
 

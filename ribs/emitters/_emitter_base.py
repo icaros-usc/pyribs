@@ -34,7 +34,7 @@ class EmitterBase(ABC):
         self._solution_dim = solution_dim
         (self._lower_bounds,
          self._upper_bounds) = self._process_bounds(bounds, self._solution_dim,
-                                                    archive.dtype)
+                                                    archive.dtypes["measures"])
 
     @staticmethod
     def _process_bounds(bounds, solution_dim, dtype):
@@ -101,7 +101,8 @@ class EmitterBase(ABC):
 
         Returns an empty array by default.
         """
-        return np.empty((0, self.solution_dim), dtype=self.archive.dtype)
+        return np.empty((0, self.solution_dim),
+                        dtype=self.archive.dtypes["solution"])
 
     def tell(self, solution, objective, measures, add_info, **fields):
         """Gives the emitter results from evaluating solutions.
@@ -130,7 +131,8 @@ class EmitterBase(ABC):
         This method only needs to be implemented by emitters used in DQD. The
         method returns an empty array by default.
         """
-        return np.empty((0, self.solution_dim), dtype=self.archive.dtype)
+        return np.empty((0, self.solution_dim),
+                        dtype=self.archive.dtypes["solution"])
 
     def tell_dqd(self, solution, objective, measures, jacobian, add_info,
                  **fields):
