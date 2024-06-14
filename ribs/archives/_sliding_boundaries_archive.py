@@ -133,9 +133,11 @@ class SlidingBoundariesArchive(ArchiveBase):
             ``objective - (-300)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-        dtype (str or data-type): Data type of the solutions, objectives,
-            and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
-            ``np.float64``.
+        dtype (str or data-type or dict): Data type of the solutions,
+            objectives, and measures. We only support ``"f"`` / ``np.float32``
+            and ``"d"`` / ``np.float64``. Alternatively, this can be a dict
+            specifying separate dtypes, of the form ``{"solution": <dtype>,
+            "objective": <dtype>, "measures": <dtype>}``.
         extra_fields (dict): Description of extra fields of data that is stored
             next to elite data like solutions and objectives. The description is
             a dict mapping from a field name (str) to a tuple of ``(shape,
