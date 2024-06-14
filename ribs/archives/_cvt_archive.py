@@ -159,8 +159,8 @@ class CVTArchive(ArchiveBase):
         )
 
         ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
-        self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
+        self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
+        self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
 
         # Apply default args for k-means. Users can easily override these,
@@ -183,7 +183,7 @@ class CVTArchive(ArchiveBase):
             if centroid_method == "kmeans":
                 if not isinstance(samples, numbers.Integral):
                     # Validate shape of custom samples.
-                    samples = np.asarray(samples, dtype=self.dtype)
+                    samples = np.asarray(samples, dtype=self.dtypes["measures"])
                     if samples.shape[1] != self._measure_dim:
                         raise ValueError(
                             f"Samples has shape {samples.shape} but must be of "
@@ -195,7 +195,7 @@ class CVTArchive(ArchiveBase):
                         self._lower_bounds,
                         self._upper_bounds,
                         size=(samples, self._measure_dim),
-                    ).astype(self.dtype)
+                    ).astype(self.dtypes["measures"])
 
                 self._centroids = k_means(self._samples, self._cells,
                                           **self._k_means_kwargs)[0]
@@ -233,7 +233,8 @@ class CVTArchive(ArchiveBase):
                                    (self._upper_bounds - self._lower_bounds))
         else:
             # Validate shape of `custom_centroids` when they are provided.
-            custom_centroids = np.asarray(custom_centroids, dtype=self.dtype)
+            custom_centroids = np.asarray(custom_centroids,
+                                          dtype=self.dtypes["measures"])
             if custom_centroids.shape != (cells, self._measure_dim):
                 raise ValueError(
                     f"custom_centroids has shape {custom_centroids.shape} but "

@@ -19,7 +19,10 @@ from .conftest import ARCHIVE_NAMES, get_archive_data
 def test_str_dtype_float(name, dtype):
     str_dtype, np_dtype = dtype
     archive = get_archive_data(name, str_dtype).archive
-    assert archive.dtype == np_dtype
+    assert archive.dtypes["solution"] == np_dtype
+    assert archive.dtypes["objective"] == np_dtype
+    assert archive.dtypes["measures"] == np_dtype
+    assert archive.dtypes["threshold"] == np_dtype
 
 
 def test_invalid_dtype():
