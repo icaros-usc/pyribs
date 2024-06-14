@@ -51,6 +51,20 @@ def test_invalid_dtype():
                     dtype=np.int32)
 
 
+def test_invalid_dict_dtype():
+    with pytest.raises(ValueError):
+        GridArchive(
+            solution_dim=3,
+            dims=[10, 10],
+            ranges=[(-1, 1), (-2, 2)],
+            dtype={
+                "solution": object,
+                "objective": np.float32,
+                # Missing measures.
+            },
+        )
+
+
 #
 # Tests for iteration -- only GridArchive for simplicity.
 #
