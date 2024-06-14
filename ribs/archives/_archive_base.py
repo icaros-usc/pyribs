@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
-                         check_shape, np_scalar, parse_float_dtype,
-                         validate_batch, validate_single)
+                         check_shape, np_scalar, validate_batch,
+                         validate_single)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
@@ -16,6 +16,38 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
                                        single_entry_with_threshold)
 
 _ARCHIVE_FIELDS = {"index", "solution", "objective", "measures", "threshold"}
+
+
+def parse_dtype(dtype):
+    """Parses dtype for the archive.
+
+    Returns:
+        np.float32 or np.float64
+    Raises:
+        ValueError: Unsupported dtype.
+    """
+    # First convert str dtype's to np.dtype.
+    if isinstance(dtype, str):
+        dtype = np.dtype(dtype)
+
+    # np.dtype is not np.float32 or np.float64, but it compares equal.
+    if dtype in [np.float32, np.float64]:
+        return {
+            "solution": dtype,
+            "objective": dtype,
+            "measures": dtype,
+        }
+    elif isinstance(dtype, dict):
+        if ("solution" not in dtype or "objective" not in dtype or
+                "measures" not in dtype):
+            raise ValueError("If dtype is a dict, it must contain 'solution',"
+                             "'objective', and 'measures' keys.")
+        return dtype
+    else:
+        raise ValueError(
+            'Unsupported dtype. Must be np.float32 or np.float64, '
+            'or dict of the form '
+            '{"solution": <dtype>, "objective": <dtype>, "measures": <dtype>}')
 
 
 class ArchiveBase(ABC):
@@ -109,13 +141,15 @@ class ArchiveBase(ABC):
             raise ValueError("The following names are not allowed in "
                              f"extra_fields: {_ARCHIVE_FIELDS}")
 
-        dtype = parse_float_dtype(dtype)
+        dtype = parse_dtype(dtype)
         self._store = ArrayStore(
             field_desc={
-                "solution": ((solution_dim,), dtype),
-                "objective": ((), dtype),
-                "measures": ((measure_dim,), dtype),
-                "threshold": ((), dtype),
+                "solution": ((solution_dim,), dtype["solution"]),
+                "objective": ((), dtype["objective"]),
+                "measures": ((measure_dim,), dtype["measures"]),
+                # Must be same dtype as the objective since they share
+                # calculations.
+                "threshold": ((), dtype["objective"]),
                 **extra_fields,
             },
             capacity=self._cells,
