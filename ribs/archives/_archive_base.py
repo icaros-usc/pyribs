@@ -215,6 +215,12 @@ class ArchiveBase(ABC):
         return self._dtype
 
     @property
+    def dtypes(self):
+        """dict: Mapping from field name to dtype for all fields in the
+        archive."""
+        return self._store.dtypes
+
+    @property
     def empty(self):
         """bool: Whether the archive is empty."""
         return len(self._store) == 0
