@@ -1,7 +1,7 @@
 """Provides the IsoLineEmitter."""
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_shape
+from ribs._utils import check_batch_shape, check_shape, np_scalar
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.operators import IsoLineOperator
 
@@ -66,8 +66,8 @@ class IsoLineEmitter(EmitterBase):
         self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
 
-        self._iso_sigma = archive.dtype(iso_sigma)
-        self._line_sigma = archive.dtype(line_sigma)
+        self._iso_sigma = np_scalar(iso_sigma, dtype=archive.dtypes["solution"])
+        self._line_sigma = np_scalar(line_sigma, archive.dtypes["solution"])
 
         self._x0 = None
         self._initial_solutions = None
@@ -79,12 +79,12 @@ class IsoLineEmitter(EmitterBase):
                 "x0 and initial_solutions cannot both be provided.")
 
         if x0 is not None:
-            self._x0 = np.array(x0, dtype=archive.dtype)
+            self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
             check_shape(self._x0, "x0", archive.solution_dim,
                         "archive.solution_dim")
         elif initial_solutions is not None:
-            self._initial_solutions = np.asarray(initial_solutions,
-                                                 dtype=archive.dtype)
+            self._initial_solutions = np.asarray(
+                initial_solutions, dtype=archive.dtypes["solution"])
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "archive.solution_dim")
 

@@ -7,6 +7,8 @@
 #### API
 
 - Allow specifying separate dtypes for solution, objective, and measures
+  ({pr}`471`)
+- Replace archive.dtype with archive.dtypes dict that holds dtype of every field
   ({pr}`470`)
 
 #### Improvements

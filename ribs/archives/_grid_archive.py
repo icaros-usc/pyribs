@@ -1,7 +1,7 @@
 """Contains the GridArchive."""
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_finite, check_is_1d
+from ribs._utils import check_batch_shape, check_finite, check_is_1d, np_scalar
 from ribs.archives._archive_base import ArchiveBase
 
 
@@ -99,10 +99,10 @@ class GridArchive(ArchiveBase):
         )
 
         ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
-        self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
+        self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
+        self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
-        self._epsilon = self.dtype(epsilon)
+        self._epsilon = np_scalar(epsilon, dtype=self.dtypes["measures"])
 
         self._boundaries = []
         for dim, lower_bound, upper_bound in zip(self._dims, self._lower_bounds,
@@ -133,7 +133,7 @@ class GridArchive(ArchiveBase):
 
     @property
     def epsilon(self):
-        """:attr:`dtype`: Epsilon for computing archive indices. Refer to
+        """dtypes["measures"]: Epsilon for computing archive indices. Refer to
         the documentation for this class."""
         return self._epsilon
 

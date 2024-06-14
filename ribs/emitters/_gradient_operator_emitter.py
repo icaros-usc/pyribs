@@ -3,7 +3,8 @@ import numbers
 
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_shape, validate_batch
+from ribs._utils import (check_batch_shape, check_shape, np_scalar,
+                         validate_batch)
 from ribs.emitters._emitter_base import EmitterBase
 
 
@@ -130,19 +131,20 @@ class GradientOperatorEmitter(EmitterBase):
                 "x0 and initial_solutions cannot both be provided.")
 
         if x0 is not None:
-            self._x0 = np.array(x0, dtype=archive.dtype)
+            self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
             check_shape(self._x0, "x0", archive.solution_dim,
                         "archive.solution_dim")
         elif initial_solutions is not None:
-            self._initial_solutions = np.asarray(initial_solutions,
-                                                 dtype=archive.dtype)
+            self._initial_solutions = np.asarray(
+                initial_solutions, dtype=archive.dtypes["solution"])
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "archive.solution_dim")
 
         self._rng = np.random.default_rng(seed)
-        self._sigma = archive.dtype(sigma) if isinstance(
-            sigma, numbers.Real) else np.array(sigma)
-        self._sigma_g = archive.dtype(sigma_g)
+        self._sigma = np_scalar(sigma,
+                                dtype=archive.dtypes["solution"]) if isinstance(
+                                    sigma, numbers.Real) else np.array(sigma)
+        self._sigma_g = np_scalar(sigma_g, dtype=archive.dtypes["solution"])
         self._line_sigma = line_sigma
         self._use_isolinedd = operator_type != 'isotropic'
         self._measure_gradients = measure_gradients
@@ -216,7 +218,7 @@ class GradientOperatorEmitter(EmitterBase):
                 loc=0.0,
                 scale=self.sigma,
                 size=(self.batch_size, self.solution_dim),
-            ).astype(self.archive.dtype)
+            ).astype(self.archive.dtypes["solution"])
 
             directions = self.archive.sample_elites(
                 self._batch_size)["solution"] - parents
@@ -225,7 +227,7 @@ class GradientOperatorEmitter(EmitterBase):
                 loc=0.0,
                 scale=self._line_sigma,
                 size=(self._batch_size, 1),
-            ).astype(self.archive.dtype)
+            ).astype(self.archive.dtypes["solution"])
 
             sol = parents + line_gaussian * directions + noise
             sol = np.clip(sol, self.lower_bounds, self.upper_bounds)
@@ -234,7 +236,7 @@ class GradientOperatorEmitter(EmitterBase):
                 loc=0.0,
                 scale=self.sigma,
                 size=(self.batch_size, self.solution_dim),
-            ).astype(self.archive.dtype)
+            ).astype(self.archive.dtypes["solution"])
 
             sol = parents + noise
             sol = np.clip(sol, self.lower_bounds, self.upper_bounds)
@@ -328,5 +330,4 @@ class GradientOperatorEmitter(EmitterBase):
             norms = np.linalg.norm(jacobian, axis=2,
                                    keepdims=True) + self._epsilon
             jacobian /= norms
-
         self._jacobian_batch = jacobian

@@ -6,6 +6,8 @@ public in the future once it becomes more stable.
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
+from ribs._utils import np_scalar
+
 
 def single_entry_with_threshold(indices, new_data, add_info, extra_args,
                                 occupied, cur_data):
@@ -47,7 +49,7 @@ def single_entry_with_threshold(indices, new_data, add_info, extra_args,
         # If threshold_min is -inf, then we want CMA-ME behavior, which will
         # compute the improvement value w.r.t. zero for new solutions.
         # Otherwise, we will compute w.r.t. threshold_min.
-        cur_threshold = (dtype(0)
+        cur_threshold = (np_scalar(0.0, dtype=dtype)
                          if threshold_min == -np.inf else threshold_min)
 
     # Retrieve candidate objective.
@@ -115,7 +117,7 @@ def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
     # -np.inf. This is because the case with threshold_min = -np.inf is handled
     # separately since we compute the new threshold based on the max objective
     # in each cell in that case.
-    ratio = dtype(1.0 - learning_rate)**objective_sizes
+    ratio = np_scalar(1.0 - learning_rate, dtype=dtype)**objective_sizes
     new_threshold = (ratio * cur_threshold +
                      (objective_sums / objective_sizes) * (1 - ratio))
 
@@ -166,7 +168,7 @@ def batch_entries_with_threshold(indices, new_data, add_info, extra_args,
     # If threshold_min is -inf, then we want CMA-ME behavior, which will compute
     # the improvement value of new solutions w.r.t zero. Otherwise, we will
     # compute improvement with respect to threshold_min.
-    cur_threshold[is_new] = (dtype(0)
+    cur_threshold[is_new] = (np_scalar(0.0, dtype=dtype)
                              if threshold_min == -np.inf else threshold_min)
     add_info["value"] = new_data["objective"] - cur_threshold
 
@@ -274,5 +276,4 @@ def compute_best_index(indices, new_data, add_info, extra_args, occupied,
     else:
         item_idx = np.argmax(new_data["objective"])
         add_info["best_index"] = indices[item_idx]
-
     return indices, new_data, add_info

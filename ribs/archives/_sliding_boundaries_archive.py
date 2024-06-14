@@ -5,8 +5,8 @@ from collections import deque
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs._utils import (check_batch_shape, check_finite, validate_batch,
-                         validate_single)
+from ribs._utils import (check_batch_shape, check_finite, np_scalar,
+                         validate_batch, validate_single)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._grid_archive import GridArchive
 
@@ -182,10 +182,10 @@ class SlidingBoundariesArchive(ArchiveBase):
         )
 
         ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
-        self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
+        self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
+        self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
-        self._epsilon = self.dtype(epsilon)
+        self._epsilon = np_scalar(epsilon, dtype=self.dtypes["measures"])
 
         # Specifics for sliding boundaries.
         self._remap_frequency = remap_frequency
@@ -194,7 +194,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         # the end.
         self._boundaries = np.full((self.measure_dim, np.max(self._dims) + 1),
                                    np.nan,
-                                   dtype=self.dtype)
+                                   dtype=self.dtypes["measures"])
 
         # Initialize the boundaries.
         for i, (dim, lower_bound, upper_bound) in enumerate(
@@ -231,7 +231,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     @property
     def epsilon(self):
-        """:attr:`dtype`: Epsilon for computing archive indices. Refer to
+        """dtypes["measures"]: Epsilon for computing archive indices. Refer to
         the documentation for this class."""
         return self._epsilon
 
