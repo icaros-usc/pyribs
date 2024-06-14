@@ -335,9 +335,11 @@ class ArchiveBase(ABC):
             coverage=np_scalar(len(self) / self.cells,
                                dtype=self.dtypes["objective"]),
             qd_score=new_qd_score,
-            norm_qd_score=new_qd_score / self.cells,
+            norm_qd_score=np_scalar(new_qd_score / self.cells,
+                                    dtype=self.dtypes["objective"]),
             obj_max=new_obj_max,
-            obj_mean=self._objective_sum / len(self),
+            obj_mean=np_scalar(self._objective_sum / len(self),
+                               dtype=self.dtypes["objective"]),
         )
 
     def add(self, solution, objective, measures, **fields):
