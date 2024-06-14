@@ -55,12 +55,19 @@ def assert_archive_elites(
             if archive_covered[j]:
                 continue
 
-            solution_match = (solution_batch is None or np.isclose(
-                data["solution"][j], solution_batch[i]).all())
+            if solution_batch is not None:
+                if data["solution"].dtype.kind == "f":
+                    solution_match = np.allclose(data["solution"][j],
+                                                 solution_batch[i])
+                else:
+                    solution_match = np.all(
+                        data["solution"][j] == solution_batch[i])
+            else:
+                solution_match = True
             objective_match = (objective_batch is None or np.isclose(
                 data["objective"][j], objective_batch[i]))
-            measures_match = (measures_batch is None or np.isclose(
-                data["measures"][j], measures_batch[i]).all())
+            measures_match = (measures_batch is None or np.allclose(
+                data["measures"][j], measures_batch[i]))
             index_match = (grid_indices_batch is None or
                            data["index"][j] == index_batch[i])
 
