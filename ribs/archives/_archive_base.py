@@ -212,7 +212,10 @@ class ArchiveBase(ABC):
     @property
     def dtype(self):
         """data-type: The dtype of the solutions, objective, and measures."""
-        return self._dtype
+        raise RuntimeError(
+            "The dtype property has been deprecated. Please use "
+            "archive.dtypes instead, which returns a mapping from field name "
+            "to dtype for all the fields in the archive.")
 
     @property
     def dtypes(self):
