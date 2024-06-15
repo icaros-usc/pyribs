@@ -4,7 +4,8 @@ from collections import namedtuple
 import numpy as np
 import pytest
 
-from ribs.archives import CVTArchive, GridArchive, SlidingBoundariesArchive
+from ribs.archives import (CVTArchive, GridArchive, GridUnstructuredArchive,
+                           SlidingBoundariesArchive, UnstructuredArchive)
 
 
 @pytest.fixture
@@ -98,6 +99,19 @@ def get_archive_data(name, dtype=np.float64):
                                          dtype=dtype)
         grid_indices = (6, 11)
         int_index = 131
+    elif name == "GridUnstructuredArchive":
+        cells = 10 * 20
+        archive = GridUnstructuredArchive(solution_dim=len(solution),
+                                          dims=[10, 20],
+                                          ranges=[(-1, 1), (-2, 2)],
+                                          dtype=dtype)
+
+        archive_with_elite = GridUnstructuredArchive(solution_dim=len(solution),
+                                                     dims=[10, 20],
+                                                     ranges=[(-1, 1), (-2, 2)],
+                                                     dtype=dtype)
+        grid_indices = (6, 11)
+        int_index = 131
     elif name.startswith("CVTArchive-"):
         # CVT archive with bounds (-1,1) and (-1,1), and 4 centroids at (0.5,
         # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The elite in
@@ -140,11 +154,26 @@ def get_archive_data(name, dtype=np.float64):
             dtype=dtype)
         grid_indices = (6, 11)
         int_index = 131
+    elif name == "UnstructuredArchive":
+        cells = 0
+        archive = UnstructuredArchive(solution_dim=len(solution),
+                                      measure_dim=2,
+                                      k_neighbors=5,
+                                      sparsity_threshold=1.0,
+                                      dtype=dtype)
 
-    archive_with_elite.add_single(solution, objective, measures)
+        archive_with_elite = UnstructuredArchive(solution_dim=len(solution),
+                                                 measure_dim=2,
+                                                 k_neighbors=5,
+                                                 sparsity_threshold=1.0,
+                                                 dtype=dtype)
+        grid_indices = (0,)
+        int_index = 0
+
+    archive_with_elite.add_single(solution, objective, measures)  # pylint: disable=E
 
     return ArchiveFixtureData(
-        archive,
+        archive,  # pylint: disable=E
         archive_with_elite,
         solution,
         objective,
@@ -152,5 +181,5 @@ def get_archive_data(name, dtype=np.float64):
         grid_indices,
         int_index,
         centroid,
-        cells,
+        cells,  # pylint: disable=E
     )
