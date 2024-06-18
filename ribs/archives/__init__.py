@@ -36,7 +36,15 @@ from ribs.archives._sliding_boundaries_archive import SlidingBoundariesArchive
 from ribs.archives._unstructured_archive import UnstructuredArchive
 
 __all__ = [
-    "GridArchive", "GridUnstructuredArchive", "CVTArchive",
-    "SlidingBoundariesArchive", "ArchiveBase", "ArrayStore", "AddStatus",
-    "ArchiveDataFrame", "ArchiveStats", "CQDScoreResult", "UnstructuredArchive"
+    "GridArchive",
+    "GridUnstructuredArchive",
+    "CVTArchive",
+    "SlidingBoundariesArchive",
+    "ArchiveBase",
+    "ArrayStore",
+    "AddStatus",
+    "ArchiveDataFrame",
+    "ArchiveStats",
+    "CQDScoreResult",
+    "UnstructuredArchive",
 ]
