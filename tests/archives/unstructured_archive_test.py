@@ -96,7 +96,7 @@ def test_properties_are_correct(data):
     assert np.all(data.archive.upper_bounds == [2, 2])
 
     # test boundaries contain [0, 2] using the midpoints and endpoints
-    test_boundaries = np.array([0, 1, 2], dtype=data.archive.dtype)
+    test_boundaries = np.array([0, 1, 2], dtype=data.archive.dtypes["measures"])
     boundaries = data.archive.boundaries
 
     assert len(boundaries) == 2
@@ -114,7 +114,8 @@ def test_properties_are_correct(data):
     assert np.all(data.archive.upper_bounds == [4, 4])
 
     # test boundaries contain [-2, 0, 2, 4] using the midpoints and endpoints
-    test_boundaries = np.array([-2, -1, 1, 3, 4], dtype=data.archive.dtype)
+    test_boundaries = np.array([-2, -1, 1, 3, 4],
+                               dtype=data.archive.dtypes["measures"])
     boundaries = data.archive.boundaries
 
     assert len(boundaries) == 2

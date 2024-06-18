@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Union
 import numpy as np
 
 from ribs._utils import (check_batch_shape, check_finite, check_shape,
-                         validate_batch, validate_single)
+                         np_scalar, validate_batch, validate_single)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._transforms import (batch_entries_with_threshold,
                                        compute_best_index,
@@ -47,9 +47,11 @@ class UnstructuredArchive(ArchiveBase):
             ``objective - (-300)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-        dtype (str or data-type): Data type of the solutions, objectives,
-            and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
-            ``np.float64``.
+        dtype (str or data-type or dict): Data type of the solutions,
+            objectives, and measures. We only support ``"f"`` / ``np.float32``
+            and ``"d"`` / ``np.float64``. Alternatively, this can be a dict
+            specifying separate dtypes, of the form ``{"solution": <dtype>,
+            "objective": <dtype>, "measures": <dtype>}``.
         extra_fields (dict): Description of extra fields of data that is stored
             next to elite data like solutions and objectives. The description is
             a dict mapping from a field name (str) to a tuple of ``(shape,
@@ -87,7 +89,8 @@ class UnstructuredArchive(ArchiveBase):
         )
 
         self._k_neighbors = int(k_neighbors)
-        self._sparsity_threshold = self.dtype(sparsity_threshold)
+        self._sparsity_threshold = np_scalar(sparsity_threshold,
+                                             dtype=self.dtypes["measures"])
 
     @property
     def k_neighbors(self) -> int:
@@ -352,7 +355,7 @@ class UnstructuredArchive(ArchiveBase):
             self.index_of(data["measures"], resize=True),
             data,
             {
-                "dtype": self._dtype,
+                "dtype": self.dtypes["threshold"],
                 "learning_rate": self._learning_rate,
                 "threshold_min": self._threshold_min,
                 "objective_sum": self._objective_sum,
@@ -428,7 +431,7 @@ class UnstructuredArchive(ArchiveBase):
             np.expand_dims(self.index_of_single(measures, resize=True), axis=0),
             data,
             {
-                "dtype": self._dtype,
+                "dtype": self.dtypes["threshold"],
                 "learning_rate": self._learning_rate,
                 "threshold_min": self._threshold_min,
                 "objective_sum": self._objective_sum,
@@ -516,6 +519,6 @@ class UnstructuredArchive(ArchiveBase):
                 curr_bounds.append(
                     (dim_measures[ind] + dim_measures[indices[idx - 1]]) / 2)
             curr_bounds.append(self.upper_bounds[dim])
-            bounds.append(np.array(curr_bounds, dtype=self.dtype))
+            bounds.append(np.array(curr_bounds, dtype=self.dtypes["measures"]))
 
         return bounds
