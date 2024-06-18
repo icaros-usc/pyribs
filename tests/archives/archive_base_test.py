@@ -19,7 +19,28 @@ from .conftest import ARCHIVE_NAMES, get_archive_data
 def test_str_dtype_float(name, dtype):
     str_dtype, np_dtype = dtype
     archive = get_archive_data(name, str_dtype).archive
-    assert archive.dtype == np_dtype
+    assert archive.dtypes["solution"] == np_dtype
+    assert archive.dtypes["objective"] == np_dtype
+    assert archive.dtypes["measures"] == np_dtype
+    assert archive.dtypes["threshold"] == np_dtype
+
+
+def test_dict_dtype():
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 10],
+        ranges=[(-1, 1), (-2, 2)],
+        dtype={
+            "solution": object,
+            "objective": np.float32,
+            "measures": np.float32,
+        },
+    )
+
+    assert archive.dtypes["solution"] == object
+    assert archive.dtypes["objective"] == np.float32
+    assert archive.dtypes["measures"] == np.float32
+    assert archive.dtypes["threshold"] == np.float32
 
 
 def test_invalid_dtype():
@@ -28,6 +49,20 @@ def test_invalid_dtype():
                     dims=[20, 20],
                     ranges=[(-1, 1)] * 2,
                     dtype=np.int32)
+
+
+def test_invalid_dict_dtype():
+    with pytest.raises(ValueError):
+        GridArchive(
+            solution_dim=3,
+            dims=[10, 10],
+            ranges=[(-1, 1), (-2, 2)],
+            dtype={
+                "solution": object,
+                "objective": np.float32,
+                # Missing measures.
+            },
+        )
 
 
 #

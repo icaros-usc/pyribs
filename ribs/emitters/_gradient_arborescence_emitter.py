@@ -165,7 +165,7 @@ class GradientArborescenceEmitter(EmitterBase):
         opt_seed, ranker_seed = seed_sequence.spawn(2)
 
         self._epsilon = epsilon
-        self._x0 = np.array(x0, dtype=archive.dtype)
+        self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
         check_shape(self._x0, "x0", archive.solution_dim,
                     "archive.solution_dim")
         self._sigma0 = sigma0
@@ -203,7 +203,7 @@ class GradientArborescenceEmitter(EmitterBase):
             batch_size=batch_size,
             solution_dim=self._num_coefficients,
             seed=opt_seed,
-            dtype=self.archive.dtype,
+            dtype=self.archive.dtypes["solution"],
             lower_bounds=-np.inf,  # No bounds for gradient coefficients.
             upper_bounds=np.inf,
             **(es_kwargs if es_kwargs is not None else {}),

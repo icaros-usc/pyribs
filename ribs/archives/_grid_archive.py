@@ -1,7 +1,7 @@
 """Contains the GridArchive."""
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_finite, check_is_1d
+from ribs._utils import check_batch_shape, check_finite, check_is_1d, np_scalar
 from ribs.archives._archive_base import ArchiveBase
 
 
@@ -51,9 +51,11 @@ class GridArchive(ArchiveBase):
             ``objective - (-300)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-        dtype (str or data-type): Data type of the solutions, objectives,
-            and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
-            ``np.float64``.
+        dtype (str or data-type or dict): Data type of the solutions,
+            objectives, and measures. We only support ``"f"`` / ``np.float32``
+            and ``"d"`` / ``np.float64``. Alternatively, this can be a dict
+            specifying separate dtypes, of the form ``{"solution": <dtype>,
+            "objective": <dtype>, "measures": <dtype>}``.
         extra_fields (dict): Description of extra fields of data that is stored
             next to elite data like solutions and objectives. The description is
             a dict mapping from a field name (str) to a tuple of ``(shape,
@@ -97,10 +99,10 @@ class GridArchive(ArchiveBase):
         )
 
         ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
-        self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
+        self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
+        self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
-        self._epsilon = self.dtype(epsilon)
+        self._epsilon = np_scalar(epsilon, dtype=self.dtypes["measures"])
 
         self._boundaries = []
         for dim, lower_bound, upper_bound in zip(self._dims, self._lower_bounds,
@@ -131,7 +133,7 @@ class GridArchive(ArchiveBase):
 
     @property
     def epsilon(self):
-        """:attr:`dtype`: Epsilon for computing archive indices. Refer to
+        """dtypes["measures"]: Epsilon for computing archive indices. Refer to
         the documentation for this class."""
         return self._epsilon
 

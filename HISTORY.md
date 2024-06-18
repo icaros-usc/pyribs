@@ -4,6 +4,13 @@
 
 ### Changelog
 
+#### API
+
+- Allow specifying separate dtypes for solution, objective, and measures
+  ({pr}`471`)
+- Replace archive.dtype with archive.dtypes dict that holds dtype of every field
+  ({pr}`470`)
+
 #### Improvements
 
 - Upgrade setup-miniconda to v3 due to deprecation ({pr}`464`)

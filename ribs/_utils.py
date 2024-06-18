@@ -4,25 +4,19 @@ import numbers
 import numpy as np
 
 
-def parse_float_dtype(dtype):
-    """Parses a floating point dtype.
+def np_scalar(scalar, dtype):
+    """Casts the scalar to the given numpy dtype.
 
-    Returns:
-        np.float32 or np.float64
-    Raises:
-        ValueError: There is an error in the bounds configuration.
+    This is useful for making sure all our scalars are in the correct dtype.
+
+    It is possible to just use np.array(scalar, dtype=dtype) since
+    zero-dimensional arrays behave like scalars, but the scalar would still show
+    up as an array if calling type().
+
+    It is also possible to use np.array(scalar, dtype=dtype).item(), but item()
+    converts outputs to standard Python objects, not numpy scalars.
     """
-    # First convert str dtype's to np.dtype.
-    if isinstance(dtype, str):
-        dtype = np.dtype(dtype)
-
-    # np.dtype is not np.float32 or np.float64, but it compares equal.
-    if dtype == np.float32:
-        return np.float32
-    if dtype == np.float64:
-        return np.float64
-
-    raise ValueError("Unsupported dtype. Must be np.float32 or np.float64")
+    return np.array([scalar], dtype=dtype)[0]
 
 
 def check_finite(x, name):
@@ -203,7 +197,8 @@ def validate_single(archive, data):
     check_shape(data["solution"], "solution", archive.solution_dim,
                 "solution_dim")
 
-    data["objective"] = archive.dtype(data["objective"])
+    data["objective"] = np_scalar(data["objective"],
+                                  archive.dtypes["objective"])
     check_finite(data["objective"], "objective")
 
     data["measures"] = np.asarray(data["measures"])

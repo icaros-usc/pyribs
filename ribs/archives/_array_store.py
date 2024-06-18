@@ -184,7 +184,7 @@ class ArrayStore:
 
                 store.field_desc == {
                     "objective": ((), np.float32),
-                    "measures": ((10,), np.float32)
+                    "measures": ((10,), np.float32),
                 }
 
         See the constructor ``field_desc`` parameter for more info. Unlike in
@@ -197,6 +197,21 @@ class ArrayStore:
             name: (arr.shape[1:], arr.dtype)
             for name, arr in self._fields.items()
         }
+
+    @cached_property
+    def dtypes(self):
+        """dict: Data types of fields in the store.
+
+        Example:
+
+            ::
+
+                store.dtypes == {
+                    "objective": np.float32,
+                    "measures": np.float32,
+                }
+        """
+        return {name: arr.dtype for name, arr in self._fields.items()}
 
     @cached_property
     def field_list(self):

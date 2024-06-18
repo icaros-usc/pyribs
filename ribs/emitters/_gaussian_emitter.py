@@ -57,7 +57,7 @@ class GaussianEmitter(EmitterBase):
                  batch_size=64,
                  seed=None):
         self._batch_size = batch_size
-        self._sigma = np.array(sigma, dtype=archive.dtype)
+        self._sigma = np.array(sigma, dtype=archive.dtypes["solution"])
         self._x0 = None
         self._initial_solutions = None
 
@@ -68,12 +68,12 @@ class GaussianEmitter(EmitterBase):
                 "x0 and initial_solutions cannot both be provided.")
 
         if x0 is not None:
-            self._x0 = np.array(x0, dtype=archive.dtype)
+            self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
             check_shape(self._x0, "x0", archive.solution_dim,
                         "archive.solution_dim")
         elif initial_solutions is not None:
-            self._initial_solutions = np.asarray(initial_solutions,
-                                                 dtype=archive.dtype)
+            self._initial_solutions = np.asarray(
+                initial_solutions, dtype=archive.dtypes["solution"])
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "archive.solution_dim")
 

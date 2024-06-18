@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
-                         check_shape, parse_float_dtype, validate_batch,
+                         check_shape, np_scalar, validate_batch,
                          validate_single)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
@@ -16,6 +16,38 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
                                        single_entry_with_threshold)
 
 _ARCHIVE_FIELDS = {"index", "solution", "objective", "measures", "threshold"}
+
+
+def parse_dtype(dtype):
+    """Parses dtype for the archive.
+
+    Returns:
+        np.float32 or np.float64
+    Raises:
+        ValueError: Unsupported dtype.
+    """
+    # First convert str dtype's to np.dtype.
+    if isinstance(dtype, str):
+        dtype = np.dtype(dtype)
+
+    # np.dtype is not np.float32 or np.float64, but it compares equal.
+    if dtype in [np.float32, np.float64]:
+        return {
+            "solution": dtype,
+            "objective": dtype,
+            "measures": dtype,
+        }
+    elif isinstance(dtype, dict):
+        if ("solution" not in dtype or "objective" not in dtype or
+                "measures" not in dtype):
+            raise ValueError("If dtype is a dict, it must contain 'solution',"
+                             "'objective', and 'measures' keys.")
+        return dtype
+    else:
+        raise ValueError(
+            'Unsupported dtype. Must be np.float32 or np.float64, '
+            'or dict of the form '
+            '{"solution": <dtype>, "objective": <dtype>, "measures": <dtype>}')
 
 
 class ArchiveBase(ABC):
@@ -61,9 +93,11 @@ class ArchiveBase(ABC):
             ``objective - (-300)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-        dtype (str or data-type): Data type of the solutions, objectives,
-            and measures. We only support ``"f"`` / ``np.float32`` and ``"d"`` /
-            ``np.float64``.
+        dtype (str or data-type or dict): Data type of the solutions,
+            objectives, and measures. We only support ``"f"`` / ``np.float32``
+            and ``"d"`` / ``np.float64``. Alternatively, this can be a dict
+            specifying separate dtypes, of the form ``{"solution": <dtype>,
+            "objective": <dtype>, "measures": <dtype>}``.
         extra_fields (dict): Description of extra fields of data that is stored
             next to elite data like solutions and objectives. The description is
             a dict mapping from a field name (str) to a tuple of ``(shape,
@@ -96,13 +130,30 @@ class ArchiveBase(ABC):
                  dtype=np.float64,
                  extra_fields=None):
 
-        self._dtype = parse_float_dtype(dtype)
         self._seed = seed
         self._rng = np.random.default_rng(seed)
         self._cells = cells
         self._solution_dim = solution_dim
         self._measure_dim = measure_dim
-        self._qd_score_offset = self._dtype(qd_score_offset)
+
+        extra_fields = extra_fields or {}
+        if _ARCHIVE_FIELDS & extra_fields.keys():
+            raise ValueError("The following names are not allowed in "
+                             f"extra_fields: {_ARCHIVE_FIELDS}")
+
+        dtype = parse_dtype(dtype)
+        self._store = ArrayStore(
+            field_desc={
+                "solution": ((solution_dim,), dtype["solution"]),
+                "objective": ((), dtype["objective"]),
+                "measures": ((measure_dim,), dtype["measures"]),
+                # Must be same dtype as the objective since they share
+                # calculations.
+                "threshold": ((), dtype["objective"]),
+                **extra_fields,
+            },
+            capacity=self._cells,
+        )
 
         if threshold_min != -np.inf and learning_rate is None:
             raise ValueError(
@@ -116,8 +167,11 @@ class ArchiveBase(ABC):
         if threshold_min == -np.inf and learning_rate != 1.0:
             raise ValueError("threshold_min can only be -np.inf if "
                              "learning_rate is 1.0")
-        self._learning_rate = self._dtype(learning_rate)
-        self._threshold_min = self._dtype(threshold_min)
+        self._learning_rate = np_scalar(learning_rate, self.dtypes["threshold"])
+        self._threshold_min = np_scalar(threshold_min, self.dtypes["threshold"])
+
+        self._qd_score_offset = np_scalar(qd_score_offset,
+                                          self.dtypes["objective"])
 
         self._stats = None
         self._best_elite = None
@@ -125,22 +179,6 @@ class ArchiveBase(ABC):
         # qd_score and obj_mean.
         self._objective_sum = None
         self._stats_reset()
-
-        extra_fields = extra_fields or {}
-        if _ARCHIVE_FIELDS & extra_fields.keys():
-            raise ValueError("The following names are not allowed in "
-                             f"extra_fields: {_ARCHIVE_FIELDS}")
-
-        self._store = ArrayStore(
-            field_desc={
-                "solution": ((solution_dim,), self.dtype),
-                "objective": ((), self.dtype),
-                "measures": ((measure_dim,), self.dtype),
-                "threshold": ((), self.dtype),
-                **extra_fields,
-            },
-            capacity=self._cells,
-        )
 
     @property
     def field_list(self):
@@ -211,8 +249,17 @@ class ArchiveBase(ABC):
 
     @property
     def dtype(self):
-        """data-type: The dtype of the solutions, objective, and measures."""
-        return self._dtype
+        """DEPRECATED."""
+        raise RuntimeError(
+            "The dtype property has been deprecated. Please use "
+            "archive.dtypes instead, which returns a mapping from field name "
+            "to dtype for all the fields in the archive.")
+
+    @property
+    def dtypes(self):
+        """dict: Mapping from field name to dtype for all fields in the
+        archive."""
+        return self._store.dtypes
 
     @property
     def empty(self):
@@ -285,16 +332,18 @@ class ArchiveBase(ABC):
 
     def _stats_reset(self):
         """Resets the archive stats."""
+        zero = np_scalar(0.0, dtype=self.dtypes["objective"])
+
         self._stats = ArchiveStats(
             num_elites=0,
-            coverage=self.dtype(0.0),
-            qd_score=self.dtype(0.0),
-            norm_qd_score=self.dtype(0.0),
+            coverage=zero,
+            qd_score=zero,
+            norm_qd_score=zero,
             obj_max=None,
             obj_mean=None,
         )
         self._best_elite = None
-        self._objective_sum = self.dtype(0.0)
+        self._objective_sum = zero
 
     def _stats_update(self, new_objective_sum, new_best_index):
         """Updates statistics based on a new sum of objective values
@@ -302,7 +351,8 @@ class ArchiveBase(ABC):
         (new_best_index)."""
         self._objective_sum = new_objective_sum
         new_qd_score = (self._objective_sum -
-                        self.dtype(len(self)) * self._qd_score_offset)
+                        np_scalar(len(self), dtype=self.dtypes["objective"]) *
+                        self._qd_score_offset)
 
         _, new_best_elite = self._store.retrieve([new_best_index])
 
@@ -318,11 +368,14 @@ class ArchiveBase(ABC):
 
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=self.dtype(len(self) / self.cells),
+            coverage=np_scalar(len(self) / self.cells,
+                               dtype=self.dtypes["objective"]),
             qd_score=new_qd_score,
-            norm_qd_score=self.dtype(new_qd_score / self.cells),
+            norm_qd_score=np_scalar(new_qd_score / self.cells,
+                                    dtype=self.dtypes["objective"]),
             obj_max=new_obj_max,
-            obj_mean=self._objective_sum / self.dtype(len(self)),
+            obj_mean=np_scalar(self._objective_sum / len(self),
+                               dtype=self.dtypes["objective"]),
         )
 
     def add(self, solution, objective, measures, **fields):
@@ -431,7 +484,7 @@ class ArchiveBase(ABC):
             self.index_of(data["measures"]),
             data,
             {
-                "dtype": self._dtype,
+                "dtype": self.dtypes["threshold"],
                 "learning_rate": self._learning_rate,
                 "threshold_min": self._threshold_min,
                 "objective_sum": self._objective_sum,
@@ -498,7 +551,7 @@ class ArchiveBase(ABC):
             np.expand_dims(self.index_of_single(measures), axis=0),
             data,
             {
-                "dtype": self._dtype,
+                "dtype": self.dtypes["threshold"],
                 "learning_rate": self._learning_rate,
                 "threshold_min": self._threshold_min,
                 "objective_sum": self._objective_sum,
