@@ -16,13 +16,13 @@ also contains several utilities associated with the archives, such as
     ribs.archives.GridUnstructuredArchive
     ribs.archives.CVTArchive
     ribs.archives.SlidingBoundariesArchive
+    ribs.archives.UnstructuredArchive
     ribs.archives.ArchiveBase
     ribs.archives.ArrayStore
     ribs.archives.AddStatus
     ribs.archives.ArchiveDataFrame
     ribs.archives.ArchiveStats
     ribs.archives.CQDScoreResult
-    ribs.archives.UnstructuredArchive
 """
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_base import ArchiveBase
