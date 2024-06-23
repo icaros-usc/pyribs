@@ -541,7 +541,7 @@ class ArrayStore:
     def roll(self, shift):
         """Rolls the indices of all properties by `shift`.
 
-        This can be useful for archives such as `GridArchive` when new values
+        This can be useful for archives such as `GridUnstructuredArchive` when new values
         appear outside the previous bounds of the archive.
 
         Args:

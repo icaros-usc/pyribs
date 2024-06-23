@@ -1,6 +1,6 @@
 """Contains the UnstructuredArchive class."""
 from functools import cached_property
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Union
 
 import numpy as np
 
@@ -22,16 +22,14 @@ class UnstructuredArchive(ArchiveBase):
     unconditionally. When a solution is in an overdense region it is added to
     the archive only if its objective improves upon the nearest existing
     solution. The archive uses the mean distance of the k-nearest neighbors to
-    determine the sparsity of metric space
-
-    .. note:: The archive is initialized as empty
+    determine the novelty of metric space
 
     Args:
         solution_dim (int): Dimension of the solution space.
         measure_dim (int): The dimension of the measure space.
         k_neighbors (int): The number of nearest neighbors to use for
             determining sparseness.
-        sparsity_threshold (float): The level of sparsity required to add a
+        novelty_threshold (float): The level of novelty required to add a
             solution to the archive unconditionally
         learning_rate (float): The learning rate for threshold updates. Defaults
             to 1.0.
@@ -67,9 +65,7 @@ class UnstructuredArchive(ArchiveBase):
                  solution_dim,
                  measure_dim,
                  k_neighbors,
-                 sparsity_threshold,
-                 learning_rate=None,
-                 threshold_min=-np.inf,
+                 novelty_threshold,
                  qd_score_offset=0.0,
                  seed=None,
                  dtype=np.float64,
@@ -80,8 +76,6 @@ class UnstructuredArchive(ArchiveBase):
             solution_dim=solution_dim,
             cells=0,
             measure_dim=measure_dim,
-            learning_rate=learning_rate,
-            threshold_min=threshold_min,
             qd_score_offset=qd_score_offset,
             seed=seed,
             dtype=dtype,
@@ -89,20 +83,20 @@ class UnstructuredArchive(ArchiveBase):
         )
 
         self._k_neighbors = int(k_neighbors)
-        self._sparsity_threshold = np_scalar(sparsity_threshold,
+        self._novelty_threshold = np_scalar(novelty_threshold,
                                              dtype=self.dtypes["measures"])
 
     @property
     def k_neighbors(self) -> int:
         """int: The number of nearest neighbors to use for determining
-        sparsity."""
+        novelty."""
         return self._k_neighbors
 
     @property
-    def sparsity_threshold(self) -> float:
+    def novelty_threshold(self) -> float:
         """:attr:`dtype` : The degree of sparseness in metric space required for
         a solution to be added unconditionally."""
-        return self._sparsity_threshold
+        return self._novelty_threshold
 
     def index_of(self, measures, resize: bool = False) -> np.ndarray:
         """Returns archive indices for the given batch of measures.
@@ -117,7 +111,7 @@ class UnstructuredArchive(ArchiveBase):
 
         Next, we compute the mean distance of the k-nearest neighbors for each
         incoming measure. If any of the mean distances are *above* the
-        `sparsity_threshold` then the archive is resized to accomodate them.
+        `novelty_threshold` then the archive is resized to accomodate them.
         They are each assigned new indices in the archive.
 
         Args:
@@ -125,7 +119,7 @@ class UnstructuredArchive(ArchiveBase):
                 coordinates in measure space.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing
-            the flattened grid coordinates.
+              the location of the solution in the archive.
         Raises:
             ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
@@ -177,7 +171,7 @@ class UnstructuredArchive(ArchiveBase):
         meas_distances = np.square(measures[:, None] - measures).sum(axis=2)
         distances = np.concatenate([distances, meas_distances], axis=1)
 
-        # find the nearest [k+1]-neighbors to determine the sparsity
+        # find the nearest [k+1]-neighbors to determine the novelty
         # use k+1 since self is included in the first k-neighbors
         top_k = np.argsort(distances, axis=1)[:, :min(self._k_neighbors +
                                                       1, distances.shape[1])]
@@ -190,7 +184,7 @@ class UnstructuredArchive(ArchiveBase):
                              axis=1), top_k] = True
         new_entries = np.sqrt(distances[where_mask]).reshape(
             batch_size,
-            -1).sum(axis=1) / self._k_neighbors > self._sparsity_threshold
+            -1).sum(axis=1) / self._k_neighbors > self._novelty_threshold
         new_entry_indicies = np.argwhere(new_entries) + curr_occ
 
         # use the nearest index already in the archive or the closest one which
@@ -372,13 +366,11 @@ class UnstructuredArchive(ArchiveBase):
         if not np.all(add_info["status"] == 0):
             self._stats_update(objective_sum, best_index)
 
-        # clear the cached properties since they've now changed
-        if "upper_bounds" in self.__dict__:
-            del self.__dict__["upper_bounds"]
-        if "lower_bounds" in self.__dict__:
-            del self.__dict__["lower_bounds"]
-        if "boundaries" in self.__dict__:
-            del self.__dict__["boundaries"]
+            # clear the cached properties since they've now changed
+            if "upper_bounds" in self.__dict__:
+                del self.__dict__["upper_bounds"]
+            if "lower_bounds" in self.__dict__:
+                del self.__dict__["lower_bounds"]
 
         return add_info
 
@@ -462,15 +454,11 @@ class UnstructuredArchive(ArchiveBase):
         Since the archive can grow arbitrarily this is calculated based on the
         maximum measure values of the solutions in the archive.
 
-        If the archive only has a single solution, then the upper bound would
-        equal the lower bound which can cause problems. So we add 1 to the
-        upper bound to make sure the boundaries form an interval rather than
-        a point.
+        The user should take care when the archive only has a single solution
+        since the upper bound would equal the lower bound and my cause
+        problems.
         """
-        upper = np.max(self._store.data("measures"), axis=0)
-        if self._store._props["n_occupied"] > 1:  # pylint: disable=W0212
-            return upper
-        return upper + 1
+        return np.max(self._store.data("measures"), axis=0)
 
     @cached_property
     def lower_bounds(self) -> np.ndarray:
@@ -480,45 +468,8 @@ class UnstructuredArchive(ArchiveBase):
         Since the archive can grow arbitrarily this is calculated based on the
         minimum measure values of the solutions in the archive.
 
-        If the archive only has a single solution, then the upper bound would
-        equal the lower bound which can cause problems. So we subtract 1 from
-        the lower bound to make sure the boundaries form an interval rather
-        than a point.
+        The user should take care when the archive only has a single solution
+        since the upper bound would equal the lower bound and my cause
+        problems.
         """
-        lower = np.min(self._store.data("measures"), axis=0)
-        if self._store._props["n_occupied"] > 1:  # pylint: disable=W0212
-            return lower
-        return lower - 1
-
-    @cached_property
-    def boundaries(self) -> List[np.ndarray]:
-        """
-        The boundaries of the measures in the archive.
-
-        Since the archive can grow arbitrarily this is calculated based on the
-        maximum and minimum measure values of the solutions in the archive.
-
-        The intervals are subdivided into an evenly-spaced grid.
-        """
-        measures = self._store.data("measures")
-        bounds = []
-        for dim in range(self.measure_dim):
-            dim_measures = measures[:, dim]
-            # use unique since it sorts for us and in the case where
-            # some measures coincide we don't have duplicate bounds
-            _, indices = np.unique(dim_measures, return_index=True)
-
-            # upper and lower bounds are min/max endpoints in the measures
-            # so we can just use them as-is. Otherwise we take the midpoint
-            # between two measures
-            # in the case of a single solution the `for` loop iterates over
-            # an empty list so we are left with just the upper and lower bounds
-            # with the solution in the middle
-            curr_bounds = [self.lower_bounds[dim]]
-            for idx, ind in enumerate(indices[1:], start=1):
-                curr_bounds.append(
-                    (dim_measures[ind] + dim_measures[indices[idx - 1]]) / 2)
-            curr_bounds.append(self.upper_bounds[dim])
-            bounds.append(np.array(curr_bounds, dtype=self.dtypes["measures"]))
-
-        return bounds
+        return np.min(self._store.data("measures"), axis=0)

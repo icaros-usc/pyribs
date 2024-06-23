@@ -170,10 +170,10 @@ def get_archive_data(name, dtype=np.float64):
         grid_indices = (0,)
         int_index = 0
 
-    archive_with_elite.add_single(solution, objective, measures)  # pylint: disable=E
+    archive_with_elite.add_single(solution, objective, measures)  # pylint: disable=E0606
 
     return ArchiveFixtureData(
-        archive,  # pylint: disable=E
+        archive,  # pylint: disable=E0606
         archive_with_elite,
         solution,
         objective,
@@ -181,5 +181,5 @@ def get_archive_data(name, dtype=np.float64):
         grid_indices,
         int_index,
         centroid,
-        cells,  # pylint: disable=E
+        cells,  # pylint: disable=E0606
     )
