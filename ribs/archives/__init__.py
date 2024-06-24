@@ -40,11 +40,11 @@ __all__ = [
     "GridUnstructuredArchive",
     "CVTArchive",
     "SlidingBoundariesArchive",
+    "UnstructuredArchive",
     "ArchiveBase",
     "ArrayStore",
     "AddStatus",
     "ArchiveDataFrame",
     "ArchiveStats",
     "CQDScoreResult",
-    "UnstructuredArchive",
 ]
