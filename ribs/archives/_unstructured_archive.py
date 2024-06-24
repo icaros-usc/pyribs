@@ -117,6 +117,10 @@ class UnstructuredArchive(ArchiveBase):
         self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
                                 ckdtree_kwargs.copy())
 
+        # k-D tree with current measures in the archive. Updated on add().
+        self._cur_kd_tree = cKDTree(self._store.data("measures"),
+                                    **self._ckdtree_kwargs)
+
     @property
     def k_neighbors(self):
         """int: The number of nearest neighbors to use for determining
@@ -142,19 +146,16 @@ class UnstructuredArchive(ArchiveBase):
         to a C++ vector."""
         return self._store.capacity
 
-    # TODO: I think this can be made into a transform or pushed into add(); we
-    # should have index_of do nothing for this archive. Calling index_of
-    # shouldn't keep on resizing the archive :p
-    #
-    # Or maybe it can just return the closest solutions to the queries.
-    #
-    # This way, add() returns the correct info.
     def index_of(self, measures) -> np.ndarray:
-        """Returns archive indices for the given batch of measures.
+        """Returns the index of the closest solution to the given measures.
 
-        In this archive, solutions are only added if their novelty exceeds the
-        provided threshold. Thus, some solutions will not be added. Solutions
-        that will not be added to the archive are assigned an index of -1.
+        Unlike the structured archives like :class:`~ribs.archives.GridArchive`,
+        this archive does not have indexed cells where each measure "belongs."
+        Thus, this method instead returns the index of the closest measure to
+        each solution passed in.
+
+        This means that :meth:`retrieve` will return the solution with the
+        closest measure to each measure passed into that method.
 
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
@@ -163,6 +164,7 @@ class UnstructuredArchive(ArchiveBase):
             numpy.ndarray: (batch_size,) array of integer indices representing
               the location of the solution in the archive.
         Raises:
+            RuntimeError: There were no entries in the archive.
             ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -171,71 +173,15 @@ class UnstructuredArchive(ArchiveBase):
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
-        reference_measures = self.data("measures")
-        if self._compare_to_batch:
-            reference_measures = np.concatenate((reference_measures, measures),
-                                                axis=0)
+        if self.empty:
+            raise RuntimeError(
+                "There were no solutions in the archive. "
+                "`UnstructuredArchive.index_of` computes the nearest neighbor "
+                "to the input measures, so there must be at least one solution "
+                "present in the archive.")
 
-        if self.compare_to_batch:
-            # We need 1 more neighbor since the first neighbor will be the
-            # solution itself.
-            k_neighbors = min(len(reference_measures), self.k_neighbors + 1)
-            first_neighbor_idx = 1
-        else:
-            k_neighbors = min(len(reference_measures), self.k_neighbors)
-            first_neighbor_idx = 0
-
-        kdt = cKDTree(reference_measures, **self._ckdtree_kwargs)
-        dists, _ = kdt.query(measures, k=k_neighbors)
-
-        # If compare_to_batch, then the first nearest neighbor will be the
-        # solution itself.
-        first_neighbor_idx = 1 if self._compare_to_batch else 0
-
-        novelty = np.mean(dists[:, first_neighbor_idx:], axis=1)
-        indices = np.full(len(measures), -1, dtype=int)
-        eligible = novelty >= self.novelty_threshold
-        n_eligible = np.sum(eligible)
-
-        cur_size = len(self._store)
-        new_size = len(self._store) + n_eligible
-
-        indices[eligible] = np.arange(cur_size, new_size)
-
-        if new_size > cur_size:
-            # Resize the store by doubling its capacity. We may need to double
-            # the capacity multiple times. The log2 below indicates how many
-            # times we would need to double the capacity. We obtain the final
-            # capacity by raising to a power of 2.
-            new_capacity = 2**np.ceil(np.log2(new_size / cur_size))
-            self._store.resize(new_capacity)
-
-        return indices
-
-    def index_of_single(self, measures, resize: bool = False) -> np.ndarray:
-        """Returns the index of the measures for one solution.
-
-        While :meth:`index_of` takes in a *batch* of measures, this method takes
-        in the measures for only *one* solution. If :meth:`index_of` is
-        implemented correctly, this method should work immediately (i.e. `"out
-        of the box" <https://idioms.thefreedictionary.com/Out-of-the-Box>`_).
-
-        Args:
-            measures (array-like): (:attr:`measure_dim`,) array of measures for
-                a single solution.
-            resize (bool) : whether or not to allow resizing of the archive to
-                fit measures which are not "close" to existing solutions
-        Returns:
-            int or numpy.integer: Integer index of the measures in the archive's
-            storage arrays.
-        Raises:
-            ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
-            ValueError: ``measures`` has non-finite values (inf or NaN).
-        """
-        measures = np.asarray(measures)
-        check_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
-        return self.index_of(measures[None], resize=resize)[0]
+        _, indices = self._cur_kd_tree.query(measures)
+        return indices.astype(np.int32)
 
     # TODO: Comment on how objectives are not considered.
     # TODO: Check -1
