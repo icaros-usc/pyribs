@@ -190,8 +190,7 @@ class UnstructuredArchive(ArchiveBase):
         _, indices = self._cur_kd_tree.query(measures)
         return indices.astype(np.int32)
 
-    # TODO: Comment on how objectives are not considered.
-    # TODO: Check -1
+    # TODO: Update docstring, comment on how objectives are not considered.
     def add(self, solution, objective, measures, **fields) -> Union[Any, Dict]:
         """Inserts a batch of solutions into the archive.
 
@@ -294,9 +293,57 @@ class UnstructuredArchive(ArchiveBase):
             },
         )
 
+        reference_measures = self.data("measures")
+        if self._compare_to_batch:
+            reference_measures = np.concatenate((reference_measures, measures),
+                                                axis=0)
+
+        if self.compare_to_batch:
+            # We need 1 more neighbor since the first neighbor will be the
+            # solution itself.
+            k_neighbors = min(len(reference_measures), self.k_neighbors + 1)
+            first_neighbor_idx = 1
+        else:
+            k_neighbors = min(len(reference_measures), self.k_neighbors)
+            first_neighbor_idx = 0
+
+        if self.compare_to_batch:
+            kdt = cKDTree(reference_measures, **self._ckdtree_kwargs)
+        else:
+            kdt = self._cur_kd_tree
+
+        if len(reference_measures) == 0:
+            eligible = np.ones(len(measures), dtype=bool)
+        else:
+            dists, _ = kdt.query(measures, k=k_neighbors)
+
+            # Since query() automatically squeezes the last dim.
+            if k_neighbors == 1:
+                dists = dists[:, None]
+
+            # If compare_to_batch, then the first nearest neighbor will be the
+            # solution itself.
+            first_neighbor_idx = 1 if self._compare_to_batch else 0
+
+            novelty = np.mean(dists[:, first_neighbor_idx:], axis=1)
+            eligible = novelty >= self.novelty_threshold
+
+        n_eligible = np.sum(eligible)
+        new_size = len(self) + n_eligible
+
+        if new_size > self.capacity:
+            # Resize the store by doubling its capacity. We may need to double
+            # the capacity multiple times. The log2 below indicates how many
+            # times we would need to double the capacity. We obtain the final
+            # capacity by raising to a power of 2.
+            new_capacity = 2**np.ceil(np.log2(new_size / self.capacity))
+            self._store.resize(new_capacity)
+
         add_info = self._store.add(
-            self.index_of(data["measures"], resize=True),
-            data,
+            np.arange(len(self), new_size),
+            {
+                key: val[eligible] for key, val in data.items()
+            },
             {
                 "dtype": self.dtypes["threshold"],
                 "learning_rate": self._learning_rate,
@@ -315,7 +362,10 @@ class UnstructuredArchive(ArchiveBase):
         if not np.all(add_info["status"] == 0):
             self._stats_update(objective_sum, best_index)
 
-            # clear the cached properties since they've now changed
+            self._cur_kd_tree = cKDTree(self._store.data("measures"),
+                                        **self._ckdtree_kwargs)
+
+            # Clear the cached properties since they have now changed.
             if "upper_bounds" in self.__dict__:
                 del self.__dict__["upper_bounds"]
             if "lower_bounds" in self.__dict__:
@@ -365,60 +415,71 @@ class UnstructuredArchive(ArchiveBase):
             },
         )
 
-        for name, arr in data.items():
-            data[name] = np.expand_dims(arr, axis=0)
+        return self.add(**{key: [val] for key, val in data.items()})
 
-        add_info = self._store.add(
-            np.expand_dims(self.index_of_single(measures, resize=True), axis=0),
-            data,
-            {
-                "dtype": self.dtypes["threshold"],
-                "learning_rate": self._learning_rate,
-                "threshold_min": self._threshold_min,
-                "objective_sum": self._objective_sum,
-            },
-            [
-                single_entry_with_threshold,
-                compute_objective_sum,
-                compute_best_index,
-            ],
-        )
+        #  for name, arr in data.items():
+        #      data[name] = np.expand_dims(arr, axis=0)
 
-        objective_sum = add_info.pop("objective_sum")
-        best_index = add_info.pop("best_index")
+        #  add_info = self._store.add(
+        #      np.expand_dims(self.index_of_single(measures, resize=True), axis=0),
+        #      data,
+        #      {
+        #          "dtype": self.dtypes["threshold"],
+        #          "learning_rate": self._learning_rate,
+        #          "threshold_min": self._threshold_min,
+        #          "objective_sum": self._objective_sum,
+        #      },
+        #      [
+        #          single_entry_with_threshold,
+        #          compute_objective_sum,
+        #          compute_best_index,
+        #      ],
+        #  )
 
-        for name, arr in add_info.items():
-            add_info[name] = arr[0]
+        #  objective_sum = add_info.pop("objective_sum")
+        #  best_index = add_info.pop("best_index")
 
-        if add_info["status"]:
-            self._stats_update(objective_sum, best_index)
+        #  for name, arr in add_info.items():
+        #      add_info[name] = arr[0]
 
-        return add_info
+        #  if add_info["status"]:
+        #      self._stats_update(objective_sum, best_index)
+
+        #  return add_info
 
     @cached_property
     def upper_bounds(self) -> np.ndarray:
-        """
-        The upper bounds of the measures in the archive.
+        """The upper bounds of the measures in the archive.
 
-        Since the archive can grow arbitrarily this is calculated based on the
+        Since the archive can grow arbitrarily, this is calculated based on the
         maximum measure values of the solutions in the archive.
 
-        The user should take care when the archive only has a single solution
-        since the upper bound would equal the lower bound and my cause
-        problems.
+        Raises:
+            RuntimeError: There are no solutions in the archive, so the
+            upper bounds do not exist.
         """
+        if self.empty:
+            raise RuntimeError("There are no solutions in the archive, so the "
+                               "upper bounds do not exist.")
+
         return np.max(self._store.data("measures"), axis=0)
 
     @cached_property
     def lower_bounds(self) -> np.ndarray:
-        """
-        The lower bounds of the measures in the archive.
+        """The lower bounds of the measures in the archive.
 
-        Since the archive can grow arbitrarily this is calculated based on the
+        Since the archive can grow arbitrarily, this is calculated based on the
         minimum measure values of the solutions in the archive.
 
-        The user should take care when the archive only has a single solution
-        since the upper bound would equal the lower bound and my cause
-        problems.
+        Raises:
+            RuntimeError: There are no solutions in the archive, so the
+            lower bounds do not exist.
         """
+        if self.empty:
+            raise RuntimeError("There are no solutions in the archive, so the "
+                               "lower bounds do not exist.")
+
         return np.min(self._store.data("measures"), axis=0)
+
+    # TODO: cqd_score needs to be fixed since it assumes lower_bounds and
+    # upper_bounds.
