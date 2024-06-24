@@ -140,6 +140,13 @@ class UnstructuredArchive(ArchiveBase):
         return self._compare_to_batch
 
     @property
+    def cells(self):
+        """int: Total number of cells in the archive. Since this archive is
+        unstructured and grows over time, the number of cells is equal to the
+        number of solutions currently in the archive."""
+        return len(self)
+
+    @property
     def capacity(self):
         """int: The number of solutions that can currently be stored in this
         archive. The capacity doubles every time the archive fills up, similar
