@@ -4,8 +4,8 @@ from collections import namedtuple
 import numpy as np
 import pytest
 
-from ribs.archives import (CVTArchive, GridArchive, GridUnstructuredArchive,
-                           SlidingBoundariesArchive, UnstructuredArchive)
+from ribs.archives import (CVTArchive, GridArchive, SlidingBoundariesArchive,
+                           UnstructuredArchive)
 
 
 @pytest.fixture
@@ -97,19 +97,6 @@ def get_archive_data(name, dtype=np.float64):
                                          dims=[10, 20],
                                          ranges=[(-1, 1), (-2, 2)],
                                          dtype=dtype)
-        grid_indices = (6, 11)
-        int_index = 131
-    elif name == "GridUnstructuredArchive":
-        cells = 10 * 20
-        archive = GridUnstructuredArchive(solution_dim=len(solution),
-                                          dims=[10, 20],
-                                          ranges=[(-1, 1), (-2, 2)],
-                                          dtype=dtype)
-
-        archive_with_elite = GridUnstructuredArchive(solution_dim=len(solution),
-                                                     dims=[10, 20],
-                                                     ranges=[(-1, 1), (-2, 2)],
-                                                     dtype=dtype)
         grid_indices = (6, 11)
         int_index = 131
     elif name.startswith("CVTArchive-"):
