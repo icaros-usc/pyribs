@@ -80,7 +80,7 @@ def assert_archive_elites(
 #             solution_dim=10,  # arbitrary
 #             measure_dim=3,  # arbitrary
 #             k_neighbors=5,
-#             sparsity_threshold=1,
+#             novelty_threshold=1,
 #         )
 
 
@@ -211,9 +211,7 @@ def test_add_single_threshold_update(add_mode):
         solution_dim=3,
         measure_dim=2,
         k_neighbors=5,
-        sparsity_threshold=1.0,
-        threshold_min=-1.0,
-        learning_rate=0.1,
+        novelty_threshold=1.0,
     )
     solution = [1, 2, 3]
     measures = [0.1, 0.1]
@@ -434,9 +432,7 @@ def test_add_batch_not_inserted_if_below_threshold_min():
         solution_dim=3,
         measure_dim=2,
         k_neighbors=5,
-        sparsity_threshold=1.0,
-        threshold_min=-10.0,
-        learning_rate=0.1,
+        novelty_threshold=1.0,
     )
 
     add_info = archive.add(
@@ -465,9 +461,7 @@ def test_add_batch_threshold_update():
         solution_dim=3,
         measure_dim=2,
         k_neighbors=5,
-        sparsity_threshold=1.0,
-        threshold_min=-1.0,
-        learning_rate=0.1,
+        novelty_threshold=1.0,
     )
     solution = [1, 2, 3]
     measures = [0.1, 0.1]
@@ -528,9 +522,7 @@ def test_add_batch_threshold_update_inf_threshold_min():
         solution_dim=3,
         measure_dim=2,
         k_neighbors=5,
-        sparsity_threshold=1.0,
-        threshold_min=-np.inf,
-        learning_rate=1.0,
+        novelty_threshold=1.0,
     )
     solution = [1, 2, 3]
     measures = [0.1, 0.1]
@@ -632,7 +624,7 @@ def test_values_go_to_correct_bin(dtype):
         solution_dim=0,
         measure_dim=1,
         k_neighbors=5,
-        sparsity_threshold=1.0,
+        novelty_threshold=1.0,
         dtype=dtype,
     )
     archive.add(
@@ -716,7 +708,7 @@ def test_cqd_score_with_one_elite():
         solution_dim=2,
         measure_dim=2,
         k_neighbors=5,
-        sparsity_threshold=1.0,
+        novelty_threshold=1.0,
     )
     archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
 
@@ -741,7 +733,7 @@ def test_cqd_score_with_max_dist():
         solution_dim=2,
         measure_dim=2,
         k_neighbors=5,
-        sparsity_threshold=1.0,
+        novelty_threshold=1.0,
     )
     archive.add_single([4.0, 4.0], 0.5, [0.0, 1.0])
 
@@ -766,7 +758,7 @@ def test_cqd_score_l1_norm():
         solution_dim=2,
         measure_dim=2,
         k_neighbors=5,
-        sparsity_threshold=1.0,
+        novelty_threshold=1.0,
     )
     archive.add_single([4.0, 4.0], 0.5, [0.0, 0.0])
 
@@ -793,7 +785,7 @@ def test_cqd_score_full_output():
         solution_dim=2,
         measure_dim=2,
         k_neighbors=5,
-        sparsity_threshold=1.0,
+        novelty_threshold=1.0,
     )
     archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
 
@@ -842,7 +834,7 @@ def test_cqd_score_with_two_elites():
         solution_dim=2,
         measure_dim=2,
         k_neighbors=5,
-        sparsity_threshold=1.0,
+        novelty_threshold=1.0,
     )
     archive.add_single([4.0, 4.0], 0.25, [-2.0, -2.0])  # Elite 2.
     archive.add_single([4.0, 4.0], 0.0, [2.0, 2.0])  # Elite 3.
