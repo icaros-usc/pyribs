@@ -62,6 +62,7 @@ ARCHIVE_NAMES = [
     "CVTArchive-brute_force",
     "CVTArchive-kd_tree",
     "SlidingBoundariesArchive",
+    "UnstructuredArchive",
 ]
 
 
@@ -146,21 +147,21 @@ def get_archive_data(name, dtype=np.float64):
         archive = UnstructuredArchive(solution_dim=len(solution),
                                       measure_dim=2,
                                       k_neighbors=5,
-                                      sparsity_threshold=1.0,
+                                      novelty_threshold=1.0,
                                       dtype=dtype)
 
         archive_with_elite = UnstructuredArchive(solution_dim=len(solution),
                                                  measure_dim=2,
                                                  k_neighbors=5,
-                                                 sparsity_threshold=1.0,
+                                                 novelty_threshold=1.0,
                                                  dtype=dtype)
         grid_indices = (0,)
         int_index = 0
 
-    archive_with_elite.add_single(solution, objective, measures)  # pylint: disable=E0606
+    archive_with_elite.add_single(solution, objective, measures)
 
     return ArchiveFixtureData(
-        archive,  # pylint: disable=E0606
+        archive,
         archive_with_elite,
         solution,
         objective,
@@ -168,5 +169,5 @@ def get_archive_data(name, dtype=np.float64):
         grid_indices,
         int_index,
         centroid,
-        cells,  # pylint: disable=E0606
+        cells,
     )
