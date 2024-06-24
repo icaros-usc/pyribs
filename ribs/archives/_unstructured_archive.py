@@ -3,6 +3,7 @@ from functools import cached_property
 from typing import Any, Dict, Union
 
 import numpy as np
+from scipy.spatial import cKDTree
 
 from ribs._utils import (check_batch_shape, check_finite, check_shape,
                          np_scalar, validate_batch, validate_single)
@@ -16,24 +17,42 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
 class UnstructuredArchive(ArchiveBase):
     """An archive that adds new solutions based on their novelty.
 
-    This archive is described in `Lehman 2011
-    <https://www.cs.swarthmore.edu/~meeden/DevelopmentalRobotics/lehman_gecco11.pdf>`_.  # pylint: disable=C0301
-    If a solution is in a sparse area of metric space it is added
-    unconditionally. When a solution is in an overdense region it is added to
-    the archive only if its objective improves upon the nearest existing
-    solution. The archive uses the mean distance of the k-nearest neighbors to
-    determine the novelty of metric space
+    This archive originates in Novelty Search and is described in `Lehman 2011
+    <http://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf>`_. Solutions are added to
+    the archive if their `novelty` exceeds a certain threshold. `Novelty`
+    :math:`\\rho` is defined as the average (Euclidean) distance in measure
+    space to the :math:`k`-nearest neighbors of the solution in the archive:
+
+    .. math::
+
+        \\rho(x) = \\frac{1}{k}\\sum_{i=1}^{k}\\text{dist}(x, \\mu_i)
+
+    Where :math:`x` is the measure value of some solution, and
+    :math:`\\mu_{1..k}` are the measure values of the :math:`k`-nearest
+    neighbors in measure space.
 
     Args:
         solution_dim (int): Dimension of the solution space.
         measure_dim (int): The dimension of the measure space.
-        k_neighbors (int): The number of nearest neighbors to use for
-            determining sparseness.
+        k_neighbors (int): The maximum number of nearest neighbors to use for
+            computing novelty (`maximum` here is indicated for cases when there
+            are fewer than ``k_neighbors`` solutions in the archive).
         novelty_threshold (float): The level of novelty required to add a
-            solution to the archive unconditionally
-        learning_rate (float): The learning rate for threshold updates. Defaults
-            to 1.0.
-        threshold_min (float): The initial threshold value for all the cells.
+            solution to the archive.
+        compare_to_batch (bool): When solutions are inserted into the archive,
+            the default behavior is to compute their novelty with respect to the
+            solutions currently in the archive. If this argument is True, the
+            novelty will be computed with respect to both the archive and the
+            incoming solutions in the batch. In other words, solutions will need
+            to be novel with respect to both the archive and the incoming
+            solutions.
+        initial_capacity (int): Since this archive is unstructured, it does not
+            have a fixed size, and it will grow as solutions are added. In the
+            implementation, we store solutions in fixed-size arrays, and every
+            time the capacity of these arrays is reached, we double their sizes
+            (similar to the vector in C++). This parameter determines the
+            initial capacity of the archive's arrays. It may be useful when it
+            is known in advance how large the archive will grow.
         qd_score_offset (float): Archives often contain negative objective
             values, and if the QD score were to be computed with these negative
             objectives, the algorithm would be penalized for adding new cells
@@ -58,6 +77,10 @@ class UnstructuredArchive(ArchiveBase):
             and a "bar" field that contains 10D values. Note that field names
             must be valid Python identifiers, and names already used in the
             archive are not allowed.
+        ckdtree_kwargs (dict): When computing nearest neighbors, we construct a
+            :class:`~scipy.spatial.cKDTree`. This parameter will pass additional
+            kwargs when constructing the tree. By default, we do not pass in any
+            kwargs.
     """
 
     def __init__(self,
@@ -66,16 +89,21 @@ class UnstructuredArchive(ArchiveBase):
                  measure_dim,
                  k_neighbors,
                  novelty_threshold,
+                 compare_to_batch=False,
+                 initial_capacity=128,
                  qd_score_offset=0.0,
                  seed=None,
                  dtype=np.float64,
-                 extra_fields=None):
+                 extra_fields=None,
+                 ckdtree_kwargs=None):
 
         ArchiveBase.__init__(
             self,
             solution_dim=solution_dim,
-            cells=0,
+            cells=initial_capacity,
             measure_dim=measure_dim,
+            # learning_rate and threhsold_min take on default values since we do
+            # not use CMA-MAE threshold in this archive.
             qd_score_offset=qd_score_offset,
             seed=seed,
             dtype=dtype,
@@ -84,35 +112,49 @@ class UnstructuredArchive(ArchiveBase):
 
         self._k_neighbors = int(k_neighbors)
         self._novelty_threshold = np_scalar(novelty_threshold,
-                                             dtype=self.dtypes["measures"])
+                                            dtype=self.dtypes["measures"])
+        self._compare_to_batch = bool(compare_to_batch)
+        self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
+                                ckdtree_kwargs.copy())
 
     @property
-    def k_neighbors(self) -> int:
+    def k_neighbors(self):
         """int: The number of nearest neighbors to use for determining
         novelty."""
         return self._k_neighbors
 
     @property
-    def novelty_threshold(self) -> float:
-        """:attr:`dtype` : The degree of sparseness in metric space required for
-        a solution to be added unconditionally."""
+    def novelty_threshold(self):
+        """dtypes["measures"]: The degree of novelty required add a solution to
+        the archive."""
         return self._novelty_threshold
 
-    def index_of(self, measures, resize: bool = False) -> np.ndarray:
+    @property
+    def compare_to_batch(self):
+        """bool: Whether novelty is computed with respect to other solutions in
+        the batch when adding solutions."""
+        return self._compare_to_batch
+
+    @property
+    def capacity(self):
+        """int: The number of solutions that can currently be stored in this
+        archive. The capacity doubles every time the archive fills up, similar
+        to a C++ vector."""
+        return self._store.capacity
+
+    # TODO: I think this can be made into a transform or pushed into add(); we
+    # should have index_of do nothing for this archive. Calling index_of
+    # shouldn't keep on resizing the archive :p
+    #
+    # Or maybe it can just return the closest solutions to the queries.
+    #
+    # This way, add() returns the correct info.
+    def index_of(self, measures) -> np.ndarray:
         """Returns archive indices for the given batch of measures.
 
-        First, if the archive is empty it is resized to fit the new data.
-
-        Then the distance between all solutions in the archive and the incoming
-        `measures` is calculated.
-
-        Next the distances between all the incoming measures and themselves is
-        also calculated and concatenated with the distances from before.
-
-        Next, we compute the mean distance of the k-nearest neighbors for each
-        incoming measure. If any of the mean distances are *above* the
-        `novelty_threshold` then the archive is resized to accomodate them.
-        They are each assigned new indices in the archive.
+        In this archive, solutions are only added if their novelty exceeds the
+        provided threshold. Thus, some solutions will not be added. Solutions
+        that will not be added to the archive are assigned an index of -1.
 
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
@@ -128,95 +170,47 @@ class UnstructuredArchive(ArchiveBase):
         measures = np.asarray(measures)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
-        batch_size = measures.shape[0]
 
-        if not batch_size:
-            return np.array([], dtype=np.int32)
+        reference_measures = self.data("measures")
+        if self._compare_to_batch:
+            reference_measures = np.concatenate((reference_measures, measures),
+                                                axis=0)
 
-        if self.empty:
-            # empty archive: the indices are all new so we can just
-            # resize the store
-            if batch_size > self._store.capacity:
-                self._store.resize(batch_size)
-            self._cells = self._store.capacity
+        if self.compare_to_batch:
+            # We need 1 more neighbor since the first neighbor will be the
+            # solution itself.
+            k_neighbors = min(len(reference_measures), self.k_neighbors + 1)
+            first_neighbor_idx = 1
+        else:
+            k_neighbors = min(len(reference_measures), self.k_neighbors)
+            first_neighbor_idx = 0
 
-            if batch_size == 1:
-                # no need to bother with expensive operations
-                return np.array([0], dtype=np.int32)
+        kdt = cKDTree(reference_measures, **self._ckdtree_kwargs)
+        dists, _ = kdt.query(measures, k=k_neighbors)
 
-            distances = np.square(measures[:, None, ...] -
-                                  measures[None]).sum(axis=2)
+        # If compare_to_batch, then the first nearest neighbor will be the
+        # solution itself.
+        first_neighbor_idx = 1 if self._compare_to_batch else 0
 
-            # find the entries which are the same point in measure space
-            # at this point we don't care about the k-nearest neighbors, just
-            # whether two points are essentially the same
-            index_array = np.isclose(distances, 0)
-            indices = index_array.argmax(axis=1)
-            # remove gaps in indices
-            cell_map = {unq: idx for idx, unq in enumerate(np.unique(indices))}
-            return np.array([cell_map[s] for s in indices])
+        novelty = np.mean(dists[:, first_neighbor_idx:], axis=1)
+        indices = np.full(len(measures), -1, dtype=int)
+        eligible = novelty >= self.novelty_threshold
+        n_eligible = np.sum(eligible)
 
-        store_measures = self._store.data("measures")
-        distances = np.square(measures[:, None] - store_measures).sum(axis=2)
+        cur_size = len(self._store)
+        new_size = len(self._store) + n_eligible
 
-        # return early so that we don't go through the expensive function calls
-        # unless necessary
-        if not resize:
-            return self._store.occupied_list[np.argmin(distances,
-                                                       axis=1).astype(np.int32)]
-        curr_occ = self._store._props["n_occupied"]  # pylint: disable=W0212
-        # calculate the distances from the measures to themselves and
-        # concatenate this with the existing distances, while ignoring
-        # self-comparisons.
-        meas_distances = np.square(measures[:, None] - measures).sum(axis=2)
-        distances = np.concatenate([distances, meas_distances], axis=1)
+        indices[eligible] = np.arange(cur_size, new_size)
 
-        # find the nearest [k+1]-neighbors to determine the novelty
-        # use k+1 since self is included in the first k-neighbors
-        top_k = np.argsort(distances, axis=1)[:, :min(self._k_neighbors +
-                                                      1, distances.shape[1])]
+        if new_size > cur_size:
+            # Resize the store by doubling its capacity. We may need to double
+            # the capacity multiple times. The log2 below indicates how many
+            # times we would need to double the capacity. We obtain the final
+            # capacity by raising to a power of 2.
+            new_capacity = 2**np.ceil(np.log2(new_size / cur_size))
+            self._store.resize(new_capacity)
 
-        # determine which entries can be newly inserted and resize
-        # the store to accommodate them
-        where_mask = np.zeros(distances.shape, dtype=np.bool_)
-        where_mask[np.repeat(np.arange(batch_size, dtype=np.int32)[:, None],
-                             top_k.shape[1],
-                             axis=1), top_k] = True
-        new_entries = np.sqrt(distances[where_mask]).reshape(
-            batch_size,
-            -1).sum(axis=1) / self._k_neighbors > self._novelty_threshold
-        new_entry_indicies = np.argwhere(new_entries) + curr_occ
-
-        # use the nearest index already in the archive or the closest one which
-        # will be added
-        indices = np.array([
-            tk[np.logical_or(
-                tk < curr_occ,
-                np.array([t in new_entry_indicies for t in tk], dtype=np.bool_),
-            )][0] for tk in top_k
-        ],
-                           dtype=np.int32)
-
-        # a mapping from top-k indices to their location in the archive
-        cell_map = {
-            unq: unq
-            for unq in self._store.occupied_list[indices[indices < curr_occ]]
-        }
-        if np.any(new_entries):
-            unique_indices = np.unique(indices)
-            unique_indices = unique_indices[unique_indices >= curr_occ]
-
-            additions = new_entries.sum()
-            if curr_occ + additions > self._store.capacity:
-                # we have to add more new entries than our archive can hold
-                self._store.resize(curr_occ + additions)
-                self._cells = self._store.capacity
-
-            # assign new entries to unoccupied indices
-            free_indices = list(np.argwhere(~self._store.occupied))
-            for unq in unique_indices:
-                cell_map[unq] = free_indices.pop(0).item()
-        return np.array([cell_map.get(s, s) for s in indices])
+        return indices
 
     def index_of_single(self, measures, resize: bool = False) -> np.ndarray:
         """Returns the index of the measures for one solution.
@@ -243,6 +237,8 @@ class UnstructuredArchive(ArchiveBase):
         check_finite(measures, "measures")
         return self.index_of(measures[None], resize=resize)[0]
 
+    # TODO: Comment on how objectives are not considered.
+    # TODO: Check -1
     def add(self, solution, objective, measures, **fields) -> Union[Any, Dict]:
         """Inserts a batch of solutions into the archive.
 
