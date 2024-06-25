@@ -538,29 +538,6 @@ class ArrayStore:
             self._fields[name] = np.empty(new_shape, cur_arr.dtype)
             self._fields[name][:cur_capacity] = cur_arr
 
-    def roll(self, shift):
-        """Rolls the indices of all properties by `shift`.
-
-        This can be useful for archives such as `GridUnstructuredArchive` when new values
-        appear outside the previous bounds of the archive.
-
-        Args:
-            shift (int): the amount by which to shift the arrays
-        """
-
-        self._props["occupied"] = np.roll(self._props["occupied"],
-                                          shift,
-                                          axis=0)
-
-        # make sure the occupied indices roll with the arrays
-        self._props["occupied_list"] = np.empty(self._props["capacity"],
-                                                dtype=np.int32)
-        self._props["occupied_list"][:self._props["n_occupied"]] = np.nonzero(
-            self._props["occupied"])[0]
-
-        for name in self._fields:
-            self._fields[name] = np.roll(self._fields[name], shift, axis=0)
-
     def as_raw_dict(self):
         """Returns the raw data in the ArrayStore as a one-level dictionary.
 

@@ -13,7 +13,6 @@ also contains several utilities associated with the archives, such as
     :toctree:
 
     ribs.archives.GridArchive
-    ribs.archives.GridUnstructuredArchive
     ribs.archives.CVTArchive
     ribs.archives.SlidingBoundariesArchive
     ribs.archives.UnstructuredArchive
@@ -31,13 +30,12 @@ from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._cvt_archive import CVTArchive
-from ribs.archives._grid_archive import GridArchive, GridUnstructuredArchive
+from ribs.archives._grid_archive import GridArchive
 from ribs.archives._sliding_boundaries_archive import SlidingBoundariesArchive
 from ribs.archives._unstructured_archive import UnstructuredArchive
 
 __all__ = [
     "GridArchive",
-    "GridUnstructuredArchive",
     "CVTArchive",
     "SlidingBoundariesArchive",
     "UnstructuredArchive",
