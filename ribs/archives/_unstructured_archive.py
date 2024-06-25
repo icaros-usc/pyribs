@@ -190,6 +190,7 @@ class UnstructuredArchive(ArchiveBase):
         _, indices = self._cur_kd_tree.query(measures)
         return indices.astype(np.int32)
 
+    # TODO: API for diversity optimization?
     # TODO: Update docstring, comment on how objectives are not considered.
     def add(self, solution, objective, measures, **fields) -> Union[Any, Dict]:
         """Inserts a batch of solutions into the archive.
@@ -313,6 +314,11 @@ class UnstructuredArchive(ArchiveBase):
             kdt = self._cur_kd_tree
 
         if len(reference_measures) == 0:
+            novelty = np.full(
+                len(measures),
+                np.inf,
+                dtype=self.dtypes["measures"],
+            )
             eligible = np.ones(len(measures), dtype=bool)
         else:
             dists, _ = kdt.query(measures, k=k_neighbors)
@@ -336,8 +342,10 @@ class UnstructuredArchive(ArchiveBase):
             # the capacity multiple times. The log2 below indicates how many
             # times we would need to double the capacity. We obtain the final
             # capacity by raising to a power of 2.
-            new_capacity = 2**np.ceil(np.log2(new_size / self.capacity))
-            self._store.resize(new_capacity)
+            multiplier = 2**int(np.ceil(np.log2(new_size / self.capacity)))
+            self._store.resize(multiplier * self.capacity)
+
+        # todo: non-eligible solutions?
 
         add_info = self._store.add(
             np.arange(len(self), new_size),
@@ -370,6 +378,13 @@ class UnstructuredArchive(ArchiveBase):
                 del self.__dict__["upper_bounds"]
             if "lower_bounds" in self.__dict__:
                 del self.__dict__["lower_bounds"]
+
+        # TODO: Clean up.
+        status = np.zeros(len(measures), dtype=np.int32)
+        status[eligible] = add_info["status"]
+        add_info["status"] = status
+
+        add_info["value"] = novelty
 
         return add_info
 
