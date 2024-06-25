@@ -496,5 +496,40 @@ class UnstructuredArchive(ArchiveBase):
 
         return np.min(self._store.data("measures"), axis=0)
 
-    # TODO: cqd_score needs to be fixed since it assumes lower_bounds and
-    # upper_bounds.
+    def cqd_score(self,
+                  iterations,
+                  target_points,
+                  penalties,
+                  obj_min,
+                  obj_max,
+                  dist_max=None,
+                  dist_ord=None):
+        """Computes the CQD score of the archive.
+
+        Refer to the documentation in :meth:`ArchiveBase.cqd_score` for more
+        info. The key difference from the base implementation is that the
+        implementation in ArchiveBase assumes the archive has a pre-defined
+        measure space with lower and upper bounds. However, by nature of being
+        unstructured, this archive has lower and upper bounds that change over
+        time. Thus, it is required to directly pass in ``target_points`` and
+        ``dist_max``.
+
+        Raises:
+            ValueError: dist_max and target_points were not passed in.
+        """
+
+        if dist_max is None or np.isscalar(target_points):
+            raise ValueError(
+                "In UnstructuredArchive, dist_max must be passed "
+                "in, and target_points must be passed in as a custom "
+                "array of points.")
+
+        return super().cqd_score(
+            iterations=iterations,
+            target_points=target_points,
+            penalties=penalties,
+            obj_min=obj_min,
+            obj_max=obj_max,
+            dist_max=dist_max,
+            dist_ord=dist_ord,
+        )
