@@ -365,10 +365,12 @@ def test_basic_stats(data):
     assert data.archive.stats.obj_mean is None
 
     assert data.archive_with_elite.stats.num_elites == 1
-    assert data.archive_with_elite.stats.coverage == 1 / data.cells
-    assert data.archive_with_elite.stats.qd_score == data.objective
-    assert (data.archive_with_elite.stats.norm_qd_score == data.objective /
-            data.cells)
+
+    if data.name not in ["UnstructuredArchive"]:
+        assert data.archive_with_elite.stats.coverage == 1 / data.cells
+        assert data.archive_with_elite.stats.qd_score == data.objective
+        assert (data.archive_with_elite.stats.norm_qd_score == data.objective /
+                data.cells)
     assert data.archive_with_elite.stats.obj_max == data.objective
     assert data.archive_with_elite.stats.obj_mean == data.objective
 
@@ -384,13 +386,19 @@ def test_retrieve_gets_correct_elite(data):
 
 
 def test_retrieve_empty_values(data):
-    occupied, elites = data.archive.retrieve([data.measures])
-    assert not occupied[0]
-    assert np.all(np.isnan(elites["solution"][0]))
-    assert np.isnan(elites["objective"])
-    assert np.all(np.isnan(elites["measures"][0]))
-    assert np.isnan(elites["threshold"])
-    assert elites["index"][0] == -1
+    if data.name == "UnstructuredArchive":
+        # No solutions in the archive, so UnstructuredArchive cannot retrieve
+        # anything.
+        with pytest.raises(RuntimeError):
+            data.archive.retrieve([data.measures])
+    else:
+        occupied, elites = data.archive.retrieve([data.measures])
+        assert not occupied[0]
+        assert np.all(np.isnan(elites["solution"][0]))
+        assert np.isnan(elites["objective"])
+        assert np.all(np.isnan(elites["measures"][0]))
+        assert np.isnan(elites["threshold"])
+        assert elites["index"][0] == -1
 
 
 def test_retrieve_wrong_shape(data):
@@ -409,13 +417,19 @@ def test_retrieve_single_gets_correct_elite(data):
 
 
 def test_retrieve_single_empty_values(data):
-    occupied, elite = data.archive.retrieve_single(data.measures)
-    assert not occupied
-    assert np.all(np.isnan(elite["solution"]))
-    assert np.isnan(elite["objective"])
-    assert np.all(np.isnan(elite["measures"]))
-    assert np.isnan(elite["threshold"])
-    assert elite["index"] == -1
+    if data.name == "UnstructuredArchive":
+        # No solutions in the archive, so UnstructuredArchive cannot retrieve
+        # anything.
+        with pytest.raises(RuntimeError):
+            data.archive.retrieve_single(data.measures)
+    else:
+        occupied, elite = data.archive.retrieve_single(data.measures)
+        assert not occupied
+        assert np.all(np.isnan(elite["solution"]))
+        assert np.isnan(elite["objective"])
+        assert np.all(np.isnan(elite["measures"]))
+        assert np.isnan(elite["threshold"])
+        assert elite["index"] == -1
 
 
 def test_retrieve_single_wrong_shape(data):
@@ -469,10 +483,13 @@ def test_pandas_data(name, with_elite, dtype):
             index = df.loc[0, "index"]
             assert (data.archive_with_elite.centroids[index] == data.centroid
                    ).all()
-        else:
-            # Other archives have expected grid indices.
+        elif name in ["GridArchive", "SlidingBoundariesArchive"]:
+            # These archives have expected grid indices.
             assert df.loc[0, "index"] == data.archive.grid_to_int_index(
                 [data.grid_indices])[0]
+        else:
+            # Archives where indices can't be tested.
+            assert name in ["UnstructuredArchive"]
 
         expected_data = [
             *data.solution, data.objective, *data.measures, data.objective

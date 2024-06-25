@@ -368,6 +368,7 @@ class UnstructuredArchive(ArchiveBase):
         objective_sum = add_info.pop("objective_sum")
         best_index = add_info.pop("best_index")
         if not np.all(add_info["status"] == 0):
+            # TODO: Remove stats that don't exist for this archive.
             self._stats_update(objective_sum, best_index)
 
             self._cur_kd_tree = cKDTree(self._store.data("measures"),
