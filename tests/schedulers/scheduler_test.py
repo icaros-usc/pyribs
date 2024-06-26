@@ -256,8 +256,16 @@ def test_tell_with_fields(add_mode):
     )
 
 
-def test_tell_with_none_objective(scheduler_fixture):
-    scheduler, _, _ = scheduler_fixture
+@pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
+def test_tell_with_none_objective(scheduler_type):
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
+    if scheduler_type == "Scheduler":
+        scheduler = Scheduler(archive, emitters)
+    else:
+        scheduler = BanditScheduler(archive, emitters, 1)
 
     solutions = scheduler.ask()
 
