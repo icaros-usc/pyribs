@@ -1,4 +1,4 @@
-"""Tests for the Scheduler."""
+"""Tests for Scheduler and BanditScheduler."""
 import numpy as np
 import pytest
 
@@ -254,6 +254,29 @@ def test_tell_with_fields(add_mode):
         measures_batch=measures_batch,
         metadata_batch=["a", "b", "c", "d"],
     )
+
+
+@pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
+def test_tell_with_none_objective(scheduler_type):
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
+    if scheduler_type == "Scheduler":
+        scheduler = Scheduler(archive, emitters)
+    else:
+        scheduler = BanditScheduler(archive, emitters, 1)
+
+    solutions = scheduler.ask()
+
+    # TODO: Switch this to a proper test once we have an archive that supports
+    # diversity optimization. Right now, GridArchive throws an error since it
+    # expects an objective.
+    with pytest.raises(
+            ValueError,
+            match="Expected objective to be a 1D array but it had shape ()",
+    ):
+        scheduler.tell(None, [[0, 0]] * len(solutions))
 
 
 ### TESTS FOR OUT-OF-ORDER ASK-TELL ###

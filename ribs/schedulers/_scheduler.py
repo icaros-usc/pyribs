@@ -218,6 +218,11 @@ class Scheduler:
     def _validate_tell_data(self, data):
         """Preprocesses data passed into tell methods."""
         for name, arr in data.items():
+            # Fields are allowed to be None to indicate they are not present,
+            # e.g., `objective` is None in diversity optimization.
+            if arr is None:
+                continue
+
             data[name] = np.asarray(arr)
             self._check_length(name, arr)
 
@@ -284,8 +289,10 @@ class Scheduler:
             objective, measures, and jacobian for ``solution[i]``.
 
         Args:
-            objective ((batch_size,) array): Each entry of this array contains
-                the objective function evaluation of a solution.
+            objective ((batch_size,) array or None): Each entry of this array
+                contains the objective function evaluation of a solution. This
+                can also be None to indicate there is no objective -- this would
+                be the case in diversity optimization problems.
             measures ((batch_size, measure_dim) array): Each row of this array
                 contains a solution's coordinates in measure space.
             jacobian (numpy.ndarray): ``(batch_size, 1 + measure_dim,
@@ -323,7 +330,8 @@ class Scheduler:
             end = pos + n
             emitter.tell_dqd(
                 **{
-                    name: arr[pos:end] for name, arr in data.items()
+                    name: None if arr is None else arr[pos:end]
+                    for name, arr in data.items()
                 },
                 jacobian=jacobian[pos:end],
                 add_info={
@@ -341,8 +349,10 @@ class Scheduler:
             ``solution[i]``.
 
         Args:
-            objective ((batch_size,) array): Each entry of this array contains
-                the objective function evaluation of a solution.
+            objective ((batch_size,) array or None): Each entry of this array
+                contains the objective function evaluation of a solution. This
+                can also be None to indicate there is no objective -- this would
+                be the case in diversity optimization problems.
             measures ((batch_size, measures_dm) array): Each row of this array
                 contains a solution's coordinates in measure space.
             fields (keyword arguments): Additional data for each solution. Each
@@ -371,7 +381,8 @@ class Scheduler:
             end = pos + n
             emitter.tell(
                 **{
-                    name: arr[pos:end] for name, arr in data.items()
+                    name: None if arr is None else arr[pos:end]
+                    for name, arr in data.items()
                 },
                 add_info={
                     name: arr[pos:end] for name, arr in add_info.items()
