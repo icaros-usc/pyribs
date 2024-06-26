@@ -6,6 +6,7 @@
 
 #### API
 
+- Support diversity optimization in Scheduler.tell ({pr}`473`)
 - Allow specifying separate dtypes for solution, objective, and measures
   ({pr}`471`)
 - Replace archive.dtype with archive.dtypes dict that holds dtype of every field
