@@ -127,10 +127,11 @@ class BanditScheduler:
                              f"it was '{add_mode}'")
 
         if archive is result_archive:
-            raise ValueError("`archive` has same id as `result_archive` -- "
-                             "Note that `Scheduler.result_archive` already "
-                             "defaults to be the same as `archive` if you pass "
-                             "`result_archive=None`")
+            raise ValueError(
+                "`archive` has same id as `result_archive` -- "
+                "Note that `BanditScheduler.result_archive` already "
+                "defaults to be the same as `archive` if you pass "
+                "`result_archive=None`")
 
         if (result_archive is not None and
                 set(archive.field_list) != set(result_archive.field_list)):
@@ -292,17 +293,8 @@ class BanditScheduler:
                 "(this is the number of solutions output by ask()) but "
                 f"has length {len(arr)}")
 
-    def _validate_tell_data(self, data):
-        """Preprocesses data passed into tell methods."""
-        for name, arr in data.items():
-            data[name] = np.asarray(arr)
-            self._check_length(name, arr)
-
-        # Convenient to have solutions be part of data, so that everything is
-        # just one dict.
-        data["solution"] = self._cur_solutions
-
-        return data
+    # pylint: disable-next = protected-access
+    _validate_tell_data = Scheduler._validate_tell_data
 
     def tell_dqd(self, objective, measures, jacobian):
         """Returns info for solutions from :meth:`ask_dqd`.
@@ -329,10 +321,12 @@ class BanditScheduler:
             ``solution[i]``.
 
         Args:
-            objective_batch ((batch_size,) array): Each entry of this array
-                contains the objective function evaluation of a solution.
-            measures_batch ((batch_size, measures_dm) array): Each row of
-                this array contains a solution's coordinates in measure space.
+            objective ((batch_size,) array or None): Each entry of this array
+                contains the objective function evaluation of a solution. This
+                can also be None to indicate there is no objective -- this would
+                be the case in diversity optimization problems.
+            measures ((batch_size, measures_dm) array): Each row of this array
+                contains a solution's coordinates in measure space.
             fields (keyword arguments): Additional data for each solution. Each
                 argument should be an array with batch_size as the first
                 dimension.
@@ -399,7 +393,8 @@ class BanditScheduler:
             self._success[i] += np.count_nonzero(add_info["status"][pos:end])
             emitter.tell(
                 **{
-                    name: arr[pos:end] for name, arr in data.items()
+                    name: None if arr is None else arr[pos:end]
+                    for name, arr in data.items()
                 },
                 add_info={
                     name: arr[pos:end] for name, arr in add_info.items()
