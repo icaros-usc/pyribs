@@ -36,14 +36,21 @@ class UnstructuredArchive(ArchiveBase):
         the default of 0 will be used. Alternatively, if it is necessary to
         associate an objective with the solutions, ``objective`` can also be
         passed in just like with other archives. Note that if the objectives
-        are left to their default values of 0, metrics like the QD score and
-        best objective will also be 0.
+        are left to their default values of 0, stats like the QD score and best
+        objective will also be 0.
 
-    .. note:: If this archive has any solutions in it, the coverage statistic
-        (``archive.stats.coverage``) will always be reported as 1.0. This is
-        because the archive is unbounded, so there is no predefined number of
-        cells to fill. We suggest using ``archive.stats.num_elites`` instead for
-        a more meaningful coverage metric.
+    .. note:: The other statistics will also behave slightly differently from
+        other archives:
+
+        - If this archive has any solutions in it, the coverage
+          (``archive.stats.coverage``) will always be reported as 1.0. This is
+          because the archive is unbounded, so there is no predefined number of
+          cells to fill. We suggest using ``archive.stats.num_elites`` instead
+          for a more meaningful coverage metric.
+        - Since the number of cells in the archive is equivalent to the number
+          of elites in the archive, the normalized QD score
+          (``archive.stats.norm_qd_score``) will always equal the mean objective
+          (``archive.stats.obj_mean``).
 
     Args:
         solution_dim (int): Dimension of the solution space.

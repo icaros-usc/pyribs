@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from ribs.archives import GridArchive
+from ribs.archives import GridArchive, UnstructuredArchive
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
@@ -367,19 +367,29 @@ def test_basic_stats(data):
     assert data.archive_with_elite.stats.num_elites == 1
 
     if data.name == "UnstructuredArchive":
-        # The solution is inserted with None objective.
         assert data.archive_with_elite.stats.coverage == 1.0
-        assert data.archive_with_elite.stats.qd_score == 0.0
-        assert data.archive_with_elite.stats.norm_qd_score == 0.0
-        assert data.archive_with_elite.stats.obj_max == 0.0
-        assert data.archive_with_elite.stats.obj_mean == 0.0
+        assert data.archive_with_elite.stats.norm_qd_score == data.objective
     else:
         assert data.archive_with_elite.stats.coverage == 1 / data.cells
-        assert data.archive_with_elite.stats.qd_score == data.objective
         assert (data.archive_with_elite.stats.norm_qd_score == data.objective /
                 data.cells)
-        assert data.archive_with_elite.stats.obj_max == data.objective
-        assert data.archive_with_elite.stats.obj_mean == data.objective
+    assert data.archive_with_elite.stats.qd_score == data.objective
+    assert data.archive_with_elite.stats.obj_max == data.objective
+    assert data.archive_with_elite.stats.obj_mean == data.objective
+
+
+def test_unstructured_stats_after_none_objective():
+    archive = UnstructuredArchive(solution_dim=3,
+                                  measure_dim=2,
+                                  k_neighbors=1,
+                                  novelty_threshold=1.0)
+    archive.add_single([1, 2, 3], None, [0, 0])
+
+    assert archive.stats.coverage == 1.0
+    assert archive.stats.qd_score == 0.0
+    assert archive.stats.norm_qd_score == 0.0
+    assert archive.stats.obj_max == 0.0
+    assert archive.stats.obj_mean == 0.0
 
 
 def test_retrieve_gets_correct_elite(data):
