@@ -367,16 +367,19 @@ def test_basic_stats(data):
     assert data.archive_with_elite.stats.num_elites == 1
 
     if data.name == "UnstructuredArchive":
+        # The solution is inserted with None objective.
         assert data.archive_with_elite.stats.coverage == 1.0
         assert data.archive_with_elite.stats.qd_score == 0.0
         assert data.archive_with_elite.stats.norm_qd_score == 0.0
+        assert data.archive_with_elite.stats.obj_max == 0.0
+        assert data.archive_with_elite.stats.obj_mean == 0.0
     else:
         assert data.archive_with_elite.stats.coverage == 1 / data.cells
         assert data.archive_with_elite.stats.qd_score == data.objective
         assert (data.archive_with_elite.stats.norm_qd_score == data.objective /
                 data.cells)
-    assert data.archive_with_elite.stats.obj_max == data.objective
-    assert data.archive_with_elite.stats.obj_mean == data.objective
+        assert data.archive_with_elite.stats.obj_max == data.objective
+        assert data.archive_with_elite.stats.obj_mean == data.objective
 
 
 def test_retrieve_gets_correct_elite(data):

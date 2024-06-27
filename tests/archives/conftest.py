@@ -146,7 +146,10 @@ def get_archive_data(name, dtype=np.float64):
             initial_capacity=capacity,
             dtype=dtype)
 
-    archive_with_elite.add_single(solution, objective, measures)
+    if name == "UnstructuredArchive":
+        archive_with_elite.add_single(solution, None, measures)
+    else:
+        archive_with_elite.add_single(solution, objective, measures)
 
     # Captures all the local variables and provides them as data. Box works with
     # dot notation, e.g., data.archive == data["archive"]
