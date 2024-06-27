@@ -366,7 +366,11 @@ def test_basic_stats(data):
 
     assert data.archive_with_elite.stats.num_elites == 1
 
-    if data.name not in ["UnstructuredArchive"]:
+    if data.name == "UnstructuredArchive":
+        assert data.archive_with_elite.stats.coverage == 1.0
+        assert data.archive_with_elite.stats.qd_score == 0.0
+        assert data.archive_with_elite.stats.norm_qd_score == 0.0
+    else:
         assert data.archive_with_elite.stats.coverage == 1 / data.cells
         assert data.archive_with_elite.stats.qd_score == data.objective
         assert (data.archive_with_elite.stats.norm_qd_score == data.objective /

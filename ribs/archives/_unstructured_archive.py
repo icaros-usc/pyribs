@@ -1,17 +1,15 @@
 """Contains the UnstructuredArchive class."""
 from functools import cached_property
-from typing import Any, Dict, Union
 
 import numpy as np
 from scipy.spatial import cKDTree
 
-from ribs._utils import (check_batch_shape, check_finite, check_shape,
-                         np_scalar, validate_batch, validate_single)
+from ribs._utils import (check_batch_shape, check_finite, np_scalar,
+                         validate_batch, validate_single)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._transforms import (batch_entries_with_threshold,
                                        compute_best_index,
-                                       compute_objective_sum,
-                                       single_entry_with_threshold)
+                                       compute_objective_sum)
 
 
 class UnstructuredArchive(ArchiveBase):
@@ -30,6 +28,22 @@ class UnstructuredArchive(ArchiveBase):
     Where :math:`x` is the measure value of some solution, and
     :math:`\\mu_{1..k}` are the measure values of the :math:`k`-nearest
     neighbors in measure space.
+
+    .. note:: The original Novelty Search archive did not contain any
+        objectives. However, for consistency with the rest of the pyribs
+        archives, this archive contains objectives that default to a value of 0.
+        When calling :meth:`add`, simply pass in ``None`` for the objective, and
+        the default of 0 will be used. Alternatively, if it is necessary to
+        associate an objective with the solutions, ``objective`` can also be
+        passed in just like with other archives. Note that if the objectives
+        are left to their default values of 0, metrics like the QD score and
+        best objective will also be 0.
+
+    .. note:: If this archive has any solutions in it, the coverage statistic
+        (``archive.stats.coverage``) will always be reported as 1.0. This is
+        because the archive is unbounded, so there is no predefined number of
+        cells to fill. We suggest using ``archive.stats.num_elites`` instead for
+        a more meaningful coverage metric.
 
     Args:
         solution_dim (int): Dimension of the solution space.
@@ -190,26 +204,14 @@ class UnstructuredArchive(ArchiveBase):
         _, indices = self._cur_kd_tree.query(measures)
         return indices.astype(np.int32)
 
-    # TODO: API for diversity optimization?
-    # TODO: Update docstring, comment on how objectives are not considered.
-    def add(self, solution, objective, measures, **fields) -> Union[Any, Dict]:
+    def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
 
-        Each solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  If multiple
-        solutions in the batch end up in the same cell, we only insert the
-        solution with the highest objective. If multiple solutions end up in the
-        same cell and tie for the highest objective, we insert the solution that
-        appears first in the batch.
-
-        For the default values of ``learning_rate`` and ``threshold_min``, the
-        threshold for each cell is updated by taking the maximum objective value
-        among all the solutions that landed in the cell, resulting in the same
-        behavior as in the vanilla MAP-Elites archive. However, for other
-        settings, the threshold is updated with the batch update rule described
-        in the appendix of `Fontaine 2022 <https://arxiv.org/abs/2205.10752>`_.
+        Solutions are inserted if they have a high enough novelty score as
+        discussed in the documentation for this class. The novelty is determined
+        by comparing to solutions currently in the archive. If this archive was
+        initialized with ``compare_to_batch=True``, then solutions in the batch
+        are also included in the novelty computation.
 
         .. note:: The indices of all arguments should "correspond" to each
             other, i.e. ``solution[i]``, ``objective[i]``,
@@ -219,8 +221,13 @@ class UnstructuredArchive(ArchiveBase):
         Args:
             solution (array-like): (batch_size, :attr:`solution_dim`) array of
                 solution parameters.
-            objective (array-like): (batch_size,) array with objective function
-                evaluations of the solutions.
+            objective (None or array-like): Since this archive is intended for
+                diversity optimization, ``objective`` is actually not necessary,
+                and a value of None can be passed in, which will cause the
+                objective values to default to 0. However, if the user wishes to
+                associate an objective with each solution, this can be a
+                (batch_size,) array with objective function evaluations of the
+                solutions.
             measures (array-like): (batch_size, :attr:`measure_dim`) array with
                 measure space coordinates of all the solutions.
             fields (keyword arguments): Additional data for each solution. Each
@@ -237,47 +244,20 @@ class UnstructuredArchive(ArchiveBase):
               possible values:
 
               - ``0``: The solution was not added to the archive.
-              - ``1``: The solution improved the objective value of a cell
-                which was already in the archive.
               - ``2``: The solution discovered a new cell in the archive.
 
-              All statuses (and values, below) are computed with respect to the
-              *current* archive. For example, if two solutions both introduce
-              the same new archive cell, then both will be marked with ``2``.
-
-              The alternative is to depend on the order of the solutions in the
-              batch -- for example, if we have two solutions ``a`` and ``b``
-              which introduce the same new cell in the archive, ``a`` could be
-              inserted first with status ``2``, and ``b`` could be inserted
-              second with status ``1`` because it improves upon ``a``. However,
-              our implementation does **not** do this.
+              Unlike in :class:`~ribs.archives.GridArchive`, there is no status
+              of 1 since solutions in this archive are never replaced.
 
               To convert statuses to a more semantic format, cast all statuses
               to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
               add_info["status"]]``.
 
-            - ``"value"`` (:class:`numpy.ndarray` of :attr:`dtype`): An array
-              with values for each solution in the batch. With the default
-              values of ``learning_rate = 1.0`` and ``threshold_min = -np.inf``,
-              the meaning of each value depends on the corresponding ``status``
-              and is identical to that in CMA-ME (`Fontaine 2020
-              <https://arxiv.org/abs/1912.02400>`_):
-
-              - ``0`` (not added): The value is the "negative improvement," i.e.
-                the objective of the solution passed in minus the objective of
-                the elite still in the archive (this value is negative because
-                the solution did not have a high enough objective to be added to
-                the archive).
-              - ``1`` (improve existing cell): The value is the "improvement,"
-                i.e. the objective of the solution passed in minus the objective
-                of the elite previously in the archive.
-              - ``2`` (new cell): The value is just the objective of the
-                solution.
-
-              In contrast, for other values of ``learning_rate`` and
-              ``threshold_min``, each value is equivalent to the objective value
-              of the solution minus the threshold of its corresponding cell in
-              the archive.
+            - ``"novelty"`` (:class:`numpy.ndarray` of :attr:`dtypes`
+              ["measures"]): The computed novelty of the solutions passed in. If
+              there were no solutions to compute novelty with respect to (e.g.,
+              the archive was empty), the novelty is set to infinity
+              (``numpy.inf``).
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
@@ -287,49 +267,48 @@ class UnstructuredArchive(ArchiveBase):
         data = validate_batch(
             self,
             {
-                "solution": solution,
-                "objective": objective,
-                "measures": measures,
+                "solution":
+                    solution,
+                "objective":
+                    np.zeros(len(solution), dtype=self.dtypes["objective"])
+                    if objective is None else objective,
+                "measures":
+                    measures,
                 **fields,
             },
         )
 
         reference_measures = self.data("measures")
         if self._compare_to_batch:
-            reference_measures = np.concatenate((reference_measures, measures),
-                                                axis=0)
+            reference_measures = np.concatenate(
+                (reference_measures, data["measures"]), axis=0)
 
         if self.compare_to_batch:
-            # We need 1 more neighbor since the first neighbor will be the
-            # solution itself.
+            # In this case, solutions from the batch will be included in the
+            # nearest neighbors. Thus, the first neighbor of each solution will
+            # be the solution itself, so we need to compute an extra neighbor
+            # and exclude the first neighbor.
             k_neighbors = min(len(reference_measures), self.k_neighbors + 1)
             first_neighbor_idx = 1
+            kd_tree = cKDTree(reference_measures, **self._ckdtree_kwargs)
         else:
             k_neighbors = min(len(reference_measures), self.k_neighbors)
             first_neighbor_idx = 0
-
-        if self.compare_to_batch:
-            kdt = cKDTree(reference_measures, **self._ckdtree_kwargs)
-        else:
-            kdt = self._cur_kd_tree
+            kd_tree = self._cur_kd_tree
 
         if len(reference_measures) == 0:
-            novelty = np.full(
-                len(measures),
-                np.inf,
-                dtype=self.dtypes["measures"],
-            )
-            eligible = np.ones(len(measures), dtype=bool)
+            # If there are no references for computing nearest neighbors, there
+            # is infinite novelty and all solutions are added.
+            novelty = np.full(len(data["measures"]),
+                              np.inf,
+                              dtype=self.dtypes["measures"])
+            eligible = np.ones(len(data["measures"]), dtype=bool)
         else:
-            dists, _ = kdt.query(measures, k=k_neighbors)
+            # Compute nearest neighbors.
+            dists, _ = kd_tree.query(data["measures"], k=k_neighbors)
 
-            # Since query() automatically squeezes the last dim.
-            if k_neighbors == 1:
-                dists = dists[:, None]
-
-            # If compare_to_batch, then the first nearest neighbor will be the
-            # solution itself.
-            first_neighbor_idx = 1 if self._compare_to_batch else 0
+            # Expand since query() automatically squeezes the last dim when k=1.
+            dists = dists[:, None] if k_neighbors == 1 else dists
 
             novelty = np.mean(dists[:, first_neighbor_idx:], axis=1)
             eligible = novelty >= self.novelty_threshold
@@ -341,12 +320,13 @@ class UnstructuredArchive(ArchiveBase):
             # Resize the store by doubling its capacity. We may need to double
             # the capacity multiple times. The log2 below indicates how many
             # times we would need to double the capacity. We obtain the final
-            # capacity by raising to a power of 2.
+            # multiplier by raising to a power of 2.
             multiplier = 2**int(np.ceil(np.log2(new_size / self.capacity)))
             self._store.resize(multiplier * self.capacity)
 
-        # todo: non-eligible solutions?
-
+        # Above, we identified solutions that were eligible for addition. Now,
+        # we apply the same addition as in ArchiveBase with only the eligible
+        # solutions.
         add_info = self._store.add(
             np.arange(len(self), new_size),
             {
@@ -355,6 +335,9 @@ class UnstructuredArchive(ArchiveBase):
             {
                 "dtype": self.dtypes["threshold"],
                 "learning_rate": self._learning_rate,
+                # Note that threshold_min is -np.inf and objectives either
+                # default to 0 or are passed in by the user, so all solutions
+                # specified here will be added.
                 "threshold_min": self._threshold_min,
                 "objective_sum": self._objective_sum,
             },
@@ -367,10 +350,22 @@ class UnstructuredArchive(ArchiveBase):
 
         objective_sum = add_info.pop("objective_sum")
         best_index = add_info.pop("best_index")
+
+        # The add_info only contains results for the eligible solutions. Here we
+        # create an add_info that contains results for all solutions.
+        all_status = np.zeros(len(data["measures"]), dtype=np.int32)
+        all_status[eligible] = add_info["status"]
+        add_info["status"] = all_status
+
+        # We do not consider objective/threshold in this archive.
+        del add_info["value"]
+
+        add_info["novelty"] = novelty
+
         if not np.all(add_info["status"] == 0):
-            # TODO: Remove stats that don't exist for this archive.
             self._stats_update(objective_sum, best_index)
 
+            # Make a new tree with the updated solutions.
             self._cur_kd_tree = cKDTree(self._store.data("measures"),
                                         **self._ckdtree_kwargs)
 
@@ -380,41 +375,22 @@ class UnstructuredArchive(ArchiveBase):
             if "lower_bounds" in self.__dict__:
                 del self.__dict__["lower_bounds"]
 
-        # TODO: Clean up.
-        status = np.zeros(len(measures), dtype=np.int32)
-        status[eligible] = add_info["status"]
-        add_info["status"] = status
-
-        add_info["value"] = novelty
-
         return add_info
 
-    def add_single(self, solution, objective, measures,
-                   **fields) -> Union[Any, Dict]:
+    def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.
-
-        The solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  The threshold is
-        also updated if the solution was inserted.
-
-        .. note::
-            To make it more amenable to modifications, this method's
-            implementation is designed to be readable at the cost of
-            performance, e.g., none of its operations are modified. If you need
-            performance, we recommend using :meth:`add`.
 
         Args:
             solution (array-like): Parameters of the solution.
-            objective (float): Objective function evaluation of the solution.
+            objective (None or float): Set to None to get the default value of
+                0; otherwise, a valid objective value is also acceptable.
             measures (array-like): Coordinates in measure space of the solution.
             fields (keyword arguments): Additional data for the solution.
 
         Returns:
             dict: Information describing the result of the add operation. The
-            dict contains ``status`` and ``value`` keys; refer to :meth:`add`
-            for the meaning of status and value.
+            dict contains ``status`` and ``novelty`` keys; refer to :meth:`add`
+            for the meaning of status and novelty.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
@@ -425,43 +401,13 @@ class UnstructuredArchive(ArchiveBase):
             self,
             {
                 "solution": solution,
-                "objective": objective,
+                "objective": 0.0 if objective is None else objective,
                 "measures": measures,
                 **fields,
             },
         )
 
         return self.add(**{key: [val] for key, val in data.items()})
-
-        #  for name, arr in data.items():
-        #      data[name] = np.expand_dims(arr, axis=0)
-
-        #  add_info = self._store.add(
-        #      np.expand_dims(self.index_of_single(measures, resize=True), axis=0),
-        #      data,
-        #      {
-        #          "dtype": self.dtypes["threshold"],
-        #          "learning_rate": self._learning_rate,
-        #          "threshold_min": self._threshold_min,
-        #          "objective_sum": self._objective_sum,
-        #      },
-        #      [
-        #          single_entry_with_threshold,
-        #          compute_objective_sum,
-        #          compute_best_index,
-        #      ],
-        #  )
-
-        #  objective_sum = add_info.pop("objective_sum")
-        #  best_index = add_info.pop("best_index")
-
-        #  for name, arr in add_info.items():
-        #      add_info[name] = arr[0]
-
-        #  if add_info["status"]:
-        #      self._stats_update(objective_sum, best_index)
-
-        #  return add_info
 
     @cached_property
     def upper_bounds(self) -> np.ndarray:

@@ -98,7 +98,7 @@ def test_properties_are_correct(data):
 def test_bounds(data):
     data.archive.add(
         solution=[[1, 2, 3]] * 2,
-        objective=[0, 0],
+        objective=None,
         measures=[[0, 0], [2, 2]],
     )
 
@@ -108,7 +108,7 @@ def test_bounds(data):
 
     data.archive.add(
         solution=[[1, 2, 3]] * 2,
-        objective=[0] * 2,
+        objective=None,
         measures=[[-2, -2], [4, 4]],
     )
 
@@ -127,7 +127,7 @@ def test_resizing_with_add_one_at_a_time():
     )
 
     for i in range(1, 129):
-        archive.add_single([1, 2, 3], 1.0, [0, i])
+        archive.add_single([1, 2, 3], None, [0, i])
 
         if i in [2, 4, 8, 16, 32, 64, 128]:
             assert archive.capacity == i
@@ -144,7 +144,7 @@ def test_resizing_with_add_multiple():
 
     archive.add(
         [[1, 2, 3]] * 5,
-        np.ones(5),
+        None,
         np.stack((np.arange(5), np.arange(5)), axis=1),  # [0, 0], [1, 1], ...
     )
 
@@ -153,7 +153,7 @@ def test_resizing_with_add_multiple():
 
     archive.add(
         [[1, 2, 3]] * 27,
-        np.ones(27),
+        None,
         np.stack((np.arange(5, 32), np.arange(5, 32)), axis=1),
     )
 
@@ -164,7 +164,6 @@ def test_resizing_with_add_multiple():
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
 def test_add_single(data, use_list, add_mode):
     solution = data.solution
-    objective = data.objective
     measures = data.measures
 
     if use_list:
@@ -172,14 +171,14 @@ def test_add_single(data, use_list, add_mode):
         measures = list(data.measures)
 
     if add_mode == "single":
-        add_info = data.archive.add_single(solution, objective, measures)
+        add_info = data.archive.add_single(solution, None, measures)
     else:
-        add_info = data.archive.add([solution], [objective], [measures])
+        add_info = data.archive.add([solution], None, [measures])
 
-    assert_archive_elite(data.archive, data.solution, data.objective,
-                         data.measures)
+    # Objective should default to 0.0.
+    assert_archive_elite(data.archive, data.solution, 0.0, data.measures)
     assert add_info["status"] == AddStatus.NEW
-    assert add_info["value"] == np.inf
+    assert add_info["novelty"] == np.inf
 
 
 def test_add_single_after_clear(data):
@@ -188,19 +187,17 @@ def test_add_single_after_clear(data):
 
     https://github.com/icaros-usc/pyribs/pull/260
     """
-    add_info = data.archive.add_single(data.solution, data.objective,
-                                       data.measures)
+    add_info = data.archive.add_single(data.solution, None, data.measures)
 
     assert add_info["status"] == 2
-    assert add_info["value"] == np.inf
+    assert add_info["novelty"] == np.inf
 
     data.archive.clear()
 
-    add_info = data.archive.add_single(data.solution, data.objective,
-                                       data.measures)
+    add_info = data.archive.add_single(data.solution, None, data.measures)
 
     assert add_info["status"] == 2
-    assert add_info["value"] == np.inf
+    assert add_info["novelty"] == np.inf
 
 
 def test_add_novel_solution():
@@ -214,13 +211,13 @@ def test_add_novel_solution():
 
     archive.add_single([1, 2, 3], 1.0, [0, 0])
 
-    # Should be added since threshold is 1.0.
-    add_info = archive.add_single([1, 2, 3], 1.0, [1, 0])
+    # Should be added since novelty threshold is 1.0.
+    add_info = archive.add_single([1, 2, 3], None, [1, 0])
 
     assert_archive_elites(archive, 2, measures_batch=[[0, 0], [1, 0]])
 
     assert add_info["status"] == 2
-    assert add_info["value"] == 1.0
+    assert add_info["novelty"] == 1.0
 
 
 def test_add_non_novel_solution():
@@ -232,15 +229,15 @@ def test_add_non_novel_solution():
         initial_capacity=1,
     )
 
-    archive.add_single([1, 2, 3], 1.0, [0, 0])
+    archive.add_single([1, 2, 3], None, [0, 0])
 
     # Should not be added since threshold is 1.0.
-    add_info = archive.add_single([1, 2, 3], 1.0, [0.5, 0])
+    add_info = archive.add_single([1, 2, 3], None, [0.5, 0])
 
     assert_archive_elites(archive, 1, measures_batch=[[0, 0]])
 
     assert add_info["status"] == 0
-    assert_allclose(add_info["value"], 0.5)
+    assert_allclose(add_info["novelty"], 0.5)
 
 
 @pytest.mark.parametrize("point", [[0.1, 0], [0.5, 0], [0.9, 0], [-0.1, 0.1]])
@@ -253,17 +250,17 @@ def test_add_with_multiple_neighbors(point):
         initial_capacity=1,
     )
 
-    archive.add_single([1, 2, 3], 1.0, [0, 0])
-    archive.add_single([1, 2, 3], 1.0, [2, 0])
+    archive.add_single([1, 2, 3], None, [0, 0])
+    archive.add_single([1, 2, 3], None, [2, 0])
 
     # Should be added since threshold is 1.0 and the point is in between [0, 0]
     # and [2, 0], so its average distance is always at least 1.0.
-    add_info = archive.add_single([1, 2, 3], 1.0, point)
+    add_info = archive.add_single([1, 2, 3], None, point)
 
     assert_archive_elites(archive, 3, measures_batch=[[0, 0], [2, 0], point])
     assert add_info["status"] == 2
     assert_allclose(
-        add_info["value"],
+        add_info["novelty"],
         np.mean(np.linalg.norm(np.array(point)[None] - [[0, 0], [2, 0]],
                                axis=1)),
     )
@@ -273,13 +270,13 @@ def test_add_single_wrong_shapes(data):
     with pytest.raises(ValueError):
         data.archive.add_single(
             solution=[1, 1],  # 2D instead of 3D solution.
-            objective=0,
+            objective=None,
             measures=[0, 0],
         )
     with pytest.raises(ValueError):
         data.archive.add_single(
             solution=[0, 0, 0],
-            objective=0,
+            objective=None,
             measures=[1, 1, 1],  # 3D instead of 2D measures.
         )
 
@@ -294,11 +291,11 @@ def test_add_batch_all_new():
     )
 
     # Initial points.
-    archive.add([[1, 2, 3]] * 2, [1.0] * 2, [[0, 0], [1, 0]])
+    archive.add([[1, 2, 3]] * 2, None, [[0, 0], [1, 0]])
 
     add_info = archive.add(
         solution=[[1, 2, 3]] * 3,
-        objective=[1.0] * 3,
+        objective=None,
         measures=[[-1, 0], [0, 1], [2, 0]],
     )
 
@@ -310,7 +307,7 @@ def test_add_batch_all_new():
     )
 
     assert (add_info["status"] == 2).all()
-    assert_allclose(add_info["value"], [
+    assert_allclose(add_info["novelty"], [
         np.mean([1, 2]),
         np.mean([1, np.sqrt(2)]),
         np.mean([2, 1]),
@@ -327,11 +324,11 @@ def test_add_batch_none_inserted():
     )
 
     # Initial points.
-    archive.add([[1, 2, 3]] * 2, [1.0] * 2, [[0, 0], [1, 0]])
+    archive.add([[1, 2, 3]] * 2, None, [[0, 0], [1, 0]])
 
     add_info = archive.add(
         solution=[[1, 2, 3]] * 2,
-        objective=[1.0] * 2,
+        objective=None,
         measures=[[0.4, 0], [0, 0.1]],
     )
 
@@ -343,7 +340,7 @@ def test_add_batch_none_inserted():
     )
 
     assert (add_info["status"] == 0).all()
-    assert_allclose(add_info["value"], [
+    assert_allclose(add_info["novelty"], [
         np.mean([0.4, 0.6]),
         np.mean([0.1, np.sqrt(0.1**2 + 1)]),
     ])
@@ -359,11 +356,11 @@ def test_add_batch_mixed_statuses():
     )
 
     # Initial points.
-    archive.add([[1, 2, 3]] * 2, [1.0] * 2, [[0, 0], [1, 0]])
+    archive.add([[1, 2, 3]] * 2, None, [[0, 0], [1, 0]])
 
     add_info = archive.add(
         solution=[[1, 2, 3]] * 5,
-        objective=[1.0] * 5,
+        objective=None,
         measures=[[-1, 0], [0.4, 0], [0, 1], [0, 0.1], [2, 0]],
     )
 
@@ -375,7 +372,7 @@ def test_add_batch_mixed_statuses():
     )
 
     assert (add_info["status"] == [2, 0, 2, 0, 2]).all()
-    assert_allclose(add_info["value"], [
+    assert_allclose(add_info["novelty"], [
         np.mean([1, 2]),
         np.mean([0.4, 0.6]),
         np.mean([1, np.sqrt(2)]),
@@ -388,7 +385,7 @@ def test_add_batch_wrong_shapes(data):
     with pytest.raises(ValueError):
         data.archive.add(
             solution=[[1, 1]],  # 2D instead of 3D solution.
-            objective=[0],
+            objective=None,
             measures=[[0, 0]],
         )
     with pytest.raises(ValueError):
@@ -400,7 +397,7 @@ def test_add_batch_wrong_shapes(data):
     with pytest.raises(ValueError):
         data.archive.add(
             solution=[[0, 0, 0]],
-            objective=[0],
+            objective=None,
             measures=[[1, 1, 1]],  # 3D instead of 2D measures.
         )
 
@@ -409,12 +406,12 @@ def test_add_batch_zero_length(data):
     """Nothing should happen when adding a batch with length 0."""
     add_info = data.archive.add(
         solution=np.ones((0, 3)),
-        objective=np.ones((0,)),
+        objective=None,
         measures=np.ones((0, 2)),
     )
 
     assert len(add_info["status"]) == 0
-    assert len(add_info["value"]) == 0
+    assert len(add_info["novelty"]) == 0
     assert len(data.archive) == 0
 
 
@@ -428,7 +425,7 @@ def test_add_batch_wrong_batch_size(data):
     with pytest.raises(ValueError):
         data.archive.add(
             solution=[[0, 0, 0]],
-            objective=[0, 0, 0],
+            objective=None,
             measures=[[1, 1, 1], [1, 1, 1]],  # 2 measures.
         )
 
@@ -444,13 +441,13 @@ def test_add_compare_to_batch():
     )
 
     # Interesting case where neither point is unique enough.
-    add_info = archive.add([[1, 2, 3]] * 2, [1.0] * 2, [[0, 0], [0.5, 0]])
+    add_info = archive.add([[1, 2, 3]] * 2, None, [[0, 0], [0.5, 0]])
 
     assert (add_info["status"] == [0, 0]).all()
-    assert_allclose(add_info["value"], [0.5, 0.5])
+    assert_allclose(add_info["novelty"], [0.5, 0.5])
 
     # First real addition -- both are added.
-    add_info = archive.add([[1, 2, 3]] * 2, [1.0] * 2, [[0, 0], [1, 0]])
+    add_info = archive.add([[1, 2, 3]] * 2, None, [[0, 0], [1, 0]])
 
     assert_archive_elites(
         archive=archive,
@@ -459,11 +456,11 @@ def test_add_compare_to_batch():
         measures_batch=[[0, 0], [1, 0]],
     )
     assert (add_info["status"] == [2, 2]).all()
-    assert_allclose(add_info["value"], [1.0, 1.0])
+    assert_allclose(add_info["novelty"], [1.0, 1.0])
 
     add_info = archive.add(
         solution=[[1, 2, 3]] * 2,
-        objective=[1.0] * 2,
+        objective=None,
         measures=[
             [0.5, 0],  # Won't be added.
             [0.5, 1],  # Should be added.
@@ -477,7 +474,7 @@ def test_add_compare_to_batch():
         measures_batch=[[0, 0], [1, 0], [0.5, 1]],
     )
     assert (add_info["status"] == [0, 2]).all()
-    assert_allclose(add_info["value"], [
+    assert_allclose(add_info["novelty"], [
         np.mean([0.5, 0.5, 1.0]),
         np.mean([np.linalg.norm([0.5, 1]),
                  np.linalg.norm([0.5, 1]), 1]),
@@ -497,7 +494,7 @@ def test_retrieve():
     # Add four measures in a square.
     archive.add(
         solution=[[]] * 4,
-        objective=[0, 0, 0, 0],
+        objective=None,
         measures=[[0, 0], [1, 0], [1, 1], [0, 1]],
     )
 
