@@ -1,4 +1,4 @@
-"""Contains the UnstructuredArchive class."""
+"""Contains the NearestNeighborArchive."""
 from functools import cached_property
 
 import numpy as np
@@ -12,7 +12,7 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
                                        compute_objective_sum)
 
 
-class UnstructuredArchive(ArchiveBase):
+class NearestNeighborArchive(ArchiveBase):
     """An archive that adds new solutions based on their novelty.
 
     This archive originates in Novelty Search and is described in `Lehman 2011
@@ -204,9 +204,9 @@ class UnstructuredArchive(ArchiveBase):
         if self.empty:
             raise RuntimeError(
                 "There were no solutions in the archive. "
-                "`UnstructuredArchive.index_of` computes the nearest neighbor "
-                "to the input measures, so there must be at least one solution "
-                "present in the archive.")
+                "`NearestNeighborArchive.index_of` computes the nearest "
+                "neighbor to the input measures, so there must be at least one "
+                "solution present in the archive.")
 
         _, indices = self._cur_kd_tree.query(measures)
         return indices.astype(np.int32)
@@ -474,7 +474,7 @@ class UnstructuredArchive(ArchiveBase):
 
         if dist_max is None or np.isscalar(target_points):
             raise ValueError(
-                "In UnstructuredArchive, dist_max must be passed "
+                "In NearestNeighborArchive, dist_max must be passed "
                 "in, and target_points must be passed in as a custom "
                 "array of points.")
 

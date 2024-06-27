@@ -3,8 +3,8 @@ import numpy as np
 import pytest
 from box import Box
 
-from ribs.archives import (CVTArchive, GridArchive, SlidingBoundariesArchive,
-                           UnstructuredArchive)
+from ribs.archives import (CVTArchive, GridArchive, NearestNeighborArchive,
+                           SlidingBoundariesArchive)
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ ARCHIVE_NAMES = [
     "CVTArchive-brute_force",
     "CVTArchive-kd_tree",
     "SlidingBoundariesArchive",
-    "UnstructuredArchive",
+    "NearestNeighborArchive",
 ]
 
 
@@ -126,19 +126,19 @@ def get_archive_data(name, dtype=np.float64):
             dtype=dtype)
         grid_indices = (6, 11)
         int_index = 131
-    elif name == "UnstructuredArchive":
+    elif name == "NearestNeighborArchive":
         cells = 0
         capacity = 1
         k_neighbors = 5
         novelty_threshold = 1.0
-        archive = UnstructuredArchive(solution_dim=len(solution),
-                                      measure_dim=2,
-                                      k_neighbors=k_neighbors,
-                                      novelty_threshold=novelty_threshold,
-                                      initial_capacity=capacity,
-                                      dtype=dtype)
+        archive = NearestNeighborArchive(solution_dim=len(solution),
+                                         measure_dim=2,
+                                         k_neighbors=k_neighbors,
+                                         novelty_threshold=novelty_threshold,
+                                         initial_capacity=capacity,
+                                         dtype=dtype)
 
-        archive_with_elite = UnstructuredArchive(
+        archive_with_elite = NearestNeighborArchive(
             solution_dim=len(solution),
             measure_dim=2,
             k_neighbors=k_neighbors,

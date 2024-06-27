@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from ribs.archives import GridArchive, UnstructuredArchive
+from ribs.archives import GridArchive, NearestNeighborArchive
 from ribs.emitters import GaussianEmitter
 from ribs.schedulers import BanditScheduler, Scheduler
 
@@ -258,10 +258,10 @@ def test_tell_with_fields(add_mode):
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_tell_with_none_objective(scheduler_type, add_mode):
-    archive = UnstructuredArchive(solution_dim=2,
-                                  measure_dim=2,
-                                  k_neighbors=1,
-                                  novelty_threshold=1.0)
+    archive = NearestNeighborArchive(solution_dim=2,
+                                     measure_dim=2,
+                                     k_neighbors=1,
+                                     novelty_threshold=1.0)
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters, add_mode=add_mode)
