@@ -132,7 +132,6 @@ class ArchiveBase(ABC):
 
         self._seed = seed
         self._rng = np.random.default_rng(seed)
-        self._cells = cells
         self._solution_dim = solution_dim
         self._measure_dim = measure_dim
 
@@ -152,7 +151,7 @@ class ArchiveBase(ABC):
                 "threshold": ((), dtype["objective"]),
                 **extra_fields,
             },
-            capacity=self._cells,
+            capacity=cells,
         )
 
         if threshold_min != -np.inf and learning_rate is None:
@@ -188,7 +187,7 @@ class ArchiveBase(ABC):
     @property
     def cells(self):
         """int: Total number of cells in the archive."""
-        return self._cells
+        return self._store.capacity
 
     @property
     def measure_dim(self):
@@ -442,12 +441,12 @@ class ArchiveBase(ABC):
               to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
               add_info["status"]]``.
 
-            - ``"value"`` (:class:`numpy.ndarray` of :attr:`dtype`): An array
-              with values for each solution in the batch. With the default
-              values of ``learning_rate = 1.0`` and ``threshold_min = -np.inf``,
-              the meaning of each value depends on the corresponding ``status``
-              and is identical to that in CMA-ME (`Fontaine 2020
-              <https://arxiv.org/abs/1912.02400>`_):
+            - ``"value"`` (:class:`numpy.ndarray` of
+              :attr:`dtypes` ["objective"]): An array with values for each
+              solution in the batch. With the default values of ``learning_rate
+              = 1.0`` and ``threshold_min = -np.inf``, the meaning of each value
+              depends on the corresponding ``status`` and is identical to that
+              in CMA-ME (`Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_):
 
               - ``0`` (not added): The value is the "negative improvement," i.e.
                 the objective of the solution passed in minus the objective of
