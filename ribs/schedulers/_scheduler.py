@@ -259,7 +259,10 @@ class Scheduler:
             add_info = defaultdict(list)
 
             for i in range(len(self._cur_solutions)):
-                single_data = {name: arr[i] for name, arr in data.items()}
+                single_data = {
+                    name: None if arr is None else arr[i]
+                    for name, arr in data.items()
+                }
                 single_info = self.archive.add_single(**single_data)
                 for name, val in single_info.items():
                     add_info[name].append(val)
