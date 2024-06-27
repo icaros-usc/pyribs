@@ -85,7 +85,11 @@ def check_solution_batch_dim(array,
                          f"shape {array.shape}.{extra_msg}")
 
 
-def validate_batch(archive, data, add_info=None, jacobian=None):
+def validate_batch(archive,
+                   data,
+                   add_info=None,
+                   jacobian=None,
+                   none_objective_ok=False):
     """Preprocesses and validates batch arguments.
 
     ``data`` is a dict containing arrays with the data of each solution, e.g.,
@@ -110,8 +114,11 @@ def validate_batch(archive, data, add_info=None, jacobian=None):
             continue
 
         if name == "objective":
-            # `objective` allowed to be None for diversity optimization.
-            if arr is not None:
+            if arr is None:
+                # `objective` allowed to be None for diversity optimization.
+                if not none_objective_ok:
+                    raise ValueError("objective cannot be None")
+            else:
                 arr = np.asarray(arr)
                 check_is_1d(arr, "objective", "")
                 check_solution_batch_dim(arr,
@@ -193,13 +200,16 @@ def validate_batch(archive, data, add_info=None, jacobian=None):
         return data
 
 
-def validate_single(archive, data):
+def validate_single(archive, data, none_objective_ok=False):
     """Performs preprocessing and checks for arguments to add_single()."""
     data["solution"] = np.asarray(data["solution"])
     check_shape(data["solution"], "solution", archive.solution_dim,
                 "solution_dim")
 
-    if data["objective"] is not None:
+    if data["objective"] is None:
+        if not none_objective_ok:
+            raise ValueError("objective cannot be None")
+    else:
         data["objective"] = np_scalar(data["objective"],
                                       archive.dtypes["objective"])
         check_finite(data["objective"], "objective")
