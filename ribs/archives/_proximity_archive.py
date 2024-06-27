@@ -60,13 +60,6 @@ class ProximityArchive(ArchiveBase):
             are fewer than ``k_neighbors`` solutions in the archive).
         novelty_threshold (float): The level of novelty required to add a
             solution to the archive.
-        compare_to_batch (bool): When solutions are inserted into the archive,
-            the default behavior is to compute their novelty with respect to the
-            solutions currently in the archive. If this argument is True, the
-            novelty will be computed with respect to both the archive and the
-            incoming solutions in the batch. In other words, solutions will need
-            to be novel with respect to both the archive and the incoming
-            solutions.
         initial_capacity (int): Since this archive is unstructured, it does not
             have a fixed size, and it will grow as solutions are added. In the
             implementation, we store solutions in fixed-size arrays, and every
@@ -110,7 +103,6 @@ class ProximityArchive(ArchiveBase):
                  measure_dim,
                  k_neighbors,
                  novelty_threshold,
-                 compare_to_batch=False,
                  initial_capacity=128,
                  qd_score_offset=0.0,
                  seed=None,
@@ -134,7 +126,6 @@ class ProximityArchive(ArchiveBase):
         self._k_neighbors = int(k_neighbors)
         self._novelty_threshold = np_scalar(novelty_threshold,
                                             dtype=self.dtypes["measures"])
-        self._compare_to_batch = bool(compare_to_batch)
         self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
                                 ckdtree_kwargs.copy())
 
@@ -153,12 +144,6 @@ class ProximityArchive(ArchiveBase):
         """dtypes["measures"]: The degree of novelty required add a solution to
         the archive."""
         return self._novelty_threshold
-
-    @property
-    def compare_to_batch(self):
-        """bool: Whether novelty is computed with respect to other solutions in
-        the batch when adding solutions."""
-        return self._compare_to_batch
 
     @property
     def cells(self):
@@ -216,9 +201,7 @@ class ProximityArchive(ArchiveBase):
 
         Solutions are inserted if they have a high enough novelty score as
         discussed in the documentation for this class. The novelty is determined
-        by comparing to solutions currently in the archive. If this archive was
-        initialized with ``compare_to_batch=True``, then solutions in the batch
-        are also included in the novelty computation.
+        by comparing to solutions currently in the archive.
 
         .. note:: The indices of all arguments should "correspond" to each
             other, i.e. ``solution[i]``, ``objective[i]``,
@@ -286,22 +269,8 @@ class ProximityArchive(ArchiveBase):
         )
 
         reference_measures = self.data("measures")
-        if self._compare_to_batch:
-            reference_measures = np.concatenate(
-                (reference_measures, data["measures"]), axis=0)
-
-        if self.compare_to_batch:
-            # In this case, solutions from the batch will be included in the
-            # nearest neighbors. Thus, the first neighbor of each solution will
-            # be the solution itself, so we need to compute an extra neighbor
-            # and exclude the first neighbor.
-            k_neighbors = min(len(reference_measures), self.k_neighbors + 1)
-            first_neighbor_idx = 1
-            kd_tree = cKDTree(reference_measures, **self._ckdtree_kwargs)
-        else:
-            k_neighbors = min(len(reference_measures), self.k_neighbors)
-            first_neighbor_idx = 0
-            kd_tree = self._cur_kd_tree
+        k_neighbors = min(len(reference_measures), self.k_neighbors)
+        kd_tree = self._cur_kd_tree
 
         if len(reference_measures) == 0:
             # If there are no references for computing nearest neighbors, there
@@ -317,7 +286,7 @@ class ProximityArchive(ArchiveBase):
             # Expand since query() automatically squeezes the last dim when k=1.
             dists = dists[:, None] if k_neighbors == 1 else dists
 
-            novelty = np.mean(dists[:, first_neighbor_idx:], axis=1)
+            novelty = np.mean(dists, axis=1)
             eligible = novelty >= self.novelty_threshold
 
         n_eligible = np.sum(eligible)

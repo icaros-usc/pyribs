@@ -73,7 +73,6 @@ def test_properties_are_correct(data):
     assert data.archive.capacity == data.capacity
     assert len(data.archive) == 0
     assert data.archive.cells == 0
-    assert not data.archive.compare_to_batch
     assert data.archive.empty
     assert data.archive.k_neighbors == data.k_neighbors
     assert data.archive.novelty_threshold == data.novelty_threshold
@@ -87,7 +86,6 @@ def test_properties_are_correct(data):
     assert data.archive_with_elite.capacity == data.capacity
     assert len(data.archive_with_elite) == 1
     assert data.archive_with_elite.cells == 1
-    assert not data.archive_with_elite.compare_to_batch
     assert not data.archive_with_elite.empty
     assert data.archive_with_elite.k_neighbors == data.k_neighbors
     assert data.archive_with_elite.novelty_threshold == data.novelty_threshold
@@ -428,57 +426,6 @@ def test_add_batch_wrong_batch_size(data):
             objective=None,
             measures=[[1, 1, 1], [1, 1, 1]],  # 2 measures.
         )
-
-
-def test_add_compare_to_batch():
-    archive = ProximityArchive(
-        solution_dim=3,
-        measure_dim=2,
-        k_neighbors=3,
-        novelty_threshold=1.0,
-        initial_capacity=1,
-        compare_to_batch=True,
-    )
-
-    # Interesting case where neither point is unique enough.
-    add_info = archive.add([[1, 2, 3]] * 2, None, [[0, 0], [0.5, 0]])
-
-    assert (add_info["status"] == [0, 0]).all()
-    assert_allclose(add_info["novelty"], [0.5, 0.5])
-
-    # First real addition -- both are added.
-    add_info = archive.add([[1, 2, 3]] * 2, None, [[0, 0], [1, 0]])
-
-    assert_archive_elites(
-        archive=archive,
-        batch_size=2,
-        solution_batch=[[1, 2, 3]] * 2,
-        measures_batch=[[0, 0], [1, 0]],
-    )
-    assert (add_info["status"] == [2, 2]).all()
-    assert_allclose(add_info["novelty"], [1.0, 1.0])
-
-    add_info = archive.add(
-        solution=[[1, 2, 3]] * 2,
-        objective=None,
-        measures=[
-            [0.5, 0],  # Won't be added.
-            [0.5, 1],  # Should be added.
-        ],
-    )
-
-    assert_archive_elites(
-        archive=archive,
-        batch_size=3,
-        solution_batch=[[1, 2, 3]] * 3,
-        measures_batch=[[0, 0], [1, 0], [0.5, 1]],
-    )
-    assert (add_info["status"] == [0, 2]).all()
-    assert_allclose(add_info["novelty"], [
-        np.mean([0.5, 0.5, 1.0]),
-        np.mean([np.linalg.norm([0.5, 1]),
-                 np.linalg.norm([0.5, 1]), 1]),
-    ])
 
 
 def test_retrieve():
