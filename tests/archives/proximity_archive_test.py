@@ -93,6 +93,17 @@ def test_properties_are_correct(data):
     assert_allclose(data.archive_with_elite.upper_bounds, data.measures)
 
 
+def test_initial_capacity_less_than_1():
+    with pytest.raises(ValueError):
+        ProximityArchive(
+            solution_dim=3,
+            measure_dim=2,
+            k_neighbors=1,
+            novelty_threshold=1.0,
+            initial_capacity=0,
+        )
+
+
 def test_bounds(data):
     data.archive.add(
         solution=[[1, 2, 3]] * 2,

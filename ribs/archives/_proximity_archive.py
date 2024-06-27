@@ -95,6 +95,8 @@ class ProximityArchive(ArchiveBase):
             :class:`~scipy.spatial.cKDTree`. This parameter will pass additional
             kwargs when constructing the tree. By default, we do not pass in any
             kwargs.
+    Raises:
+        ValueError: ``initial_capacity`` must be at least 1.
     """
 
     def __init__(self,
@@ -109,6 +111,9 @@ class ProximityArchive(ArchiveBase):
                  dtype=np.float64,
                  extra_fields=None,
                  ckdtree_kwargs=None):
+
+        if initial_capacity < 1:
+            raise ValueError("initial_capacity must be at least 1.")
 
         ArchiveBase.__init__(
             self,
