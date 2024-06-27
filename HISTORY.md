@@ -15,6 +15,7 @@
 
 #### Improvements
 
+- Remove `_cells` attribute from ArchiveBase ({pr}`474`)
 - Upgrade setup-miniconda to v3 due to deprecation ({pr}`464`)
 
 ## 0.7.1
