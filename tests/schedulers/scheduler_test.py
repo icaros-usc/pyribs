@@ -261,7 +261,7 @@ def test_tell_with_none_objective(scheduler_type, add_mode):
     archive = ProximityArchive(solution_dim=2,
                                measure_dim=2,
                                k_neighbors=1,
-                               novelty_threshold=1.0)
+                               proximity_threshold=1.0)
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters, add_mode=add_mode)

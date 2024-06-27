@@ -13,7 +13,7 @@ from ribs.archives._transforms import (batch_entries_with_threshold,
 
 
 class ProximityArchive(ArchiveBase):
-    """An archive that adds new solutions based on their novelty.
+    """An archive that adds new solutions based on proximity to other solutions.
 
     This archive originates in Novelty Search and is described in `Lehman 2011
     <http://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf>`_. Solutions are added to
@@ -58,7 +58,7 @@ class ProximityArchive(ArchiveBase):
         k_neighbors (int): The maximum number of nearest neighbors to use for
             computing novelty (`maximum` here is indicated for cases when there
             are fewer than ``k_neighbors`` solutions in the archive).
-        novelty_threshold (float): The level of novelty required to add a
+        proximity_threshold (float): The level of novelty required to add a
             solution to the archive.
         initial_capacity (int): Since this archive is unstructured, it does not
             have a fixed size, and it will grow as solutions are added. In the
@@ -104,7 +104,7 @@ class ProximityArchive(ArchiveBase):
                  solution_dim,
                  measure_dim,
                  k_neighbors,
-                 novelty_threshold,
+                 proximity_threshold,
                  initial_capacity=128,
                  qd_score_offset=0.0,
                  seed=None,
@@ -129,8 +129,8 @@ class ProximityArchive(ArchiveBase):
         )
 
         self._k_neighbors = int(k_neighbors)
-        self._novelty_threshold = np_scalar(novelty_threshold,
-                                            dtype=self.dtypes["measures"])
+        self._proximity_threshold = np_scalar(proximity_threshold,
+                                              dtype=self.dtypes["measures"])
         self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
                                 ckdtree_kwargs.copy())
 
@@ -145,10 +145,10 @@ class ProximityArchive(ArchiveBase):
         return self._k_neighbors
 
     @property
-    def novelty_threshold(self):
+    def proximity_threshold(self):
         """dtypes["measures"]: The degree of novelty required add a solution to
         the archive."""
-        return self._novelty_threshold
+        return self._proximity_threshold
 
     @property
     def cells(self):
@@ -292,7 +292,7 @@ class ProximityArchive(ArchiveBase):
             dists = dists[:, None] if k_neighbors == 1 else dists
 
             novelty = np.mean(dists, axis=1)
-            eligible = novelty >= self.novelty_threshold
+            eligible = novelty >= self.proximity_threshold
 
         n_eligible = np.sum(eligible)
         new_size = len(self) + n_eligible

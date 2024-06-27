@@ -382,7 +382,7 @@ def test_unstructured_stats_after_none_objective():
     archive = ProximityArchive(solution_dim=3,
                                measure_dim=2,
                                k_neighbors=1,
-                               novelty_threshold=1.0)
+                               proximity_threshold=1.0)
     archive.add_single([1, 2, 3], None, [0, 0])
 
     assert archive.stats.coverage == 1.0
