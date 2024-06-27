@@ -29,21 +29,19 @@ class ProximityArchive(ArchiveBase):
     :math:`\\mu_{1..k}` are the measure values of the :math:`k`-nearest
     neighbors in measure space.
 
-    .. note:: The original Novelty Search archive did not contain any
-        objectives. However, for consistency with the rest of the pyribs
-        archives, this archive contains objectives that default to a value of 0.
-        When calling :meth:`add`, simply pass in ``None`` for the objective, and
-        the default of 0 will be used. Alternatively, if it is necessary to
-        associate an objective with the solutions, ``objective`` can also be
-        passed in just like with other archives. Note that if the objectives
-        are left to their default values of 0, stats like the QD score and best
-        objective will also be 0.
+    .. note:: When used for diversity optimization, this archive does not
+        require any objectives, and ``objective=None`` can be passed into
+        :meth:`add`. For consistency with the rest of pyribs, ``objective=None``
+        will result in a default objective value of 0, which will also cause
+        stats like QD score and best objective to be 0. Alternatively, it is
+        possible to associate objectives with the solutions by passing
+        ``objective`` to :meth:`add` just like in other archives.
 
     .. note:: The other statistics will also behave slightly differently from
         other archives:
 
         - If this archive has any solutions in it, the coverage
-          (``archive.stats.coverage``) will always be reported as 1.0. This is
+          (``archive.stats.coverage``) will always be reported as 1. This is
           because the archive is unbounded, so there is no predefined number of
           cells to fill. We suggest using ``archive.stats.num_elites`` instead
           for a more meaningful coverage metric.
@@ -54,7 +52,7 @@ class ProximityArchive(ArchiveBase):
 
     Args:
         solution_dim (int): Dimension of the solution space.
-        measure_dim (int): The dimension of the measure space.
+        measure_dim (int): Dimension of the measure space.
         k_neighbors (int): The maximum number of nearest neighbors to use for
             computing novelty (`maximum` here is indicated for cases when there
             are fewer than ``k_neighbors`` solutions in the archive).
@@ -146,8 +144,8 @@ class ProximityArchive(ArchiveBase):
 
     @property
     def proximity_threshold(self):
-        """dtypes["measures"]: The degree of novelty required add a solution to
-        the archive."""
+        """dtypes["measures"]: The degree of novelty required to add a solution
+        to the archive."""
         return self._proximity_threshold
 
     @property
@@ -169,8 +167,8 @@ class ProximityArchive(ArchiveBase):
 
         Unlike the structured archives like :class:`~ribs.archives.GridArchive`,
         this archive does not have indexed cells where each measure "belongs."
-        Thus, this method instead returns the index of the closest measure to
-        each solution passed in.
+        Thus, this method instead returns the index of the solution with the
+        closest measure to each solution passed in.
 
         This means that :meth:`retrieve` will return the solution with the
         closest measure to each measure passed into that method.
@@ -216,9 +214,7 @@ class ProximityArchive(ArchiveBase):
         Args:
             solution (array-like): (batch_size, :attr:`solution_dim`) array of
                 solution parameters.
-            objective (None or array-like): Since this archive is intended for
-                diversity optimization, ``objective`` is actually not necessary,
-                and a value of None can be passed in, which will cause the
+            objective (None or array-like): A value of None will cause the
                 objective values to default to 0. However, if the user wishes to
                 associate an objective with each solution, this can be a
                 (batch_size,) array with objective function evaluations of the
@@ -240,9 +236,6 @@ class ProximityArchive(ArchiveBase):
 
               - ``0``: The solution was not added to the archive.
               - ``2``: The solution discovered a new cell in the archive.
-
-              Unlike in :class:`~ribs.archives.GridArchive`, there is no status
-              of 1 since solutions in this archive are never replaced.
 
               To convert statuses to a more semantic format, cast all statuses
               to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
@@ -273,12 +266,8 @@ class ProximityArchive(ArchiveBase):
             },
         )
 
-        reference_measures = self.data("measures")
-        k_neighbors = min(len(reference_measures), self.k_neighbors)
-        kd_tree = self._cur_kd_tree
-
-        if len(reference_measures) == 0:
-            # If there are no references for computing nearest neighbors, there
+        if self.empty:
+            # If there are no neighbors for computing nearest neighbors, there
             # is infinite novelty and all solutions are added.
             novelty = np.full(len(data["measures"]),
                               np.inf,
@@ -286,7 +275,8 @@ class ProximityArchive(ArchiveBase):
             eligible = np.ones(len(data["measures"]), dtype=bool)
         else:
             # Compute nearest neighbors.
-            dists, _ = kd_tree.query(data["measures"], k=k_neighbors)
+            k_neighbors = min(len(self), self.k_neighbors)
+            dists, _ = self._cur_kd_tree.query(data["measures"], k=k_neighbors)
 
             # Expand since query() automatically squeezes the last dim when k=1.
             dists = dists[:, None] if k_neighbors == 1 else dists
