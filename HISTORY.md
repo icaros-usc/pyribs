@@ -6,7 +6,7 @@
 
 #### API
 
-- Add NearestNeighborArchive for novelty search ({pr}`472`)
+- Add ProximityArchive for novelty search ({pr}`472`)
 - Support diversity optimization in Scheduler.tell ({pr}`473`)
 - Allow specifying separate dtypes for solution, objective, and measures
   ({pr}`471`)

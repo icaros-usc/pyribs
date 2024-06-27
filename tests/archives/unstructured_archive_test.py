@@ -1,9 +1,9 @@
-"""Tests for the NearestNeighborArchive."""
+"""Tests for the ProximityArchive."""
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from ribs.archives import AddStatus, NearestNeighborArchive
+from ribs.archives import AddStatus, ProximityArchive
 from tests.archives.conftest import get_archive_data
 
 # pylint: disable = redefined-outer-name
@@ -12,7 +12,7 @@ from tests.archives.conftest import get_archive_data
 @pytest.fixture
 def data():
     """Data for grid archive tests."""
-    return get_archive_data("NearestNeighborArchive")
+    return get_archive_data("ProximityArchive")
 
 
 def assert_archive_elite(archive, solution, objective, measures):
@@ -118,7 +118,7 @@ def test_bounds(data):
 
 
 def test_resizing_with_add_one_at_a_time():
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=3,
         measure_dim=2,
         k_neighbors=5,
@@ -134,7 +134,7 @@ def test_resizing_with_add_one_at_a_time():
 
 
 def test_resizing_with_add_multiple():
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=3,
         measure_dim=2,
         k_neighbors=5,
@@ -201,7 +201,7 @@ def test_add_single_after_clear(data):
 
 
 def test_add_novel_solution():
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=3,
         measure_dim=2,
         k_neighbors=1,
@@ -221,7 +221,7 @@ def test_add_novel_solution():
 
 
 def test_add_non_novel_solution():
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=3,
         measure_dim=2,
         k_neighbors=1,
@@ -242,7 +242,7 @@ def test_add_non_novel_solution():
 
 @pytest.mark.parametrize("point", [[0.1, 0], [0.5, 0], [0.9, 0], [-0.1, 0.1]])
 def test_add_with_multiple_neighbors(point):
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=3,
         measure_dim=2,
         k_neighbors=2,
@@ -282,7 +282,7 @@ def test_add_single_wrong_shapes(data):
 
 
 def test_add_batch_all_new():
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=3,
         measure_dim=2,
         k_neighbors=2,
@@ -315,7 +315,7 @@ def test_add_batch_all_new():
 
 
 def test_add_batch_none_inserted():
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=3,
         measure_dim=2,
         k_neighbors=2,
@@ -347,7 +347,7 @@ def test_add_batch_none_inserted():
 
 
 def test_add_batch_mixed_statuses():
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=3,
         measure_dim=2,
         k_neighbors=2,
@@ -431,7 +431,7 @@ def test_add_batch_wrong_batch_size(data):
 
 
 def test_add_compare_to_batch():
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=3,
         measure_dim=2,
         k_neighbors=3,
@@ -484,7 +484,7 @@ def test_add_compare_to_batch():
 def test_retrieve():
     """Indirectly tests that index_of is retrieving the nearest solutions in
     measure space."""
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=0,
         measure_dim=2,
         k_neighbors=5,
@@ -529,7 +529,7 @@ def test_nonfinite_inputs(data):
 
 
 def test_cqd_score_with_max_dist():
-    archive = NearestNeighborArchive(
+    archive = ProximityArchive(
         solution_dim=2,
         measure_dim=2,
         k_neighbors=5,

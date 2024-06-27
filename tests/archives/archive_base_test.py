@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from ribs.archives import GridArchive, NearestNeighborArchive
+from ribs.archives import GridArchive, ProximityArchive
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
@@ -366,7 +366,7 @@ def test_basic_stats(data):
 
     assert data.archive_with_elite.stats.num_elites == 1
 
-    if data.name == "NearestNeighborArchive":
+    if data.name == "ProximityArchive":
         assert data.archive_with_elite.stats.coverage == 1.0
         assert data.archive_with_elite.stats.norm_qd_score == data.objective
     else:
@@ -379,10 +379,10 @@ def test_basic_stats(data):
 
 
 def test_unstructured_stats_after_none_objective():
-    archive = NearestNeighborArchive(solution_dim=3,
-                                     measure_dim=2,
-                                     k_neighbors=1,
-                                     novelty_threshold=1.0)
+    archive = ProximityArchive(solution_dim=3,
+                               measure_dim=2,
+                               k_neighbors=1,
+                               novelty_threshold=1.0)
     archive.add_single([1, 2, 3], None, [0, 0])
 
     assert archive.stats.coverage == 1.0
@@ -403,8 +403,8 @@ def test_retrieve_gets_correct_elite(data):
 
 
 def test_retrieve_empty_values(data):
-    if data.name == "NearestNeighborArchive":
-        # No solutions in the archive, so NearestNeighborArchive cannot retrieve
+    if data.name == "ProximityArchive":
+        # No solutions in the archive, so ProximityArchive cannot retrieve
         # anything.
         with pytest.raises(RuntimeError):
             data.archive.retrieve([data.measures])
@@ -434,8 +434,8 @@ def test_retrieve_single_gets_correct_elite(data):
 
 
 def test_retrieve_single_empty_values(data):
-    if data.name == "NearestNeighborArchive":
-        # No solutions in the archive, so NearestNeighborArchive cannot retrieve
+    if data.name == "ProximityArchive":
+        # No solutions in the archive, so ProximityArchive cannot retrieve
         # anything.
         with pytest.raises(RuntimeError):
             data.archive.retrieve_single(data.measures)
@@ -506,7 +506,7 @@ def test_pandas_data(name, with_elite, dtype):
                 [data.grid_indices])[0]
         else:
             # Archives where indices can't be tested.
-            assert name in ["NearestNeighborArchive"]
+            assert name in ["ProximityArchive"]
 
         expected_data = [
             *data.solution, data.objective, *data.measures, data.objective

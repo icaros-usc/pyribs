@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from box import Box
 
-from ribs.archives import (CVTArchive, GridArchive, NearestNeighborArchive,
+from ribs.archives import (CVTArchive, GridArchive, ProximityArchive,
                            SlidingBoundariesArchive)
 
 
@@ -46,7 +46,7 @@ ARCHIVE_NAMES = [
     "CVTArchive-brute_force",
     "CVTArchive-kd_tree",
     "SlidingBoundariesArchive",
-    "NearestNeighborArchive",
+    "ProximityArchive",
 ]
 
 
@@ -126,19 +126,19 @@ def get_archive_data(name, dtype=np.float64):
             dtype=dtype)
         grid_indices = (6, 11)
         int_index = 131
-    elif name == "NearestNeighborArchive":
+    elif name == "ProximityArchive":
         cells = 0
         capacity = 1
         k_neighbors = 5
         novelty_threshold = 1.0
-        archive = NearestNeighborArchive(solution_dim=len(solution),
-                                         measure_dim=2,
-                                         k_neighbors=k_neighbors,
-                                         novelty_threshold=novelty_threshold,
-                                         initial_capacity=capacity,
-                                         dtype=dtype)
+        archive = ProximityArchive(solution_dim=len(solution),
+                                   measure_dim=2,
+                                   k_neighbors=k_neighbors,
+                                   novelty_threshold=novelty_threshold,
+                                   initial_capacity=capacity,
+                                   dtype=dtype)
 
-        archive_with_elite = NearestNeighborArchive(
+        archive_with_elite = ProximityArchive(
             solution_dim=len(solution),
             measure_dim=2,
             k_neighbors=k_neighbors,
