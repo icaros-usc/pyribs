@@ -199,38 +199,38 @@ class CVTArchive(ArchiveBase):
                         size=(samples, self._measure_dim),
                     ).astype(self.dtypes["measures"])
 
-                self._centroids = k_means(self._samples, self._cells,
+                self._centroids = k_means(self._samples, self.cells,
                                           **self._k_means_kwargs)[0]
 
-                if self._centroids.shape[0] < self._cells:
+                if self._centroids.shape[0] < self.cells:
                     raise RuntimeError(
                         "While generating the CVT, k-means clustering found "
                         f"{self._centroids.shape[0]} centroids, but this "
-                        f"archive needs {self._cells} cells. This most "
+                        f"archive needs {self.cells} cells. This most "
                         "likely happened because there are too few samples "
                         "and/or too many cells.")
             elif centroid_method == "random":
                 # Generates random centroids.
                 self._centroids = self._rng.uniform(self._lower_bounds,
                                                     self._upper_bounds,
-                                                    size=(self._cells,
+                                                    size=(self.cells,
                                                           self._measure_dim))
             elif centroid_method == "sobol":
                 # Generates centroids as a Sobol sequence.
                 sampler = Sobol(d=self._measure_dim, scramble=False)
-                sobol_nums = sampler.random(n=self._cells)
+                sobol_nums = sampler.random(n=self.cells)
                 self._centroids = (self._lower_bounds + sobol_nums *
                                    (self._upper_bounds - self._lower_bounds))
             elif centroid_method == "scrambled_sobol":
                 # Generates centroids as a scrambled Sobol sequence.
                 sampler = Sobol(d=self._measure_dim, scramble=True)
-                sobol_nums = sampler.random(n=self._cells)
+                sobol_nums = sampler.random(n=self.cells)
                 self._centroids = (self._lower_bounds + sobol_nums *
                                    (self._upper_bounds - self._lower_bounds))
             elif centroid_method == "halton":
                 # Generates centroids with a Halton sequence.
                 sampler = Halton(d=self._measure_dim)
-                halton_nums = sampler.random(n=self._cells)
+                halton_nums = sampler.random(n=self.cells)
                 self._centroids = (self._lower_bounds + halton_nums *
                                    (self._upper_bounds - self._lower_bounds))
         else:
