@@ -1,10 +1,10 @@
 """Useful utilities for all archive tests."""
-from collections import namedtuple
-
 import numpy as np
 import pytest
+from box import Box
 
-from ribs.archives import CVTArchive, GridArchive, SlidingBoundariesArchive
+from ribs.archives import (CVTArchive, GridArchive, ProximityArchive,
+                           SlidingBoundariesArchive)
 
 
 @pytest.fixture
@@ -41,31 +41,17 @@ def add_mode(request):
 # Helpers for generating archive data.
 #
 
-ArchiveFixtureData = namedtuple(
-    "ArchiveFixtureData",
-    [
-        "archive",  # An empty archive with 2D measure space.
-        "archive_with_elite",  # 2D measure space with one elite.
-        "solution",  # A solution.
-        "objective",  # Float objective value.
-        "measures",  # 2D measures for the solution.
-        "grid_indices",  # Index for GridArchive and SlidingBoundariesArchive.
-        "int_index",  # Integer index corresponding to grid_indices.
-        "centroid",  # Centroid coordinates for CVTArchive.
-        "cells",  # Total number of cells in the archive.
-    ],
-)
-
 ARCHIVE_NAMES = [
     "GridArchive",
     "CVTArchive-brute_force",
     "CVTArchive-kd_tree",
     "SlidingBoundariesArchive",
+    "ProximityArchive",
 ]
 
 
 def get_archive_data(name, dtype=np.float64):
-    """Returns ArchiveFixtureData to use for testing each archive.
+    """Returns data to use for testing each archive.
 
     The archives vary, but there will always be an empty 2D archive, as well as
     a 2D archive with a single solution added to it. This solution will have a
@@ -75,13 +61,13 @@ def get_archive_data(name, dtype=np.float64):
     The name is the name of an archive to create. It should come from
     ARCHIVE_NAMES.
     """
+    # All local variables are captured at the end.
+    # pylint: disable = possibly-unused-variable
+
     # Characteristics of a single solution to insert into archive_with_elite.
     solution = np.array([1., 2., 3.])
     objective = 1.0
     measures = np.array([0.25, 0.25])
-    grid_indices = None
-    int_index = None
-    centroid = None
 
     if name == "GridArchive":
         # Grid archive with 10 cells and range (-1, 1) in first dim, and 20
@@ -140,17 +126,28 @@ def get_archive_data(name, dtype=np.float64):
             dtype=dtype)
         grid_indices = (6, 11)
         int_index = 131
+    elif name == "ProximityArchive":
+        cells = 0
+        capacity = 1
+        k_neighbors = 5
+        novelty_threshold = 1.0
+        archive = ProximityArchive(solution_dim=len(solution),
+                                   measure_dim=2,
+                                   k_neighbors=k_neighbors,
+                                   novelty_threshold=novelty_threshold,
+                                   initial_capacity=capacity,
+                                   dtype=dtype)
+
+        archive_with_elite = ProximityArchive(
+            solution_dim=len(solution),
+            measure_dim=2,
+            k_neighbors=k_neighbors,
+            novelty_threshold=novelty_threshold,
+            initial_capacity=capacity,
+            dtype=dtype)
 
     archive_with_elite.add_single(solution, objective, measures)
 
-    return ArchiveFixtureData(
-        archive,
-        archive_with_elite,
-        solution,
-        objective,
-        measures,
-        grid_indices,
-        int_index,
-        centroid,
-        cells,
-    )
+    # Captures all the local variables and provides them as data. Box works with
+    # dot notation, e.g., data.archive == data["archive"]
+    return Box(locals())

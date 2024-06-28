@@ -46,6 +46,7 @@ extras_require = {
         "pre-commit",
 
         # Testing
+        "python-box[all]~=7.0",
         "pytest==7.0.1",
         "pytest-cov==3.0.0",
         "pytest-benchmark==3.4.1",

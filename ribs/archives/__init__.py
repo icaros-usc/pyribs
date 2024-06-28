@@ -14,6 +14,7 @@ also contains several utilities associated with the archives, such as
 
     ribs.archives.GridArchive
     ribs.archives.CVTArchive
+    ribs.archives.ProximityArchive
     ribs.archives.SlidingBoundariesArchive
     ribs.archives.ArchiveBase
     ribs.archives.ArrayStore
@@ -30,11 +31,13 @@ from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._grid_archive import GridArchive
+from ribs.archives._proximity_archive import ProximityArchive
 from ribs.archives._sliding_boundaries_archive import SlidingBoundariesArchive
 
 __all__ = [
     "GridArchive",
     "CVTArchive",
+    "ProximityArchive",
     "SlidingBoundariesArchive",
     "ArchiveBase",
     "ArrayStore",
