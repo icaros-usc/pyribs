@@ -75,7 +75,7 @@ def test_properties_are_correct(data):
     assert data.archive.cells == 0
     assert data.archive.empty
     assert data.archive.k_neighbors == data.k_neighbors
-    assert data.archive.proximity_threshold == data.proximity_threshold
+    assert data.archive.novelty_threshold == data.novelty_threshold
     # Undefined when there are no solutions.
     with pytest.raises(RuntimeError):
         data.archive.lower_bounds  # pylint: disable = pointless-statement
@@ -88,8 +88,7 @@ def test_properties_are_correct(data):
     assert data.archive_with_elite.cells == 1
     assert not data.archive_with_elite.empty
     assert data.archive_with_elite.k_neighbors == data.k_neighbors
-    assert (
-        data.archive_with_elite.proximity_threshold == data.proximity_threshold)
+    assert data.archive_with_elite.novelty_threshold == data.novelty_threshold
     assert_allclose(data.archive_with_elite.lower_bounds, data.measures)
     assert_allclose(data.archive_with_elite.upper_bounds, data.measures)
 
@@ -100,7 +99,7 @@ def test_initial_capacity_less_than_1():
             solution_dim=3,
             measure_dim=2,
             k_neighbors=1,
-            proximity_threshold=1.0,
+            novelty_threshold=1.0,
             initial_capacity=0,
         )
 
@@ -132,7 +131,7 @@ def test_resizing_with_add_one_at_a_time():
         solution_dim=3,
         measure_dim=2,
         k_neighbors=5,
-        proximity_threshold=1.0,
+        novelty_threshold=1.0,
         initial_capacity=1,
     )
 
@@ -148,7 +147,7 @@ def test_resizing_with_add_multiple():
         solution_dim=3,
         measure_dim=2,
         k_neighbors=5,
-        proximity_threshold=1.0,
+        novelty_threshold=1.0,
         initial_capacity=2,
     )
 
@@ -215,7 +214,7 @@ def test_add_novel_solution():
         solution_dim=3,
         measure_dim=2,
         k_neighbors=1,
-        proximity_threshold=1.0,
+        novelty_threshold=1.0,
         initial_capacity=1,
     )
 
@@ -235,7 +234,7 @@ def test_add_non_novel_solution():
         solution_dim=3,
         measure_dim=2,
         k_neighbors=1,
-        proximity_threshold=1.0,
+        novelty_threshold=1.0,
         initial_capacity=1,
     )
 
@@ -256,7 +255,7 @@ def test_add_with_multiple_neighbors(point):
         solution_dim=3,
         measure_dim=2,
         k_neighbors=2,
-        proximity_threshold=1.0,
+        novelty_threshold=1.0,
         initial_capacity=1,
     )
 
@@ -296,7 +295,7 @@ def test_add_batch_all_new():
         solution_dim=3,
         measure_dim=2,
         k_neighbors=2,
-        proximity_threshold=1.0,
+        novelty_threshold=1.0,
         initial_capacity=1,
     )
 
@@ -329,7 +328,7 @@ def test_add_batch_none_inserted():
         solution_dim=3,
         measure_dim=2,
         k_neighbors=2,
-        proximity_threshold=1.0,
+        novelty_threshold=1.0,
         initial_capacity=1,
     )
 
@@ -361,7 +360,7 @@ def test_add_batch_mixed_statuses():
         solution_dim=3,
         measure_dim=2,
         k_neighbors=2,
-        proximity_threshold=1.0,
+        novelty_threshold=1.0,
         initial_capacity=1,
     )
 
@@ -447,7 +446,7 @@ def test_retrieve():
         solution_dim=0,
         measure_dim=2,
         k_neighbors=5,
-        proximity_threshold=1.0,
+        novelty_threshold=1.0,
     )
 
     # Add four measures in a square.
@@ -492,7 +491,7 @@ def test_cqd_score_with_max_dist():
         solution_dim=2,
         measure_dim=2,
         k_neighbors=5,
-        proximity_threshold=1.0,
+        novelty_threshold=1.0,
     )
     archive.add_single([4.0, 4.0], 0.5, [0.0, 1.0])
 

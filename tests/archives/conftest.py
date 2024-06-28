@@ -130,11 +130,11 @@ def get_archive_data(name, dtype=np.float64):
         cells = 0
         capacity = 1
         k_neighbors = 5
-        proximity_threshold = 1.0
+        novelty_threshold = 1.0
         archive = ProximityArchive(solution_dim=len(solution),
                                    measure_dim=2,
                                    k_neighbors=k_neighbors,
-                                   proximity_threshold=proximity_threshold,
+                                   novelty_threshold=novelty_threshold,
                                    initial_capacity=capacity,
                                    dtype=dtype)
 
@@ -142,7 +142,7 @@ def get_archive_data(name, dtype=np.float64):
             solution_dim=len(solution),
             measure_dim=2,
             k_neighbors=k_neighbors,
-            proximity_threshold=proximity_threshold,
+            novelty_threshold=novelty_threshold,
             initial_capacity=capacity,
             dtype=dtype)
 
