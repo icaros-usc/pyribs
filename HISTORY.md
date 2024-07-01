@@ -15,6 +15,10 @@
 - Replace archive.dtype with archive.dtypes dict that holds dtype of every field
   ({pr}`470`)
 
+#### Documentation
+
+- Add novelty search with CMA-ES to sphere example ({pr}`478`)
+
 #### Improvements
 
 - Remove `_cells` attribute from ArchiveBase ({pr}`475`)
