@@ -6,8 +6,8 @@
 
 #### API
 
-- Add NoveltyRanker for novelty search ({pr}`476`)
-- Add proximity_archive_plot for visualizing ProximityArchive ({pr}`475`)
+- Add NoveltyRanker for novelty search ({pr}`477`)
+- Add proximity_archive_plot for visualizing ProximityArchive ({pr}`476`)
 - Add ProximityArchive for novelty search ({pr}`472`)
 - Support diversity optimization in Scheduler.tell ({pr}`473`)
 - Allow specifying separate dtypes for solution, objective, and measures
@@ -17,7 +17,7 @@
 
 #### Improvements
 
-- Remove `_cells` attribute from ArchiveBase ({pr}`474`)
+- Remove `_cells` attribute from ArchiveBase ({pr}`475`)
 - Upgrade setup-miniconda to v3 due to deprecation ({pr}`464`)
 
 ## 0.7.1
