@@ -6,6 +6,7 @@
 
 #### API
 
+- Add NoveltyRanker for novelty search ({pr}`476`)
 - Add proximity_archive_plot for visualizing ProximityArchive ({pr}`475`)
 - Add ProximityArchive for novelty search ({pr}`472`)
 - Support diversity optimization in Scheduler.tell ({pr}`473`)
