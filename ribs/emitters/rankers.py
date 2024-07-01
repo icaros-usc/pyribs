@@ -339,6 +339,25 @@ added solutions.
     """
 
 
+class NoveltyRanker(RankerBase):
+    """Ranks solutions based on novelty scores.
+
+    This ranker can only be used with archives that return the ``novelty`` field
+    from their ``add`` method, such as
+    :meth:`ribs.archives.ProximityArchive.add`.
+    """
+
+    def rank(self, emitter, archive, data, add_info):
+        # Sort only by objective value.
+        return np.flip(np.argsort(add_info["novelty"])), add_info["novelty"]
+
+    rank.__doc__ = f"""
+Ranks solutions based on novelty scores.
+
+{_RANK_ARGS}
+    """
+
+
 _NAME_TO_RANKER_MAP = {
     "ImprovementRanker": ImprovementRanker,
     "TwoStageImprovementRanker": TwoStageImprovementRanker,
@@ -346,12 +365,14 @@ _NAME_TO_RANKER_MAP = {
     "TwoStageRandomDirectionRanker": TwoStageRandomDirectionRanker,
     "ObjectiveRanker": ObjectiveRanker,
     "TwoStageObjectiveRanker": TwoStageObjectiveRanker,
+    "NoveltyRanker": NoveltyRanker,
     "imp": ImprovementRanker,
     "2imp": TwoStageImprovementRanker,
     "rd": RandomDirectionRanker,
     "2rd": TwoStageRandomDirectionRanker,
     "obj": ObjectiveRanker,
-    "2obj": TwoStageObjectiveRanker
+    "2obj": TwoStageObjectiveRanker,
+    "nov": NoveltyRanker,
 }
 
 
