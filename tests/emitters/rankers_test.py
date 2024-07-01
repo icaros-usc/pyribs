@@ -1,9 +1,11 @@
 """Tests for the rankers."""
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 from ribs.archives import GridArchive
-from ribs.emitters.rankers import (ObjectiveRanker, RandomDirectionRanker,
+from ribs.emitters.rankers import (NoveltyRanker, ObjectiveRanker,
+                                   RandomDirectionRanker,
                                    TwoStageImprovementRanker,
                                    TwoStageObjectiveRanker,
                                    TwoStageRandomDirectionRanker)
@@ -195,3 +197,25 @@ def test_two_stage_objective_ranker(archive_fixture, emitter):
         [add_info["status"][2], objective_batch[2]],
         [add_info["status"][3], objective_batch[3]],
     ]).all()
+
+
+def test_novelty_ranker(archive_fixture):
+    _, x0 = archive_fixture
+    solution_batch = [x0, x0, x0, x0]
+    measures_batch = [[0, 0], [1.2, 1.2], [0.1, 0.1], [1.5, 1.5]]
+
+    ranker = NoveltyRanker()
+    indices, ranking_values = ranker.rank(
+        emitter=None,
+        archive=None,
+        data={
+            "solution": solution_batch,
+            "measures": measures_batch,
+        },
+        add_info={
+            "novelty": [1.0, 0.5, 0.9, 0.4],
+        },
+    )
+
+    assert (indices == [0, 2, 1, 3]).all()
+    assert_allclose(ranking_values, [1.0, 0.5, 0.9, 0.4])
