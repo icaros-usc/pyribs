@@ -52,7 +52,7 @@ def proximity_archive_plot(archive,
             ...                 # Objectives default to 0 in this case.
             ...                 objective=None,
             ...                 measures=np.stack((x, y), axis=1))
-            >>> # Plot a heatmap of the archive.
+            >>> # Plot the archive.
             >>> plt.figure(figsize=(6, 6))
             >>> # Notice that the colormap is just a single RGB array, and the
             ... # colorbar is removed since it is just one color.
@@ -82,7 +82,7 @@ def proximity_archive_plot(archive,
             ...     archive.add(solution=np.stack((x, y), axis=1),
             ...                 objective=-(x**2 + y**2),
             ...                 measures=np.stack((x, y), axis=1))
-            >>> # Plot a heatmap of the archive.
+            >>> # Plot the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> proximity_archive_plot(archive)
             >>> plt.title("Negative sphere function")
@@ -93,8 +93,8 @@ def proximity_archive_plot(archive,
     Args:
         archive (SlidingBoundariesArchive): A 2D
             :class:`~ribs.archives.SlidingBoundariesArchive`.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
-            If ``None``, the current axis will be used.
+        ax (matplotlib.axes.Axes): Axes on which to make the plot. If ``None``,
+            the current axis will be used.
         df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
             this argument instead of the data currently in the archive. This
             data can be obtained by, for instance, calling
@@ -112,7 +112,7 @@ def proximity_archive_plot(archive,
             :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
             (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
             :class:`~matplotlib.colors.Colormap` object.
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
+        aspect ('auto', 'equal', float): The aspect ratio of the plot (i.e.
             height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
             ``aspect=1``. See :meth:`matplotlib.axes.Axes.set_aspect` for more
             info.
@@ -133,10 +133,10 @@ def proximity_archive_plot(archive,
             the colorbar on the specified Axes.
         cbar_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.colorbar`.
-        rasterized (bool): Whether to rasterize the heatmap. This can be useful
-            for saving to a vector format like PDF. Essentially, only the
-            heatmap will be converted to a raster graphic so that the archive
-            cells will not have to be individually rendered. Meanwhile, the
+        rasterized (bool): Whether to rasterize the plot. This can be useful for
+            saving to a vector format like PDF. Essentially, only the scatter
+            plot will be converted to a raster graphic so that the archive cells
+            will not have to be individually rendered. Meanwhile, the
             surrounding axes, particularly text labels, will remain in vector
             format.
     Raises:
