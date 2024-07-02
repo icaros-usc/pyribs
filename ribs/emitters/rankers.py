@@ -12,22 +12,26 @@ the full name of a ranker, e.g. "ImprovementRanker", or the abbreviated name of
 a ranker, e.g. "imp".
 The supported abbreviations are:
 
+* ``density``: :class:`DensityRanker`
 * ``imp``: :class:`ImprovementRanker`
-* ``2imp``: :class:`TwoStageImprovementRanker`
-* ``rd``: :class:`RandomDirectionRanker`
-* ``2rd``: :class:`TwoStageRandomDirectionRanker`
+* ``nov``: :class:`NoveltyRanker`
 * ``obj``: :class:`ObjectiveRanker`
+* ``rd``: :class:`RandomDirectionRanker`
+* ``2imp``: :class:`TwoStageImprovementRanker`
 * ``2obj``: :class:`TwoStageObjectiveRanker`
+* ``2rd``: :class:`TwoStageRandomDirectionRanker`
 
 .. autosummary::
     :toctree:
 
+    ribs.emitters.rankers.DensityRanker
     ribs.emitters.rankers.ImprovementRanker
-    ribs.emitters.rankers.TwoStageImprovementRanker
-    ribs.emitters.rankers.RandomDirectionRanker
-    ribs.emitters.rankers.TwoStageRandomDirectionRanker
+    ribs.emitters.rankers.NoveltyRanker
     ribs.emitters.rankers.ObjectiveRanker
+    ribs.emitters.rankers.RandomDirectionRanker
+    ribs.emitters.rankers.TwoStageImprovementRanker
     ribs.emitters.rankers.TwoStageObjectiveRanker
+    ribs.emitters.rankers.TwoStageRandomDirectionRanker
     ribs.emitters.rankers.RankerBase
 """
 from abc import ABC, abstractmethod
@@ -35,12 +39,14 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 __all__ = [
+    "DensityRanker",
     "ImprovementRanker",
-    "TwoStageImprovementRanker",
-    "RandomDirectionRanker",
-    "TwoStageRandomDirectionRanker",
+    "NoveltyRanker",
     "ObjectiveRanker",
+    "RandomDirectionRanker",
+    "TwoStageImprovementRanker",
     "TwoStageObjectiveRanker",
+    "TwoStageRandomDirectionRanker",
     "RankerBase",
 ]
 
@@ -348,7 +354,6 @@ class NoveltyRanker(RankerBase):
     """
 
     def rank(self, emitter, archive, data, add_info):
-        # Sort only by objective value.
         return np.flip(np.argsort(add_info["novelty"])), add_info["novelty"]
 
     rank.__doc__ = f"""
@@ -358,21 +363,47 @@ Ranks solutions based on novelty scores.
     """
 
 
+class DensityRanker(RankerBase):
+    """Ranks solutions based on density in measure space.
+
+    The archive must be a :class:`~ribs.archives.DensityArchive` or have a
+    ``compute_density`` method.
+    """
+
+    def rank(self, emitter, archive, data, add_info):
+        try:
+            density = archive.compute_density(data["measures"])
+        except AttributeError as e:
+            raise AttributeError("DensityRanker requires that the archive have"
+                                 "a compute_density method.") from e
+
+        # Lower density is better, so we sort as normal (i.e., ascending order).
+        return np.argsort(density), density
+
+    rank.__doc__ = f"""
+Ranks solutions based on density in measure space.
+
+{_RANK_ARGS}
+    """
+
+
 _NAME_TO_RANKER_MAP = {
+    "DensityRanker": DensityRanker,
     "ImprovementRanker": ImprovementRanker,
-    "TwoStageImprovementRanker": TwoStageImprovementRanker,
-    "RandomDirectionRanker": RandomDirectionRanker,
-    "TwoStageRandomDirectionRanker": TwoStageRandomDirectionRanker,
-    "ObjectiveRanker": ObjectiveRanker,
-    "TwoStageObjectiveRanker": TwoStageObjectiveRanker,
     "NoveltyRanker": NoveltyRanker,
+    "ObjectiveRanker": ObjectiveRanker,
+    "RandomDirectionRanker": RandomDirectionRanker,
+    "TwoStageImprovementRanker": TwoStageImprovementRanker,
+    "TwoStageObjectiveRanker": TwoStageObjectiveRanker,
+    "TwoStageRandomDirectionRanker": TwoStageRandomDirectionRanker,
+    "density": DensityRanker,
     "imp": ImprovementRanker,
-    "2imp": TwoStageImprovementRanker,
-    "rd": RandomDirectionRanker,
-    "2rd": TwoStageRandomDirectionRanker,
-    "obj": ObjectiveRanker,
-    "2obj": TwoStageObjectiveRanker,
     "nov": NoveltyRanker,
+    "obj": ObjectiveRanker,
+    "rd": RandomDirectionRanker,
+    "2imp": TwoStageImprovementRanker,
+    "2obj": TwoStageObjectiveRanker,
+    "2rd": TwoStageRandomDirectionRanker,
 }
 
 
