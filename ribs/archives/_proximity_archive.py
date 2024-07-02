@@ -361,7 +361,7 @@ class ProximityArchive(ArchiveBase):
                 neighbor_objectives = neighbor_objectives.reshape(indices.shape)
 
                 local_competition = np.sum(
-                    neighbor_objectives > data["objective"],
+                    neighbor_objectives < data["objective"][:, None],
                     axis=1,
                     dtype=np.int32,
                 )
@@ -369,6 +369,26 @@ class ProximityArchive(ArchiveBase):
         novel_enough = novelty >= self.novelty_threshold
         n_novel_enough = np.sum(novel_enough)
         new_size = len(self) + n_novel_enough
+
+        if self.local_competition:
+            # In the case of local competition, we consider all solutions for
+            # addition. Solutions that were not novel enough have the potential
+            # to replace their nearest neighbors in the archive.
+            add_indices = np.empty(len(novelty), dtype=np.int32)
+            add_indices[novel_enough] = np.arange(len(self), new_size)
+
+            not_novel_enough = ~novel_enough
+            n_not_novel_enough = len(novelty) - n_novel_enough
+            if n_not_novel_enough > 0:
+                add_indices[not_novel_enough] = \
+                    self.index_of(data["measures"][not_novel_enough])
+
+            add_data = data
+        else:
+            # Without local competition, the only solutions that can be added
+            # are the ones that were novel enough.
+            add_indices = np.arange(len(self), new_size)
+            add_data = {key: val[novel_enough] for key, val in data.items()}
 
         if new_size > self.capacity:
             # Resize the store by doubling its capacity. We may need to double
@@ -378,33 +398,15 @@ class ProximityArchive(ArchiveBase):
             multiplier = 2**int(np.ceil(np.log2(new_size / self.capacity)))
             self._store.resize(multiplier * self.capacity)
 
-        if self.local_competition:
-            # In the case of local competition, we consider all solutions for
-            # addition. Solutions that were not novel enough have the potential
-            # to replace their nearest neighbors in the archive.
-            add_indices = np.empty(len(novelty), dtype=np.int32)
-            add_indices[novel_enough] = np.arange(len(self), new_size)
-            add_indices[~novel_enough] = \
-                self.index_of(data["measures"][~novel_enough])
-            add_data = data
-        else:
-            # Without local competition, the only solutions that can be added
-            # are the ones that were novel enough.
-            add_indices = np.arange(len(self), new_size)
-            add_data = {key: val[novel_enough] for key, val in data.items()}
-
-        # Above, we identified solutions that were eligible for addition. Now,
-        # we apply the same addition as in ArchiveBase with only the eligible
-        # solutions.
         add_info = self._store.add(
             add_indices,
             add_data,
             {
                 "dtype": self.dtypes["threshold"],
                 "learning_rate": self._learning_rate,
-                # Note that threshold_min is -np.inf and objectives either
-                # default to 0 or are passed in by the user, so all solutions
-                # specified here will be added.
+                # Note that when only novelty is considered, objectives default
+                # to 0, so all solutions specified will be added because the
+                # threshold_min is -np.inf.
                 "threshold_min": self._threshold_min,
                 "objective_sum": self._objective_sum,
             },
