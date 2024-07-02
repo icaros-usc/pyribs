@@ -509,3 +509,22 @@ def test_cqd_score_with_max_dist():
     # For theta=0, the score should be 0.5 - 0 * 0.5 = 0.5
     # For theta=1, the score should be 0.5 - 1 * 0.5 = 0.0
     assert np.isclose(score, 0.5 + 0.0)
+
+
+#
+# Tests for local competition.
+#
+
+
+def test_add_none_to_nslc():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=1,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    with pytest.raises(ValueError):
+        archive.add_single([1, 2, 3], None, [0, 0])

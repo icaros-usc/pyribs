@@ -30,6 +30,10 @@ class ProximityArchive(ArchiveBase):
     :math:`\\mu_{1..k}` are the measure values of the :math:`k`-nearest
     neighbors in measure space.
 
+    This archive also supports the local competition behavior from Novelty
+    Search with Local Competition, described in `Lehman
+    2011b`<http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
+
     .. note:: When used for diversity optimization, this archive does not
         require any objectives, and ``objective=None`` can be passed into
         :meth:`add`. For consistency with the rest of pyribs, ``objective=None``
@@ -59,6 +63,10 @@ class ProximityArchive(ArchiveBase):
             are fewer than ``k_neighbors`` solutions in the archive).
         novelty_threshold (float): The level of novelty required to add a
             solution to the archive.
+        local_competition (bool): Whether to turn on local competition behavior.
+            If turned on, the archive will require objectives to be passed in
+            during :meth:`add`. Furthermore, the ``add_info`` returned by
+            :meth:`add` will include local competition information.
         initial_capacity (int): Since this archive is unstructured, it does not
             have a fixed size, and it will grow as solutions are added. In the
             implementation, we store solutions in fixed-size arrays, and every
@@ -104,6 +112,7 @@ class ProximityArchive(ArchiveBase):
                  measure_dim,
                  k_neighbors,
                  novelty_threshold,
+                 local_competition=False,
                  initial_capacity=128,
                  qd_score_offset=0.0,
                  seed=None,
@@ -130,6 +139,7 @@ class ProximityArchive(ArchiveBase):
         self._k_neighbors = int(k_neighbors)
         self._novelty_threshold = np_scalar(novelty_threshold,
                                             dtype=self.dtypes["measures"])
+        self._local_competition = local_competition
         self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
                                 ckdtree_kwargs.copy())
 
@@ -148,6 +158,11 @@ class ProximityArchive(ArchiveBase):
         """dtypes["measures"]: The degree of novelty required add a solution to
         the archive."""
         return self._novelty_threshold
+
+    @property
+    def local_competition(self):
+        """bool: Whether local competition behavior is turned on."""
+        return self._local_competition
 
     @property
     def cells(self):
@@ -252,17 +267,23 @@ class ProximityArchive(ArchiveBase):
             ValueError: The array arguments do not match their specified shapes.
             ValueError: ``objective`` or ``measures`` has non-finite values (inf
                 or NaN).
+            ValueError: ``local_competition` is turned on but objective was not
+                passed in.
         """
+        if objective is None:
+            if self.local_competition:
+                raise ValueError("If local competition is turned on, objective "
+                                 "must be passed in to add().")
+            else:
+                objective = np.zeros(len(solution),
+                                     dtype=self.dtypes["objective"])
+
         data = validate_batch(
             self,
             {
-                "solution":
-                    solution,
-                "objective":
-                    np.zeros(len(solution), dtype=self.dtypes["objective"])
-                    if objective is None else objective,
-                "measures":
-                    measures,
+                "solution": solution,
+                "objective": objective,
+                "measures": measures,
                 **fields,
             },
         )
@@ -372,13 +393,16 @@ class ProximityArchive(ArchiveBase):
             self,
             {
                 "solution": solution,
-                "objective": 0.0 if objective is None else objective,
+                "objective": objective,
                 "measures": measures,
                 **fields,
             },
+            none_objective_ok=True,
         )
 
-        return self.add(**{key: [val] for key, val in data.items()})
+        return self.add(**{
+            key: val if val is None else [val] for key, val in data.items()
+        })
 
     @cached_property
     def upper_bounds(self) -> np.ndarray:
