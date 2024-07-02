@@ -299,10 +299,10 @@ class ProximityArchive(ArchiveBase):
                 the nearest neighbor (this value is negative because the
                 solution did not have a high enough objective to be added to the
                 archive).
-              - ``1`` (replace/improve existing cell): The value is the
+              - ``1`` (replace/improve existing solution): The value is the
                 "improvement," i.e. the objective of the solution passed in
                 minus the objective of the elite that was replaced.
-              - ``2`` (new cell): The value is just the objective of the
+              - ``2`` (new solution): The value is just the objective of the
                 solution.
 
         Raises:
@@ -348,11 +348,12 @@ class ProximityArchive(ArchiveBase):
 
             # Expand since query() automatically squeezes the last dim when k=1.
             dists = dists[:, None] if k_neighbors == 1 else dists
-            indices = indices[:, None] if k_neighbors == 1 else indices
 
             novelty = np.mean(dists, axis=1)
 
             if self.local_competition:
+                indices = indices[:, None] if k_neighbors == 1 else indices
+
                 # The first item returned by `retrieve` is `occupied` -- all
                 # these indices are occupied since they are indices of solutions
                 # in the archive.
@@ -372,11 +373,14 @@ class ProximityArchive(ArchiveBase):
 
         if self.local_competition:
             # In the case of local competition, we consider all solutions for
-            # addition. Solutions that were not novel enough have the potential
-            # to replace their nearest neighbors in the archive.
+            # addition.
             add_indices = np.empty(len(novelty), dtype=np.int32)
+
+            # New solutions are assigned the new indices.
             add_indices[novel_enough] = np.arange(len(self), new_size)
 
+            # Solutions that were not novel enough have the potential to replace
+            # their nearest neighbors in the archive.
             not_novel_enough = ~novel_enough
             n_not_novel_enough = len(novelty) - n_novel_enough
             if n_not_novel_enough > 0:
