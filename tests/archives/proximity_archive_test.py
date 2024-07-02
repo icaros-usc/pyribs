@@ -1,7 +1,7 @@
 """Tests for the ProximityArchive."""
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
 from ribs.archives import AddStatus, ProximityArchive
 from tests.archives.conftest import get_archive_data
@@ -528,3 +528,31 @@ def test_add_none_to_nslc():
 
     with pytest.raises(ValueError):
         archive.add_single([1, 2, 3], None, [0, 0])
+
+
+@pytest.mark.parametrize("point", [[0.1, 0], [0.5, 0], [0.9, 0], [-0.1, 0.1]])
+def test_add_with_multiple_neighbors_nslc(point):
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=2,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    archive.add_single([1, 2, 3], 0.0, [0, 0])
+    archive.add_single([1, 2, 3], 2.0, [2, 0])
+
+    # Should be added since threshold is 1.0 and the point is in between [0, 0]
+    # and [2, 0], so its average distance is always at least 1.0.
+    add_info = archive.add_single([1, 2, 3], 1.0, point)
+
+    assert_archive_elites(archive, 3, measures_batch=[[0, 0], [2, 0], point])
+    assert add_info["status"] == 2
+    assert_allclose(
+        add_info["novelty"],
+        np.mean(np.linalg.norm(np.array(point)[None] - [[0, 0], [2, 0]],
+                               axis=1)),
+    )
+    assert_equal(add_info["local_competition"], 1)

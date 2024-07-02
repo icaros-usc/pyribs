@@ -66,7 +66,12 @@ class ProximityArchive(ArchiveBase):
         local_competition (bool): Whether to turn on local competition behavior.
             If turned on, the archive will require objectives to be passed in
             during :meth:`add`. Furthermore, the ``add_info`` returned by
-            :meth:`add` will include local competition information.
+            :meth:`add` will include local competition information. Finally,
+            solutions can be replaced in the archive. Specifically, if a
+            candidate solution's novelty is below the novelty threshold, its
+            objective will be compared to that of its nearest neighbor. If the
+            candidate's objective is higher, it will replace the nearest
+            neighbor.
         initial_capacity (int): Since this archive is unstructured, it does not
             have a fixed size, and it will grow as solutions are added. In the
             implementation, we store solutions in fixed-size arrays, and every
@@ -263,6 +268,12 @@ class ProximityArchive(ArchiveBase):
               the archive was empty), the novelty is set to the
               :attr:`novelty_threshold`.
 
+            - ``"local_competition"`` (:class:`numpy.ndarray` of :class:`int`):
+              Indicates, for each solution, how many of the nearest neighbors
+              had lower objective values. Maximum value is :attr:`k_neighbors`.
+              If there were no solutions to compute novelty with respect to,
+              (i.e., the archive was empty), the local competition is set to 0.
+
         Raises:
             ValueError: The array arguments do not match their specified shapes.
             ValueError: ``objective`` or ``measures`` has non-finite values (inf
@@ -288,21 +299,40 @@ class ProximityArchive(ArchiveBase):
             },
         )
 
+        # Compute novelty and local competition.
         if self.empty:
             # If there are no neighbors for computing nearest neighbors, there
             # is infinite novelty and all solutions are added.
             novelty = np.full(len(data["measures"]),
                               self.novelty_threshold,
                               dtype=self.dtypes["measures"])
+
+            if self.local_competition:
+                local_competition = np.zeros(len(novelty), dtype=np.int32)
         else:
             # Compute nearest neighbors.
             k_neighbors = min(len(self), self.k_neighbors)
-            dists, _ = self._cur_kd_tree.query(data["measures"], k=k_neighbors)
+            dists, indices = self._cur_kd_tree.query(data["measures"],
+                                                     k=k_neighbors)
 
             # Expand since query() automatically squeezes the last dim when k=1.
             dists = dists[:, None] if k_neighbors == 1 else dists
+            indices = indices[:, None] if k_neighbors == 1 else indices
 
             novelty = np.mean(dists, axis=1)
+
+            if self.local_competition:
+                # The first item returned by `retrieve` is `occupied` -- all
+                # these indices are occupied since they are indices of solutions
+                # in the archive.
+                neighbor_objectives = self._store.retrieve(
+                    indices.ravel(), "objective")[1]
+                neighbor_objectives = neighbor_objectives.reshape(indices.shape)
+
+                local_competition = np.sum(neighbor_objectives
+                                           > data["objective"],
+                                           axis=1,
+                                           dtype=np.int32)
 
         eligible = novelty >= self.novelty_threshold
         n_eligible = np.sum(eligible)
@@ -349,10 +379,13 @@ class ProximityArchive(ArchiveBase):
         all_status[eligible] = add_info["status"]
         add_info["status"] = all_status
 
-        # We do not consider objective/threshold in this archive.
-        del add_info["value"]
-
         add_info["novelty"] = novelty
+
+        if self.local_competition:
+            add_info["local_competition"] = local_competition
+        else:
+            # We ignore objective/threshold when only novelty is considered.
+            del add_info["value"]
 
         if not np.all(add_info["status"] == 0):
             self._stats_update(objective_sum, best_index)
