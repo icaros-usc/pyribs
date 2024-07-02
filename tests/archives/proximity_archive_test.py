@@ -187,7 +187,7 @@ def test_add_single(data, use_list, add_mode):
     # Objective should default to 0.0.
     assert_archive_elite(data.archive, data.solution, 0.0, data.measures)
     assert add_info["status"] == AddStatus.NEW
-    assert add_info["novelty"] == np.inf
+    assert add_info["novelty"] == data.archive.novelty_threshold
 
 
 def test_add_single_after_clear(data):
@@ -199,14 +199,14 @@ def test_add_single_after_clear(data):
     add_info = data.archive.add_single(data.solution, None, data.measures)
 
     assert add_info["status"] == 2
-    assert add_info["novelty"] == np.inf
+    assert add_info["novelty"] == data.archive.novelty_threshold
 
     data.archive.clear()
 
     add_info = data.archive.add_single(data.solution, None, data.measures)
 
     assert add_info["status"] == 2
-    assert add_info["novelty"] == np.inf
+    assert add_info["novelty"] == data.archive.novelty_threshold
 
 
 def test_add_novel_solution():
