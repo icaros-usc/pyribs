@@ -1,7 +1,7 @@
 """Tests for the ProximityArchive."""
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
 from ribs.archives import AddStatus, ProximityArchive
 from tests.archives.conftest import get_archive_data
@@ -509,3 +509,345 @@ def test_cqd_score_with_max_dist():
     # For theta=0, the score should be 0.5 - 0 * 0.5 = 0.5
     # For theta=1, the score should be 0.5 - 1 * 0.5 = 0.0
     assert np.isclose(score, 0.5 + 0.0)
+
+
+#
+# Tests for local competition.
+#
+
+
+def test_lc_add_none():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=1,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    with pytest.raises(ValueError):
+        archive.add_single([1, 2, 3], None, [0, 0])
+
+
+def test_lc_add_single(add_mode):
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=2,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    solution = np.array([1., 2., 3.])
+    measures = np.array([0.25, 0.25])
+
+    if add_mode == "single":
+        add_info = archive.add_single(solution, 5.0, measures)
+    else:
+        add_info = archive.add([solution], [5.0], [measures])
+
+    assert_archive_elite(archive, solution, 5.0, measures)
+    assert add_info["status"] == AddStatus.NEW
+    assert add_info["novelty"] == archive.novelty_threshold
+    assert add_info["local_competition"] == 0
+    assert add_info["value"] == 5.0
+
+
+def test_lc_add_single_after_clear():
+    """After clearing, we should still get the same status and value when adding
+    to the archive.
+
+    https://github.com/icaros-usc/pyribs/pull/260
+    """
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=2,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    solution = np.array([1., 2., 3.])
+    measures = np.array([0.25, 0.25])
+
+    add_info = archive.add_single(solution, 5.0, measures)
+
+    assert add_info["status"] == 2
+    assert add_info["novelty"] == archive.novelty_threshold
+    assert add_info["local_competition"] == 0
+    assert add_info["value"] == 5.0
+
+    archive.clear()
+
+    add_info = archive.add_single(solution, 5.0, measures)
+
+    assert add_info["status"] == 2
+    assert add_info["novelty"] == archive.novelty_threshold
+    assert add_info["local_competition"] == 0
+    assert add_info["value"] == 5.0
+
+
+def test_lc_add_novel_solution():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=1,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    archive.add_single([1, 2, 3], 1.0, [0, 0])
+
+    # Should be added since novelty threshold is 1.0.
+    add_info = archive.add_single([1, 2, 3], 2.0, [1, 0])
+
+    assert_archive_elites(archive,
+                          2,
+                          objective_batch=[1.0, 2.0],
+                          measures_batch=[[0, 0], [1, 0]])
+
+    assert add_info["status"] == 2
+    assert add_info["novelty"] == 1.0
+    assert add_info["local_competition"] == 1
+    assert add_info["value"] == 2.0
+
+
+def test_lc_add_non_novel_solution():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=1,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    archive.add_single([1, 2, 3], 1.0, [0, 0])
+
+    # Should replace other solution since threshold is 1.0 and distance is 0.5,
+    # but the objective is 2.0 over 1.0.
+    add_info = archive.add_single([1, 2, 3], 2.0, [0.5, 0])
+
+    assert_archive_elites(archive,
+                          1,
+                          objective_batch=[2.0],
+                          measures_batch=[[0.5, 0]])
+
+    assert add_info["status"] == 1
+    assert_allclose(add_info["novelty"], 0.5)
+    assert add_info["local_competition"] == 1
+    assert add_info["value"] == 1.0
+
+
+def test_lc_add_non_novel_low_performing_solution():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=1,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    archive.add_single([1, 2, 3], 1.0, [0, 0])
+
+    # Not novel enough because threshold is 1.0 and distance is 0.5, and not
+    # performant enough because objective is 0.0 when 1.0 is needed.
+    add_info = archive.add_single([1, 2, 3], 0.0, [0.5, 0])
+
+    assert_archive_elites(archive,
+                          1,
+                          objective_batch=[1.0],
+                          measures_batch=[[0, 0]])
+
+    assert add_info["status"] == 0
+    assert_allclose(add_info["novelty"], 0.5)
+    assert add_info["local_competition"] == 0
+    assert add_info["value"] == -1.0
+
+
+@pytest.mark.parametrize("point", [[0.1, 0], [0.5, 0], [0.9, 0], [-0.1, 0.1]])
+def test_lc_add_with_multiple_neighbors(point):
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=2,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    archive.add_single([1, 2, 3], 0.0, [0, 0])
+    archive.add_single([1, 2, 3], 2.0, [2, 0])
+
+    # Should be added since threshold is 1.0 and the point is in between [0, 0]
+    # and [2, 0], so its average distance is always at least 1.0.
+    add_info = archive.add_single([1, 2, 3], 1.0, point)
+
+    assert_archive_elites(archive,
+                          3,
+                          objective_batch=[0.0, 2.0, 1.0],
+                          measures_batch=[[0, 0], [2, 0], point])
+    assert add_info["status"] == 2
+    assert_allclose(
+        add_info["novelty"],
+        np.mean(np.linalg.norm(np.array(point)[None] - [[0, 0], [2, 0]],
+                               axis=1)),
+    )
+    assert_equal(add_info["local_competition"], 1)
+    assert_allclose(add_info["value"], 1.0)
+
+
+def test_lc_add_batch_all_new():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=2,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    # Initial points.
+    archive.add([[1, 2, 3]] * 2, [0.0, 2.0], [[0, 0], [1, 0]])
+
+    add_info = archive.add(
+        solution=[[1, 2, 3]] * 3,
+        objective=[-1.0, 1.0, 3.0],
+        measures=[[-1, 0], [0, 1], [2, 0]],
+    )
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=5,
+        solution_batch=[[1, 2, 3]] * 5,
+        objective_batch=[0.0, 2.0, -1.0, 1.0, 3.0],
+        measures_batch=[[0, 0], [1, 0], [-1, 0], [0, 1], [2, 0]],
+    )
+
+    assert (add_info["status"] == 2).all()
+    assert_allclose(add_info["novelty"], [
+        np.mean([1, 2]),
+        np.mean([1, np.sqrt(2)]),
+        np.mean([2, 1]),
+    ])
+    assert_equal(add_info["local_competition"], [0, 1, 2])
+    assert_allclose(add_info["value"], [-1, 1, 3])
+
+
+def test_lc_add_batch_none_inserted():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=2,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    # Initial points.
+    archive.add([[1, 2, 3]] * 2, [0.0, 2.0], [[0, 0], [1, 0]])
+
+    add_info = archive.add(
+        solution=[[1, 2, 3]] * 2,
+        objective=[-1, -2],
+        measures=[[0.6, 0], [0, 0.1]],
+    )
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=2,
+        solution_batch=[[1, 2, 3]] * 2,
+        objective_batch=[0.0, 2.0],
+        measures_batch=[[0, 0], [1, 0]],
+    )
+
+    assert (add_info["status"] == 0).all()
+    assert_allclose(add_info["novelty"], [
+        np.mean([0.4, 0.6]),
+        np.mean([0.1, np.sqrt(0.1**2 + 1)]),
+    ])
+    assert_equal(add_info["local_competition"], [0, 0])
+    assert_allclose(add_info["value"], [-1 - 2, -2 - 0])
+
+
+def test_lc_add_batch_mixed_statuses():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=2,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    # Initial points.
+    archive.add([[1, 2, 3]] * 2, [0.0, 2.0], [[0, 0], [1, 0]])
+
+    add_info = archive.add(
+        solution=[[1, 2, 3]] * 5,
+        objective=[-2, -1, 1, -3, 5],
+        measures=[[-1, 0], [0.4, 0], [0, 0.5], [0, 0.1], [2, 0]],
+    )
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=4,
+        solution_batch=[[1, 2, 3]] * 4,
+        objective_batch=[2, -2, 1, 5],
+        measures_batch=[[1, 0], [-1, 0], [0, 0.5], [2, 0]],
+    )
+
+    assert (add_info["status"] == [2, 0, 1, 0, 2]).all()
+    assert_allclose(add_info["novelty"], [
+        np.mean([1, 2]),
+        np.mean([0.4, 0.6]),
+        np.mean([0.5, np.sqrt(1**2 + 0.5**2)]),
+        np.mean([0.1, np.sqrt(0.1**2 + 1)]),
+        np.mean([2, 1]),
+    ])
+    assert_equal(add_info["local_competition"], [0, 0, 1, 0, 2])
+    assert_allclose(add_info["value"], [-2, -1, 1, -3, 5])
+
+
+def test_lc_add_batch_replace_same_cell():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=2,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    # Initial points.
+    archive.add([[1, 2, 3]] * 2, [0.0, 2.0], [[0, 0], [1, 0]])
+
+    # First three solutions replace the solution at [0, 0]; last is just added.
+    add_info = archive.add(
+        solution=[[1, 2, 3]] * 4,
+        objective=[1.0, 2.0, 3.0, 0.0],
+        measures=[[0, 0.1], [0, 0.2], [0, 0.3], [3, 0]],
+    )
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=3,
+        solution_batch=[[1, 2, 3]] * 3,
+        objective_batch=[2, 3, 0],
+        measures_batch=[[1, 0], [0, 0.3], [3, 0]],
+    )
+
+    assert (add_info["status"] == [1, 1, 1, 2]).all()
+    assert_allclose(add_info["novelty"], [
+        np.mean([0.1, np.sqrt(1**2 + 0.1**2)]),
+        np.mean([0.2, np.sqrt(1**2 + 0.2**2)]),
+        np.mean([0.3, np.sqrt(1**2 + 0.3**2)]),
+        np.mean([3, 2]),
+    ])
+    assert_equal(add_info["local_competition"], [1, 1, 2, 0])
+    assert_allclose(add_info["value"], [1, 2, 3, 0])
