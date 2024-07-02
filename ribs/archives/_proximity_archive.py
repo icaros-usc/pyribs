@@ -244,9 +244,9 @@ class ProximityArchive(ArchiveBase):
 
             - ``"novelty"`` (:class:`numpy.ndarray` of :attr:`dtypes`
               ["measures"]): The computed novelty of the solutions passed in. If
-              there were no solutions to compute novelty with respect to (e.g.,
-              the archive was empty), the novelty is set to infinity
-              (``numpy.inf``).
+              there were no solutions to compute novelty with respect to (i.e.,
+              the archive was empty), the novelty is set to the
+              :attr:`novelty_threshold`.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
@@ -271,9 +271,8 @@ class ProximityArchive(ArchiveBase):
             # If there are no neighbors for computing nearest neighbors, there
             # is infinite novelty and all solutions are added.
             novelty = np.full(len(data["measures"]),
-                              np.inf,
+                              self.novelty_threshold,
                               dtype=self.dtypes["measures"])
-            eligible = np.ones(len(data["measures"]), dtype=bool)
         else:
             # Compute nearest neighbors.
             k_neighbors = min(len(self), self.k_neighbors)
@@ -283,8 +282,8 @@ class ProximityArchive(ArchiveBase):
             dists = dists[:, None] if k_neighbors == 1 else dists
 
             novelty = np.mean(dists, axis=1)
-            eligible = novelty >= self.novelty_threshold
 
+        eligible = novelty >= self.novelty_threshold
         n_eligible = np.sum(eligible)
         new_size = len(self) + n_eligible
 
