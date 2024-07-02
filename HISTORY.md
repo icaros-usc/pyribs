@@ -6,6 +6,7 @@
 
 #### API
 
+- Add DensityRanker for density descent search ({pr}`483`)
 - Add NoveltyRanker for novelty search ({pr}`477`)
 - Add proximity_archive_plot for visualizing ProximityArchive ({pr}`476`,
   {pr}`480`)
@@ -19,7 +20,7 @@
 
 #### Documentation
 
-- Add novelty search with CMA-ES to sphere example ({pr}`478`)
+- Add novelty search with CMA-ES to sphere example ({pr}`478`, {pr}`482`)
 
 #### Improvements
 
