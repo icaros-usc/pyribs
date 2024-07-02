@@ -388,7 +388,16 @@ class ProximityArchive(ArchiveBase):
             ValueError: The array arguments do not match their specified shapes.
             ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
                 has non-finite values.
+            ValueError: ``local_competition` is turned on but objective was not
+                passed in.
         """
+        if objective is None:
+            if self.local_competition:
+                raise ValueError("If local competition is turned on, objective "
+                                 "must be passed in to add_single().")
+            else:
+                objective = 0.0
+
         data = validate_single(
             self,
             {
@@ -397,12 +406,9 @@ class ProximityArchive(ArchiveBase):
                 "measures": measures,
                 **fields,
             },
-            none_objective_ok=True,
         )
 
-        return self.add(**{
-            key: val if val is None else [val] for key, val in data.items()
-        })
+        return self.add(**{key: [val] for key, val in data.items()})
 
     @cached_property
     def upper_bounds(self) -> np.ndarray:
