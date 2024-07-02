@@ -45,6 +45,8 @@ The supported algorithms are:
   using ImprovementRanker.
 - `cma_maega`: GridArchive (learning_rate = 0.01) with
   GradientArborescenceEmitter using ImprovementRanker.
+- `ns_cma`: Novelty Search with CMA-ES; implemented using a ProximityArchive
+  with EvolutionStrategyEmitter. Results are stored in a passive GridArchive.
 
 The parameters for each algorithm are stored in CONFIG. The parameters
 reproduce the experiments presented in the paper in which each algorithm is
@@ -84,7 +86,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 
-from ribs.archives import CVTArchive, GridArchive
+from ribs.archives import CVTArchive, GridArchive, ProximityArchive
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
                            GradientArborescenceEmitter, GradientOperatorEmitter,
                            IsoLineEmitter)
@@ -595,7 +597,36 @@ CONFIG = {
             "class": Scheduler,
             "kwargs": {}
         }
-    }
+    },
+    "ns_cma": {
+        "dim": 100,
+        "iters": 5000,
+        "archive_dims": (100, 100),
+        "use_result_archive": True,
+        "is_dqd": False,
+        "batch_size": 36,
+        "archive": {
+            "class": ProximityArchive,
+            "kwargs": {
+                "k_neighbors": 15,
+                "novelty_threshold": 0.037 * 512,
+            }
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "nov",
+                "selection_rule": "mu",
+                "restart_rule": "basic",
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
 }
 
 
@@ -685,6 +716,11 @@ def create_scheduler(config, algorithm, seed=None):
         archive = archive_class(solution_dim=solution_dim,
                                 ranges=bounds,
                                 dims=archive_dims,
+                                seed=seed,
+                                **config["archive"]["kwargs"])
+    elif archive_class == ProximityArchive:
+        archive = archive_class(solution_dim=solution_dim,
+                                measure_dim=len(bounds),
                                 seed=seed,
                                 **config["archive"]["kwargs"])
     else:
