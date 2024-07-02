@@ -19,7 +19,7 @@
 
 #### Documentation
 
-- Add novelty search with CMA-ES to sphere example ({pr}`478`)
+- Add novelty search with CMA-ES to sphere example ({pr}`478`, {pr}`482`)
 
 #### Improvements
 

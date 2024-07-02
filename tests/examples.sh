@@ -49,6 +49,7 @@ python examples/sphere.py cma_mega_adam --dim 20 --itrs 10 --outdir "${SPHERE_OU
 python examples/sphere.py cma_mae --dim 20 --itrs 10 --learning_rate 0.01 --outdir "${SPHERE_OUTPUT}"
 python examples/sphere.py cma_maega --dim 20 --itrs 10 --learning_rate 0.01 --outdir "${SPHERE_OUTPUT}"
 python examples/sphere.py ns_cma --dim 20 --itrs 10 --outdir "${SPHERE_OUTPUT}"
+python examples/sphere.py nslc_cma_imp --dim 20 --itrs 10 --outdir "${SPHERE_OUTPUT}"
 
 # lunar_lander.py
 install_deps examples/lunar_lander.py

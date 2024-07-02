@@ -47,6 +47,9 @@ The supported algorithms are:
   GradientArborescenceEmitter using ImprovementRanker.
 - `ns_cma`: Novelty Search with CMA-ES; implemented using a ProximityArchive
   with EvolutionStrategyEmitter. Results are stored in a passive GridArchive.
+- `nslc_cma_imp`: EvolutionStrategyEmitter with a ProximityArchive with local
+  competition turned on. Thus, the archive returns two-stage improvement
+  information that is fed to the EvolutionStrategyEmitter just like in CMA-ME.
 
 The parameters for each algorithm are stored in CONFIG. The parameters
 reproduce the experiments presented in the paper in which each algorithm is
@@ -608,6 +611,8 @@ CONFIG = {
         "archive": {
             "class": ProximityArchive,
             "kwargs": {
+                # Hyperparameters from Density Descent paper:
+                # https://arxiv.org/abs/2312.11331
                 "k_neighbors": 15,
                 "novelty_threshold": 0.037 * 512,
             }
@@ -619,6 +624,37 @@ CONFIG = {
                 "ranker": "nov",
                 "selection_rule": "mu",
                 "restart_rule": "basic",
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "nslc_cma_imp": {
+        "dim": 100,
+        "iters": 5000,
+        "archive_dims": (100, 100),
+        "use_result_archive": True,
+        "is_dqd": False,
+        "batch_size": 36,
+        "archive": {
+            "class": ProximityArchive,
+            "kwargs": {
+                "k_neighbors": 15,
+                # Note: This is untuned.
+                "novelty_threshold": 0.037 * 100,
+                "local_competition": True,
+            }
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2imp",
+                "selection_rule": "filter",
+                "restart_rule": "no_improvement"
             },
             "num_emitters": 15
         }],
