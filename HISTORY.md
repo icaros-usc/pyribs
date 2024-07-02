@@ -9,7 +9,8 @@
 - Add NoveltyRanker for novelty search ({pr}`477`)
 - Add proximity_archive_plot for visualizing ProximityArchive ({pr}`476`,
   {pr}`480`)
-- Add ProximityArchive for novelty search ({pr}`472`, {pr}`479`, {pr}`481`)
+- Support novelty search with local competition in ProximityArchive ({pr}`481`)
+- Add ProximityArchive for novelty search ({pr}`472`, {pr}`479`)
 - Support diversity optimization in Scheduler.tell ({pr}`473`)
 - Allow specifying separate dtypes for solution, objective, and measures
   ({pr}`471`)
