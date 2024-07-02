@@ -46,7 +46,7 @@ The supported algorithms are:
 - `cma_maega`: GridArchive (learning_rate = 0.01) with
   GradientArborescenceEmitter using ImprovementRanker.
 - `ns_cma`: Novelty Search with CMA-ES; implemented using a ProximityArchive
-  with EvolutionStrategyEmitter.
+  with EvolutionStrategyEmitter. Results are stored in a passive GridArchive.
 
 The parameters for each algorithm are stored in CONFIG. The parameters
 reproduce the experiments presented in the paper in which each algorithm is
