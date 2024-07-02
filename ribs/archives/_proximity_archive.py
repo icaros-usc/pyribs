@@ -32,7 +32,7 @@ class ProximityArchive(ArchiveBase):
 
     This archive also supports the local competition behavior from Novelty
     Search with Local Competition, described in `Lehman
-    2011b`<http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
+    2011b <http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
 
     .. note:: When used for diversity optimization, this archive does not
         require any objectives, and ``objective=None`` can be passed into
@@ -227,6 +227,13 @@ class ProximityArchive(ArchiveBase):
         discussed in the documentation for this class. The novelty is determined
         by comparing to solutions currently in the archive.
 
+        If :attr:`local_competition` is turned on, solutions can also replace
+        existing solutions in the archive. Namely, if the solution was not novel
+        enough to be added, it will be compared to its nearest neighbor, and if
+        it exceeds the objective value of its nearest neighbor, it will replace
+        the nearest neighbor. If there are conflicts where multiple solutions
+        may replace a single solution, the highest-performing is chosen.
+
         .. note:: The indices of all arguments should "correspond" to each
             other, i.e. ``solution[i]``, ``objective[i]``,
             ``measures[i]``, and should be the solution parameters,
@@ -239,7 +246,8 @@ class ProximityArchive(ArchiveBase):
                 objective values to default to 0. However, if the user wishes to
                 associate an objective with each solution, this can be a
                 (batch_size,) array with objective function evaluations of the
-                solutions.
+                solutions. If :attr:`local_competition` is turned on, this
+                argument must be provided.
             measures (array-like): (batch_size, :attr:`measure_dim`) array with
                 measure space coordinates of all the solutions.
             fields (keyword arguments): Additional data for each solution. Each
@@ -256,7 +264,11 @@ class ProximityArchive(ArchiveBase):
               possible values:
 
               - ``0``: The solution was not added to the archive.
-              - ``2``: The solution discovered a new cell in the archive.
+              - ``1``: The solution replaced an existing solution in the
+                archive due to having a higher objective (only applies if
+                :attr:`local_competition` is turned on).
+              - ``2``: The solution was added to the archive due to being
+                sufficiently novel.
 
               To convert statuses to a more semantic format, cast all statuses
               to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
@@ -269,10 +281,29 @@ class ProximityArchive(ArchiveBase):
               :attr:`novelty_threshold`.
 
             - ``"local_competition"`` (:class:`numpy.ndarray` of :class:`int`):
+              Only available if :attr:`local_competition` is turned on.
               Indicates, for each solution, how many of the nearest neighbors
               had lower objective values. Maximum value is :attr:`k_neighbors`.
               If there were no solutions to compute novelty with respect to,
               (i.e., the archive was empty), the local competition is set to 0.
+
+            - ``"value"`` (:class:`numpy.ndarray` of
+              :attr:`dtypes` ["objective"]): Only available if
+              :attr:`local_competition` is turned on. The meaning of each value
+              depends on the corresponding ``status`` and is inspired by the
+              values in CMA-ME (`Fontaine 2020
+              <https://arxiv.org/abs/1912.02400>`_):
+
+              - ``0`` (not added): The value is the "negative improvement," i.e.
+                the objective of the solution passed in minus the objective of
+                the nearest neighbor (this value is negative because the
+                solution did not have a high enough objective to be added to the
+                archive).
+              - ``1`` (replace/improve existing cell): The value is the
+                "improvement," i.e. the objective of the solution passed in
+                minus the objective of the elite that was replaced.
+              - ``2`` (new cell): The value is just the objective of the
+                solution.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
@@ -329,14 +360,15 @@ class ProximityArchive(ArchiveBase):
                     indices.ravel(), "objective")[1]
                 neighbor_objectives = neighbor_objectives.reshape(indices.shape)
 
-                local_competition = np.sum(neighbor_objectives
-                                           > data["objective"],
-                                           axis=1,
-                                           dtype=np.int32)
+                local_competition = np.sum(
+                    neighbor_objectives > data["objective"],
+                    axis=1,
+                    dtype=np.int32,
+                )
 
-        eligible = novelty >= self.novelty_threshold
-        n_eligible = np.sum(eligible)
-        new_size = len(self) + n_eligible
+        novel_enough = novelty >= self.novelty_threshold
+        n_novel_enough = np.sum(novel_enough)
+        new_size = len(self) + n_novel_enough
 
         if new_size > self.capacity:
             # Resize the store by doubling its capacity. We may need to double
@@ -346,14 +378,27 @@ class ProximityArchive(ArchiveBase):
             multiplier = 2**int(np.ceil(np.log2(new_size / self.capacity)))
             self._store.resize(multiplier * self.capacity)
 
+        if self.local_competition:
+            # In the case of local competition, we consider all solutions for
+            # addition. Solutions that were not novel enough have the potential
+            # to replace their nearest neighbors in the archive.
+            add_indices = np.empty(len(novelty), dtype=np.int32)
+            add_indices[novel_enough] = np.arange(len(self), new_size)
+            add_indices[~novel_enough] = \
+                self.index_of(data["measures"][~novel_enough])
+            add_data = data
+        else:
+            # Without local competition, the only solutions that can be added
+            # are the ones that were novel enough.
+            add_indices = np.arange(len(self), new_size)
+            add_data = {key: val[novel_enough] for key, val in data.items()}
+
         # Above, we identified solutions that were eligible for addition. Now,
         # we apply the same addition as in ArchiveBase with only the eligible
         # solutions.
         add_info = self._store.add(
-            np.arange(len(self), new_size),
-            {
-                key: val[eligible] for key, val in data.items()
-            },
+            add_indices,
+            add_data,
             {
                 "dtype": self.dtypes["threshold"],
                 "learning_rate": self._learning_rate,
@@ -373,17 +418,21 @@ class ProximityArchive(ArchiveBase):
         objective_sum = add_info.pop("objective_sum")
         best_index = add_info.pop("best_index")
 
-        # The add_info only contains results for the eligible solutions. Here we
-        # create an add_info that contains results for all solutions.
-        all_status = np.zeros(len(data["measures"]), dtype=np.int32)
-        all_status[eligible] = add_info["status"]
-        add_info["status"] = all_status
-
+        # Add novelty to the data.
         add_info["novelty"] = novelty
 
         if self.local_competition:
+            # add_info contains results for all solutions. We also want to
+            # return local_competition info.
             add_info["local_competition"] = local_competition
         else:
+            # add_info only contains results for the solutions that were novel
+            # enough. Here we create an add_info that contains results for all
+            # solutions.
+            all_status = np.zeros(len(data["measures"]), dtype=np.int32)
+            all_status[novel_enough] = add_info["status"]
+            add_info["status"] = all_status
+
             # We ignore objective/threshold when only novelty is considered.
             del add_info["value"]
 
