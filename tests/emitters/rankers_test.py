@@ -4,8 +4,8 @@ import pytest
 from numpy.testing import assert_allclose
 
 from ribs.archives import GridArchive
-from ribs.emitters.rankers import (NoveltyRanker, ObjectiveRanker,
-                                   RandomDirectionRanker,
+from ribs.emitters.rankers import (DensityRanker, NoveltyRanker,
+                                   ObjectiveRanker, RandomDirectionRanker,
                                    TwoStageImprovementRanker,
                                    TwoStageObjectiveRanker,
                                    TwoStageRandomDirectionRanker)
@@ -199,9 +199,8 @@ def test_two_stage_objective_ranker(archive_fixture, emitter):
     ]).all()
 
 
-def test_novelty_ranker(archive_fixture):
-    _, x0 = archive_fixture
-    solution_batch = [x0, x0, x0, x0]
+def test_novelty_ranker():
+    solution_batch = [[1, 2, 3]] * 4
     measures_batch = [[0, 0], [1.2, 1.2], [0.1, 0.1], [1.5, 1.5]]
 
     ranker = NoveltyRanker()
@@ -219,3 +218,30 @@ def test_novelty_ranker(archive_fixture):
 
     assert (indices == [0, 2, 1, 3]).all()
     assert_allclose(ranking_values, [1.0, 0.5, 0.9, 0.4])
+
+
+def test_density_ranker():
+    solution_batch = [[1, 2, 3]] * 4
+    measures_batch = [[0, 0], [1.2, 1.2], [0.1, 0.1], [1.5, 1.5]]
+
+    class FakeDensityArchive:
+        """Mock density archive for testing."""
+
+        def compute_density(self,
+                            measures):  # pylint: disable = unused-argument
+            """Returns fake densities for the four solutions."""
+            return [0.5, 0.3, 0.7, 0.1]
+
+    ranker = DensityRanker()
+    indices, ranking_values = ranker.rank(
+        emitter=None,
+        archive=FakeDensityArchive(),
+        data={
+            "solution": solution_batch,
+            "measures": measures_batch,
+        },
+        add_info={},
+    )
+
+    assert (indices == [3, 1, 0, 2]).all()
+    assert_allclose(ranking_values, [0.5, 0.3, 0.7, 0.1])
