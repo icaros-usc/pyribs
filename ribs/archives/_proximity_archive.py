@@ -220,6 +220,77 @@ class ProximityArchive(ArchiveBase):
         _, indices = self._cur_kd_tree.query(measures)
         return indices.astype(np.int32)
 
+    def compute_novelty(self, measures, local_competition=None):
+        """Computes the novelty and local competition of the given measures.
+
+        Args:
+            measures (array-like): (batch_size, :attr:`measure_dim`) array of
+                coordinates in measure space.
+            local_competition (None or array-like): This can be None to
+                indicate not to compute local competition. Otherwise, it can be
+                a (batch_size,) array of objective values to use as references
+                for computing objective values.
+        Returns:
+            numpy.ndarray or tuple: Either one value or a tuple of two values:
+
+            - numpy.ndarray: (batch_size,) array holding the novelty score of
+              each measure. If the archive is empty, the novelty is set to the
+              :attr:`novelty_threshold`.
+            - numpy.ndarray: If ``local_competition`` is passed in, a
+              (batch_size,) array holding the local competition of each solution
+              will also be returned. If the archive is empty, the local
+              competition will be set to 0.
+        """
+        measures = np.asarray(measures)
+        batch_size = len(measures)
+
+        if local_competition is not None:
+            objectives = np.asarray(local_competition)
+            local_competition = True
+
+        if self.empty:
+            # Set default values for novelty and local competition when archive
+            # is empty.
+            novelty = np.full(batch_size,
+                              self.novelty_threshold,
+                              dtype=self.dtypes["measures"])
+
+            if local_competition:
+                local_competition_scores = np.zeros(len(novelty),
+                                                    dtype=np.int32)
+        else:
+            # Compute nearest neighbors.
+            k_neighbors = min(len(self), self.k_neighbors)
+            dists, indices = self._cur_kd_tree.query(measures, k=k_neighbors)
+
+            # Expand since query() automatically squeezes the last dim when k=1.
+            dists = dists[:, None] if k_neighbors == 1 else dists
+
+            novelty = np.mean(dists, axis=1)
+
+            if local_competition:
+                indices = indices[:, None] if k_neighbors == 1 else indices
+
+                # The first item returned by `retrieve` is `occupied` -- all
+                # these indices are occupied since they are indices of solutions
+                # in the archive.
+                neighbor_objectives = self._store.retrieve(
+                    indices.ravel(), "objective")[1]
+                neighbor_objectives = neighbor_objectives.reshape(indices.shape)
+
+                # Local competition is the number of neighbors who have a lower
+                # objective.
+                local_competition_scores = np.sum(
+                    neighbor_objectives < objectives[:, None],
+                    axis=1,
+                    dtype=np.int32,
+                )
+
+        if local_competition:
+            return novelty, local_competition_scores
+        else:
+            return novelty
+
     def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
 
@@ -330,42 +401,13 @@ class ProximityArchive(ArchiveBase):
             },
         )
 
-        # Compute novelty and local competition.
-        if self.empty:
-            # If there are no neighbors for computing nearest neighbors, there
-            # is infinite novelty and all solutions are added.
-            novelty = np.full(len(data["measures"]),
-                              self.novelty_threshold,
-                              dtype=self.dtypes["measures"])
-
-            if self.local_competition:
-                local_competition = np.zeros(len(novelty), dtype=np.int32)
+        if self.local_competition:
+            novelty, local_competition = self.compute_novelty(
+                measures=data["measures"],
+                local_competition=data["objective"],
+            )
         else:
-            # Compute nearest neighbors.
-            k_neighbors = min(len(self), self.k_neighbors)
-            dists, indices = self._cur_kd_tree.query(data["measures"],
-                                                     k=k_neighbors)
-
-            # Expand since query() automatically squeezes the last dim when k=1.
-            dists = dists[:, None] if k_neighbors == 1 else dists
-
-            novelty = np.mean(dists, axis=1)
-
-            if self.local_competition:
-                indices = indices[:, None] if k_neighbors == 1 else indices
-
-                # The first item returned by `retrieve` is `occupied` -- all
-                # these indices are occupied since they are indices of solutions
-                # in the archive.
-                neighbor_objectives = self._store.retrieve(
-                    indices.ravel(), "objective")[1]
-                neighbor_objectives = neighbor_objectives.reshape(indices.shape)
-
-                local_competition = np.sum(
-                    neighbor_objectives < data["objective"][:, None],
-                    axis=1,
-                    dtype=np.int32,
-                )
+            novelty = self.compute_novelty(measures=data["measures"])
 
         novel_enough = novelty >= self.novelty_threshold
         n_novel_enough = np.sum(novel_enough)
