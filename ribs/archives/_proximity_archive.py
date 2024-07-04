@@ -249,8 +249,8 @@ class ProximityArchive(ArchiveBase):
             local_competition = True
 
         if self.empty:
-            # If there are no neighbors for computing nearest neighbors, there
-            # is infinite novelty and all solutions are added.
+            # Set default values for novelty and local competition when archive
+            # is empty.
             novelty = np.full(batch_size,
                               self.novelty_threshold,
                               dtype=self.dtypes["measures"])
@@ -278,6 +278,8 @@ class ProximityArchive(ArchiveBase):
                     indices.ravel(), "objective")[1]
                 neighbor_objectives = neighbor_objectives.reshape(indices.shape)
 
+                # Local competition is the number of neighbors who have a lower
+                # objective.
                 local_competition_scores = np.sum(
                     neighbor_objectives < objectives[:, None],
                     axis=1,
