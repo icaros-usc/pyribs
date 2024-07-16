@@ -29,6 +29,13 @@ import ribs
 sys.path.insert(0, os.path.abspath(".."))  # Detect ribs.
 sys.path.append(os.path.abspath("./_ext"))  # Detect extensions.
 
+# Set canonical URL from the Read the Docs Domain
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "")
+
+# Tell Jinja2 templates the build is running on Read the Docs
+if os.environ.get("READTHEDOCS", "") == "True":
+    html_context["READTHEDOCS"] = True
+
 DEV_MODE = os.environ.get("DOCS_MODE", "regular") == "dev"
 READTHEDOCS_VERSION = os.environ.get("READTHEDOCS_VERSION", "stable")
 READTHEDOCS_LANGUAGE = os.environ.get("READTHEDOCS_LANGUAGE", "en")
