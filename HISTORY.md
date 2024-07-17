@@ -20,6 +20,7 @@
 
 #### Documentation
 
+- Fix documentation conf for readthedocs deprecations ({pr}`485`)
 - Add novelty search with CMA-ES to sphere example ({pr}`478`, {pr}`482`)
 
 #### Improvements
