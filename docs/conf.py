@@ -32,10 +32,6 @@ sys.path.append(os.path.abspath("./_ext"))  # Detect extensions.
 # Set canonical URL from the Read the Docs Domain
 html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "")
 
-# Tell Jinja2 templates the build is running on Read the Docs
-if os.environ.get("READTHEDOCS", "") == "True":
-    html_context["READTHEDOCS"] = True
-
 DEV_MODE = os.environ.get("DOCS_MODE", "regular") == "dev"
 READTHEDOCS_VERSION = os.environ.get("READTHEDOCS_VERSION", "stable")
 READTHEDOCS_LANGUAGE = os.environ.get("READTHEDOCS_LANGUAGE", "en")
@@ -142,6 +138,10 @@ html_logo = "_static/imgs/icon.svg"
 html_favicon = "_static/imgs/favicon.ico"
 html_title = (f"pyribs (stable - v{version})" if READTHEDOCS_VERSION == "stable"
               else f"pyribs ({READTHEDOCS_VERSION})")
+
+# Tell Jinja2 templates the build is running on Read the Docs
+if os.environ.get("READTHEDOCS", "") == "True":
+    html_context["READTHEDOCS"] = True
 
 # material theme options (see theme.conf for more information)
 html_theme_options = {
