@@ -217,8 +217,8 @@ class BanditScheduler:
             (batch_size, dim) array: An array of n solutions to evaluate. Each
             row contains a single solution.
         Raises:
-            RuntimeError: This method was called without first calling
-                :meth:`tell`.
+            RuntimeError: This method was called immediately after calling an
+                ask method.
         """
         if self._last_called == "ask":
             raise RuntimeError("ask cannot be called immediately after " +
@@ -331,7 +331,7 @@ class BanditScheduler:
                 argument should be an array with batch_size as the first
                 dimension.
         Raises:
-            RuntimeError: This method is called without first calling
+            RuntimeError: This method was called without first calling
                 :meth:`ask`.
             ValueError: One of the inputs has the wrong shape.
         """
