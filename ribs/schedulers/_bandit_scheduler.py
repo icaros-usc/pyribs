@@ -243,10 +243,15 @@ class BanditScheduler:
             # Reselect all emitters.
             reselect = self._active_arr.copy()
 
-        # If no emitters are active, activate the first num_active.
-        if not self._active_arr.any():
+        # If not enough emitters are active, activate the first num_active.
+        diff = self._num_active - self._active_arr.sum()
+        i = 0
+        while diff > 0:
             reselect[:] = False
-            self._active_arr[:self._num_active] = True
+            if not self._active_arr[i]:
+                self._active_arr[i] = True
+                diff -= 1
+            i += 1
 
         # Deactivate emitters to be reselected.
         self._active_arr[reselect] = False
@@ -258,7 +263,9 @@ class BanditScheduler:
         #   terminated/restarted will be reselected. Otherwise, if reselect is
         #   "all", then all emitters are reselected.
         if reselect.any():
-            ucb1 = np.full_like(self._emitter_pool, np.inf)
+            ucb1 = np.full_like(
+                self._emitter_pool, np.inf
+            )  # np.inf forces to select emitters that were not yet selected
             update_ucb = self._selection != 0
             if update_ucb.any():
                 ucb1[update_ucb] = (
@@ -269,6 +276,16 @@ class BanditScheduler:
             # Activate top emitters based on UCB1.
             activate = np.argsort(ucb1)[-reselect.sum():]
             self._active_arr[activate] = True
+
+            # Deactivate emitters if there are too many active emitters.
+            nb_deactivate = self.emitters.sum() - self._num_active
+            deactivate = np.argsort(ucb1)
+            for i in deactivate:
+                if nb_deactivate == 0:
+                    break
+                if self._active_arr[i]:
+                    self._active_arr[i] = False
+                    nb_deactivate -= 1
 
         self._cur_solutions = []
 
