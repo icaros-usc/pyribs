@@ -8,10 +8,16 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import pytest
 from matplotlib.testing.decorators import image_comparison
-from qdax.core.containers.mapelites_repertoire import (MapElitesRepertoire,
-                                                       compute_cvt_centroids)
 
 from ribs.visualize import qdax_repertoire_3d_plot, qdax_repertoire_heatmap
+
+try:
+    # This is an edge case where yapf and isort disagree.
+    # yapf: disable
+    from qdax.core.containers.mapelites_repertoire import (
+        MapElitesRepertoire, compute_cvt_centroids)
+except ImportError:
+    pytest.skip(allow_module_level=True)
 
 
 @pytest.fixture(autouse=True)
