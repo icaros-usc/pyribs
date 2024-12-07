@@ -240,7 +240,7 @@ class BanditScheduler:
 
             self._restarts = emitter_restarts
         else:
-            # Reselect all emitters.
+            # Reselect all active emitters.
             reselect = self._active_arr.copy()
 
         # If not enough emitters are active, activate the first num_active.
