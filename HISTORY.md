@@ -27,6 +27,7 @@
 
 #### Improvements
 
+- Move yapf after isort in pre-commit ({pr}`490`)
 - Remove `_cells` attribute from ArchiveBase ({pr}`475`)
 - Upgrade setup-miniconda to v3 due to deprecation ({pr}`464`)
 
