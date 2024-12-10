@@ -245,13 +245,13 @@ class BanditScheduler:
 
         # If not enough emitters are active, activate the first num_active.
         # This always happens on the first iteration(s).
-        nb_activated = self._num_active - self._active_arr.sum()
+        num_needed = self._num_active - self._active_arr.sum()
         i = 0
-        while nb_activated > 0:
+        while num_needed > 0:
             reselect[i] = False
             if not self._active_arr[i]:
                 self._active_arr[i] = True
-                nb_activated -= 1
+                num_needed -= 1
             i += 1
 
         # Deactivate emitters to be reselected.
