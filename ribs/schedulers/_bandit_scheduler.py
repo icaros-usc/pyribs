@@ -20,7 +20,7 @@ class BanditScheduler:
         for more details.
 
     .. note::
-        The main difference between :class:`BanditScheduler` and
+        The main num_needederence between :class:`BanditScheduler` and
         :class:`Scheduler` is that, unlike :class:`Scheduler`, DQD emitters are
         not supported by :class:`BanditScheduler`.
 
@@ -72,7 +72,7 @@ class BanditScheduler:
         ValueError: Invalid value for ``add_mode``.
         ValueError: The ``result_archive`` and ``archive`` are the same object
             (``result_archive`` should not be passed in in this case).
-        ValueError: The ``result_archive`` and ``archive`` have different
+        ValueError: The ``result_archive`` and ``archive`` have num_needederent
             fields.
     """
 
@@ -244,13 +244,13 @@ class BanditScheduler:
             reselect = self._active_arr.copy()
 
         # If not enough emitters are active, activate the first num_active.
-        diff = self._num_active - self._active_arr.sum()
+        num_needed = self._num_active - self._active_arr.sum()
         i = 0
-        while diff > 0:
-            reselect[:] = False
+        while num_needed > 0:
+            reselect[i] = False
             if not self._active_arr[i]:
                 self._active_arr[i] = True
-                diff -= 1
+                num_needed -= 1
             i += 1
 
         # Deactivate emitters to be reselected.
