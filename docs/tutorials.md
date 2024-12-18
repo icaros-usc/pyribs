@@ -44,8 +44,7 @@ tutorials/fooling_mnist
 tutorials/optuna
 ```
 
-The following tutorials show how pyribs can be applied to a variety of different
-problems.
+The following tutorials show how pyribs can be applied to a variety of problems.
 
 - {doc}`tutorials/lsi_mnist`: Generates diverse handwritten MNIST digits with
   CMA-ME.
