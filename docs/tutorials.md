@@ -53,7 +53,7 @@ The following tutorials show how pyribs can be applied to a variety of problems.
 - {doc}`tutorials/fooling_mnist`: Searches for misclassified MNIST images with
   MAP-Elites.
 - {doc}`tutorials/optuna`: Details on how pyribs can be integrated with the
-  [Optuna](https://optuna.org) framework for hyperparameter tuning.
+  [Optuna](https://optuna.org) framework for hyperparameter optimization.
 
 <!--
 
