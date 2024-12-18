@@ -20,6 +20,7 @@
 
 #### Documentation
 
+- Add tutorial page on Optuna integration ({pr}`492`)
 - Switch from std to var in arm tutorial ({pr}`486`)
 - Fix documentation conf for readthedocs deprecations ({pr}`485`)
 - Add novelty search with CMA-ES to sphere example ({pr}`478`, {pr}`482`)
