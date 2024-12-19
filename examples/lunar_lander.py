@@ -3,7 +3,7 @@
 Install the following dependencies before running this example -- swig must be
 installed before box2d can be installed, hence it is a separate command:
     pip install swig
-    pip install ribs[visualize] tqdm fire gymnasium[box2d]==0.29.1 moviepy>=1.0.0 dask>=2.0.0 distributed>=2.0.0 bokeh>=2.0.0
+    pip install ribs[visualize] tqdm fire gymnasium[box2d]==1.0.0 moviepy>=1.0.0 dask>=2.0.0 distributed>=2.0.0 bokeh>=2.0.0
 
 This script uses the same setup as the tutorial, but it also uses Dask instead
 of Python's multiprocessing to parallelize evaluations on a single machine and
@@ -89,7 +89,7 @@ def simulate(model, seed=None, video_env=None):
         # just creates their own copy of the environment instead of trying to
         # share the environment. This also makes the function "pure." However,
         # we should use the video_env if it is passed in.
-        env = gym.make("LunarLander-v2")
+        env = gym.make("LunarLander-v3")
     else:
         env = video_env
 
@@ -146,7 +146,7 @@ def create_scheduler(seed, n_emitters, sigma0, batch_size):
         A pyribs scheduler set up for CMA-ME (i.e. it has
         EvolutionStrategyEmitter's and a GridArchive).
     """
-    env = gym.make("LunarLander-v2")
+    env = gym.make("LunarLander-v3")
     action_dim = env.action_space.n
     obs_dim = env.observation_space.shape[0]
     initial_model = np.zeros((action_dim, obs_dim))
@@ -333,7 +333,7 @@ def run_evaluation(outdir, env_seed):
 
     # Use a single env so that all the videos go to the same directory.
     video_env = gym.wrappers.RecordVideo(
-        gym.make("LunarLander-v2", render_mode="rgb_array"),
+        gym.make("LunarLander-v3", render_mode="rgb_array"),
         video_folder=str(outdir / "videos"),
         # This will ensure all episodes are recorded as videos.
         episode_trigger=lambda idx: True,
