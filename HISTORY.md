@@ -20,6 +20,7 @@
 
 #### Documentation
 
+- Update gymnasium and lunar lander version ({pr}`493`)
 - Add tutorial page on Optuna integration ({pr}`492`)
 - Switch from std to var in arm tutorial ({pr}`486`)
 - Fix documentation conf for readthedocs deprecations ({pr}`485`)
