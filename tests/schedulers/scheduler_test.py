@@ -34,6 +34,29 @@ def add_mode(request):
     return request.param
 
 
+@pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
+def test_attributes(scheduler_type):
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)],
+                          threshold_min=1.0,
+                          learning_rate=1.0)
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
+
+    if scheduler_type == "Scheduler":
+        scheduler = Scheduler(archive, emitters)
+
+        assert scheduler.archive == archive
+        assert scheduler.emitters == emitters
+    else:
+        scheduler = BanditScheduler(archive, emitters, 1)
+
+        assert scheduler.archive == archive
+        assert scheduler.emitter_pool == emitters
+        assert len(scheduler.active) == len(scheduler.emitter_pool)
+        assert not np.any(scheduler.active)
+
+
 def test_init_fails_with_non_list():
     archive = GridArchive(solution_dim=2,
                           dims=[100, 100],
