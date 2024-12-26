@@ -355,15 +355,17 @@ def test_constant_active_emitters_bandit_scheduler():
                         batch_size=num_solutions) for _ in range(10)
     ]
     scheduler = BanditScheduler(archive, emitters, num_active=expected_active)
-    num_loops = 5
+    num_loops = 10
+
+    rng = np.random.default_rng(42)
 
     for _ in range(num_loops):
         solutions = scheduler.ask()
         assert scheduler.emitters.sum() == expected_active
 
         # Mock objective and measures for tell
-        objective = np.random.rand(len(solutions))
-        measures = np.random.rand(len(solutions), 2)
+        objective = rng.random(len(solutions))
+        measures = rng.random((len(solutions), 2))
         scheduler.tell(objective, measures)
 
         assert scheduler.emitters.sum() == expected_active
