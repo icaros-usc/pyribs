@@ -20,7 +20,7 @@ class BanditScheduler:
         for more details.
 
     .. note::
-        The main num_needederence between :class:`BanditScheduler` and
+        The main difference between :class:`BanditScheduler` and
         :class:`Scheduler` is that, unlike :class:`Scheduler`, DQD emitters are
         not supported by :class:`BanditScheduler`.
 
@@ -72,7 +72,7 @@ class BanditScheduler:
         ValueError: Invalid value for ``add_mode``.
         ValueError: The ``result_archive`` and ``archive`` are the same object
             (``result_archive`` should not be passed in in this case).
-        ValueError: The ``result_archive`` and ``archive`` have num_needederent
+        ValueError: The ``result_archive`` and ``archive`` have different
             fields.
     """
 
