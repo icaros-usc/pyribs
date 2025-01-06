@@ -277,11 +277,13 @@ class BanditScheduler:
             # Activate top emitters based on UCB1, until there are num_active
             # active emitters. Activate only inactive emitters.
             activate = np.argsort(ucb1)[::-1]
+            cur_active = self._active_arr.sum()
             for i in activate:
-                if self._active_arr.sum() == self._num_active:
+                if cur_active >= self._num_active:
                     break
                 if not self._active_arr[i]:
                     self._active_arr[i] = True
+                    cur_active += 1
 
         self._cur_solutions = []
 
