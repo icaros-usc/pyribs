@@ -18,6 +18,11 @@
 - Replace archive.dtype with archive.dtypes dict that holds dtype of every field
   ({pr}`470`)
 
+#### Bugs
+
+- Fix `BanditScheduler` behaviour: the number of active emitters remains stable
+  ({pr}`489`)
+
 #### Documentation
 
 - Switch from std to var in arm tutorial ({pr}`486`)
@@ -27,8 +32,6 @@
 
 #### Improvements
 
-- Fix `BanditScheduler` behaviour: the number of active emitters remains stable
-  ({pr}`489`)
 - Skip qdax tests if qdax not installed ({pr}`491`)
 - Move yapf after isort in pre-commit ({pr}`490`)
 - Remove `_cells` attribute from ArchiveBase ({pr}`475`)
