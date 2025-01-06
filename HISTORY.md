@@ -27,6 +27,7 @@
 
 #### Documentation
 
+- Add version selector to docs ({pr}`495`)
 - Update gymnasium and lunar lander version ({pr}`493`)
 - Add tutorial page on Optuna integration ({pr}`492`)
 - Switch from std to var in arm tutorial ({pr}`486`)
