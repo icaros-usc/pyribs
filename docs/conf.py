@@ -170,14 +170,12 @@ html_theme_options = {
         "index":
             "A bare-bones Python library for quality diversity optimization."
     },
-    "version_dropdown": False,
+    "version_dropdown": True,
     "version_json": None,
-    #  "version_info": {
-    #      "Release": "https://bashtage.github.io/sphinx-material/",
-    #      "Development": "https://bashtage.github.io/sphinx-material/devel/",
-    #      "Release (rel)": "/sphinx-material/",
-    #      "Development (rel)": "/sphinx-material/devel/",
-    #  },
+    "version_info": {
+        "Stable": "https://docs.pyribs.org/en/stable/",
+        "Latest": "https://docs.pyribs.org/en/latest/",
+    },
     "table_classes": ["plain"],
 }
 
