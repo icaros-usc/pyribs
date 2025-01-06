@@ -339,3 +339,33 @@ def test_tell_fails_with_wrong_shapes(scheduler_fixture, array):
             scheduler.tell(objective_batch[:-1], measures_batch)
         elif array == "measures_batch":
             scheduler.tell(objective_batch, measures_batch[:-1])
+
+
+def test_constant_active_emitters_bandit_scheduler():
+    solution_dim = 2
+    num_solutions = 4
+    expected_active = 3
+    archive = GridArchive(solution_dim=solution_dim,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
+    emitters = [
+        GaussianEmitter(archive,
+                        sigma=1,
+                        x0=[0.0, 0.0],
+                        batch_size=num_solutions) for _ in range(10)
+    ]
+    scheduler = BanditScheduler(archive, emitters, num_active=expected_active)
+    num_loops = 10
+
+    rng = np.random.default_rng(42)
+
+    for _ in range(num_loops):
+        solutions = scheduler.ask()
+        assert scheduler.emitters.sum() == expected_active
+
+        # Mock objective and measures for tell
+        objective = rng.random(len(solutions))
+        measures = rng.random((len(solutions), 2))
+        scheduler.tell(objective, measures)
+
+        assert scheduler.emitters.sum() == expected_active
