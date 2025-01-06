@@ -182,7 +182,7 @@ class BanditScheduler:
     def active(self):
         """numpy.ndarray: Boolean array indicating which emitters in the
         :attr:`emitter_pool` are currently active."""
-        return readonly(self._active_arr)
+        return readonly(self._active_arr.view())
 
     @property
     def result_archive(self):
