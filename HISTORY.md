@@ -20,6 +20,11 @@
 - Replace archive.dtype with archive.dtypes dict that holds dtype of every field
   ({pr}`470`)
 
+#### Bugs
+
+- Fix `BanditScheduler` behaviour: the number of active emitters remains stable
+  ({pr}`489`)
+
 #### Documentation
 
 - Update gymnasium and lunar lander version ({pr}`493`)
