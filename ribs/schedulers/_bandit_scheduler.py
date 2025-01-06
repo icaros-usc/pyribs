@@ -4,6 +4,7 @@ from collections import defaultdict
 
 import numpy as np
 
+from ribs._utils import readonly
 from ribs.schedulers._scheduler import Scheduler
 
 
@@ -172,10 +173,16 @@ class BanditScheduler:
         return self._archive
 
     @property
-    def emitters(self):
-        """list of ribs.archives.EmitterBase: Emitters for generating solutions
-        in this scheduler."""
-        return self._active_arr
+    def emitter_pool(self):
+        """list of ribs.archives.EmitterBase: The pool of emitters available in
+        the scheduler."""
+        return self._emitter_pool
+
+    @property
+    def active(self):
+        """numpy.ndarray: Boolean array indicating which emitters in the
+        :attr:`emitter_pool` are currently active."""
+        return readonly(self._active_arr.view())
 
     @property
     def result_archive(self):
