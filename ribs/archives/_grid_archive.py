@@ -1,4 +1,5 @@
 """Contains the GridArchive."""
+
 import numpy as np
 
 from ribs._utils import check_batch_shape, check_finite, check_is_1d, np_scalar
@@ -68,22 +69,26 @@ class GridArchive(ArchiveBase):
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
-    def __init__(self,
-                 *,
-                 solution_dim,
-                 dims,
-                 ranges,
-                 learning_rate=None,
-                 threshold_min=-np.inf,
-                 epsilon=1e-6,
-                 qd_score_offset=0.0,
-                 seed=None,
-                 dtype=np.float64,
-                 extra_fields=None):
+    def __init__(
+        self,
+        *,
+        solution_dim,
+        dims,
+        ranges,
+        learning_rate=None,
+        threshold_min=-np.inf,
+        epsilon=1e-6,
+        qd_score_offset=0.0,
+        seed=None,
+        dtype=np.float64,
+        extra_fields=None,
+    ):
         self._dims = np.array(dims, dtype=np.int32)
         if len(self._dims) != len(ranges):
-            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
-                             f"(length {len(ranges)}) must be the same length")
+            raise ValueError(
+                f"dims (length {len(self._dims)}) and ranges "
+                f"(length {len(ranges)}) must be the same length"
+            )
 
         ArchiveBase.__init__(
             self,
@@ -105,10 +110,12 @@ class GridArchive(ArchiveBase):
         self._epsilon = np_scalar(epsilon, dtype=self.dtypes["measures"])
 
         self._boundaries = []
-        for dim, lower_bound, upper_bound in zip(self._dims, self._lower_bounds,
-                                                 self._upper_bounds):
+        for dim, lower_bound, upper_bound in zip(
+            self._dims, self._lower_bounds, self._upper_bounds
+        ):
             self._boundaries.append(
-                np.linspace(lower_bound, upper_bound, dim + 1))
+                np.linspace(lower_bound, upper_bound, dim + 1)
+            )
 
     @property
     def dims(self):
@@ -154,6 +161,57 @@ class GridArchive(ArchiveBase):
         and to access all the upper bounds, use ``boundaries[i][1:]``.
         """
         return self._boundaries
+
+    def retessellate(self, new_tessellation):
+        """Initializes a new archive with ``new_tessellation`` and re-inserts
+        solutions from the old archive.
+
+        Note that if the new grid resolution is smaller than the old grid
+        resolution, some solutions originally from different cells may end up
+        being assigned to the same cell. Since only a single highest-objective
+        elite is allowed in each cell, some solutions may be dropped.
+
+        Also note that the current implementation does not support archive
+        thresholds. The thresholds within each cell should correspond to how
+        well the measure space within that cell has been explored, and thereby
+        should correspond to the measure space volume within that cell. While
+        this definitely changes after retessellating, it is currently not clear
+        what the new threshold should be.
+
+        Args:
+            new_tessellation (array-like of int):  Number of cells in each
+            dimension of the measure space, e.g. ``[20, 30, 40]`` indicates
+            there should be 3 dimensions with 20, 30, and 40 cells. The format
+            is similar as the ``dims`` argument in the constructor.
+
+        Returns:
+            GridArchive: A new GridArchive with the new tessellation.
+        """
+        if not np.isclose(self.learning_rate, 1):
+            raise NotImplementedError(
+                "Cannot retessellate an archive with learning rate."
+            )
+
+        new_archive = GridArchive(
+            solution_dim=self.solution_dim,
+            dims=new_tessellation,
+            ranges=list(zip(self.lower_bounds, self.upper_bounds)),
+            learning_rate=None,
+            threshold_min=-np.inf,
+            epsilon=self.epsilon,
+            qd_score_offset=self.qd_score_offset,
+            seed=self._seed,
+            dtype=self.dtypes,
+            # extra_fields=None,
+        )
+
+        curr_solution, curr_objective, curr_measures = self.data(
+            fields=["solution", "objective", "measures"], return_type="tuple"
+        )
+
+        new_archive.add(curr_solution, curr_objective, curr_measures)
+
+        return new_archive
 
     def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
@@ -202,9 +260,10 @@ class GridArchive(ArchiveBase):
         # Adding epsilon accounts for floating point precision errors from
         # transforming measures. We then cast to int32 to obtain integer
         # indices.
-        grid_indices = ((self._dims *
-                         (measures - self._lower_bounds) + self._epsilon) /
-                        self._interval_size).astype(np.int32)
+        grid_indices = (
+            (self._dims * (measures - self._lower_bounds) + self._epsilon)
+            / self._interval_size
+        ).astype(np.int32)
 
         # Clip indices to the archive dimensions (for example, for 20 cells, we
         # want indices to run from 0 to 19).
@@ -227,8 +286,9 @@ class GridArchive(ArchiveBase):
                 :attr:`measure_dim`)
         """
         grid_indices = np.asarray(grid_indices)
-        check_batch_shape(grid_indices, "grid_indices", self.measure_dim,
-                          "measure_dim")
+        check_batch_shape(
+            grid_indices, "grid_indices", self.measure_dim, "measure_dim"
+        )
 
         return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
@@ -249,7 +309,9 @@ class GridArchive(ArchiveBase):
         int_indices = np.asarray(int_indices)
         check_is_1d(int_indices, "int_indices")
 
-        return np.asarray(np.unravel_index(
-            int_indices,
-            self._dims,
-        )).T.astype(np.int32)
+        return np.asarray(
+            np.unravel_index(
+                int_indices,
+                self._dims,
+            )
+        ).T.astype(np.int32)
