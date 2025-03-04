@@ -1,6 +1,6 @@
 import numpy as np
 from ribs.archives import GridArchive
-from ribs.schedulers import Scheduler
+from ribs.schedulers import BayesianOptimizationScheduler
 from ribs.emitters import BayesianOptimizationEmitter
 
 import os
@@ -108,7 +108,7 @@ wandb_logger = wandb.init(
 # Sphere domain evaluator
 sphere_domain = Sphere(solution_dim=4, shift=2)
 
-reload_checkpoint = None
+reload_checkpoint = "/Users/zhaonick/Downloads/pyribs_dev/pyribs/test_logs/checkpoint_00000020.pkl"
 if reload_checkpoint is None:
     start_itr = 0
     # The main grid archive that interacts with BOP-Elites. We start at the lowest
@@ -138,20 +138,25 @@ if reload_checkpoint is None:
     init_obj, init_meas = sphere_domain.evaluate(init_sol)
 
     # The main component of BOP-Elites
-    emitter = BayesianOptimizationEmitter(
-        archive=archive,
-        init_solution=init_sol,
-        init_objective=init_obj,
-        init_measures=init_meas,
-        bounds=[(-10.24, 10.24)] * sphere_domain.solution_dim,
-        upscale_schedule=params.upscale_schedule,
-        seed=params.seed,
-    )
+    emitters = [
+        BayesianOptimizationEmitter(
+            archive=archive,
+            init_solution=init_sol,
+            init_objective=init_obj,
+            init_measures=init_meas,
+            bounds=[(-10.24, 10.24)] * sphere_domain.solution_dim,
+            upscale_schedule=params.upscale_schedule,
+            seed=params.seed,
+        )
+    ]
 
     # Scheduler for managing multiple emitters (in what order we ask them for
-    # solutions etc.). Doesn't matter in this example because we have only 1
-    # emitter. Included for compatibility.
-    scheduler = Scheduler(archive, [emitter])
+    # solutions etc.).
+    # TODO(DrKent): What should the behavior be when there are more than one bayesian
+    # emitters? Can they all fill solutions to the same archive (and if so,
+    # what happens when one of the emitters converge earlier than the others
+    # and requests an archive upscale when the others are not ready?)
+    scheduler = BayesianOptimizationScheduler(archive, emitters)
 
     # Adds the initial batch of data we evaluated to the main and passive archives
     scheduler.archive.add(init_sol, init_obj.flatten(), init_meas)
@@ -204,7 +209,6 @@ for i in range(start_itr, params.total_itrs):
     wandb.log(
         {
             "Itr. Time": time.time() - itr_start_time,
-            "Cum. Time": itr_start_time - exp_start_time,
         },
         commit=True,
         step=i,

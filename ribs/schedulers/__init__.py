@@ -14,10 +14,11 @@ performs in previous iterations.
     ribs.schedulers.Scheduler
     ribs.schedulers.BanditScheduler
 """
+
 from ribs.schedulers._bandit_scheduler import BanditScheduler
 from ribs.schedulers._scheduler import Scheduler
+from ribs.schedulers._bayesian_opt_scheduler import (
+    BayesianOptimizationScheduler,
+)
 
-__all__ = [
-    "Scheduler",
-    "BanditScheduler",
-]
+__all__ = ["Scheduler", "BanditScheduler", "BayesianOptimizationScheduler"]

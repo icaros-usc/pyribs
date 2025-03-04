@@ -176,7 +176,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         """int: Number of SOBOL samples to draw when choosing pattern search
         starting points in :meth:`ask`.
 
-        TODO: Is there a paper I can refer to for this value? I was referring
+        TODO(DrKent): Is there a paper I can refer to for this value? I was referring
         to the BOP-Elites source codes at <https://github.com/kentwar/
         BOPElites/blob/main/algorithm/BOP_Elites_UKD.py#L285>.
         """
@@ -285,7 +285,7 @@ class BayesianOptimizationEmitter(EmitterBase):
                 each cell.
         """
         # retrieves objective values of elites currently stored in the archive.
-        # TODO: BOP-Elites source codes seem to set this to the average
+        # TODO(DrKent): BOP-Elites source codes seem to set this to the average
         # objective value (see <https://github.com/kentwar/BOPElites/blob/
         # main/acq_functions/BOP_UKD_beta.py#L266>), but the paper suggests
         # setting this to 0. Which version should we implement?
@@ -296,17 +296,21 @@ class BayesianOptimizationEmitter(EmitterBase):
         #        evaluated?
         # 0:
         #   con: We'll need to pad the objective function to make it positive.
+        num_samples = obj_mus.shape[0]
         all_obj = np.zeros((self.archive.cells,), dtype=self.dtype)
         elite_idx, elite_obj = self.archive.data(
             ["index", "objective"], return_type="tuple"
         )
         all_obj[elite_idx] = elite_obj
 
-        distribution = norm(loc=obj_mus, scale=obj_stds)
+        distribution = norm(
+            loc=np.repeat(all_obj[None, :], num_samples, axis=0),
+            scale=np.repeat(obj_stds[:, None], self.archive.cells, axis=1),
+        )
 
         return (obj_mus[:, None] - all_obj) * distribution.cdf(
-            all_obj[:, None]
-        ).T + obj_stds[:, None] * distribution.pdf(all_obj[:, None]).T
+            obj_mus[:, None]
+        ) + obj_stds[:, None] * distribution.pdf(obj_mus[:, None])
 
     def _get_cell_probs(self, meas_mus, meas_stds, normalize=True, cutoff=True):
         """Computes archive cell membership probabilities predicted by
@@ -416,9 +420,6 @@ class BayesianOptimizationEmitter(EmitterBase):
             mus[:, 1:], stds[:, 1:], normalize=True, cutoff=True
         )
 
-        if self.num_evals >= 30:
-            __import__("pdb").set_trace()
-
         # TODO: Make this prettier...
         if return_by_cell:
             if return_cell_probs:
@@ -453,7 +454,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             4. Returns the top :attr:`batch_size` solutions with the largest
                EJIE values.
 
-        TODO: This process has been simplified from the source codes
+        TODO(DrKent): This process has been simplified from the source codes
         implementation. The following are the components that are in the
         BOP-Elites source codes but removed here for simplicity:
             1. load_previous_points (<https://github.com/kentwar/BOPElites/blob/
@@ -546,7 +547,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             range(self._search_nrestarts), best_cell_idx
         ]
 
-        # TODO: Both the paper and the source codes check whether the highest
+        # TODO(DrKent): Both the paper and the source codes check whether the highest
         # **EJIE** attribution is above 50%. But since the cutoff is applied to
         # the predicted **cell probabilities**, we are wondering why we don't
         # check whether more than 50% cell probabilities are attributed to a
@@ -567,7 +568,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         # New cell mismatch checks whether the most likely cell predicted by
         # the GP has below 50% confidence (instead of matching predicted and
         # evaluated cells).
-        # TODO: Might need an author's note from Dr. Kent on this.
+        # TODO(DrKent): Might need an author's note from Dr. Kent on this.
         for best_prob, attr_val in zip(
             best_cell_probs[sorted_idx], self._asked_info["ejie_attributions"]
         ):
@@ -607,6 +608,13 @@ class BayesianOptimizationEmitter(EmitterBase):
             fields (keyword arguments): Additional data for each solution. Each
                 argument should be an array with batch_size as the first
                 dimension.
+
+        Returns:
+            np.ndarray: A 1D array of shape (:attr:`measure_dim`,) containing
+                the next resolution to upscale to. The actual upscaling will
+                be done in the scheduler, through
+                :meth:`~ribs.schedulers.BayesianOptimizationScheduler.tell`. If
+                no upscaling is needed in the current step, returns ``None``.
         """
         data, add_info = validate_batch(
             self.archive,
@@ -618,12 +626,6 @@ class BayesianOptimizationEmitter(EmitterBase):
             },
             add_info,
         )
-
-        # TODO: Sanity check. Remove later.
-        try:
-            assert np.all(self._asked_info["asked_solutions"] == solution)
-        except:
-            __import__("pdb").set_trace()
 
         # Adds new data to dataset.
         self._dataset["solution"] = np.vstack(
@@ -645,7 +647,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         )
 
         # Updates mis-specification count
-        # TODO: When deciding whether to increment mis-specification count,
+        # TODO(DrKent): When deciding whether to increment mis-specification count,
         # BOP-Elites source codes (see <https://github.com/kentwar/BOPElites/
         # blob/main/algorithm/BOP_Elites_UKD.py#L151>) also checks
         # no_improvement on top of cell mismatch and EJIE attribution > 50%. We
@@ -664,7 +666,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         #         self._misspec += 1
 
         # Checks upscale conditions and upscales if needed
-        # TODO: It appears that, for upscale conditions, the BOP-Elites source
+        # TODO(DrKent): It appears that, for upscale conditions, the BOP-Elites source
         # codes check QD score convergence (which is a stricter condition than
         # checking all cells have been filled), but do not check the number of
         # evaluated solutions as in paper Algorithm 1. (see <https://github.com/
@@ -683,8 +685,4 @@ class BayesianOptimizationEmitter(EmitterBase):
                     np.all(self.upscale_schedule > self.archive.dims, axis=1)
                 ][0]
 
-                # Upscales the archive
-                # TODO: Might be good to send a signal upstream that the
-                # archive has been upscaled.
-                new_archive = self.archive.retessellate(next_res)
-                self.archive = new_archive
+                return next_res
