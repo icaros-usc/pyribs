@@ -4,7 +4,7 @@ from ribs._utils import check_finite, check_num_sol, validate_batch
 from ribs.emitters._emitter_base import EmitterBase
 
 from ribs.archives import GridArchive
-from scipy.stats import norm
+from scipy.stats import norm, entropy
 from scipy.stats.qmc import Sobol
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
@@ -139,6 +139,10 @@ class BayesianOptimizationEmitter(EmitterBase):
             ),
         }
 
+        self.entropy_norm = entropy(
+            np.ones(self.archive.cells) / self.archive.cells
+        )
+
     @property
     def batch_size(self):
         """int: Number of solutions to return in :meth:`ask`."""
@@ -203,6 +207,11 @@ class BayesianOptimizationEmitter(EmitterBase):
         """Allows resetting the archive associated with this emitter (for
         archive upscaling)."""
         self._archive = new_archive
+
+    def _update_entropy_norm(self):
+        self.entropy_norm = entropy(
+            np.ones(self.archive.cells) / self.archive.cells
+        )
 
     def _check_upscale_schedule(self, upscale_schedule):
         """Checks that ``upscale_schedule`` is a valid upscale schedule,
@@ -420,20 +429,34 @@ class BayesianOptimizationEmitter(EmitterBase):
             mus[:, 1:], stds[:, 1:], normalize=True, cutoff=True
         )
 
+        entropies = entropy(cell_probs, axis=1)[:, None]
+
         # TODO: Make this prettier...
         if return_by_cell:
             if return_cell_probs:
-                return expected_improvements * cell_probs, cell_probs
-            else:
-                return expected_improvements * cell_probs
-        else:
-            if return_cell_probs:
                 return (
-                    np.sum(expected_improvements * cell_probs, axis=1),
+                    expected_improvements
+                    * cell_probs
+                    * (1 + entropies / self.entropy_norm),
                     cell_probs,
                 )
             else:
-                return np.sum(expected_improvements * cell_probs, axis=1)
+                return (
+                    expected_improvements
+                    * cell_probs
+                    * (1 + entropies / self.entropy_norm)
+                )
+        else:
+            if return_cell_probs:
+                return (
+                    np.sum(expected_improvements * cell_probs, axis=1)
+                    * (1 + entropies / self.entropy_norm),
+                    cell_probs,
+                )
+            else:
+                return np.sum(expected_improvements * cell_probs, axis=1) * (
+                    1 + entropies / self.entropy_norm
+                )
 
     def ask(self):
         """Returns :attr:`batch_size` solutions that are predicted to have high

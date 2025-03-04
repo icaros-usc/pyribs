@@ -34,15 +34,23 @@ class Sphere:
 
         displacement = sols - self.shift
         raw_obj = np.sum(np.square(displacement), axis=1)
-        objs = (raw_obj - self._worst_obj) / (self._best_obj - self._worst_obj) * 100
+        objs = (
+            (raw_obj - self._worst_obj)
+            / (self._best_obj - self._worst_obj)
+            * 100
+        )
 
         clipped = sols.copy()
         clip_indices = np.where(np.logical_or(clipped > 5.12, clipped < -5.12))
         clipped[clip_indices] = 5.12 / clipped[clip_indices]
         measures = np.concatenate(
             (
-                np.sum(clipped[:, : self.solution_dim // 2], axis=1, keepdims=True),
-                np.sum(clipped[:, self.solution_dim // 2 :], axis=1, keepdims=True),
+                np.sum(
+                    clipped[:, : self.solution_dim // 2], axis=1, keepdims=True
+                ),
+                np.sum(
+                    clipped[:, self.solution_dim // 2 :], axis=1, keepdims=True
+                ),
             ),
             axis=1,
         )
@@ -89,11 +97,11 @@ params = Params(
 )
 
 wandb_logger = wandb.init(
-    project="BOP-Elites",
+    project="BOP-Elites(entropy)",
     config=asdict(params),
-    name="BOP-Elites, Sphere",
+    name="BOP-Elites(entropy), Sphere",
     id=str(params.seed),
-    tags=["BOP-Elites", "Sphere"],
+    tags=["BOP-Elites(entropy)", "Sphere"],
     resume="allow",  # Allow resuming from same run ID
 )
 
@@ -218,7 +226,9 @@ for i in range(start_itr, params.total_itrs):
             "passive_archive": passive_archive,
         }
 
-        with open(os.path.join(params.logdir, f"checkpoint_{i:08d}.pkl"), "wb") as file:
+        with open(
+            os.path.join(params.logdir, f"checkpoint_{i:08d}.pkl"), "wb"
+        ) as file:
             pickle.dump(checkpoint, file)
 
 wandb_logger.finish()

@@ -106,3 +106,4 @@ class BayesianOptimizationScheduler(Scheduler):
             self.archive = new_archive
             for e in self._emitters:
                 e.archive = new_archive
+                e.update_entropy_norm()
