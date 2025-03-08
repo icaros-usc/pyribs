@@ -35,7 +35,9 @@ class BayesianOptimizationScheduler(Scheduler):
                         f"schedule {other_upscale_schedule}."
                     )
 
-        if not this_upscale_schedule is None:
+        if this_upscale_schedule is None:
+            self._upscale_schedule = None
+        else:
             self._upscale_schedule = this_upscale_schedule.copy()
 
     @property

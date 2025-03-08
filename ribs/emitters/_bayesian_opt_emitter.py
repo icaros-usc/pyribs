@@ -126,7 +126,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         self._search_nrestarts = search_nrestarts
 
         if upscale_schedule is None:
-            self._upscale_schedule = np.array([])
+            self._upscale_schedule = None
         else:
             self._upscale_schedule = np.asarray(upscale_schedule)
             self._check_upscale_schedule(self._upscale_schedule)
@@ -709,7 +709,9 @@ class BayesianOptimizationEmitter(EmitterBase):
         # the original author. The new condition triggers the upscale when no
         # new cell has been found for multiple iterations.
         self._update_no_coverage_progress()
-        if np.any(np.all(self.upscale_schedule > self.archive.dims, axis=1)):
+        if (not self.upscale_schedule is None) and np.any(
+            np.all(self.upscale_schedule > self.archive.dims, axis=1)
+        ):
             if self._numitrs_noprogress > self.upscale_trigger_threshold:
                 # The next resolution on the schedule that is higher than the
                 # current resolution along all measure dims
