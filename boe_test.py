@@ -5,6 +5,7 @@ from ribs.emitters import BayesianOptimizationEmitter
 
 import os
 import time
+import uuid
 import wandb
 import pickle
 import matplotlib.pyplot as plt
@@ -81,7 +82,11 @@ if not trial_path.is_dir():
 class Params:
     init_nsamples: int
     total_itrs: int
+    search_nrestarts: int
+    entropy_ejie: bool
     upscale_schedule: List[List]
+    batch_size: int
+    num_emitters: int
     seed: int
     logdir: str
     log_evry: int
@@ -90,18 +95,22 @@ class Params:
 params = Params(
     init_nsamples=20,
     total_itrs=1000,
+    search_nrestarts=5,
+    entropy_ejie=False,
     upscale_schedule=[[5, 5], [10, 10], [25, 25]],
+    batch_size=1,
+    num_emitters=1,
     seed=42,
     logdir=trial_outdir,
     log_evry=20,
 )
 
 wandb_logger = wandb.init(
-    project="BOP-Elites(entropy)",
+    project="BOP-Elites(sphere)",
     config=asdict(params),
-    name="BOP-Elites(entropy), Sphere",
-    id=str(params.seed),
-    tags=["BOP-Elites(entropy)", "Sphere"],
+    name="BOP-Elites",
+    id=str(uuid.uuid5(uuid.NAMESPACE_DNS, str(asdict(params)))),
+    tags=["BOP-Elites", "Sphere"],
     resume="allow",  # Allow resuming from same run ID
 )
 
@@ -145,17 +154,17 @@ if reload_checkpoint is None:
             init_objective=init_obj,
             init_measures=init_meas,
             bounds=[(-10.24, 10.24)] * sphere_domain.solution_dim,
+            search_nrestarts=params.search_nrestarts,
+            entropy_ejie=params.entropy_ejie,
             upscale_schedule=params.upscale_schedule,
+            batch_size=params.batch_size,
             seed=params.seed,
         )
+        for _ in range(params.num_emitters)
     ]
 
     # Scheduler for managing multiple emitters (in what order we ask them for
     # solutions etc.).
-    # TODO(DrKent): What should the behavior be when there are more than one bayesian
-    # emitters? Can they all fill solutions to the same archive (and if so,
-    # what happens when one of the emitters converge earlier than the others
-    # and requests an archive upscale when the others are not ready?)
     scheduler = BayesianOptimizationScheduler(archive, emitters)
 
     # Adds the initial batch of data we evaluated to the main and passive archives

@@ -12,6 +12,7 @@ from sklearn.gaussian_process.kernels import Matern
 from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
 from pymoo.optimize import minimize
 from pymoo.problems.functional import FunctionalProblem
+from pymoo.termination.default import DefaultSingleObjectiveTermination
 
 
 class BayesianOptimizationEmitter(EmitterBase):
@@ -40,6 +41,9 @@ class BayesianOptimizationEmitter(EmitterBase):
             ``None`` or ``+-inf`` because SOBOL sampling is used.
         search_nrestarts (int): Number of starting points for EJIE pattern
             search.
+        entropy_ejie (bool): If ``True``, augments EJIE acquisition function
+            with entropy to encourage measure space exploration. See <https://
+            dl.acm.org/doi/10.1145/3583131.3590486> Sec. 4.1 for more details.
         upscale_schedule (array-like): An array of increasing archive
             resolutions starting with :attr:`archive.resolution` and ending
             with the user's intended final archive resolution. This will
@@ -47,6 +51,9 @@ class BayesianOptimizationEmitter(EmitterBase):
             within the current archive has been filled, or the number of
             evaluated solutions is more than twice :attr:`archive.cells`. If
             ``None``, the archive will not be upscaled.
+        min_obj (float or int): The lowest possible objective value. Serves as
+            the default objective value within archive cells that have not been
+            filled. Mainly used when computing expected improvement.
         batch_size (int): Number of solutions to return in :meth:`ask`. Must
             not exceed ``search_nrestarts``. It is recommended to set this to 1
             for sample efficiency.
@@ -62,7 +69,9 @@ class BayesianOptimizationEmitter(EmitterBase):
         bounds,
         *,
         search_nrestarts=5,
+        entropy_ejie=False,
         upscale_schedule=None,
+        min_obj=0,
         batch_size=1,
         seed=None,
     ):
@@ -126,6 +135,7 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         self._misspec = 0
         self._overspec = 0
+        self._numitrs_noprogress = 0
 
         # Saves info on solutions returned by ask()
         self._asked_info = {
@@ -139,9 +149,13 @@ class BayesianOptimizationEmitter(EmitterBase):
             ),
         }
 
-        self.entropy_norm = entropy(
-            np.ones(self.archive.cells) / self.archive.cells
+        self._entropy_norm = (
+            entropy(np.ones(self.archive.cells) / self.archive.cells)
+            if entropy_ejie
+            else None
         )
+
+        self._min_obj = min_obj
 
     @property
     def batch_size(self):
@@ -158,7 +172,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             * (2 / self.archive.cells)
             ** (
                 (10 * self.solution_dim)
-                / (self._misspec - 2 * self._overspec + self.num_evals)
+                / (self._misspec - 2 * self._overspec + self.num_evals + 1e-6)
             )
             ** 0.5
         )
@@ -180,9 +194,11 @@ class BayesianOptimizationEmitter(EmitterBase):
         """int: Number of SOBOL samples to draw when choosing pattern search
         starting points in :meth:`ask`.
 
-        TODO(DrKent): Is there a paper I can refer to for this value? I was referring
-        to the BOP-Elites source codes at <https://github.com/kentwar/
-        BOPElites/blob/main/algorithm/BOP_Elites_UKD.py#L285>.
+        TODO: If measure function gradients are available, a potentially better
+        way to do this might be to do Latin Hypercube sampling within measure
+        space, and then use measure gradients to find solutions achieving those
+        measure space samples. See <https://wrap.warwick.ac.uk/id/eprint/189556
+        /1/WRAP_Theses_Kent_2024.pdf> Sec. 6.3 for more details.
         """
         m = 10 if self.solution_dim < 2 else 1
         return np.clip(
@@ -202,16 +218,51 @@ class BayesianOptimizationEmitter(EmitterBase):
         initializing this emitter."""
         return self._upscale_schedule
 
+    @property
+    def upscale_trigger_threshold(self):
+        """int: The maximum number of iterations the emitter is allowed to not
+        find new cells before archive upscale is triggered. See <https://github.
+        com/kentwar/BOPElites/blob/main/algorithm/BOP_Elites_UKD_beta.py#L187>
+        for more details."""
+        return np.floor(np.sqrt(self.archive.cells))
+
+    @property
+    def min_obj(self):
+        """float or int: The lowest possible objective value. See the `min_obj`
+        parameter in :meth:``__init__``."""
+        return self._min_obj
+
     @EmitterBase.archive.setter
     def archive(self, new_archive):
         """Allows resetting the archive associated with this emitter (for
         archive upscaling)."""
         self._archive = new_archive
 
-    def _update_entropy_norm(self):
-        self.entropy_norm = entropy(
-            np.ones(self.archive.cells) / self.archive.cells
-        )
+    def _post_upscale_updates(self):
+        """After the upstream scheduler upscales the archive, updates
+        :attr:`_entropy_norm` according to new number of archive cells and
+        resets :attr:`_numitrs_noprogress` to 0.
+        """
+        if not self._entropy_norm is None:
+            self._entropy_norm = entropy(
+                np.ones(self.archive.cells) / self.archive.cells
+            )
+
+        self._numitrs_noprogress = 0
+
+    def _update_no_coverage_progress(self):
+        """Increments :attr:`_numitrs_noprogress` if number of discovered
+        archive cells remains the same for two successive calls to this
+        function. Otherwise resets :attr:`_numitrs_noprogress` to 0.
+        """
+        if not "_prev_numcells" in self.__dict__:
+            self._prev_numcells = len(self.archive)
+
+        if len(self.archive) == self._prev_numcells:
+            self._numitrs_noprogress += 1
+        else:
+            self._numitrs_noprogress = 0
+            self._prev_numcells = len(self.archive)
 
     def _check_upscale_schedule(self, upscale_schedule):
         """Checks that ``upscale_schedule`` is a valid upscale schedule,
@@ -293,20 +344,8 @@ class BayesianOptimizationEmitter(EmitterBase):
                 containing the expected improvements for each solution over
                 each cell.
         """
-        # retrieves objective values of elites currently stored in the archive.
-        # TODO(DrKent): BOP-Elites source codes seem to set this to the average
-        # objective value (see <https://github.com/kentwar/BOPElites/blob/
-        # main/acq_functions/BOP_UKD_beta.py#L266>), but the paper suggests
-        # setting this to 0. Which version should we implement?
-        # Average:
-        #   con: What if the maximum achievable objective for an empty cell
-        #        is lower than the average objective? Since we don't evaluate
-        #        negative EJIE, will this mean the empty cell will never be
-        #        evaluated?
-        # 0:
-        #   con: We'll need to pad the objective function to make it positive.
         num_samples = obj_mus.shape[0]
-        all_obj = np.zeros((self.archive.cells,), dtype=self.dtype)
+        all_obj = np.full((self.archive.cells,), self.min_obj)
         elite_idx, elite_obj = self.archive.data(
             ["index", "objective"], return_type="tuple"
         )
@@ -431,32 +470,30 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         entropies = entropy(cell_probs, axis=1)[:, None]
 
+        ejie_by_cell = expected_improvements * cell_probs
+        ejie_entropy_by_cell = (
+            ejie_by_cell
+            if self._entropy_norm is None
+            else ejie_by_cell * (1 + entropies / self._entropy_norm)
+        )
+
         # TODO: Make this prettier...
         if return_by_cell:
             if return_cell_probs:
                 return (
-                    expected_improvements
-                    * cell_probs
-                    * (1 + entropies / self.entropy_norm),
+                    ejie_entropy_by_cell,
                     cell_probs,
                 )
             else:
-                return (
-                    expected_improvements
-                    * cell_probs
-                    * (1 + entropies / self.entropy_norm)
-                )
+                return ejie_entropy_by_cell
         else:
             if return_cell_probs:
                 return (
-                    np.sum(expected_improvements * cell_probs, axis=1)
-                    * (1 + entropies / self.entropy_norm),
+                    np.sum(ejie_entropy_by_cell, axis=1),
                     cell_probs,
                 )
             else:
-                return np.sum(expected_improvements * cell_probs, axis=1) * (
-                    1 + entropies / self.entropy_norm
-                )
+                return np.sum(ejie_entropy_by_cell, axis=1)
 
     def ask(self):
         """Returns :attr:`batch_size` solutions that are predicted to have high
@@ -515,6 +552,8 @@ class BayesianOptimizationEmitter(EmitterBase):
             xu=self.upper_bounds,
         )
 
+        termination = DefaultSingleObjectiveTermination()
+
         optimized_samples = []
         while len(optimized_samples) < self.batch_size:
             samples = self._sample_n_rescale(self.num_sobol_samples)
@@ -532,17 +571,12 @@ class BayesianOptimizationEmitter(EmitterBase):
             for x0 in search_starting_points:
                 optimizer = PatternSearch(x0=x0)
 
-                # TODO: Using default pymoo minimize and PatternSearch
-                # parameters.
-                # For reference, PatternSearch termination defaults to
-                # ``SingleObjectiveSpaceTermination(tol=1e-8)``
-                # while BOP-Elites source codes use
-                # DefaultSingleObjectiveTermination with ``ftol=1e-4``
+                # TODO: Using default pymoo minimize, PatternSearch, and
+                # termination.
                 result = minimize(
                     problem=pymoo_problem,
                     algorithm=optimizer,
-                    # We are currently re-initializing optimizer for each
-                    # starting point so no need to copy
+                    termination=termination,
                     copy_algorithm=False,
                     seed=self._seed,
                 )
@@ -570,11 +604,6 @@ class BayesianOptimizationEmitter(EmitterBase):
             range(self._search_nrestarts), best_cell_idx
         ]
 
-        # TODO(DrKent): Both the paper and the source codes check whether the highest
-        # **EJIE** attribution is above 50%. But since the cutoff is applied to
-        # the predicted **cell probabilities**, we are wondering why we don't
-        # check whether more than 50% cell probabilities are attributed to a
-        # single cell.
         # Computes EJIE attributions of the most likely cell for each solution
         ejie_attributions = ejie_by_cell[
             range(self._search_nrestarts), best_cell_idx
@@ -612,12 +641,9 @@ class BayesianOptimizationEmitter(EmitterBase):
                whether its predicted cell is different from the cell it is
                actually assigned according to its evaluated measures. If so,
                increments :attr:`_misspec`.
-            4. If either every cell within the current archive has been filled,
-               or if the number of evaluated solutions (i.e. the size of
-               :attr:`_dataset`) is more than twice :attr:`archive.cells`, and
-               if there are higher resolutions in :attr:`upscale_schedule`,
-               upscales the archive to the next scheduled resolution. This will
-               update :attr:`archive` in-place.
+            4. If :attr:`upscale_schedule` is not ``None``, and if the archive
+               upcale conditions have been met, sends an upscale signal
+               upstream by returning the next resolution to upscale to.
 
         Args:
             solution (array-like): (batch_size, :attr:`solution_dim`) array of
@@ -669,39 +695,17 @@ class BayesianOptimizationEmitter(EmitterBase):
             ),
         )
 
-        # Updates mis-specification count
-        # TODO(DrKent): When deciding whether to increment mis-specification count,
-        # BOP-Elites source codes (see <https://github.com/kentwar/BOPElites/
-        # blob/main/algorithm/BOP_Elites_UKD.py#L151>) also checks
-        # no_improvement on top of cell mismatch and EJIE attribution > 50%. We
-        # are currently not checking no_improvement because it is not included
-        # in the paper, but please let me know if we should include it.
-        # eval_cell_idx = self.archive.index_of(measures)
-        # for attr_val, pred_idx, eval_idx in zip(
-        #     self._asked_info["ejie_attributions"],
-        #     self._asked_info["predicted_cells"],
-        #     eval_cell_idx,
-        # ):
-        #     # Old cell mismatch compares predicted cell to evaluated cell.
-        #     # This has been deprecated as suggested by Dr. Kent. New cell
-        #     # mismatch has been moved to ask().
-        #     if attr_val > 0.5 and pred_idx != eval_idx:
-        #         self._misspec += 1
-
         # Checks upscale conditions and upscales if needed
-        # TODO(DrKent): It appears that, for upscale conditions, the BOP-Elites source
-        # codes check QD score convergence (which is a stricter condition than
-        # checking all cells have been filled), but do not check the number of
-        # evaluated solutions as in paper Algorithm 1. (see <https://github.com/
-        # kentwar/BOPElites/blob/main/algorithm/BOP_Elites_UKD_beta.py#L210>).
-        # We are currently implementing the paper's conditions, i.e. all cells
-        # filled or num_evals > 2*cells, but please let us know if we should
-        # implement the source codes version instead.
+        # NOTE: BOP-Elites Algorithm 1 implements a slightly different upscale
+        # condition, in which the archive upscale is triggered if either all
+        # its cells have been filled or if num_evals > 2*cells. However, the
+        # old condition may struggle with applications where some cells are not
+        # feasible.We implement an improved condition here as recommended by
+        # the original author. The new condition triggers the upscale when no
+        # new cell has been found for multiple iterations.
+        self._update_no_coverage_progress()
         if np.any(np.all(self.upscale_schedule > self.archive.dims, axis=1)):
-            if (
-                self.archive.stats.coverage == 1.0
-                or self.num_evals > 2 * self.archive.cells
-            ):
+            if self._numitrs_noprogress > self.upscale_trigger_threshold:
                 # The next resolution on the schedule that is higher than the
                 # current resolution along all measure dims
                 next_res = self.upscale_schedule[
