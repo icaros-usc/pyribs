@@ -468,32 +468,37 @@ class BayesianOptimizationEmitter(EmitterBase):
             mus[:, 1:], stds[:, 1:], normalize=True, cutoff=True
         )
 
-        entropies = entropy(cell_probs, axis=1)[:, None]
-
-        ejie_by_cell = expected_improvements * cell_probs
-        ejie_entropy_by_cell = (
-            ejie_by_cell
-            if self._entropy_norm is None
-            else ejie_by_cell * (1 + entropies / self._entropy_norm)
-        )
+        if not self._entropy_norm is None:
+            all_zero_filter = np.all(np.isclose(cell_probs, 0), axis=1)
+            entropies = np.zeros((mus.shape[0], 1))
+            entropies[~all_zero_filter] = entropy(
+                cell_probs[~all_zero_filter], axis=1
+            )[:, None]
+            ejie_by_cell = (
+                expected_improvements
+                * cell_probs
+                * (1 + entropies / self._entropy_norm)
+            )
+        else:
+            ejie_by_cell = expected_improvements * cell_probs
 
         # TODO: Make this prettier...
         if return_by_cell:
             if return_cell_probs:
                 return (
-                    ejie_entropy_by_cell,
+                    ejie_by_cell,
                     cell_probs,
                 )
             else:
-                return ejie_entropy_by_cell
+                return ejie_by_cell
         else:
             if return_cell_probs:
                 return (
-                    np.sum(ejie_entropy_by_cell, axis=1),
+                    np.sum(ejie_by_cell, axis=1),
                     cell_probs,
                 )
             else:
-                return np.sum(ejie_entropy_by_cell, axis=1)
+                return np.sum(ejie_by_cell, axis=1)
 
     def ask(self):
         """Returns :attr:`batch_size` solutions that are predicted to have high
