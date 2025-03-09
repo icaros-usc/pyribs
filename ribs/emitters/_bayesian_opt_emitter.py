@@ -597,7 +597,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             if not found_positive_ejie:
                 self._overspec += 1
 
-        optimized_samples = np.array(optimized_samples)[: self.batch_size]
+        optimized_samples = np.array(optimized_samples)
 
         ejie_by_cell, cell_probs = self._get_ejie_values(
             optimized_samples, return_by_cell=True, return_cell_probs=True
@@ -605,15 +605,15 @@ class BayesianOptimizationEmitter(EmitterBase):
         optimized_ejies = np.sum(ejie_by_cell, axis=1)
         # Most likely cell for each optimized solution
         best_cell_idx = np.argmax(cell_probs, axis=1)
-        best_cell_probs = cell_probs[range(self.batch_size), best_cell_idx]
+        best_cell_probs = cell_probs[range(cell_probs.shape[0]), best_cell_idx]
 
         # Computes EJIE attributions of the most likely cell for each solution
         ejie_attributions = ejie_by_cell[
-            range(self.batch_size), best_cell_idx
+            range(ejie_by_cell.shape[0]), best_cell_idx
         ] / np.sum(ejie_by_cell, axis=1)
 
         # Sort by EJIE, take the top :attr:`batch_size` samples
-        sorted_idx = np.argsort(optimized_ejies)[::-1]
+        sorted_idx = np.argsort(optimized_ejies)[::-1][: self.batch_size]
 
         # Saves asked info for later tell() updates
         self._asked_info["asked_solutions"] = optimized_samples[sorted_idx]
