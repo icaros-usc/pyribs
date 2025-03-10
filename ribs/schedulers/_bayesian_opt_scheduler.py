@@ -1,17 +1,49 @@
-"""Provides the Scheduler."""
+"""Provides the BayesianOptimizationScheduler."""
 
 import numpy as np
-from ribs.schedulers._scheduler import Scheduler
+
 from ribs.emitters._bayesian_opt_emitter import BayesianOptimizationEmitter
+from ribs.schedulers._scheduler import Scheduler
 
 
 class BayesianOptimizationScheduler(Scheduler):
-    def __init__(
-        self, archive, emitters, *, result_archive=None, add_mode="batch"
-    ):
-        super().__init__(
-            archive, emitters, result_archive=result_archive, add_mode=add_mode
-        )
+    """This scheduler is mostly the same as :class:`~Scheduler`, except it
+    supports upscaling the archives associated with its emitters. It should be
+    used in conjunction with :class:`~ribs.emitters.BayesianOptimizationEmitter`
+    and :class:`~ribs.archives.GridArchive`.
+
+    Args:
+        archive (ribs.archives.GridArchive): An archive object.
+        emitters (list of ribs.emitters.BayesianOptimizationEmitter): A list of
+            emitter objects.
+        add_mode (str): Indicates how solutions should be added to the archive.
+            The default is "batch", which adds all solutions with one call to
+            :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single"
+            to add the solutions one at a time with
+            :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is
+            included for legacy reasons, as it was the only mode of operation in
+            pyribs 0.4.0 and before. We highly recommend using "batch" mode
+            since it is significantly faster.
+        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
+            CMA-MAE, the archive does not store all the best-performing
+            solutions. The ``result_archive`` is a secondary archive where we
+            can store all the best-performing solutions.
+
+    Raises:
+        TypeError: Some emitters are not BayesianOptimizationEmitter.
+        ValueError: Not all emitters have the same upscale schedule.
+    """
+
+    def __init__(self,
+                 archive,
+                 emitters,
+                 *,
+                 result_archive=None,
+                 add_mode="batch"):
+        super().__init__(archive,
+                         emitters,
+                         result_archive=result_archive,
+                         add_mode=add_mode)
 
         # Checks that all emitters are BayesianOptimizationEmitter and have the
         # same upscale schedule
@@ -20,8 +52,7 @@ class BayesianOptimizationScheduler(Scheduler):
             if not isinstance(e, BayesianOptimizationEmitter):
                 raise TypeError(
                     "All emitters must be of type BayesianOptimizationEmitter, "
-                    f"but emitter{i} has type {type(e)}"
-                )
+                    f"but emitter{i} has type {type(e)}")
 
             if i == 0:
                 this_upscale_schedule = e.upscale_schedule
@@ -32,8 +63,7 @@ class BayesianOptimizationScheduler(Scheduler):
                         "All emitters must have the same upscale schedule. "
                         "emitter0 has upscale schedule "
                         f"{this_upscale_schedule}, but emitter{i} has upscale "
-                        f"schedule {other_upscale_schedule}."
-                    )
+                        f"schedule {other_upscale_schedule}.")
 
         if this_upscale_schedule is None:
             self._upscale_schedule = None
@@ -42,6 +72,8 @@ class BayesianOptimizationScheduler(Scheduler):
 
     @property
     def upscale_schedule(self):
+        """The upscale schedules for all its bayesian optimization emitters.
+        None if emitters do not undergo archive upscaling."""
         return self._upscale_schedule
 
     @Scheduler.archive.setter
@@ -50,8 +82,7 @@ class BayesianOptimizationScheduler(Scheduler):
 
     def tell_dqd(self, objective, measures, jacobian, **fields):
         raise NotImplementedError(
-            "BayesianOptimization currently does not support DQD"
-        )
+            "BayesianOptimization currently does not support DQD")
 
     def tell(self, objective, measures, **fields):
         """Updates :attr:`emitters` and the :attr:`archive` with new data. When
@@ -63,28 +94,27 @@ class BayesianOptimizationScheduler(Scheduler):
             raise RuntimeError("tell() was called without calling ask().")
         self._last_called = "tell"
 
-        data = self._validate_tell_data(
-            {
-                "objective": objective,
-                "measures": measures,
-                **fields,
-            }
-        )
+        data = self._validate_tell_data({
+            "objective": objective,
+            "measures": measures,
+            **fields,
+        })
 
         add_info = self._add_to_archives(data)
 
         pos = 0
         this_upscale_res = None
-        for i, (emitter, n) in enumerate(
-            zip(self._emitters, self._num_emitted)
-        ):
+        for i, (emitter, n) in enumerate(zip(self._emitters,
+                                             self._num_emitted)):
             end = pos + n
             upscale_res = emitter.tell(
                 **{
                     name: None if arr is None else arr[pos:end]
                     for name, arr in data.items()
                 },
-                add_info={name: arr[pos:end] for name, arr in add_info.items()},
+                add_info={
+                    name: arr[pos:end] for name, arr in add_info.items()
+                },
             )
             pos = end
 
@@ -95,11 +125,10 @@ class BayesianOptimizationScheduler(Scheduler):
                 else:
                     if np.any(this_upscale_res != upscale_res):
                         raise ValueError(
-                            "Emitters returned different upscale resolutions when "
-                            "they should return the same. Emitter0 returned "
-                            f"resolution {this_upscale_res}, but emitter{i} "
-                            f"returned resolution {upscale_res}"
-                        )
+                            "Emitters returned different upscale resolutions "
+                            "when they should return the same. Emitter0 "
+                            f"returned resolution {this_upscale_res}, but "
+                            f"emitter{i} returned resolution {upscale_res}")
 
         # If the upscale resolution is not None, upscales :attr:`archive` and
         # all emitter archives.
@@ -108,4 +137,4 @@ class BayesianOptimizationScheduler(Scheduler):
             self.archive = new_archive
             for e in self._emitters:
                 e.archive = new_archive
-                e._post_upscale_updates()
+                e.post_upscale_updates()

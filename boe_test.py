@@ -1,21 +1,24 @@
-import numpy as np
-from ribs.archives import GridArchive
-from ribs.schedulers import BayesianOptimizationScheduler
-from ribs.emitters import BayesianOptimizationEmitter
-
+# pylint: skip-file
 import os
+import pickle
 import time
 import uuid
-import wandb
-import pickle
-import matplotlib.pyplot as plt
-from typing import List
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import List
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import wandb
+from ribs.archives import GridArchive
+from ribs.emitters import BayesianOptimizationEmitter
+from ribs.schedulers import BayesianOptimizationScheduler
 from ribs.visualize import grid_archive_heatmap
 
 
 class Sphere:
+
     def __init__(self, solution_dim, shift):
         self.solution_dim = solution_dim
         self.shift = shift
@@ -23,23 +26,20 @@ class Sphere:
         # We min-max normalize all objective scores to [0, 100]
         self._best_obj = 0
         self._worst_obj = max(
-            (10.24 - shift) ** 2 * self.solution_dim,
-            (-10.24 - shift) ** 2 * self.solution_dim,
+            (10.24 - shift)**2 * self.solution_dim,
+            (-10.24 - shift)**2 * self.solution_dim,
         )
 
     def evaluate(self, sols):
         if not sols.shape[1] == self.solution_dim:
             raise ValueError(
-                f"Expects sols to have shape (,{self.solution_dim}), actually gets shape {sols.shape}"
-            )
+                f"Expects sols to have shape (,{self.solution_dim}), actually "
+                f"gets shape {sols.shape}")
 
         displacement = sols - self.shift
         raw_obj = np.sum(np.square(displacement), axis=1)
-        objs = (
-            (raw_obj - self._worst_obj)
-            / (self._best_obj - self._worst_obj)
-            * 100
-        )
+        objs = ((raw_obj - self._worst_obj) /
+                (self._best_obj - self._worst_obj) * 100)
 
         clipped = sols.copy()
         clip_indices = np.where(np.logical_or(clipped > 5.12, clipped < -5.12))
@@ -47,11 +47,9 @@ class Sphere:
         measures = np.concatenate(
             (
                 np.sum(
-                    clipped[:, : self.solution_dim // 2], axis=1, keepdims=True
-                ),
+                    clipped[:, :self.solution_dim // 2], axis=1, keepdims=True),
                 np.sum(
-                    clipped[:, self.solution_dim // 2 :], axis=1, keepdims=True
-                ),
+                    clipped[:, self.solution_dim // 2:], axis=1, keepdims=True),
             ),
             axis=1,
         )
@@ -120,17 +118,17 @@ sphere_domain = Sphere(solution_dim=4, shift=2)
 reload_checkpoint = None
 if reload_checkpoint is None:
     start_itr = 0
-    # The main grid archive that interacts with BOP-Elites. We start at the lowest
-    # resolution from ``upscale_schedule``.
+    # The main grid archive that interacts with BOP-Elites. We start at the
+    # lowest resolution from ``upscale_schedule``.
     archive = GridArchive(
         solution_dim=sphere_domain.solution_dim,
         dims=params.upscale_schedule[0],
         ranges=[[-5.12, 5.12]] * 2,
         seed=params.seed,
     )
-    # The passive archive that does NOT interact with BOP-Elites other than storing
-    # all evaluated data seen so far. We do not scale the passive archive, and it
-    # always stays at the final resolution.
+    # The passive archive that does NOT interact with BOP-Elites other than
+    # storing all evaluated data seen so far. We do not scale the passive
+    # archive, and it always stays at the final resolution.
     passive_archive = GridArchive(
         solution_dim=sphere_domain.solution_dim,
         dims=params.upscale_schedule[-1],
@@ -150,24 +148,22 @@ if reload_checkpoint is None:
     emitters = [
         BayesianOptimizationEmitter(
             archive=archive,
-            init_solution=init_sol,
-            init_objective=init_obj,
-            init_measures=init_meas,
+            init_data=(init_sol, init_obj, init_meas),
             bounds=[(-10.24, 10.24)] * sphere_domain.solution_dim,
             search_nrestarts=params.search_nrestarts,
             entropy_ejie=params.entropy_ejie,
             upscale_schedule=params.upscale_schedule,
             batch_size=params.batch_size,
             seed=params.seed,
-        )
-        for _ in range(params.num_emitters)
+        ) for _ in range(params.num_emitters)
     ]
 
     # Scheduler for managing multiple emitters (in what order we ask them for
     # solutions etc.).
     scheduler = BayesianOptimizationScheduler(archive, emitters)
 
-    # Adds the initial batch of data we evaluated to the main and passive archives
+    # Adds the initial batch of data we evaluated to the main and passive
+    # archives
     scheduler.archive.add(init_sol, init_obj.flatten(), init_meas)
     passive_archive.add(init_sol, init_obj.flatten(), init_meas)
 else:
@@ -235,9 +231,8 @@ for i in range(start_itr, params.total_itrs):
             "passive_archive": passive_archive,
         }
 
-        with open(
-            os.path.join(params.logdir, f"checkpoint_{i:08d}.pkl"), "wb"
-        ) as file:
+        with open(os.path.join(params.logdir, f"checkpoint_{i:08d}.pkl"),
+                  "wb") as file:
             pickle.dump(checkpoint, file)
 
 wandb_logger.finish()

@@ -4,25 +4,17 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from ribs._utils import (
-    check_batch_shape,
-    check_finite,
-    check_is_1d,
-    check_shape,
-    np_scalar,
-    validate_batch,
-    validate_single,
-)
+from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
+                         check_shape, np_scalar, validate_batch,
+                         validate_single)
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
-from ribs.archives._transforms import (
-    batch_entries_with_threshold,
-    compute_best_index,
-    compute_objective_sum,
-    single_entry_with_threshold,
-)
+from ribs.archives._transforms import (batch_entries_with_threshold,
+                                       compute_best_index,
+                                       compute_objective_sum,
+                                       single_entry_with_threshold)
 
 _ARCHIVE_FIELDS = {"index", "solution", "objective", "measures", "threshold"}
 
@@ -47,22 +39,16 @@ def parse_dtype(dtype):
             "measures": dtype,
         }
     elif isinstance(dtype, dict):
-        if (
-            "solution" not in dtype
-            or "objective" not in dtype
-            or "measures" not in dtype
-        ):
-            raise ValueError(
-                "If dtype is a dict, it must contain 'solution',"
-                "'objective', and 'measures' keys."
-            )
+        if ("solution" not in dtype or "objective" not in dtype or
+                "measures" not in dtype):
+            raise ValueError("If dtype is a dict, it must contain 'solution',"
+                             "'objective', and 'measures' keys.")
         return dtype
     else:
         raise ValueError(
             "Unsupported dtype. Must be np.float32 or np.float64, "
             "or dict of the form "
-            '{"solution": <dtype>, "objective": <dtype>, "measures": <dtype>}'
-        )
+            '{"solution": <dtype>, "objective": <dtype>, "measures": <dtype>}')
 
 
 class ArchiveBase(ABC):
@@ -154,10 +140,8 @@ class ArchiveBase(ABC):
 
         extra_fields = extra_fields or {}
         if _ARCHIVE_FIELDS & extra_fields.keys():
-            raise ValueError(
-                "The following names are not allowed in "
-                f"extra_fields: {_ARCHIVE_FIELDS}"
-            )
+            raise ValueError("The following names are not allowed in "
+                             f"extra_fields: {_ARCHIVE_FIELDS}")
 
         dtype = parse_dtype(dtype)
         self._store = ArrayStore(
@@ -179,20 +163,17 @@ class ArchiveBase(ABC):
                 "Please note that threshold_min is only used in CMA-MAE; "
                 "it is not intended to be used for only filtering archive "
                 "solutions. If you would like to run CMA-MAE, please also set "
-                "learning_rate."
-            )
+                "learning_rate.")
         if learning_rate is None:
             learning_rate = 1.0  # Default value.
         if threshold_min == -np.inf and learning_rate != 1.0:
-            raise ValueError(
-                "threshold_min can only be -np.inf if " "learning_rate is 1.0"
-            )
+            raise ValueError("threshold_min can only be -np.inf if "
+                             "learning_rate is 1.0")
         self._learning_rate = np_scalar(learning_rate, self.dtypes["threshold"])
         self._threshold_min = np_scalar(threshold_min, self.dtypes["threshold"])
 
-        self._qd_score_offset = np_scalar(
-            qd_score_offset, self.dtypes["objective"]
-        )
+        self._qd_score_offset = np_scalar(qd_score_offset,
+                                          self.dtypes["objective"])
 
         self._stats = None
         self._best_elite = None
@@ -274,8 +255,7 @@ class ArchiveBase(ABC):
         raise RuntimeError(
             "The dtype property has been deprecated. Please use "
             "archive.dtypes instead, which returns a mapping from field name "
-            "to dtype for all the fields in the archive."
-        )
+            "to dtype for all the fields in the archive.")
 
     @property
     def dtypes(self):
@@ -389,18 +369,14 @@ class ArchiveBase(ABC):
         (new_objective_sum) and the index of a potential new best elite
         (new_best_index)."""
         self._objective_sum = new_objective_sum
-        new_qd_score = (
-            self._objective_sum
-            - np_scalar(len(self), dtype=self.dtypes["objective"])
-            * self._qd_score_offset
-        )
+        new_qd_score = (self._objective_sum -
+                        np_scalar(len(self), dtype=self.dtypes["objective"]) *
+                        self._qd_score_offset)
 
         _, new_best_elite = self._store.retrieve([new_best_index])
 
-        if (
-            self._stats.obj_max is None
-            or new_best_elite["objective"] > self._stats.obj_max
-        ):
+        if (self._stats.obj_max is None or
+                new_best_elite["objective"] > self._stats.obj_max):
             # Convert batched values to single values.
             new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
@@ -411,17 +387,14 @@ class ArchiveBase(ABC):
 
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=np_scalar(
-                len(self) / self.cells, dtype=self.dtypes["objective"]
-            ),
+            coverage=np_scalar(len(self) / self.cells,
+                               dtype=self.dtypes["objective"]),
             qd_score=new_qd_score,
-            norm_qd_score=np_scalar(
-                new_qd_score / self.cells, dtype=self.dtypes["objective"]
-            ),
+            norm_qd_score=np_scalar(new_qd_score / self.cells,
+                                    dtype=self.dtypes["objective"]),
             obj_max=new_obj_max,
-            obj_mean=np_scalar(
-                self._objective_sum / len(self), dtype=self.dtypes["objective"]
-            ),
+            obj_mean=np_scalar(self._objective_sum / len(self),
+                               dtype=self.dtypes["objective"]),
         )
 
     def add(self, solution, objective, measures, **fields):
@@ -840,9 +813,9 @@ class ArchiveBase(ABC):
             "as_pandas has been deprecated. Please use "
             "archive.data(..., return_type='pandas') instead, or consider "
             "retrieving individual fields, e.g., "
-            "objective = archive.data('objective')"
-        )
+            "objective = archive.data('objective')")
 
+    # pylint: disable=too-many-positional-arguments
     def cqd_score(
         self,
         iterations,
@@ -903,14 +876,13 @@ class ArchiveBase(ABC):
             ValueError: target_points or penalties is an array with the wrong
                 shape.
         """
-        if not (
-            hasattr(self, "upper_bounds") and hasattr(self, "lower_bounds")
-        ) and (dist_max is None or np.isscalar(target_points)):
+        if not (hasattr(self, "upper_bounds") and
+                hasattr(self, "lower_bounds")) and (dist_max is None or
+                                                    np.isscalar(target_points)):
             raise RuntimeError(
                 "When the archive does not have lower_bounds and "
                 "upper_bounds properties, dist_max must be specified, "
-                "and target_points must be an array"
-            )
+                "and target_points must be an array")
 
         if np.isscalar(target_points):
             # pylint: disable = no-member
@@ -922,23 +894,19 @@ class ArchiveBase(ABC):
         else:
             # Copy since we return this.
             target_points = np.copy(target_points)
-            if (
-                target_points.ndim != 3
-                or target_points.shape[0] != iterations
-                or target_points.shape[2] != self.measure_dim
-            ):
+            if (target_points.ndim != 3 or
+                    target_points.shape[0] != iterations or
+                    target_points.shape[2] != self.measure_dim):
                 raise ValueError(
                     "Expected target_points to be a 3D array with "
                     f"shape ({iterations}, n, {self.measure_dim}) "
                     "(i.e. shape (iterations, n, measure_dim)) but it had "
-                    f"shape {target_points.shape}"
-                )
+                    f"shape {target_points.shape}")
 
         if dist_max is None:
             # pylint: disable = no-member
-            dist_max = np.linalg.norm(
-                self.upper_bounds - self.lower_bounds, ord=dist_ord
-            )
+            dist_max = np.linalg.norm(self.upper_bounds - self.lower_bounds,
+                                      ord=dist_ord)
 
         if np.isscalar(penalties):
             penalties = np.linspace(0, 1, penalties)

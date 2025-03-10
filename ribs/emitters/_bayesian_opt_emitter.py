@@ -1,18 +1,18 @@
+"""Provides the BayesianOptimizationEmitter."""
+
 import numpy as np
-
-from ribs._utils import check_finite, check_num_sol, validate_batch
-from ribs.emitters._emitter_base import EmitterBase
-
-from ribs.archives import GridArchive
-from scipy.stats import norm, entropy
-from scipy.stats.qmc import Sobol
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import Matern
-
 from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
 from pymoo.optimize import minimize
 from pymoo.problems.functional import FunctionalProblem
 from pymoo.termination.default import DefaultSingleObjectiveTermination
+from scipy.stats import entropy, norm
+from scipy.stats.qmc import Sobol
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import Matern
+
+from ribs._utils import check_finite, check_num_sol, validate_batch
+from ribs.archives import GridArchive
+from ribs.emitters._emitter_base import EmitterBase
 
 
 class BayesianOptimizationEmitter(EmitterBase):
@@ -28,13 +28,13 @@ class BayesianOptimizationEmitter(EmitterBase):
         archive (ribs.archives.GridArchive): An archive to use when creating
             and inserting solutions. Currently, the only supported archive type
             is :class:`ribs.archives.GridArchive`.
-        init_solution (array-like): (init_batch_size, :attr:`solution_dim`)
-            array of solutions used in the initial batch of training data for
-            gaussian processes.
-        init_objective (array-like): (init_batch_size,) array with objective
-            function evaluations of the solutions.
-        init_measures (array-like): (init_batch_size, :attr:`measure_dim`)
-            array with measure function evaluations of the solutions.
+        init_data (array-like, array-like, array-like): A 3-tuple containing
+            the initial batch of training data for gaussian processes. The
+            first array-like should be the initial solution parameters, and the
+            second and third should be their corresponding objective and
+            measure values. The three array-likes should have shapes
+            (init_batch_size, :attr:`solution_dim`), (init_batch_size,), and
+            (init_batch_size, :attr:`measure_dim`) respectively.
         bounds (array-like): Bounds of the solution space. Pass an array-like
             to specify the bounds for each dim. Each element in this array-like
             must be a tuple of ``(lower_bound, upper_bound)``. Cannot be
@@ -63,9 +63,7 @@ class BayesianOptimizationEmitter(EmitterBase):
     def __init__(
         self,
         archive,
-        init_solution,
-        init_objective,
-        init_measures,
+        init_data,
         bounds,
         *,
         search_nrestarts=5,
@@ -83,33 +81,31 @@ class BayesianOptimizationEmitter(EmitterBase):
             bounds=bounds,
         )
 
-        if not (isinstance(archive, GridArchive)):
+        if not isinstance(archive, GridArchive):
             raise NotImplementedError(
                 f"archive type {type(archive)} not implemented for "
-                "BayesianOptimizationEmitter. Expected GridArchive."
-            )
+                "BayesianOptimizationEmitter. Expected GridArchive.")
 
-        if (not upscale_schedule is None) and (
-            not np.isclose(archive.learning_rate, 1)
-        ):
+        if (not upscale_schedule is None) and (not np.isclose(
+                archive.learning_rate, 1)):
             raise NotImplementedError(
                 "Archive upscaling is currently incompatible with archive "
                 "learning rate. Since you have specified an upscale schedule "
                 f"{upscale_schedule}, the learning rate of the input archive "
-                f"must be 1 (currently {archive.learning_rate})."
-            )
+                f"must be 1 (currently {archive.learning_rate}).")
 
         self._seed = seed
         self._sobol = Sobol(d=self.solution_dim, scramble=True, seed=self._seed)
 
         # Initializes a multi-output GP. 1 output for objective function, plus 1
         # output for each measure function
-        # TODO: Using Matern kernal with default parameters
-        self._gp = GaussianProcessRegressor(
-            kernel=Matern(), normalize_y=True, n_targets=1 + self.measure_dim
-        )
+        # NOTE: Using Matern kernal with default parameters
+        self._gp = GaussianProcessRegressor(kernel=Matern(),
+                                            normalize_y=True,
+                                            n_targets=1 + self.measure_dim)
 
         # Trains GP with initial data
+        init_solution, init_objective, init_measures = init_data
         check_num_sol(init_solution, init_objective, init_measures)
         self._dataset = {
             "solution": np.asarray(init_solution),
@@ -119,8 +115,8 @@ class BayesianOptimizationEmitter(EmitterBase):
         self._gp.fit(
             X=self._dataset["solution"],
             y=np.concatenate(
-                (self._dataset["objective"], self._dataset["measures"]), axis=1
-            ),
+                (self._dataset["objective"], self._dataset["measures"]),
+                axis=1),
         )
 
         self._search_nrestarts = search_nrestarts
@@ -135,13 +131,12 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         self._misspec = 0
         self._overspec = 0
+        self._prev_numcells = len(self.archive)
         self._numitrs_noprogress = 0
 
-        self._entropy_norm = (
-            entropy(np.ones(self.archive.cells) / self.archive.cells)
-            if entropy_ejie
-            else None
-        )
+        self._entropy_norm = (entropy(
+            np.ones(self.archive.cells) /
+            self.archive.cells) if entropy_ejie else None)
 
         self._min_obj = min_obj
 
@@ -160,15 +155,9 @@ class BayesianOptimizationEmitter(EmitterBase):
         return slightly different cell_probs, so we return cell_prob_cutoff at
         a lower precision than cell_probs to ensure the same sample
         consistently passes/fails the threshold check."""
-        return np.float16(
-            0.5
-            * (2 / self.archive.cells)
-            ** (
-                (10 * self.solution_dim)
-                / (self._misspec - 2 * self._overspec + self.num_evals + 1e-6)
-            )
-            ** 0.5
-        )
+        return np.float16(0.5 * (2 / self.archive.cells)**(
+            (10 * self.solution_dim) /
+            (self._misspec - 2 * self._overspec + self.num_evals + 1e-6))**0.5)
 
     @property
     def num_evals(self):
@@ -187,7 +176,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         """int: Number of SOBOL samples to draw when choosing pattern search
         starting points in :meth:`ask`.
 
-        TODO: If measure function gradients are available, a potentially better
+        NOTE: If measure function gradients are available, a potentially better
         way to do this might be to do Latin Hypercube sampling within measure
         space, and then use measure gradients to find solutions achieving those
         measure space samples. See <https://wrap.warwick.ac.uk/id/eprint/189556
@@ -238,8 +227,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         """
         if not self._entropy_norm is None:
             self._entropy_norm = entropy(
-                np.ones(self.archive.cells) / self.archive.cells
-            )
+                np.ones(self.archive.cells) / self.archive.cells)
 
         self._numitrs_noprogress = 0
 
@@ -248,9 +236,6 @@ class BayesianOptimizationEmitter(EmitterBase):
         archive cells remains the same for two successive calls to this
         function. Otherwise resets :attr:`_numitrs_noprogress` to 0.
         """
-        if not "_prev_numcells" in self.__dict__:
-            self._prev_numcells = len(self.archive)
-
         if len(self.archive) == self._prev_numcells:
             self._numitrs_noprogress += 1
         else:
@@ -289,14 +274,12 @@ class BayesianOptimizationEmitter(EmitterBase):
         if upscale_schedule.shape[1] != self.measure_dim:
             raise ValueError(
                 f"Expected upscale_schedule of shape (any,{self.measure_dim}), "
-                f"actually got {upscale_schedule.shape}."
-            )
+                f"actually got {upscale_schedule.shape}.")
 
         if not np.all(np.diff(upscale_schedule, axis=0) >= 0):
             raise ValueError(
                 "The resolutions corresponding to each measure must be "
-                "non-decreasing along axis 0."
-            )
+                "non-decreasing along axis 0.")
 
     def _sample_n_rescale(self, num_samples):
         """Samples `num_samples` solutions from the SOBOL sequence and rescales
@@ -313,8 +296,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         # SOBOL samples are in range [0, 1]. Need to rescale to bounds
         sobol_samples = self._sobol.random(n=num_samples)
         rescaled_samples = self.lower_bounds + sobol_samples * (
-            self.upper_bounds - self.lower_bounds
-        )
+            self.upper_bounds - self.lower_bounds)
 
         return rescaled_samples
 
@@ -339,9 +321,8 @@ class BayesianOptimizationEmitter(EmitterBase):
         """
         num_samples = obj_mus.shape[0]
         all_obj = np.full((self.archive.cells,), self.min_obj)
-        elite_idx, elite_obj = self.archive.data(
-            ["index", "objective"], return_type="tuple"
-        )
+        elite_idx, elite_obj = self.archive.data(["index", "objective"],
+                                                 return_type="tuple")
         all_obj[elite_idx] = elite_obj
 
         distribution = norm(
@@ -350,8 +331,8 @@ class BayesianOptimizationEmitter(EmitterBase):
         )
 
         return (obj_mus[:, None] - all_obj) * distribution.cdf(
-            obj_mus[:, None]
-        ) + obj_stds[:, None] * distribution.pdf(obj_mus[:, None])
+            obj_mus[:, None]) + obj_stds[:, None] * distribution.pdf(
+                obj_mus[:, None])
 
     def _get_cell_probs(self, meas_mus, meas_stds, normalize=True, cutoff=True):
         """Computes archive cell membership probabilities predicted by
@@ -385,8 +366,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             # computes the cdf values at each cell boundary, this has shape
             # (num_solutions, num_boundaries).
             cdf_vals = distribution.cdf(
-                self.archive.boundaries[measure_idx][:, None]
-            ).T
+                self.archive.boundaries[measure_idx][:, None]).T
 
             # takes the difference between each pair of adjacent boundaries,
             # this has shape (num_solutions, num_boundaries-1) = (num_solutions,
@@ -415,9 +395,10 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         return cell_probs
 
-    def _get_ejie_values(
-        self, samples, return_by_cell=False, return_cell_probs=False
-    ):
+    def _get_ejie_values(self,
+                         samples,
+                         return_by_cell=False,
+                         return_cell_probs=False):
         """Computes *Expected Joint Improvement of Elites* (EJIE) acquisition
         values of samples by multiplying the predicted expected improvements
         and cell membership probabilities.
@@ -448,33 +429,27 @@ class BayesianOptimizationEmitter(EmitterBase):
                 :attr:`archive.cells`) containing the predicted cell
                 membership probabilities for each solution.
         """
-        mus, stds = self._gp.predict(
-            samples.reshape(-1, self.solution_dim), return_std=True
-        )
+        mus, stds = self._gp.predict(samples.reshape(-1, self.solution_dim),
+                                     return_std=True)
 
         expected_improvements = self._get_expected_improvements(
-            mus[:, 0], stds[:, 0]
-        )
+            mus[:, 0], stds[:, 0])
 
-        cell_probs = self._get_cell_probs(
-            mus[:, 1:], stds[:, 1:], normalize=True, cutoff=True
-        )
+        cell_probs = self._get_cell_probs(mus[:, 1:],
+                                          stds[:, 1:],
+                                          normalize=True,
+                                          cutoff=True)
 
         if not self._entropy_norm is None:
             all_zero_filter = np.all(np.isclose(cell_probs, 0), axis=1)
             entropies = np.zeros((mus.shape[0], 1))
-            entropies[~all_zero_filter] = entropy(
-                cell_probs[~all_zero_filter], axis=1
-            )[:, None]
-            ejie_by_cell = (
-                expected_improvements
-                * cell_probs
-                * (1 + entropies / self._entropy_norm)
-            )
+            entropies[~all_zero_filter] = entropy(cell_probs[~all_zero_filter],
+                                                  axis=1)[:, None]
+            ejie_by_cell = (expected_improvements * cell_probs *
+                            (1 + entropies / self._entropy_norm))
         else:
             ejie_by_cell = expected_improvements * cell_probs
 
-        # TODO: Make this prettier...
         if return_by_cell:
             if return_cell_probs:
                 return (
@@ -543,8 +518,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         pymoo_problem = FunctionalProblem(
             n_var=self.solution_dim,
             objs=lambda x: -self._get_ejie_values(
-                x, return_by_cell=False, return_cell_probs=False
-            ),
+                x, return_by_cell=False, return_cell_probs=False),
             xl=self.lower_bounds,
             xu=self.upper_bounds,
         )
@@ -554,21 +528,19 @@ class BayesianOptimizationEmitter(EmitterBase):
         optimized_samples = []
         while len(optimized_samples) < self.batch_size:
             samples = self._sample_n_rescale(self.num_sobol_samples)
-            ejie_values = self._get_ejie_values(
-                samples, return_by_cell=False, return_cell_probs=False
-            )
+            ejie_values = self._get_ejie_values(samples,
+                                                return_by_cell=False,
+                                                return_cell_probs=False)
 
-            search_starting_points = samples[
-                np.argsort(ejie_values)[-self._search_nrestarts :]
-            ]
+            search_starting_points = samples[np.argsort(ejie_values)
+                                             [-self._search_nrestarts:]]
 
             # optimizes ejie values of starting points
-            # TODO: Dask this
             found_positive_ejie = False
             for x0 in search_starting_points:
                 optimizer = PatternSearch(x0=x0)
 
-                # TODO: Using default pymoo minimize, PatternSearch, and
+                # Note: Using default pymoo minimize, PatternSearch, and
                 # termination.
                 result = minimize(
                     problem=pymoo_problem,
@@ -591,9 +563,9 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         optimized_samples = np.array(optimized_samples)
 
-        ejie_by_cell, cell_probs = self._get_ejie_values(
-            optimized_samples, return_by_cell=True, return_cell_probs=True
-        )
+        ejie_by_cell, cell_probs = self._get_ejie_values(optimized_samples,
+                                                         return_by_cell=True,
+                                                         return_cell_probs=True)
         optimized_ejies = np.sum(ejie_by_cell, axis=1)
         # Most likely cell for each optimized solution
         best_cell_idx = np.argmax(cell_probs, axis=1)
@@ -601,12 +573,11 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         # Computes EJIE attributions of the most likely cell for each solution
         ejie_attributions = (
-            ejie_by_cell[range(ejie_by_cell.shape[0]), best_cell_idx]
-            / optimized_ejies
-        )
+            ejie_by_cell[range(ejie_by_cell.shape[0]), best_cell_idx] /
+            optimized_ejies)
 
         # Sort by EJIE, take the top :attr:`batch_size` samples
-        sorted_idx = np.argsort(optimized_ejies)[::-1][: self.batch_size]
+        sorted_idx = np.argsort(optimized_ejies)[::-1][:self.batch_size]
 
         # NOTE: BOP-Elites Algorithm 1 implements a different mis-specification
         # check, in which a mis-specification occurs if a sample is predicted
@@ -617,10 +588,9 @@ class BayesianOptimizationEmitter(EmitterBase):
         # is attributed to a single cell, which has low predicted cell
         # probability. This corresponds to the (undesirable) scenario in which
         # a cell that is likely unreachable dominates EJIE.
-        for best_prob, attr_val in zip(
-            best_cell_probs[sorted_idx], ejie_attributions[sorted_idx]
-        ):
-            if best_prob < 0.5 and attr_val > 0.5:
+        for best_prob, attr_val in zip(best_cell_probs[sorted_idx],
+                                       ejie_attributions[sorted_idx]):
+            if best_prob < 0.5 < attr_val:
                 self._misspec += 1
 
         return optimized_samples[sorted_idx]
@@ -674,21 +644,17 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         # Adds new data to dataset.
         self._dataset["solution"] = np.vstack(
-            (self._dataset["solution"], data["solution"])
-        )
+            (self._dataset["solution"], data["solution"]))
         self._dataset["objective"] = np.vstack(
-            (self._dataset["objective"], data["objective"].reshape(-1, 1))
-        )
+            (self._dataset["objective"], data["objective"].reshape(-1, 1)))
         self._dataset["measures"] = np.vstack(
-            (self._dataset["measures"], data["measures"])
-        )
+            (self._dataset["measures"], data["measures"]))
 
         # Updates (actually re-trains) GP with updated dataset.
         self._gp.fit(
             X=self._dataset["solution"],
             y=np.hstack(
-                (self._dataset["objective"], self._dataset["measures"])
-            ),
+                (self._dataset["objective"], self._dataset["measures"])),
         )
 
         # Checks upscale conditions and upscales if needed
@@ -701,13 +667,14 @@ class BayesianOptimizationEmitter(EmitterBase):
         # new cell has been found for multiple iterations.
         self._update_no_coverage_progress()
         if (not self.upscale_schedule is None) and np.any(
-            np.all(self.upscale_schedule > self.archive.dims, axis=1)
-        ):
+                np.all(self.upscale_schedule > self.archive.dims, axis=1)):
             if self._numitrs_noprogress > self.upscale_trigger_threshold:
                 # The next resolution on the schedule that is higher than the
                 # current resolution along all measure dims
-                next_res = self.upscale_schedule[
-                    np.all(self.upscale_schedule > self.archive.dims, axis=1)
-                ][0]
+                next_res = self.upscale_schedule[np.all(self.upscale_schedule
+                                                        > self.archive.dims,
+                                                        axis=1)][0]
 
                 return next_res
+
+        return None

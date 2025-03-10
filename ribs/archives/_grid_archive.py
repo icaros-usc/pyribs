@@ -85,10 +85,8 @@ class GridArchive(ArchiveBase):
     ):
         self._dims = np.array(dims, dtype=np.int32)
         if len(self._dims) != len(ranges):
-            raise ValueError(
-                f"dims (length {len(self._dims)}) and ranges "
-                f"(length {len(ranges)}) must be the same length"
-            )
+            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
+                             f"(length {len(ranges)}) must be the same length")
 
         ArchiveBase.__init__(
             self,
@@ -110,12 +108,10 @@ class GridArchive(ArchiveBase):
         self._epsilon = np_scalar(epsilon, dtype=self.dtypes["measures"])
 
         self._boundaries = []
-        for dim, lower_bound, upper_bound in zip(
-            self._dims, self._lower_bounds, self._upper_bounds
-        ):
+        for dim, lower_bound, upper_bound in zip(self._dims, self._lower_bounds,
+                                                 self._upper_bounds):
             self._boundaries.append(
-                np.linspace(lower_bound, upper_bound, dim + 1)
-            )
+                np.linspace(lower_bound, upper_bound, dim + 1))
 
     @property
     def dims(self):
@@ -189,8 +185,7 @@ class GridArchive(ArchiveBase):
         """
         if not np.isclose(self.learning_rate, 1):
             raise NotImplementedError(
-                "Cannot retessellate an archive with learning rate."
-            )
+                "Cannot retessellate an archive with learning rate.")
 
         new_archive = GridArchive(
             solution_dim=self.solution_dim,
@@ -206,8 +201,7 @@ class GridArchive(ArchiveBase):
         )
 
         curr_solution, curr_objective, curr_measures = self.data(
-            fields=["solution", "objective", "measures"], return_type="tuple"
-        )
+            fields=["solution", "objective", "measures"], return_type="tuple")
 
         new_archive.add(curr_solution, curr_objective, curr_measures)
 
@@ -260,10 +254,9 @@ class GridArchive(ArchiveBase):
         # Adding epsilon accounts for floating point precision errors from
         # transforming measures. We then cast to int32 to obtain integer
         # indices.
-        grid_indices = (
-            (self._dims * (measures - self._lower_bounds) + self._epsilon)
-            / self._interval_size
-        ).astype(np.int32)
+        grid_indices = ((self._dims *
+                         (measures - self._lower_bounds) + self._epsilon) /
+                        self._interval_size).astype(np.int32)
 
         # Clip indices to the archive dimensions (for example, for 20 cells, we
         # want indices to run from 0 to 19).
@@ -286,9 +279,8 @@ class GridArchive(ArchiveBase):
                 :attr:`measure_dim`)
         """
         grid_indices = np.asarray(grid_indices)
-        check_batch_shape(
-            grid_indices, "grid_indices", self.measure_dim, "measure_dim"
-        )
+        check_batch_shape(grid_indices, "grid_indices", self.measure_dim,
+                          "measure_dim")
 
         return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
@@ -309,9 +301,7 @@ class GridArchive(ArchiveBase):
         int_indices = np.asarray(int_indices)
         check_is_1d(int_indices, "int_indices")
 
-        return np.asarray(
-            np.unravel_index(
-                int_indices,
-                self._dims,
-            )
-        ).T.astype(np.int32)
+        return np.asarray(np.unravel_index(
+            int_indices,
+            self._dims,
+        )).T.astype(np.int32)

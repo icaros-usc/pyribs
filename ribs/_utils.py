@@ -27,14 +27,10 @@ def check_finite(x, name):
     """
     if not np.all(np.isfinite(x)):
         if np.isscalar(x):
-            raise ValueError(
-                f"{name} must be finite (infinity "
-                "and NaN values are not supported)."
-            )
-        raise ValueError(
-            f"All elements of {name} must be finite (infinity "
-            "and NaN values are not supported)."
-        )
+            raise ValueError(f"{name} must be finite (infinity "
+                             "and NaN values are not supported).")
+        raise ValueError(f"All elements of {name} must be finite (infinity "
+                         "and NaN values are not supported).")
 
 
 def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
@@ -48,12 +44,10 @@ def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
         dim = (dim,)
     if array.ndim != 1 + len(dim) or array.shape[1:] != dim:
         dim_str = ", ".join(map(str, dim))
-        raise ValueError(
-            f"Expected {array_name} to be an array with shape "
-            f"(batch_size, {dim_str}) (i.e. shape "
-            f"(batch_size, {dim_name})) but it had shape "
-            f"{array.shape}.{extra_msg}"
-        )
+        raise ValueError(f"Expected {array_name} to be an array with shape "
+                         f"(batch_size, {dim_str}) (i.e. shape "
+                         f"(batch_size, {dim_name})) but it had shape "
+                         f"{array.shape}.{extra_msg}")
 
 
 def check_shape(array, array_name, dim, dim_name, extra_msg=""):
@@ -68,36 +62,35 @@ def check_shape(array, array_name, dim, dim_name, extra_msg=""):
         raise ValueError(
             f"Expected {array_name} to be an array with shape "
             f"{dim} (i.e. shape ({dim_name}{comma})) but it had shape "
-            f"{array.shape}.{extra_msg}"
-        )
+            f"{array.shape}.{extra_msg}")
 
 
 def check_is_1d(array, array_name, extra_msg=""):
     """Checks that an array is 1D."""
     if array.ndim != 1:
-        raise ValueError(
-            f"Expected {array_name} to be a 1D array but it had "
-            f"shape {array.shape}.{extra_msg}"
-        )
+        raise ValueError(f"Expected {array_name} to be a 1D array but it had "
+                         f"shape {array.shape}.{extra_msg}")
 
 
-def check_solution_batch_dim(
-    array, array_name, batch_size, is_1d=False, extra_msg=""
-):
+def check_solution_batch_dim(array,
+                             array_name,
+                             batch_size,
+                             is_1d=False,
+                             extra_msg=""):
     """Checks the batch dimension of an array with respect to solution_batch."""
     if array.shape[0] != batch_size:
-        raise ValueError(
-            f"{array_name} does not match the batch dimension of "
-            "solution_batch -- since solution_batch has shape "
-            f"({batch_size}, ..), {array_name} should have shape "
-            f"({batch_size},{'' if is_1d else ' ..'}), but it has "
-            f"shape {array.shape}.{extra_msg}"
-        )
+        raise ValueError(f"{array_name} does not match the batch dimension of "
+                         "solution_batch -- since solution_batch has shape "
+                         f"({batch_size}, ..), {array_name} should have shape "
+                         f"({batch_size},{'' if is_1d else ' ..'}), but it has "
+                         f"shape {array.shape}.{extra_msg}")
 
 
-def validate_batch(
-    archive, data, add_info=None, jacobian=None, none_objective_ok=False
-):
+def validate_batch(archive,
+                   data,
+                   add_info=None,
+                   jacobian=None,
+                   none_objective_ok=False):
     """Preprocesses and validates batch arguments.
 
     ``data`` is a dict containing arrays with the data of each solution, e.g.,
@@ -111,9 +104,8 @@ def validate_batch(
     """
     # Process and validate solution_batch.
     data["solution"] = np.asarray(data["solution"])
-    check_batch_shape(
-        data["solution"], "solution", archive.solution_dim, "solution_dim", ""
-    )
+    check_batch_shape(data["solution"], "solution", archive.solution_dim,
+                      "solution_dim", "")
     batch_size = data["solution"].shape[0]
 
     # Process and validate the other data.
@@ -130,26 +122,31 @@ def validate_batch(
             else:
                 arr = np.asarray(arr)
                 check_is_1d(arr, "objective", "")
-                check_solution_batch_dim(
-                    arr, "objective", batch_size, is_1d=True, extra_msg=""
-                )
+                check_solution_batch_dim(arr,
+                                         "objective",
+                                         batch_size,
+                                         is_1d=True,
+                                         extra_msg="")
                 check_finite(arr, "objective")
 
         elif name == "measures":
             arr = np.asarray(arr)
-            check_batch_shape(
-                arr, "measures", archive.measure_dim, "measure_dim", ""
-            )
-            check_solution_batch_dim(
-                arr, "measures", batch_size, is_1d=False, extra_msg=""
-            )
+            check_batch_shape(arr, "measures", archive.measure_dim,
+                              "measure_dim", "")
+            check_solution_batch_dim(arr,
+                                     "measures",
+                                     batch_size,
+                                     is_1d=False,
+                                     extra_msg="")
             check_finite(arr, "measures")
 
         else:
             arr = np.asarray(arr)
-            check_solution_batch_dim(
-                arr, name, batch_size, is_1d=False, extra_msg=""
-            )
+            check_solution_batch_dim(arr,
+                                     name,
+                                     batch_size,
+                                     is_1d=False,
+                                     extra_msg="")
 
         data[name] = arr
 
@@ -161,23 +158,29 @@ def validate_batch(
             if name == "status":
                 arr = np.asarray(arr)
                 check_is_1d(arr, "status", "")
-                check_solution_batch_dim(
-                    arr, "status", batch_size, is_1d=True, extra_msg=""
-                )
+                check_solution_batch_dim(arr,
+                                         "status",
+                                         batch_size,
+                                         is_1d=True,
+                                         extra_msg="")
                 check_finite(arr, "status")
 
             elif name == "value":
                 arr = np.asarray(arr)
                 check_is_1d(arr, "value", "")
-                check_solution_batch_dim(
-                    arr, "value", batch_size, is_1d=True, extra_msg=""
-                )
+                check_solution_batch_dim(arr,
+                                         "value",
+                                         batch_size,
+                                         is_1d=True,
+                                         extra_msg="")
 
             else:
                 arr = np.asarray(arr)
-                check_solution_batch_dim(
-                    arr, name, batch_size, is_1d=False, extra_msg=""
-                )
+                check_solution_batch_dim(arr,
+                                         name,
+                                         batch_size,
+                                         is_1d=False,
+                                         extra_msg="")
 
             add_info[name] = arr
 
@@ -204,23 +207,20 @@ def validate_batch(
 def validate_single(archive, data, none_objective_ok=False):
     """Performs preprocessing and checks for arguments to add_single()."""
     data["solution"] = np.asarray(data["solution"])
-    check_shape(
-        data["solution"], "solution", archive.solution_dim, "solution_dim"
-    )
+    check_shape(data["solution"], "solution", archive.solution_dim,
+                "solution_dim")
 
     if data["objective"] is None:
         if not none_objective_ok:
             raise ValueError("objective cannot be None")
     else:
-        data["objective"] = np_scalar(
-            data["objective"], archive.dtypes["objective"]
-        )
+        data["objective"] = np_scalar(data["objective"],
+                                      archive.dtypes["objective"])
         check_finite(data["objective"], "objective")
 
     data["measures"] = np.asarray(data["measures"])
-    check_shape(
-        data["measures"], "measures", archive.measure_dim, "measure_dim"
-    )
+    check_shape(data["measures"], "measures", archive.measure_dim,
+                "measure_dim")
     check_finite(data["measures"], "measures")
 
     return data
@@ -241,12 +241,8 @@ def check_num_sol(solution, objective, measures):
 
     num_sol = sol.shape[0]
     if obj.shape[0] != num_sol:
-        raise ValueError(
-            f"Expected {num_sol} objectives, but got "
-            f"{obj.shape[0]} objectives."
-        )
+        raise ValueError(f"Expected {num_sol} objectives, but got "
+                         f"{obj.shape[0]} objectives.")
     if meas.shape[0] != num_sol:
-        raise ValueError(
-            f"Expected {num_sol} measures, but got "
-            f"{meas.shape[0]} measures."
-        )
+        raise ValueError(f"Expected {num_sol} measures, but got "
+                         f"{meas.shape[0]} measures.")
