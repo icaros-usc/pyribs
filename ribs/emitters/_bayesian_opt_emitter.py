@@ -164,10 +164,15 @@ class BayesianOptimizationEmitter(EmitterBase):
 
     @property
     def cell_prob_cutoff(self):
-        """float: Cutoff value (ohm) for :meth:`_get_cell_probs` as described
-        in `Kent et al. 2024 <https://ieeexplore.ieee.org/abstract/document/
-        10472301>` Sec.IV-D."""
-        return (
+        """np.float16: Cutoff value (ohm) for :meth:`_get_cell_probs` as
+        described in `Kent et al. 2024 <https://ieeexplore.ieee.org/abstract
+        /document/10472301>` Sec.IV-D.
+        There are some numerical errors involved with cell_probs, so even
+        passing the same sample in different shapes/contexts can sometimes
+        return slightly different cell_probs, so we return cell_prob_cutoff at
+        a lower precision than cell_probs to ensure the same sample
+        consistently passes/fails the threshold check."""
+        return np.float16(
             0.5
             * (2 / self.archive.cells)
             ** (
@@ -608,9 +613,10 @@ class BayesianOptimizationEmitter(EmitterBase):
         best_cell_probs = cell_probs[range(cell_probs.shape[0]), best_cell_idx]
 
         # Computes EJIE attributions of the most likely cell for each solution
-        ejie_attributions = ejie_by_cell[
-            range(ejie_by_cell.shape[0]), best_cell_idx
-        ] / np.sum(ejie_by_cell, axis=1)
+        ejie_attributions = (
+            ejie_by_cell[range(ejie_by_cell.shape[0]), best_cell_idx]
+            / optimized_ejies
+        )
 
         # Sort by EJIE, take the top :attr:`batch_size` samples
         sorted_idx = np.argsort(optimized_ejies)[::-1][: self.batch_size]
