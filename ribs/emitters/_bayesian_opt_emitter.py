@@ -220,7 +220,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         archive upscaling)."""
         self._archive = new_archive
 
-    def _post_upscale_updates(self):
+    def post_upscale_updates(self):
         """After the upstream scheduler upscales the archive, updates
         :attr:`_entropy_norm` according to new number of archive cells and
         resets :attr:`_numitrs_noprogress` to 0.
