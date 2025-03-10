@@ -137,18 +137,6 @@ class BayesianOptimizationEmitter(EmitterBase):
         self._overspec = 0
         self._numitrs_noprogress = 0
 
-        # Saves info on solutions returned by ask()
-        self._asked_info = {
-            "asked_solutions": np.zeros(
-                (self.batch_size, self.solution_dim),
-                dtype=self.dtype,
-            ),
-            "ejie_attributions": np.zeros((self.batch_size,), dtype=np.float64),
-            "predicted_cells": np.zeros(
-                (self.batch_size, self.measure_dim), dtype=np.int32
-            ),
-        }
-
         self._entropy_norm = (
             entropy(np.ones(self.archive.cells) / self.archive.cells)
             if entropy_ejie
@@ -406,7 +394,6 @@ class BayesianOptimizationEmitter(EmitterBase):
             cdf_diffs = np.diff(cdf_vals, axis=1)
 
             # reshapes diffs to be compatible with element-wise multiplication
-            # TODO: make this prettier...
             for i in range(self.measure_dim):
                 if i != measure_idx:
                     # axis i+1 because first axis is num_solutions
@@ -524,7 +511,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             4. Returns the top :attr:`batch_size` solutions with the largest
                EJIE values.
 
-        TODO(DrKent): This process has been simplified from the source codes
+        NOTE: This process has been simplified from the source codes
         implementation. The following are the components that are in the
         BOP-Elites source codes but removed here for simplicity:
             1. load_previous_points (<https://github.com/kentwar/BOPElites/blob/
@@ -621,22 +608,22 @@ class BayesianOptimizationEmitter(EmitterBase):
         # Sort by EJIE, take the top :attr:`batch_size` samples
         sorted_idx = np.argsort(optimized_ejies)[::-1][: self.batch_size]
 
-        # Saves asked info for later tell() updates
-        self._asked_info["asked_solutions"] = optimized_samples[sorted_idx]
-        self._asked_info["ejie_attributions"] = ejie_attributions[sorted_idx]
-        self._asked_info["predicted_cells"] = best_cell_idx[sorted_idx]
-
-        # New cell mismatch checks whether the most likely cell predicted by
-        # the GP has below 50% confidence (instead of matching predicted and
-        # evaluated cells).
-        # TODO(DrKent): Might need an author's note from Dr. Kent on this.
+        # NOTE: BOP-Elites Algorithm 1 implements a different mis-specification
+        # check, in which a mis-specification occurs if a sample is predicted
+        # to be in a cell with high confidence, but the prediction turns out
+        # to be wrong.
+        # We implement a new mis-specification check as recommended by the
+        # author. New mis-specification checks whether most of a sample's EJIE
+        # is attributed to a single cell, which has low predicted cell
+        # probability. This corresponds to the (undesirable) scenario in which
+        # a cell that is likely unreachable dominates EJIE.
         for best_prob, attr_val in zip(
-            best_cell_probs[sorted_idx], self._asked_info["ejie_attributions"]
+            best_cell_probs[sorted_idx], ejie_attributions[sorted_idx]
         ):
             if best_prob < 0.5 and attr_val > 0.5:
                 self._misspec += 1
 
-        return self._asked_info["asked_solutions"].copy()
+        return optimized_samples[sorted_idx]
 
     def tell(self, solution, objective, measures, add_info, **fields):
         """Updates the gaussian process given evaluated solutions, objectives,
@@ -709,7 +696,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         # condition, in which the archive upscale is triggered if either all
         # its cells have been filled or if num_evals > 2*cells. However, the
         # old condition may struggle with applications where some cells are not
-        # feasible.We implement an improved condition here as recommended by
+        # feasible. We implement an improved condition here as recommended by
         # the original author. The new condition triggers the upscale when no
         # new cell has been found for multiple iterations.
         self._update_no_coverage_progress()
