@@ -20,4 +20,8 @@ from ribs.schedulers._bayesian_opt_scheduler import \
     BayesianOptimizationScheduler
 from ribs.schedulers._scheduler import Scheduler
 
-__all__ = ["Scheduler", "BanditScheduler", "BayesianOptimizationScheduler"]
+__all__ = [
+    "Scheduler", 
+    "BanditScheduler", 
+    "BayesianOptimizationScheduler"
+]

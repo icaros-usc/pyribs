@@ -35,8 +35,10 @@ extras_require = {
         ### visualize ###
         "matplotlib>=3.0.0",
         "shapely>=2.0.0",
+
         ### cma ###
         "cma",
+
         ### pymoo ###
         "pymoo",
     ],
@@ -45,12 +47,14 @@ extras_require = {
         "pylint",
         "yapf",
         "pre-commit",
+
         # Testing
         "python-box[all]~=7.0",
         "pytest==7.0.1",
         "pytest-cov==3.0.0",
         "pytest-benchmark==3.4.1",
         "pytest-xdist==2.5.0",
+
         # Documentation
         "myst-nb==0.17.1",
         "Sphinx==4.5.0",
@@ -69,13 +73,12 @@ extras_require = {
         "sphinxcontrib-jsmath==1.0.1",
         "sphinxcontrib-qthelp==1.0.3",
         "sphinxcontrib-serializinghtml==1.1.5",
+
         # Distribution
         "bump2version==1.0.1",
         "wheel==0.40.0",
         "twine==4.0.2",
         "check-wheel-contents==0.4.0",
-        # wandb
-        "wandb",
     ],
 }
 

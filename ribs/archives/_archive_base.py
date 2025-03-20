@@ -1,5 +1,4 @@
 """Provides ArchiveBase."""
-
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -46,8 +45,8 @@ def parse_dtype(dtype):
         return dtype
     else:
         raise ValueError(
-            "Unsupported dtype. Must be np.float32 or np.float64, "
-            "or dict of the form "
+            'Unsupported dtype. Must be np.float32 or np.float64, '
+            'or dict of the form '
             '{"solution": <dtype>, "objective": <dtype>, "measures": <dtype>}')
 
 
@@ -119,19 +118,17 @@ class ArchiveBase(ABC):
         ValueError: Invalid names in extra_fields.
     """
 
-    def __init__(
-        self,
-        *,
-        solution_dim,
-        cells,
-        measure_dim,
-        learning_rate=None,
-        threshold_min=-np.inf,
-        qd_score_offset=0.0,
-        seed=None,
-        dtype=np.float64,
-        extra_fields=None,
-    ):
+    def __init__(self,
+                 *,
+                 solution_dim,
+                 cells,
+                 measure_dim,
+                 learning_rate=None,
+                 threshold_min=-np.inf,
+                 qd_score_offset=0.0,
+                 seed=None,
+                 dtype=np.float64,
+                 extra_fields=None):
 
         self._seed = seed
         self._rng = np.random.default_rng(seed)
@@ -783,7 +780,7 @@ class ArchiveBase(ABC):
 
             All data returned by this method will be a copy, i.e., the data will
             not update as the archive changes.
-        """  # pylint: disable = line-too-long
+        """ # pylint: disable = line-too-long
         data = self._store.data(fields, return_type)
         if return_type == "pandas":
             data = ArchiveDataFrame(data)
@@ -798,17 +795,14 @@ class ArchiveBase(ABC):
             "retrieving individual fields, e.g., "
             "objective = archive.data('objective')")
 
-    # pylint: disable=too-many-positional-arguments
-    def cqd_score(
-        self,
-        iterations,
-        target_points,
-        penalties,
-        obj_min,
-        obj_max,
-        dist_max=None,
-        dist_ord=None,
-    ):
+    def cqd_score(self,
+                  iterations,
+                  target_points,
+                  penalties,
+                  obj_min,
+                  obj_max,
+                  dist_max=None,
+                  dist_ord=None):
         """Computes the CQD score of the archive.
 
         The Continuous Quality Diversity (CQD) score was introduced in
@@ -859,9 +853,9 @@ class ArchiveBase(ABC):
             ValueError: target_points or penalties is an array with the wrong
                 shape.
         """
-        if not (hasattr(self, "upper_bounds") and
-                hasattr(self, "lower_bounds")) and (dist_max is None or
-                                                    np.isscalar(target_points)):
+        if (not (hasattr(self, "upper_bounds") and
+                 hasattr(self, "lower_bounds")) and
+            (dist_max is None or np.isscalar(target_points))):
             raise RuntimeError(
                 "When the archive does not have lower_bounds and "
                 "upper_bounds properties, dist_max must be specified, "

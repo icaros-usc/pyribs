@@ -1,5 +1,4 @@
 """Miscellaneous internal utilities."""
-
 import numbers
 
 import numpy as np
@@ -189,12 +188,9 @@ def validate_batch(archive,
     # jacobian is optional; check it if provided.
     if jacobian is not None:
         jacobian = np.asarray(jacobian)
-        check_batch_shape(
-            jacobian,
-            "jacobian",
-            (archive.measure_dim + 1, archive.solution_dim),
-            "measure_dim + 1, solution_dim",
-        )
+        check_batch_shape(jacobian, "jacobian",
+                          (archive.measure_dim + 1, archive.solution_dim),
+                          "measure_dim + 1, solution_dim")
         check_finite(jacobian, "jacobian")
         extra_returns.append(jacobian)
 
