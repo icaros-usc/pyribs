@@ -134,10 +134,3 @@ results/
 *.vim
 .DS_Store
 .project
-
-# My stuff
-bin/
-include/
-share/
-pyvenv.cfg
-wandb/
