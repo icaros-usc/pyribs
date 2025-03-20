@@ -49,10 +49,14 @@ class BayesianOptimizationEmitter(EmitterBase):
         min_obj (float or int): The lowest possible objective value. Serves as
             the default objective value within archive cells that have not been
             filled. Mainly used when computing expected improvement.
+        num_initial_samples (int): The number of solutions that will be sampled
+            from a Sobol sequence as the first batch of training data for
+            gaussian processes. Either ``num_initial_samples`` or
+            ``initial_solutions`` must be set.
         initial_solutions (array-like): An (n, solution_dim) array of solutions
-            to be used when the archive is empty. If this argument is None, then
-            solutions will be sampled from a Sobol sequence generated within
-            ``bounds``.
+            to be used as the first batch of training data for gaussian
+            processes. Either ``num_initial_samples`` or ``initial_solutions``
+            must be set.
         batch_size (int): Number of solutions to return in :meth:`ask`. Must
             not exceed ``search_nrestarts``. It is recommended to set this to 1
             for sample efficiency.
@@ -68,6 +72,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         entropy_ejie=False,
         upscale_schedule=None,
         min_obj=0,
+        num_initial_samples=None,
         initial_solutions=None,
         batch_size=8,
         seed=None,
@@ -103,13 +108,24 @@ class BayesianOptimizationEmitter(EmitterBase):
                                             normalize_y=True,
                                             n_targets=1 + self.measure_dim)
 
+        if num_initial_samples is None and initial_solutions is None:
+            raise ValueError(
+                "Either num_initial_samples or initial_solutions must be "
+                "provided.")
+        if num_initial_samples is not None and initial_solutions is not None:
+            raise ValueError(
+                "num_initial_samples and initial_solutions cannot both be "
+                "provided.")
+
         if initial_solutions is not None:
             self._initial_solutions = np.asarray(
                 initial_solutions, dtype=archive.dtypes["solution"])
-            check_batch_shape(self._initial_solutions, "initial_solutions",
-                              archive.solution_dim, "archive.solution_dim")
         else:
-            self._initial_solutions = None
+            self._initial_solutions = self._sample_n_rescale(
+                num_initial_samples)
+
+        check_batch_shape(self._initial_solutions, "initial_solutions",
+                          archive.solution_dim, "archive.solution_dim")
 
         self._dataset = {
             "solution": np.empty((0, self.solution_dim), dtype=self.dtype),
@@ -477,8 +493,8 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         If ``self._gp`` has not been trained on any data and
         ``self._initial_solutions`` is set, we return
-        ``self._initial_solutions``. If ``self._initial_solutions`` is
-        not set, we use Sobol sampling to draw an initial batch of solutions.
+        ``self._initial_solutions``, which was either provided by user at
+        emitter initialization or sampled from a Sobol sequence.
 
         If ``self._gp`` has been trained on some data:
             1. Samples :attr:`num_sobol_samples` SOBOL samples.
@@ -524,11 +540,8 @@ class BayesianOptimizationEmitter(EmitterBase):
             EJIE values in descending EJIE order.
         """
         if self.num_evals == 0:
-            if self.initial_solutions is not None:
-                return np.clip(self.initial_solutions, self.lower_bounds,
-                               self.upper_bounds)
-            else:
-                return self._sample_n_rescale(self.batch_size)
+            return np.clip(self.initial_solutions, self.lower_bounds,
+                           self.upper_bounds)
 
         # pymoo minimizes so need to negate
         pymoo_problem = FunctionalProblem(

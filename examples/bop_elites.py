@@ -100,6 +100,8 @@ class Params:
     search_nrestarts: int
     entropy_ejie: bool
     upscale_schedule: List[List]
+    num_initial_samples: int
+    initial_solutions: np.ndarray
     batch_size: int
     num_emitters: int
     seed: int
@@ -123,6 +125,8 @@ if __name__ == '__main__':
         search_nrestarts=5,
         entropy_ejie=False,
         upscale_schedule=[[5, 5], [10, 10], [25, 25]],
+        num_initial_samples=20,
+        initial_solutions=None,
         batch_size=8,
         num_emitters=1,
         seed=42,
@@ -156,6 +160,8 @@ if __name__ == '__main__':
             search_nrestarts=params.search_nrestarts,
             entropy_ejie=params.entropy_ejie,
             upscale_schedule=params.upscale_schedule,
+            num_initial_samples=params.num_initial_samples,
+            initial_solutions=params.initial_solutions,
             batch_size=params.batch_size,
             seed=params.seed + i,
         ) for i in range(params.num_emitters)
