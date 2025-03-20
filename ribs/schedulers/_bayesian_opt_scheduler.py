@@ -2,6 +2,7 @@
 
 import numpy as np
 
+from ribs.archives._grid_archive import GridArchive
 from ribs.emitters._bayesian_opt_emitter import BayesianOptimizationEmitter
 from ribs.schedulers._scheduler import Scheduler
 
@@ -52,7 +53,7 @@ class BayesianOptimizationScheduler(Scheduler):
             if not isinstance(e, BayesianOptimizationEmitter):
                 raise TypeError(
                     "All emitters must be of type BayesianOptimizationEmitter, "
-                    f"but emitter{i} has type {type(e)}")
+                    f"but emitter{i} has type {e.__class__.__name__}")
 
             if i == 0:
                 this_upscale_schedule = e.upscale_schedule
@@ -64,6 +65,11 @@ class BayesianOptimizationScheduler(Scheduler):
                         "emitter0 has upscale schedule "
                         f"{this_upscale_schedule}, but emitter{i} has upscale "
                         f"schedule {other_upscale_schedule}.")
+
+        # Checks that ``archive`` is a GridArchive
+        if not isinstance(archive, GridArchive):
+            raise TypeError("archive type must be GridArchive. Actually got "
+                            f"{archive.__class__.__name__}")
 
         if this_upscale_schedule is None:
             self._upscale_schedule = None
@@ -87,7 +93,7 @@ class BayesianOptimizationScheduler(Scheduler):
     def tell(self, objective, measures, **fields):
         """Updates :attr:`emitters` and the :attr:`archive` with new data. When
         **ALL** emitters are ready to upscale, calls
-        :meth:`~ribs.archives.ArchiveBase.retessellate` to upscale the archive.
+        :meth:`~ribs.archives.GridArchive.retessellate` to upscale the archive.
         Otherwise same as :meth:`~Scheduler.tell`.
         """
         if self._last_called != "ask":

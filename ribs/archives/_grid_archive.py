@@ -158,8 +158,8 @@ class GridArchive(ArchiveBase):
         """
         return self._boundaries
 
-    def retessellate(self, new_tessellation):
-        """Initializes a new archive with ``new_tessellation`` and re-inserts
+    def retessellate(self, new_dims):
+        """Initializes a new archive with ``new_dims`` and re-inserts
         solutions from the old archive.
 
         Note that if the new grid resolution is smaller than the old grid
@@ -175,7 +175,7 @@ class GridArchive(ArchiveBase):
         what the new threshold should be.
 
         Args:
-            new_tessellation (array-like of int):  Number of cells in each
+            new_dims (array-like of int):  Number of cells in each
             dimension of the measure space, e.g. ``[20, 30, 40]`` indicates
             there should be 3 dimensions with 20, 30, and 40 cells. The format
             is similar as the ``dims`` argument in the constructor.
@@ -189,7 +189,7 @@ class GridArchive(ArchiveBase):
 
         new_archive = GridArchive(
             solution_dim=self.solution_dim,
-            dims=new_tessellation,
+            dims=new_dims,
             ranges=list(zip(self.lower_bounds, self.upper_bounds)),
             learning_rate=None,
             threshold_min=-np.inf,
@@ -197,7 +197,7 @@ class GridArchive(ArchiveBase):
             qd_score_offset=self.qd_score_offset,
             seed=self._seed,
             dtype=self.dtypes,
-            # extra_fields=None,
+            extra_fields=None,
         )
 
         curr_solution, curr_objective, curr_measures = self.data(

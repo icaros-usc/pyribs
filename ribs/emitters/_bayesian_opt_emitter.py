@@ -1,4 +1,5 @@
 """Provides the BayesianOptimizationEmitter."""
+import warnings
 
 import numpy as np
 from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
@@ -7,10 +8,11 @@ from pymoo.problems.functional import FunctionalProblem
 from pymoo.termination.default import DefaultSingleObjectiveTermination
 from scipy.stats import entropy, norm
 from scipy.stats.qmc import Sobol
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 
-from ribs._utils import check_finite, check_num_sol, validate_batch
+from ribs._utils import check_batch_shape, check_finite, validate_batch
 from ribs.archives import GridArchive
 from ribs.emitters._emitter_base import EmitterBase
 
@@ -28,13 +30,6 @@ class BayesianOptimizationEmitter(EmitterBase):
         archive (ribs.archives.GridArchive): An archive to use when creating
             and inserting solutions. Currently, the only supported archive type
             is :class:`ribs.archives.GridArchive`.
-        init_data (array-like, array-like, array-like): A 3-tuple containing
-            the initial batch of training data for gaussian processes. The
-            first array-like should be the initial solution parameters, and the
-            second and third should be their corresponding objective and
-            measure values. The three array-likes should have shapes
-            (init_batch_size, :attr:`solution_dim`), (init_batch_size,), and
-            (init_batch_size, :attr:`measure_dim`) respectively.
         bounds (array-like): Bounds of the solution space. Pass an array-like
             to specify the bounds for each dim. Each element in this array-like
             must be a tuple of ``(lower_bound, upper_bound)``. Cannot be
@@ -54,6 +49,10 @@ class BayesianOptimizationEmitter(EmitterBase):
         min_obj (float or int): The lowest possible objective value. Serves as
             the default objective value within archive cells that have not been
             filled. Mainly used when computing expected improvement.
+        initial_solutions (array-like): An (n, solution_dim) array of solutions
+            to be used when the archive is empty. If this argument is None, then
+            solutions will be sampled from a Sobol sequence generated within
+            ``bounds``.
         batch_size (int): Number of solutions to return in :meth:`ask`. Must
             not exceed ``search_nrestarts``. It is recommended to set this to 1
             for sample efficiency.
@@ -63,14 +62,14 @@ class BayesianOptimizationEmitter(EmitterBase):
     def __init__(
         self,
         archive,
-        init_data,
         bounds,
         *,
         search_nrestarts=5,
         entropy_ejie=False,
         upscale_schedule=None,
         min_obj=0,
-        batch_size=1,
+        initial_solutions=None,
+        batch_size=8,
         seed=None,
     ):
         check_finite(bounds, "bounds")
@@ -83,8 +82,8 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         if not isinstance(archive, GridArchive):
             raise NotImplementedError(
-                f"archive type {type(archive)} not implemented for "
-                "BayesianOptimizationEmitter. Expected GridArchive.")
+                f"archive type {archive.__class__.__name__} not implemented for"
+                " BayesianOptimizationEmitter. Expected GridArchive.")
 
         if (not upscale_schedule is None) and (not np.isclose(
                 archive.learning_rate, 1)):
@@ -104,20 +103,19 @@ class BayesianOptimizationEmitter(EmitterBase):
                                             normalize_y=True,
                                             n_targets=1 + self.measure_dim)
 
-        # Trains GP with initial data
-        init_solution, init_objective, init_measures = init_data
-        check_num_sol(init_solution, init_objective, init_measures)
+        if initial_solutions is not None:
+            self._initial_solutions = np.asarray(
+                initial_solutions, dtype=archive.dtypes["solution"])
+            check_batch_shape(self._initial_solutions, "initial_solutions",
+                              archive.solution_dim, "archive.solution_dim")
+        else:
+            self._initial_solutions = None
+
         self._dataset = {
-            "solution": np.asarray(init_solution),
-            "objective": np.asarray(init_objective).reshape(-1, 1),
-            "measures": np.asarray(init_measures),
+            "solution": np.empty((0, self.solution_dim), dtype=self.dtype),
+            "objective": np.empty((0, 1)),
+            "measures": np.empty((0, self.measure_dim)),
         }
-        self._gp.fit(
-            X=self._dataset["solution"],
-            y=np.concatenate(
-                (self._dataset["objective"], self._dataset["measures"]),
-                axis=1),
-        )
 
         self._search_nrestarts = search_nrestarts
 
@@ -213,6 +211,12 @@ class BayesianOptimizationEmitter(EmitterBase):
         """float or int: The lowest possible objective value. See the `min_obj`
         parameter in :meth:``__init__``."""
         return self._min_obj
+
+    @property
+    def initial_solutions(self):
+        """numpy.ndarray: The initial solutions which are returned when the
+        archive is empty (if x0 is not set)."""
+        return self._initial_solutions
 
     @EmitterBase.archive.setter
     def archive(self, new_archive):
@@ -471,7 +475,12 @@ class BayesianOptimizationEmitter(EmitterBase):
         """Returns :attr:`batch_size` solutions that are predicted to have high
         *Expected Joint Improvement of Elites* (EJIE) acquisition values.
 
-        The function does the following:
+        If ``self._gp`` has not been trained on any data and
+        ``self._initial_solutions`` is set, we return
+        ``self._initial_solutions``. If ``self._initial_solutions`` is
+        not set, we use Sobol sampling to draw an initial batch of solutions.
+
+        If ``self._gp`` has been trained on some data:
             1. Samples :attr:`num_sobol_samples` SOBOL samples.
             2. Computes the EJIE values for each sample, and keeps the top
                :attr:`_search_nrestarts` samples with the largest EJIE values
@@ -514,6 +523,13 @@ class BayesianOptimizationEmitter(EmitterBase):
             :attr:`solution_dim`) containing the solutions with the largest
             EJIE values in descending EJIE order.
         """
+        if self.num_evals == 0:
+            if self.initial_solutions is not None:
+                return np.clip(self.initial_solutions, self.lower_bounds,
+                               self.upper_bounds)
+            else:
+                return self._sample_n_rescale(self.batch_size)
+
         # pymoo minimizes so need to negate
         pymoo_problem = FunctionalProblem(
             n_var=self.solution_dim,
@@ -651,11 +667,15 @@ class BayesianOptimizationEmitter(EmitterBase):
             (self._dataset["measures"], data["measures"]))
 
         # Updates (actually re-trains) GP with updated dataset.
-        self._gp.fit(
-            X=self._dataset["solution"],
-            y=np.hstack(
-                (self._dataset["objective"], self._dataset["measures"])),
-        )
+        # sklearn occasionally raises LBFGS ConvergenceWarning, but this does
+        # not seem to impact BOP-Elites performance too much.
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=ConvergenceWarning)
+            self._gp.fit(
+                X=self._dataset["solution"],
+                y=np.hstack(
+                    (self._dataset["objective"], self._dataset["measures"])),
+            )
 
         # Checks upscale conditions and upscales if needed
         # NOTE: BOP-Elites Algorithm 1 implements a slightly different upscale

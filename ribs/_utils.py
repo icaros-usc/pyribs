@@ -230,19 +230,3 @@ def readonly(arr):
     """Sets an array to be readonly."""
     arr.flags.writeable = False
     return arr
-
-
-def check_num_sol(solution, objective, measures):
-    """Check that the shapes of solution, objective, measures are compatible.
-    i.e. they should have the same number of rows."""
-    sol = np.asarray(solution)
-    obj = np.asarray(objective)
-    meas = np.asarray(measures)
-
-    num_sol = sol.shape[0]
-    if obj.shape[0] != num_sol:
-        raise ValueError(f"Expected {num_sol} objectives, but got "
-                         f"{obj.shape[0]} objectives.")
-    if meas.shape[0] != num_sol:
-        raise ValueError(f"Expected {num_sol} measures, but got "
-                         f"{meas.shape[0]} measures.")

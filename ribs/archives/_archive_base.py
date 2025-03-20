@@ -295,23 +295,6 @@ class ArchiveBase(ABC):
         self._stats_reset()
 
     @abstractmethod
-    def retessellate(self, new_tessellation):
-        """Initializes a new archive with ``new_tessellation`` and re-inserts
-        solutions from the old archive.
-
-        Args:
-            new_tessellation (Any): Varies depending on the archive type. For
-                example, if the archive is a GridArchive, then
-                ``new_tessellation`` would be a dims array containing the
-                number of cells in each measure dimension. If the archive is a
-                CVTArchive, then new_tessellation would be the new number of
-                cells.
-
-        Returns:
-            ArchiveBase: A new archive with the new tessellation.
-        """
-
-    @abstractmethod
     def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
 
