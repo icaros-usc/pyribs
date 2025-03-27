@@ -59,6 +59,10 @@ jobs:
         run: pytest tests/visualize
       - name: Install QDax
         run: pip install qdax
+      # After QDax is installed, matplotlib gets downgraded, so we upgrade it
+      # again.
+      - name: Fix Matplotlib version
+        run: pip install -U matplotlib
       - name: Test visualize extra for QDax
         run: pytest tests/visualize_qdax
   coverage:
