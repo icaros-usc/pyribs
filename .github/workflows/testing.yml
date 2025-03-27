@@ -57,21 +57,13 @@ jobs:
         run: pip install .[visualize]
       - name: Test visualize extra
         run: pytest tests/visualize
-      - name: Install QDax
-        run: pip install qdax
-      # After QDax is installed, matplotlib gets downgraded, so we upgrade it
-      # again.
-      - name: Fix Matplotlib version
-        run: pip install -U matplotlib
-      - name: Test visualize extra for QDax
-        run: pytest tests/visualize_qdax
   coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: "3.10"
+          python-version: "3.12"
       - name: Install deps
         run: pip install .[all,dev]
       - name: Test coverage
@@ -88,11 +80,26 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: "3.10"
+          python-version: "3.12"
       - name: Install deps
         run: pip install .[visualize,dev]
       - name: Run benchmarks
         run: pytest -c pytest_benchmark.ini tests
+  visualize_qdax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: pip install .[visualize,dev]
+      - name: Install QDax
+        run: pip install qdax
+      - name: Fix dependencies
+        run: pip uninstall jumanji && pip install -U matplotlib
+      - name: Test visualize extra for QDax
+        run: pytest tests/visualize_qdax
   examples:
     runs-on: ubuntu-latest
     steps:
