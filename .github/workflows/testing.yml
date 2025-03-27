@@ -95,9 +95,7 @@ jobs:
       - name: Install deps
         run: pip install .[visualize,dev]
       - name: Install QDax
-        run: pip install qdax
-      - name: Fix dependencies
-        run: pip uninstall --yes jumanji && pip install -U matplotlib
+        run: pip install qdax matplotlib==3.10.1
       - name: Test visualize extra for QDax
         run: pytest tests/visualize_qdax
   examples:
