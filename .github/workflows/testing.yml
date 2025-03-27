@@ -57,7 +57,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: "3.8"
+          python-version: "3.10"
       - name: Install core deps
         run: pip install -r pinned_reqs/install.txt .[dev]
       - name: Test core
@@ -68,8 +68,7 @@ jobs:
       - name: Test visualize extra
         run: pytest tests/visualize
       - name: Install QDax
-        # Brax 0.9.4 fails with Python 3.8 due to mujoco-mjx
-        run: pip install qdax brax==0.9.3
+        run: pip install qdax
       - name: Test visualize extra for QDax
         run: pytest tests/visualize_qdax
       - name: Install cma dep
@@ -82,7 +81,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: "3.8"
+          python-version: "3.10"
       - name: Install deps
         run: pip install .[all,dev]
       - name: Test coverage
@@ -99,7 +98,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: "3.8"
+          python-version: "3.10"
       - name: Install deps
         run: pip install .[visualize,dev]
       - name: Run benchmarks
@@ -114,7 +113,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: 3.8
+          python-version: "3.10"
       - name: Install deps
         run: pip install .[visualize]
       - name: Test Examples
@@ -138,7 +137,6 @@ jobs:
       # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
       - name: Remove swig
         run: sudo apt-get remove swig
-      # We use Python 3.10 instead of 3.8 here since Google Colab uses 3.10.
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
@@ -156,7 +154,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: "3.8"
+          python-version: "3.10"
       - name: Install deps
         run: pip install .[visualize,dev]
       - name: Build docs
@@ -169,7 +167,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: "3.8"
+          python-version: "3.10"
       - name: Install dependencies
         run: |
           pip install -e .
