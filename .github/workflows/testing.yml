@@ -53,6 +53,8 @@ jobs:
         run: pip install .[pycma]
       - name: Test cma extra
         run: pytest tests/emitters_pycma
+      - name: Install visualize dep
+        run: pip install .[visualize]
       - name: Test visualize extra
         run: pytest tests/visualize
       - name: Install QDax
@@ -140,7 +142,7 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install deps
-        run: pip install .[visualize,dev]
+        run: pip install .[all,dev]
       - name: Build docs
         run: make docs
   deploy:

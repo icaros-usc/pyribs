@@ -47,10 +47,10 @@ extras_require = {
 
         # Testing
         "python-box[all]~=7.0",
-        "pytest==7.0.1",
-        "pytest-cov==3.0.0",
-        "pytest-benchmark==3.4.1",
-        "pytest-xdist==2.5.0",
+        "pytest==8.3.5",
+        "pytest-cov==6.0.0",
+        "pytest-benchmark==5.1.0",
+        "pytest-xdist==3.6.1",
 
         # Documentation
         "myst-nb==0.17.1",
