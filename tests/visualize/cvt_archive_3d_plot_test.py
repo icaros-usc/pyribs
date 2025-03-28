@@ -17,7 +17,7 @@ from .conftest import add_uniform_sphere_3d
 # Tolerance for root mean square difference between the pixels of the images,
 # where 255 is the max value. We have a pretty high tolerance for
 # `cvt_archive_3d_plot` since 3D rendering tends to vary a bit.
-CVT_IMAGE_TOLERANCE = 1.0
+CVT_IMAGE_TOLERANCE = 2.0
 
 #
 # Fixtures
