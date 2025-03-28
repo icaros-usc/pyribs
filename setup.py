@@ -38,6 +38,9 @@ extras_require = {
 
         ### cma ###
         "cma",
+
+        ### pymoo ###
+        "pymoo",
     ],
     "dev": [
         "pip>=20.3",

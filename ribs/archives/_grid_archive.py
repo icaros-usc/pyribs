@@ -155,6 +155,55 @@ class GridArchive(ArchiveBase):
         """
         return self._boundaries
 
+    def retessellate(self, new_dims):
+        """Initializes a new archive with ``new_dims`` and re-inserts
+        solutions from the old archive.
+
+        Note that if the new grid resolution is smaller than the old grid
+        resolution, some solutions originally from different cells may end up
+        being assigned to the same cell. Since only a single highest-objective
+        elite is allowed in each cell, some solutions may be dropped.
+
+        Also note that the current implementation does not support archive
+        thresholds. The thresholds within each cell should correspond to how
+        well the measure space within that cell has been explored, and thereby
+        should correspond to the measure space volume within that cell. While
+        this definitely changes after retessellating, it is currently not clear
+        what the new threshold should be.
+
+        Args:
+            new_dims (array-like of int):  Number of cells in each
+            dimension of the measure space, e.g. ``[20, 30, 40]`` indicates
+            there should be 3 dimensions with 20, 30, and 40 cells. The format
+            is similar as the ``dims`` argument in the constructor.
+
+        Returns:
+            GridArchive: A new GridArchive with the new tessellation.
+        """
+        if not np.isclose(self.learning_rate, 1):
+            raise NotImplementedError(
+                "Cannot retessellate an archive with learning rate.")
+
+        new_archive = GridArchive(
+            solution_dim=self.solution_dim,
+            dims=new_dims,
+            ranges=list(zip(self.lower_bounds, self.upper_bounds)),
+            learning_rate=None,
+            threshold_min=-np.inf,
+            epsilon=self.epsilon,
+            qd_score_offset=self.qd_score_offset,
+            seed=self._seed,
+            dtype=self.dtypes,
+            extra_fields=None,
+        )
+
+        curr_solution, curr_objective, curr_measures = self.data(
+            fields=["solution", "objective", "measures"], return_type="tuple")
+
+        new_archive.add(curr_solution, curr_objective, curr_measures)
+
+        return new_archive
+
     def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
 
