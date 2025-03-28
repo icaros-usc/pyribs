@@ -6,6 +6,7 @@
 
 #### API
 
+- Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
 - **Backwards-incompatible:** BanditScheduler: Add emitter_pool and active attr;
   remove emitters attr ({pr}`494`)
 - Add DensityRanker for density descent search ({pr}`483`)
