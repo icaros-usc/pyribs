@@ -59,7 +59,9 @@ class BayesianOptimizationScheduler(Scheduler):
                 this_upscale_schedule = e.upscale_schedule
             else:
                 other_upscale_schedule = e.upscale_schedule
-                if np.any(this_upscale_schedule != other_upscale_schedule):
+                if (this_upscale_schedule.shape != other_upscale_schedule.shape
+                        or np.any(
+                            this_upscale_schedule != other_upscale_schedule)):
                     raise ValueError(
                         "All emitters must have the same upscale schedule. "
                         "emitter0 has upscale schedule "
@@ -68,7 +70,7 @@ class BayesianOptimizationScheduler(Scheduler):
 
         # Checks that ``archive`` is a GridArchive
         if not isinstance(archive, GridArchive):
-            raise TypeError("archive type must be GridArchive. Actually got "
+            raise TypeError("Archive type must be GridArchive. Actually got "
                             f"{archive.__class__.__name__}")
 
         if this_upscale_schedule is None:
@@ -86,13 +88,18 @@ class BayesianOptimizationScheduler(Scheduler):
     def archive(self, new_archive):
         self._archive = new_archive
 
+    def ask_dqd(self):
+        raise NotImplementedError(
+            "BayesianOptimization currently does not support DQD")
+
     def tell_dqd(self, objective, measures, jacobian, **fields):
         raise NotImplementedError(
             "BayesianOptimization currently does not support DQD")
 
     def tell(self, objective, measures, **fields):
-        """Updates :attr:`emitters` and the :attr:`archive` with new data. When
-        **ALL** emitters are ready to upscale, calls
+        """Updates :attr:`emitters` and the :attr:`archive` with new data.
+
+        When **ALL** emitters are ready to upscale, calls
         :meth:`~ribs.archives.GridArchive.retessellate` to upscale the archive.
         Otherwise same as :meth:`~Scheduler.tell`.
         """
@@ -125,7 +132,7 @@ class BayesianOptimizationScheduler(Scheduler):
             pos = end
 
             # Check that all emitters have returned the same upscale resolution.
-            if not self.upscale_schedule is None:
+            if self.upscale_schedule is not None:
                 if i == 0:
                     this_upscale_res = upscale_res
                 else:
@@ -138,7 +145,7 @@ class BayesianOptimizationScheduler(Scheduler):
 
         # If the upscale resolution is not None, upscales :attr:`archive` and
         # all emitter archives.
-        if not this_upscale_res is None:
+        if this_upscale_res is not None:
             new_archive = self.archive.retessellate(this_upscale_res)
             self.archive = new_archive
             for e in self._emitters:

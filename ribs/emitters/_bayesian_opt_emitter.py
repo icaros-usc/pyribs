@@ -1,11 +1,8 @@
 """Provides the BayesianOptimizationEmitter."""
+
 import warnings
 
 import numpy as np
-from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
-from pymoo.optimize import minimize
-from pymoo.problems.functional import FunctionalProblem
-from pymoo.termination.default import DefaultSingleObjectiveTermination
 from scipy.stats import entropy, norm
 from scipy.stats.qmc import Sobol
 from sklearn.exceptions import ConvergenceWarning
@@ -21,7 +18,8 @@ class BayesianOptimizationEmitter(EmitterBase):
     """A sample-efficient emitter that models objective and measure functions
     with gaussian process surrogate models and uses Bayesian Optimisation to
     emit solutions that are predicted to have high *Expected Joint Improvement
-    of Elites* (EJIE) acquisition values.
+    of Elites* (EJIE) acquisition values. This emitter requires the
+    `pymoo <https://pypi.org/project/pymoo/>`_ package.
 
     Refer to `Kent et al. 2024 <https://ieeexplore.ieee.org/abstract/document
     /10472301>` for more information.
@@ -77,6 +75,15 @@ class BayesianOptimizationEmitter(EmitterBase):
         batch_size=8,
         seed=None,
     ):
+        try:
+            # pylint: disable = import-outside-toplevel
+            import pymoo
+        except ImportError as e:
+            raise ImportError(
+                "pymoo must be installed -- please run "
+                "`pip install ribs[pymoo]` or `pip install pymoo`") from e
+        self._pymoo = pymoo
+
         check_finite(bounds, "bounds")
         EmitterBase.__init__(
             self,
@@ -124,8 +131,12 @@ class BayesianOptimizationEmitter(EmitterBase):
             self._initial_solutions = self._sample_n_rescale(
                 num_initial_samples)
 
-        check_batch_shape(self._initial_solutions, "initial_solutions",
-                          archive.solution_dim, "archive.solution_dim")
+        check_batch_shape(
+            self._initial_solutions,
+            "initial_solutions",
+            archive.solution_dim,
+            "archive.solution_dim",
+        )
 
         self._dataset = {
             "solution": np.empty((0, self.solution_dim), dtype=self.dtype),
@@ -245,7 +256,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         :attr:`_entropy_norm` according to new number of archive cells and
         resets :attr:`_numitrs_noprogress` to 0.
         """
-        if not self._entropy_norm is None:
+        if self._entropy_norm is not None:
             self._entropy_norm = entropy(
                 np.ones(self.archive.cells) / self.archive.cells)
 
@@ -460,7 +471,7 @@ class BayesianOptimizationEmitter(EmitterBase):
                                           normalize=True,
                                           cutoff=True)
 
-        if not self._entropy_norm is None:
+        if self._entropy_norm is not None:
             all_zero_filter = np.all(np.isclose(cell_probs, 0), axis=1)
             entropies = np.zeros((mus.shape[0], 1))
             entropies[~all_zero_filter] = entropy(cell_probs[~all_zero_filter],
@@ -530,8 +541,6 @@ class BayesianOptimizationEmitter(EmitterBase):
             4. We no longer explicitly add samples predicted to be in empty
             cells to the starting point pool, since samples predicted to be in
             empty cells should already have high EJIE.
-        It is **very** likely that I made some mistakes in simplifying the
-        process. Please definitely feel free to correct me if this is the case.
 
 
         Returns:
@@ -544,7 +553,7 @@ class BayesianOptimizationEmitter(EmitterBase):
                            self.upper_bounds)
 
         # pymoo minimizes so need to negate
-        pymoo_problem = FunctionalProblem(
+        pymoo_problem = self._pymoo.problems.functional.FunctionalProblem(
             n_var=self.solution_dim,
             objs=lambda x: -self._get_ejie_values(
                 x, return_by_cell=False, return_cell_probs=False),
@@ -552,7 +561,8 @@ class BayesianOptimizationEmitter(EmitterBase):
             xu=self.upper_bounds,
         )
 
-        termination = DefaultSingleObjectiveTermination()
+        termination = (
+            self._pymoo.termination.default.DefaultSingleObjectiveTermination())
 
         optimized_samples = []
         while len(optimized_samples) < self.batch_size:
@@ -567,11 +577,13 @@ class BayesianOptimizationEmitter(EmitterBase):
             # optimizes ejie values of starting points
             found_positive_ejie = False
             for x0 in search_starting_points:
-                optimizer = PatternSearch(x0=x0)
+                optimizer = (
+                    self._pymoo.algorithms.soo.nonconvex.pattern.PatternSearch(
+                        x0=x0))
 
                 # Note: Using default pymoo minimize, PatternSearch, and
                 # termination.
-                result = minimize(
+                result = self._pymoo.optimize.minimize(
                     problem=pymoo_problem,
                     algorithm=optimizer,
                     termination=termination,

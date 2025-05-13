@@ -1,4 +1,5 @@
 """Contains the GridArchive."""
+
 import numpy as np
 
 from ribs._utils import check_batch_shape, check_finite, check_is_1d, np_scalar
@@ -68,18 +69,20 @@ class GridArchive(ArchiveBase):
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
-    def __init__(self,
-                 *,
-                 solution_dim,
-                 dims,
-                 ranges,
-                 learning_rate=None,
-                 threshold_min=-np.inf,
-                 epsilon=1e-6,
-                 qd_score_offset=0.0,
-                 seed=None,
-                 dtype=np.float64,
-                 extra_fields=None):
+    def __init__(
+        self,
+        *,
+        solution_dim,
+        dims,
+        ranges,
+        learning_rate=None,
+        threshold_min=-np.inf,
+        epsilon=1e-6,
+        qd_score_offset=0.0,
+        seed=None,
+        dtype=np.float64,
+        extra_fields=None,
+    ):
         self._dims = np.array(dims, dtype=np.int32)
         if len(self._dims) != len(ranges):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
@@ -184,6 +187,13 @@ class GridArchive(ArchiveBase):
             raise NotImplementedError(
                 "Cannot retessellate an archive with learning rate.")
 
+        # exclude default fields from GridArchive._store to retrieve
+        # extra_fields
+        extra_fields = {}
+        for name, arr in self._store.field_desc.items():
+            if name not in ["solution", "objective", "measures", "threshold"]:
+                extra_fields[name] = arr
+
         new_archive = GridArchive(
             solution_dim=self.solution_dim,
             dims=new_dims,
@@ -194,13 +204,12 @@ class GridArchive(ArchiveBase):
             qd_score_offset=self.qd_score_offset,
             seed=self._seed,
             dtype=self.dtypes,
-            extra_fields=None,
+            extra_fields=extra_fields,
         )
 
-        curr_solution, curr_objective, curr_measures = self.data(
-            fields=["solution", "objective", "measures"], return_type="tuple")
+        curr_data = self.data()
 
-        new_archive.add(curr_solution, curr_objective, curr_measures)
+        new_archive.add(**curr_data)
 
         return new_archive
 

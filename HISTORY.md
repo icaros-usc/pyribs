@@ -61,7 +61,7 @@ makes a couple of minor usability improvements, such as better error checking.
   ({pr}`461`)
 - Warn user if resampling for bounds takes too long in ESs ({pr}`462`)
 - Implement BOP-Elites by adding BayesianOptimizationEmitter and
-  BayesianOptimizationScheduler
+  BayesianOptimizationScheduler ({pr}`496`)
 - Add BOP-Elites demo
 
 #### Documentation

@@ -1,8 +1,6 @@
-"""Example script of running BOP-Elites on the sphere domain.
-"""
+"""Example script of running BOP-Elites on the sphere domain."""
 
 import json
-import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -95,6 +93,7 @@ def save_heatmap(archive, heatmap_path):
 @dataclass
 class Params:
     """Experiment parameters for BOP-Elites, the sphere domain, and logging."""
+
     solution_dim: int
     total_itrs: int
     search_nrestarts: int
@@ -109,15 +108,11 @@ class Params:
     log_every: int
 
 
-if __name__ == '__main__':
+def main():
+    """Main function for running BOP-Elites on the sphere domain."""
     # logdir for saving experiment data
-    trial_outdir = os.path.join(
-        os.path.curdir,
-        "test_logs",
-    )
-    trial_path = Path(trial_outdir)
-    if not trial_path.is_dir():
-        trial_path.mkdir()
+    trial_path = Path("test_logs")
+    trial_path.mkdir(exist_ok=True)
 
     params = Params(
         solution_dim=4,
@@ -130,16 +125,18 @@ if __name__ == '__main__':
         batch_size=8,
         num_emitters=1,
         seed=42,
-        logdir=trial_outdir,
+        logdir=trial_path,
         log_every=20,
     )
 
     # The main grid archive that interacts with BOP-Elites. We start at the
     # lowest resolution from ``upscale_schedule``.
+    max_bound = params.solution_dim / 2 * 5.12
+    bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     main_archive = GridArchive(
         solution_dim=params.solution_dim,
         dims=params.upscale_schedule[0],
-        ranges=[[-5.12, 5.12]] * 2,
+        ranges=bounds,
         seed=params.seed,
     )
     # The passive archive that does NOT interact with BOP-Elites other than
@@ -148,7 +145,7 @@ if __name__ == '__main__':
     passive_archive = GridArchive(
         solution_dim=params.solution_dim,
         dims=params.upscale_schedule[-1],
-        ranges=[[-5.12, 5.12]] * 2,
+        ranges=bounds,
         seed=params.seed,
     )
 
@@ -156,6 +153,8 @@ if __name__ == '__main__':
     emitters = [
         BayesianOptimizationEmitter(
             archive=main_archive,
+            # BayesianOptimizationEmitter requires solution space bounds due to
+            # Sobol sampling. i.e., bounds cannot be None.
             bounds=[(-10.24, 10.24)] * params.solution_dim,
             search_nrestarts=params.search_nrestarts,
             entropy_ejie=params.entropy_ejie,
@@ -185,10 +184,9 @@ if __name__ == '__main__':
         "Itr. Time": {
             "x": [0],
             "y": [0.0],
-        }
+        },
     }
 
-    exp_start_time = time.time()
     for i in tqdm.trange(1, params.total_itrs + 1):
         itr_start_time = time.time()
 
@@ -218,7 +216,7 @@ if __name__ == '__main__':
 
             save_heatmap(
                 passive_archive,
-                os.path.join(params.logdir, f"heatmap_{i:08d}.png"),
+                params.logdir / f"heatmap_{i:08d}_passive.png",
             )
 
     # Plot metrics.
@@ -231,3 +229,7 @@ if __name__ == '__main__':
         plt.clf()
     with (params.logdir / "metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
+
+
+if __name__ == "__main__":
+    main()
