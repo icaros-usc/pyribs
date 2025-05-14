@@ -77,12 +77,20 @@ class BayesianOptimizationEmitter(EmitterBase):
     ):
         try:
             # pylint: disable = import-outside-toplevel
-            import pymoo
+            from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
+            from pymoo.optimize import minimize
+            from pymoo.problems.functional import FunctionalProblem
+            from pymoo.termination.default import DefaultSingleObjectiveTermination
         except ImportError as e:
             raise ImportError(
                 "pymoo must be installed -- please run "
                 "`pip install ribs[pymoo]` or `pip install pymoo`") from e
-        self._pymoo = pymoo
+        self._pymoo_mods = {
+            'PatternSearch': PatternSearch,
+            'minimize': minimize,
+            'FunctionalProblem': FunctionalProblem,
+            'DefaultSingleObjectiveTermination': DefaultSingleObjectiveTermination
+        }
 
         check_finite(bounds, "bounds")
         EmitterBase.__init__(
@@ -553,7 +561,7 @@ class BayesianOptimizationEmitter(EmitterBase):
                            self.upper_bounds)
 
         # pymoo minimizes so need to negate
-        pymoo_problem = self._pymoo.problems.functional.FunctionalProblem(
+        pymoo_problem = self._pymoo_mods['FunctionalProblem'](
             n_var=self.solution_dim,
             objs=lambda x: -self._get_ejie_values(
                 x, return_by_cell=False, return_cell_probs=False),
@@ -561,8 +569,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             xu=self.upper_bounds,
         )
 
-        termination = (
-            self._pymoo.termination.default.DefaultSingleObjectiveTermination())
+        termination = self._pymoo_mods['DefaultSingleObjectiveTermination']()
 
         optimized_samples = []
         while len(optimized_samples) < self.batch_size:
@@ -578,12 +585,12 @@ class BayesianOptimizationEmitter(EmitterBase):
             found_positive_ejie = False
             for x0 in search_starting_points:
                 optimizer = (
-                    self._pymoo.algorithms.soo.nonconvex.pattern.PatternSearch(
+                    self._pymoo_mods['PatternSearch'](
                         x0=x0))
 
                 # Note: Using default pymoo minimize, PatternSearch, and
                 # termination.
-                result = self._pymoo.optimize.minimize(
+                result = self._pymoo_mods['minimize'](
                     problem=pymoo_problem,
                     algorithm=optimizer,
                     termination=termination,

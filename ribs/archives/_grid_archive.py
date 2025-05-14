@@ -208,6 +208,7 @@ class GridArchive(ArchiveBase):
         )
 
         curr_data = self.data()
+        del curr_data['index']
 
         new_archive.add(**curr_data)
 
