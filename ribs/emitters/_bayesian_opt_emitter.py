@@ -1,5 +1,4 @@
 """Provides the BayesianOptimizationEmitter."""
-
 import warnings
 
 import numpy as np
@@ -80,16 +79,21 @@ class BayesianOptimizationEmitter(EmitterBase):
             from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
             from pymoo.optimize import minimize
             from pymoo.problems.functional import FunctionalProblem
-            from pymoo.termination.default import DefaultSingleObjectiveTermination
+            from pymoo.termination.default import \
+                DefaultSingleObjectiveTermination
         except ImportError as e:
             raise ImportError(
                 "pymoo must be installed -- please run "
                 "`pip install ribs[pymoo]` or `pip install pymoo`") from e
         self._pymoo_mods = {
-            'PatternSearch': PatternSearch,
-            'minimize': minimize,
-            'FunctionalProblem': FunctionalProblem,
-            'DefaultSingleObjectiveTermination': DefaultSingleObjectiveTermination
+            'PatternSearch':
+                PatternSearch,
+            'minimize':
+                minimize,
+            'FunctionalProblem':
+                FunctionalProblem,
+            'DefaultSingleObjectiveTermination':
+                DefaultSingleObjectiveTermination
         }
 
         check_finite(bounds, "bounds")
@@ -584,9 +588,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             # optimizes ejie values of starting points
             found_positive_ejie = False
             for x0 in search_starting_points:
-                optimizer = (
-                    self._pymoo_mods['PatternSearch'](
-                        x0=x0))
+                optimizer = self._pymoo_mods['PatternSearch'](x0=x0)
 
                 # Note: Using default pymoo minimize, PatternSearch, and
                 # termination.

@@ -68,20 +68,18 @@ class GridArchive(ArchiveBase):
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
-    def __init__(
-        self,
-        *,
-        solution_dim,
-        dims,
-        ranges,
-        learning_rate=None,
-        threshold_min=-np.inf,
-        epsilon=1e-6,
-        qd_score_offset=0.0,
-        seed=None,
-        dtype=np.float64,
-        extra_fields=None,
-    ):
+    def __init__(self,
+                 *,
+                 solution_dim,
+                 dims,
+                 ranges,
+                 learning_rate=None,
+                 threshold_min=-np.inf,
+                 epsilon=1e-6,
+                 qd_score_offset=0.0,
+                 seed=None,
+                 dtype=np.float64,
+                 extra_fields=None):
         self._dims = np.array(dims, dtype=np.int32)
         if len(self._dims) != len(ranges):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
