@@ -1,5 +1,4 @@
 """Contains the GridArchive."""
-
 import numpy as np
 
 from ribs._utils import check_batch_shape, check_finite, check_is_1d, np_scalar

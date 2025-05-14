@@ -1,4 +1,5 @@
-"""Example script of running BOP-Elites on the sphere domain."""
+"""Example script of running BOP-Elites on the sphere domain.
+"""
 
 import json
 import time
@@ -93,7 +94,6 @@ def save_heatmap(archive, heatmap_path):
 @dataclass
 class Params:
     """Experiment parameters for BOP-Elites, the sphere domain, and logging."""
-
     solution_dim: int
     total_itrs: int
     search_nrestarts: int
@@ -184,7 +184,7 @@ def main():
         "Itr. Time": {
             "x": [0],
             "y": [0.0],
-        },
+        }
     }
 
     for i in tqdm.trange(1, params.total_itrs + 1):
