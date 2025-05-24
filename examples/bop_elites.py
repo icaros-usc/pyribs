@@ -215,8 +215,8 @@ def main():
                 f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
 
             save_heatmap(
-                passive_archive,
-                params.logdir / f"heatmap_{i:08d}_passive.png",
+                scheduler.result_archive,
+                params.logdir / f"heatmap_{i:08d}.png",
             )
 
     # Plot metrics.

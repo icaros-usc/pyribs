@@ -71,7 +71,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         min_obj=0,
         num_initial_samples=None,
         initial_solutions=None,
-        batch_size=8,
+        batch_size=1,
         seed=None,
     ):
         try:
@@ -184,7 +184,7 @@ class BayesianOptimizationEmitter(EmitterBase):
 
     @property
     def cell_prob_cutoff(self):
-        """np.float16: Cutoff value (ohm) for :meth:`_get_cell_probs` as
+        """np.float64: Cutoff value (ohm) for :meth:`_get_cell_probs` as
         described in `Kent et al. 2024 <https://ieeexplore.ieee.org/abstract
         /document/10472301>` Sec.IV-D.
         There are some numerical errors involved with cell_probs, so even
@@ -192,9 +192,11 @@ class BayesianOptimizationEmitter(EmitterBase):
         return slightly different cell_probs, so we return cell_prob_cutoff at
         a lower precision than cell_probs to ensure the same sample
         consistently passes/fails the threshold check."""
-        return np.float16(0.5 * (2 / self.archive.cells)**(
-            (10 * self.solution_dim) /
-            (self._misspec - 2 * self._overspec + self.num_evals + 1e-6))**0.5)
+        return round(
+            0.5 * (2 / self.archive.cells)**
+            ((10 * self.solution_dim) /
+             (self._misspec - 2 * self._overspec + self.num_evals + 1e-6))**0.5,
+            4)
 
     @property
     def num_evals(self):
@@ -280,7 +282,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         function. Otherwise resets :attr:`_numitrs_noprogress` to 0.
         """
         if len(self.archive) == self._prev_numcells:
-            self._numitrs_noprogress += 1
+            self._numitrs_noprogress += self.batch_size
         else:
             self._numitrs_noprogress = 0
             self._prev_numcells = len(self.archive)
@@ -438,39 +440,27 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         return cell_probs
 
-    def _get_ejie_values(self,
-                         samples,
-                         return_by_cell=False,
-                         return_cell_probs=False):
+    def _get_ejie_values(self, samples):
         """Computes *Expected Joint Improvement of Elites* (EJIE) acquisition
         values of samples by multiplying the predicted expected improvements
-        and cell membership probabilities.
+        and cell membership probabilities. Returns individual EJIE values for
+        each cell in an array of shape (num_solutions, :attr:`archive.cells`).
+        You can use `np.sum(result, axis=1)` to get the total EJIE on the
+        entire archive. Also returns the predicted cell membership
+        probabilities for each sample in an array of shape
+        (num_solutions, :attr:`archive.cells`).
 
         Args:
             samples (np.ndarray): Array of shape (num_samples,
                 :attr:`solution_dim`) containing samples whose EJIE values need
                 to be computed.
-            return_by_cell (bool): If ``True``, returns individual EJIE values
-                for each cell in an array of shape (num_solutions,
-                :attr:`archive.cells`). This option is mainly used for
-                determining whether more than half of the EJIE value is
-                attributed to a single cell.
-            return_cell_probs (bool): If ``True``, returns the predicted cell
-                membership probabilities for each sample in an array of shape
-                (num_solutions, :attr:`archive.cells`). This option is mainly
-                used for identifying the most likely cell for each sample.
 
         Returns:
-            np.ndarray or tuple(np.ndarray, np.ndarray): If
-                ``return_by_cell=True``, returns an array of shape
+            tuple(np.ndarray, np.ndarray): Returns an array of shape
                 (num_solutions, :attr:`archive.cells`) containing each
-                solution's EJIE values for each cell. If
-                ``return_by_cell=False``, returns an array of shape
-                (num_solutions,) containing the total EJIE of each sample,
-                summed across all cells. If ``return_cell_probs=True``,
-                additionally returns an array of shape (num_solutions,
-                :attr:`archive.cells`) containing the predicted cell
-                membership probabilities for each solution.
+                solution's EJIE values for each cell. Also returns an array of
+                shape (num_solutions, :attr:`archive.cells`) containing the
+                predicted cell membership probabilities for each solution.
         """
         mus, stds = self._gp.predict(samples.reshape(-1, self.solution_dim),
                                      return_std=True)
@@ -493,22 +483,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         else:
             ejie_by_cell = expected_improvements * cell_probs
 
-        if return_by_cell:
-            if return_cell_probs:
-                return (
-                    ejie_by_cell,
-                    cell_probs,
-                )
-            else:
-                return ejie_by_cell
-        else:
-            if return_cell_probs:
-                return (
-                    np.sum(ejie_by_cell, axis=1),
-                    cell_probs,
-                )
-            else:
-                return np.sum(ejie_by_cell, axis=1)
+        return ejie_by_cell, cell_probs
 
     def ask(self):
         """Returns :attr:`batch_size` solutions that are predicted to have high
@@ -567,23 +542,25 @@ class BayesianOptimizationEmitter(EmitterBase):
         # pymoo minimizes so need to negate
         pymoo_problem = self._pymoo_mods['FunctionalProblem'](
             n_var=self.solution_dim,
-            objs=lambda x: -self._get_ejie_values(
-                x, return_by_cell=False, return_cell_probs=False),
+            objs=lambda x: -np.sum(self._get_ejie_values(x)[0], axis=1),
             xl=self.lower_bounds,
             xu=self.upper_bounds,
         )
 
         termination = self._pymoo_mods['DefaultSingleObjectiveTermination']()
 
-        optimized_samples = []
-        while len(optimized_samples) < self.batch_size:
+        optimization_outcomes = {
+            'optimized_samples': [],
+            'optimized_ejie_by_cell': [],
+            'optimized_cell_probs': []
+        }
+        while len(optimization_outcomes['optimized_samples']) < self.batch_size:
             samples = self._sample_n_rescale(self.num_sobol_samples)
-            ejie_values = self._get_ejie_values(samples,
-                                                return_by_cell=False,
-                                                return_cell_probs=False)
+            starting_ejie_by_cell, _ = self._get_ejie_values(samples)
 
-            search_starting_points = samples[np.argsort(ejie_values)
-                                             [-self._search_nrestarts:]]
+            search_starting_points = samples[np.argsort(
+                np.sum(starting_ejie_by_cell,
+                       axis=1))[-self._search_nrestarts:]]
 
             # optimizes ejie values of starting points
             found_positive_ejie = False
@@ -601,7 +578,15 @@ class BayesianOptimizationEmitter(EmitterBase):
                 )
 
                 if -result.F > 0:
-                    optimized_samples.append(result.X)
+                    optimization_outcomes['optimized_samples'].append(result.X)
+                    # retrieve the cell-wise EJIE and probs for optimized
+                    # solution
+                    opt_ejie_by_cell, opt_cell_probs = self._get_ejie_values(
+                        result.X)
+                    optimization_outcomes['optimized_ejie_by_cell'].append(
+                        opt_ejie_by_cell.squeeze())
+                    optimization_outcomes['optimized_cell_probs'].append(
+                        opt_cell_probs.squeeze())
                     found_positive_ejie = True
 
             # if didn't find any positive ejie after optimization, increments
@@ -611,12 +596,11 @@ class BayesianOptimizationEmitter(EmitterBase):
             if not found_positive_ejie:
                 self._overspec += 1
 
-        optimized_samples = np.array(optimized_samples)
+        optimized_samples = np.array(optimization_outcomes['optimized_samples'])
+        ejie_by_cell = np.array(optimization_outcomes['optimized_ejie_by_cell'])
+        cell_probs = np.array(optimization_outcomes['optimized_cell_probs'])
 
-        ejie_by_cell, cell_probs = self._get_ejie_values(optimized_samples,
-                                                         return_by_cell=True,
-                                                         return_cell_probs=True)
-        optimized_ejies = np.sum(ejie_by_cell, axis=1)
+        total_ejies = np.sum(ejie_by_cell, axis=1)
         # Most likely cell for each optimized solution
         best_cell_idx = np.argmax(cell_probs, axis=1)
         best_cell_probs = cell_probs[range(cell_probs.shape[0]), best_cell_idx]
@@ -624,10 +608,10 @@ class BayesianOptimizationEmitter(EmitterBase):
         # Computes EJIE attributions of the most likely cell for each solution
         ejie_attributions = (
             ejie_by_cell[range(ejie_by_cell.shape[0]), best_cell_idx] /
-            optimized_ejies)
+            total_ejies)
 
         # Sort by EJIE, take the top :attr:`batch_size` samples
-        sorted_idx = np.argsort(optimized_ejies)[::-1][:self.batch_size]
+        sorted_idx = np.argsort(total_ejies)[::-1][:self.batch_size]
 
         # NOTE: BOP-Elites Algorithm 1 implements a different mis-specification
         # check, in which a mis-specification occurs if a sample is predicted
