@@ -19,10 +19,19 @@ def _as_cvt_archive(repertoire, ranges):
     )
 
     # Add everything to the CVTArchive.
-    occupied = repertoire.fitnesses != -np.inf
+    fitnesses = repertoire.fitnesses
+
+    if fitnesses.shape[1:] == (1,):
+        fitnesses = fitnesses.squeeze(1)
+    else:
+        raise ValueError(
+            "This method only supports visualizing single-objective "
+            "archives (i.e., there can only be one fitness).")
+
+    occupied = fitnesses != -np.inf
     cvt_archive.add(
         np.empty((occupied.sum(), 0)),
-        repertoire.fitnesses[occupied],
+        fitnesses[occupied],
         repertoire.descriptors[occupied],
     )
 
@@ -36,7 +45,7 @@ def qdax_repertoire_heatmap(
     **kwargs,
 ):
     # pylint: disable = line-too-long
-    """Plots a heatmap of a QDax MapElitesRepertoire.
+    """Plots a heatmap of a single-objective QDax MapElitesRepertoire.
 
     Internally, this function converts a
     :class:`~qdax.core.containers.mapelites_repertoire.MapElitesRepertoire` into
@@ -54,6 +63,8 @@ def qdax_repertoire_heatmap(
             MapElitesRepertoire does not store measure space bounds.
         *args: Positional arguments to pass to :meth:`cvt_archive_heatmap`.
         **kwargs: Keyword arguments to pass to :meth:`cvt_archive_heatmap`.
+    Raises:
+        ValueError: The repertoire passed in has more than one fitness.
     """
     # pylint: enable = line-too-long
 
@@ -67,7 +78,7 @@ def qdax_repertoire_3d_plot(
     **kwargs,
 ):
     # pylint: disable = line-too-long
-    """Plots a QDax MapElitesRepertoire with 3D measure space.
+    """Plots a single-objective QDax MapElitesRepertoire with 3D measure space.
 
     Internally, this function converts a
     :class:`~qdax.core.containers.mapelites_repertoire.MapElitesRepertoire` into
@@ -86,6 +97,8 @@ def qdax_repertoire_3d_plot(
             store measure space bounds.
         *args: Positional arguments to pass to :meth:`cvt_archive_3d_plot`.
         **kwargs: Keyword arguments to pass to :meth:`cvt_archive_3d_plot`.
+    Raises:
+        ValueError: The repertoire passed in has more than one fitness.
     """
     # pylint: enable = line-too-long
 
