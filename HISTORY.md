@@ -39,6 +39,7 @@
 
 #### Improvements
 
+- Update QDax visualizations to match QDax 0.5.0 ({pr}`502`)
 - Skip qdax tests if qdax not installed ({pr}`491`)
 - Move yapf after isort in pre-commit ({pr}`490`)
 - Remove `_cells` attribute from ArchiveBase ({pr}`475`)
