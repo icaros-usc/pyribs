@@ -47,7 +47,7 @@ def test_qdax_repertoire_heatmap():
         num_centroids=100,
         minval=-1,
         maxval=1,
-        random_key=jax.random.PRNGKey(42),
+        key=jax.random.PRNGKey(42),
     )
 
     # Create initial population.
@@ -76,21 +76,21 @@ def test_qdax_repertoire_heatmap():
 def test_qdax_repertoire_3d_plot():
     plt.figure(figsize=(8, 6))
 
-    random_key = jax.random.PRNGKey(42)
+    key = jax.random.PRNGKey(42)
 
     # Compute the CVT centroids.
-    random_key, subkey = jax.random.split(random_key)
+    key, subkey = jax.random.split(key)
     centroids, _ = compute_cvt_centroids(
         num_descriptors=3,
         num_init_cvt_samples=1000,
         num_centroids=500,
         minval=-1,
         maxval=1,
-        random_key=subkey,
+        key=subkey,
     )
 
     # Create initial population.
-    random_key, *subkeys = jax.random.split(random_key, 4)
+    key, *subkeys = jax.random.split(key, 4)
     x = jax.random.uniform(subkeys[0], (10000,), minval=-1.0, maxval=1.0)
     y = jax.random.uniform(subkeys[1], (10000,), minval=-1.0, maxval=1.0)
     z = jax.random.uniform(subkeys[2], (10000,), minval=-1.0, maxval=1.0)
