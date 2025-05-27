@@ -16,6 +16,8 @@ try:
     # yapf: disable
     from qdax.core.containers.mapelites_repertoire import (
         MapElitesRepertoire, compute_cvt_centroids)
+
+    # yapf: enable
 except ImportError:
     pytest.skip(allow_module_level=True)
 
@@ -41,7 +43,7 @@ def test_qdax_repertoire_heatmap():
     plt.figure(figsize=(8, 6))
 
     # Compute the CVT centroids.
-    centroids, _ = compute_cvt_centroids(
+    centroids = compute_cvt_centroids(
         num_descriptors=2,
         num_init_cvt_samples=1000,
         num_centroids=100,
@@ -80,7 +82,7 @@ def test_qdax_repertoire_3d_plot():
 
     # Compute the CVT centroids.
     key, subkey = jax.random.split(key)
-    centroids, _ = compute_cvt_centroids(
+    centroids = compute_cvt_centroids(
         num_descriptors=3,
         num_init_cvt_samples=1000,
         num_centroids=500,
