@@ -18,9 +18,8 @@ def _as_cvt_archive(repertoire, ranges):
         custom_centroids=repertoire.centroids,
     )
 
-    # Add everything to the CVTArchive.
+    # Fitness is originally (N, 1). Reshape it to (N,).
     fitnesses = repertoire.fitnesses
-
     if fitnesses.shape[1:] == (1,):
         fitnesses = fitnesses.squeeze(1)
     else:
@@ -28,6 +27,7 @@ def _as_cvt_archive(repertoire, ranges):
             "This method only supports visualizing single-objective "
             "archives (i.e., there can only be one fitness).")
 
+    # Add everything to the CVTArchive.
     occupied = fitnesses != -np.inf
     cvt_archive.add(
         np.empty((occupied.sum(), 0)),
