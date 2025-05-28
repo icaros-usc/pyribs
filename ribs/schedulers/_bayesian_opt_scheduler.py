@@ -59,8 +59,10 @@ class BayesianOptimizationScheduler(Scheduler):
                 this_upscale_schedule = e.upscale_schedule
             else:
                 other_upscale_schedule = e.upscale_schedule
-                if (this_upscale_schedule.shape != other_upscale_schedule.shape
-                        or np.any(
+                # pylint: disable=unidiomatic-typecheck
+                if (type(this_upscale_schedule) != type(other_upscale_schedule)
+                        or this_upscale_schedule.shape
+                        != other_upscale_schedule.shape or np.any(
                             this_upscale_schedule != other_upscale_schedule)):
                     raise ValueError(
                         "All emitters must have the same upscale schedule. "

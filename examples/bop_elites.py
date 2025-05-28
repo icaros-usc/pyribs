@@ -1,12 +1,15 @@
-"""Example script of running BOP-Elites on the sphere domain.
+"""Example script of running BOP-Elites on the sphere domain. Before running
+this example, please install pymoo with:
+
+    pip install ribs[pymoo]
 """
 
 import json
 import time
-from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
+import fire
 import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
@@ -90,63 +93,42 @@ def save_heatmap(archive, heatmap_path):
     plt.close(plt.gcf())
 
 
-# experiment params
-@dataclass
-class Params:
-    """Experiment parameters for BOP-Elites, the sphere domain, and logging."""
-    solution_dim: int
-    total_itrs: int
-    search_nrestarts: int
-    entropy_ejie: bool
-    upscale_schedule: List[List]
-    num_initial_samples: int
-    initial_solutions: np.ndarray
-    batch_size: int
-    num_emitters: int
-    seed: int
-    logdir: str
-    log_every: int
-
-
-def main():
+# pylint:disable = too-many-positional-arguments, dangerous-default-value
+def main(iterations: int = 1000,
+         solution_dim: int = 4,
+         search_nrestarts: int = 5,
+         entropy_ejie: bool = False,
+         upscale_schedule: List[List] = [[5, 5], [10, 10], [25, 25]],
+         num_initial_samples: int = 20,
+         initial_solutions: np.ndarray = None,
+         batch_size: int = 8,
+         num_emitters: int = 1,
+         seed: int = 42,
+         outdir: str = "test_logs",
+         log_every: int = 20):
     """Main function for running BOP-Elites on the sphere domain."""
     # logdir for saving experiment data
-    trial_path = Path("test_logs")
-    trial_path.mkdir(exist_ok=True)
-
-    params = Params(
-        solution_dim=4,
-        total_itrs=1000,
-        search_nrestarts=5,
-        entropy_ejie=False,
-        upscale_schedule=[[5, 5], [10, 10], [25, 25]],
-        num_initial_samples=20,
-        initial_solutions=None,
-        batch_size=8,
-        num_emitters=1,
-        seed=42,
-        logdir=trial_path,
-        log_every=20,
-    )
+    logdir = Path(outdir)
+    logdir.mkdir(exist_ok=True)
 
     # The main grid archive that interacts with BOP-Elites. We start at the
     # lowest resolution from ``upscale_schedule``.
-    max_bound = params.solution_dim / 2 * 5.12
+    max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     main_archive = GridArchive(
-        solution_dim=params.solution_dim,
-        dims=params.upscale_schedule[0],
+        solution_dim=solution_dim,
+        dims=upscale_schedule[0],
         ranges=bounds,
-        seed=params.seed,
+        seed=seed,
     )
     # The passive archive that does NOT interact with BOP-Elites other than
     # storing all evaluated data seen so far. We do not scale the passive
     # archive, and it always stays at the final resolution.
     passive_archive = GridArchive(
-        solution_dim=params.solution_dim,
-        dims=params.upscale_schedule[-1],
+        solution_dim=solution_dim,
+        dims=upscale_schedule[-1],
         ranges=bounds,
-        seed=params.seed,
+        seed=seed,
     )
 
     # The main component of BOP-Elites
@@ -155,15 +137,15 @@ def main():
             archive=main_archive,
             # BayesianOptimizationEmitter requires solution space bounds due to
             # Sobol sampling. i.e., bounds cannot be None.
-            bounds=[(-10.24, 10.24)] * params.solution_dim,
-            search_nrestarts=params.search_nrestarts,
-            entropy_ejie=params.entropy_ejie,
-            upscale_schedule=params.upscale_schedule,
-            num_initial_samples=params.num_initial_samples,
-            initial_solutions=params.initial_solutions,
-            batch_size=params.batch_size,
-            seed=params.seed + i,
-        ) for i in range(params.num_emitters)
+            bounds=[(-10.24, 10.24)] * solution_dim,
+            search_nrestarts=search_nrestarts,
+            entropy_ejie=entropy_ejie,
+            upscale_schedule=upscale_schedule,
+            num_initial_samples=num_initial_samples,
+            initial_solutions=initial_solutions,
+            batch_size=batch_size,
+            seed=seed + i,
+        ) for i in range(num_emitters)
     ]
 
     # Scheduler for managing multiple emitters (in what order we ask them for
@@ -187,18 +169,18 @@ def main():
         }
     }
 
-    for i in tqdm.trange(1, params.total_itrs + 1):
+    for i in tqdm.trange(1, iterations + 1):
         itr_start_time = time.time()
 
         sol = scheduler.ask()
         obj, _, meas, _ = sphere(sol)
         scheduler.tell(obj, meas)
 
-        final_itr = i == params.total_itrs
-        if i % params.log_every == 0 or final_itr:
+        final_itr = i == iterations
+        if i % log_every == 0 or final_itr:
             if final_itr:
                 scheduler.result_archive.data(return_type="pandas").to_csv(
-                    params.logdir / "final_archive.csv")
+                    logdir / "final_archive.csv")
 
             metrics["QD Score"]["x"].append(i)
             metrics["QD Score"]["y"].append(
@@ -216,7 +198,7 @@ def main():
 
             save_heatmap(
                 scheduler.result_archive,
-                params.logdir / f"heatmap_{i:08d}.png",
+                logdir / f"heatmap_{i:08d}.png",
             )
 
     # Plot metrics.
@@ -224,12 +206,11 @@ def main():
         plt.plot(values["x"], values["y"])
         plt.title(metric)
         plt.xlabel("Iteration")
-        plt.savefig(
-            str(params.logdir / f"{metric.lower().replace(' ', '_')}.png"))
+        plt.savefig(str(logdir / f"{metric.lower().replace(' ', '_')}.png"))
         plt.clf()
-    with (params.logdir / "metrics.json").open("w") as file:
+    with (logdir / "metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)

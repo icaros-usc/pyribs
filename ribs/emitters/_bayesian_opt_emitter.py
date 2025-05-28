@@ -294,6 +294,8 @@ class BayesianOptimizationEmitter(EmitterBase):
                :attr:`measure_dim`.
             2. The resolutions corresponding to each measure must be
                non-decreasing along axis 0.
+            3. The first resolution within the schedule must equal
+               :attr:`archive.dims`.
 
         Example of valid upscale_schedule:
             [
@@ -325,6 +327,12 @@ class BayesianOptimizationEmitter(EmitterBase):
             raise ValueError(
                 "The resolutions corresponding to each measure must be "
                 "non-decreasing along axis 0.")
+
+        if not np.all(self.archive.dims == upscale_schedule[0]):
+            raise ValueError(
+                "Expected the first resolution within upscale_schedule to be "
+                f"{self.archive.dims} (the resolution of this emitter's "
+                f"archive), actually got {upscale_schedule[0]}.")
 
     def _sample_n_rescale(self, num_samples):
         """Samples `num_samples` solutions from the SOBOL sequence and rescales
