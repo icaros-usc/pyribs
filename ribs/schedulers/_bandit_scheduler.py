@@ -4,6 +4,7 @@ from collections import defaultdict
 
 import numpy as np
 
+from ribs._utils import readonly
 from ribs.schedulers._scheduler import Scheduler
 
 
@@ -172,10 +173,16 @@ class BanditScheduler:
         return self._archive
 
     @property
-    def emitters(self):
-        """list of ribs.archives.EmitterBase: Emitters for generating solutions
-        in this scheduler."""
-        return self._active_arr
+    def emitter_pool(self):
+        """list of ribs.archives.EmitterBase: The pool of emitters available in
+        the scheduler."""
+        return self._emitter_pool
+
+    @property
+    def active(self):
+        """numpy.ndarray: Boolean array indicating which emitters in the
+        :attr:`emitter_pool` are currently active."""
+        return readonly(self._active_arr.view())
 
     @property
     def result_archive(self):
@@ -217,8 +224,8 @@ class BanditScheduler:
             (batch_size, dim) array: An array of n solutions to evaluate. Each
             row contains a single solution.
         Raises:
-            RuntimeError: This method was called without first calling
-                :meth:`tell`.
+            RuntimeError: This method was called immediately after calling an
+                ask method.
         """
         if self._last_called == "ask":
             raise RuntimeError("ask cannot be called immediately after " +
@@ -243,10 +250,16 @@ class BanditScheduler:
             # Reselect all emitters.
             reselect = self._active_arr.copy()
 
-        # If no emitters are active, activate the first num_active.
-        if not self._active_arr.any():
-            reselect[:] = False
-            self._active_arr[:self._num_active] = True
+        # If not enough emitters are active, activate the first num_active.
+        # This always happens on the first iteration(s).
+        num_needed = self._num_active - self._active_arr.sum()
+        i = 0
+        while num_needed > 0:
+            reselect[i] = False
+            if not self._active_arr[i]:
+                self._active_arr[i] = True
+                num_needed -= 1
+            i += 1
 
         # Deactivate emitters to be reselected.
         self._active_arr[reselect] = False
@@ -258,7 +271,9 @@ class BanditScheduler:
         #   terminated/restarted will be reselected. Otherwise, if reselect is
         #   "all", then all emitters are reselected.
         if reselect.any():
-            ucb1 = np.full_like(self._emitter_pool, np.inf)
+            ucb1 = np.full_like(
+                self._emitter_pool, np.inf
+            )  # np.inf forces to select emitters that were not yet selected
             update_ucb = self._selection != 0
             if update_ucb.any():
                 ucb1[update_ucb] = (
@@ -266,9 +281,16 @@ class BanditScheduler:
                     self._zeta * np.sqrt(
                         np.log(self._success.sum()) /
                         self._selection[update_ucb]))
-            # Activate top emitters based on UCB1.
-            activate = np.argsort(ucb1)[-reselect.sum():]
-            self._active_arr[activate] = True
+            # Activate top emitters based on UCB1, until there are num_active
+            # active emitters. Activate only inactive emitters.
+            activate = np.argsort(ucb1)[::-1]
+            cur_active = self._active_arr.sum()
+            for i in activate:
+                if cur_active >= self._num_active:
+                    break
+                if not self._active_arr[i]:
+                    self._active_arr[i] = True
+                    cur_active += 1
 
         self._cur_solutions = []
 
@@ -331,7 +353,7 @@ class BanditScheduler:
                 argument should be an array with batch_size as the first
                 dimension.
         Raises:
-            RuntimeError: This method is called without first calling
+            RuntimeError: This method was called without first calling
                 :meth:`ask`.
             ValueError: One of the inputs has the wrong shape.
         """

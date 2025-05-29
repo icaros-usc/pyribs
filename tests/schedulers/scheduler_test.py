@@ -34,6 +34,29 @@ def add_mode(request):
     return request.param
 
 
+@pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
+def test_attributes(scheduler_type):
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)],
+                          threshold_min=1.0,
+                          learning_rate=1.0)
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
+
+    if scheduler_type == "Scheduler":
+        scheduler = Scheduler(archive, emitters)
+
+        assert scheduler.archive == archive
+        assert scheduler.emitters == emitters
+    else:
+        scheduler = BanditScheduler(archive, emitters, 1)
+
+        assert scheduler.archive == archive
+        assert scheduler.emitter_pool == emitters
+        assert len(scheduler.active) == len(scheduler.emitter_pool)
+        assert not np.any(scheduler.active)
+
+
 def test_init_fails_with_non_list():
     archive = GridArchive(solution_dim=2,
                           dims=[100, 100],
@@ -339,3 +362,33 @@ def test_tell_fails_with_wrong_shapes(scheduler_fixture, array):
             scheduler.tell(objective_batch[:-1], measures_batch)
         elif array == "measures_batch":
             scheduler.tell(objective_batch, measures_batch[:-1])
+
+
+def test_constant_active_emitters_bandit_scheduler():
+    solution_dim = 2
+    num_solutions = 4
+    expected_active = 3
+    archive = GridArchive(solution_dim=solution_dim,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
+    emitters = [
+        GaussianEmitter(archive,
+                        sigma=1,
+                        x0=[0.0, 0.0],
+                        batch_size=num_solutions) for _ in range(10)
+    ]
+    scheduler = BanditScheduler(archive, emitters, num_active=expected_active)
+    num_loops = 10
+
+    rng = np.random.default_rng(42)
+
+    for _ in range(num_loops):
+        solutions = scheduler.ask()
+        assert scheduler.active.sum() == expected_active
+
+        # Mock objective and measures for tell
+        objective = rng.random(len(solutions))
+        measures = rng.random((len(solutions), 2))
+        scheduler.tell(objective, measures)
+
+        assert scheduler.active.sum() == expected_active
