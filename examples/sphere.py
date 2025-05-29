@@ -16,16 +16,33 @@ clipped values of the solution. Having each measure depend equally on several
 values in the solution space makes the problem more difficult (refer to
 Fontaine 2020 for more info).
 
-The supported algorithms are:
+We support a number of algorithms in this script. The parameters for each
+algorithm are stored in CONFIG. The parameters roughly reproduce the results
+from the CMA-MAE paper (Fontaine 2023, https://arxiv.org/abs/2205.10752), i.e.:
+- Archives have 10,000 cells, either as a 100x100 grid archive or a 10,000-cell
+  CVT archive.
+- Each algorithm runs for 10,000 iterations, with 540 solutions evaluated every
+  iteration.
+- We default to run on the 100-dimensional version of the sphere problem.
+Below we list the algorithms available.
+
+MAP-Elites and MAP-Elites (line):
 - `map_elites`: GridArchive with GaussianEmitter.
 - `line_map_elites`: GridArchive with IsoLineEmitter.
 - `cvt_map_elites`: CVTArchive with GaussianEmitter.
 - `line_cvt_map_elites`: CVTArchive with IsoLineEmitter.
+
+Multi-Emitter MAP-Elites:
 - `me_map_elites`: MAP-Elites with Bandit Scheduler.
+
+CMA-ME:
 - `cma_me_imp`: GridArchive with EvolutionStrategyEmitter using
-  TwoStageImprovmentRanker.
+  TwoStageImprovmentRanker; this is the suggested version of CMA-ME.
 - `cma_me_imp_mu`: GridArchive with EvolutionStrategyEmitter using
   TwoStageImprovmentRanker and mu selection rule.
+- `cma_me_basic`: GridArchive with EvolutionStrategyEmitter using
+  TwoStageImprovmentRanker, mu selection rule, and basic restart rule. This is
+  the version of CMA-ME that was used as a baseline in Fontaine 2023.
 - `cma_me_rd`: GridArchive with EvolutionStrategyEmitter using
   RandomDirectionRanker.
 - `cma_me_rd_mu`: GridArchive with EvolutionStrategyEmitter using
@@ -33,27 +50,31 @@ The supported algorithms are:
 - `cma_me_opt`: GridArchive with EvolutionStrategyEmitter using ObjectiveRanker
   with mu selection rule.
 - `cma_me_mixed`: GridArchive with EvolutionStrategyEmitter, where half (7) of
-  the emitter are using TwoStageRandomDirectionRanker and half (8) are
+  the emitters use TwoStageRandomDirectionRanker and half (8) use
   TwoStageImprovementRanker.
-- `og_map_elites`: GridArchive with GradientOperatorEmitter, does not use
+
+DQD algorithms:
+- `og_map_elites`: GridArchive with GradientOperatorEmitter; does not use
   measure gradients.
-- `omg_mega`: GridArchive with GradientOperatorEmitter, uses measure gradients.
+- `omg_mega`: GridArchive with GradientOperatorEmitter; uses measure gradients.
 - `cma_mega`: GridArchive with GradientArborescenceEmitter.
 - `cma_mega_adam`: GridArchive with GradientArborescenceEmitter using Adam
   Optimizer.
+
+CMA-MAE and CMA-MAEGA:
 - `cma_mae`: GridArchive (learning_rate = 0.01) with EvolutionStrategyEmitter
   using ImprovementRanker.
 - `cma_maega`: GridArchive (learning_rate = 0.01) with
   GradientArborescenceEmitter using ImprovementRanker.
+
+Diversity Optimization algorithms (note that these will not optimize the
+objective):
 - `ns_cma`: Novelty Search with CMA-ES; implemented using a ProximityArchive
   with EvolutionStrategyEmitter. Results are stored in a passive GridArchive.
+  Note that the objective will not be optimized in this case.
 - `nslc_cma_imp`: EvolutionStrategyEmitter with a ProximityArchive with local
   competition turned on. Thus, the archive returns two-stage improvement
   information that is fed to the EvolutionStrategyEmitter just like in CMA-ME.
-
-The parameters for each algorithm are stored in CONFIG. The parameters
-reproduce the experiments presented in the paper in which each algorithm is
-introduced.
 
 Outputs are saved in the `sphere_output/` directory by default. The archive is
 saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
@@ -62,11 +83,11 @@ the run are also saved in `{algorithm}_{dim}_metrics.json`, and plots of the
 metrics are saved in PNG's with the name `{algorithm}_{dim}_metric_name.png`.
 
 To generate a video of the heatmap from the heatmap images, use a tool like
-ffmpeg. For example, the following will generate a 6FPS video showing the
-heatmap for cma_me_imp with 20 dims.
+ffmpeg. For example, the following will generate a 6 FPS (Frames Per Second)
+video showing the heatmap for cma_me_imp with 100 dims.
 
-    ffmpeg -r 6 -i "sphere_output/cma_me_imp_20_heatmap_%*.png" \
-        sphere_output/cma_me_imp_20_heatmap_video.mp4
+    ffmpeg -r 6 -i "sphere_output/cma_me_imp_100_heatmap_%*.png" \
+        sphere_output/cma_me_imp_100_heatmap_video.mp4
 
 Usage (see sphere_main function for all args or run `python sphere.py --help`):
     python sphere.py ALGORITHM
@@ -75,7 +96,7 @@ Example:
 
     # To make numpy and sklearn run single-threaded, set env variables for BLAS
     # and OpenMP:
-    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere.py map_elites 20
+    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere.py map_elites 100
 Help:
     python sphere.py --help
 """
@@ -97,25 +118,24 @@ from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
 CONFIG = {
+    ## MAP-Elites and MAP-Elites (line) ##
     "map_elites": {
-        "dim": 20,
-        "iters": 4500,
-        "archive_dims": (500, 500),
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
-        "batch_size": 37,
         "archive": {
             "class": GridArchive,
-            "kwargs": {
-                "threshold_min": -np.inf
-            }
+            "kwargs": {}
         },
         "emitters": [{
             "class": GaussianEmitter,
             "kwargs": {
-                "sigma": 0.5
+                "sigma": 0.5,
+                "batch_size": 540
             },
-            "num_emitters": 15
+            "num_emitters": 1
         }],
         "scheduler": {
             "class": Scheduler,
@@ -123,25 +143,23 @@ CONFIG = {
         }
     },
     "line_map_elites": {
-        "dim": 20,
-        "iters": 4500,
-        "archive_dims": (500, 500),
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
-        "batch_size": 37,
         "archive": {
             "class": GridArchive,
-            "kwargs": {
-                "threshold_min": -np.inf
-            }
+            "kwargs": {}
         },
         "emitters": [{
             "class": IsoLineEmitter,
             "kwargs": {
-                "iso_sigma": 0.1,
-                "line_sigma": 0.2
+                "iso_sigma": 0.5,
+                "line_sigma": 0.2,
+                "batch_size": 540
             },
-            "num_emitters": 15
+            "num_emitters": 1
         }],
         "scheduler": {
             "class": Scheduler,
@@ -149,26 +167,26 @@ CONFIG = {
         }
     },
     "cvt_map_elites": {
-        "dim": 20,
-        "iters": 4500,
-        "archive_dims": (500, 500),
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
-        "batch_size": 37,
         "archive": {
             "class": CVTArchive,
             "kwargs": {
-                "cells": 10_000,
-                "samples": 100_000,
+                "cells": 10000,
+                "samples": 100000,
                 "use_kd_tree": True
             }
         },
         "emitters": [{
             "class": GaussianEmitter,
             "kwargs": {
-                "sigma": 0.5
+                "sigma": 0.5,
+                "batch_size": 540
             },
-            "num_emitters": 15
+            "num_emitters": 1
         }],
         "scheduler": {
             "class": Scheduler,
@@ -176,235 +194,43 @@ CONFIG = {
         }
     },
     "line_cvt_map_elites": {
-        "dim": 20,
-        "iters": 4500,
-        "archive_dims": (500, 500),
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
-        "batch_size": 37,
         "archive": {
             "class": CVTArchive,
             "kwargs": {
-                "cells": 10_000,
-                "samples": 100_000,
+                "cells": 10000,
+                "samples": 100000,
                 "use_kd_tree": True
             }
         },
         "emitters": [{
             "class": IsoLineEmitter,
             "kwargs": {
-                "iso_sigma": 0.1,
-                "line_sigma": 0.2
+                "iso_sigma": 0.5,
+                "line_sigma": 0.2,
+                "batch_size": 540
             },
-            "num_emitters": 15
+            "num_emitters": 1
         }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
     },
+
+    ## Multi-Emitter MAP-Elites (ME-MAP-Elites) ##
     "me_map_elites": {
+        # Note that we set ME-MAP-Elites to generate 12 * 50 solutions every
+        # iteration, rather than num_emitters=15 * batch_size=36.
         "dim": 100,
-        "iters": 20_000,
+        "iters": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
-        "batch_size": 50,
-        "archive": {
-            "class": GridArchive,
-            "kwargs": {
-                "threshold_min": -np.inf
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "obj"
-            },
-            "num_emitters": 12
-        }, {
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2rd"
-            },
-            "num_emitters": 12
-        }, {
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2imp"
-            },
-            "num_emitters": 12
-        }, {
-            "class": IsoLineEmitter,
-            "kwargs": {
-                "iso_sigma": 0.01,
-                "line_sigma": 0.1
-            },
-            "num_emitters": 12
-        }],
-        "scheduler": {
-            "class": BanditScheduler,
-            "kwargs": {
-                "num_active": 12,
-                "reselect": "terminated"
-            }
-        }
-    },
-    "cma_me_mixed": {
-        "dim": 20,
-        "iters": 4500,
-        "archive_dims": (500, 500),
-        "use_result_archive": False,
-        "is_dqd": False,
-        "batch_size": 37,
-        "archive": {
-            "class": GridArchive,
-            "kwargs": {
-                "threshold_min": -np.inf
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2rd"
-            },
-            "num_emitters": 7
-        }, {
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2imp"
-            },
-            "num_emitters": 8
-        }],
-        "scheduler": {
-            "class": Scheduler,
-            "kwargs": {}
-        }
-    },
-    "cma_me_imp": {
-        "dim": 20,
-        "iters": 4500,
-        "archive_dims": (500, 500),
-        "use_result_archive": False,
-        "is_dqd": False,
-        "batch_size": 37,
-        "archive": {
-            "class": GridArchive,
-            "kwargs": {
-                "threshold_min": -np.inf
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2imp",
-                "selection_rule": "filter",
-                "restart_rule": "no_improvement"
-            },
-            "num_emitters": 15
-        }],
-        "scheduler": {
-            "class": Scheduler,
-            "kwargs": {}
-        }
-    },
-    "cma_me_imp_mu": {
-        "dim": 20,
-        "iters": 4500,
-        "archive_dims": (500, 500),
-        "use_result_archive": False,
-        "is_dqd": False,
-        "batch_size": 37,
-        "archive": {
-            "class": GridArchive,
-            "kwargs": {
-                "threshold_min": -np.inf
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2imp",
-                "selection_rule": "mu",
-                "restart_rule": "no_improvement"
-            },
-            "num_emitters": 15
-        }],
-        "scheduler": {
-            "class": Scheduler,
-            "kwargs": {}
-        }
-    },
-    "cma_me_rd": {
-        "dim": 20,
-        "iters": 4500,
-        "archive_dims": (500, 500),
-        "use_result_archive": False,
-        "is_dqd": False,
-        "batch_size": 37,
-        "archive": {
-            "class": GridArchive,
-            "kwargs": {
-                "threshold_min": -np.inf
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2rd",
-                "selection_rule": "filter",
-                "restart_rule": "no_improvement"
-            },
-            "num_emitters": 15
-        }],
-        "scheduler": {
-            "class": Scheduler,
-            "kwargs": {}
-        }
-    },
-    "cma_me_rd_mu": {
-        "dim": 20,
-        "iters": 4500,
-        "archive_dims": (500, 500),
-        "use_result_archive": False,
-        "is_dqd": False,
-        "batch_size": 37,
-        "archive": {
-            "class": GridArchive,
-            "kwargs": {
-                "threshold_min": -np.inf
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2rd",
-                "selection_rule": "mu",
-                "restart_rule": "no_improvement"
-            },
-            "num_emitters": 15
-        }],
-        "scheduler": {
-            "class": Scheduler,
-            "kwargs": {}
-        }
-    },
-    "cma_me_opt": {
-        "dim": 20,
-        "iters": 4500,
-        "archive_dims": (500, 500),
-        "use_result_archive": False,
-        "is_dqd": False,
-        "batch_size": 37,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -416,8 +242,62 @@ CONFIG = {
             "kwargs": {
                 "sigma0": 0.5,
                 "ranker": "obj",
-                "selection_rule": "mu",
-                "restart_rule": "basic"
+                "batch_size": 50
+            },
+            "num_emitters": 12
+        }, {
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2rd",
+                "batch_size": 50
+            },
+            "num_emitters": 12
+        }, {
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2imp",
+                "batch_size": 50
+            },
+            "num_emitters": 12
+        }, {
+            "class": IsoLineEmitter,
+            "kwargs": {
+                "iso_sigma": 0.01,
+                "line_sigma": 0.1,
+                "batch_size": 50
+            },
+            "num_emitters": 12
+        }],
+        "scheduler": {
+            "class": BanditScheduler,
+            "kwargs": {
+                "num_active": 12,
+                "reselect": "terminated"
+            }
+        }
+    },
+
+    ## CMA-ME ##
+    "cma_me_imp": {
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": False,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {}
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2imp",
+                "selection_rule": "filter",
+                "restart_rule": "no_improvement",
+                "batch_size": 36
             },
             "num_emitters": 15
         }],
@@ -426,20 +306,179 @@ CONFIG = {
             "kwargs": {}
         }
     },
+    "cma_me_imp_mu": {
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": False,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {}
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2imp",
+                "selection_rule": "mu",
+                "restart_rule": "no_improvement",
+                "batch_size": 36
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "cma_me_basic": {
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": False,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {}
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2imp",
+                "selection_rule": "mu",
+                "restart_rule": "basic",
+                "batch_size": 36
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "cma_me_rd": {
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": False,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {}
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2rd",
+                "selection_rule": "filter",
+                "restart_rule": "no_improvement",
+                "batch_size": 36
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "cma_me_rd_mu": {
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": False,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {}
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2rd",
+                "selection_rule": "mu",
+                "restart_rule": "no_improvement",
+                "batch_size": 36
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "cma_me_opt": {
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": False,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {}
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "obj",
+                "selection_rule": "mu",
+                "restart_rule": "basic",
+                "batch_size": 36
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "cma_me_mixed": {
+        "dim": 100,
+        "iters": 10000,
+        "archive_dims": (100, 100),
+        "use_result_archive": False,
+        "is_dqd": False,
+        "archive": {
+            "class": GridArchive,
+            "kwargs": {}
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2rd",
+                "batch_size": 36
+            },
+            "num_emitters": 7
+        }, {
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 0.5,
+                "ranker": "2imp",
+                "batch_size": 36
+            },
+            "num_emitters": 8
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+
+    ## DQD algorithms ##
     "og_map_elites": {
-        "dim": 1_000,
-        "iters": 10_000,
+        "dim": 100,
+        "iters": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
-        # Divide by 2 since half of the 36 solutions are used in ask_dqd(), and
-        # the other half are used in ask().
-        "batch_size": 36 // 2,
         "archive": {
             "class": GridArchive,
-            "kwargs": {
-                "threshold_min": -np.inf
-            }
+            "kwargs": {}
         },
         "emitters": [{
             "class": GradientOperatorEmitter,
@@ -448,6 +487,9 @@ CONFIG = {
                 "sigma_g": 0.5,
                 "measure_gradients": False,
                 "normalize_grad": False,
+                # Divide by 2 since half of the solutions are used in ask_dqd(),
+                # and the other half are used in ask().
+                "batch_size": 540 // 2
             },
             "num_emitters": 1
         }],
@@ -457,14 +499,11 @@ CONFIG = {
         }
     },
     "omg_mega": {
-        "dim": 1_000,
-        "iters": 10_000,
+        "dim": 100,
+        "iters": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
-        # Divide by 2 since half of the 36 solutions are used in ask_dqd(), and
-        # the other half are used in ask().
-        "batch_size": 36 // 2,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -478,6 +517,9 @@ CONFIG = {
                 "sigma_g": 10.0,
                 "measure_gradients": True,
                 "normalize_grad": True,
+                # Divide by 2 since half of the solutions are used in ask_dqd(),
+                # and the other half are used in ask().
+                "batch_size": 540 // 2
             },
             "num_emitters": 1
         }],
@@ -487,12 +529,11 @@ CONFIG = {
         }
     },
     "cma_mega": {
-        "dim": 1_000,
-        "iters": 10_000,
+        "dim": 100,
+        "iters": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
-        "batch_size": 35,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -505,9 +546,12 @@ CONFIG = {
                 "sigma0": 10.0,
                 "lr": 1.0,
                 "grad_opt": "gradient_ascent",
-                "selection_rule": "mu"
+                "selection_rule": "mu",
+                # Subtract 1 since one solution is used in ask_dqd() and the
+                # rest are used in ask().
+                "batch_size": 36 - 1
             },
-            "num_emitters": 1
+            "num_emitters": 15
         }],
         "scheduler": {
             "class": Scheduler,
@@ -515,12 +559,11 @@ CONFIG = {
         }
     },
     "cma_mega_adam": {
-        "dim": 1_000,
-        "iters": 10_000,
+        "dim": 100,
+        "iters": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
-        "batch_size": 35,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -533,22 +576,26 @@ CONFIG = {
                 "sigma0": 10.0,
                 "lr": 0.002,
                 "grad_opt": "adam",
-                "selection_rule": "mu"
+                "selection_rule": "mu",
+                # Subtract 1 since one solution is used in ask_dqd() and the
+                # rest are used in ask().
+                "batch_size": 36 - 1
             },
-            "num_emitters": 1
+            "num_emitters": 15
         }],
         "scheduler": {
             "class": Scheduler,
             "kwargs": {}
         }
     },
+
+    ## CMA-MAE and CMA-MAEGA ##
     "cma_mae": {
         "dim": 100,
-        "iters": 10_000,
+        "iters": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": False,
-        "batch_size": 36,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -562,7 +609,8 @@ CONFIG = {
                 "sigma0": 0.5,
                 "ranker": "imp",
                 "selection_rule": "mu",
-                "restart_rule": "basic"
+                "restart_rule": "basic",
+                "batch_size": 36,
             },
             "num_emitters": 15
         }],
@@ -572,12 +620,11 @@ CONFIG = {
         }
     },
     "cma_maega": {
-        "dim": 1_000,
-        "iters": 10_000,
+        "dim": 100,
+        "iters": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": True,
-        "batch_size": 35,
         "archive": {
             "class": GridArchive,
             "kwargs": {
@@ -592,7 +639,10 @@ CONFIG = {
                 "lr": 1.0,
                 "ranker": "imp",
                 "grad_opt": "gradient_ascent",
-                "restart_rule": "basic"
+                "restart_rule": "basic",
+                # Subtract 1 since one solution is used in ask_dqd() and the
+                # rest are used in ask().
+                "batch_size": 36 - 1,
             },
             "num_emitters": 15
         }],
@@ -601,6 +651,8 @@ CONFIG = {
             "kwargs": {}
         }
     },
+
+    ## Diversity Optimization algorithms ##
     "ns_cma": {
         "dim": 100,
         "iters": 5000,
@@ -785,7 +837,6 @@ def create_scheduler(config, algorithm, seed=None):
                 archive,
                 x0=initial_sol,
                 **e["kwargs"],
-                batch_size=config["batch_size"],
                 seed=s,
             ) for s in seed_sequence.spawn(e["num_emitters"])
         ]
@@ -826,6 +877,7 @@ def save_heatmap(archive, heatmap_path):
     plt.close(plt.gcf())
 
 
+# pylint: disable-next = too-many-positional-arguments
 def sphere_main(algorithm,
                 dim=None,
                 itrs=None,
