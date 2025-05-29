@@ -116,10 +116,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 
-from ribs.archives import CVTArchive, GridArchive, ProximityArchive
-from ribs.emitters import (DensityArchive, EvolutionStrategyEmitter,
-                           GaussianEmitter, GradientArborescenceEmitter,
-                           GradientOperatorEmitter, IsoLineEmitter)
+from ribs.archives import (CVTArchive, DensityArchive, GridArchive,
+                           ProximityArchive)
+from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
+                           GradientArborescenceEmitter, GradientOperatorEmitter,
+                           IsoLineEmitter)
 from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
