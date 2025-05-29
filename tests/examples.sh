@@ -33,6 +33,7 @@ export OMP_NUM_THREADS=1
 install_deps examples/sphere.py
 SPHERE_OUTPUT="${TMPDIR}/sphere_output"
 
+# Read the list of algorithms in sphere.py into a bash array.
 SPHERE_ALGOS=( $(cd examples && python -c "
 from sphere import CONFIG
 for algo in CONFIG:
