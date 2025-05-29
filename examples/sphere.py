@@ -121,7 +121,7 @@ CONFIG = {
     ## MAP-Elites and MAP-Elites (line) ##
     "map_elites": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -144,7 +144,7 @@ CONFIG = {
     },
     "line_map_elites": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -168,7 +168,7 @@ CONFIG = {
     },
     "cvt_map_elites": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -195,7 +195,7 @@ CONFIG = {
     },
     "line_cvt_map_elites": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -227,7 +227,7 @@ CONFIG = {
         # Note that we set ME-MAP-Elites to generate 12 * 50 solutions every
         # iteration, rather than num_emitters=15 * batch_size=36.
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -282,7 +282,7 @@ CONFIG = {
     ## CMA-ME ##
     "cma_me_imp": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -308,7 +308,7 @@ CONFIG = {
     },
     "cma_me_imp_mu": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -334,7 +334,7 @@ CONFIG = {
     },
     "cma_me_basic": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -360,7 +360,7 @@ CONFIG = {
     },
     "cma_me_rd": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -386,7 +386,7 @@ CONFIG = {
     },
     "cma_me_rd_mu": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -412,7 +412,7 @@ CONFIG = {
     },
     "cma_me_opt": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -438,7 +438,7 @@ CONFIG = {
     },
     "cma_me_mixed": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": False,
@@ -472,7 +472,7 @@ CONFIG = {
     ## DQD algorithms ##
     "og_map_elites": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
@@ -500,7 +500,7 @@ CONFIG = {
     },
     "omg_mega": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
@@ -530,7 +530,7 @@ CONFIG = {
     },
     "cma_mega": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
@@ -560,7 +560,7 @@ CONFIG = {
     },
     "cma_mega_adam": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": False,
         "is_dqd": True,
@@ -592,7 +592,7 @@ CONFIG = {
     ## CMA-MAE and CMA-MAEGA ##
     "cma_mae": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": False,
@@ -621,7 +621,7 @@ CONFIG = {
     },
     "cma_maega": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": True,
@@ -655,7 +655,7 @@ CONFIG = {
     ## Diversity Optimization algorithms ##
     "ns_cma": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": False,
@@ -686,7 +686,7 @@ CONFIG = {
     },
     "nslc_cma_imp": {
         "dim": 100,
-        "iters": 10000,
+        "itrs": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": False,
@@ -910,7 +910,7 @@ def sphere_main(algorithm,
 
     # Use default itrs for each algorithm.
     if itrs is not None:
-        config["iters"] = itrs
+        config["itrs"] = itrs
 
     # Use default archive_dim for each algorithm.
     if archive_dims is not None:
@@ -936,7 +936,7 @@ def sphere_main(algorithm,
     scheduler = create_scheduler(config, algorithm, seed=seed)
     result_archive = scheduler.result_archive
     is_dqd = config["is_dqd"]
-    itrs = config["iters"]
+    itrs = config["itrs"]
     metrics = {
         "QD Score": {
             "x": [0],
