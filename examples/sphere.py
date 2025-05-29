@@ -22,8 +22,9 @@ from the CMA-MAE paper (Fontaine 2023, https://arxiv.org/abs/2205.10752), i.e.,
 they use the following settings:
 - Archives have 10,000 cells, either as a 100x100 grid archive or a 10,000-cell
   CVT archive.
-- Each algorithm runs for 10,000 iterations, with 540 solutions evaluated every
-  iteration.
+- Each algorithm generates 540 solutions every iteration, typically as one
+  emitter generating 540 solutions or 15 emitters generating 36 solutions each.
+- We default to run each algorithm for 10,000 iterations.
 - We default to run on the 100-dimensional version of the sphere problem.
 Below we list the algorithms available.
 
@@ -120,15 +121,14 @@ from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 CONFIG = {
     ## MAP-Elites and MAP-Elites (line) ##
     "map_elites": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
-            "kwargs": {}
+            "kwargs": {
+                "dims": (100, 100),
+            }
         },
+        "result_archive": None,
         "emitters": [{
             "class": GaussianEmitter,
             "kwargs": {
@@ -143,15 +143,14 @@ CONFIG = {
         }
     },
     "line_map_elites": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
-            "kwargs": {}
+            "kwargs": {
+                "dims": (100, 100),
+            }
         },
+        "result_archive": None,
         "emitters": [{
             "class": IsoLineEmitter,
             "kwargs": {
@@ -167,10 +166,6 @@ CONFIG = {
         }
     },
     "cvt_map_elites": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": CVTArchive,
@@ -180,6 +175,7 @@ CONFIG = {
                 "use_kd_tree": True
             }
         },
+        "result_archive": None,
         "emitters": [{
             "class": GaussianEmitter,
             "kwargs": {
@@ -194,10 +190,6 @@ CONFIG = {
         }
     },
     "line_cvt_map_elites": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": CVTArchive,
@@ -207,6 +199,7 @@ CONFIG = {
                 "use_kd_tree": True
             }
         },
+        "result_archive": None,
         "emitters": [{
             "class": IsoLineEmitter,
             "kwargs": {
@@ -224,56 +217,51 @@ CONFIG = {
 
     ## Multi-Emitter MAP-Elites (ME-MAP-Elites) ##
     "me_map_elites": {
-        # Note that we set ME-MAP-Elites to generate 12 * 50 solutions every
-        # iteration, rather than num_emitters=15 * batch_size=36.
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
             "kwargs": {
-                "threshold_min": -np.inf
+                "dims": (100, 100),
             }
         },
+        "result_archive": None,
         "emitters": [{
             "class": EvolutionStrategyEmitter,
             "kwargs": {
                 "sigma0": 0.5,
                 "ranker": "obj",
-                "batch_size": 50
+                "batch_size": 36
             },
-            "num_emitters": 12
+            "num_emitters": 15
         }, {
             "class": EvolutionStrategyEmitter,
             "kwargs": {
                 "sigma0": 0.5,
                 "ranker": "2rd",
-                "batch_size": 50
+                "batch_size": 36
             },
-            "num_emitters": 12
+            "num_emitters": 15
         }, {
             "class": EvolutionStrategyEmitter,
             "kwargs": {
                 "sigma0": 0.5,
                 "ranker": "2imp",
-                "batch_size": 50
+                "batch_size": 36
             },
-            "num_emitters": 12
+            "num_emitters": 15
         }, {
             "class": IsoLineEmitter,
             "kwargs": {
                 "iso_sigma": 0.01,
                 "line_sigma": 0.1,
-                "batch_size": 50
+                "batch_size": 36
             },
-            "num_emitters": 12
+            "num_emitters": 15
         }],
         "scheduler": {
             "class": BanditScheduler,
             "kwargs": {
-                "num_active": 12,
+                "num_active": 15,
                 "reselect": "terminated"
             }
         }
@@ -281,15 +269,14 @@ CONFIG = {
 
     ## CMA-ME ##
     "cma_me_imp": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
-            "kwargs": {}
+            "kwargs": {
+                "dims": (100, 100),
+            }
         },
+        "result_archive": None,
         "emitters": [{
             "class": EvolutionStrategyEmitter,
             "kwargs": {
@@ -307,15 +294,14 @@ CONFIG = {
         }
     },
     "cma_me_imp_mu": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
-            "kwargs": {}
+            "kwargs": {
+                "dims": (100, 100),
+            }
         },
+        "result_archive": None,
         "emitters": [{
             "class": EvolutionStrategyEmitter,
             "kwargs": {
@@ -333,15 +319,14 @@ CONFIG = {
         }
     },
     "cma_me_basic": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
-            "kwargs": {}
+            "kwargs": {
+                "dims": (100, 100),
+            }
         },
+        "result_archive": None,
         "emitters": [{
             "class": EvolutionStrategyEmitter,
             "kwargs": {
@@ -359,15 +344,14 @@ CONFIG = {
         }
     },
     "cma_me_rd": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
-            "kwargs": {}
+            "kwargs": {
+                "dims": (100, 100),
+            }
         },
+        "result_archive": None,
         "emitters": [{
             "class": EvolutionStrategyEmitter,
             "kwargs": {
@@ -385,15 +369,14 @@ CONFIG = {
         }
     },
     "cma_me_rd_mu": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
-            "kwargs": {}
+            "kwargs": {
+                "dims": (100, 100),
+            }
         },
+        "result_archive": None,
         "emitters": [{
             "class": EvolutionStrategyEmitter,
             "kwargs": {
@@ -411,15 +394,14 @@ CONFIG = {
         }
     },
     "cma_me_opt": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
-            "kwargs": {}
+            "kwargs": {
+                "dims": (100, 100),
+            }
         },
+        "result_archive": None,
         "emitters": [{
             "class": EvolutionStrategyEmitter,
             "kwargs": {
@@ -437,15 +419,14 @@ CONFIG = {
         }
     },
     "cma_me_mixed": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
-            "kwargs": {}
+            "kwargs": {
+                "dims": (100, 100),
+            }
         },
+        "result_archive": None,
         "emitters": [{
             "class": EvolutionStrategyEmitter,
             "kwargs": {
@@ -471,15 +452,14 @@ CONFIG = {
 
     ## DQD algorithms ##
     "og_map_elites": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": True,
         "archive": {
             "class": GridArchive,
-            "kwargs": {}
+            "kwargs": {
+                "dims": (100, 100),
+            }
         },
+        "result_archive": None,
         "emitters": [{
             "class": GradientOperatorEmitter,
             "kwargs": {
@@ -499,17 +479,14 @@ CONFIG = {
         }
     },
     "omg_mega": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": True,
         "archive": {
             "class": GridArchive,
             "kwargs": {
-                "threshold_min": -np.inf
+                "dims": (100, 100),
             }
         },
+        "result_archive": None,
         "emitters": [{
             "class": GradientOperatorEmitter,
             "kwargs": {
@@ -529,17 +506,14 @@ CONFIG = {
         }
     },
     "cma_mega": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": True,
         "archive": {
             "class": GridArchive,
             "kwargs": {
-                "threshold_min": -np.inf
+                "dims": (100, 100),
             }
         },
+        "result_archive": None,
         "emitters": [{
             "class": GradientArborescenceEmitter,
             "kwargs": {
@@ -559,17 +533,14 @@ CONFIG = {
         }
     },
     "cma_mega_adam": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": False,
         "is_dqd": True,
         "archive": {
             "class": GridArchive,
             "kwargs": {
-                "threshold_min": -np.inf
+                "dims": (100, 100),
             }
         },
+        "result_archive": None,
         "emitters": [{
             "class": GradientArborescenceEmitter,
             "kwargs": {
@@ -591,16 +562,19 @@ CONFIG = {
 
     ## CMA-MAE and CMA-MAEGA ##
     "cma_mae": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": True,
         "is_dqd": False,
         "archive": {
             "class": GridArchive,
             "kwargs": {
+                "dims": (100, 100),
                 "threshold_min": 0,
                 "learning_rate": 0.01
+            }
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
             }
         },
         "emitters": [{
@@ -620,16 +594,19 @@ CONFIG = {
         }
     },
     "cma_maega": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": True,
         "is_dqd": True,
         "archive": {
             "class": GridArchive,
             "kwargs": {
+                "dims": (100, 100),
                 "threshold_min": 0,
                 "learning_rate": 0.01
+            }
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
             }
         },
         "emitters": [{
@@ -654,10 +631,6 @@ CONFIG = {
 
     ## Novelty Search ##
     "ns_cma": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": True,
         "is_dqd": False,
         "archive": {
             "class": ProximityArchive,
@@ -666,6 +639,12 @@ CONFIG = {
                 # https://arxiv.org/abs/2312.11331
                 "k_neighbors": 15,
                 "novelty_threshold": 0.037 * 512,
+            }
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
             }
         },
         "emitters": [{
@@ -685,10 +664,6 @@ CONFIG = {
         }
     },
     "nslc_cma_imp": {
-        "dim": 100,
-        "itrs": 10000,
-        "archive_dims": (100, 100),
-        "use_result_archive": True,
         "is_dqd": False,
         "archive": {
             "class": ProximityArchive,
@@ -697,6 +672,12 @@ CONFIG = {
                 # Note: This is untuned.
                 "novelty_threshold": 0.037 * 100,
                 "local_competition": True,
+            }
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
             }
         },
         "emitters": [{
@@ -788,41 +769,40 @@ def create_scheduler(config, algorithm, seed=None):
     Returns:
         ribs.schedulers.Scheduler: A ribs scheduler for running the algorithm.
     """
+    # Properties of the Sphere problem.
     solution_dim = config["dim"]
-    archive_dims = config["archive_dims"]
-    learning_rate = 1.0 if "learning_rate" not in config["archive"][
-        "kwargs"] else config["archive"]["kwargs"]["learning_rate"]
-    use_result_archive = config["use_result_archive"]
     max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     initial_sol = np.zeros(solution_dim)
 
     # Create archive.
     archive_class = config["archive"]["class"]
-    if archive_class == GridArchive:
-        archive = archive_class(solution_dim=solution_dim,
-                                ranges=bounds,
-                                dims=archive_dims,
-                                seed=seed,
-                                **config["archive"]["kwargs"])
-    elif archive_class == ProximityArchive:
-        archive = archive_class(solution_dim=solution_dim,
-                                measure_dim=len(bounds),
-                                seed=seed,
-                                **config["archive"]["kwargs"])
+    if archive_class == ProximityArchive:
+        # ProximityArchive takes `measure_dim` instead of `ranges`.
+        archive = archive_class(
+            solution_dim=solution_dim,
+            measure_dim=len(bounds),
+            seed=seed,
+            **config["archive"]["kwargs"],
+        )
     else:
-        archive = archive_class(solution_dim=solution_dim,
-                                ranges=bounds,
-                                seed=seed,
-                                **config["archive"]["kwargs"])
+        archive = archive_class(
+            solution_dim=solution_dim,
+            ranges=bounds,
+            seed=seed,
+            **config["archive"]["kwargs"],
+        )
 
     # Create result archive.
-    result_archive = None
-    if use_result_archive:
-        result_archive = GridArchive(solution_dim=solution_dim,
-                                     dims=archive_dims,
-                                     ranges=bounds,
-                                     seed=seed)
+    if config["result_archive"] is None:
+        result_archive = None
+    else:
+        result_archive = config["result_archive"]["class"](
+            solution_dim=solution_dim,
+            ranges=bounds,
+            seed=seed,
+            **config["result_archive"]["kwargs"],
+        )
 
     # Create emitters. Each emitter needs a different seed so that they do not
     # all do the same thing, hence we create an rng here to generate seeds. The
@@ -841,15 +821,15 @@ def create_scheduler(config, algorithm, seed=None):
         ]
 
     # Create Scheduler
-    scheduler_class = config["scheduler"]["class"]
-    scheduler = scheduler_class(archive,
-                                emitters,
-                                result_archive=result_archive,
-                                **config["scheduler"]["kwargs"])
+    scheduler = config["scheduler"]["class"](
+        archive,
+        emitters,
+        result_archive=result_archive,
+        **config["scheduler"]["kwargs"],
+    )
 
-    print(f"Create {scheduler.__class__.__name__} for {algorithm} with "
-          f"learning rate {learning_rate}, using solution dim {solution_dim}, "
-          f"archive dims {archive_dims}, and {len(emitters)} emitters.")
+    print(f"Create {scheduler.__class__.__name__} for {algorithm} "
+          f"using solution dim {solution_dim} and {len(emitters)} emitters.")
     return scheduler
 
 
@@ -870,14 +850,17 @@ def save_heatmap(archive, heatmap_path):
         cvt_archive_heatmap(archive, vmin=0, vmax=100)
         plt.tight_layout()
         plt.savefig(heatmap_path)
+    else:
+        raise NotImplementedError(
+            "This script currently does not plot heatmaps for this archive.")
     plt.close(plt.gcf())
 
 
 # pylint: disable-next = too-many-positional-arguments
 def sphere_main(algorithm,
-                dim=None,
-                itrs=None,
-                archive_dims=None,
+                dim=100,
+                itrs=10000,
+                grid_dims=None,
                 learning_rate=None,
                 es=None,
                 outdir="sphere_output",
@@ -889,7 +872,7 @@ def sphere_main(algorithm,
         algorithm (str): Name of the algorithm.
         dim (int): Dimensionality of the sphere function.
         itrs (int): Iterations to run.
-        archive_dims (tuple): Dimensionality of the archive.
+        grid_dims (tuple): Grid dimensions for GridArchive.
         learning_rate (float): The archive learning rate.
         es (str): If passed, this will set the ES for all
             EvolutionStrategyEmitter instances.
@@ -900,24 +883,20 @@ def sphere_main(algorithm,
     """
     config = copy.deepcopy(CONFIG[algorithm])
 
-    # Use default dim for each algorithm.
-    if dim is not None:
-        config["dim"] = dim
+    # Add params that are not in the config.
+    config["dim"] = dim
+    config["itrs"] = itrs
 
-    # Use default itrs for each algorithm.
-    if itrs is not None:
-        config["itrs"] = itrs
-
-    # Use default archive_dim for each algorithm.
-    if archive_dims is not None:
-        config["archive_dims"] = archive_dims
-
-    # Use default learning_rate for each algorithm.
+    # Add params that are in the config by default but may be passed in.
+    if grid_dims is not None:
+        if config["archive"]["class"] == GridArchive:
+            config["archive"]["kwargs"]["dims"] = grid_dims
+        if config["result_archive"]["class"] == GridArchive:
+            config["result_archive"]["kwargs"]["dims"] = grid_dims
     if learning_rate is not None:
         config["archive"]["kwargs"]["learning_rate"] = learning_rate
-
-    # Set ES for all EvolutionStrategyEmitter.
     if es is not None:
+        # Set ES for all EvolutionStrategyEmitter.
         for e in config["emitters"]:
             if e["class"] == EvolutionStrategyEmitter:
                 e["kwargs"]["es"] = es
