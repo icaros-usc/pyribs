@@ -846,10 +846,9 @@ def create_scheduler(config, algorithm, seed=None):
                                 emitters,
                                 result_archive=result_archive,
                                 **config["scheduler"]["kwargs"])
-    scheduler_name = scheduler.__class__.__name__
 
-    print(f"Create {scheduler_name} for {algorithm} with learning rate "
-          f"{learning_rate}, using solution dim {solution_dim}, "
+    print(f"Create {scheduler.__class__.__name__} for {algorithm} with "
+          f"learning rate {learning_rate}, using solution dim {solution_dim}, "
           f"archive dims {archive_dims}, and {len(emitters)} emitters.")
     return scheduler
 
