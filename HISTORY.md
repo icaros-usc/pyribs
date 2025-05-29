@@ -9,9 +9,6 @@
 - Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
 - **Backwards-incompatible:** BanditScheduler: Add emitter_pool and active attr;
   remove emitters attr ({pr}`494`)
-
-TODO: Compress these history entries
-
 - Add DensityRanker for density descent search ({pr}`483`, {pr}`504`)
 - Add NoveltyRanker for novelty search ({pr}`477`)
 - Add proximity_archive_plot for visualizing ProximityArchive ({pr}`476`,
