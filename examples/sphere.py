@@ -18,7 +18,8 @@ Fontaine 2020 for more info).
 
 We support a number of algorithms in this script. The parameters for each
 algorithm are stored in CONFIG. The parameters roughly reproduce the results
-from the CMA-MAE paper (Fontaine 2023, https://arxiv.org/abs/2205.10752), i.e.:
+from the CMA-MAE paper (Fontaine 2023, https://arxiv.org/abs/2205.10752), i.e.,
+they use the following settings:
 - Archives have 10,000 cells, either as a 100x100 grid archive or a 10,000-cell
   CVT archive.
 - Each algorithm runs for 10,000 iterations, with 540 solutions evaluated every
@@ -67,8 +68,7 @@ CMA-MAE and CMA-MAEGA:
 - `cma_maega`: GridArchive (learning_rate = 0.01) with
   GradientArborescenceEmitter using ImprovementRanker.
 
-Diversity Optimization algorithms (note that these will not optimize the
-objective):
+Novelty Search:
 - `ns_cma`: Novelty Search with CMA-ES; implemented using a ProximityArchive
   with EvolutionStrategyEmitter. Results are stored in a passive GridArchive.
   Note that the objective will not be optimized in this case.
@@ -652,7 +652,7 @@ CONFIG = {
         }
     },
 
-    ## Diversity Optimization algorithms ##
+    ## Novelty Search ##
     "ns_cma": {
         "dim": 100,
         "itrs": 10000,
@@ -796,7 +796,6 @@ def create_scheduler(config, algorithm, seed=None):
     max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     initial_sol = np.zeros(solution_dim)
-    mode = "batch"
 
     # Create archive.
     archive_class = config["archive"]["class"]
@@ -846,14 +845,12 @@ def create_scheduler(config, algorithm, seed=None):
     scheduler = scheduler_class(archive,
                                 emitters,
                                 result_archive=result_archive,
-                                add_mode=mode,
                                 **config["scheduler"]["kwargs"])
     scheduler_name = scheduler.__class__.__name__
 
     print(f"Create {scheduler_name} for {algorithm} with learning rate "
-          f"{learning_rate} and add mode {mode}, using solution dim "
-          f"{solution_dim}, archive dims {archive_dims}, and "
-          f"{len(emitters)} emitters.")
+          f"{learning_rate}, using solution dim {solution_dim}, "
+          f"archive dims {archive_dims}, and {len(emitters)} emitters.")
     return scheduler
 
 
