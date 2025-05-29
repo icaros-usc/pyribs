@@ -6,6 +6,7 @@
 
 #### API
 
+- Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
 - **Backwards-incompatible:** BanditScheduler: Add emitter_pool and active attr;
   remove emitters attr ({pr}`494`)
 - Add DensityRanker for density descent search ({pr}`483`)
@@ -27,6 +28,7 @@
 
 #### Documentation
 
+- DQD tutorial edits ({pr}`500`)
 - Add version selector to docs ({pr}`495`)
 - Update gymnasium and lunar lander version ({pr}`493`)
 - Add tutorial page on Optuna integration ({pr}`492`)
@@ -37,6 +39,7 @@
 
 #### Improvements
 
+- Update QDax visualizations to match QDax 0.5.0 ({pr}`502`)
 - Skip qdax tests if qdax not installed ({pr}`491`)
 - Move yapf after isort in pre-commit ({pr}`490`)
 - Remove `_cells` attribute from ArchiveBase ({pr}`475`)

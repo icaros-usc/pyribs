@@ -51,10 +51,10 @@ extras_require = {
 
         # Testing
         "python-box[all]~=7.0",
-        "pytest==7.0.1",
-        "pytest-cov==3.0.0",
-        "pytest-benchmark==3.4.1",
-        "pytest-xdist==2.5.0",
+        "pytest==8.3.5",
+        "pytest-cov==6.0.0",
+        "pytest-benchmark==5.1.0",
+        "pytest-xdist==3.6.1",
 
         # Documentation
         "myst-nb==0.17.1",
@@ -94,11 +94,11 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Mathematics",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -114,7 +114,7 @@ setup(
     keywords="ribs",
     name="ribs",
     packages=find_packages(include=["ribs", "ribs.*"]),
-    python_requires=">=3.8.0",
+    python_requires=">=3.9.0",
     test_suite="tests",
     url="https://github.com/icaros-usc/pyribs",
     version="0.7.1",
