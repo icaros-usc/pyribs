@@ -655,11 +655,10 @@ CONFIG = {
     ## Diversity Optimization algorithms ##
     "ns_cma": {
         "dim": 100,
-        "iters": 5000,
+        "iters": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": False,
-        "batch_size": 36,
         "archive": {
             "class": ProximityArchive,
             "kwargs": {
@@ -676,6 +675,7 @@ CONFIG = {
                 "ranker": "nov",
                 "selection_rule": "mu",
                 "restart_rule": "basic",
+                "batch_size": 36
             },
             "num_emitters": 15
         }],
@@ -686,11 +686,10 @@ CONFIG = {
     },
     "nslc_cma_imp": {
         "dim": 100,
-        "iters": 5000,
+        "iters": 10000,
         "archive_dims": (100, 100),
         "use_result_archive": True,
         "is_dqd": False,
-        "batch_size": 36,
         "archive": {
             "class": ProximityArchive,
             "kwargs": {
@@ -706,7 +705,8 @@ CONFIG = {
                 "sigma0": 0.5,
                 "ranker": "2imp",
                 "selection_rule": "filter",
-                "restart_rule": "no_improvement"
+                "restart_rule": "no_improvement",
+                "batch_size": 36,
             },
             "num_emitters": 15
         }],
