@@ -77,6 +77,11 @@ Novelty Search:
   competition turned on. Thus, the archive returns two-stage improvement
   information that is fed to the EvolutionStrategyEmitter just like in CMA-ME.
 
+DDS:
+- `dds`: Density Descent Search (Lee 2024; https://arxiv.org/abs/2312.11331)
+  with a KDE as the density estimator. Uses DensityArchive and
+  EvolutionStrategyEmitter with DensityRanker.
+
 Outputs are saved in the `sphere_output/` directory by default. The archive is
 saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
 heatmap are saved as `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about
@@ -112,9 +117,9 @@ import numpy as np
 import tqdm
 
 from ribs.archives import CVTArchive, GridArchive, ProximityArchive
-from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           GradientArborescenceEmitter, GradientOperatorEmitter,
-                           IsoLineEmitter)
+from ribs.emitters import (DensityArchive, EvolutionStrategyEmitter,
+                           GaussianEmitter, GradientArborescenceEmitter,
+                           GradientOperatorEmitter, IsoLineEmitter)
 from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
@@ -631,12 +636,12 @@ CONFIG = {
 
     ## Novelty Search ##
     "ns_cma": {
+        # Hyperparameters from Density Descent paper:
+        # https://arxiv.org/abs/2312.11331
         "is_dqd": False,
         "archive": {
             "class": ProximityArchive,
             "kwargs": {
-                # Hyperparameters from Density Descent paper:
-                # https://arxiv.org/abs/2312.11331
                 "k_neighbors": 15,
                 "novelty_threshold": 0.037 * 512,
             }
@@ -688,6 +693,42 @@ CONFIG = {
                 "selection_rule": "filter",
                 "restart_rule": "no_improvement",
                 "batch_size": 36,
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+
+    ## DDS ##
+    "dds": {
+        # Hyperparameters from Density Descent paper:
+        # https://arxiv.org/abs/2312.11331
+        "is_dqd": False,
+        "archive": {
+            "class": DensityArchive,
+            "kwargs": {
+                "density_method": "kde",
+                "bandwidth": 25.6,
+                "buffer_size": 10000,
+            }
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
+            }
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 1.5,
+                "ranker": "density",
+                "selection_rule": "mu",
+                "restart_rule": "basic",
+                "batch_size": 36
             },
             "num_emitters": 15
         }],
@@ -777,8 +818,8 @@ def create_scheduler(config, algorithm, seed=None):
 
     # Create archive.
     archive_class = config["archive"]["class"]
-    if archive_class == ProximityArchive:
-        # ProximityArchive takes `measure_dim` instead of `ranges`.
+    if archive_class in [DensityArchive, ProximityArchive]:
+        # These two archives take `measure_dim` instead of `ranges`.
         archive = archive_class(
             solution_dim=solution_dim,
             measure_dim=len(bounds),
