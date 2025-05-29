@@ -9,7 +9,7 @@
 - Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
 - **Backwards-incompatible:** BanditScheduler: Add emitter_pool and active attr;
   remove emitters attr ({pr}`494`)
-- Add DensityRanker for density descent search ({pr}`483`)
+- Add DensityRanker for density descent search ({pr}`483`, {pr}`504`)
 - Add NoveltyRanker for novelty search ({pr}`477`)
 - Add proximity_archive_plot for visualizing ProximityArchive ({pr}`476`,
   {pr}`480`)
@@ -28,6 +28,7 @@
 
 #### Documentation
 
+- Update sphere example for consistency ({pr}`505`)
 - DQD tutorial edits ({pr}`500`)
 - Add version selector to docs ({pr}`495`)
 - Update gymnasium and lunar lander version ({pr}`493`)
