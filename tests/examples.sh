@@ -26,37 +26,31 @@ function install_deps() {
 export OPENBLAS_NUM_THREADS=1
 export OMP_NUM_THREADS=1
 
+#
 # sphere.py
+#
+
 install_deps examples/sphere.py
 SPHERE_OUTPUT="${TMPDIR}/sphere_output"
-python examples/sphere.py map_elites --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py line_map_elites --itrs 10 --outdir "${SPHERE_OUTPUT}"
-# CVT excluded since it takes a while to build the archive.
-# python examples/sphere.py cvt_map_elites --itrs 10 "${SPHERE_OUTPUT}"
-# python examples/sphere.py line_cvt_map_elites --itrs 10 "${SPHERE_OUTPUT}"
 
-python examples/sphere.py me_map_elites --itrs 10 --outdir "${SPHERE_OUTPUT}"
+SPHERE_ALGOS=( $(cd examples && python -c "
+from sphere import CONFIG
+for algo in CONFIG:
+  print(algo)
+") )
 
-python examples/sphere.py cma_me_imp --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py cma_me_imp_mu --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py cma_me_basic --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py cma_me_rd --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py cma_me_rd_mu --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py cma_me_opt --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py cma_me_mixed --itrs 10 --outdir "${SPHERE_OUTPUT}"
+# Test each algorithm.
+for algo in "${SPHERE_ALGOS[@]}"; do
+  # CVT excluded since it takes a while to build the archive.
+  if [[ "$algo" != @(cvt_map_elites|line_cvt_map_elites) ]]; then
+    python examples/sphere.py "$algo" --itrs 10 --outdir "${SPHERE_OUTPUT}"
+  fi
+done
 
-python examples/sphere.py og_map_elites --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py omg_mega --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py cma_mega --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py cma_mega_adam --itrs 10 --outdir "${SPHERE_OUTPUT}"
-
-python examples/sphere.py cma_mae --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py cma_maega --itrs 10 --outdir "${SPHERE_OUTPUT}"
-
-python examples/sphere.py ns_cma --itrs 10 --outdir "${SPHERE_OUTPUT}"
-python examples/sphere.py nslc_cma_imp --itrs 10 --outdir "${SPHERE_OUTPUT}"
-
+#
 # lunar_lander.py
+#
+
 install_deps examples/lunar_lander.py
 LUNAR_LANDER_OUTPUT="${TMPDIR}/lunar_lander_output"
 python examples/lunar_lander.py --iterations 5 --outdir "${LUNAR_LANDER_OUTPUT}"
