@@ -49,7 +49,9 @@ class ProximityArchive(ArchiveBase):
           (``archive.stats.coverage``) will always be reported as 1. This is
           because the archive is unbounded, so there is no predefined number of
           cells to fill. We suggest using ``archive.stats.num_elites`` instead
-          for a more meaningful coverage metric.
+          for a more meaningful coverage metric, or creating a passive result
+          archive to store elites discovered by the algorithm (similar to
+          CMA-MAE).
         - Since the number of cells in the archive is equivalent to the number
           of elites in the archive, the normalized QD score
           (``archive.stats.norm_qd_score``) will always equal the mean objective
@@ -244,9 +246,9 @@ class ProximityArchive(ArchiveBase):
         measures = np.asarray(measures)
         batch_size = len(measures)
 
-        if local_competition is not None:
+        use_local_competition = local_competition is not None
+        if use_local_competition:
             objectives = np.asarray(local_competition)
-            local_competition = True
 
         if self.empty:
             # Set default values for novelty and local competition when archive
@@ -255,7 +257,7 @@ class ProximityArchive(ArchiveBase):
                               self.novelty_threshold,
                               dtype=self.dtypes["measures"])
 
-            if local_competition:
+            if use_local_competition:
                 local_competition_scores = np.zeros(len(novelty),
                                                     dtype=np.int32)
         else:
@@ -268,7 +270,7 @@ class ProximityArchive(ArchiveBase):
 
             novelty = np.mean(dists, axis=1)
 
-            if local_competition:
+            if use_local_competition:
                 indices = indices[:, None] if k_neighbors == 1 else indices
 
                 # The first item returned by `retrieve` is `occupied` -- all
@@ -286,7 +288,8 @@ class ProximityArchive(ArchiveBase):
                     dtype=np.int32,
                 )
 
-        if local_competition:
+        if use_local_competition:
+            # pylint: disable-next = used-before-assignment
             return novelty, local_competition_scores
         else:
             return novelty
@@ -540,7 +543,7 @@ class ProximityArchive(ArchiveBase):
 
         return self.add(**{key: [val] for key, val in data.items()})
 
-    @cached_property
+    @cached_property  # The cache is cleared in add().
     def upper_bounds(self) -> np.ndarray:
         """The upper bounds of the measures in the archive.
 
@@ -557,7 +560,7 @@ class ProximityArchive(ArchiveBase):
 
         return np.max(self._store.data("measures"), axis=0)
 
-    @cached_property
+    @cached_property  # The cache is cleared in add().
     def lower_bounds(self) -> np.ndarray:
         """The lower bounds of the measures in the archive.
 
