@@ -82,6 +82,16 @@ def grid_archive_3d():
     return archive
 
 
+@pytest.fixture(scope="module")
+def grid_archive_3d_empty():
+    """Same as above but without solutions."""
+    archive = GridArchive(solution_dim=3,
+                          dims=[10, 10, 10],
+                          ranges=[(-2, 2), (-1, 1), (-2, 1)],
+                          seed=42)
+    return archive
+
+
 #
 # 2D tests
 #
