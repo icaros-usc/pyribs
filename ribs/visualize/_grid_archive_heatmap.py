@@ -163,17 +163,17 @@ def grid_archive_heatmap(archive,
 
         archive_heatmap_1d(
             archive,
-            archive.boundaries[0],
-            cell_objectives,
-            ax,
-            cmap,
-            aspect,
-            vmin,
-            vmax,
-            cbar,
-            cbar_kwargs,
-            rasterized,
-            pcm_kwargs,
+            cell_boundaries=archive.boundaries[0],
+            cell_objectives=cell_objectives,
+            ax=ax,
+            cmap=cmap,
+            aspect=aspect,
+            vmin=vmin,
+            vmax=vmax,
+            cbar=cbar,
+            cbar_kwargs=cbar_kwargs,
+            rasterized=rasterized,
+            pcm_kwargs=pcm_kwargs,
         )
 
     elif archive.measure_dim == 2:

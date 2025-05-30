@@ -63,6 +63,7 @@ def set_cbar(t, ax, cbar, cbar_kwargs):
 
 def archive_heatmap_1d(
     archive,
+    *,
     cell_boundaries,
     cell_objectives,
     ax,
@@ -117,8 +118,10 @@ def archive_heatmap_1d(
 
     # Create the plot.
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-    vmin = np.nanmin(cell_objectives) if vmin is None else vmin
-    vmax = np.nanmax(cell_objectives) if vmax is None else vmax
+    if vmin is None and not archive.empty:
+        vmin = np.nanmin(cell_objectives)
+    if vmax is None and not archive.empty:
+        vmax = np.nanmax(cell_objectives)
     t = ax.pcolormesh(
         cell_boundaries,
         # y-bounds; needs a sensible default so that aspect ratio is consistent.
