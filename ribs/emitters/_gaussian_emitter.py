@@ -124,17 +124,17 @@ class GaussianEmitter(EmitterBase):
             empty, we return ``initial_solutions``, which might not have
             ``batch_size`` solutions.
         """
-        if self.archive.empty and self._initial_solutions is not None:
+        if self.archive.empty and self.initial_solutions is not None:
             return self._clip(self.initial_solutions)
 
         if self.archive.empty:
-            parents = np.repeat(self.x0[None], repeats=self._batch_size, axis=0)
+            parents = np.repeat(self.x0[None], repeats=self.batch_size, axis=0)
         else:
-            parents = self.archive.sample_elites(self._batch_size)["solution"]
+            parents = self.archive.sample_elites(self.batch_size)["solution"]
 
         noise = self._rng.normal(
-            scale=self._sigma,
-            size=(self._batch_size, self.solution_dim),
+            scale=self.sigma,
+            size=(self.batch_size, self.solution_dim),
         ).astype(self.archive.dtypes["solution"])
 
         return self._clip(parents + noise)

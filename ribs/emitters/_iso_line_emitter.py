@@ -153,23 +153,23 @@ class IsoLineEmitter(EmitterBase):
             # Note: Since the parents are all `x0`, the `directions` below will
             # all be 0.
             parents = np.repeat(self.x0[None],
-                                repeats=2 * self._batch_size,
+                                repeats=2 * self.batch_size,
                                 axis=0)
         else:
             parents = self.archive.sample_elites(2 *
-                                                 self._batch_size)["solution"]
+                                                 self.batch_size)["solution"]
 
-        parents = parents.reshape(2, self._batch_size, -1)
+        parents = parents.reshape(2, self.batch_size, self.solution_dim)
         elites = parents[0]
         directions = parents[1] - parents[0]
 
         iso_gaussian = self._rng.normal(
-            scale=self._iso_sigma,
-            size=(elites.shape[0], elites.shape[1]),
+            scale=self.iso_sigma,
+            size=(self.batch_size, self.solution_dim),
         ).astype(elites.dtype)
         line_gaussian = self._rng.normal(
-            scale=self._line_sigma,
-            size=(elites.shape[0], 1),
+            scale=self.line_sigma,
+            size=(self.batch_size, 1),
         ).astype(elites.dtype)
 
         solutions = elites + iso_gaussian + line_gaussian * directions
