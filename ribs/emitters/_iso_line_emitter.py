@@ -150,6 +150,8 @@ class IsoLineEmitter(EmitterBase):
             return self._clip(self.initial_solutions)
 
         if self.archive.empty:
+            # Note: Since the parents are all `x0`, the `directions` below will
+            # all be 0.
             parents = np.repeat(self.x0[None],
                                 repeats=2 * self._batch_size,
                                 axis=0)
@@ -170,7 +172,6 @@ class IsoLineEmitter(EmitterBase):
             size=(elites.shape[0], 1),
         ).astype(elites.dtype)
 
-        # Note: If the parents are all `x0`, the directions become 0.
         solutions = elites + iso_gaussian + line_gaussian * directions
 
         return self._clip(solutions)
