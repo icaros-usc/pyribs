@@ -118,29 +118,29 @@ class GeneticAlgorithmEmitter(EmitterBase):
         Raises:
             ValueError: The ``parent_type`` of the operator is unknown.
         """
-        if self.archive.empty and self.initial_solutions is not None:
+        if self.archive.empty and self._initial_solutions is not None:
             return self._clip(self.initial_solutions)
 
         if self._operator.parent_type == 1:
             if self.archive.empty:
                 parents = np.repeat(self.x0[None],
-                                    repeats=self.batch_size,
+                                    repeats=self._batch_size,
                                     axis=0)
             else:
                 parents = self.archive.sample_elites(
-                    self.batch_size)["solution"]
+                    self._batch_size)["solution"]
             return self._clip(self._operator.ask(parents))
 
         elif self._operator.parent_type == 2:
             if self.archive.empty:
                 parents = np.repeat(self.x0[None],
-                                    repeats=2 * self.batch_size,
+                                    repeats=2 * self._batch_size,
                                     axis=0)
             else:
                 parents = self.archive.sample_elites(
-                    2 * self.batch_size)["solution"]
+                    2 * self._batch_size)["solution"]
             return self._clip(
-                self._operator.ask(parents.reshape(2, self.batch_size, -1)))
+                self._operator.ask(parents.reshape(2, self._batch_size, -1)))
 
         else:
             raise ValueError(
