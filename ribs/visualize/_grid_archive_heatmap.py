@@ -207,10 +207,10 @@ def grid_archive_heatmap(archive,
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        if vmin is None and len(objective_batch) > 0:
-            vmin = np.min(objective_batch)
-        if vmax is None and len(objective_batch) > 0:
-            vmax = np.max(objective_batch)
+        vmin = (np.min(objective_batch)
+                if vmin is None and len(objective_batch) > 0 else vmin)
+        vmax = (np.max(objective_batch)
+                if vmax is None and len(objective_batch) > 0 else vmax)
         t = ax.pcolormesh(x_bounds,
                           y_bounds,
                           colors,
