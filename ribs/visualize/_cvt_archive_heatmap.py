@@ -232,9 +232,20 @@ def cvt_archive_heatmap(archive,
         cell_objectives = np.full(archive.cells, np.nan)
         cell_objectives[selected_inv_idx] = objective_batch
 
-        ax = archive_heatmap_1d(archive, cell_boundaries, cell_objectives, ax,
-                                cmap, aspect, vmin, vmax, cbar, cbar_kwargs,
-                                rasterized, pcm_kwargs)
+        ax = archive_heatmap_1d(
+            archive,
+            cell_boundaries=cell_boundaries,
+            cell_objectives=cell_objectives,
+            ax=ax,
+            cmap=cmap,
+            aspect=aspect,
+            vmin=vmin,
+            vmax=vmax,
+            cbar=cbar,
+            cbar_kwargs=cbar_kwargs,
+            rasterized=rasterized,
+            pcm_kwargs=pcm_kwargs,
+        )
 
         # Samples and centroids are plotted at y=0.5 so that they appear along
         # the center of the diagram.

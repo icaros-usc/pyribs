@@ -163,17 +163,17 @@ def grid_archive_heatmap(archive,
 
         archive_heatmap_1d(
             archive,
-            archive.boundaries[0],
-            cell_objectives,
-            ax,
-            cmap,
-            aspect,
-            vmin,
-            vmax,
-            cbar,
-            cbar_kwargs,
-            rasterized,
-            pcm_kwargs,
+            cell_boundaries=archive.boundaries[0],
+            cell_objectives=cell_objectives,
+            ax=ax,
+            cmap=cmap,
+            aspect=aspect,
+            vmin=vmin,
+            vmax=vmax,
+            cbar=cbar,
+            cbar_kwargs=cbar_kwargs,
+            rasterized=rasterized,
+            pcm_kwargs=pcm_kwargs,
         )
 
     elif archive.measure_dim == 2:
@@ -207,8 +207,10 @@ def grid_archive_heatmap(archive,
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        vmin = np.min(objective_batch) if vmin is None else vmin
-        vmax = np.max(objective_batch) if vmax is None else vmax
+        vmin = (np.min(objective_batch)
+                if vmin is None and len(objective_batch) > 0 else vmin)
+        vmax = (np.max(objective_batch)
+                if vmax is None and len(objective_batch) > 0 else vmax)
         t = ax.pcolormesh(x_bounds,
                           y_bounds,
                           colors,
