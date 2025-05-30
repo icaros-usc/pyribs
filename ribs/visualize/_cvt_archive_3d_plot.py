@@ -370,8 +370,8 @@ def cvt_archive_3d_plot(
                    s=elite_ms,
                    c=objective_batch,
                    cmap=cmap,
-                   vmin=vmin,
-                   vmax=vmax,
+                   vmin=min_obj,
+                   vmax=max_obj,
                    lw=0.0,
                    alpha=elite_alpha)
     if plot_samples:
