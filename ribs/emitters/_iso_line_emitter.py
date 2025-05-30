@@ -3,7 +3,6 @@ import numpy as np
 
 from ribs._utils import check_batch_shape, check_shape, np_scalar
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.operators import IsoLineOperator
 
 
 class IsoLineEmitter(EmitterBase):
@@ -69,6 +68,7 @@ class IsoLineEmitter(EmitterBase):
             bounds=bounds,
         )
 
+        self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
         self._iso_sigma = np_scalar(iso_sigma, dtype=archive.dtypes["solution"])
         self._line_sigma = np_scalar(line_sigma, archive.dtypes["solution"])
@@ -90,10 +90,6 @@ class IsoLineEmitter(EmitterBase):
                 initial_solutions, dtype=archive.dtypes["solution"])
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "archive.solution_dim")
-
-        self._operator = IsoLineOperator(iso_sigma=self._iso_sigma,
-                                         line_sigma=self._line_sigma,
-                                         seed=seed)
 
     @property
     def x0(self):
@@ -161,5 +157,20 @@ class IsoLineEmitter(EmitterBase):
             parents = self.archive.sample_elites(2 *
                                                  self._batch_size)["solution"]
 
-        return self._clip(
-            self._operator.ask(parents.reshape(2, self._batch_size, -1)))
+        parents = parents.reshape(2, self._batch_size, -1)
+        elites = parents[0]
+        directions = parents[1] - parents[0]
+
+        iso_gaussian = self._rng.normal(
+            scale=self._iso_sigma,
+            size=(elites.shape[0], elites.shape[1]),
+        ).astype(elites.dtype)
+        line_gaussian = self._rng.normal(
+            scale=self._line_sigma,
+            size=(elites.shape[0], 1),
+        ).astype(elites.dtype)
+
+        # Note: If the parents are all `x0`, the directions become 0.
+        solutions = elites + iso_gaussian + line_gaussian * directions
+
+        return self._clip(solutions)
