@@ -82,6 +82,7 @@ https://docs.pyribs.org/en/stable/whats-new.html
 
 #### API
 
+- Add GeneticAlgorithmEmitter with Internal Operator Support ({pr} `427`)
 - Support alternative centroid generation methods in CVTArchive ({pr}`417`,
   {pr}`437`)
 - Add PyCMAEvolutionStrategy for using pycma in ES emitters ({pr}`434`)
