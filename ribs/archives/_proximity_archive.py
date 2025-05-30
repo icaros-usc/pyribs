@@ -246,10 +246,9 @@ class ProximityArchive(ArchiveBase):
         measures = np.asarray(measures)
         batch_size = len(measures)
 
-        if local_competition is not None:
+        use_local_competition = local_competition is not None
+        if use_local_competition:
             objectives = np.asarray(local_competition)
-            # TODO: switching to bool is sketchy...
-            local_competition = True
 
         if self.empty:
             # Set default values for novelty and local competition when archive
@@ -258,7 +257,7 @@ class ProximityArchive(ArchiveBase):
                               self.novelty_threshold,
                               dtype=self.dtypes["measures"])
 
-            if local_competition:
+            if use_local_competition:
                 local_competition_scores = np.zeros(len(novelty),
                                                     dtype=np.int32)
         else:
@@ -271,7 +270,7 @@ class ProximityArchive(ArchiveBase):
 
             novelty = np.mean(dists, axis=1)
 
-            if local_competition:
+            if use_local_competition:
                 indices = indices[:, None] if k_neighbors == 1 else indices
 
                 # The first item returned by `retrieve` is `occupied` -- all
@@ -289,7 +288,8 @@ class ProximityArchive(ArchiveBase):
                     dtype=np.int32,
                 )
 
-        if local_competition:
+        if use_local_competition:
+            # pylint: disable-next = used-before-assignment
             return novelty, local_competition_scores
         else:
             return novelty
