@@ -14,8 +14,7 @@ class EmitterBase(ABC):
     DQD emitters should override :meth:`ask_dqd` and :meth:`tell_dqd` methods.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
+        archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
         solution_dim (int): The dimension of solutions produced by this emitter.
         bounds (None or array-like): Bounds of the solution space. Pass None to
