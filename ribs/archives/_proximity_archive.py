@@ -49,7 +49,9 @@ class ProximityArchive(ArchiveBase):
           (``archive.stats.coverage``) will always be reported as 1. This is
           because the archive is unbounded, so there is no predefined number of
           cells to fill. We suggest using ``archive.stats.num_elites`` instead
-          for a more meaningful coverage metric.
+          for a more meaningful coverage metric, or creating a passive result
+          archive to store elites discovered by the algorithm (similar to
+          CMA-MAE).
         - Since the number of cells in the archive is equivalent to the number
           of elites in the archive, the normalized QD score
           (``archive.stats.norm_qd_score``) will always equal the mean objective
@@ -246,6 +248,7 @@ class ProximityArchive(ArchiveBase):
 
         if local_competition is not None:
             objectives = np.asarray(local_competition)
+            # TODO: switching to bool is sketchy...
             local_competition = True
 
         if self.empty:
@@ -540,7 +543,7 @@ class ProximityArchive(ArchiveBase):
 
         return self.add(**{key: [val] for key, val in data.items()})
 
-    @cached_property
+    @cached_property  # The cache is cleared in add().
     def upper_bounds(self) -> np.ndarray:
         """The upper bounds of the measures in the archive.
 
@@ -557,7 +560,7 @@ class ProximityArchive(ArchiveBase):
 
         return np.max(self._store.data("measures"), axis=0)
 
-    @cached_property
+    @cached_property  # The cache is cleared in add().
     def lower_bounds(self) -> np.ndarray:
         """The lower bounds of the measures in the archive.
 
