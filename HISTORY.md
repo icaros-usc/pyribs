@@ -6,7 +6,8 @@
 
 #### API
 
-- **Backwards-incompatible:** Tidy up operator implementation ({pr}`507`)
+- **Backwards-incompatible:** Tidy up operator implementation ({pr}`507`,
+  {pr}`508`)
 - Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
 - **Backwards-incompatible:** BanditScheduler: Add emitter_pool and active attr;
   remove emitters attr ({pr}`494`)
