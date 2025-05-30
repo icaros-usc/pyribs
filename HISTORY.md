@@ -6,6 +6,7 @@
 
 #### API
 
+- **Backwards-incompatible:** Tidy up operator implementation ({pr}`507`)
 - Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
 - **Backwards-incompatible:** BanditScheduler: Add emitter_pool and active attr;
   remove emitters attr ({pr}`494`)
@@ -82,6 +83,7 @@ https://docs.pyribs.org/en/stable/whats-new.html
 
 #### API
 
+- Add GeneticAlgorithmEmitter with Internal Operator Support ({pr} `427`)
 - Support alternative centroid generation methods in CVTArchive ({pr}`417`,
   {pr}`437`)
 - Add PyCMAEvolutionStrategy for using pycma in ES emitters ({pr}`434`)
