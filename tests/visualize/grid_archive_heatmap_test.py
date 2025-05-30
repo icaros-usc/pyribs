@@ -21,11 +21,18 @@ from .conftest import (add_uniform_sphere_1d, add_uniform_sphere_2d,
 
 @pytest.fixture(scope="module")
 def grid_archive_1d():
-    """Deterministically-created GridArchive with 1 measure."""
+    """Deterministically-created GridArchive with 1D measure space."""
     # The archive must be low-res enough that we can tell if the number of cells
     # is correct, yet high-res enough that we can see different colors.
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1, 1)], seed=42)
     add_uniform_sphere_1d(archive, (-1, 1))
+    return archive
+
+
+@pytest.fixture(scope="module")
+def grid_archive_1d_empty():
+    """Same as above but without solutions."""
+    archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1, 1)], seed=42)
     return archive
 
 
@@ -39,6 +46,16 @@ def grid_archive_2d():
                           ranges=[(-1, 1), (-1, 1)],
                           seed=42)
     add_uniform_sphere_2d(archive, (-1, 1), (-1, 1))
+    return archive
+
+
+@pytest.fixture(scope="module")
+def grid_archive_2d_empty():
+    """Same as above but without solutions."""
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)],
+                          seed=42)
     return archive
 
 
@@ -114,6 +131,19 @@ def test_limits(grid_archive_2d):
     # give a more uniform-looking archive.
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_2d, vmin=-1.0, vmax=-0.5)
+
+
+@image_comparison(baseline_images=["limits_when_empty"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_limits_when_empty(grid_archive_2d_empty):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(
+        grid_archive_2d_empty,
+        # Intentionally don't provide vmin or vmax.
+        vmin=None,
+        vmax=None,
+    )
 
 
 @image_comparison(baseline_images=["listed_cmap"],
@@ -213,6 +243,19 @@ def test_plot_with_df(grid_archive_2d):
 def test_1d(grid_archive_1d):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_1d)
+
+
+@image_comparison(baseline_images=["1d_limits_when_empty"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_1d_limits_when_empty(grid_archive_1d_empty):
+    plt.figure(figsize=(8, 6))
+    grid_archive_heatmap(
+        grid_archive_1d_empty,
+        # Intentionally don't provide vmin or vmax.
+        vmin=None,
+        vmax=None,
+    )
 
 
 @image_comparison(baseline_images=["1d_aspect_greater_than_1"],
