@@ -7,21 +7,17 @@ from ribs.emitters.operators import GaussianOperator
 
 
 class GaussianEmitter(EmitterBase):
-    """Emits solutions by adding Gaussian noise to existing archive solutions.
+    """Emits solutions by adding Gaussian noise to existing elites.
 
-    If the archive is empty and ``self._initial_solutions`` is set, a call to
-    :meth:`ask` will return ``self._initial_solutions``. If
-    ``self._initial_solutions`` is not set, we draw from a Gaussian distribution
-    centered at ``self.x0`` with standard deviation ``self.sigma``. Otherwise,
-    each solution is drawn from a distribution centered at a randomly chosen
-    elite with standard deviation ``self.sigma``.
-
-    This is the classic variation operator presented in `Mouret 2015
-    <https://arxiv.org/pdf/1504.04909.pdf>`_.
+    If the archive is empty and ``initial_solutions`` is set, a call to
+    :meth:`ask` will return ``initial_solutions``. If ``initial_solutions`` is
+    not set, we draw solutions from a Gaussian distribution centered at ``x0``
+    with standard deviation ``sigma``. Otherwise, each solution is drawn from a
+    distribution centered at a randomly chosen elite with standard deviation
+    ``sigma``.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
+        archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
         sigma (float or array-like): Standard deviation of the Gaussian
             distribution. Note we assume the Gaussian is diagonal, so if this
@@ -56,6 +52,13 @@ class GaussianEmitter(EmitterBase):
                  bounds=None,
                  batch_size=64,
                  seed=None):
+        EmitterBase.__init__(
+            self,
+            archive,
+            solution_dim=archive.solution_dim,
+            bounds=bounds,
+        )
+
         self._batch_size = batch_size
         self._sigma = np.array(sigma, dtype=archive.dtypes["solution"])
         self._x0 = None
@@ -77,16 +80,7 @@ class GaussianEmitter(EmitterBase):
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "archive.solution_dim")
 
-        EmitterBase.__init__(
-            self,
-            archive,
-            solution_dim=archive.solution_dim,
-            bounds=bounds,
-        )
-        self._operator = GaussianOperator(sigma=self._sigma,
-                                          lower_bounds=self._lower_bounds,
-                                          upper_bounds=self._upper_bounds,
-                                          seed=seed)
+        self._operator = GaussianOperator(sigma=self._sigma, seed=seed)
 
     @property
     def x0(self):
@@ -112,28 +106,32 @@ class GaussianEmitter(EmitterBase):
         """int: Number of solutions to return in :meth:`ask`."""
         return self._batch_size
 
+    def _clip(self, solutions):
+        """Clips solutions to the bounds of the solution space."""
+        return np.clip(solutions, self.lower_bounds, self.upper_bounds)
+
     def ask(self):
         """Creates solutions by adding Gaussian noise to elites in the archive.
 
-        If the archive is empty and ``self._initial_solutions`` is set, we
-        return ``self._initial_solutions``. If ``self._initial_solutions`` is
-        not set, we draw from Gaussian distribution centered at ``self.x0``
-        with standard deviation ``self.sigma``. Otherwise, each solution is
+        If the archive is empty and ``initial_solutions`` is set, a call to
+        :meth:`ask` will return ``initial_solutions``. If ``initial_solutions``
+        is not set, we draw solutions from a Gaussian distribution centered at
+        ``x0`` with standard deviation ``sigma``. Otherwise, each solution is
         drawn from a distribution centered at a randomly chosen elite with
-        standard deviation ``self.sigma``.
+        standard deviation ``sigma``.
 
         Returns:
-            If the archive is not empty, ``(batch_size, solution_dim)`` array
-            -- contains ``batch_size`` new solutions to evaluate. If the
-            archive is empty, we return ``self._initial_solutions``, which
-            might not have ``batch_size`` solutions.
+            If the archive is not empty, ``(batch_size, solution_dim)`` array --
+            contains ``batch_size`` new solutions to evaluate. If the archive is
+            empty, we return ``initial_solutions``, which might not have
+            ``batch_size`` solutions.
         """
+        if self.archive.empty and self._initial_solutions is not None:
+            return self._clip(self.initial_solutions)
+
         if self.archive.empty:
-            if self._initial_solutions is not None:
-                return np.clip(self._initial_solutions, self.lower_bounds,
-                               self.upper_bounds)
             parents = np.repeat(self.x0[None], repeats=self._batch_size, axis=0)
         else:
             parents = self.archive.sample_elites(self._batch_size)["solution"]
 
-        return self._operator.ask(parents=parents)
+        return self._clip(self._operator.ask(parents))
