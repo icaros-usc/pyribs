@@ -19,8 +19,7 @@ class EvolutionStrategyEmitter(EmitterBase):
     the mean and covariance of the distribution.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive to use when creating
-            and inserting solutions. For instance, this can be
+        archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution. Must be 1-dimensional.
         sigma0 (float): Initial step size / standard deviation of the
