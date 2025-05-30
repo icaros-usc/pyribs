@@ -6,8 +6,7 @@
 
 #### API
 
-- **Backwards-incompatible:** Tidy up operator implementation ({pr}`507`,
-  {pr}`508`)
+- **Backwards-incompatible:** Tidy up operator implementation ({pr}`507`)
 - Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
 - **Backwards-incompatible:** BanditScheduler: Add emitter_pool and active attr;
   remove emitters attr ({pr}`494`)
@@ -42,6 +41,7 @@
 
 #### Improvements
 
+- Remove operators from GaussianEmitter and IsoLineEmitter ({pr}`508`)
 - Update QDax visualizations to match QDax 0.5.0 ({pr}`502`)
 - Skip qdax tests if qdax not installed ({pr}`491`)
 - Move yapf after isort in pre-commit ({pr}`490`)
