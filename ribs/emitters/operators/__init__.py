@@ -3,7 +3,7 @@
 Operators take in one or more parent solutions and output new solutions via
 operations such as mutation and crossover. When specifying operators for an
 emitter, one can pass in the operator class itself, or the string name of the
-operator, or an abbreviated name. The supported abbreviations are as follows.
+operator, or an abbreviated name. The supported abbreviations are:
 
 * ``gaussian``: :class:`GaussianOperator`
 * ``isoline``: :class:`IsoLineOperator`
