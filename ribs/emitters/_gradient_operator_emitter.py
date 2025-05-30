@@ -58,8 +58,7 @@ class GradientOperatorEmitter(EmitterBase):
 
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
+        archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
         sigma (float or array-like): Standard deviation of the Gaussian
             perturbation used to generate new solutions in ask_dqd().
@@ -121,8 +120,9 @@ class GradientOperatorEmitter(EmitterBase):
             solution_dim=archive.solution_dim,
             bounds=bounds,
         )
-        self._initial_solutions = None
+
         self._x0 = None
+        self._initial_solutions = None
 
         if x0 is None and initial_solutions is None:
             raise ValueError("Either x0 or initial_solutions must be provided.")

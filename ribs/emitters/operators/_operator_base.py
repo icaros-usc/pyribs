@@ -5,8 +5,7 @@ from abc import ABC, abstractmethod
 class OperatorBase(ABC):
     """Base class for operators.
 
-    Operators take in parents and output new solutions when their ask method
-    is called. They can also be instantiated with any arguments.
+    Operators output new solutions when passed parents.
     """
 
     @abstractmethod
