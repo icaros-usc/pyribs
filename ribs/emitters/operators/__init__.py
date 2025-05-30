@@ -1,7 +1,12 @@
-"""Various operators which are employed across emitters.
+"""Various operators that are employed across emitters.
 
 Operators take in one or more parent solutions and output new solutions via
-operators such as mutation and crossover.
+operations such as mutation and crossover. When specifying operators for an
+emitter, one can pass in the operator class itself, or the string name of the
+operator, or an abbreviated name. The supported abbreviations are as follows.
+
+* ``gaussian``: :class:`GaussianOperator`
+* ``isoline``: :class:`IsoLineOperator`
 
 .. autosummary::
     :toctree:
