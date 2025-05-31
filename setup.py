@@ -29,6 +29,7 @@ extras_require = {
         "shapely>=2.0.0",
     ],
     "pycma": ["cma"],
+    "pymoo": ["pymoo"],
     # All dependencies except for dev. Don't worry if there are duplicate
     # dependencies, since setuptools automatically handles duplicates.
     "all": [
@@ -38,6 +39,9 @@ extras_require = {
 
         ### cma ###
         "cma",
+
+        ### pymoo ###
+        "pymoo",
     ],
     "dev": [
         "pip>=20.3",
@@ -70,7 +74,7 @@ extras_require = {
         "sphinxcontrib-jsmath==1.0.1",
         "sphinxcontrib-qthelp==1.0.3",
         "sphinxcontrib-serializinghtml==1.1.5",
-
+        
         # Distribution
         "bump2version==1.0.1",
         "wheel==0.40.0",
