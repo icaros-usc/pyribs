@@ -40,6 +40,20 @@ def cvt_archive_3d():
 
 
 @pytest.fixture(scope="module")
+def cvt_archive_3d_empty():
+    """Same as above but without solutions."""
+    ranges = np.array([(-1, 1), (-1, 1), (-1, 1)])
+    archive = CVTArchive(
+        solution_dim=3,
+        cells=500,
+        ranges=ranges,
+        samples=10_000,
+        seed=42,
+    )
+    return archive
+
+
+@pytest.fixture(scope="module")
 def cvt_archive_3d_rect():
     """Same as above, but the dimensions have different ranges."""
     ranges = [(-1, 1), (-2, 0), (1, 3)]
@@ -119,6 +133,19 @@ def test_3d_rect_reorder(cvt_archive_3d_rect):
 def test_limits(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
     cvt_archive_3d_plot(cvt_archive_3d, vmin=-1.0, vmax=-0.5)
+
+
+@image_comparison(baseline_images=["limits_when_empty"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_limits_when_empty(cvt_archive_3d_empty):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_3d_plot(
+        cvt_archive_3d_empty,
+        # Intentionally don't provide vmin or vmax.
+        vmin=None,
+        vmax=None,
+    )
 
 
 @image_comparison(baseline_images=["listed_cmap"],

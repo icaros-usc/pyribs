@@ -150,8 +150,10 @@ def sliding_boundaries_archive_heatmap(archive,
     ax.set_aspect(aspect)
 
     # Create the plot.
-    vmin = np.min(objective_batch) if vmin is None else vmin
-    vmax = np.max(objective_batch) if vmax is None else vmax
+    vmin = (np.min(objective_batch)
+            if vmin is None and len(objective_batch) > 0 else vmin)
+    vmax = (np.max(objective_batch)
+            if vmax is None and len(objective_batch) > 0 else vmax)
     t = ax.scatter(x,
                    y,
                    s=ms,

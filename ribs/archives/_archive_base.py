@@ -786,15 +786,6 @@ class ArchiveBase(ABC):
             data = ArchiveDataFrame(data)
         return data
 
-    def as_pandas(self, include_solutions=True, include_metadata=False):
-        """DEPRECATED."""
-        # pylint: disable = unused-argument
-        raise RuntimeError(
-            "as_pandas has been deprecated. Please use "
-            "archive.data(..., return_type='pandas') instead, or consider "
-            "retrieving individual fields, e.g., "
-            "objective = archive.data('objective')")
-
     def cqd_score(self,
                   iterations,
                   target_points,

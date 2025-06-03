@@ -42,6 +42,8 @@
 
 #### Improvements
 
+- Migrate to pyproject.toml ({pr}`514`)
+- Set vmin and vmax to None if archive is empty in ribs.visualize ({pr}`513`)
 - Remove operators from GaussianEmitter and IsoLineEmitter ({pr}`508`)
 - Update QDax visualizations to match QDax 0.5.0 ({pr}`502`)
 - Skip qdax tests if qdax not installed ({pr}`491`)
