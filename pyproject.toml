@@ -94,7 +94,7 @@ dev = [
   # Distribution
   "build",
   "check-wheel-contents",
-  "twine==4.0.2",
+  "twine",
 ]
 
 [project.urls]
