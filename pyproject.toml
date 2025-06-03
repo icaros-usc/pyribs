@@ -111,3 +111,18 @@ include = ["ribs", "ribs.*"]
 [tool.setuptools.dynamic]
 version = {attr = "ribs.__version__"}
 readme = {file = ["README.md", "HISTORY.md"], content-type = "text/markdown"}
+
+[tool.isort]
+known_first_party = "ribs"
+line_length = 80
+
+[tool.yapf]
+based_on_style = "google"
+column_limit = 80
+indent_width = 4
+
+[tool.pytest.ini_options]
+python_files = "*_test.py"
+python_functions = "test_*"
+addopts = "-v --cov-report term-missing --cov=ribs"
+markers = "style"
