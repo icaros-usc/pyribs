@@ -244,8 +244,19 @@ def cvt_archive_3d_plot(
         samples = samples[:, measure_order]
 
     # Compute objective value range.
-    min_obj = np.min(objective_batch) if vmin is None else vmin
-    max_obj = np.max(objective_batch) if vmax is None else vmax
+    if vmin is None:
+        # Defaulting to -inf (and inf for max_obj) allows the computations after
+        # this to proceed smoothly.
+        min_obj = (np.min(objective_batch)
+                   if len(objective_batch) > 0 else -np.inf)
+    else:
+        min_obj = vmin
+
+    if vmax is None:
+        max_obj = (np.max(objective_batch)
+                   if len(objective_batch) > 0 else np.inf)
+    else:
+        max_obj = vmax
 
     # If the min and max are the same, we set a sensible default range.
     if min_obj == max_obj:
@@ -359,8 +370,8 @@ def cvt_archive_3d_plot(
                    s=elite_ms,
                    c=objective_batch,
                    cmap=cmap,
-                   vmin=vmin,
-                   vmax=vmax,
+                   vmin=min_obj,
+                   vmax=max_obj,
                    lw=0.0,
                    alpha=elite_alpha)
     if plot_samples:
