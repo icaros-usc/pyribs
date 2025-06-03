@@ -69,7 +69,7 @@ class ArchiveBase(ABC):
     .. note:: Attributes beginning with an underscore are only intended to be
         accessed by child classes (i.e. they are "protected" attributes).
 
-    .. note:: The idea of archive thresholds was introduced in `Fontaine 2022
+    .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
         <https://arxiv.org/abs/2205.10752>`_. Refer to our `CMA-MAE tutorial
         <../../tutorials/cma_mae.html>`_ for more info on thresholds, including
         the ``learning_rate`` and ``threshold_min`` parameters.
@@ -785,15 +785,6 @@ class ArchiveBase(ABC):
         if return_type == "pandas":
             data = ArchiveDataFrame(data)
         return data
-
-    def as_pandas(self, include_solutions=True, include_metadata=False):
-        """DEPRECATED."""
-        # pylint: disable = unused-argument
-        raise RuntimeError(
-            "as_pandas has been deprecated. Please use "
-            "archive.data(..., return_type='pandas') instead, or consider "
-            "retrieving individual fields, e.g., "
-            "objective = archive.data('objective')")
 
     def cqd_score(self,
                   iterations,

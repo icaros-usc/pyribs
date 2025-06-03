@@ -69,6 +69,18 @@ def cvt_archive_2d():
 
 
 @pytest.fixture(scope="module")
+def cvt_archive_2d_empty():
+    """Same as above but without solutions."""
+    archive = CVTArchive(solution_dim=2,
+                         cells=100,
+                         ranges=[(-1, 1), (-1, 1)],
+                         samples=1000,
+                         use_kd_tree=True,
+                         seed=42)
+    return archive
+
+
+@pytest.fixture(scope="module")
 def cvt_archive_2d_long():
     """Same as above, but the measure space is longer in one direction."""
     archive = CVTArchive(solution_dim=2,
@@ -155,6 +167,19 @@ def test_2d_long_transpose(cvt_archive_2d_long):
 def test_limits(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive_2d, vmin=-1.0, vmax=-0.5)
+
+
+@image_comparison(baseline_images=["limits_when_empty"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_limits_when_empty(cvt_archive_2d_empty):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive_2d_empty,
+        # Intentionally don't provide vmin or vmax.
+        vmin=None,
+        vmax=None,
+    )
 
 
 @image_comparison(baseline_images=["listed_cmap"],

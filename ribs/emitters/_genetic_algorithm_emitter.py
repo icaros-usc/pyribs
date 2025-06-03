@@ -7,27 +7,23 @@ from ribs.emitters.operators import _get_op
 
 
 class GeneticAlgorithmEmitter(EmitterBase):
-    """Emits solutions by using operator provided.
+    """Creates solutions with a genetic algorithm.
 
-    If the archive is empty and ``self._initial_solutions`` is set, a call to
-    :meth:`ask` will return ``self._initial_solutions``. If
-    ``self._initial_solutions`` is not set, we operate on self.x0.
-
+    If the archive is empty and ``initial_solutions`` is set, a call to
+    :meth:`ask` will return ``initial_solutions``. If ``initial_solutions`` is
+    not set, we pass ``x0`` through the operator.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
+        archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
-        x0 (numpy.ndarray): Initial solution.
-        operator (str): Internal Operator Class used to Mutate Solutions
-            in ask method.
+        operator (str): Internal operator for mutating solutions. See
+            :mod:`ribs.emitters.operators` for the list of allowed names.
         operator_kwargs (dict): Additional arguments to pass to the operator.
             See :mod:`ribs.emitters.operators` for the arguments allowed by each
             operator.
+        x0 (numpy.ndarray): Initial solution.
         initial_solutions (array-like): An (n, solution_dim) array of solutions
-            to be used when the archive is empty. If this argument is None, then
-            solutions will be sampled from a Gaussian distribution centered at
-            ``x0`` with standard deviation ``sigma``.
+            to be used when the archive is empty, in lieu of ``x0``.
         bounds (None or array-like): Bounds of the solution space. Solutions are
             clipped to these bounds. Pass None to indicate there are no bounds.
             Alternatively, pass an array-like to specify the bounds for each
@@ -35,6 +31,8 @@ class GeneticAlgorithmEmitter(EmitterBase):
             bound, or a tuple of ``(lower_bound, upper_bound)``, where
             ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
         batch_size (int): Number of solutions to return in :meth:`ask`.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid a fixed seed.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
@@ -43,16 +41,13 @@ class GeneticAlgorithmEmitter(EmitterBase):
     def __init__(self,
                  archive,
                  *,
+                 operator,
+                 operator_kwargs=None,
                  x0=None,
                  initial_solutions=None,
                  bounds=None,
                  batch_size=64,
-                 operator_kwargs=None,
-                 operator=None):
-        self._batch_size = batch_size
-        self._x0 = x0
-        self._initial_solutions = None
-
+                 seed=None):
         EmitterBase.__init__(
             self,
             archive,
@@ -60,8 +55,9 @@ class GeneticAlgorithmEmitter(EmitterBase):
             bounds=bounds,
         )
 
-        if operator is None:
-            raise ValueError("Operator must be provided.")
+        self._batch_size = batch_size
+        self._x0 = x0
+        self._initial_solutions = None
 
         if x0 is None and initial_solutions is None:
             raise ValueError("Either x0 or initial_solutions must be provided.")
@@ -79,14 +75,15 @@ class GeneticAlgorithmEmitter(EmitterBase):
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "archive.solution_dim")
 
-        self._operator = _get_op(operator)(
-            lower_bounds=self._lower_bounds,
-            upper_bounds=self._upper_bounds,
-            **(operator_kwargs if operator_kwargs is not None else {}))
+        operator_class = _get_op(operator)
+        self._operator = operator_class(
+            **(operator_kwargs if operator_kwargs is not None else {}),
+            seed=seed,
+        )
 
     @property
     def x0(self):
-        """numpy.ndarray: Initial Solution (if initial_solutions is not
+        """numpy.ndarray: Initial Solution (if ``initial_solutions`` is not
         set)."""
         return self._x0
 
@@ -101,44 +98,50 @@ class GeneticAlgorithmEmitter(EmitterBase):
         """int: Number of solutions to return in :meth:`ask`."""
         return self._batch_size
 
-    def ask(self):
-        """Creates solutions with operator provided.
+    def _clip(self, solutions):
+        """Clips solutions to the bounds of the solution space."""
+        return np.clip(solutions, self.lower_bounds, self.upper_bounds)
 
-        If the archive is empty and ``self._initial_solutions`` is set, we
-        return ``self._initial_solutions``. If ``self._initial_solutions`` is
-        not set and the archive is still empty, we operate on the initial
-        solution (x0) provided. Otherwise, we sample parents from the archive
-        to be used as input to the operator
+    def ask(self):
+        """Creates solutions with the provided operator.
+
+        If the archive is empty and ``initial_solutions`` is set, a call to
+        :meth:`ask` will return ``initial_solutions``. If ``initial_solutions``
+        is not set, we pass ``x0`` through the operator. Otherwise, we sample
+        parents from the archive to be passed to the operator.
 
         Returns:
             numpy.ndarray: If the archive is not empty, ``(batch_size,
             solution_dim)`` array -- contains ``batch_size`` new solutions to
-            evaluate. If the archive is empty, we return
-            ``self._initial_solutions``, which might not have ``batch_size``
-            solutions.
+            evaluate. If the archive is empty, we return ``initial_solutions``,
+            which might not have ``batch_size`` solutions.
+        Raises:
+            ValueError: The ``parent_type`` of the operator is unknown.
         """
+        if self.archive.empty and self.initial_solutions is not None:
+            return self._clip(self.initial_solutions)
 
-        if self.archive.empty and self._initial_solutions is not None:
-            return np.clip(self._initial_solutions, self.lower_bounds,
-                           self.upper_bounds)
-
-        if self._operator.parent_type == 2:
+        if self._operator.parent_type == 1:
             if self.archive.empty:
                 parents = np.repeat(self.x0[None],
-                                    repeats=2 * self._batch_size,
+                                    repeats=self.batch_size,
                                     axis=0)
             else:
                 parents = self.archive.sample_elites(
-                    2 * self._batch_size)["solution"]
-            return self._operator.ask(
-                parents=parents.reshape(2, self._batch_size, -1))
-        else:  # self._operator.parent_type == 1, gaussian
+                    self.batch_size)["solution"]
+            return self._clip(self._operator.ask(parents))
+
+        elif self._operator.parent_type == 2:
             if self.archive.empty:
                 parents = np.repeat(self.x0[None],
-                                    repeats=self._batch_size,
+                                    repeats=2 * self.batch_size,
                                     axis=0)
             else:
                 parents = self.archive.sample_elites(
-                    self._batch_size)["solution"]
+                    2 * self.batch_size)["solution"]
+            return self._clip(
+                self._operator.ask(parents.reshape(2, self.batch_size, -1)))
 
-            return self._operator.ask(parents=parents)
+        else:
+            raise ValueError(
+                f"Unknown operator `parent_type` {self._operator.parent_type}")

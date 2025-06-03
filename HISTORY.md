@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Tidy up operator implementation ({pr}`507`,
+  {pr}`510`)
 - Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
 - **Backwards-incompatible:** BanditScheduler: Add emitter_pool and active attr;
   remove emitters attr ({pr}`494`)
@@ -40,6 +42,8 @@
 
 #### Improvements
 
+- Migrate to pyproject.toml ({pr}`514`)
+- Set vmin and vmax to None if archive is empty in ribs.visualize ({pr}`513`)
 - Update QDax visualizations to match QDax 0.5.0 ({pr}`502`)
 - Skip qdax tests if qdax not installed ({pr}`491`)
 - Move yapf after isort in pre-commit ({pr}`490`)
@@ -85,6 +89,7 @@ https://docs.pyribs.org/en/stable/whats-new.html
 
 #### API
 
+- Add GeneticAlgorithmEmitter with Internal Operator Support ({pr} `427`)
 - Support alternative centroid generation methods in CVTArchive ({pr}`417`,
   {pr}`437`)
 - Add PyCMAEvolutionStrategy for using pycma in ES emitters ({pr}`434`)

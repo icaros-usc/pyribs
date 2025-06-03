@@ -15,28 +15,13 @@ class IsoLineOperator(OperatorBase):
             generate solutions.
         line_sigma (float): Scale factor for the line distribution used when
             generating solutions.
-        sigma (float or array-like): Standard deviation of the Gaussian
-            distribution. Note we assume the Gaussian is diagonal, so if this
-            argument is an array, it must be 1D.
-        lower_bounds (array-like): Upper bounds of the solution space. Passed in
-            by emitter
-        upper_bounds (array-like): Upper bounds of the solution space. Passed in
-            by emitter
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
     """
 
-    def __init__(self,
-                 lower_bounds,
-                 upper_bounds,
-                 iso_sigma,
-                 line_sigma,
-                 seed=None):
+    def __init__(self, iso_sigma, line_sigma, seed=None):
         self._iso_sigma = iso_sigma
         self._line_sigma = line_sigma
-        self._lower_bounds = lower_bounds
-        self._upper_bounds = upper_bounds
-
         self._rng = np.random.default_rng(seed)
 
     @property
@@ -73,4 +58,4 @@ class IsoLineOperator(OperatorBase):
         ).astype(elites.dtype)
         solution_batch = elites + iso_gaussian + line_gaussian * directions
 
-        return np.clip(solution_batch, self._lower_bounds, self._upper_bounds)
+        return solution_batch

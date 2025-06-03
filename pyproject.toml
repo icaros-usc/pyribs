@@ -1,0 +1,134 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ribs"
+dynamic = ["version", "readme"]
+authors = [
+  { name = "ICAROS Lab pyribs Team", email = "team@pyribs.org" },
+]
+description = "A bare-bones Python library for quality diversity optimization."
+license = "MIT"
+keywords = ["ribs", "quality diversity", "optimization"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.9.0"
+dependencies = [
+  # numpy>=1.17.0 is when default_rng becomes available;
+  # scikit-learn 1.1.0 requires numpy 1.17.3+
+  "numpy>=1.17.3",
+  "numpy_groupies>=0.9.16",  # Supports Python 3.7 and up.
+  "numba>=0.51.0",
+  "pandas>=1.0.0",
+  "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
+  "scikit-learn>=1.1.0",  # Primarily used in CVTArchive.
+  "scipy>=1.7.0",  # Primarily used in CVTArchive.
+  "threadpoolctl>=3.0.0",
+]
+
+[project.optional-dependencies]
+visualize = [
+  "matplotlib>=3.0.0",
+  "shapely>=2.0.0",
+]
+pycma = [
+  "cma",
+]
+pymoo = [
+  "pymoo",
+]
+# All dependencies except for dev. Don't worry if there are duplicate
+# dependencies, since setuptools automatically handles duplicates.
+all = [
+    ### visualize ###
+    "matplotlib>=3.0.0",
+    "shapely>=2.0.0",
+
+    ### cma ###
+    "cma",
+
+  ### pymoo ###
+  "pymoo",
+]
+dev = [
+  "pip>=20.3",
+  "pylint",
+  "yapf",
+  "pre-commit",
+
+  # Testing
+  "python-box[all]~=7.0",
+  "pytest==8.3.5",
+  "pytest-cov==6.0.0",
+  "pytest-benchmark==5.1.0",
+  "pytest-xdist==3.6.1",
+
+  # Documentation
+  "myst-nb==0.17.1",
+  "Sphinx==4.5.0",
+  "sphinx-autobuild==2021.3.14",
+  "sphinx-autodoc-typehints==1.18.2",
+  "sphinx-codeautolink==0.12.1",
+  "sphinx-copybutton==0.3.1",
+  "sphinx-jinja2-compat==0.2.0",
+  "sphinx-material==0.0.32",
+  "sphinx-prompt==1.5.0",
+  "sphinx-tabs==3.3.1",
+  "sphinx-toolbox==3.1.0",
+  "sphinxcontrib-applehelp==1.0.4",
+  "sphinxcontrib-devhelp==1.0.2",
+  "sphinxcontrib-htmlhelp==2.0.1",
+  "sphinxcontrib-jsmath==1.0.1",
+  "sphinxcontrib-qthelp==1.0.3",
+  "sphinxcontrib-serializinghtml==1.1.5",
+
+  # Distribution
+  "build",
+  "check-wheel-contents",
+  "twine",
+]
+
+[project.urls]
+Homepage = "https://pyribs.org"
+Repository = "https://github.com/icaros-usc/pyribs"
+Documentation = "https://docs.pyribs.org"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["ribs", "ribs.*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "ribs.__version__"}
+readme = {file = ["README.md", "HISTORY.md"], content-type = "text/markdown"}
+
+[tool.isort]
+known_first_party = "ribs"
+line_length = 80
+
+[tool.yapf]
+based_on_style = "google"
+column_limit = 80
+indent_width = 4
+
+[tool.pytest.ini_options]
+python_files = "*_test.py"
+python_functions = "test_*"
+addopts = "-v --cov-report term-missing --cov=ribs"
+markers = "style"
