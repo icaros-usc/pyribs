@@ -8,7 +8,7 @@ from matplotlib.testing.decorators import image_comparison
 from ribs.visualize import parallel_axes_plot
 
 from .grid_archive_heatmap_test import (  # pylint: disable = unused-import
-    grid_archive_2d, grid_archive_3d)
+    grid_archive_2d, grid_archive_3d, grid_archive_3d_empty)
 
 # pylint: disable = redefined-outer-name
 
@@ -70,6 +70,14 @@ def test_3d_width2_alpha2(grid_archive_3d):
 def test_3d_custom_objective_limits(grid_archive_3d):
     plt.figure(figsize=(8, 6))
     parallel_axes_plot(grid_archive_3d, vmin=-2.0, vmax=-1.0)
+
+
+@image_comparison(baseline_images=["3d_limits_when_empty"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_3d_limits_when_empty(grid_archive_3d_empty):
+    plt.figure(figsize=(8, 6))
+    parallel_axes_plot(grid_archive_3d_empty, vmin=None, vmax=None)
 
 
 @image_comparison(

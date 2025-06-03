@@ -3,5 +3,7 @@ include HISTORY.md
 include LICENSE
 include README.md
 
+exclude tests
+
 global-exclude __pycache__
 global-exclude *.py[co]
