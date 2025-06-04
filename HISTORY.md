@@ -6,6 +6,7 @@
 
 #### API
 
+- Add retessellate method to GridArchive ({pr}`516`)
 - **Backwards-incompatible:** Tidy up operator implementation ({pr}`507`,
   {pr}`510`)
 - Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
