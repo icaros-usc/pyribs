@@ -43,7 +43,8 @@ def assert_archive_elites(
     # Check the number of solutions.
     assert len(data["index"]) == batch_size
 
-    index_batch = archive.grid_to_int_index(grid_indices_batch)
+    if grid_indices_batch is not None:
+        index_batch = archive.grid_to_int_index(grid_indices_batch)
 
     # Enforce a one-to-one correspondence between entries in the archive and in
     # the provided input -- see
@@ -67,8 +68,10 @@ def assert_archive_elites(
                 data["objective"][j], objective_batch[i]))
             measures_match = (measures_batch is None or np.allclose(
                 data["measures"][j], measures_batch[i]))
-            index_match = (grid_indices_batch is None or
-                           data["index"][j] == index_batch[i])
+            index_match = (
+                grid_indices_batch is None or
+                # pylint: disable-next = possibly-used-before-assignment
+                data["index"][j] == index_batch[i])
 
             # Used for testing custom fields.
             metadata_match = (metadata_batch is None or
