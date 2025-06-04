@@ -43,8 +43,7 @@ def assert_archive_elites(
     # Check the number of solutions.
     assert len(data["index"]) == batch_size
 
-    if grid_indices_batch is not None:
-        index_batch = archive.grid_to_int_index(grid_indices_batch)
+    index_batch = archive.grid_to_int_index(grid_indices_batch)
 
     # Enforce a one-to-one correspondence between entries in the archive and in
     # the provided input -- see
@@ -846,3 +845,97 @@ def test_cqd_score_with_two_elites():
     # For theta=0, the score should be max(0.25 - 0 * 0.5, 0 - 0 * 0) = 0.25
     # For theta=1, the score should be max(0.25 - 1 * 0.5, 0 - 1 * 0) = 0
     assert np.isclose(score, 0.25 + 0)
+
+
+def test_retessellate_bad_learning_rate():
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[2, 2],
+        ranges=[(-1, 1), (-1, 1)],
+        # We only support retessellating with learning_rate=1.0.
+        learning_rate=0.1,
+        threshold_min=0.0,
+    )
+    with pytest.raises(ValueError):
+        archive.retessellate([1, 2, 3])
+
+
+def test_retessellate_wrong_dims():
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[2, 2],
+        ranges=[(-1, 1), (-1, 1)],
+    )
+    with pytest.raises(ValueError):
+        # This is a 3D measure space when the original measure space was 2D.
+        archive.retessellate([1, 2, 3])
+
+
+def test_retessellate_into_bigger_dims():
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[2, 2],
+        ranges=[(-1, 1), (-1, 1)],
+    )
+    archive.add(
+        solution=[[1, 2, 3], [4, 5, 6]],
+        objective=[1.0, 2.0],
+        measures=[[0.75, 0.75], [-0.75, -0.75]],
+    )
+
+    assert np.all(archive.dims == [2, 2])
+    assert len(archive.boundaries) == 2
+    assert np.isclose(archive.boundaries[0], [-1, 0, 1]).all()
+    assert np.isclose(archive.boundaries[1], [-1, 0, 1]).all()
+    assert_archive_elites(
+        archive=archive,
+        batch_size=2,
+        solution_batch=[[1, 2, 3], [4, 5, 6]],
+        objective_batch=[1.0, 2.0],
+        measures_batch=[[0.75, 0.75], [-0.75, -0.75]],
+        grid_indices_batch=[[1, 1], [0, 0]],
+    )
+
+    archive.retessellate([4, 4])
+
+    assert np.all(archive.dims == [4, 4])
+    assert len(archive.boundaries) == 2
+    assert np.isclose(archive.boundaries[0], [-1, -0.5, 0, 0.5, 1]).all()
+    assert np.isclose(archive.boundaries[1], [-1, -0.5, 0, 0.5, 1]).all()
+    assert_archive_elites(
+        archive=archive,
+        batch_size=2,
+        solution_batch=[[1, 2, 3], [4, 5, 6]],
+        objective_batch=[1.0, 2.0],
+        measures_batch=[[0.75, 0.75], [-0.75, -0.75]],
+        grid_indices_batch=[[3, 3], [0, 0]],
+    )
+
+
+def test_retessellate_into_smaller_dims():
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[2, 2],
+        ranges=[(-1, 1), (-1, 1)],
+    )
+    archive.add(
+        solution=[[1, 2, 3], [4, 5, 6]],
+        objective=[1.0, 2.0],
+        measures=[[0.75, 0.75], [-0.75, -0.75]],
+    )
+
+    archive.retessellate([1, 1])
+
+    assert np.all(archive.dims == [1, 1])
+    assert len(archive.boundaries) == 2
+    assert np.isclose(archive.boundaries[0], [-1, 1]).all()
+    assert np.isclose(archive.boundaries[1], [-1, 1]).all()
+    # Only the elite with higher objective should be kept.
+    assert_archive_elites(
+        archive=archive,
+        batch_size=1,
+        solution_batch=[[4, 5, 6]],
+        objective_batch=[2.0],
+        measures_batch=[[-0.75, -0.75]],
+        grid_indices_batch=[[0, 0]],
+    )
