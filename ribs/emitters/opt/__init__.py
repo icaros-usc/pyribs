@@ -1,15 +1,10 @@
-"""Various optimizers which are employed across emitters.
+"""Various optimizers that are employed across emitters.
 
-There are gradient-based optimizers which inherit from :class:`GradientOptBase`
-and evolution strategies which inherit from :class:`EvolutionStrategyBase`. When
-specifying optimizers for an emitter, one can pass in the optimizer class
-itself, or the string name of the optimizer, or an abbreviated name. The
-supported abbreviations are as follows.
-
-For gradient-based optimizers (inheriting from :class:`GradientOptBase`):
-
-* ``adam``: :class:`AdamOpt`
-* ``gradient_ascent``: :class:`GradientAscentOpt`
+This subpackage contains evolution strategies that inherit from
+:class:`EvolutionStrategyBase` and gradient-based optimizers that inherit from
+:class:`GradientOptBase`. When specifying optimizers for an emitter, one can
+pass in the optimizer class itself, or the string name of the optimizer, or an
+abbreviated name. The abbreviations are listed below.
 
 For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
 
@@ -28,6 +23,15 @@ For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
     ribs.emitters.opt.PyCMAEvolutionStrategy
     ribs.emitters.opt.SeparableCMAEvolutionStrategy
     ribs.emitters.opt.EvolutionStrategyBase
+
+For gradient-based optimizers (inheriting from :class:`GradientOptBase`):
+
+* ``adam``: :class:`AdamOpt`
+* ``gradient_ascent``: :class:`GradientAscentOpt`
+
+.. autosummary::
+    :toctree:
+
     ribs.emitters.opt.AdamOpt
     ribs.emitters.opt.GradientAscentOpt
     ribs.emitters.opt.GradientOptBase
