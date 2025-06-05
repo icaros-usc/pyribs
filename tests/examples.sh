@@ -56,6 +56,11 @@ install_deps examples/lunar_lander.py
 LUNAR_LANDER_OUTPUT="${TMPDIR}/lunar_lander_output"
 python examples/lunar_lander.py --iterations 5 --outdir "${LUNAR_LANDER_OUTPUT}"
 
+# bop_elites.py
+install_deps examples/bop_elites.py
+BOP_ELITES_OUTPUT="${TMPDIR}/bop_elites_output"
+python examples/bop_elites.py --iterations 5 --outdir "${BOP_ELITES_OUTPUT}"
+
 # Cleanup.
 rm -rf $TMPDIR
 echo "Success in $SECONDS seconds"

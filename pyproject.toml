@@ -49,6 +49,9 @@ visualize = [
 pycma = [
   "cma",
 ]
+pymoo = [
+  "pymoo",
+]
 # All dependencies except for dev. Don't worry if there are duplicate
 # dependencies, since setuptools automatically handles duplicates.
 all = [
@@ -58,6 +61,9 @@ all = [
 
   ### cma ###
   "cma",
+
+  ### pymoo ###
+  "pymoo",
 ]
 dev = [
   "pip>=20.3",

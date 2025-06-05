@@ -21,8 +21,10 @@ inheriting from :class:`~ribs.emitters.EmitterBase`.
     ribs.emitters.GradientArborescenceEmitter
     ribs.emitters.GradientOperatorEmitter
     ribs.emitters.IsoLineEmitter
+    ribs.emitters.BayesianOptimizationEmitter
     ribs.emitters.EmitterBase
 """
+from ribs.emitters._bayesian_opt_emitter import BayesianOptimizationEmitter
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters._evolution_strategy_emitter import EvolutionStrategyEmitter
 from ribs.emitters._gaussian_emitter import GaussianEmitter
@@ -39,5 +41,6 @@ __all__ = [
     "GradientArborescenceEmitter",
     "GradientOperatorEmitter",
     "IsoLineEmitter",
+    "BayesianOptimizationEmitter",
     "EmitterBase",
 ]
