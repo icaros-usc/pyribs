@@ -101,6 +101,7 @@ class GridArchive(ArchiveBase):
         ArchiveBase.__init__(
             self,
             solution_dim=solution_dim,
+            objective_dim=(),
             measure_dim=len(self._dims),
         )
 
