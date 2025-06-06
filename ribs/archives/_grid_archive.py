@@ -93,15 +93,18 @@ class GridArchive(ArchiveBase):
                  seed=None,
                  dtype=np.float64,
                  extra_fields=None):
-        self._seed = seed
-        self._rng = np.random.default_rng(seed)
-
         self._dims = np.array(dims, dtype=np.int32)
         if len(self._dims) != len(ranges):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
                              f"(length {len(ranges)}) must be the same length")
-        self._solution_dim = solution_dim
-        self._measure_dim = len(self._dims)
+
+        ArchiveBase.__init__(
+            self,
+            solution_dim=solution_dim,
+            measure_dim=len(self._dims),
+        )
+
+        self._rng = np.random.default_rng(seed)
 
         extra_fields = extra_fields or {}
         reserved_fields = {
@@ -184,16 +187,6 @@ class GridArchive(ArchiveBase):
     def cells(self):
         """int: Total number of cells in the archive."""
         return self._store.capacity
-
-    @property
-    def measure_dim(self):
-        """int: Dimensionality of the measure space."""
-        return self._measure_dim
-
-    @property
-    def solution_dim(self):
-        """int: Dimensionality of the solutions in the archive."""
-        return self._solution_dim
 
     @property
     def learning_rate(self):
@@ -298,6 +291,7 @@ class GridArchive(ArchiveBase):
         return len(self._store) == 0
 
     def clear(self):
+        """Removes all elites in the archive."""
         self._store.clear()
         self._stats_reset()
 

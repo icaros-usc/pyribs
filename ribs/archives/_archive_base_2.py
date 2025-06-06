@@ -3,7 +3,40 @@ from abc import ABC, abstractmethod
 
 
 class ArchiveBase(ABC):
-    """Base class for archives."""
+    """Base class for archives.
+
+    Args:
+        solution_dim (int): Dimensionality of the solution space.
+        objective_dim (int or empty tuple): Dimensionality of the objective space.
+            Typically, we consider single-objective optimization problems where
+            the objective is a scalar, in which case this argument should be an
+            empty tuple ``()``. In multi-objective optimization problems, this
+            argument should be an integer indicating the number of objectives.
+        measure_dim (int): Dimensionality of the measure space.
+    """
+
+    def __init__(self, *, solution_dim, objective_dim, measure_dim):
+        self._solution_dim = solution_dim
+        self._objective_dim = objective_dim
+        self._measure_dim = measure_dim
+
+    @property
+    def solution_dim(self):
+        """int: Dimensionality of the solution space."""
+        return self._solution_dim
+
+    @property
+    def objective_dim(self):
+        """int or empty tuple: Dimensionality of the objective space.
+
+        The empty tuple ``()`` indicates a scalar objective.
+        """
+        return self._objective_dim
+
+    @property
+    def measure_dim(self):
+        """int: Dimensionality of the measure space."""
+        return self._measure_dim
 
     @property
     @abstractmethod
@@ -18,148 +51,69 @@ class ArchiveBase(ABC):
     def empty(self):
         """bool: Whether the archive is empty."""
 
-    # TODO: Make this not required.
-    @abstractmethod
     def clear(self):
-        """Removes all elites from the archive.
+        """Resets the archive, e.g., by removing all elites in it.
 
-        After this method is called, the archive will be :attr:`empty`.
+        After calling this method, the archive will be :attr:`empty`.
+
+        Child classes are not required to implement this method.
         """
+        raise NotImplementedError(
+            "`clear` has not been implemented on this archive")
 
-    # TODO: Tidy up return value; update docstring.
     @abstractmethod
     def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
 
-        Each solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  If multiple
-        solutions in the batch end up in the same cell, we only insert the
-        solution with the highest objective. If multiple solutions end up in the
-        same cell and tie for the highest objective, we insert the solution that
-        appears first in the batch.
+        The indices of all arguments should "correspond" to each other, i.e.,
+        ``solution[i]``, ``objective[i]``, and ``measures[i]`` should be the
+        solution parameters, objective, and measures for solution ``i``.
 
-        For the default values of ``learning_rate`` and ``threshold_min``, the
-        threshold for each cell is updated by taking the maximum objective value
-        among all the solutions that landed in the cell, resulting in the same
-        behavior as in the vanilla MAP-Elites archive. However, for other
-        settings, the threshold is updated with the batch update rule described
-        in the appendix of `Fontaine 2022 <https://arxiv.org/abs/2205.10752>`_.
-
-        .. note:: The indices of all arguments should "correspond" to each
-            other, i.e. ``solution[i]``, ``objective[i]``,
-            ``measures[i]``, and should be the solution parameters,
-            objective, and measures for solution ``i``.
+        For API consistency, all child classes should take in ``solution``,
+        ``objective``, and ``measures``. There may be cases where one of these
+        parameters is not necessary, e.g., ``objective`` is not required in
+        diversity optimization settings. In such cases, it should be possible to
+        pass in ``None`` as the argument.
 
         Args:
             solution (array-like): (batch_size, :attr:`solution_dim`) array of
                 solution parameters.
-            objective (array-like): (batch_size,) array with objective function
-                evaluations of the solutions.
+            objective (array-like): (batch_size, :attr:`objective_dim`) array
+                with objective function evaluations of the solutions.
             measures (array-like): (batch_size, :attr:`measure_dim`) array with
                 measure space coordinates of all the solutions.
             fields (keyword arguments): Additional data for each solution. Each
-                argument should be an array with batch_size as the first
+                argument should be an array with ``batch_size`` as the first
                 dimension.
 
         Returns:
             dict: Information describing the result of the add operation. The
-            dict contains the following keys:
-
-            - ``"status"`` (:class:`numpy.ndarray` of :class:`int`): An array of
-              integers that represent the "status" obtained when attempting to
-              insert each solution in the batch. Each item has the following
-              possible values:
-
-              - ``0``: The solution was not added to the archive.
-              - ``1``: The solution improved the objective value of a cell
-                which was already in the archive.
-              - ``2``: The solution discovered a new cell in the archive.
-
-              All statuses (and values, below) are computed with respect to the
-              *current* archive. For example, if two solutions both introduce
-              the same new archive cell, then both will be marked with ``2``.
-
-              The alternative is to depend on the order of the solutions in the
-              batch -- for example, if we have two solutions ``a`` and ``b``
-              which introduce the same new cell in the archive, ``a`` could be
-              inserted first with status ``2``, and ``b`` could be inserted
-              second with status ``1`` because it improves upon ``a``. However,
-              our implementation does **not** do this.
-
-              To convert statuses to a more semantic format, cast all statuses
-              to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
-              add_info["status"]]``.
-
-            - ``"value"`` (:class:`numpy.ndarray` of
-              :attr:`dtypes` ["objective"]): An array with values for each
-              solution in the batch. With the default values of ``learning_rate
-              = 1.0`` and ``threshold_min = -np.inf``, the meaning of each value
-              depends on the corresponding ``status`` and is identical to that
-              in CMA-ME (`Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_):
-
-              - ``0`` (not added): The value is the "negative improvement," i.e.
-                the objective of the solution passed in minus the objective of
-                the elite still in the archive (this value is negative because
-                the solution did not have a high enough objective to be added to
-                the archive).
-              - ``1`` (improve existing cell): The value is the "improvement,"
-                i.e. the objective of the solution passed in minus the objective
-                of the elite previously in the archive.
-              - ``2`` (new cell): The value is just the objective of the
-                solution.
-
-              In contrast, for other values of ``learning_rate`` and
-              ``threshold_min``, each value is equivalent to the objective value
-              of the solution minus the threshold of its corresponding cell in
-              the archive.
-
-        Raises:
-            ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective`` or ``measures`` has non-finite values (inf
-                or NaN).
+            content of the dict is to be determined by child classes.
         """
 
-    # TODO: Specify it is not required to be implemented.
     def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.
 
-        The solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  The threshold is
-        also updated if the solution was inserted.
-
-        .. note::
-            To make it more amenable to modifications, this method's
-            implementation is designed to be readable at the cost of
-            performance, e.g., none of its operations are modified. If you need
-            performance, we recommend using :meth:`add`.
+        Child classes are not required to implement this method.
 
         Args:
             solution (array-like): Parameters of the solution.
-            objective (float): Objective function evaluation of the solution.
+            objective (scalar or array-like): Objective function evaluation of
+                the solution.
             measures (array-like): Coordinates in measure space of the solution.
             fields (keyword arguments): Additional data for the solution.
 
         Returns:
-            dict: Information describing the result of the add operation. The
-            dict contains ``status`` and ``value`` keys; refer to :meth:`add`
-            for the meaning of status and value.
-
-        Raises:
-            ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
-                has non-finite values.
+            dict: Information describing the result of the add operation. As in
+            :meth:`add`, the content of this dict is decided by child classes.
         """
-        # TODO
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "`add_single` has not been implemented on this archive")
 
+    # TODO
     @abstractmethod
     def retrieve(self, measures):
-        """Retrieves the elites with measures in the same cells as the measures
-        specified.
+        """Queries the archive for a batch of solutions with the given measures.
 
         This method operates in batch, i.e., it takes in a batch of measures and
         outputs the batched data for the elites::
@@ -259,7 +213,7 @@ class ArchiveBase(ABC):
     # TODO: Unclear what parameters should be.
     @abstractmethod
     def data(self, fields=None, return_type="dict"):
-        """Retrieves data for all elites in the archive.
+        """Returns all data in the archive.
 
         Args:
             fields (str or array-like of str): List of fields to include. By
