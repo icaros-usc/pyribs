@@ -7,13 +7,15 @@ class ArchiveBase(ABC):
 
     Archives in pyribs store solutions and their objective and measure values,
     as well as associated components like k-D trees and density estimators. The
-    primary method of an archive is to :meth:`add` new solutions. There are also
-    methods to read from the archive, such as :meth:`retrieve` and :meth:`data`.
+    primary method of an archive is to write new solutions to it with
+    :meth:`add`. There are also methods to read from the archive, such as
+    :meth:`retrieve` and :meth:`data`. Once they are in the archive, solutions
+    and their corresponding data are referred to as *elites*.
 
     Due to the flexibility of archives and workflows available in pyribs, it is
-    possible to design algorithms that use only a small subset of these methods.
-    As such, none of the methods listed here are required to be implemented in
-    child classes, although by default they will raise
+    possible to design algorithms that call only a small subset of these
+    methods. As such, none of the methods listed here are required to be
+    implemented in child classes, although by default they will raise
     :class:`NotImplementedError` when called.
 
     Args:
@@ -131,105 +133,57 @@ class ArchiveBase(ABC):
     ## Methods for reading from the archive ##
 
     def retrieve(self, measures):
-        """Queries the archive for a batch of solutions with the given measures.
+        """Queries the archive for a batch of elites with the given measures.
 
-        This method operates in batch, i.e., it takes in a batch of measures and
+        This method operates in batch. It takes in a batch of measures and
         outputs the batched data for the elites::
 
             occupied, elites = archive.retrieve(...)
+            occupied  # Shape: (batch_size,)
             elites["solution"]  # Shape: (batch_size, solution_dim)
-            elites["objective"]
-            elites["measures"]
-            elites["threshold"]
-            elites["index"]
+            elites["objective"]  # Shape: (batch_size, objective_dim)
+            elites["measures"]  # Shape: (batch_size, measure_dim)
+            ...
 
-        If the cell associated with ``elites["measures"][i]`` has an elite in
-        it, then ``occupied[i]`` will be True. Furthermore,
-        ``elites["solution"][i]``, ``elites["objective"][i]``,
-        ``elites["measures"][i]``, ``elites["threshold"][i]``, and
-        ``elites["index"][i]`` will be set to the properties of the elite. Note
-        that ``elites["measures"][i]`` may not be equal to the ``measures[i]``
-        passed as an argument, since the measures only need to be in the same
-        archive cell.
-
-        If the cell associated with ``measures[i]`` *does not* have any elite in
-        it, then ``occupied[i]`` will be set to False. Furthermore, the
-        corresponding outputs will be set to empty values -- namely:
-
-        * NaN for floating-point fields
-        * -1 for the "index" field
-        * 0 for integer fields
-        * None for object fields
-
-        If you need to retrieve a *single* elite associated with some measures,
-        consider using :meth:`retrieve_single`.
+        ``occupied`` indicates whether an elite was found for each measure,
+        i.e., whether the archive was *occupied* at each queried measure. If
+        ``occupied[i]`` is True, then ``elites["solution"][i]``,
+        ``elites["objective"][i]``, ``elites["measures"][i]``, and other fields
+        will contain the data of the elite for the input ``measures[i]``. If
+        ``occupied[i]`` is False, then those fields will instead have arbitrary
+        values, e.g., ``elites["solution"][i]`` may be set to all NaN.
 
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
-                coordinates in measure space.
+                measure space points at which to retrieve solutions.
         Returns:
-            tuple: 2-element tuple of (occupied array, dict). The occupied array
-            indicates whether each of the cells indicated by the coordinates in
-            ``measures`` has an elite, while the dict contains the data of those
-            elites. The dict maps from field name to the corresponding array.
-        Raises:
-            ValueError: ``measures`` is not of shape (batch_size,
-                :attr:`measure_dim`).
-            ValueError: ``measures`` has non-finite values (inf or NaN).
+            tuple: 2-element tuple of (boolean ``occupied`` array, dict of elite
+            data). See above for description.
         """
         raise NotImplementedError(
             "`retrieve` has not been implemented in this archive")
 
     def retrieve_single(self, measures):
-        """Retrieves the elite with measures in the same cell as the measures
-        specified.
+        """Queries the archive for an elite with the given measures.
 
         While :meth:`retrieve` takes in a *batch* of measures, this method takes
         in the measures for only *one* solution and returns a single bool and a
-        dict with single entries.
+        dict with single entries::
+
+            occupied, elite = archive.retrieve_single(...)
+            occupied  # Bool
+            elite["solution"]  # Shape: (solution_dim,)
+            elite["objective"]  # Shape: (objective_dim,)
+            elite["measures"]  # Shape: (measure_dim,)
+            ...
 
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures.
         Returns:
-            tuple: If there is an elite with measures in the same cell as the
-            measures specified, then this method returns a True value and a dict
-            where all the fields hold the info of the elite. Otherwise, this
-            method returns a False value and a dict filled with the same "empty"
-            values described in :meth:`retrieve`.
-        Raises:
-            ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
-            ValueError: ``measures`` has non-finite values (inf or NaN).
+            tuple: 2-element tuple of (boolean, dict of data for one elite)
         """
         raise NotImplementedError(
             "`retrieve_single` has not been implemented in this archive")
-
-    # TODO: I'm unclear whether we want this here, as it seems to be a very
-    # specific form of selection.
-    def sample_elites(self, n):
-        """Randomly samples elites from the archive.
-
-        Currently, this sampling is done uniformly at random. Furthermore, each
-        sample is done independently, so elites may be repeated in the sample.
-        Additional sampling methods may be supported in the future.
-
-        Example:
-
-            ::
-
-                elites = archive.sample_elites(16)
-                elites["solution"]  # Shape: (16, solution_dim)
-                elites["objective"]
-                ...
-
-        Args:
-            n (int): Number of elites to sample.
-        Returns:
-            dict: Holds a batch of elites randomly selected from the archive.
-        Raises:
-            IndexError: The archive is empty.
-        """
-        raise NotImplementedError(
-            "`sample_elites` has not been implemented in this archive")
 
     # TODO: Unclear what parameters should be.
     def data(self, fields=None, return_type="dict"):
@@ -314,3 +268,31 @@ class ArchiveBase(ABC):
         """ # pylint: disable = line-too-long
         raise NotImplementedError(
             "`data` has not been implemented in this archive")
+
+    # TODO: I'm unclear whether we want this here, as it seems to be a very
+    # specific form of selection.
+    def sample_elites(self, n):
+        """Randomly samples elites from the archive.
+
+        Currently, this sampling is done uniformly at random. Furthermore, each
+        sample is done independently, so elites may be repeated in the sample.
+        Additional sampling methods may be supported in the future.
+
+        Example:
+
+            ::
+
+                elites = archive.sample_elites(16)
+                elites["solution"]  # Shape: (16, solution_dim)
+                elites["objective"]
+                ...
+
+        Args:
+            n (int): Number of elites to sample.
+        Returns:
+            dict: Holds a batch of elites randomly selected from the archive.
+        Raises:
+            IndexError: The archive is empty.
+        """
+        raise NotImplementedError(
+            "`sample_elites` has not been implemented in this archive")
