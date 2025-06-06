@@ -1,9 +1,20 @@
 """Provides ArchiveBase."""
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 class ArchiveBase(ABC):
     """Base class for archives.
+
+    Archives in pyribs store solutions and their objective and measure values,
+    as well as associated components like k-D trees and density estimators. The
+    primary method of an archive is to :meth:`add` new solutions. There are also
+    methods to read from the archive, such as :meth:`retrieve` and :meth:`data`.
+
+    Due to the flexibility of archives and workflows available in pyribs, it is
+    possible to design algorithms that use only a small subset of these methods.
+    As such, none of the methods listed here are required to be implemented in
+    child classes, although by default they will raise
+    :class:`NotImplementedError` when called.
 
     Args:
         solution_dim (int): Dimensionality of the solution space.
@@ -19,6 +30,8 @@ class ArchiveBase(ABC):
         self._solution_dim = solution_dim
         self._objective_dim = objective_dim
         self._measure_dim = measure_dim
+
+    ## Properties of the archive ##
 
     @property
     def solution_dim(self):
@@ -39,29 +52,22 @@ class ArchiveBase(ABC):
         return self._measure_dim
 
     @property
-    @abstractmethod
     def stats(self):
         """:class:`~ribs.archives.ArchiveStats`: Statistics about the archive.
 
         See :class:`~ribs.archives.ArchiveStats` for more info.
         """
+        raise NotImplementedError(
+            "`stats` has not been implemented in this archive")
 
     @property
-    @abstractmethod
     def empty(self):
         """bool: Whether the archive is empty."""
-
-    def clear(self):
-        """Resets the archive, e.g., by removing all elites in it.
-
-        After calling this method, the archive will be :attr:`empty`.
-
-        Child classes are not required to implement this method.
-        """
         raise NotImplementedError(
-            "`clear` has not been implemented on this archive")
+            "`empty` has not been implemented in this archive")
 
-    @abstractmethod
+    ## Methods for writing to the archive ##
+
     def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
 
@@ -90,6 +96,8 @@ class ArchiveBase(ABC):
             dict: Information describing the result of the add operation. The
             content of the dict is to be determined by child classes.
         """
+        raise NotImplementedError(
+            "`add` has not been implemented in this archive")
 
     def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.
@@ -108,10 +116,20 @@ class ArchiveBase(ABC):
             :meth:`add`, the content of this dict is decided by child classes.
         """
         raise NotImplementedError(
-            "`add_single` has not been implemented on this archive")
+            "`add_single` has not been implemented in this archive")
 
-    # TODO
-    @abstractmethod
+    def clear(self):
+        """Resets the archive, e.g., by removing all elites in it.
+
+        After calling this method, the archive will be :attr:`empty`.
+
+        Child classes are not required to implement this method.
+        """
+        raise NotImplementedError(
+            "`clear` has not been implemented in this archive")
+
+    ## Methods for reading from the archive ##
+
     def retrieve(self, measures):
         """Queries the archive for a batch of solutions with the given measures.
 
@@ -159,6 +177,8 @@ class ArchiveBase(ABC):
                 :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
+        raise NotImplementedError(
+            "`retrieve` has not been implemented in this archive")
 
     def retrieve_single(self, measures):
         """Retrieves the elite with measures in the same cell as the measures
@@ -180,12 +200,11 @@ class ArchiveBase(ABC):
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        # TODO
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "`retrieve_single` has not been implemented in this archive")
 
     # TODO: I'm unclear whether we want this here, as it seems to be a very
     # specific form of selection.
-    @abstractmethod
     def sample_elites(self, n):
         """Randomly samples elites from the archive.
 
@@ -209,9 +228,10 @@ class ArchiveBase(ABC):
         Raises:
             IndexError: The archive is empty.
         """
+        raise NotImplementedError(
+            "`sample_elites` has not been implemented in this archive")
 
     # TODO: Unclear what parameters should be.
-    @abstractmethod
     def data(self, fields=None, return_type="dict"):
         """Returns all data in the archive.
 
@@ -292,3 +312,5 @@ class ArchiveBase(ABC):
             All data returned by this method will be a copy, i.e., the data will
             not update as the archive changes.
         """ # pylint: disable = line-too-long
+        raise NotImplementedError(
+            "`data` has not been implemented in this archive")
