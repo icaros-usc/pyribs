@@ -2,11 +2,13 @@
 import numpy as np
 from scipy.spatial import cKDTree
 
-from ribs._utils import (check_batch_shape, check_finite, check_shape,
-                         np_scalar, validate_batch, validate_single)
+from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
+                         check_shape, np_scalar, validate_batch,
+                         validate_single)
 from ribs.archives._archive_base_2 import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
+from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._transforms import (batch_entries_with_threshold,
                                        compute_best_index,
                                        compute_objective_sum)
@@ -57,6 +59,10 @@ class ProximityArchive(ArchiveBase):
         - Since the number of archive cells equals the number of elites in the
           archive, the normalized QD score (``archive.stats.norm_qd_score``)
           will always equal the mean objective (``archive.stats.obj_mean``).
+
+    By default, this archive stores the following data fields: ``solution``,
+    ``objective``, ``measures``, and ``index``. The integer ``index`` uniquely
+    identifies each cell.
 
     Args:
         solution_dim (int): Dimensionality of the solution space.
@@ -212,21 +218,6 @@ class ProximityArchive(ArchiveBase):
         """dict: The elite with the highest objective in the archive.
 
         None if there are no elites in the archive.
-
-        .. note::
-            If the archive is non-elitist (this occurs when using the archive
-            with a learning rate which is not 1.0, as in CMA-MAE), then this
-            best elite may no longer exist in the archive because it was
-            replaced with an elite with a lower objective value. This can happen
-            because in non-elitist archives, new solutions only need to exceed
-            the *threshold* of the cell they are being inserted into, not the
-            *objective* of the elite currently in the cell. See :pr:`314` for
-            more info.
-
-        .. note::
-            The best elite will contain a "threshold" key. This threshold is the
-            threshold of the best elite's cell after the best elite was inserted
-            into the archive.
         """
         return self._best_elite
 
@@ -761,26 +752,134 @@ class ProximityArchive(ArchiveBase):
                   dist_ord=None):
         """Computes the CQD score of the archive.
 
-        Refer to the documentation in :meth:`ArchiveBase.cqd_score` for more
-        info. The key difference from the base implementation is that the
-        implementation in ArchiveBase assumes the archive has a pre-defined
-        measure space with lower and upper bounds. However, by nature of being
-        unstructured, this archive has lower and upper bounds that change over
-        time. Thus, it is required to directly pass in ``target_points`` and
-        ``dist_max``.
+        .. note:: A key difference from other archives' CQD Score is that this
+            implementation requires passing in ``target_points`` and
+            ``dist_max``, since there are no lower and upper bounds for the
+            measure space in this archive.
 
+        The Continuous Quality Diversity (CQD) score was introduced in
+        `Kent 2022 <https://dl.acm.org/doi/10.1145/3520304.3534018>`_.
+
+        .. note:: This method by default assumes that the archive has an
+            ``upper_bounds`` and ``lower_bounds`` property which delineate the
+            bounds of the measure space, as is the case in
+            :class:`~ribs.archives.GridArchive`,
+            :class:`~ribs.archives.CVTArchive`, and
+            :class:`~ribs.archives.SlidingBoundariesArchive`.  If this is not
+            the case, ``dist_max`` must be passed in, and ``target_points`` must
+            be an array of custom points.
+
+        Args:
+            iterations (int): Number of times to compute the CQD score. The mean
+                CQD score across these iterations is returned.
+            target_points (int or array-like): Number of target points to
+                generate, or an (iterations, n, measure_dim) array which
+                lists n target points to list on each iteration. When an int is
+                passed, the points are sampled uniformly within the bounds of
+                the measure space.
+            penalties (int or array-like): Number of penalty values over which
+                to compute the score (the values are distributed evenly over the
+                range [0,1]). Alternatively, this may be a 1D array which
+                explicitly lists the penalty values. Known as :math:`\\theta` in
+                Kent 2022.
+            obj_min (float): Minimum objective value, used when normalizing the
+                objectives.
+            obj_max (float): Maximum objective value, used when normalizing the
+                objectives.
+            dist_max (float): Maximum distance between points in measure space.
+                Defaults to the distance between the extremes of the measure
+                space bounds (the type of distance is computed with the order
+                specified by ``dist_ord``). Known as :math:`\\delta_{max}` in
+                Kent 2022.
+            dist_ord: Order of the norm to use for calculating measure space
+                distance; this is passed to :func:`numpy.linalg.norm` as the
+                ``ord`` argument. See :func:`numpy.linalg.norm` for possible
+                values. The default is to use Euclidean distance (L2 norm).
+        Returns:
+            The mean CQD score obtained with ``iterations`` rounds of
+            calculations.
         Raises:
-            ValueError: dist_max and target_points were not passed in.
+            RuntimeError: The archive does not have the bounds properties
+                mentioned above, and dist_max is not specified or the target
+                points are not provided.
+            ValueError: target_points or penalties is an array with the wrong
+                shape.
         """
-
         if dist_max is None or np.isscalar(target_points):
             raise ValueError(
                 "In ProximityArchive, dist_max must be passed "
                 "in, and target_points must be passed in as a custom "
                 "array of points.")
 
-        return super().cqd_score(
+        if (not (hasattr(self, "upper_bounds") and
+                 hasattr(self, "lower_bounds")) and
+            (dist_max is None or np.isscalar(target_points))):
+            raise RuntimeError(
+                "When the archive does not have lower_bounds and "
+                "upper_bounds properties, dist_max must be specified, "
+                "and target_points must be an array")
+
+        if np.isscalar(target_points):
+            # pylint: disable = no-member
+            target_points = self._rng.uniform(
+                low=self.lower_bounds,
+                high=self.upper_bounds,
+                size=(iterations, target_points, self.measure_dim),
+            )
+        else:
+            # Copy since this is returned.
+            target_points = np.copy(target_points)
+            if (target_points.ndim != 3 or
+                    target_points.shape[0] != iterations or
+                    target_points.shape[2] != self.measure_dim):
+                raise ValueError(
+                    "Expected target_points to be a 3D array with "
+                    f"shape ({iterations}, n, {self.measure_dim}) "
+                    "(i.e. shape (iterations, n, measure_dim)) but it had "
+                    f"shape {target_points.shape}")
+
+        if dist_max is None:
+            # pylint: disable = no-member
+            dist_max = np.linalg.norm(self.upper_bounds - self.lower_bounds,
+                                      ord=dist_ord)
+
+        if np.isscalar(penalties):
+            penalties = np.linspace(0, 1, penalties)
+        else:
+            penalties = np.copy(penalties)  # Copy since this is returned.
+            check_is_1d(penalties, "penalties")
+
+        objective_batch = self._store.data("objective")
+        measures_batch = self._store.data("measures")
+
+        norm_objectives = objective_batch / (obj_max - obj_min)
+
+        scores = np.zeros(iterations)
+
+        for itr in range(iterations):
+            # Distance calculation -- start by taking the difference between
+            # each measure i and all the target points.
+            distances = measures_batch[:, None] - target_points[itr]
+
+            # (len(archive), n_target_points) array of distances.
+            distances = np.linalg.norm(distances, ord=dist_ord, axis=2)
+
+            norm_distances = distances / dist_max
+
+            for penalty in penalties:
+                # Known as omega in Kent 2022 -- a (len(archive),
+                # n_target_points) array.
+                values = norm_objectives[:, None] - penalty * norm_distances
+
+                # (n_target_points,) array.
+                max_values_per_target = np.max(values, axis=0)
+
+                scores[itr] += np.sum(max_values_per_target)
+
+        return CQDScoreResult(
             iterations=iterations,
+            mean=np.mean(scores),
+            scores=scores,
             target_points=target_points,
             penalties=penalties,
             obj_min=obj_min,
