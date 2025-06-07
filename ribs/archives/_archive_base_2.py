@@ -5,26 +5,32 @@ from abc import ABC
 class ArchiveBase(ABC):
     """Base class for archives.
 
-    Archives in pyribs store solutions and their objective and measure values,
-    as well as associated components like k-D trees and density estimators. The
-    primary method of an archive is to write new solutions to it with
-    :meth:`add`. There are also methods to read from the archive, such as
-    :meth:`retrieve` and :meth:`data`. Once they are in the archive, solutions
-    and their corresponding data are referred to as *elites*.
+    An archive stores *elites*. Each elite consists of several data *fields*: at
+    a minimum, the elite has a *solution* and the evaluated *objective* and
+    *measures* of the solution. The elite may also include additional data
+    fields. Besides elites, archives can store components like k-D trees and
+    density estimators.
 
-    Due to the flexibility of archives and workflows available in pyribs, it is
-    possible to design algorithms that call only a small subset of these
-    methods. As such, none of the methods listed here are required to be
+    The primary method of an archive is to write new solutions to it with
+    :meth:`add`. There are also methods to read from the archive, such as
+    :meth:`retrieve` and :meth:`data`. These methods typically operate over
+    batches of inputs (e.g., adding multiple solutions at once with
+    :meth:`add`), but methods such as :meth:`add_single` and
+    :meth:`retrieve_single` support single inputs.
+
+    Due to the flexibility of workflows available in pyribs, it is possible to
+    design archives that require only a small subset of the methods in this base
+    class. As such, none of the methods listed here are required to be
     implemented in child classes, although by default they will raise
     :class:`NotImplementedError` when called.
 
     Args:
         solution_dim (int): Dimensionality of the solution space.
-        objective_dim (int or empty tuple): Dimensionality of the objective space.
-            Typically, we consider single-objective optimization problems where
-            the objective is a scalar, in which case this argument should be an
-            empty tuple ``()``. In multi-objective optimization problems, this
-            argument should be an integer indicating the number of objectives.
+        objective_dim (int or empty tuple): Dimensionality of the objective
+            space. For single-objective optimization problems where the
+            objective is a scalar, this argument should be an empty tuple
+            ``()``. In multi-objective optimization problems, this argument
+            should be an integer indicating the number of objectives.
         measure_dim (int): Dimensionality of the measure space.
     """
 
@@ -34,6 +40,12 @@ class ArchiveBase(ABC):
         self._measure_dim = measure_dim
 
     ## Properties of the archive ##
+
+    @property
+    def field_list(self):
+        """list: List of data fields in the archive."""
+        raise NotImplementedError(
+            "`field_list` has not been implemented in this archive")
 
     @property
     def solution_dim(self):
@@ -71,7 +83,7 @@ class ArchiveBase(ABC):
     ## Methods for writing to the archive ##
 
     def add(self, solution, objective, measures, **fields):
-        """Inserts a batch of solutions into the archive.
+        """Inserts a batch of solutions and their data into the archive.
 
         The indices of all arguments should "correspond" to each other, i.e.,
         ``solution[i]``, ``objective[i]``, and ``measures[i]`` should be the
@@ -102,9 +114,7 @@ class ArchiveBase(ABC):
             "`add` has not been implemented in this archive")
 
     def add_single(self, solution, objective, measures, **fields):
-        """Inserts a single solution into the archive.
-
-        Child classes are not required to implement this method.
+        """Inserts a single solution and its data into the archive.
 
         Args:
             solution (array-like): Parameters of the solution.
@@ -123,9 +133,7 @@ class ArchiveBase(ABC):
     def clear(self):
         """Resets the archive, e.g., by removing all elites in it.
 
-        After calling this method, the archive will be :attr:`empty`.
-
-        Child classes are not required to implement this method.
+        After calling this method, the archive should be :attr:`empty`.
         """
         raise NotImplementedError(
             "`clear` has not been implemented in this archive")
@@ -133,7 +141,7 @@ class ArchiveBase(ABC):
     ## Methods for reading from the archive ##
 
     def retrieve(self, measures):
-        """Queries the archive for a batch of elites with the given measures.
+        """Queries the archive for elites with the given batch of measures.
 
         This method operates in batch. It takes in a batch of measures and
         outputs the batched data for the elites::
@@ -185,23 +193,27 @@ class ArchiveBase(ABC):
         raise NotImplementedError(
             "`retrieve_single` has not been implemented in this archive")
 
-    # TODO: Unclear what parameters should be.
     def data(self, fields=None, return_type="dict"):
-        """Returns all data in the archive.
+        """Returns data of the elites in the archive.
 
         Args:
-            fields (str or array-like of str): List of fields to include. By
-                default, all fields will be included, with an additional "index"
-                as the last field ("index" can also be placed anywhere in this
-                list). This can also be a single str indicating a field name.
+            fields (str or array-like of str): List of fields to include, such
+                as ``solution``, ``objectives``, ``measures``, and other fields
+                in the archive. This can also be a single str indicating a field
+                name.
             return_type (str): Type of data to return. See below. Ignored if
                 ``fields`` is a str.
 
         Returns:
-            The data for all entries in the archive. If ``fields`` was a single
-            str, this will just be an array holding data for the given field.
-            Otherwise, this data can take the following forms, depending on the
-            ``return_type`` argument:
+            The data for all elites in the archive. All data returned by this
+            method will be a copy, i.e., the data will not update as the archive
+            changes. If ``fields`` was a single str, the returned data will just
+            be an array holding data for the given field, such as::
+
+                  measures = archive.data("measures")
+
+            Otherwise, the returned data can take the following forms, depending
+            on the ``return_type`` argument:
 
             - ``return_type="dict"``: Dict mapping from the field name to the
               field data at the given indices. An example is::
@@ -210,20 +222,17 @@ class ArchiveBase(ABC):
                     "solution": [[1.0, 1.0, ...], ...],
                     "objective": [1.5, ...],
                     "measures": [[1.0, 2.0], ...],
-                    "threshold": [0.8, ...],
-                    "index": [4, ...],
+                    ...
                   }
 
-              Observe that we also return the indices as an ``index`` entry in
-              the dict. The keys in this dict can be modified with the
-              ``fields`` arg; duplicate fields will be ignored since the dict
-              stores unique keys.
+              The keys in this dict can be modified with the ``fields`` arg;
+              duplicate fields will be ignored since the dict stores unique
+              keys.
 
             - ``return_type="tuple"``: Tuple of arrays matching the field order
-              given in ``fields``. For instance, if ``fields`` was
-              ``["objective", "measures"]``, we would receive a tuple of
-              ``(objective_arr, measures_arr)``. In this case, the results
-              from ``retrieve`` could be unpacked as::
+              in ``fields``. For instance, if ``fields`` is
+              ``["objective", "measures"]``, this method would return a tuple of
+              ``(objective_arr, measures_arr)`` that could be unpacked as::
 
                   objective, measures = archive.data(["objective", "measures"],
                                                      return_type="tuple")
@@ -233,11 +242,10 @@ class ArchiveBase(ABC):
               ``fields=["objective", "objective"]`` will result in two
               objective arrays being returned.
 
-              By default, (i.e., when ``fields=None``), the fields in the tuple
-              will be ordered according to the :attr:`field_list` along with
-              ``index`` as the last field.
+              When ``fields=None`` (the default case), the fields in the tuple
+              will be ordered according to the :attr:`field_list`.
 
-            - ``return_type="pandas"``: A
+            - ``return_type="pandas"``: An
               :class:`~ribs.archives.ArchiveDataFrame` with the following
               columns:
 
@@ -245,32 +253,27 @@ class ArchiveBase(ABC):
                 name. For example, ``objective`` would have a single column
                 called ``objective``.
               - For fields that are 1D arrays, multiple columns with the name
-                suffixed by its index. For instance, if we have a ``measures``
-                field of length 10, we create 10 columns with names
-                ``measures_0``, ``measures_1``, ..., ``measures_9``. We do not
-                currently support fields with >1D data.
-              - 1 column of integers (``np.int32``) for the index, named
-                ``index``.
+                suffixed by its index. To illustrate, for a ``measures``
+                field of length 10, the dataframe would contain 10 columns with
+                names ``measures_0``, ``measures_1``, ..., ``measures_9``.
+                **The output format for fields with >1D data is currently not
+                defined.**
 
               In short, the dataframe might look like this by default:
 
-              +------------+------+-----------+------------+------+-----------+-------+
-              | solution_0 | ...  | objective | measures_0 | ...  | threshold | index |
-              +============+======+===========+============+======+===========+=======+
-              |            | ...  |           |            | ...  |           |       |
-              +------------+------+-----------+------------+------+-----------+-------+
+              +------------+------+-----------+------------+------+
+              | solution_0 | ...  | objective | measures_0 | ...  |
+              +============+======+===========+============+======+
+              |            | ...  |           |            | ...  |
+              +------------+------+-----------+------------+------+
 
-              Like the other return types, the columns can be adjusted with
-              the ``fields`` parameter.
-
-            All data returned by this method will be a copy, i.e., the data will
-            not update as the archive changes.
+              Like the other return types, the columns returned can be adjusted
+              with the ``fields`` parameter.
         """ # pylint: disable = line-too-long
         raise NotImplementedError(
             "`data` has not been implemented in this archive")
 
-    # TODO: I'm unclear whether we want this here, as it seems to be a very
-    # specific form of selection.
+    # TODO: Unclear to include this.
     def sample_elites(self, n):
         """Randomly samples elites from the archive.
 
