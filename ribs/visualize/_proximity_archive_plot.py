@@ -162,10 +162,10 @@ def proximity_archive_plot(archive,
         objective_batch = df.get_field("objective")
     x = measures_batch[:, 0]
     y = measures_batch[:, 1]
-    lower_bounds = archive.lower_bounds - 0.01 if lower_bounds is None \
-                        else lower_bounds
-    upper_bounds = archive.upper_bounds + 0.01 if upper_bounds is None \
-                        else upper_bounds
+    lower_bounds = np.min(measures_batch, axis=0) - 0.01 \
+                     if lower_bounds is None else lower_bounds
+    upper_bounds = np.max(measures_batch, axis=0) + 0.01 \
+                     if upper_bounds is None else upper_bounds
 
     if transpose_measures:
         # Since the archive is 2D, transpose by swapping the x and y measures
