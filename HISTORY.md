@@ -25,6 +25,7 @@
 
 #### Bugs
 
+- Make emitter bounds dtype match solution dtype ({pr}`519`)
 - Fix `BanditScheduler` behaviour: the number of active emitters remains stable
   ({pr}`489`)
 
