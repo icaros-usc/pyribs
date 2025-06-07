@@ -198,7 +198,7 @@ class ArchiveBase(ABC):
 
         Args:
             fields (str or array-like of str): List of fields to include, such
-                as ``solution``, ``objectives``, ``measures``, and other fields
+                as ``solution``, ``objective``, ``measures``, and other fields
                 in the archive. This can also be a single str indicating a field
                 name.
             return_type (str): Type of data to return. See below. Ignored if
