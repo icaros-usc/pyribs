@@ -8,7 +8,7 @@ def parse_dtype(dtype):
     """Parses dtype for the archive.
 
     Returns:
-        np.float32 or np.float64
+        dict with dtypes for ``solution``, ``objective``, and ``measures``.
     Raises:
         ValueError: Unsupported dtype.
     """
