@@ -51,7 +51,7 @@ class CVTArchive(ArchiveBase):
     and pass them into ``custom_centroids`` when constructing archives for
     subsequent experiments.
 
-    .. note:: The idea of archive thresholds was introduced in `Fontaine 2022
+    .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
         <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds,
         including the ``learning_rate`` and ``threshold_min`` parameters, refer
         to our tutorial :doc:`/tutorials/cma_mae`.
