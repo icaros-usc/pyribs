@@ -4,15 +4,20 @@ from functools import cached_property
 import numpy as np
 from scipy.spatial import cKDTree
 
-from ribs._utils import (check_batch_shape, check_finite, np_scalar,
-                         validate_batch, validate_single)
-from ribs.archives._archive_base import ArchiveBase
+from ribs._utils import (check_batch_shape, check_finite, check_shape,
+                         np_scalar, validate_batch, validate_single)
+from ribs.archives._archive_base_2 import ArchiveBase
+from ribs.archives._archive_data_frame import ArchiveDataFrame
+from ribs.archives._archive_stats import ArchiveStats
+from ribs.archives._array_store import ArrayStore
 from ribs.archives._transforms import (batch_entries_with_threshold,
                                        compute_best_index,
                                        compute_objective_sum)
+from ribs.archives._utils import parse_dtype
 
 
 class ProximityArchive(ArchiveBase):
+    # pylint: disable = too-many-public-methods
     """An archive that adds new solutions based on novelty, where novelty is
     defined via proximity to other solutions in measure space.
 
@@ -30,9 +35,9 @@ class ProximityArchive(ArchiveBase):
     :math:`\\mu_{1..k}` are the measure values of the :math:`k`-nearest
     neighbors in measure space.
 
-    This archive also supports the local competition behavior from Novelty
-    Search with Local Competition, described in `Lehman
-    2011b <http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
+    This archive also supports the local competition computation from Novelty
+    Search with Local Competition, described in `Lehman 2011b
+    <http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
 
     .. note:: When used for diversity optimization, this archive does not
         require any objectives, and ``objective=None`` can be passed into
@@ -42,27 +47,26 @@ class ProximityArchive(ArchiveBase):
         possible to associate objectives with the solutions by passing
         ``objective`` to :meth:`add` just like in other archives.
 
-    .. note:: The other statistics will also behave slightly differently from
-        other archives:
+    .. note:: Some statistics will behave differently than in other archives:
 
         - If this archive has any solutions in it, the coverage
           (``archive.stats.coverage``) will always be reported as 1. This is
           because the archive is unbounded, so there is no predefined number of
-          cells to fill. We suggest using ``archive.stats.num_elites`` instead
-          for a more meaningful coverage metric, or creating a passive result
-          archive to store elites discovered by the algorithm (similar to
-          CMA-MAE).
-        - Since the number of cells in the archive is equivalent to the number
-          of elites in the archive, the normalized QD score
-          (``archive.stats.norm_qd_score``) will always equal the mean objective
-          (``archive.stats.obj_mean``).
+          cells to fill. As such, ``archive.stats.num_elites`` may provide a
+          more meaningful coverage metric. It is also common to create a
+          :class:`~ribs.archives.GridArchive` or
+          :class:`~ribs.archives.CVTArchive` as a result archive, from which a
+          meaningful coverage can be computed.
+        - Since the number of archive cells equals the number of elites in the
+          archive, the normalized QD score (``archive.stats.norm_qd_score``)
+          will always equal the mean objective (``archive.stats.obj_mean``).
 
     Args:
-        solution_dim (int): Dimension of the solution space.
-        measure_dim (int): Dimension of the measure space.
-        k_neighbors (int): The maximum number of nearest neighbors to use for
-            computing novelty (`maximum` here is indicated for cases when there
-            are fewer than ``k_neighbors`` solutions in the archive).
+        solution_dim (int): Dimensionality of the solution space.
+        measure_dim (int): Dimensionality of the measure space.
+        k_neighbors (int): The maximum number of nearest neighbors for computing
+            novelty (`maximum` here is indicated since there may be fewer than
+            ``k_neighbors`` solutions in the archive).
         novelty_threshold (float): The level of novelty required to add a
             solution to the archive.
         local_competition (bool): Whether to turn on local competition behavior.
@@ -93,10 +97,10 @@ class ProximityArchive(ArchiveBase):
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type or dict): Data type of the solutions,
-            objectives, and measures. We only support ``"f"`` / ``np.float32``
-            and ``"d"`` / ``np.float64``. Alternatively, this can be a dict
-            specifying separate dtypes, of the form ``{"solution": <dtype>,
-            "objective": <dtype>, "measures": <dtype>}``.
+            objectives, and measures. This can be ``"f"`` / ``np.float32``,
+            ``"d"`` / ``np.float64``, or a dict specifying separate dtypes, of
+            the form ``{"solution": <dtype>, "objective": <dtype>, "measures":
+            <dtype>}``.
         extra_fields (dict): Description of extra fields of data that is stored
             next to elite data like solutions and objectives. The description is
             a dict mapping from a field name (str) to a tuple of ``(shape,
@@ -113,51 +117,127 @@ class ProximityArchive(ArchiveBase):
         ValueError: ``initial_capacity`` must be at least 1.
     """
 
-    def __init__(self,
-                 *,
-                 solution_dim,
-                 measure_dim,
-                 k_neighbors,
-                 novelty_threshold,
-                 local_competition=False,
-                 initial_capacity=128,
-                 qd_score_offset=0.0,
-                 seed=None,
-                 dtype=np.float64,
-                 extra_fields=None,
-                 ckdtree_kwargs=None):
-
-        if initial_capacity < 1:
-            raise ValueError("initial_capacity must be at least 1.")
+    def __init__(
+        self,
+        *,
+        solution_dim,
+        measure_dim,
+        k_neighbors,
+        novelty_threshold,
+        local_competition=False,
+        initial_capacity=128,
+        qd_score_offset=0.0,
+        seed=None,
+        dtype=np.float64,
+        extra_fields=None,
+        ckdtree_kwargs=None,
+    ):
+        self._rng = np.random.default_rng(seed)
 
         ArchiveBase.__init__(
             self,
             solution_dim=solution_dim,
-            cells=initial_capacity,
+            objective_dim=(),
             measure_dim=measure_dim,
-            # learning_rate and threhsold_min take on default values since we do
-            # not use CMA-MAE threshold in this archive.
-            qd_score_offset=qd_score_offset,
-            seed=seed,
-            dtype=dtype,
-            extra_fields=extra_fields,
         )
 
+        # Set up the ArrayStore, which is a data structure that stores all the
+        # elites' data in arrays sharing a common index.
+        extra_fields = extra_fields or {}
+        reserved_fields = {
+            "solution", "objective", "measures", "threshold", "index"
+        }
+        if reserved_fields & extra_fields.keys():
+            raise ValueError("The following names are not allowed in "
+                             f"extra_fields: {reserved_fields}")
+        if initial_capacity < 1:
+            raise ValueError("initial_capacity must be at least 1.")
+        dtype = parse_dtype(dtype)
+        self._store = ArrayStore(
+            field_desc={
+                "solution": ((self.solution_dim,), dtype["solution"]),
+                "objective": ((), dtype["objective"]),
+                "measures": ((self.measure_dim,), dtype["measures"]),
+                # Must be same dtype as the objective since they share
+                # calculations.
+                "threshold": ((), dtype["objective"]),
+                **extra_fields,
+            },
+            capacity=initial_capacity,
+        )
+
+        # Set up constant properties.
         self._k_neighbors = int(k_neighbors)
         self._novelty_threshold = np_scalar(novelty_threshold,
                                             dtype=self.dtypes["measures"])
         self._local_competition = local_competition
         self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
                                 ckdtree_kwargs.copy())
+        self._qd_score_offset = np_scalar(qd_score_offset,
+                                          self.dtypes["objective"])
 
-        # k-D tree with current measures in the archive. Updated on add().
+        # Set up k-D tree with current measures in the archive. Updated on
+        # add().
         self._cur_kd_tree = cKDTree(self._store.data("measures"),
                                     **self._ckdtree_kwargs)
 
+        # TODO: Refactor stats?
+
+        # Set up statistics.
+        self._stats = None
+        self._best_elite = None
+        # Sum of all objective values in the archive; useful for computing
+        # qd_score and obj_mean.
+        self._objective_sum = None
+        self._stats_reset()
+
+    ## Properties inherited from ArchiveBase ##
+
+    @property
+    def field_list(self):
+        return self._store.field_list
+
+    @property
+    def stats(self):
+        return self._stats
+
+    @property
+    def empty(self):
+        return len(self._store) == 0
+
+    @property
+    def dtypes(self):
+        return self._store.dtypes
+
+    ## Properties that are not in ArchiveBase ##
+    ## Roughly ordered by the parameter list in the constructor. ##
+
+    @property
+    def best_elite(self):
+        """dict: The elite with the highest objective in the archive.
+
+        None if there are no elites in the archive.
+
+        .. note::
+            If the archive is non-elitist (this occurs when using the archive
+            with a learning rate which is not 1.0, as in CMA-MAE), then this
+            best elite may no longer exist in the archive because it was
+            replaced with an elite with a lower objective value. This can happen
+            because in non-elitist archives, new solutions only need to exceed
+            the *threshold* of the cell they are being inserted into, not the
+            *objective* of the elite currently in the cell. See :pr:`314` for
+            more info.
+
+        .. note::
+            The best elite will contain a "threshold" key. This threshold is the
+            threshold of the best elite's cell after the best elite was inserted
+            into the archive.
+        """
+        return self._best_elite
+
     @property
     def k_neighbors(self):
-        """int: The number of nearest neighbors to use for determining
-        novelty."""
+        """int: The number of nearest neighbors for computing novelty."""
         return self._k_neighbors
 
     @property
@@ -172,19 +252,84 @@ class ProximityArchive(ArchiveBase):
         return self._local_competition
 
     @property
+    def capacity(self):
+        """int: The number of solutions that can currently be stored in this
+        archive. The capacity doubles every time the archive fills up."""
+        return self._store.capacity
+
+    @property
     def cells(self):
-        """int: Total number of cells in the archive. Since this archive is
-        unstructured and grows over time, the number of cells is equal to the
-        number of solutions currently in the archive."""
+        """int: Strictly speaking, this archive does not have "cells" since it
+        does not have a tessellation like other archives. However, for API
+        compatibility, we set the number of cells as equal to the number of
+        solutions currently in the archive."""
         return len(self)
 
     @property
-    def capacity(self):
-        """int: The number of solutions that can currently be stored in this
-        archive. The capacity doubles every time the archive fills up, similar
-        to a C++ vector."""
-        return self._store.capacity
+    def qd_score_offset(self):
+        """float: The offset which is subtracted from objective values when
+        computing the QD score."""
+        return self._qd_score_offset
 
+    ## dunder methods ##
+
+    def __len__(self):
+        return len(self._store)
+
+    def __iter__(self):
+        return iter(self._store)
+
+    ## Utilities ##
+
+    def _stats_reset(self):
+        """Resets the archive stats."""
+        zero = np_scalar(0.0, dtype=self.dtypes["objective"])
+
+        self._stats = ArchiveStats(
+            num_elites=0,
+            coverage=zero,
+            qd_score=zero,
+            norm_qd_score=zero,
+            obj_max=None,
+            obj_mean=None,
+        )
+        self._best_elite = None
+        self._objective_sum = zero
+
+    def _stats_update(self, new_objective_sum, new_best_index):
+        """Updates statistics based on a new sum of objective values
+        (new_objective_sum) and the index of a potential new best elite
+        (new_best_index)."""
+        self._objective_sum = new_objective_sum
+        new_qd_score = (self._objective_sum -
+                        np_scalar(len(self), dtype=self.dtypes["objective"]) *
+                        self._qd_score_offset)
+
+        _, new_best_elite = self._store.retrieve([new_best_index])
+
+        if (self._stats.obj_max is None or
+                new_best_elite["objective"] > self._stats.obj_max):
+            # Convert batched values to single values.
+            new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
+
+            new_obj_max = new_best_elite["objective"]
+            self._best_elite = new_best_elite
+        else:
+            new_obj_max = self._stats.obj_max
+
+        self._stats = ArchiveStats(
+            num_elites=len(self),
+            coverage=np_scalar(len(self) / self.cells,
+                               dtype=self.dtypes["objective"]),
+            qd_score=new_qd_score,
+            norm_qd_score=np_scalar(new_qd_score / self.cells,
+                                    dtype=self.dtypes["objective"]),
+            obj_max=new_obj_max,
+            obj_mean=np_scalar(self._objective_sum / len(self),
+                               dtype=self.dtypes["objective"]),
+        )
+
+    # TODO: We no longer need index_of?
     def index_of(self, measures) -> np.ndarray:
         """Returns the index of the closest solution to the given measures.
 
@@ -221,6 +366,26 @@ class ProximityArchive(ArchiveBase):
 
         _, indices = self._cur_kd_tree.query(measures)
         return indices.astype(np.int32)
+
+    def index_of_single(self, measures):
+        """Returns the index of the measures for one solution.
+
+        See :meth:`index_of`.
+
+        Args:
+            measures (array-like): (:attr:`measure_dim`,) array of measures for
+                a single solution.
+        Returns:
+            int or numpy.integer: Integer index of the measures in the archive's
+            storage arrays.
+        Raises:
+            ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
+        """
+        measures = np.asarray(measures)
+        check_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
+        return self.index_of(measures[None])[0]
 
     def compute_novelty(self, measures, local_competition=None):
         """Computes the novelty and local competition of the given measures.
@@ -293,6 +458,8 @@ class ProximityArchive(ArchiveBase):
             return novelty, local_competition_scores
         else:
             return novelty
+
+    ## Methods for writing to the archive ##
 
     def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
@@ -451,12 +618,12 @@ class ProximityArchive(ArchiveBase):
             add_indices,
             add_data,
             {
-                "dtype": self.dtypes["threshold"],
-                "learning_rate": self._learning_rate,
+                "dtype": self.dtypes["objective"],
+                "learning_rate": 1.0,
                 # Note that when only novelty is considered, objectives default
                 # to 0, so all solutions specified will be added because the
                 # threshold_min is -np.inf.
-                "threshold_min": self._threshold_min,
+                "threshold_min": -np.inf,
                 "objective_sum": self._objective_sum,
             },
             [
@@ -493,12 +660,6 @@ class ProximityArchive(ArchiveBase):
             # Make a new tree with the updated solutions.
             self._cur_kd_tree = cKDTree(self._store.data("measures"),
                                         **self._ckdtree_kwargs)
-
-            # Clear the cached properties since they have now changed.
-            if "upper_bounds" in self.__dict__:
-                del self.__dict__["upper_bounds"]
-            if "lower_bounds" in self.__dict__:
-                del self.__dict__["lower_bounds"]
 
         return add_info
 
@@ -543,39 +704,62 @@ class ProximityArchive(ArchiveBase):
 
         return self.add(**{key: [val] for key, val in data.items()})
 
-    @cached_property  # The cache is cleared in add().
-    def upper_bounds(self) -> np.ndarray:
-        """The upper bounds of the measures in the archive.
+    def clear(self):
+        """Removes all elites in the archive."""
+        self._store.clear()
+        self._stats_reset()
 
-        Since the archive can grow arbitrarily, this is calculated based on the
-        maximum measure values of the solutions in the archive.
+    ## Methods for reading from the archive ##
+    ## Refer to ArchiveBase for documentation of these methods. ##
 
-        Raises:
-            RuntimeError: There are no solutions in the archive, so the
-            upper bounds do not exist.
-        """
+    # TODO: Refactor?
+    def retrieve(self, measures):
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
+
+        occupied, data = self._store.retrieve(self.index_of(measures))
+        unoccupied = ~occupied
+
+        for name, arr in data.items():
+            if arr.dtype == object:
+                fill_val = None
+            elif name == "index":
+                fill_val = -1
+            elif np.issubdtype(arr.dtype, np.integer):
+                fill_val = 0
+            else:  # Floating-point and other fields.
+                fill_val = np.nan
+
+            arr[unoccupied] = fill_val
+
+        return occupied, data
+
+    def retrieve_single(self, measures):
+        measures = np.asarray(measures)
+        check_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
+
+        occupied, data = self.retrieve(measures[None])
+
+        return occupied[0], {field: arr[0] for field, arr in data.items()}
+
+    def data(self, fields=None, return_type="dict"):
+        data = self._store.data(fields, return_type)
+        if return_type == "pandas":
+            data = ArchiveDataFrame(data)
+        return data
+
+    def sample_elites(self, n):
         if self.empty:
-            raise RuntimeError("There are no solutions in the archive, so the "
-                               "upper bounds do not exist.")
+            raise IndexError("No elements in archive.")
 
-        return np.max(self._store.data("measures"), axis=0)
+        random_indices = self._rng.integers(len(self._store), size=n)
+        selected_indices = self._store.occupied_list[random_indices]
+        _, elites = self._store.retrieve(selected_indices)
+        return elites
 
-    @cached_property  # The cache is cleared in add().
-    def lower_bounds(self) -> np.ndarray:
-        """The lower bounds of the measures in the archive.
-
-        Since the archive can grow arbitrarily, this is calculated based on the
-        minimum measure values of the solutions in the archive.
-
-        Raises:
-            RuntimeError: There are no solutions in the archive, so the
-            lower bounds do not exist.
-        """
-        if self.empty:
-            raise RuntimeError("There are no solutions in the archive, so the "
-                               "lower bounds do not exist.")
-
-        return np.min(self._store.data("measures"), axis=0)
+    ## CQD Score ##
 
     def cqd_score(self,
                   iterations,
