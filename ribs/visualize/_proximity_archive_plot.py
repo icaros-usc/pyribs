@@ -164,7 +164,7 @@ def proximity_archive_plot(archive,
     y = measures_batch[:, 1]
     lower_bounds = np.min(measures_batch, axis=0) - 0.01 \
                      if lower_bounds is None else lower_bounds
-    upper_bounds = np.min(measures_batch, axis=0) + 0.01 \
+    upper_bounds = np.max(measures_batch, axis=0) + 0.01 \
                      if upper_bounds is None else upper_bounds
 
     if transpose_measures:
