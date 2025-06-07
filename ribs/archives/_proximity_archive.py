@@ -5,7 +5,6 @@ from scipy.spatial import cKDTree
 from ribs._utils import (check_batch_shape, check_finite, check_shape,
                          np_scalar, validate_batch, validate_single)
 from ribs.archives._archive_base_2 import ArchiveBase
-from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._transforms import (batch_entries_with_threshold,
@@ -178,8 +177,6 @@ class ProximityArchive(ArchiveBase):
         # add().
         self._cur_kd_tree = cKDTree(self._store.data("measures"),
                                     **self._ckdtree_kwargs)
-
-        # TODO: Refactor stats?
 
         # Set up statistics.
         self._stats = None
@@ -709,7 +706,6 @@ class ProximityArchive(ArchiveBase):
     ## Methods for reading from the archive ##
     ## Refer to ArchiveBase for documentation of these methods. ##
 
-    # TODO: Refactor?
     def retrieve(self, measures):
         measures = np.asarray(measures)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
