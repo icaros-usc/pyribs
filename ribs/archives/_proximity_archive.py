@@ -520,13 +520,13 @@ class ProximityArchive(ArchiveBase):
               values in CMA-ME (`Fontaine 2020
               <https://arxiv.org/abs/1912.02400>`_):
 
-              - ``0`` (not added): The value is the "negative improvement," i.e.
-                the objective of the solution passed in minus the objective of
-                the nearest neighbor (this value is negative because the
-                solution did not have a high enough objective to be added to the
-                archive).
+              - ``0`` (not added): The value is the "negative improvement,"
+                i.e., the objective of the solution passed in minus the
+                objective of the nearest neighbor (this value is negative
+                because the solution did not have a high enough objective to be
+                added to the archive).
               - ``1`` (replace/improve existing solution): The value is the
-                "improvement," i.e. the objective of the solution passed in
+                "improvement," i.e., the objective of the solution passed in
                 minus the objective of the elite that was replaced.
               - ``2`` (new solution): The value is just the objective of the
                 solution.
