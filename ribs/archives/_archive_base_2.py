@@ -48,6 +48,13 @@ class ArchiveBase(ABC):
             "`field_list` has not been implemented in this archive")
 
     @property
+    def dtypes(self):
+        """dict: Mapping from field name to dtype for all fields in the
+        archive."""
+        raise NotImplementedError(
+            "`dtypes` has not been implemented in this archive")
+
+    @property
     def solution_dim(self):
         """int: Dimensionality of the solution space."""
         return self._solution_dim
@@ -79,6 +86,29 @@ class ArchiveBase(ABC):
         """bool: Whether the archive is empty."""
         raise NotImplementedError(
             "`empty` has not been implemented in this archive")
+
+    ## dunder methods ##
+
+    def __len__(self):
+        """Number of elites in the archive."""
+        raise NotImplementedError(
+            "`__len__` has not been implemented in this archive")
+
+    def __iter__(self):
+        """Creates an iterator over the elites in the archive.
+
+        Example:
+
+            ::
+
+                for elite in archive:
+                    elite["solution"]
+                    elite["objective"]
+                    elite["measures"]
+                    ...
+        """
+        raise NotImplementedError(
+            "`__iter__` has not been implemented in this archive")
 
     ## Methods for writing to the archive ##
 
@@ -167,6 +197,10 @@ class ArchiveBase(ABC):
         Returns:
             tuple: 2-element tuple of (boolean ``occupied`` array, dict of elite
             data). See above for description.
+        Raises:
+            ValueError: ``measures`` is not of shape (batch_size,
+                :attr:`measure_dim`).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         raise NotImplementedError(
             "`retrieve` has not been implemented in this archive")
@@ -189,6 +223,9 @@ class ArchiveBase(ABC):
             measures (array-like): (:attr:`measure_dim`,) array of measures.
         Returns:
             tuple: 2-element tuple of (boolean, dict of data for one elite)
+        Raises:
+            ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         raise NotImplementedError(
             "`retrieve_single` has not been implemented in this archive")
