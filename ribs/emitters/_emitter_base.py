@@ -33,7 +33,7 @@ class EmitterBase(ABC):
         self._solution_dim = solution_dim
         (self._lower_bounds,
          self._upper_bounds) = self._process_bounds(bounds, self._solution_dim,
-                                                    archive.dtypes["measures"])
+                                                    archive.dtypes["solution"])
 
     @staticmethod
     def _process_bounds(bounds, solution_dim, dtype):
