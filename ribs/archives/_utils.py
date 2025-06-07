@@ -5,14 +5,8 @@ from ribs._utils import np_scalar
 
 
 def parse_dtype(dtype):
-    """Parses dtype for the archive.
-
-    Returns:
-        dict with dtypes for ``solution``, ``objective``, and ``measures``.
-    Raises:
-        ValueError: Unsupported dtype.
-    """
-    # First convert str dtype's to np.dtype.
+    """Parses dtypes for the archive."""
+    # Convert str dtypes to np.dtype.
     if isinstance(dtype, str):
         dtype = np.dtype(dtype)
 
