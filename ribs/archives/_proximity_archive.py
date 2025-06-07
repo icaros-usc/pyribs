@@ -1,6 +1,4 @@
 """Contains the ProximityArchive."""
-from functools import cached_property
-
 import numpy as np
 from scipy.spatial import cKDTree
 
@@ -329,7 +327,6 @@ class ProximityArchive(ArchiveBase):
                                dtype=self.dtypes["objective"]),
         )
 
-    # TODO: We no longer need index_of?
     def index_of(self, measures) -> np.ndarray:
         """Returns the index of the closest solution to the given measures.
 
