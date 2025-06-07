@@ -6,7 +6,6 @@ import numpy as np
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
                          check_shape, np_scalar, validate_batch,
                          validate_single)
-from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
@@ -781,10 +780,7 @@ class ArchiveBase(ABC):
             All data returned by this method will be a copy, i.e., the data will
             not update as the archive changes.
         """ # pylint: disable = line-too-long
-        data = self._store.data(fields, return_type)
-        if return_type == "pandas":
-            data = ArchiveDataFrame(data)
-        return data
+        return self._store.data(fields, return_type)
 
     def cqd_score(self,
                   iterations,

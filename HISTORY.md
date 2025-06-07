@@ -44,6 +44,7 @@
 
 #### Improvements
 
+- Make ArrayStore.data return ArchiveDataFrame instead of DataFrame ({pr}`522`)
 - Migrate to pyproject.toml ({pr}`514`)
 - Set vmin and vmax to None if archive is empty in ribs.visualize ({pr}`513`)
 - Update QDax visualizations to match QDax 0.5.0 ({pr}`502`)
