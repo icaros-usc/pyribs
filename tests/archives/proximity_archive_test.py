@@ -76,11 +76,6 @@ def test_properties_are_correct(data):
     assert data.archive.empty
     assert data.archive.k_neighbors == data.k_neighbors
     assert data.archive.novelty_threshold == data.novelty_threshold
-    # Undefined when there are no solutions.
-    with pytest.raises(RuntimeError):
-        data.archive.lower_bounds  # pylint: disable = pointless-statement
-    with pytest.raises(RuntimeError):
-        data.archive.upper_bounds  # pylint: disable = pointless-statement
 
     # With elite.
     assert data.archive_with_elite.capacity == data.capacity
@@ -89,8 +84,6 @@ def test_properties_are_correct(data):
     assert not data.archive_with_elite.empty
     assert data.archive_with_elite.k_neighbors == data.k_neighbors
     assert data.archive_with_elite.novelty_threshold == data.novelty_threshold
-    assert_allclose(data.archive_with_elite.lower_bounds, data.measures)
-    assert_allclose(data.archive_with_elite.upper_bounds, data.measures)
 
 
 def test_initial_capacity_less_than_1():
@@ -102,28 +95,6 @@ def test_initial_capacity_less_than_1():
             novelty_threshold=1.0,
             initial_capacity=0,
         )
-
-
-def test_bounds(data):
-    data.archive.add(
-        solution=[[1, 2, 3]] * 2,
-        objective=None,
-        measures=[[0, 0], [2, 2]],
-    )
-
-    # Boundaries should reflect min/max measures.
-    assert np.all(data.archive.lower_bounds == [0, 0])
-    assert np.all(data.archive.upper_bounds == [2, 2])
-
-    data.archive.add(
-        solution=[[1, 2, 3]] * 2,
-        objective=None,
-        measures=[[-2, -2], [4, 4]],
-    )
-
-    # Boundaries should update to the new min/max measures.
-    assert np.all(data.archive.lower_bounds == [-2, -2])
-    assert np.all(data.archive.upper_bounds == [4, 4])
 
 
 def test_resizing_with_add_one_at_a_time():

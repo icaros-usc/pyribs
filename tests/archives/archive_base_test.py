@@ -339,11 +339,13 @@ def test_solution_dim_correct(data):
 
 
 def test_learning_rate_correct(data):
-    assert data.archive.learning_rate == 1.0  # Default value.
+    if not isinstance(data.archive, ProximityArchive):
+        assert data.archive.learning_rate == 1.0  # Default value.
 
 
 def test_threshold_min_correct(data):
-    assert data.archive.threshold_min == -np.inf  # Default value.
+    if not isinstance(data.archive, ProximityArchive):
+        assert data.archive.threshold_min == -np.inf  # Default value.
 
 
 def test_qd_score_offset_correct(data):

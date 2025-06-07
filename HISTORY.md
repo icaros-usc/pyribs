@@ -16,7 +16,8 @@
 - Add proximity_archive_plot for visualizing ProximityArchive ({pr}`476`,
   {pr}`480`)
 - Support novelty search with local competition in ProximityArchive ({pr}`481`)
-- Add ProximityArchive for novelty search ({pr}`472`, {pr}`479`, {pr}`484`)
+- Add ProximityArchive for novelty search ({pr}`472`, {pr}`479`, {pr}`484`,
+  {pr}`521`)
 - Support diversity optimization in Scheduler.tell ({pr}`473`)
 - Allow specifying separate dtypes for solution, objective, and measures
   ({pr}`471`)
@@ -31,7 +32,6 @@
 
 #### Documentation
 
-- Refactor archives into single-file implementations ({pr}`518`)
 - Update sphere example for consistency ({pr}`505`)
 - DQD tutorial edits ({pr}`500`)
 - Add version selector to docs ({pr}`495`)
@@ -44,6 +44,7 @@
 
 #### Improvements
 
+- Refactor archives into single-file implementations ({pr}`518`, {pr}`521`)
 - Make ArrayStore.data return ArchiveDataFrame instead of DataFrame ({pr}`522`)
 - Migrate to pyproject.toml ({pr}`514`)
 - Set vmin and vmax to None if archive is empty in ribs.visualize ({pr}`513`)
