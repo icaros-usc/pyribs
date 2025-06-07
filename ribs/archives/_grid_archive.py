@@ -110,7 +110,7 @@ class GridArchive(ArchiveBase):
         )
 
         # Set up the ArrayStore, which is a data structure that stores all the
-        # data of the elites in arrays sharing a common index.
+        # elites' data in arrays sharing a common index.
         extra_fields = extra_fields or {}
         reserved_fields = {
             "solution", "objective", "measures", "threshold", "index"
@@ -185,7 +185,7 @@ class GridArchive(ArchiveBase):
         return self._store.dtypes
 
     ## Properties that are not in ArchiveBase ##
-    ## Roughly ordered by the parameter list in the constructor.
+    ## Roughly ordered by the parameter list in the constructor. ##
 
     @property
     def best_elite(self):
@@ -649,6 +649,7 @@ class GridArchive(ArchiveBase):
         self._stats_reset()
 
     ## Methods for reading from the archive ##
+    ## Refer to ArchiveBase for the documentation of these methods. ##
 
     def retrieve(self, measures):
         measures = np.asarray(measures)
