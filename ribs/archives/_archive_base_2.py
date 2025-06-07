@@ -269,11 +269,10 @@ class ArchiveBase(ABC):
 
               Like the other return types, the columns returned can be adjusted
               with the ``fields`` parameter.
-        """ # pylint: disable = line-too-long
+        """
         raise NotImplementedError(
             "`data` has not been implemented in this archive")
 
-    # TODO: Unclear to include this.
     def sample_elites(self, n):
         """Randomly samples elites from the archive.
 
@@ -288,14 +287,13 @@ class ArchiveBase(ABC):
                 elites = archive.sample_elites(16)
                 elites["solution"]  # Shape: (16, solution_dim)
                 elites["objective"]
+                elites["measures"]
                 ...
 
         Args:
             n (int): Number of elites to sample.
         Returns:
             dict: Holds a batch of elites randomly selected from the archive.
-        Raises:
-            IndexError: The archive is empty.
         """
         raise NotImplementedError(
             "`sample_elites` has not been implemented in this archive")
