@@ -394,7 +394,7 @@ class ArchiveBase(ABC):
         among all the solutions that landed in the cell, resulting in the same
         behavior as in the vanilla MAP-Elites archive. However, for other
         settings, the threshold is updated with the batch update rule described
-        in the appendix of `Fontaine 2022 <https://arxiv.org/abs/2205.10752>`_.
+        in the appendix of `Fontaine 2023 <https://arxiv.org/abs/2205.10752>`_.
 
         .. note:: The indices of all arguments should "correspond" to each
             other, i.e. ``solution[i]``, ``objective[i]``,
