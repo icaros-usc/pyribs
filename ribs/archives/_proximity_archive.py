@@ -742,10 +742,7 @@ class ProximityArchive(ArchiveBase):
         return occupied[0], {field: arr[0] for field, arr in data.items()}
 
     def data(self, fields=None, return_type="dict"):
-        data = self._store.data(fields, return_type)
-        if return_type == "pandas":
-            data = ArchiveDataFrame(data)
-        return data
+        return self._store.data(fields, return_type)
 
     def sample_elites(self, n):
         if self.empty:
