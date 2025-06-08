@@ -615,6 +615,65 @@ class GridArchive(ArchiveBase):
             },
         )
 
+        # Delete these so that we only use the clean, validated data in `data`.
+        del solution, objective, measures, fields
+
+        # Identify the archive cell.
+        index = self.index_of_single(data["measures"])
+
+        # Retrieve current data of the cell, namely, whether it is occupied, and
+        # if so, its current threshold.
+        cur_occupied, cur_data = self._store.retrieve([index])
+        cur_occupied = cur_occupied[0]
+        cur_threshold = cur_data["threshold"][0]
+
+        # If the cell is not currently occupied, the threshold needs special
+        # settings.
+        if not cur_occupied:
+            # If threshold_min is -inf, then we want CMA-ME behavior, which
+            # computes the improvement value with a threshold of zero for new
+            # solutions. Otherwise, we will compute with a threshold of
+            # threshold_min.
+            cur_threshold = (np_scalar(0.0, dtype=self.dtypes["threshold"])
+                             if self.threshold_min == -np.inf else
+                             self.threshold_min)
+
+        # Retrieve candidate objective.
+        objective = data["objective"]
+
+        # Compute status and threshold.
+        add_info["status"] = np.array([0])  # NOT_ADDED
+
+        # In CMA-ME,
+        # For CMA-ME behavior, threshold_arr[index] is -inf for new cells, which
+        # satisfies this if condition.
+
+        # TODO: Reference MAP-Elites rules here?
+        if ((not cur_occupied and threshold_min < objective) or
+            (cur_occupied and cur_threshold < objective)):
+            if cur_occupied:
+                add_info["status"] = np.array([1])  # IMPROVE_EXISTING
+            else:
+                add_info["status"] = np.array([2])  # NEW
+
+            # This calculation works in the case where threshold_min is -inf because
+            # cur_threshold will be set to 0.0 instead.
+            data["threshold"] = [(cur_threshold * (1.0 - learning_rate) +
+                                  objective * learning_rate)]
+
+            # TODO: Call store.add?
+
+        # Value is the improvement over the current threshold (can be negative).
+        add_info["value"] = np.array([objective - cur_threshold])
+
+        if add_info["status"]:
+            return indices, new_data, add_info
+        else:
+            # new_data is ignored, so make it an empty dict.
+            return np.array([], dtype=np.int32), {}, add_info
+
+        # ----------------------------------------------------
+
         for name, arr in data.items():
             data[name] = np.expand_dims(arr, axis=0)
 
