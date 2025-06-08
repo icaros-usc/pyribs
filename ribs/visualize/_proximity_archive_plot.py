@@ -118,10 +118,11 @@ def proximity_archive_plot(archive,
             info.
         ms (float): Marker size for the solutions.
         lower_bounds (array-like of float): Lower bounds of the measure space
-            for the plot. Defaults to the lower bounds of the archive minus
-            0.01.
+            for the plot. Defaults to the minimum measure value along each
+            dimension of the archive, minus 0.01.
         upper_bounds (array-like of float): Upper bounds of the measure space
-            for the plot. Defaults to the upper bounds of the archive plus 0.01.
+            for the plot. Defaults to the maximum measure value along each
+            dimension of the archive, plus 0.01.
         vmin (float): Minimum objective value to use in the plot. If ``None``,
             the minimum objective value in the archive is used.
         vmax (float): Maximum objective value to use in the plot. If ``None``,
@@ -162,10 +163,18 @@ def proximity_archive_plot(archive,
         objective_batch = df.get_field("objective")
     x = measures_batch[:, 0]
     y = measures_batch[:, 1]
-    lower_bounds = np.min(measures_batch, axis=0) - 0.01 \
-                     if lower_bounds is None else lower_bounds
-    upper_bounds = np.max(measures_batch, axis=0) + 0.01 \
-                     if upper_bounds is None else upper_bounds
+
+    if lower_bounds is None:
+        if len(measures_batch) > 0:
+            lower_bounds = np.min(measures_batch, axis=0) - 0.01
+        else:
+            # Sensible defaults when the archive is empty.
+            lower_bounds = np.full(archive.measure_dim, -0.01)
+    if upper_bounds is None:
+        if len(measures_batch) > 0:
+            upper_bounds = np.max(measures_batch, axis=0) + 0.01
+        else:
+            upper_bounds = np.full(archive.measure_dim, 0.01)
 
     if transpose_measures:
         # Since the archive is 2D, transpose by swapping the x and y measures
@@ -182,8 +191,10 @@ def proximity_archive_plot(archive,
     ax.set_aspect(aspect)
 
     # Create the plot.
-    vmin = np.min(objective_batch) if vmin is None else vmin
-    vmax = np.max(objective_batch) if vmax is None else vmax
+    vmin = (np.min(objective_batch)
+            if vmin is None and len(objective_batch) > 0 else vmin)
+    vmax = (np.max(objective_batch)
+            if vmax is None and len(objective_batch) > 0 else vmax)
     t = ax.scatter(x,
                    y,
                    s=ms,
