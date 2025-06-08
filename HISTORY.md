@@ -14,7 +14,7 @@
 - Add DensityRanker for density descent search ({pr}`483`, {pr}`504`)
 - Add NoveltyRanker for novelty search ({pr}`477`)
 - Add proximity_archive_plot for visualizing ProximityArchive ({pr}`476`,
-  {pr}`480`)
+  {pr}`480`, {pr}`523`)
 - Support novelty search with local competition in ProximityArchive ({pr}`481`)
 - Add ProximityArchive for novelty search ({pr}`472`, {pr}`479`, {pr}`484`,
   {pr}`521`)
@@ -47,7 +47,8 @@
 - Refactor archives into single-file implementations ({pr}`518`, {pr}`521`)
 - Make ArrayStore.data return ArchiveDataFrame instead of DataFrame ({pr}`522`)
 - Migrate to pyproject.toml ({pr}`514`)
-- Set vmin and vmax to None if archive is empty in ribs.visualize ({pr}`513`)
+- Set vmin and vmax to None if archive is empty in ribs.visualize ({pr}`513`,
+  {pr}`523`)
 - Update QDax visualizations to match QDax 0.5.0 ({pr}`502`)
 - Skip qdax tests if qdax not installed ({pr}`491`)
 - Move yapf after isort in pre-commit ({pr}`490`)
