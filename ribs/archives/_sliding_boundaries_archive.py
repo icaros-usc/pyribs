@@ -5,12 +5,18 @@ from collections import deque
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs._utils import (check_batch_shape, check_finite, np_scalar,
-                         validate_batch, validate_single)
-from ribs.archives._archive_base import ArchiveBase
+from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
+                         check_shape, np_scalar, validate_batch,
+                         validate_single)
+from ribs.archives._archive_base_2 import ArchiveBase
+from ribs.archives._archive_stats import ArchiveStats
+from ribs.archives._array_store import ArrayStore
+from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._grid_archive import GridArchive
+from ribs.archives._utils import parse_dtype
 
 
+# TODO: Docstring update? Mention fields?
 class SolutionBuffer:
     """An internal class that stores relevant data to re-add after remapping.
 
@@ -81,7 +87,7 @@ class SolutionBuffer:
 
 
 class SlidingBoundariesArchive(ArchiveBase):
-    """An archive with a fixed number of sliding boundaries on each dimension.
+    """An archive with a fixed number of sliding boundaries in each dimension.
 
     This archive is the container described in `Fontaine 2019
     <https://arxiv.org/abs/1904.10656>`_. Just like the
@@ -95,18 +101,18 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     Initially, the archive has no solutions, so it cannot automatically
     calculate the boundaries. Thus, until the first remap, this archive divides
-    the measure space defined by ``ranges`` into equally sized cells.
+    the measure space defined by ``ranges`` into equally-sized cells.
 
     Overall, this archive attempts to make the distribution of the space
     illuminated by the archive more accurately match the true distribution of
     the measures when they are not uniformly distributed.
 
-    .. note:: Unlike other archives, this archive does not currently support
-        `thresholds <../../tutorials/cma_mae.html>`_ or batched addition (see
-        :meth:`add`).
+    By default, this archive stores the following data fields: ``solution``,
+    ``objective``, ``measures``, and ``index``. The integer ``index`` uniquely
+    identifies each cell.
 
     Args:
-        solution_dim (int): Dimension of the solution space.
+        solution_dim (int): Dimensionality of the solution space.
         dims (array-like): Number of cells in each dimension of the measure
             space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions
             with 20, 30, and 40 cells. (The number of dimensions is implicitly
@@ -134,10 +140,10 @@ class SlidingBoundariesArchive(ArchiveBase):
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type or dict): Data type of the solutions,
-            objectives, and measures. We only support ``"f"`` / ``np.float32``
-            and ``"d"`` / ``np.float64``. Alternatively, this can be a dict
-            specifying separate dtypes, of the form ``{"solution": <dtype>,
-            "objective": <dtype>, "measures": <dtype>}``.
+            objectives, and measures. This can be ``"f"`` / ``np.float32``,
+            ``"d"`` / ``np.float64``, or a dict specifying separate dtypes, of
+            the form ``{"solution": <dtype>, "objective": <dtype>, "measures":
+            <dtype>}``.
         extra_fields (dict): Description of extra fields of data that is stored
             next to elite data like solutions and objectives. The description is
             a dict mapping from a field name (str) to a tuple of ``(shape,
@@ -153,50 +159,66 @@ class SlidingBoundariesArchive(ArchiveBase):
             remapping.
     """
 
-    def __init__(self,
-                 *,
-                 solution_dim,
-                 dims,
-                 ranges,
-                 epsilon=1e-6,
-                 qd_score_offset=0.0,
-                 seed=None,
-                 dtype=np.float64,
-                 extra_fields=None,
-                 remap_frequency=100,
-                 buffer_capacity=1000):
+    def __init__(
+        self,
+        *,
+        solution_dim,
+        dims,
+        ranges,
+        epsilon=1e-6,
+        qd_score_offset=0.0,
+        seed=None,
+        dtype=np.float64,
+        extra_fields=None,
+        remap_frequency=100,
+        buffer_capacity=1000,
+    ):
+        self._rng = np.random.default_rng(seed)
         self._dims = np.array(dims)
-        if len(self._dims) != len(ranges):
-            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
-                             f"(length {len(ranges)}) must be the same length")
 
         ArchiveBase.__init__(
             self,
             solution_dim=solution_dim,
-            cells=np.prod(self._dims),
+            objective_dim=(),
             measure_dim=len(self._dims),
-            qd_score_offset=qd_score_offset,
-            seed=seed,
-            dtype=dtype,
-            extra_fields=extra_fields,
         )
 
+        # Set up the ArrayStore, which is a data structure that stores all the
+        # elites' data in arrays sharing a common index.
+        extra_fields = extra_fields or {}
+        reserved_fields = {"solution", "objective", "measures", "index"}
+        if reserved_fields & extra_fields.keys():
+            raise ValueError("The following names are not allowed in "
+                             f"extra_fields: {reserved_fields}")
+        dtype = parse_dtype(dtype)
+        self._store = ArrayStore(
+            field_desc={
+                "solution": ((self.solution_dim,), dtype["solution"]),
+                "objective": ((), dtype["objective"]),
+                "measures": ((self.measure_dim,), dtype["measures"]),
+                **extra_fields,
+            },
+            capacity=np.prod(self._dims),
+        )
+
+        # Set up constant properties.
+        if len(self._dims) != len(ranges):
+            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
+                             f"(length {len(ranges)}) must be the same length")
         ranges = list(zip(*ranges))
         self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
         self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._epsilon = np_scalar(epsilon, dtype=self.dtypes["measures"])
-
-        # Specifics for sliding boundaries.
+        self._qd_score_offset = np_scalar(qd_score_offset,
+                                          self.dtypes["objective"])
         self._remap_frequency = remap_frequency
 
-        # Allocate an extra entry in each row so we can put the upper bound at
-        # the end.
+        # Initialize the boundaries -- allocate an extra entry in each row so we
+        # can put the upper bound at the end.
         self._boundaries = np.full((self.measure_dim, np.max(self._dims) + 1),
                                    np.nan,
                                    dtype=self.dtypes["measures"])
-
-        # Initialize the boundaries.
         for i, (dim, lower_bound, upper_bound) in enumerate(
                 zip(self._dims, self._lower_bounds, self._upper_bounds)):
             self._boundaries[i, :dim + 1] = np.linspace(lower_bound,
@@ -208,10 +230,44 @@ class SlidingBoundariesArchive(ArchiveBase):
         # Total number of solutions encountered.
         self._total_num_sol = 0
 
+        # Set up statistics.
+        self._stats = None
+        self._best_elite = None
+        # Sum of all objective values in the archive; useful for computing
+        # qd_score and obj_mean.
+        self._objective_sum = None
+        self._stats_reset()
+
+    ## Properties inherited from ArchiveBase ##
+
+    @property
+    def field_list(self):
+        return self._store.field_list
+
+    @property
+    def stats(self):
+        return self._stats
+
+    @property
+    def empty(self):
+        return len(self._store) == 0
+
+    @property
+    def dtypes(self):
+        return self._store.dtypes
+
+    ## Properties that are not in ArchiveBase ##
+    ## Roughly ordered by the parameter list in the constructor. ##
+
     @property
     def dims(self):
         """(measure_dim,) numpy.ndarray: Number of cells in each dimension."""
         return self._dims
+
+    @property
+    def cells(self):
+        """int: Total number of cells in the archive."""
+        return self._store.capacity
 
     @property
     def lower_bounds(self):
@@ -236,6 +292,12 @@ class SlidingBoundariesArchive(ArchiveBase):
         return self._epsilon
 
     @property
+    def qd_score_offset(self):
+        """float: The offset which is subtracted from objective values when
+        computing the QD score."""
+        return self._qd_score_offset
+
+    @property
     def remap_frequency(self):
         """int: Frequency of remapping. Archive will remap once after
         ``remap_frequency`` number of solutions has been found.
@@ -246,6 +308,8 @@ class SlidingBoundariesArchive(ArchiveBase):
     def buffer_capacity(self):
         """int: Maximum capacity of the buffer."""
         return self._buffer.capacity
+
+    ## Boundaries property (updates over time) ##
 
     @property
     def boundaries(self):
@@ -267,6 +331,64 @@ class SlidingBoundariesArchive(ArchiveBase):
         return [
             bound[:dim + 1] for bound, dim in zip(self._boundaries, self._dims)
         ]
+
+    ## dunder methods ##
+
+    def __len__(self):
+        return len(self._store)
+
+    def __iter__(self):
+        return iter(self._store)
+
+    ## Utilities ##
+
+    def _stats_reset(self):
+        """Resets the archive stats."""
+        zero = np_scalar(0.0, dtype=self.dtypes["objective"])
+
+        self._stats = ArchiveStats(
+            num_elites=0,
+            coverage=zero,
+            qd_score=zero,
+            norm_qd_score=zero,
+            obj_max=None,
+            obj_mean=None,
+        )
+        self._best_elite = None
+        self._objective_sum = zero
+
+    def _stats_update(self, new_objective_sum, new_best_index):
+        """Updates statistics based on a new sum of objective values
+        (new_objective_sum) and the index of a potential new best elite
+        (new_best_index)."""
+        self._objective_sum = new_objective_sum
+        new_qd_score = (self._objective_sum -
+                        np_scalar(len(self), dtype=self.dtypes["objective"]) *
+                        self._qd_score_offset)
+
+        _, new_best_elite = self._store.retrieve([new_best_index])
+
+        if (self._stats.obj_max is None or
+                new_best_elite["objective"] > self._stats.obj_max):
+            # Convert batched values to single values.
+            new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
+
+            new_obj_max = new_best_elite["objective"]
+            self._best_elite = new_best_elite
+        else:
+            new_obj_max = self._stats.obj_max
+
+        self._stats = ArchiveStats(
+            num_elites=len(self),
+            coverage=np_scalar(len(self) / self.cells,
+                               dtype=self.dtypes["objective"]),
+            qd_score=new_qd_score,
+            norm_qd_score=np_scalar(new_qd_score / self.cells,
+                                    dtype=self.dtypes["objective"]),
+            obj_max=new_obj_max,
+            obj_mean=np_scalar(self._objective_sum / len(self),
+                               dtype=self.dtypes["objective"]),
+        )
 
     def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
@@ -333,6 +455,26 @@ class SlidingBoundariesArchive(ArchiveBase):
         # pylint: disable = no-member
         return np.ravel_multi_index(idx_cols, self._dims).astype(np.int32)
 
+    def index_of_single(self, measures):
+        """Returns the index of the measures for one solution.
+
+        See :meth:`index_of`.
+
+        Args:
+            measures (array-like): (:attr:`measure_dim`,) array of measures for
+                a single solution.
+        Returns:
+            int or numpy.integer: Integer index of the measures in the archive's
+            storage arrays.
+        Raises:
+            ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
+            ValueError: ``measures`` has non-finite values (inf or NaN).
+        """
+        measures = np.asarray(measures)
+        check_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
+        return self.index_of(measures[None])[0]
+
     # Copy these methods from GridArchive.
     int_to_grid_index = GridArchive.int_to_grid_index
     grid_to_int_index = GridArchive.grid_to_int_index
@@ -364,7 +506,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         cur_data = self._store.data()
 
         # These fields are only computed by the archive.
-        cur_data.pop("threshold")
+        cur_data.pop("threshold")  # TODO: remove threshold
         cur_data.pop("index")
 
         new_data_single = list(self._buffer)  # List of dicts.
@@ -387,6 +529,8 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         add_info = ArchiveBase.add_single(self, **last_data)
         return add_info
+
+    ## Methods for writing to the archive ##
 
     def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
@@ -425,6 +569,77 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         return add_info
 
+    def add_single_2(self, solution, objective, measures, **fields):
+        """Inserts a single solution into the archive.
+
+        The solution is only inserted if it has a higher ``objective`` than the
+        threshold of the corresponding cell. For the default values of
+        ``learning_rate`` and ``threshold_min``, this threshold is simply the
+        objective value of the elite previously in the cell.  The threshold is
+        also updated if the solution was inserted.
+
+        .. note::
+            To make it more amenable to modifications, this method's
+            implementation is designed to be readable at the cost of
+            performance, e.g., none of its operations are modified. :meth:`add`
+            should be used if performance is required.
+
+        Args:
+            solution (array-like): Parameters of the solution.
+            objective (float): Objective function evaluation of the solution.
+            measures (array-like): Coordinates in measure space of the solution.
+            fields (keyword arguments): Additional data for the solution.
+
+        Returns:
+            dict: Information describing the result of the add operation. The
+            dict contains ``status`` and ``value`` keys; refer to :meth:`add`
+            for the meaning of status and value.
+
+        Raises:
+            ValueError: The array arguments do not match their specified shapes.
+            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
+                has non-finite values.
+        """
+        data = validate_single(
+            self,
+            {
+                "solution": solution,
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            },
+        )
+
+        for name, arr in data.items():
+            data[name] = np.expand_dims(arr, axis=0)
+
+        add_info = self._store.add(
+            np.expand_dims(self.index_of_single(measures), axis=0),
+            data,
+            {
+                "dtype": self.dtypes["objective"],
+                "learning_rate": 1.0,
+                "threshold_min": -np.inf,
+                "objective_sum": self._objective_sum,
+            },
+            [
+                single_entry_with_threshold,
+                compute_objective_sum,
+                compute_best_index,
+            ],
+        )
+
+        objective_sum = add_info.pop("objective_sum")
+        best_index = add_info.pop("best_index")
+
+        for name, arr in add_info.items():
+            add_info[name] = arr[0]
+
+        if add_info["status"]:
+            self._stats_update(objective_sum, best_index)
+
+        return add_info
+
     def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.
 
@@ -458,5 +673,194 @@ class SlidingBoundariesArchive(ArchiveBase):
             ])
             self._interval_size = self._upper_bounds - self._lower_bounds
         else:
-            add_info = ArchiveBase.add_single(self, **new_data)
+            # TODO: Implement our own add_single...
+            add_info = self.add_single_2(**new_data)
         return add_info
+
+    def clear(self):
+        """Removes all elites in the archive."""
+        self._store.clear()
+        self._stats_reset()
+
+    ## Methods for reading from the archive ##
+    ## Refer to ArchiveBase for documentation of these methods. ##
+
+    def retrieve(self, measures):
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
+
+        occupied, data = self._store.retrieve(self.index_of(measures))
+        unoccupied = ~occupied
+
+        for name, arr in data.items():
+            if arr.dtype == object:
+                fill_val = None
+            elif name == "index":
+                fill_val = -1
+            elif np.issubdtype(arr.dtype, np.integer):
+                fill_val = 0
+            else:  # Floating-point and other fields.
+                fill_val = np.nan
+
+            arr[unoccupied] = fill_val
+
+        return occupied, data
+
+    def retrieve_single(self, measures):
+        measures = np.asarray(measures)
+        check_shape(measures, "measures", self.measure_dim, "measure_dim")
+        check_finite(measures, "measures")
+
+        occupied, data = self.retrieve(measures[None])
+
+        return occupied[0], {field: arr[0] for field, arr in data.items()}
+
+    def data(self, fields=None, return_type="dict"):
+        return self._store.data(fields, return_type)
+
+    def sample_elites(self, n):
+        if self.empty:
+            raise IndexError("No elements in archive.")
+
+        random_indices = self._rng.integers(len(self._store), size=n)
+        selected_indices = self._store.occupied_list[random_indices]
+        _, elites = self._store.retrieve(selected_indices)
+        return elites
+
+    ## CQD Score ##
+
+    def cqd_score(self,
+                  iterations,
+                  target_points,
+                  penalties,
+                  obj_min,
+                  obj_max,
+                  dist_max=None,
+                  dist_ord=None):
+        """Computes the CQD score of the archive.
+
+        The Continuous Quality Diversity (CQD) score was introduced in
+        `Kent 2022 <https://dl.acm.org/doi/10.1145/3520304.3534018>`_.
+
+        .. note:: This method by default assumes that the archive has an
+            ``upper_bounds`` and ``lower_bounds`` property which delineate the
+            bounds of the measure space, as is the case in
+            :class:`~ribs.archives.GridArchive`,
+            :class:`~ribs.archives.CVTArchive`, and
+            :class:`~ribs.archives.SlidingBoundariesArchive`.  If this is not
+            the case, ``dist_max`` must be passed in, and ``target_points`` must
+            be an array of custom points.
+
+        Args:
+            iterations (int): Number of times to compute the CQD score. The mean
+                CQD score across these iterations is returned.
+            target_points (int or array-like): Number of target points to
+                generate, or an (iterations, n, measure_dim) array which
+                lists n target points to list on each iteration. When an int is
+                passed, the points are sampled uniformly within the bounds of
+                the measure space.
+            penalties (int or array-like): Number of penalty values over which
+                to compute the score (the values are distributed evenly over the
+                range [0,1]). Alternatively, this may be a 1D array which
+                explicitly lists the penalty values. Known as :math:`\\theta` in
+                Kent 2022.
+            obj_min (float): Minimum objective value, used when normalizing the
+                objectives.
+            obj_max (float): Maximum objective value, used when normalizing the
+                objectives.
+            dist_max (float): Maximum distance between points in measure space.
+                Defaults to the distance between the extremes of the measure
+                space bounds (the type of distance is computed with the order
+                specified by ``dist_ord``). Known as :math:`\\delta_{max}` in
+                Kent 2022.
+            dist_ord: Order of the norm to use for calculating measure space
+                distance; this is passed to :func:`numpy.linalg.norm` as the
+                ``ord`` argument. See :func:`numpy.linalg.norm` for possible
+                values. The default is to use Euclidean distance (L2 norm).
+        Returns:
+            The mean CQD score obtained with ``iterations`` rounds of
+            calculations.
+        Raises:
+            RuntimeError: The archive does not have the bounds properties
+                mentioned above, and dist_max is not specified or the target
+                points are not provided.
+            ValueError: target_points or penalties is an array with the wrong
+                shape.
+        """
+        if (not (hasattr(self, "upper_bounds") and
+                 hasattr(self, "lower_bounds")) and
+            (dist_max is None or np.isscalar(target_points))):
+            raise RuntimeError(
+                "When the archive does not have lower_bounds and "
+                "upper_bounds properties, dist_max must be specified, "
+                "and target_points must be an array")
+
+        if np.isscalar(target_points):
+            # pylint: disable = no-member
+            target_points = self._rng.uniform(
+                low=self.lower_bounds,
+                high=self.upper_bounds,
+                size=(iterations, target_points, self.measure_dim),
+            )
+        else:
+            # Copy since this is returned.
+            target_points = np.copy(target_points)
+            if (target_points.ndim != 3 or
+                    target_points.shape[0] != iterations or
+                    target_points.shape[2] != self.measure_dim):
+                raise ValueError(
+                    "Expected target_points to be a 3D array with "
+                    f"shape ({iterations}, n, {self.measure_dim}) "
+                    "(i.e. shape (iterations, n, measure_dim)) but it had "
+                    f"shape {target_points.shape}")
+
+        if dist_max is None:
+            # pylint: disable = no-member
+            dist_max = np.linalg.norm(self.upper_bounds - self.lower_bounds,
+                                      ord=dist_ord)
+
+        if np.isscalar(penalties):
+            penalties = np.linspace(0, 1, penalties)
+        else:
+            penalties = np.copy(penalties)  # Copy since this is returned.
+            check_is_1d(penalties, "penalties")
+
+        objective_batch = self._store.data("objective")
+        measures_batch = self._store.data("measures")
+
+        norm_objectives = objective_batch / (obj_max - obj_min)
+
+        scores = np.zeros(iterations)
+
+        for itr in range(iterations):
+            # Distance calculation -- start by taking the difference between
+            # each measure i and all the target points.
+            distances = measures_batch[:, None] - target_points[itr]
+
+            # (len(archive), n_target_points) array of distances.
+            distances = np.linalg.norm(distances, ord=dist_ord, axis=2)
+
+            norm_distances = distances / dist_max
+
+            for penalty in penalties:
+                # Known as omega in Kent 2022 -- a (len(archive),
+                # n_target_points) array.
+                values = norm_objectives[:, None] - penalty * norm_distances
+
+                # (n_target_points,) array.
+                max_values_per_target = np.max(values, axis=0)
+
+                scores[itr] += np.sum(max_values_per_target)
+
+        return CQDScoreResult(
+            iterations=iterations,
+            mean=np.mean(scores),
+            scores=scores,
+            target_points=target_points,
+            penalties=penalties,
+            obj_min=obj_min,
+            obj_max=obj_max,
+            dist_max=dist_max,
+            dist_ord=dist_ord,
+        )
