@@ -6,9 +6,9 @@ from functools import cached_property
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
-from pandas import DataFrame
 
 from ribs._utils import readonly
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 
 
 class Update(IntEnum):
@@ -286,8 +286,9 @@ class ArrayStore:
                 tuple will be ordered according to the ``field_desc`` argument
                 in the constructor, along with ``index`` as the last field.
 
-              - ``return_type="pandas"``: A :class:`pandas.DataFrame` with the
-                following columns (by default):
+              - ``return_type="pandas"``: An
+                :class:`~ribs.archives.ArchiveDataFrame` with the following
+                columns (by default):
 
                 - For fields that are scalars, a single column with the field
                   name. For example, ``objective`` would have a single column
@@ -371,7 +372,7 @@ class ArrayStore:
             data = tuple(data)
         elif return_type == "pandas":
             # Data above are already copied, so no need to copy again.
-            data = DataFrame(data, copy=False)
+            data = ArchiveDataFrame(data, copy=False)
 
         return occupied, data
 

@@ -109,8 +109,8 @@ def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
                                func="sum",
                                fill_value=np.nan)[indices]
 
-    # Update the threshold with the batch update rule from Fontaine 2022:
-    # https://arxiv.org/abs/2205.10752
+    # Update the threshold with the batch update rule from Fontaine 2023
+    # (https://arxiv.org/abs/2205.10752).
     #
     # Unlike in single_entry_with_threshold, we do not need to worry about
     # cur_threshold having -np.inf here as a result of threshold_min being
@@ -189,10 +189,10 @@ def batch_entries_with_threshold(indices, new_data, add_info, extra_args,
         # Regular archive behavior, so the thresholds are just the objective.
         new_threshold = new_data["objective"]
     else:
-        # Batch threshold update described in Fontaine 2022
-        # https://arxiv.org/abs/2205.10752 This computation is based on the mean
-        # objective of all solutions in the batch that could have been inserted
-        # into each cell.
+        # Batch threshold update described in Fontaine 2023
+        # (https://arxiv.org/abs/2205.10752) This computation is based on the
+        # mean objective of all solutions in the batch that could have been
+        # inserted into each cell.
         new_threshold = _compute_thresholds(indices, new_data["objective"],
                                             cur_threshold, learning_rate, dtype)
 

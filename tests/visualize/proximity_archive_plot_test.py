@@ -50,6 +50,29 @@ def proximity_archive_2d():
 
 
 @pytest.fixture(scope="module")
+def proximity_archive_2d_obj():
+    """Same as above but with objectives."""
+    archive = ProximityArchive(solution_dim=2,
+                               measure_dim=2,
+                               k_neighbors=5,
+                               novelty_threshold=0.1,
+                               seed=42)
+    add_random_sphere(archive, (-1, 1), (-1, 1), use_objective=True)
+    return archive
+
+
+@pytest.fixture(scope="module")
+def proximity_archive_2d_empty():
+    """Same as above but without solutions."""
+    archive = ProximityArchive(solution_dim=2,
+                               measure_dim=2,
+                               k_neighbors=5,
+                               novelty_threshold=0.1,
+                               seed=42)
+    return archive
+
+
+@pytest.fixture(scope="module")
 def proximity_archive_2d_long():
     """Same as above, but the measure space is longer in one direction."""
     archive = ProximityArchive(solution_dim=2,
@@ -125,6 +148,29 @@ def test_bounds(proximity_archive_2d):
                            upper_bounds=[5, 5],
                            cmap=[[0.5, 0.5, 0.5]],
                            cbar=None)
+
+
+@image_comparison(baseline_images=["limits"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_limits(proximity_archive_2d_obj):
+    # Negative sphere function should have range (-2, 0). These limits should
+    # give a more uniform-looking archive.
+    plt.figure(figsize=(8, 6))
+    proximity_archive_plot(proximity_archive_2d_obj, vmin=-1.0, vmax=-0.5)
+
+
+@image_comparison(baseline_images=["bounds_and_limits_when_empty"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_bounds_and_limits_when_empty(proximity_archive_2d_empty):
+    plt.figure(figsize=(8, 6))
+    proximity_archive_plot(
+        proximity_archive_2d_empty,
+        # Intentionally don't provide vmin or vmax.
+        vmin=None,
+        vmax=None,
+    )
 
 
 @image_comparison(baseline_images=["rasterized"],
