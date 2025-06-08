@@ -38,7 +38,7 @@ class GridArchive(ArchiveBase):
     into a cell, while the integer ``index`` uniquely identifies each cell.
 
     Args:
-        solution_dim (int): Dimension of the solution space.
+        solution_dim (int): Dimensionality of the solution space.
         dims (array-like of int): Number of cells in each dimension of the
             measure space, e.g. ``[20, 30, 40]`` indicates there should be 3
             dimensions with 20, 30, and 40 cells. (The number of dimensions is
@@ -87,18 +87,20 @@ class GridArchive(ArchiveBase):
         ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
-    def __init__(self,
-                 *,
-                 solution_dim,
-                 dims,
-                 ranges,
-                 learning_rate=None,
-                 threshold_min=-np.inf,
-                 epsilon=1e-6,
-                 qd_score_offset=0.0,
-                 seed=None,
-                 dtype=np.float64,
-                 extra_fields=None):
+    def __init__(
+        self,
+        *,
+        solution_dim,
+        dims,
+        ranges,
+        learning_rate=None,
+        threshold_min=-np.inf,
+        epsilon=1e-6,
+        qd_score_offset=0.0,
+        seed=None,
+        dtype=np.float64,
+        extra_fields=None,
+    ):
         self._rng = np.random.default_rng(seed)
         self._dims = np.array(dims, dtype=np.int32)
 
@@ -649,7 +651,7 @@ class GridArchive(ArchiveBase):
         self._stats_reset()
 
     ## Methods for reading from the archive ##
-    ## Refer to ArchiveBase for the documentation of these methods. ##
+    ## Refer to ArchiveBase for documentation of these methods. ##
 
     def retrieve(self, measures):
         measures = np.asarray(measures)
