@@ -331,6 +331,8 @@ class ArchiveBase(ABC):
             n (int): Number of elites to sample.
         Returns:
             dict: Holds a batch of elites randomly selected from the archive.
+        Raises:
+            IndexError: The archive is empty.
         """
         raise NotImplementedError(
             "`sample_elites` has not been implemented in this archive")
