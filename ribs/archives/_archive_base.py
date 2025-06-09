@@ -11,8 +11,7 @@ from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._transforms import (batch_entries_with_threshold,
                                        compute_best_index,
-                                       compute_objective_sum,
-                                       single_entry_with_threshold)
+                                       compute_objective_sum)
 
 _ARCHIVE_FIELDS = {"index", "solution", "objective", "measures", "threshold"}
 
@@ -93,10 +92,10 @@ class ArchiveBase(ABC):
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type or dict): Data type of the solutions,
-            objectives, and measures. We only support ``"f"`` / ``np.float32``
-            and ``"d"`` / ``np.float64``. Alternatively, this can be a dict
-            specifying separate dtypes, of the form ``{"solution": <dtype>,
-            "objective": <dtype>, "measures": <dtype>}``.
+            objectives, and measures. This can be ``"f"`` / ``np.float32``,
+            ``"d"`` / ``np.float64``, or a dict specifying separate dtypes, of
+            the form ``{"solution": <dtype>, "objective": <dtype>, "measures":
+            <dtype>}``.
         extra_fields (dict): Description of extra fields of data that is stored
             next to elite data like solutions and objectives. The description is
             a dict mapping from a field name (str) to a tuple of ``(shape,
@@ -117,19 +116,19 @@ class ArchiveBase(ABC):
         ValueError: Invalid names in extra_fields.
     """
 
-    def __init__(self,
-                 *,
-                 solution_dim,
-                 cells,
-                 measure_dim,
-                 learning_rate=None,
-                 threshold_min=-np.inf,
-                 qd_score_offset=0.0,
-                 seed=None,
-                 dtype=np.float64,
-                 extra_fields=None):
-
-        self._seed = seed
+    def __init__(
+        self,
+        *,
+        solution_dim,
+        cells,
+        measure_dim,
+        learning_rate=None,
+        threshold_min=-np.inf,
+        qd_score_offset=0.0,
+        seed=None,
+        dtype=np.float64,
+        extra_fields=None,
+    ):
         self._rng = np.random.default_rng(seed)
         self._solution_dim = solution_dim
         self._measure_dim = measure_dim
@@ -396,7 +395,7 @@ class ArchiveBase(ABC):
         in the appendix of `Fontaine 2023 <https://arxiv.org/abs/2205.10752>`_.
 
         .. note:: The indices of all arguments should "correspond" to each
-            other, i.e. ``solution[i]``, ``objective[i]``,
+            other, i.e., ``solution[i]``, ``objective[i]``,
             ``measures[i]``, and should be the solution parameters,
             objective, and measures for solution ``i``.
 
@@ -431,13 +430,13 @@ class ArchiveBase(ABC):
 
               The alternative is to depend on the order of the solutions in the
               batch -- for example, if we have two solutions ``a`` and ``b``
-              which introduce the same new cell in the archive, ``a`` could be
+              that introduce the same new cell in the archive, ``a`` could be
               inserted first with status ``2``, and ``b`` could be inserted
               second with status ``1`` because it improves upon ``a``. However,
               our implementation does **not** do this.
 
               To convert statuses to a more semantic format, cast all statuses
-              to :class:`AddStatus` e.g. with ``[AddStatus(s) for s in
+              to :class:`AddStatus`, e.g., with ``[AddStatus(s) for s in
               add_info["status"]]``.
 
             - ``"value"`` (:class:`numpy.ndarray` of
@@ -447,14 +446,14 @@ class ArchiveBase(ABC):
               depends on the corresponding ``status`` and is identical to that
               in CMA-ME (`Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_):
 
-              - ``0`` (not added): The value is the "negative improvement," i.e.
-                the objective of the solution passed in minus the objective of
-                the elite still in the archive (this value is negative because
-                the solution did not have a high enough objective to be added to
-                the archive).
+              - ``0`` (not added): The value is the "negative improvement,"
+                i.e., the objective of the solution passed in minus the
+                objective of the elite still in the archive (this value is
+                negative because the solution did not have a high enough
+                objective to be added to the archive).
               - ``1`` (improve existing cell): The value is the "improvement,"
-                i.e. the objective of the solution passed in minus the objective
-                of the elite previously in the archive.
+                i.e., the objective of the solution passed in minus the
+                objective of the elite previously in the archive.
               - ``2`` (new cell): The value is just the objective of the
                 solution.
 
@@ -511,10 +510,9 @@ class ArchiveBase(ABC):
         also updated if the solution was inserted.
 
         .. note::
-            To make it more amenable to modifications, this method's
-            implementation is designed to be readable at the cost of
-            performance, e.g., none of its operations are modified. If you need
-            performance, we recommend using :meth:`add`.
+            This method is provided as an easier-to-understand implementation
+            that has less performance due to inserting only one solution at a
+            time. For better performance, see :meth:`add`.
 
         Args:
             solution (array-like): Parameters of the solution.
@@ -542,33 +540,83 @@ class ArchiveBase(ABC):
             },
         )
 
-        for name, arr in data.items():
-            data[name] = np.expand_dims(arr, axis=0)
+        # Delete these so that we only use the clean, validated data in `data`.
+        del solution, objective, measures, fields
 
-        add_info = self._store.add(
-            np.expand_dims(self.index_of_single(measures), axis=0),
-            data,
-            {
-                "dtype": self.dtypes["threshold"],
-                "learning_rate": self._learning_rate,
-                "threshold_min": self._threshold_min,
-                "objective_sum": self._objective_sum,
-            },
-            [
-                single_entry_with_threshold,
-                compute_objective_sum,
-                compute_best_index,
-            ],
-        )
+        # Information to return about the addition.
+        add_info = {}
 
-        objective_sum = add_info.pop("objective_sum")
-        best_index = add_info.pop("best_index")
+        # Identify the archive cell.
+        index = self.index_of_single(data["measures"])
 
-        for name, arr in add_info.items():
-            add_info[name] = arr[0]
+        # Retrieve current data of the cell.
+        cur_occupied, cur_data = self._store.retrieve([index])
+        cur_occupied = cur_occupied[0]
 
-        if add_info["status"]:
-            self._stats_update(objective_sum, best_index)
+        if cur_occupied:
+            # If the cell is currently occupied, the threshold comes from the
+            # cell's current data.
+            cur_threshold = cur_data["threshold"][0]
+        else:
+            # If the cell is not currently occupied, the threshold needs special
+            # settings.
+            #
+            # If threshold_min is -inf, then we want CMA-ME behavior, which
+            # computes the improvement value with a threshold of zero for new
+            # solutions. Otherwise, we will set cur_threshold to threshold_min.
+            cur_threshold = (np_scalar(0.0, dtype=self.dtypes["threshold"])
+                             if self.threshold_min == -np.inf else
+                             self.threshold_min)
+
+        # Retrieve candidate objective.
+        objective = data["objective"]
+
+        # Compute status and threshold.
+        add_info["status"] = 0  # NOT_ADDED
+
+        # Now we check whether a solution should be added to the archive. We use
+        # the addition rule from MAP-Elites (Fig. 2 of Mouret 2015
+        # https://arxiv.org/pdf/1504.04909.pdf), with modifications for CMA-MAE.
+
+        # This checks if a new solution is discovered in the archive. Note that
+        # regular MAP-Elites only checks `not cur_occupied`. CMA-MAE has an
+        # additional `threshold_min` that the objective must exceed for new
+        # cells. If CMA-MAE is not being used, then `threshold_min` is -np.inf,
+        # making this check identical to that of MAP-Elites.
+        is_new = not cur_occupied and self.threshold_min < objective
+
+        # This checks whether the solution improves an existing cell in the
+        # archive, i.e., whether it performs better than the current solution in
+        # this cell. Vanilla MAP-Elites compares to the objective of the cell's
+        # current solution. CMA-MAE compares to a threshold value that updates
+        # over time. When learning_rate is set to 1.0 (the default value), we
+        # recover the same rule as in MAP-Elites because cur_threshold is
+        # equivalent to the objective of the solution in the cell.
+        improve_existing = cur_occupied and cur_threshold < objective
+
+        if is_new or improve_existing:
+            if improve_existing:
+                add_info["status"] = 1  # IMPROVE_EXISTING
+            else:
+                add_info["status"] = 2  # NEW
+
+            # This calculation works in the case where threshold_min is -inf
+            # because cur_threshold will be set to 0.0 instead.
+            data["threshold"] = [(cur_threshold * (1.0 - self.learning_rate) +
+                                  objective * self.learning_rate)]
+
+            self._store.add_2(index[None], {
+                name: np.expand_dims(arr, axis=0) for name, arr in data.items()
+            })
+
+            # Update stats.
+            cur_objective = (cur_data["objective"] if cur_occupied else
+                             np_scalar(0.0, self.dtypes["objective"]))
+            self._stats_update(self._objective_sum + objective - cur_objective,
+                               index)
+
+        # Value is the improvement over the current threshold (can be negative).
+        add_info["value"] = objective - cur_threshold
 
         return add_info
 
