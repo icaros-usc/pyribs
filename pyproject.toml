@@ -12,20 +12,20 @@ description = "A bare-bones Python library for quality diversity optimization."
 license = "MIT"
 keywords = ["ribs", "quality diversity", "optimization"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Education",
-    "Intended Audience :: Science/Research",
-    "Natural Language :: English",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Mathematics",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 requires-python = ">=3.9.0"
 dependencies = [
@@ -52,12 +52,12 @@ pycma = [
 # All dependencies except for dev. Don't worry if there are duplicate
 # dependencies, since setuptools automatically handles duplicates.
 all = [
-    ### visualize ###
-    "matplotlib>=3.0.0",
-    "shapely>=2.0.0",
+  ### visualize ###
+  "matplotlib>=3.0.0",
+  "shapely>=2.0.0",
 
-    ### cma ###
-    "cma",
+  ### cma ###
+  "cma",
 ]
 dev = [
   "pip>=20.3",

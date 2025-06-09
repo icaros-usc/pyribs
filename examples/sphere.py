@@ -856,7 +856,6 @@ def save_heatmap(archive, heatmap_path):
     plt.close(plt.gcf())
 
 
-# pylint: disable-next = too-many-positional-arguments
 def sphere_main(algorithm,
                 dim=100,
                 itrs=10000,
