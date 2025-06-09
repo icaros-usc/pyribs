@@ -645,7 +645,7 @@ class GridArchive(ArchiveBase):
         objective = data["objective"]
 
         # Compute status and threshold.
-        add_info["status"] = 0  # NOT_ADDED
+        add_info["status"] = np.int32(0)  # NOT_ADDED
 
         # Now we check whether a solution should be added to the archive. We use
         # the addition rule from MAP-Elites (Fig. 2 of Mouret 2015
@@ -669,9 +669,9 @@ class GridArchive(ArchiveBase):
 
         if is_new or improve_existing:
             if improve_existing:
-                add_info["status"] = 1  # IMPROVE_EXISTING
+                add_info["status"] = np.int32(1)  # IMPROVE_EXISTING
             else:
-                add_info["status"] = 2  # NEW
+                add_info["status"] = np.int32(2)  # NEW
 
             # This calculation works in the case where threshold_min is -inf
             # because cur_threshold will be set to 0.0 instead.
