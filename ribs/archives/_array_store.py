@@ -391,12 +391,10 @@ class ArrayStore:
         return self.retrieve(self.occupied_list, fields, return_type)[1]
 
     def add_2(self, indices, new_data):
-        # TODO: docstring
         """Adds new data to the store at the given indices."""
         self._props["updates"][Update.ADD] += 1
 
         # Shortcut when there is nothing to add to the store.
-        # TODO: Check needed?
         if len(indices) == 0:
             return
 
