@@ -628,7 +628,7 @@ class GridArchive(ArchiveBase):
 
         if cur_occupied:
             # If the cell is currently occupied, the threshold comes from the
-            # cell's current data.
+            # current data of the elite in the cell.
             cur_threshold = cur_data["threshold"][0]
         else:
             # If the cell is not currently occupied, the threshold needs special
@@ -659,12 +659,13 @@ class GridArchive(ArchiveBase):
         is_new = not cur_occupied and self.threshold_min < objective
 
         # This checks whether the solution improves an existing cell in the
-        # archive, i.e., whether it performs better than the current solution in
+        # archive, i.e., whether it performs better than the current elite in
         # this cell. Vanilla MAP-Elites compares to the objective of the cell's
-        # current solution. CMA-MAE compares to a threshold value that updates
-        # over time. When learning_rate is set to 1.0 (the default value), we
-        # recover the same rule as in MAP-Elites because cur_threshold is
-        # equivalent to the objective of the solution in the cell.
+        # current elite. CMA-MAE compares to a threshold value that updates
+        # over time (i.e., cur_threshold). When learning_rate is set to 1.0 (the
+        # default value), we recover the same rule as in MAP-Elites because
+        # cur_threshold is equivalent to the objective of the solution in the
+        # cell.
         improve_existing = cur_occupied and cur_threshold < objective
 
         if is_new or improve_existing:
