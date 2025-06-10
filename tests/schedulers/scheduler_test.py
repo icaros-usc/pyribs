@@ -198,6 +198,42 @@ def test_result_archive_mismatch_fields(scheduler_type):
             )
 
 
+@pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
+def test_result_archive_same_fields(scheduler_type):
+    archive = ProximityArchive(solution_dim=2,
+                               measure_dim=2,
+                               k_neighbors=5,
+                               novelty_threshold=0.01,
+                               extra_fields={
+                                   "metadata": ((), object),
+                                   "square": ((2, 2), np.int32)
+                               })
+    result_archive = GridArchive(solution_dim=2,
+                                 dims=[100, 100],
+                                 ranges=[(-1, 1), (-1, 1)],
+                                 extra_fields={
+                                     "metadata": ((), object),
+                                     "square": ((2, 2), np.int32)
+                                 })
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
+
+    # GridArchive has a threshold field and ProximityArchive does not, but these
+    # should still instantiate fine because the extra_fields are identical.
+    if scheduler_type == "Scheduler":
+        Scheduler(
+            archive,
+            emitters,
+            result_archive=result_archive,
+        )
+    else:
+        BanditScheduler(
+            archive,
+            emitters,
+            1,
+            result_archive=result_archive,
+        )
+
+
 def test_tell_inserts_solutions_into_archive(add_mode):
     batch_size = 4
     archive = GridArchive(solution_dim=2,
