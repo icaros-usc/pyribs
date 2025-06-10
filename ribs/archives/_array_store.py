@@ -418,11 +418,9 @@ class ArrayStore:
         """
         self._props["updates"][Update.ADD] += 1
 
-        # Shortcut when there is nothing to add.
         if len(indices) == 0:
             return
 
-        # Verify that the array shapes match the indices.
         for name, arr in data.items():
             if len(arr) != len(indices):
                 raise ValueError(
@@ -430,7 +428,6 @@ class ArrayStore:
                     f"{len(arr)} but should be the same length as indices "
                     f"({len(indices)})")
 
-        # Verify the data has the correct fields.
         if data.keys() != self._fields.keys():
             raise ValueError(
                 f"`data` has keys {data.keys()} but should have the "
