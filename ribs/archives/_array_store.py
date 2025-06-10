@@ -214,6 +214,22 @@ class ArrayStore:
         return {name: arr.dtype for name, arr in self._fields.items()}
 
     @cached_property
+    def dtypes_with_index(self):
+        """dict: Data types of fields in the store, plus the index.
+
+        Example:
+
+            ::
+
+                store.dtypes == {
+                    "objective": np.float32,
+                    "measures": np.float32,
+                    "index": np.int32,
+                }
+        """
+        return self.dtypes | {"index": np.int32}
+
+    @cached_property
     def field_list(self):
         """list: List of fields in the store.
 
@@ -226,6 +242,21 @@ class ArrayStore:
         # Python dicts are ordered, so this will follow the same order as in the
         # constructor.
         return list(self._fields)
+
+    @cached_property
+    def field_list_with_index(self):
+        """list: List of fields in the store, plus the index.
+
+        The index is always added at the end of the list.
+
+        Example:
+
+            ::
+
+                store.field_list_with_index == \
+                        ["objective", "measures", "index"]
+        """
+        return list(self._fields) + ["index"]
 
     def retrieve(self, indices, fields=None, return_type="dict"):
         """Collects data at the given indices.
