@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
+from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
                          check_shape, np_scalar, validate_batch,
@@ -241,7 +242,6 @@ class ArchiveBase(ABC):
         """
         return self._best_elite
 
-    # TODO: Remove?
     @property
     def dtype(self):
         """DEPRECATED."""
@@ -372,6 +372,47 @@ class ArchiveBase(ABC):
             obj_mean=np_scalar(self._objective_sum / len(self),
                                dtype=self.dtypes["objective"]),
         )
+
+    @staticmethod
+    def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
+                            dtype):
+        """Computes new thresholds with the CMA-MAE batch threshold update rule.
+
+        If entries in `indices` are duplicated, they receive the same threshold.
+        """
+        if len(indices) == 0:
+            return np.array([], dtype=dtype)
+
+        # Compute the number of objectives inserted into each cell. Note that we
+        # index with `indices` to place the counts at all relevant indices. For
+        # instance, if we had an array [1,2,3,1,5], we would end up with
+        # [2,1,1,2,1] (there are 2 1's, 1 2, 1 3, 2 1's, and 1 5).
+        #
+        # All objective_sizes should be > 0 since we only retrieve counts for
+        # indices in `indices`.
+        objective_sizes = aggregate(indices, 1, func="len",
+                                    fill_value=0)[indices]
+
+        # Compute the sum of the objectives inserted into each cell -- again, we
+        # index with `indices`.
+        objective_sums = aggregate(indices,
+                                   objective,
+                                   func="sum",
+                                   fill_value=np.nan)[indices]
+
+        # Update the threshold with the batch update rule from Fontaine 2023
+        # (https://arxiv.org/abs/2205.10752).
+        #
+        # Unlike in single_entry_with_threshold, we do not need to worry about
+        # cur_threshold having -np.inf here as a result of threshold_min being
+        # -np.inf. This is because the case with threshold_min = -np.inf is
+        # handled separately since we compute the new threshold based on the max
+        # objective in each cell in that case.
+        ratio = np_scalar(1.0 - learning_rate, dtype=dtype)**objective_sizes
+        new_threshold = (ratio * cur_threshold +
+                         (objective_sums / objective_sizes) * (1 - ratio))
+
+        return new_threshold
 
     def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
@@ -564,7 +605,7 @@ class ArchiveBase(ABC):
         data["threshold"] = new_threshold[should_insert]
 
         # Insert elites into the store.
-        self._store.add_2(indices, data)
+        self._store.add(indices, data)
 
         # Compute statistics.
         cur_objective = cur_data["objective"]
@@ -683,7 +724,7 @@ class ArchiveBase(ABC):
             data["threshold"] = [(cur_threshold * (1.0 - self.learning_rate) +
                                   objective * self.learning_rate)]
 
-            self._store.add_2(index[None], {
+            self._store.add(index[None], {
                 name: np.expand_dims(arr, axis=0) for name, arr in data.items()
             })
 
