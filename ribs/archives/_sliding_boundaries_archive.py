@@ -16,7 +16,6 @@ from ribs.archives._grid_archive import GridArchive
 from ribs.archives._utils import parse_dtype
 
 
-# TODO: Docstring update? Mention fields?
 class SolutionBuffer:
     """An internal class that stores relevant data to re-add after remapping.
 
@@ -87,6 +86,7 @@ class SolutionBuffer:
 
 
 class SlidingBoundariesArchive(ArchiveBase):
+    # pylint: disable = too-many-public-methods
     """An archive with a fixed number of sliding boundaries in each dimension.
 
     This archive is the container described in `Fontaine 2019
@@ -186,7 +186,9 @@ class SlidingBoundariesArchive(ArchiveBase):
         # Set up the ArrayStore, which is a data structure that stores all the
         # elites' data in arrays sharing a common index.
         extra_fields = extra_fields or {}
-        reserved_fields = {"solution", "objective", "measures", "index"}
+        reserved_fields = {
+            "solution", "objective", "measures", "threshold", "index"
+        }
         if reserved_fields & extra_fields.keys():
             raise ValueError("The following names are not allowed in "
                              f"extra_fields: {reserved_fields}")
@@ -196,6 +198,9 @@ class SlidingBoundariesArchive(ArchiveBase):
                 "solution": ((self.solution_dim,), dtype["solution"]),
                 "objective": ((), dtype["objective"]),
                 "measures": ((self.measure_dim,), dtype["measures"]),
+                # Must be same dtype as the objective since they share
+                # calculations.
+                "threshold": ((), dtype["objective"]),
                 **extra_fields,
             },
             capacity=np.prod(self._dims),
@@ -506,7 +511,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         cur_data = self._store.data()
 
         # These fields are only computed by the archive.
-        cur_data.pop("threshold")  # TODO: remove threshold
+        cur_data.pop("threshold")
         cur_data.pop("index")
 
         new_data_single = list(self._buffer)  # List of dicts.
@@ -525,10 +530,12 @@ class SlidingBoundariesArchive(ArchiveBase):
             name: np.concatenate((cur_data[name], new_data[name]))
             for name in cur_data
         }
-        ArchiveBase.add(self, **final_data)
 
-        add_info = ArchiveBase.add_single(self, **last_data)
-        return add_info
+        for i in range(len(final_data["solution"])):
+            self._basic_add_single({
+                name: arr[i] for name, arr in final_data.items()
+            })
+        return self._basic_add_single(last_data)
 
     ## Methods for writing to the archive ##
 
@@ -569,74 +576,54 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         return add_info
 
-    def add_single_2(self, solution, objective, measures, **fields):
-        """Inserts a single solution into the archive.
+    def _basic_add_single(self, data):
+        """Regular addition following standard MAP-Elites procedures.
 
-        The solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  The threshold is
-        also updated if the solution was inserted.
-
-        .. note::
-            To make it more amenable to modifications, this method's
-            implementation is designed to be readable at the cost of
-            performance, e.g., none of its operations are modified. :meth:`add`
-            should be used if performance is required.
-
-        Args:
-            solution (array-like): Parameters of the solution.
-            objective (float): Objective function evaluation of the solution.
-            measures (array-like): Coordinates in measure space of the solution.
-            fields (keyword arguments): Additional data for the solution.
-
-        Returns:
-            dict: Information describing the result of the add operation. The
-            dict contains ``status`` and ``value`` keys; refer to :meth:`add`
-            for the meaning of status and value.
-
-        Raises:
-            ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
-                has non-finite values.
+        `data` should be similar to the data created in `add_single`.
         """
-        data = validate_single(
-            self,
-            {
-                "solution": solution,
-                "objective": objective,
-                "measures": measures,
-                **fields,
-            },
-        )
 
-        for name, arr in data.items():
-            data[name] = np.expand_dims(arr, axis=0)
+        # Information to return about the addition.
+        add_info = {}
 
-        add_info = self._store.add(
-            np.expand_dims(self.index_of_single(measures), axis=0),
-            data,
-            {
-                "dtype": self.dtypes["objective"],
-                "learning_rate": 1.0,
-                "threshold_min": -np.inf,
-                "objective_sum": self._objective_sum,
-            },
-            [
-                single_entry_with_threshold,
-                compute_objective_sum,
-                compute_best_index,
-            ],
-        )
+        # Identify the archive cell.
+        index = self.index_of_single(data["measures"])
 
-        objective_sum = add_info.pop("objective_sum")
-        best_index = add_info.pop("best_index")
+        # Retrieve current data of the cell.
+        cur_occupied, cur_data = self._store.retrieve([index])
+        cur_occupied = cur_occupied[0]
+        cur_objective = (cur_data["objective"] if cur_occupied else np_scalar(
+            0.0, self.dtypes["objective"]))
 
-        for name, arr in add_info.items():
-            add_info[name] = arr[0]
+        # Retrieve candidate objective.
+        objective = data["objective"]
 
-        if add_info["status"]:
-            self._stats_update(objective_sum, best_index)
+        # Compute status and threshold.
+        add_info["status"] = np.int32(0)  # NOT_ADDED
+
+        # Now we check whether a solution should be added to the archive. We use
+        # the addition rule from MAP-Elites (Fig. 2 of Mouret 2015
+        # https://arxiv.org/pdf/1504.04909.pdf).
+
+        if (not cur_occupied or (cur_occupied and objective > cur_objective)):
+            if cur_occupied:
+                add_info["status"] = np.int32(1)  # IMPROVE_EXISTING
+            else:
+                add_info["status"] = np.int32(2)  # NEW
+
+            # TODO (btjanaka): Placeholder -- will remove.
+            data["threshold"] = data["objective"]
+
+            # Insert elite into the store.
+            self._store.add(index[None], {
+                name: np.expand_dims(arr, axis=0) for name, arr in data.items()
+            })
+
+            # Update stats.
+            self._stats_update(self._objective_sum + objective - cur_objective,
+                               index)
+
+        # Value is the improvement over the current objective (can be negative).
+        add_info["value"] = objective - cur_objective
 
         return add_info
 
@@ -651,7 +638,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         See :meth:`ArchiveBase.add_single` for arguments and return values.
         """
-        new_data = validate_single(
+        data = validate_single(
             self,
             {
                 "solution": solution,
@@ -661,7 +648,10 @@ class SlidingBoundariesArchive(ArchiveBase):
             },
         )
 
-        self._buffer.add(new_data)
+        # Delete these so that we only use the clean, validated data in `data`.
+        del solution, objective, measures, fields
+
+        self._buffer.add(data)
         self._total_num_sol += 1
 
         if self._total_num_sol % self._remap_frequency == 0:
@@ -673,8 +663,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             ])
             self._interval_size = self._upper_bounds - self._lower_bounds
         else:
-            # TODO: Implement our own add_single...
-            add_info = self.add_single_2(**new_data)
+            add_info = self._basic_add_single(data)
         return add_info
 
     def clear(self):
