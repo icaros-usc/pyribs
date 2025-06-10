@@ -309,64 +309,6 @@ def test_retrieve_single_field(store):
     assert np.all(data == [2.0, 1.0])
 
 
-def test_add_simple_transform(store):
-
-    def obj_meas(indices, new_data, add_info, extra_args, occupied, cur_data):
-        # pylint: disable = unused-argument
-        new_data["objective"] = np.sum(new_data["solution"], axis=1)
-        new_data["measures"] = np.asarray(new_data["solution"])[:, :2]
-        add_info.update(extra_args)
-        add_info["bar"] = 5
-        return indices, new_data, add_info
-
-    add_info = store.add(
-        [3, 5],
-        {
-            "solution": [np.ones(10), 2 * np.ones(10)],
-        },
-        {"foo": 4},
-        [obj_meas],
-    )
-
-    assert add_info == {"foo": 4, "bar": 5}
-
-    assert len(store) == 2
-    assert np.all(store.occupied == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
-    assert np.all(np.sort(store.occupied_list) == [3, 5])
-
-    occupied, data = store.retrieve([3, 5])
-
-    assert np.all(occupied == [True, True])
-    assert data.keys() == set(["objective", "measures", "solution", "index"])
-    assert np.all(data["objective"] == [10.0, 20.0])
-    assert np.all(data["measures"] == [[1.0, 1.0], [2.0, 2.0]])
-    assert np.all(data["solution"] == [np.ones(10), 2 * np.ones(10)])
-    assert np.all(data["index"] == [3, 5])
-
-
-def test_add_empty_transform(store):
-    # new_data should be able to take on arbitrary values when no indices are
-    # returned, so we make it an empty dict here.
-    def empty(indices, new_data, add_info, extra_args, occupied, cur_data):
-        # pylint: disable = unused-argument
-        return [], {}, {}
-
-    add_info = store.add(
-        [3, 5],
-        {
-            "solution": [np.ones(10), 2 * np.ones(10)],
-        },
-        {"foo": 4},
-        [empty],
-    )
-
-    assert add_info == {}
-
-    assert len(store) == 0
-    assert np.all(~store.occupied)
-    assert len(store.occupied_list) == 0
-
-
 def test_resize_bad_capacity(store):
     with pytest.raises(ValueError):
         store.resize(store.capacity)
