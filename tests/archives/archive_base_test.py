@@ -27,6 +27,7 @@ def test_str_dtype_float(name, dtype):
     assert archive.dtypes["measures"] == np_dtype
     if isinstance(archive, MAE_ARCHIVES):
         assert archive.dtypes["threshold"] == np_dtype
+    assert archive.dtypes["index"] == np.int32
 
 
 def test_dict_dtype():
@@ -45,6 +46,7 @@ def test_dict_dtype():
     assert archive.dtypes["objective"] == np.float32
     assert archive.dtypes["measures"] == np.float32
     assert archive.dtypes["threshold"] == np.float32
+    assert archive.dtypes["index"] == np.int32
 
 
 def test_invalid_dtype():
@@ -359,10 +361,12 @@ def test_qd_score_offset_correct(data):
 def test_field_list_correct(data):
     if isinstance(data.archive, MAE_ARCHIVES):
         assert data.archive.field_list == [
-            "solution", "objective", "measures", "threshold"
+            "solution", "objective", "measures", "threshold", "index"
         ]
     else:
-        assert data.archive.field_list == ["solution", "objective", "measures"]
+        assert data.archive.field_list == [
+            "solution", "objective", "measures", "index"
+        ]
 
 
 def test_basic_stats(data):
