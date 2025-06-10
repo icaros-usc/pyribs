@@ -1,189 +1,71 @@
 """Provides ArchiveBase."""
-from abc import ABC, abstractmethod
-
-import numpy as np
-from numpy_groupies import aggregate_nb as aggregate
-
-from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
-                         check_shape, np_scalar, validate_batch,
-                         validate_single)
-from ribs.archives._archive_stats import ArchiveStats
-from ribs.archives._array_store import ArrayStore
-from ribs.archives._cqd_score_result import CQDScoreResult
-
-_ARCHIVE_FIELDS = {"index", "solution", "objective", "measures", "threshold"}
-
-
-def parse_dtype(dtype):
-    """Parses dtype for the archive.
-
-    Returns:
-        np.float32 or np.float64
-    Raises:
-        ValueError: Unsupported dtype.
-    """
-    # First convert str dtype's to np.dtype.
-    if isinstance(dtype, str):
-        dtype = np.dtype(dtype)
-
-    # np.dtype is not np.float32 or np.float64, but it compares equal.
-    if dtype in [np.float32, np.float64]:
-        return {
-            "solution": dtype,
-            "objective": dtype,
-            "measures": dtype,
-        }
-    elif isinstance(dtype, dict):
-        if ("solution" not in dtype or "objective" not in dtype or
-                "measures" not in dtype):
-            raise ValueError("If dtype is a dict, it must contain 'solution',"
-                             "'objective', and 'measures' keys.")
-        return dtype
-    else:
-        raise ValueError(
-            'Unsupported dtype. Must be np.float32 or np.float64, '
-            'or dict of the form '
-            '{"solution": <dtype>, "objective": <dtype>, "measures": <dtype>}')
+from abc import ABC
 
 
 class ArchiveBase(ABC):
-    # pylint: disable = too-many-instance-attributes, too-many-public-methods
     """Base class for archives.
 
-    This class composes archives using an :class:`ArrayStore` that has
-    "solution", "objective", "measures", and "threshold" fields.
+    An archive stores *elites*. Each elite consists of several data *fields*: at
+    a minimum, the elite has a *solution* and the evaluated *objective* and
+    *measures* of the solution. The elite may also include additional data
+    fields. Besides elites, archives can store components like k-D trees and
+    density estimators.
 
-    Child classes typically override the following methods:
+    The primary method of an archive is to write new solutions to it with
+    :meth:`add`. There are also methods to read from the archive, such as
+    :meth:`retrieve` and :meth:`data`. These methods typically operate over
+    batches of inputs (e.g., adding multiple solutions at once with
+    :meth:`add`), but methods such as :meth:`add_single` and
+    :meth:`retrieve_single` support single inputs.
 
-    - ``__init__``: Child classes must invoke this class's ``__init__`` with the
-      appropriate arguments.
-    - :meth:`index_of`: Returns integer indices into the arrays above when
-      given a batch of measures. Usually, each index has a meaning, e.g. in
-      :class:`~ribs.archives.CVTArchive` it is the index of a centroid.
-      Documentation for this method should describe the meaning of the index.
-
-    .. note:: Attributes beginning with an underscore are only intended to be
-        accessed by child classes (i.e. they are "protected" attributes).
-
-    .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
-        <https://arxiv.org/abs/2205.10752>`_. Refer to our `CMA-MAE tutorial
-        <../../tutorials/cma_mae.html>`_ for more info on thresholds, including
-        the ``learning_rate`` and ``threshold_min`` parameters.
+    Due to the flexibility of workflows available in pyribs, it is possible to
+    design archives that require only a small subset of the methods in this base
+    class. As such, none of the methods listed here are required to be
+    implemented in child classes, although by default they will raise
+    :class:`NotImplementedError` when called.
 
     Args:
-        solution_dim (int): Dimension of the solution space.
-        cells (int): Number of cells in the archive. This is used to create the
-            numpy arrays described above for storing archive info.
-        measure_dim (int): The dimension of the measure space.
-        learning_rate (float): The learning rate for threshold updates. Defaults
-            to 1.0.
-        threshold_min (float): The initial threshold value for all the cells.
-        qd_score_offset (float): Archives often contain negative objective
-            values, and if the QD score were to be computed with these negative
-            objectives, the algorithm would be penalized for adding new cells
-            with negative objectives. Thus, a standard practice is to normalize
-            all the objectives so that they are non-negative by introducing an
-            offset. This QD score offset will be *subtracted* from all
-            objectives in the archive, e.g., if your objectives go as low as
-            -300, pass in -300 so that each objective will be transformed as
-            ``objective - (-300)``.
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
-        dtype (str or data-type or dict): Data type of the solutions,
-            objectives, and measures. This can be ``"f"`` / ``np.float32``,
-            ``"d"`` / ``np.float64``, or a dict specifying separate dtypes, of
-            the form ``{"solution": <dtype>, "objective": <dtype>, "measures":
-            <dtype>}``.
-        extra_fields (dict): Description of extra fields of data that is stored
-            next to elite data like solutions and objectives. The description is
-            a dict mapping from a field name (str) to a tuple of ``(shape,
-            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
-            np.float32)}`` will create a "foo" field that contains scalar values
-            and a "bar" field that contains 10D values. Note that field names
-            must be valid Python identifiers, and names already used in the
-            archive are not allowed.
-
-    Attributes:
-        _rng (numpy.random.Generator): Random number generator, used in
-            particular for generating random elites.
-        _store (ribs.archives.ArrayStore): The underlying ArrayStore containing
-            data for the archive.
-
-    Raises:
-        ValueError: Invalid values for learning_rate and threshold_min.
-        ValueError: Invalid names in extra_fields.
+        solution_dim (int): Dimensionality of the solution space.
+        objective_dim (int or empty tuple): Dimensionality of the objective
+            space. For single-objective optimization problems where the
+            objective is a scalar, this argument should be an empty tuple
+            ``()``. In multi-objective optimization problems, this argument
+            should be an integer indicating the number of objectives.
+        measure_dim (int): Dimensionality of the measure space.
     """
 
-    def __init__(
-        self,
-        *,
-        solution_dim,
-        cells,
-        measure_dim,
-        learning_rate=None,
-        threshold_min=-np.inf,
-        qd_score_offset=0.0,
-        seed=None,
-        dtype=np.float64,
-        extra_fields=None,
-    ):
-        self._rng = np.random.default_rng(seed)
+    def __init__(self, *, solution_dim, objective_dim, measure_dim):
         self._solution_dim = solution_dim
+        self._objective_dim = objective_dim
         self._measure_dim = measure_dim
 
-        extra_fields = extra_fields or {}
-        if _ARCHIVE_FIELDS & extra_fields.keys():
-            raise ValueError("The following names are not allowed in "
-                             f"extra_fields: {_ARCHIVE_FIELDS}")
-
-        dtype = parse_dtype(dtype)
-        self._store = ArrayStore(
-            field_desc={
-                "solution": ((solution_dim,), dtype["solution"]),
-                "objective": ((), dtype["objective"]),
-                "measures": ((measure_dim,), dtype["measures"]),
-                # Must be same dtype as the objective since they share
-                # calculations.
-                "threshold": ((), dtype["objective"]),
-                **extra_fields,
-            },
-            capacity=cells,
-        )
-
-        if threshold_min != -np.inf and learning_rate is None:
-            raise ValueError(
-                "You set threshold_min without setting learning_rate. "
-                "Please note that threshold_min is only used in CMA-MAE; "
-                "it is not intended to be used for only filtering archive "
-                "solutions. If you would like to run CMA-MAE, please also set "
-                "learning_rate.")
-        if learning_rate is None:
-            learning_rate = 1.0  # Default value.
-        if threshold_min == -np.inf and learning_rate != 1.0:
-            raise ValueError("threshold_min can only be -np.inf if "
-                             "learning_rate is 1.0")
-        self._learning_rate = np_scalar(learning_rate, self.dtypes["threshold"])
-        self._threshold_min = np_scalar(threshold_min, self.dtypes["threshold"])
-
-        self._qd_score_offset = np_scalar(qd_score_offset,
-                                          self.dtypes["objective"])
-
-        self._stats = None
-        self._best_elite = None
-        # Sum of all objective values in the archive; useful for computing
-        # qd_score and obj_mean.
-        self._objective_sum = None
-        self._stats_reset()
+    ## Properties of the archive ##
 
     @property
     def field_list(self):
         """list: List of data fields in the archive."""
-        return self._store.field_list
+        raise NotImplementedError(
+            "`field_list` has not been implemented in this archive")
 
     @property
-    def cells(self):
-        """int: Total number of cells in the archive."""
-        return self._store.capacity
+    def dtypes(self):
+        """dict: Mapping from field name to dtype for all fields in the
+        archive."""
+        raise NotImplementedError(
+            "`dtypes` has not been implemented in this archive")
+
+    @property
+    def solution_dim(self):
+        """int: Dimensionality of the solution space."""
+        return self._solution_dim
+
+    @property
+    def objective_dim(self):
+        """int or empty tuple: Dimensionality of the objective space.
+
+        The empty tuple ``()`` indicates a scalar objective.
+        """
+        return self._objective_dim
 
     @property
     def measure_dim(self):
@@ -191,79 +73,26 @@ class ArchiveBase(ABC):
         return self._measure_dim
 
     @property
-    def solution_dim(self):
-        """int: Dimensionality of the solutions in the archive."""
-        return self._solution_dim
-
-    @property
-    def learning_rate(self):
-        """float: The learning rate for threshold updates."""
-        return self._learning_rate
-
-    @property
-    def threshold_min(self):
-        """float: The initial threshold value for all the cells."""
-        return self._threshold_min
-
-    @property
-    def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when
-        computing the QD score."""
-        return self._qd_score_offset
-
-    @property
     def stats(self):
-        """:class:`ArchiveStats`: Statistics about the archive.
+        """:class:`~ribs.archives.ArchiveStats`: Statistics about the archive.
 
-        See :class:`ArchiveStats` for more info.
+        See :class:`~ribs.archives.ArchiveStats` for more info.
         """
-        return self._stats
-
-    @property
-    def best_elite(self):
-        """dict: The elite with the highest objective in the archive.
-
-        None if there are no elites in the archive.
-
-        .. note::
-            If the archive is non-elitist (this occurs when using the archive
-            with a learning rate which is not 1.0, as in CMA-MAE), then this
-            best elite may no longer exist in the archive because it was
-            replaced with an elite with a lower objective value. This can happen
-            because in non-elitist archives, new solutions only need to exceed
-            the *threshold* of the cell they are being inserted into, not the
-            *objective* of the elite currently in the cell. See :pr:`314` for
-            more info.
-
-        .. note::
-            The best elite will contain a "threshold" key. This threshold is the
-            threshold of the best elite's cell after the best elite was inserted
-            into the archive.
-        """
-        return self._best_elite
-
-    @property
-    def dtype(self):
-        """DEPRECATED."""
-        raise RuntimeError(
-            "The dtype property has been deprecated. Please use "
-            "archive.dtypes instead, which returns a mapping from field name "
-            "to dtype for all the fields in the archive.")
-
-    @property
-    def dtypes(self):
-        """dict: Mapping from field name to dtype for all fields in the
-        archive."""
-        return self._store.dtypes
+        raise NotImplementedError(
+            "`stats` has not been implemented in this archive")
 
     @property
     def empty(self):
         """bool: Whether the archive is empty."""
-        return len(self._store) == 0
+        raise NotImplementedError(
+            "`empty` has not been implemented in this archive")
+
+    ## dunder methods ##
 
     def __len__(self):
         """Number of elites in the archive."""
-        return len(self._store)
+        raise NotImplementedError(
+            "`__len__` has not been implemented in this archive")
 
     def __iter__(self):
         """Creates an iterator over the elites in the archive.
@@ -275,566 +104,211 @@ class ArchiveBase(ABC):
                 for elite in archive:
                     elite["solution"]
                     elite["objective"]
+                    elite["measures"]
                     ...
         """
-        return iter(self._store)
+        raise NotImplementedError(
+            "`__iter__` has not been implemented in this archive")
 
-    def clear(self):
-        """Removes all elites from the archive.
-
-        After this method is called, the archive will be :attr:`empty`.
-        """
-        self._store.clear()
-        self._stats_reset()
-
-    @abstractmethod
-    def index_of(self, measures):
-        """Returns archive indices for the given batch of measures.
-
-        If you need to retrieve the index of the measures for a *single*
-        solution, consider using :meth:`index_of_single`.
-
-        Args:
-            measures (array-like): (batch_size, :attr:`measure_dim`) array of
-                coordinates in measure space.
-        Returns:
-            (numpy.ndarray): (batch_size,) array with the indices of the
-            batch of measures in the archive's storage arrays.
-        """
-
-    def index_of_single(self, measures):
-        """Returns the index of the measures for one solution.
-
-        While :meth:`index_of` takes in a *batch* of measures, this method takes
-        in the measures for only *one* solution. If :meth:`index_of` is
-        implemented correctly, this method should work immediately (i.e. `"out
-        of the box" <https://idioms.thefreedictionary.com/Out-of-the-Box>`_).
-
-        Args:
-            measures (array-like): (:attr:`measure_dim`,) array of measures for
-                a single solution.
-        Returns:
-            int or numpy.integer: Integer index of the measures in the archive's
-            storage arrays.
-        Raises:
-            ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
-            ValueError: ``measures`` has non-finite values (inf or NaN).
-        """
-        measures = np.asarray(measures)
-        check_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
-        return self.index_of(measures[None])[0]
-
-    def _stats_reset(self):
-        """Resets the archive stats."""
-        zero = np_scalar(0.0, dtype=self.dtypes["objective"])
-
-        self._stats = ArchiveStats(
-            num_elites=0,
-            coverage=zero,
-            qd_score=zero,
-            norm_qd_score=zero,
-            obj_max=None,
-            obj_mean=None,
-        )
-        self._best_elite = None
-        self._objective_sum = zero
-
-    def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values
-        (new_objective_sum) and the index of a potential new best elite
-        (new_best_index)."""
-        self._objective_sum = new_objective_sum
-        new_qd_score = (self._objective_sum -
-                        np_scalar(len(self), dtype=self.dtypes["objective"]) *
-                        self._qd_score_offset)
-
-        _, new_best_elite = self._store.retrieve([new_best_index])
-
-        if (self._stats.obj_max is None or
-                new_best_elite["objective"] > self._stats.obj_max):
-            # Convert batched values to single values.
-            new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
-
-            new_obj_max = new_best_elite["objective"]
-            self._best_elite = new_best_elite
-        else:
-            new_obj_max = self._stats.obj_max
-
-        self._stats = ArchiveStats(
-            num_elites=len(self),
-            coverage=np_scalar(len(self) / self.cells,
-                               dtype=self.dtypes["objective"]),
-            qd_score=new_qd_score,
-            norm_qd_score=np_scalar(new_qd_score / self.cells,
-                                    dtype=self.dtypes["objective"]),
-            obj_max=new_obj_max,
-            obj_mean=np_scalar(self._objective_sum / len(self),
-                               dtype=self.dtypes["objective"]),
-        )
-
-    @staticmethod
-    def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
-                            dtype):
-        """Computes new thresholds with the CMA-MAE batch threshold update rule.
-
-        If entries in `indices` are duplicated, they receive the same threshold.
-        """
-        if len(indices) == 0:
-            return np.array([], dtype=dtype)
-
-        # Compute the number of objectives inserted into each cell. Note that we
-        # index with `indices` to place the counts at all relevant indices. For
-        # instance, if we had an array [1,2,3,1,5], we would end up with
-        # [2,1,1,2,1] (there are 2 1's, 1 2, 1 3, 2 1's, and 1 5).
-        #
-        # All objective_sizes should be > 0 since we only retrieve counts for
-        # indices in `indices`.
-        objective_sizes = aggregate(indices, 1, func="len",
-                                    fill_value=0)[indices]
-
-        # Compute the sum of the objectives inserted into each cell -- again, we
-        # index with `indices`.
-        objective_sums = aggregate(indices,
-                                   objective,
-                                   func="sum",
-                                   fill_value=np.nan)[indices]
-
-        # Update the threshold with the batch update rule from Fontaine 2023
-        # (https://arxiv.org/abs/2205.10752).
-        #
-        # Unlike in single_entry_with_threshold, we do not need to worry about
-        # cur_threshold having -np.inf here as a result of threshold_min being
-        # -np.inf. This is because the case with threshold_min = -np.inf is
-        # handled separately since we compute the new threshold based on the max
-        # objective in each cell in that case.
-        ratio = np_scalar(1.0 - learning_rate, dtype=dtype)**objective_sizes
-        new_threshold = (ratio * cur_threshold +
-                         (objective_sums / objective_sizes) * (1 - ratio))
-
-        return new_threshold
+    ## Methods for writing to the archive ##
 
     def add(self, solution, objective, measures, **fields):
-        """Inserts a batch of solutions into the archive.
+        """Inserts a batch of solutions and their data into the archive.
 
-        Each solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  If multiple
-        solutions in the batch end up in the same cell, we only insert the
-        solution with the highest objective. If multiple solutions end up in the
-        same cell and tie for the highest objective, we insert the solution that
-        appears first in the batch.
+        The indices of all arguments should "correspond" to each other, i.e.,
+        ``solution[i]``, ``objective[i]``, and ``measures[i]`` should be the
+        solution parameters, objective, and measures for solution ``i``.
 
-        For the default values of ``learning_rate`` and ``threshold_min``, the
-        threshold for each cell is updated by taking the maximum objective value
-        among all the solutions that landed in the cell, resulting in the same
-        behavior as in the vanilla MAP-Elites archive. However, for other
-        settings, the threshold is updated with the batch update rule described
-        in the appendix of `Fontaine 2023 <https://arxiv.org/abs/2205.10752>`_.
-
-        .. note:: The indices of all arguments should "correspond" to each
-            other, i.e., ``solution[i]``, ``objective[i]``, and ``measures[i]``
-            should be the solution parameters, objective, and measures for
-            solution ``i``.
+        For API consistency, all child classes should take in ``solution``,
+        ``objective``, and ``measures``. There may be cases where one of these
+        parameters is not necessary, e.g., ``objective`` is not required in
+        diversity optimization settings. In such cases, it should be possible to
+        pass in ``None`` as the argument.
 
         Args:
             solution (array-like): (batch_size, :attr:`solution_dim`) array of
                 solution parameters.
-            objective (array-like): (batch_size,) array with objective function
-                evaluations of the solutions.
+            objective (array-like): (batch_size, :attr:`objective_dim`) array
+                with objective function evaluations of the solutions.
             measures (array-like): (batch_size, :attr:`measure_dim`) array with
                 measure space coordinates of all the solutions.
             fields (keyword arguments): Additional data for each solution. Each
-                argument should be an array with batch_size as the first
+                argument should be an array with ``batch_size`` as the first
                 dimension.
 
         Returns:
             dict: Information describing the result of the add operation. The
-            dict contains the following keys:
-
-            - ``"status"`` (:class:`numpy.ndarray` of :class:`int`): An array of
-              integers that represent the "status" obtained when attempting to
-              insert each solution in the batch. Each item has the following
-              possible values:
-
-              - ``0``: The solution was not added to the archive.
-              - ``1``: The solution improved the objective value of a cell
-                which was already in the archive.
-              - ``2``: The solution discovered a new cell in the archive.
-
-              All statuses (and values, below) are computed with respect to the
-              *current* archive. For example, if two solutions both introduce
-              the same new archive cell, then both will be marked with ``2``.
-
-              The alternative is to depend on the order of the solutions in the
-              batch -- for example, if we have two solutions ``a`` and ``b``
-              that introduce the same new cell in the archive, ``a`` could be
-              inserted first with status ``2``, and ``b`` could be inserted
-              second with status ``1`` because it improves upon ``a``. However,
-              our implementation does **not** do this.
-
-              To convert statuses to a more semantic format, cast all statuses
-              to :class:`AddStatus`, e.g., with ``[AddStatus(s) for s in
-              add_info["status"]]``.
-
-            - ``"value"`` (:class:`numpy.ndarray` of
-              :attr:`dtypes` ["objective"]): An array with values for each
-              solution in the batch. With the default values of ``learning_rate
-              = 1.0`` and ``threshold_min = -np.inf``, the meaning of each value
-              depends on the corresponding ``status`` and is identical to that
-              in CMA-ME (`Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_):
-
-              - ``0`` (not added): The value is the "negative improvement,"
-                i.e., the objective of the solution passed in minus the
-                objective of the elite still in the archive (this value is
-                negative because the solution did not have a high enough
-                objective to be added to the archive).
-              - ``1`` (improve existing cell): The value is the "improvement,"
-                i.e., the objective of the solution passed in minus the
-                objective of the elite previously in the archive.
-              - ``2`` (new cell): The value is just the objective of the
-                solution.
-
-              In contrast, for other values of ``learning_rate`` and
-              ``threshold_min``, each value is equivalent to the objective value
-              of the solution minus the threshold of its corresponding cell in
-              the archive.
-
-        Raises:
-            ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective`` or ``measures`` has non-finite values (inf
-                or NaN).
+            content of the dict is to be determined by child classes.
         """
-        data = validate_batch(
-            self,
-            {
-                "solution": solution,
-                "objective": objective,
-                "measures": measures,
-                **fields,
-            },
-        )
-
-        # Delete these so that we only use the clean, validated data in `data`.
-        del solution, objective, measures, fields
-
-        # Information to return about the addition.
-        add_info = {}
-
-        # Retrieve indices of the archive cells.
-        indices = self.index_of(data["measures"])
-        batch_size = len(indices)
-
-        # Retrieve current data and thresholds. Unoccupied cells default to
-        # threshold_min.
-        cur_occupied, cur_data = self._store.retrieve(indices)
-        cur_threshold = cur_data["threshold"]
-        cur_threshold[~cur_occupied] = self.threshold_min
-
-        # Compute status -- arrays below are all boolean arrays of length
-        # batch_size.
-        #
-        # When we want CMA-ME behavior, the threshold defaults to -inf for new
-        # cells, which satisfies the condition for can_insert.
-        can_insert = data["objective"] > cur_threshold
-        is_new = can_insert & ~cur_occupied
-        improve_existing = can_insert & cur_occupied
-        add_info["status"] = np.zeros(batch_size, dtype=np.int32)
-        add_info["status"][is_new] = 2
-        add_info["status"][improve_existing] = 1
-
-        # If threshold_min is -inf, then we want CMA-ME behavior, which computes
-        # the improvement value of new solutions w.r.t zero. Otherwise, we
-        # compute improvement with respect to threshold_min.
-        cur_threshold[is_new] = (np_scalar(0.0, dtype=self.dtypes["threshold"])
-                                 if self.threshold_min == -np.inf else
-                                 self.threshold_min)
-        add_info["value"] = data["objective"] - cur_threshold
-
-        # Return early if we cannot insert anything -- continuing throws a
-        # ValueError in aggregate() since index[can_insert] would be empty.
-        if not np.any(can_insert):
-            return add_info
-
-        # Select all solutions that _can_ be inserted -- at this point, there
-        # are still conflicts in the insertions, e.g., multiple solutions can
-        # map to index 0.
-        indices = indices[can_insert]
-        data = {name: arr[can_insert] for name, arr in data.items()}
-        cur_threshold = cur_threshold[can_insert]
-
-        # Compute the new threshold associated with each entry.
-        if self.threshold_min == -np.inf:
-            # Regular archive behavior: thresholds are just the objectives.
-            new_threshold = data["objective"]
-        else:
-            # Batch threshold update described in Fontaine 2023
-            # (https://arxiv.org/abs/2205.10752). This computation is based on
-            # the mean objective of all solutions in the batch that could have
-            # been inserted into each cell.
-            new_threshold = self._compute_thresholds(indices, data["objective"],
-                                                     cur_threshold,
-                                                     self.learning_rate,
-                                                     self.dtypes["threshold"])
-
-        # Retrieve indices of solutions that _should_ be inserted into the
-        # archive. Currently, multiple solutions may be inserted at each archive
-        # index, but we only want to insert the maximum among these solutions.
-        # Thus, we obtain the argmax for each archive index.
-        #
-        # We use a fill_value of -1 to indicate archive indices that were not
-        # covered in the batch. Note that the length of archive_argmax is only
-        # max(indices), rather than the total number of grid cells. However,
-        # this is okay because we only need the indices of the solutions, which
-        # we store in should_insert.
-        #
-        # aggregate() always chooses the first item if there are ties, so the
-        # first elite will be inserted if there is a tie. See their default
-        # numpy implementation for more info:
-        # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-        archive_argmax = aggregate(indices,
-                                   data["objective"],
-                                   func="argmax",
-                                   fill_value=-1)
-        should_insert = archive_argmax[archive_argmax != -1]
-
-        # Select only solutions that will be inserted into the archive.
-        indices = indices[should_insert]
-        data = {name: arr[should_insert] for name, arr in data.items()}
-        data["threshold"] = new_threshold[should_insert]
-
-        # Insert elites into the store.
-        self._store.add(indices, data)
-
-        # Compute statistics.
-        cur_objective = cur_data["objective"]
-        cur_objective[~cur_occupied] = 0.0
-        cur_objective = cur_objective[can_insert][should_insert]
-        objective_sum = (self._objective_sum +
-                         np.sum(data["objective"] - cur_objective))
-        best_index = indices[np.argmax(data["objective"])]
-        self._stats_update(objective_sum, best_index)
-
-        return add_info
+        raise NotImplementedError(
+            "`add` has not been implemented in this archive")
 
     def add_single(self, solution, objective, measures, **fields):
-        """Inserts a single solution into the archive.
-
-        The solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  The threshold is
-        also updated if the solution was inserted.
-
-        .. note::
-            This method is provided as an easier-to-understand implementation
-            that has less performance due to inserting only one solution at a
-            time. For better performance, see :meth:`add`.
+        """Inserts a single solution and its data into the archive.
 
         Args:
             solution (array-like): Parameters of the solution.
-            objective (float): Objective function evaluation of the solution.
+            objective (scalar or array-like): Objective function evaluation of
+                the solution.
             measures (array-like): Coordinates in measure space of the solution.
             fields (keyword arguments): Additional data for the solution.
 
         Returns:
-            dict: Information describing the result of the add operation. The
-            dict contains ``status`` and ``value`` keys; refer to :meth:`add`
-            for the meaning of status and value.
-
-        Raises:
-            ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
-                has non-finite values.
+            dict: Information describing the result of the add operation. As in
+            :meth:`add`, the content of this dict is decided by child classes.
         """
-        data = validate_single(
-            self,
-            {
-                "solution": solution,
-                "objective": objective,
-                "measures": measures,
-                **fields,
-            },
-        )
+        raise NotImplementedError(
+            "`add_single` has not been implemented in this archive")
 
-        # Delete these so that we only use the clean, validated data in `data`.
-        del solution, objective, measures, fields
+    def clear(self):
+        """Resets the archive, e.g., by removing all elites in it.
 
-        # Information to return about the addition.
-        add_info = {}
+        After calling this method, the archive should be :attr:`empty`.
+        """
+        raise NotImplementedError(
+            "`clear` has not been implemented in this archive")
 
-        # Identify the archive cell.
-        index = self.index_of_single(data["measures"])
-
-        # Retrieve current data of the cell.
-        cur_occupied, cur_data = self._store.retrieve([index])
-        cur_occupied = cur_occupied[0]
-
-        if cur_occupied:
-            # If the cell is currently occupied, the threshold comes from the
-            # current data of the elite in the cell.
-            cur_threshold = cur_data["threshold"][0]
-        else:
-            # If the cell is not currently occupied, the threshold needs special
-            # settings.
-            #
-            # If threshold_min is -inf, then we want CMA-ME behavior, which
-            # computes the improvement value with a threshold of zero for new
-            # solutions. Otherwise, we will set cur_threshold to threshold_min.
-            cur_threshold = (np_scalar(0.0, dtype=self.dtypes["threshold"])
-                             if self.threshold_min == -np.inf else
-                             self.threshold_min)
-
-        # Retrieve candidate objective.
-        objective = data["objective"]
-
-        # Compute status and threshold.
-        add_info["status"] = np.int32(0)  # NOT_ADDED
-
-        # Now we check whether a solution should be added to the archive. We use
-        # the addition rule from MAP-Elites (Fig. 2 of Mouret 2015
-        # https://arxiv.org/pdf/1504.04909.pdf), with modifications for CMA-MAE.
-
-        # This checks if a new solution is discovered in the archive. Note that
-        # regular MAP-Elites only checks `not cur_occupied`. CMA-MAE has an
-        # additional `threshold_min` that the objective must exceed for new
-        # cells. If CMA-MAE is not being used, then `threshold_min` is -np.inf,
-        # making this check identical to that of MAP-Elites.
-        is_new = not cur_occupied and self.threshold_min < objective
-
-        # This checks whether the solution improves an existing cell in the
-        # archive, i.e., whether it performs better than the current elite in
-        # this cell. Vanilla MAP-Elites compares to the objective of the cell's
-        # current elite. CMA-MAE compares to a threshold value that updates
-        # over time (i.e., cur_threshold). When learning_rate is set to 1.0 (the
-        # default value), we recover the same rule as in MAP-Elites because
-        # cur_threshold is equivalent to the objective of the solution in the
-        # cell.
-        improve_existing = cur_occupied and cur_threshold < objective
-
-        if is_new or improve_existing:
-            if improve_existing:
-                add_info["status"] = np.int32(1)  # IMPROVE_EXISTING
-            else:
-                add_info["status"] = np.int32(2)  # NEW
-
-            # This calculation works in the case where threshold_min is -inf
-            # because cur_threshold will be set to 0.0 instead.
-            data["threshold"] = [(cur_threshold * (1.0 - self.learning_rate) +
-                                  objective * self.learning_rate)]
-
-            self._store.add(index[None], {
-                name: np.expand_dims(arr, axis=0) for name, arr in data.items()
-            })
-
-            # Update stats.
-            cur_objective = (cur_data["objective"] if cur_occupied else
-                             np_scalar(0.0, self.dtypes["objective"]))
-            self._stats_update(self._objective_sum + objective - cur_objective,
-                               index)
-
-        # Value is the improvement over the current threshold (can be negative).
-        add_info["value"] = objective - cur_threshold
-
-        return add_info
+    ## Methods for reading from the archive ##
 
     def retrieve(self, measures):
-        """Retrieves the elites with measures in the same cells as the measures
-        specified.
+        """Queries the archive for elites with the given batch of measures.
 
-        This method operates in batch, i.e., it takes in a batch of measures and
+        This method operates in batch. It takes in a batch of measures and
         outputs the batched data for the elites::
 
             occupied, elites = archive.retrieve(...)
+            occupied  # Shape: (batch_size,)
             elites["solution"]  # Shape: (batch_size, solution_dim)
-            elites["objective"]
-            elites["measures"]
-            elites["threshold"]
-            elites["index"]
+            elites["objective"]  # Shape: (batch_size, objective_dim)
+            elites["measures"]  # Shape: (batch_size, measure_dim)
+            ...
 
-        If the cell associated with ``elites["measures"][i]`` has an elite in
-        it, then ``occupied[i]`` will be True. Furthermore,
-        ``elites["solution"][i]``, ``elites["objective"][i]``,
-        ``elites["measures"][i]``, ``elites["threshold"][i]``, and
-        ``elites["index"][i]`` will be set to the properties of the elite. Note
-        that ``elites["measures"][i]`` may not be equal to the ``measures[i]``
-        passed as an argument, since the measures only need to be in the same
-        archive cell.
-
-        If the cell associated with ``measures[i]`` *does not* have any elite in
-        it, then ``occupied[i]`` will be set to False. Furthermore, the
-        corresponding outputs will be set to empty values -- namely:
-
-        * NaN for floating-point fields
-        * -1 for the "index" field
-        * 0 for integer fields
-        * None for object fields
-
-        If you need to retrieve a *single* elite associated with some measures,
-        consider using :meth:`retrieve_single`.
+        ``occupied`` indicates whether an elite was found for each measure,
+        i.e., whether the archive was *occupied* at each queried measure. If
+        ``occupied[i]`` is True, then ``elites["solution"][i]``,
+        ``elites["objective"][i]``, ``elites["measures"][i]``, and other fields
+        will contain the data of the elite for the input ``measures[i]``. If
+        ``occupied[i]`` is False, then those fields will instead have arbitrary
+        values, e.g., ``elites["solution"][i]`` may be set to all NaN.
 
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
-                coordinates in measure space.
+                measure space points at which to retrieve solutions.
         Returns:
-            tuple: 2-element tuple of (occupied array, dict). The occupied array
-            indicates whether each of the cells indicated by the coordinates in
-            ``measures`` has an elite, while the dict contains the data of those
-            elites. The dict maps from field name to the corresponding array.
+            tuple: 2-element tuple of (boolean ``occupied`` array, dict of elite
+            data). See above for description.
         Raises:
             ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
-        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
-
-        occupied, data = self._store.retrieve(self.index_of(measures))
-        unoccupied = ~occupied
-
-        for name, arr in data.items():
-            if arr.dtype == object:
-                fill_val = None
-            elif name == "index":
-                fill_val = -1
-            elif np.issubdtype(arr.dtype, np.integer):
-                fill_val = 0
-            else:  # Floating-point and other fields.
-                fill_val = np.nan
-
-            arr[unoccupied] = fill_val
-
-        return occupied, data
+        raise NotImplementedError(
+            "`retrieve` has not been implemented in this archive")
 
     def retrieve_single(self, measures):
-        """Retrieves the elite with measures in the same cell as the measures
-        specified.
+        """Queries the archive for an elite with the given measures.
 
         While :meth:`retrieve` takes in a *batch* of measures, this method takes
         in the measures for only *one* solution and returns a single bool and a
-        dict with single entries.
+        dict with single entries::
+
+            occupied, elite = archive.retrieve_single(...)
+            occupied  # Bool
+            elite["solution"]  # Shape: (solution_dim,)
+            elite["objective"]  # Shape: (objective_dim,)
+            elite["measures"]  # Shape: (measure_dim,)
+            ...
 
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures.
         Returns:
-            tuple: If there is an elite with measures in the same cell as the
-            measures specified, then this method returns a True value and a dict
-            where all the fields hold the info of the elite. Otherwise, this
-            method returns a False value and a dict filled with the same "empty"
-            values described in :meth:`retrieve`.
+            tuple: 2-element tuple of (boolean, dict of data for one elite)
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
-        check_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
+        raise NotImplementedError(
+            "`retrieve_single` has not been implemented in this archive")
 
-        occupied, data = self.retrieve(measures[None])
+    def data(self, fields=None, return_type="dict"):
+        """Returns data of the elites in the archive.
 
-        return occupied[0], {field: arr[0] for field, arr in data.items()}
+        Args:
+            fields (str or array-like of str): List of fields to include, such
+                as ``solution``, ``objective``, ``measures``, and other fields
+                in the archive. This can also be a single str indicating a field
+                name.
+            return_type (str): Type of data to return. See below. Ignored if
+                ``fields`` is a str.
+
+        Returns:
+            The data for all elites in the archive. All data returned by this
+            method will be a copy, i.e., the data will not update as the archive
+            changes. If ``fields`` was a single str, the returned data will just
+            be an array holding data for the given field, such as::
+
+                  measures = archive.data("measures")
+
+            Otherwise, the returned data can take the following forms, depending
+            on the ``return_type`` argument:
+
+            - ``return_type="dict"``: Dict mapping from the field name to the
+              field data at the given indices. An example is::
+
+                  {
+                    "solution": [[1.0, 1.0, ...], ...],
+                    "objective": [1.5, ...],
+                    "measures": [[1.0, 2.0], ...],
+                    ...
+                  }
+
+              The keys in this dict can be modified with the ``fields`` arg;
+              duplicate fields will be ignored since the dict stores unique
+              keys.
+
+            - ``return_type="tuple"``: Tuple of arrays matching the field order
+              in ``fields``. For instance, if ``fields`` is
+              ``["objective", "measures"]``, this method would return a tuple of
+              ``(objective_arr, measures_arr)`` that could be unpacked as::
+
+                  objective, measures = archive.data(["objective", "measures"],
+                                                     return_type="tuple")
+
+              Unlike with the ``dict`` return type, duplicate fields will show
+              up as duplicate entries in the tuple, e.g.,
+              ``fields=["objective", "objective"]`` will result in two
+              objective arrays being returned.
+
+              When ``fields=None`` (the default case), the fields in the tuple
+              will be ordered according to the :attr:`field_list`.
+
+            - ``return_type="pandas"``: An
+              :class:`~ribs.archives.ArchiveDataFrame` with the following
+              columns:
+
+              - For fields that are scalars, a single column with the field
+                name. For example, ``objective`` would have a single column
+                called ``objective``.
+              - For fields that are 1D arrays, multiple columns with the name
+                suffixed by its index. To illustrate, for a ``measures``
+                field of length 10, the dataframe would contain 10 columns with
+                names ``measures_0``, ``measures_1``, ..., ``measures_9``.
+                **The output format for fields with >1D data is currently not
+                defined.**
+
+              In short, the dataframe might look like this by default:
+
+              +------------+------+-----------+------------+------+
+              | solution_0 | ...  | objective | measures_0 | ...  |
+              +============+======+===========+============+======+
+              |            | ...  |           |            | ...  |
+              +------------+------+-----------+------------+------+
+
+              Like the other return types, the columns returned can be adjusted
+              with the ``fields`` parameter.
+        """
+        raise NotImplementedError(
+            "`data` has not been implemented in this archive")
 
     def sample_elites(self, n):
         """Randomly samples elites from the archive.
@@ -850,6 +324,7 @@ class ArchiveBase(ABC):
                 elites = archive.sample_elites(16)
                 elites["solution"]  # Shape: (16, solution_dim)
                 elites["objective"]
+                elites["measures"]
                 ...
 
         Args:
@@ -859,227 +334,5 @@ class ArchiveBase(ABC):
         Raises:
             IndexError: The archive is empty.
         """
-        if self.empty:
-            raise IndexError("No elements in archive.")
-
-        random_indices = self._rng.integers(len(self._store), size=n)
-        selected_indices = self._store.occupied_list[random_indices]
-        _, elites = self._store.retrieve(selected_indices)
-        return elites
-
-    def data(self, fields=None, return_type="dict"):
-        """Retrieves data for all elites in the archive.
-
-        Args:
-            fields (str or array-like of str): List of fields to include. By
-                default, all fields will be included, with an additional "index"
-                as the last field ("index" can also be placed anywhere in this
-                list). This can also be a single str indicating a field name.
-            return_type (str): Type of data to return. See below. Ignored if
-                ``fields`` is a str.
-
-        Returns:
-            The data for all entries in the archive. If ``fields`` was a single
-            str, this will just be an array holding data for the given field.
-            Otherwise, this data can take the following forms, depending on the
-            ``return_type`` argument:
-
-            - ``return_type="dict"``: Dict mapping from the field name to the
-              field data at the given indices. An example is::
-
-                  {
-                    "solution": [[1.0, 1.0, ...], ...],
-                    "objective": [1.5, ...],
-                    "measures": [[1.0, 2.0], ...],
-                    "threshold": [0.8, ...],
-                    "index": [4, ...],
-                  }
-
-              Observe that we also return the indices as an ``index`` entry in
-              the dict. The keys in this dict can be modified with the
-              ``fields`` arg; duplicate fields will be ignored since the dict
-              stores unique keys.
-
-            - ``return_type="tuple"``: Tuple of arrays matching the field order
-              given in ``fields``. For instance, if ``fields`` was
-              ``["objective", "measures"]``, we would receive a tuple of
-              ``(objective_arr, measures_arr)``. In this case, the results
-              from ``retrieve`` could be unpacked as::
-
-                  objective, measures = archive.data(["objective", "measures"],
-                                                     return_type="tuple")
-
-              Unlike with the ``dict`` return type, duplicate fields will show
-              up as duplicate entries in the tuple, e.g.,
-              ``fields=["objective", "objective"]`` will result in two
-              objective arrays being returned.
-
-              By default, (i.e., when ``fields=None``), the fields in the tuple
-              will be ordered according to the :attr:`field_list` along with
-              ``index`` as the last field.
-
-            - ``return_type="pandas"``: A
-              :class:`~ribs.archives.ArchiveDataFrame` with the following
-              columns:
-
-              - For fields that are scalars, a single column with the field
-                name. For example, ``objective`` would have a single column
-                called ``objective``.
-              - For fields that are 1D arrays, multiple columns with the name
-                suffixed by its index. For instance, if we have a ``measures``
-                field of length 10, we create 10 columns with names
-                ``measures_0``, ``measures_1``, ..., ``measures_9``. We do not
-                currently support fields with >1D data.
-              - 1 column of integers (``np.int32``) for the index, named
-                ``index``.
-
-              In short, the dataframe might look like this by default:
-
-              +------------+------+-----------+------------+------+-----------+-------+
-              | solution_0 | ...  | objective | measures_0 | ...  | threshold | index |
-              +============+======+===========+============+======+===========+=======+
-              |            | ...  |           |            | ...  |           |       |
-              +------------+------+-----------+------------+------+-----------+-------+
-
-              Like the other return types, the columns can be adjusted with
-              the ``fields`` parameter.
-
-            All data returned by this method will be a copy, i.e., the data will
-            not update as the archive changes.
-        """ # pylint: disable = line-too-long
-        return self._store.data(fields, return_type)
-
-    def cqd_score(self,
-                  iterations,
-                  target_points,
-                  penalties,
-                  obj_min,
-                  obj_max,
-                  dist_max=None,
-                  dist_ord=None):
-        """Computes the CQD score of the archive.
-
-        The Continuous Quality Diversity (CQD) score was introduced in
-        `Kent 2022 <https://dl.acm.org/doi/10.1145/3520304.3534018>`_.
-
-        .. note:: This method by default assumes that the archive has an
-            ``upper_bounds`` and ``lower_bounds`` property which delineate the
-            bounds of the measure space, as is the case in
-            :class:`~ribs.archives.GridArchive`,
-            :class:`~ribs.archives.CVTArchive`, and
-            :class:`~ribs.archives.SlidingBoundariesArchive`.  If this is not
-            the case, ``dist_max`` must be passed in, and ``target_points`` must
-            be an array of custom points.
-
-        Args:
-            iterations (int): Number of times to compute the CQD score. We
-                return the mean CQD score across these iterations.
-            target_points (int or array-like): Number of target points to
-                generate, or an (iterations, n, measure_dim) array which
-                lists n target points to list on each iteration. When an int is
-                passed, the points are sampled uniformly within the bounds of
-                the measure space.
-            penalties (int or array-like): Number of penalty values over which
-                to compute the score (the values are distributed evenly over the
-                range [0,1]). Alternatively, this may be a 1D array which
-                explicitly lists the penalty values. Known as :math:`\\theta` in
-                Kent 2022.
-            obj_min (float): Minimum objective value, used when normalizing the
-                objectives.
-            obj_max (float): Maximum objective value, used when normalizing the
-                objectives.
-            dist_max (float): Maximum distance between points in measure space.
-                Defaults to the distance between the extremes of the measure
-                space bounds (the type of distance is computed with the order
-                specified by ``dist_ord``). Known as :math:`\\delta_{max}` in
-                Kent 2022.
-            dist_ord: Order of the norm to use for calculating measure space
-                distance; this is passed to :func:`numpy.linalg.norm` as the
-                ``ord`` argument. See :func:`numpy.linalg.norm` for possible
-                values. The default is to use Euclidean distance (L2 norm).
-        Returns:
-            The mean CQD score obtained with ``iterations`` rounds of
-            calculations.
-        Raises:
-            RuntimeError: The archive does not have the bounds properties
-                mentioned above, and dist_max is not specified or the target
-                points are not provided.
-            ValueError: target_points or penalties is an array with the wrong
-                shape.
-        """
-        if (not (hasattr(self, "upper_bounds") and
-                 hasattr(self, "lower_bounds")) and
-            (dist_max is None or np.isscalar(target_points))):
-            raise RuntimeError(
-                "When the archive does not have lower_bounds and "
-                "upper_bounds properties, dist_max must be specified, "
-                "and target_points must be an array")
-
-        if np.isscalar(target_points):
-            # pylint: disable = no-member
-            target_points = self._rng.uniform(
-                low=self.lower_bounds,
-                high=self.upper_bounds,
-                size=(iterations, target_points, self.measure_dim),
-            )
-        else:
-            # Copy since we return this.
-            target_points = np.copy(target_points)
-            if (target_points.ndim != 3 or
-                    target_points.shape[0] != iterations or
-                    target_points.shape[2] != self.measure_dim):
-                raise ValueError(
-                    "Expected target_points to be a 3D array with "
-                    f"shape ({iterations}, n, {self.measure_dim}) "
-                    "(i.e. shape (iterations, n, measure_dim)) but it had "
-                    f"shape {target_points.shape}")
-
-        if dist_max is None:
-            # pylint: disable = no-member
-            dist_max = np.linalg.norm(self.upper_bounds - self.lower_bounds,
-                                      ord=dist_ord)
-
-        if np.isscalar(penalties):
-            penalties = np.linspace(0, 1, penalties)
-        else:
-            penalties = np.copy(penalties)  # Copy since we return this.
-            check_is_1d(penalties, "penalties")
-
-        objective_batch = self._store.data("objective")
-        measures_batch = self._store.data("measures")
-
-        norm_objectives = objective_batch / (obj_max - obj_min)
-
-        scores = np.zeros(iterations)
-
-        for itr in range(iterations):
-            # Distance calculation -- start by taking the difference between
-            # each measure i and all the target points.
-            distances = measures_batch[:, None] - target_points[itr]
-
-            # (len(archive), n_target_points) array of distances.
-            distances = np.linalg.norm(distances, ord=dist_ord, axis=2)
-
-            norm_distances = distances / dist_max
-
-            for penalty in penalties:
-                # Known as omega in Kent 2022 -- a (len(archive),
-                # n_target_points) array.
-                values = norm_objectives[:, None] - penalty * norm_distances
-
-                # (n_target_points,) array.
-                max_values_per_target = np.max(values, axis=0)
-
-                scores[itr] += np.sum(max_values_per_target)
-
-        return CQDScoreResult(
-            iterations=iterations,
-            mean=np.mean(scores),
-            scores=scores,
-            target_points=target_points,
-            penalties=penalties,
-            obj_min=obj_min,
-            obj_max=obj_max,
-            dist_max=dist_max,
-            dist_ord=dist_ord,
-        )
+        raise NotImplementedError(
+            "`sample_elites` has not been implemented in this archive")

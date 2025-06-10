@@ -6,7 +6,7 @@ from scipy.spatial import cKDTree
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
                          check_shape, np_scalar, validate_batch,
                          validate_single)
-from ribs.archives._archive_base_2 import ArchiveBase
+from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
