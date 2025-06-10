@@ -390,50 +390,7 @@ class ArrayStore:
         """
         return self.retrieve(self.occupied_list, fields, return_type)[1]
 
-    def add_2(self, indices, new_data):
-        """Adds new data to the store at the given indices."""
-        self._props["updates"][Update.ADD] += 1
-
-        # Shortcut when there is nothing to add to the store.
-        if len(indices) == 0:
-            return
-
-        # Verify that the array shapes match the indices.
-        for name, arr in new_data.items():
-            if len(arr) != len(indices):
-                raise ValueError(
-                    f"In `new_data`, the array for `{name}` has length "
-                    f"{len(arr)} but should be the same length as indices "
-                    f"({len(indices)})")
-
-        # Verify that new_data ends up with the correct fields after the
-        # transforms.
-        if new_data.keys() != self._fields.keys():
-            raise ValueError(
-                f"`new_data` had keys {new_data.keys()} but should have the "
-                f"same keys as this ArrayStore, i.e., {self._fields.keys()}. "
-                "You may be seeing this error if your archive has "
-                "extra_fields but the fields were not passed into "
-                "archive.add() or scheduler.tell().")
-
-        # Update occupancy data.
-        unique_indices = np.where(aggregate(indices, 1, func="len") != 0)[0]
-        cur_occupied = self._props["occupied"][unique_indices]
-        new_indices = unique_indices[~cur_occupied]
-        n_occupied = self._props["n_occupied"]
-        self._props["occupied"][new_indices] = True
-        self._props["occupied_list"][n_occupied:n_occupied +
-                                     len(new_indices)] = new_indices
-        self._props["n_occupied"] = n_occupied + len(new_indices)
-
-        # Insert into the ArrayStore. Note that we do not assume indices are
-        # unique. Hence, when updating occupancy data above, we computed the
-        # unique indices. In contrast, here we let NumPy's default behavior
-        # handle duplicate indices.
-        for name, arr in self._fields.items():
-            arr[indices] = new_data[name]
-
-    def add(self, indices, new_data, extra_args, transforms):
+    def add(self, indices, new_data):  # TODO: rename to data
         """Adds new data to the store at the given indices.
 
         The indices, new_data, and add_info are passed through transforms before
@@ -496,18 +453,13 @@ class ArrayStore:
             ValueError: The final version of ``new_data`` has fields that have a
                 different length than ``indices``.
         """
+        # TODO: Rename to `add`
+        # TODO: docstring
         self._props["updates"][Update.ADD] += 1
-
-        add_info = {}
-        for transform in transforms:
-            occupied, cur_data = self.retrieve(indices)
-            indices, new_data, add_info = transform(indices, new_data, add_info,
-                                                    extra_args, occupied,
-                                                    cur_data)
 
         # Shortcut when there is nothing to add to the store.
         if len(indices) == 0:
-            return add_info
+            return
 
         # Verify that the array shapes match the indices.
         for name, arr in new_data.items():
@@ -543,8 +495,6 @@ class ArrayStore:
         # handle duplicate indices.
         for name, arr in self._fields.items():
             arr[indices] = new_data[name]
-
-        return add_info
 
     def clear(self):
         """Removes all entries from the store."""

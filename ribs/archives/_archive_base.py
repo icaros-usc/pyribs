@@ -9,9 +9,6 @@ from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
-from ribs.archives._transforms import (batch_entries_with_threshold,
-                                       compute_best_index,
-                                       compute_objective_sum)
 
 _ARCHIVE_FIELDS = {"index", "solution", "objective", "measures", "threshold"}
 
@@ -244,6 +241,7 @@ class ArchiveBase(ABC):
         """
         return self._best_elite
 
+    # TODO: Remove?
     @property
     def dtype(self):
         """DEPRECATED."""
@@ -395,9 +393,9 @@ class ArchiveBase(ABC):
         in the appendix of `Fontaine 2023 <https://arxiv.org/abs/2205.10752>`_.
 
         .. note:: The indices of all arguments should "correspond" to each
-            other, i.e., ``solution[i]``, ``objective[i]``,
-            ``measures[i]``, and should be the solution parameters,
-            objective, and measures for solution ``i``.
+            other, i.e., ``solution[i]``, ``objective[i]``, and ``measures[i]``
+            should be the solution parameters, objective, and measures for
+            solution ``i``.
 
         Args:
             solution (array-like): (batch_size, :attr:`solution_dim`) array of
@@ -477,26 +475,105 @@ class ArchiveBase(ABC):
             },
         )
 
-        add_info = self._store.add(
-            self.index_of(data["measures"]),
-            data,
-            {
-                "dtype": self.dtypes["threshold"],
-                "learning_rate": self._learning_rate,
-                "threshold_min": self._threshold_min,
-                "objective_sum": self._objective_sum,
-            },
-            [
-                batch_entries_with_threshold,
-                compute_objective_sum,
-                compute_best_index,
-            ],
-        )
+        # Delete these so that we only use the clean, validated data in `data`.
+        del solution, objective, measures, fields
 
-        objective_sum = add_info.pop("objective_sum")
-        best_index = add_info.pop("best_index")
-        if not np.all(add_info["status"] == 0):
-            self._stats_update(objective_sum, best_index)
+        # Information to return about the addition.
+        add_info = {}
+
+        # Retrieve indices of the archive cells.
+        indices = self.index_of(data["measures"])
+        batch_size = len(indices)
+
+        # Retrieve current data and thresholds. Unoccupied cells default to
+        # threshold_min.
+        cur_occupied, cur_data = self._store.retrieve(indices)
+        cur_threshold = cur_data["threshold"]
+        cur_threshold[~cur_occupied] = self.threshold_min
+
+        # Compute status -- arrays below are all boolean arrays of length
+        # batch_size.
+        #
+        # When we want CMA-ME behavior, the threshold defaults to -inf for new
+        # cells, which satisfies the condition for can_insert.
+        can_insert = data["objective"] > cur_threshold
+        is_new = can_insert & ~cur_occupied
+        improve_existing = can_insert & cur_occupied
+        add_info["status"] = np.zeros(batch_size, dtype=np.int32)
+        add_info["status"][is_new] = 2
+        add_info["status"][improve_existing] = 1
+
+        # If threshold_min is -inf, then we want CMA-ME behavior, which computes
+        # the improvement value of new solutions w.r.t zero. Otherwise, we
+        # compute improvement with respect to threshold_min.
+        cur_threshold[is_new] = (np_scalar(0.0, dtype=self.dtypes["threshold"])
+                                 if self.threshold_min == -np.inf else
+                                 self.threshold_min)
+        add_info["value"] = data["objective"] - cur_threshold
+
+        # Return early if we cannot insert anything -- continuing throws a
+        # ValueError in aggregate() since index[can_insert] would be empty.
+        if not np.any(can_insert):
+            return add_info
+
+        # Select all solutions that _can_ be inserted -- at this point, there
+        # are still conflicts in the insertions, e.g., multiple solutions can
+        # map to index 0.
+        indices = indices[can_insert]
+        data = {name: arr[can_insert] for name, arr in data.items()}
+        cur_threshold = cur_threshold[can_insert]
+
+        # Compute the new threshold associated with each entry.
+        if self.threshold_min == -np.inf:
+            # Regular archive behavior: thresholds are just the objectives.
+            new_threshold = data["objective"]
+        else:
+            # Batch threshold update described in Fontaine 2023
+            # (https://arxiv.org/abs/2205.10752). This computation is based on
+            # the mean objective of all solutions in the batch that could have
+            # been inserted into each cell.
+            new_threshold = self._compute_thresholds(indices, data["objective"],
+                                                     cur_threshold,
+                                                     self.learning_rate,
+                                                     self.dtypes["threshold"])
+
+        # Retrieve indices of solutions that _should_ be inserted into the
+        # archive. Currently, multiple solutions may be inserted at each archive
+        # index, but we only want to insert the maximum among these solutions.
+        # Thus, we obtain the argmax for each archive index.
+        #
+        # We use a fill_value of -1 to indicate archive indices that were not
+        # covered in the batch. Note that the length of archive_argmax is only
+        # max(indices), rather than the total number of grid cells. However,
+        # this is okay because we only need the indices of the solutions, which
+        # we store in should_insert.
+        #
+        # aggregate() always chooses the first item if there are ties, so the
+        # first elite will be inserted if there is a tie. See their default
+        # numpy implementation for more info:
+        # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
+        archive_argmax = aggregate(indices,
+                                   data["objective"],
+                                   func="argmax",
+                                   fill_value=-1)
+        should_insert = archive_argmax[archive_argmax != -1]
+
+        # Select only solutions that will be inserted into the archive.
+        indices = indices[should_insert]
+        data = {name: arr[should_insert] for name, arr in data.items()}
+        data["threshold"] = new_threshold[should_insert]
+
+        # Insert elites into the store.
+        self._store.add_2(indices, data)
+
+        # Compute statistics.
+        cur_objective = cur_data["objective"]
+        cur_objective[~cur_occupied] = 0.0
+        cur_objective = cur_objective[can_insert][should_insert]
+        objective_sum = (self._objective_sum +
+                         np.sum(data["objective"] - cur_objective))
+        best_index = indices[np.argmax(data["objective"])]
+        self._stats_update(objective_sum, best_index)
 
         return add_info
 
