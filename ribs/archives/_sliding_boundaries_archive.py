@@ -591,7 +591,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         # Retrieve candidate objective.
         objective = data["objective"]
 
-        # Compute status and threshold.
+        # Set up status.
         add_info["status"] = np.int32(0)  # NOT_ADDED
 
         # Now we check whether a solution should be added to the archive. We use
