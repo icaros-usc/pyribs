@@ -60,7 +60,7 @@ class CVTArchive(ArchiveBase):
         :pr:`38`.
 
     Args:
-        solution_dim (int): Dimension of the solution space.
+        solution_dim (int): Dimensionality of the solution space.
         cells (int): The number of cells to use in the archive, equivalent to
             the number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
@@ -84,10 +84,10 @@ class CVTArchive(ArchiveBase):
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
         dtype (str or data-type or dict): Data type of the solutions,
-            objectives, and measures. We only support ``"f"`` / ``np.float32``
-            and ``"d"`` / ``np.float64``. Alternatively, this can be a dict
-            specifying separate dtypes, of the form ``{"solution": <dtype>,
-            "objective": <dtype>, "measures": <dtype>}``.
+            objectives, and measures. This can be ``"f"`` / ``np.float32``,
+            ``"d"`` / ``np.float64``, or a dict specifying separate dtypes, of
+            the form ``{"solution": <dtype>, "objective": <dtype>, "measures":
+            <dtype>}``.
         extra_fields (dict): Description of extra fields of data that is stored
             next to elite data like solutions and objectives. The description is
             a dict mapping from a field name (str) to a tuple of ``(shape,
@@ -124,6 +124,8 @@ class CVTArchive(ArchiveBase):
             will chunk the distance calculations to compute chunk_size inputs at
             a time.
     Raises:
+        ValueError: Invalid values for learning_rate and threshold_min.
+        ValueError: Invalid names in extra_fields.
         ValueError: The ``samples`` array or the ``custom_centroids`` array has
             the wrong shape.
     """
