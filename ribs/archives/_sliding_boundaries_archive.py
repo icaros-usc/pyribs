@@ -591,8 +591,8 @@ class SlidingBoundariesArchive(ArchiveBase):
         # Retrieve current data of the cell.
         cur_occupied, cur_data = self._store.retrieve([index])
         cur_occupied = cur_occupied[0]
-        cur_objective = (cur_data["objective"] if cur_occupied else np_scalar(
-            0.0, self.dtypes["objective"]))
+        cur_objective = (cur_data["objective"][0] if cur_occupied else
+                         np_scalar(0.0, self.dtypes["objective"]))
 
         # Retrieve candidate objective.
         objective = data["objective"]
