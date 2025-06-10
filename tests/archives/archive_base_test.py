@@ -2,7 +2,8 @@
 import numpy as np
 import pytest
 
-from ribs.archives import CVTArchive, GridArchive, ProximityArchive
+from ribs.archives import (CVTArchive, GridArchive, ProximityArchive,
+                           SlidingBoundariesArchive)
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
@@ -490,10 +491,18 @@ def test_pandas_data(name, with_elite, dtype):
     measure_dim = len(data.measures)
     expected_cols = ([f"solution_{i}" for i in range(solution_dim)] +
                      ["objective"] +
-                     [f"measures_{i}" for i in range(measure_dim)] +
-                     ["threshold", "index"])
+                     [f"measures_{i}" for i in range(measure_dim)])
     expected_dtypes = ([dtype for _ in range(solution_dim)] + [dtype] +
-                       [dtype for _ in range(measure_dim)] + [dtype, np.int32])
+                       [dtype for _ in range(measure_dim)])
+    expected_data = [*data.solution, data.objective, *data.measures]
+
+    if isinstance(data.archive, MAE_ARCHIVES):
+        expected_cols += ["threshold", "index"]
+        expected_dtypes += [dtype, np.int32]
+        expected_data.append(data.objective)  # Append the threshold.
+    else:
+        expected_cols += ["index"]
+        expected_dtypes += [np.int32]
 
     # Retrieve the dataframe.
     if with_elite:
@@ -506,20 +515,18 @@ def test_pandas_data(name, with_elite, dtype):
     assert (df.dtypes == expected_dtypes).all()
 
     if with_elite:
-        if name.startswith("CVTArchive-"):
+        if isinstance(data.archive_with_elite, CVTArchive):
             # For CVTArchive, we check the centroid because the index can vary.
             index = df.loc[0, "index"]
             assert (data.archive_with_elite.centroids[index] == data.centroid
                    ).all()
-        elif name in ["GridArchive", "SlidingBoundariesArchive"]:
+        elif isinstance(data.archive_with_elite,
+                        (GridArchive, SlidingBoundariesArchive)):
             # These archives have expected grid indices.
             assert df.loc[0, "index"] == data.archive.grid_to_int_index(
                 [data.grid_indices])[0]
         else:
             # Archives where indices can't be tested.
-            assert name in ["ProximityArchive"]
+            assert isinstance(data.archive_with_elite, (ProximityArchive,))
 
-        expected_data = [
-            *data.solution, data.objective, *data.measures, data.objective
-        ]
-        assert (df.loc[0, :"threshold"] == expected_data).all()
+        assert (df.iloc[0, :len(expected_data)] == expected_data).all()
