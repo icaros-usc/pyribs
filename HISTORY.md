@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Make archive field_list and dtypes props include
+  index ({pr}`532`)
 - **Backwards-incompatible:** Remove thresholds from SlidingBoundariesArchive
   ({pr}`527`)
 - **Backwards-incompatible:** Remove transforms from archive add operations
