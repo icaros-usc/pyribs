@@ -2,9 +2,11 @@
 import numpy as np
 import pytest
 
-from ribs.archives import GridArchive, ProximityArchive
+from ribs.archives import CVTArchive, GridArchive, ProximityArchive
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
+
+MAE_ARCHIVES = (GridArchive, CVTArchive)
 
 # pylint: disable = redefined-outer-name
 
@@ -22,7 +24,8 @@ def test_str_dtype_float(name, dtype):
     assert archive.dtypes["solution"] == np_dtype
     assert archive.dtypes["objective"] == np_dtype
     assert archive.dtypes["measures"] == np_dtype
-    assert archive.dtypes["threshold"] == np_dtype
+    if isinstance(archive, MAE_ARCHIVES):
+        assert archive.dtypes["threshold"] == np_dtype
 
 
 def test_dict_dtype():
@@ -339,12 +342,12 @@ def test_solution_dim_correct(data):
 
 
 def test_learning_rate_correct(data):
-    if not isinstance(data.archive, ProximityArchive):
+    if isinstance(data.archive, MAE_ARCHIVES):
         assert data.archive.learning_rate == 1.0  # Default value.
 
 
 def test_threshold_min_correct(data):
-    if not isinstance(data.archive, ProximityArchive):
+    if isinstance(data.archive, MAE_ARCHIVES):
         assert data.archive.threshold_min == -np.inf  # Default value.
 
 
@@ -353,9 +356,12 @@ def test_qd_score_offset_correct(data):
 
 
 def test_field_list_correct(data):
-    assert data.archive.field_list == [
-        "solution", "objective", "measures", "threshold"
-    ]
+    if isinstance(data.archive, MAE_ARCHIVES):
+        assert data.archive.field_list == [
+            "solution", "objective", "measures", "threshold"
+        ]
+    else:
+        assert data.archive.field_list == ["solution", "objective", "measures"]
 
 
 def test_basic_stats(data):
@@ -400,7 +406,8 @@ def test_retrieve_gets_correct_elite(data):
     assert np.all(elites["solution"][0] == data.solution)
     assert elites["objective"][0] == data.objective
     assert np.all(elites["measures"][0] == data.measures)
-    assert elites["threshold"][0] == data.objective
+    if isinstance(data.archive_with_elite, MAE_ARCHIVES):
+        assert elites["threshold"][0] == data.objective
     # Avoid checking elites["index"] since the meaning varies by archive.
 
 
@@ -416,7 +423,8 @@ def test_retrieve_empty_values(data):
         assert np.all(np.isnan(elites["solution"][0]))
         assert np.isnan(elites["objective"])
         assert np.all(np.isnan(elites["measures"][0]))
-        assert np.isnan(elites["threshold"])
+        if isinstance(data.archive, MAE_ARCHIVES):
+            assert np.isnan(elites["threshold"])
         assert elites["index"][0] == -1
 
 
@@ -431,7 +439,8 @@ def test_retrieve_single_gets_correct_elite(data):
     assert np.all(elite["solution"] == data.solution)
     assert elite["objective"] == data.objective
     assert np.all(elite["measures"] == data.measures)
-    assert elite["threshold"] == data.objective
+    if isinstance(data.archive_with_elite, MAE_ARCHIVES):
+        assert elite["threshold"] == data.objective
     # Avoid checking elite["index"] since the meaning varies by archive.
 
 
