@@ -651,7 +651,8 @@ class SlidingBoundariesArchive(ArchiveBase):
         # Delete these so that we only use the clean, validated data in `data`.
         del solution, objective, measures, fields
 
-        self._buffer.add(data)
+        # Copy since other methods like basic_add_single can modify it.
+        self._buffer.add(data.copy())
         self._total_num_sol += 1
 
         if self._total_num_sol % self._remap_frequency == 0:
