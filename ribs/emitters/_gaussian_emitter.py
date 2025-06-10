@@ -3,7 +3,6 @@ import numpy as np
 
 from ribs._utils import check_batch_shape, check_shape
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.operators import GaussianOperator
 
 
 class GaussianEmitter(EmitterBase):
@@ -59,6 +58,7 @@ class GaussianEmitter(EmitterBase):
             bounds=bounds,
         )
 
+        self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
         self._sigma = np.array(sigma, dtype=archive.dtypes["solution"])
         self._x0 = None
@@ -79,8 +79,6 @@ class GaussianEmitter(EmitterBase):
                 initial_solutions, dtype=archive.dtypes["solution"])
             check_batch_shape(self._initial_solutions, "initial_solutions",
                               archive.solution_dim, "archive.solution_dim")
-
-        self._operator = GaussianOperator(sigma=self._sigma, seed=seed)
 
     @property
     def x0(self):
@@ -126,12 +124,17 @@ class GaussianEmitter(EmitterBase):
             empty, we return ``initial_solutions``, which might not have
             ``batch_size`` solutions.
         """
-        if self.archive.empty and self._initial_solutions is not None:
+        if self.archive.empty and self.initial_solutions is not None:
             return self._clip(self.initial_solutions)
 
         if self.archive.empty:
-            parents = np.repeat(self.x0[None], repeats=self._batch_size, axis=0)
+            parents = np.repeat(self.x0[None], repeats=self.batch_size, axis=0)
         else:
-            parents = self.archive.sample_elites(self._batch_size)["solution"]
+            parents = self.archive.sample_elites(self.batch_size)["solution"]
 
-        return self._clip(self._operator.ask(parents))
+        noise = self._rng.normal(
+            scale=self.sigma,
+            size=(self.batch_size, self.solution_dim),
+        ).astype(self.archive.dtypes["solution"])
+
+        return self._clip(parents + noise)

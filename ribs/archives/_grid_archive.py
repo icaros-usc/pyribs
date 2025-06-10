@@ -864,6 +864,59 @@ class GridArchive(ArchiveBase):
         _, elites = self._store.retrieve(selected_indices)
         return elites
 
+    ## retessellate ##
+
+    def retessellate(self, new_dims):
+        """Updates the resolution of this archive to the given dimensions.
+
+        Upon resizing the archive, this method re-inserts the solutions that are
+        currently contained in the archive. Note that if the new grid resolution
+        is smaller than the old grid resolution, some solutions may be dropped,
+        as solutions originally from different cells may now land in the same
+        cell, and only the highest-objective elite in each cell is retained.
+
+        Also note that the current implementation does not support archive
+        thresholds from CMA-MAE, i.e., the learning rate must be 1. The
+        thresholds within each cell should correspond to how well the measure
+        space within that cell has been explored, and thereby should correspond
+        to the measure space volume within that cell. It is an open research
+        problem as to how the new thresholds should be determined after
+        retessellating.
+
+        Args:
+            new_dims (array-like of int):  Number of cells in each dimension of
+                the measure space, e.g., ``[20, 30, 40]`` indicates there should
+                be 3 dimensions with 20, 30, and 40 cells. The format is
+                identical to the ``dims`` argument in ``__init__``.
+
+        Raises:
+            ValueError: Attempted to retessellate an archive with learning rate
+                not equal to 1.
+            ValueError: The measure space dimensionality in ``new_dims`` does
+                not match the current measure space dimensionality.
+        """
+        if not np.isclose(self.learning_rate, 1):
+            raise ValueError("Cannot retessellate an archive with "
+                             "learning rate not equal to 1.")
+        if len(new_dims) != self.measure_dim:
+            raise ValueError(
+                "The measure space dimensionality indicated in `new_dims` "
+                f"is {len(new_dims)}, but this archive has a measure space "
+                f"dimensionality of {self.measure_dim}.")
+
+        cur_data = self.data()
+        del cur_data['index']
+        # Note: No need to clear the store since we just replace it below.
+
+        self._dims = np.array(new_dims, dtype=np.int32)
+        self._boundaries = self._compute_boundaries(self._dims,
+                                                    self._lower_bounds,
+                                                    self._upper_bounds)
+        self._store = ArrayStore(self._store.field_desc,
+                                 capacity=np.prod(self._dims))
+
+        self.add(**cur_data)
+
     ## CQD Score ##
 
     def cqd_score(self,

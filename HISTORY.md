@@ -8,6 +8,7 @@
 
 - **Backwards-incompatible:** Remove transforms from archive add operations
   ({pr}`525`)
+- Add retessellate method to GridArchive ({pr}`516`)
 - **Backwards-incompatible:** Tidy up operator implementation ({pr}`507`,
   {pr}`510`)
 - Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
@@ -51,6 +52,7 @@
 - Migrate to pyproject.toml ({pr}`514`)
 - Set vmin and vmax to None if archive is empty in ribs.visualize ({pr}`513`,
   {pr}`523`)
+- Remove operators from GaussianEmitter and IsoLineEmitter ({pr}`508`)
 - Update QDax visualizations to match QDax 0.5.0 ({pr}`502`)
 - Skip qdax tests if qdax not installed ({pr}`491`)
 - Move yapf after isort in pre-commit ({pr}`490`)
