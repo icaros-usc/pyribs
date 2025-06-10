@@ -433,7 +433,9 @@ class ArrayStore:
                 f"`data` has keys {data.keys()} but should have the "
                 f"same keys as this ArrayStore, i.e., {self._fields.keys()}. "
                 "This error may occur if the archive has extra_fields but the "
-                "fields were not passed to archive.add() or scheduler.tell().")
+                "fields were not passed to archive.add() or scheduler.tell(). "
+                "This can also occur if the archive and result_archive have "
+                "different extra_fields.")
 
         # Update occupancy data.
         unique_indices = np.where(aggregate(indices, 1, func="len") != 0)[0]
