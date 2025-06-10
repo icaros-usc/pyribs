@@ -1,4 +1,4 @@
-"""Tests for ArchiveBase."""
+"""Tests that are common across all archives."""
 import numpy as np
 import pytest
 
