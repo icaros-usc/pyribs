@@ -457,7 +457,8 @@ def test_retrieve_single_empty_values(data):
         assert np.all(np.isnan(elite["solution"]))
         assert np.isnan(elite["objective"])
         assert np.all(np.isnan(elite["measures"]))
-        assert np.isnan(elite["threshold"])
+        if isinstance(data.archive_with_elite, MAE_ARCHIVES):
+            assert np.isnan(elite["threshold"])
         assert elite["index"] == -1
 
 
