@@ -854,3 +854,15 @@ class SlidingBoundariesArchive(ArchiveBase):
             dist_max=dist_max,
             dist_ord=dist_ord,
         )
+
+    # TODO (btjanaka): Placeholder -- will remove.
+    @property
+    def learning_rate(self):
+        """float: The learning rate for threshold updates."""
+        return 1.0
+
+    # TODO (btjanaka): Placeholder -- will remove.
+    @property
+    def threshold_min(self):
+        """float: The initial threshold value for all the cells."""
+        return -np.inf
