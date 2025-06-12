@@ -47,3 +47,23 @@ def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
     learning_rate = np_scalar(learning_rate, dtype)
     threshold_min = np_scalar(threshold_min, dtype)
     return learning_rate, threshold_min
+
+
+def fill_sentinel_values(occupied, data):
+    """Fills unoccupied entries in data with sentinel values.
+
+    Operates in-place on `data`.
+    """
+    unoccupied = ~occupied
+
+    for name, arr in data.items():
+        if arr.dtype == object:
+            fill_val = None
+        elif name == "index":
+            fill_val = -1
+        elif np.issubdtype(arr.dtype, np.integer):
+            fill_val = 0
+        else:  # Floating-point and other fields.
+            fill_val = np.nan
+
+        arr[unoccupied] = fill_val

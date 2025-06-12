@@ -13,7 +13,7 @@ from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._grid_archive import GridArchive
-from ribs.archives._utils import parse_dtype
+from ribs.archives._utils import fill_sentinel_values, parse_dtype
 
 
 class SolutionBuffer:
@@ -672,19 +672,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         check_finite(measures, "measures")
 
         occupied, data = self._store.retrieve(self.index_of(measures))
-        unoccupied = ~occupied
-
-        for name, arr in data.items():
-            if arr.dtype == object:
-                fill_val = None
-            elif name == "index":
-                fill_val = -1
-            elif np.issubdtype(arr.dtype, np.integer):
-                fill_val = 0
-            else:  # Floating-point and other fields.
-                fill_val = np.nan
-
-            arr[unoccupied] = fill_val
+        fill_sentinel_values(occupied, data)
 
         return occupied, data
 
