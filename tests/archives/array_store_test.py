@@ -53,10 +53,19 @@ def test_init(shape):
             (shape[2],) if isinstance(shape[2], int) else shape[2], np.float32),
     }
     assert store.field_list == ["objective", "measures", "solution"]
+    assert store.field_list_with_index == [
+        "objective", "measures", "solution", "index"
+    ]
     assert store.dtypes == {
         "objective": np.float32,
         "measures": np.float32,
         "solution": np.float32,
+    }
+    assert store.dtypes_with_index == {
+        "objective": np.float32,
+        "measures": np.float32,
+        "solution": np.float32,
+        "index": np.int32,
     }
 
 
