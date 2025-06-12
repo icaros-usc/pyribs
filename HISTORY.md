@@ -50,7 +50,7 @@
 #### Improvements
 
 - Refactor archives into single-file implementations ({pr}`518`, {pr}`521`,
-  {pr}`526`, {pr}`528`, {pr}`529`)
+  {pr}`526`, {pr}`528`, {pr}`529`, {pr}`530`)
 - Make ArrayStore.data return ArchiveDataFrame instead of DataFrame ({pr}`522`)
 - Migrate to pyproject.toml ({pr}`514`)
 - Set vmin and vmax to None if archive is empty in ribs.visualize ({pr}`513`,
