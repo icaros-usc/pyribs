@@ -53,6 +53,20 @@ def test_init(shape):
             (shape[2],) if isinstance(shape[2], int) else shape[2], np.float32),
     }
     assert store.field_list == ["objective", "measures", "solution"]
+    assert store.field_list_with_index == [
+        "objective", "measures", "solution", "index"
+    ]
+    assert store.dtypes == {
+        "objective": np.float32,
+        "measures": np.float32,
+        "solution": np.float32,
+    }
+    assert store.dtypes_with_index == {
+        "objective": np.float32,
+        "measures": np.float32,
+        "solution": np.float32,
+        "index": np.int32,
+    }
 
 
 @pytest.fixture
@@ -77,8 +91,6 @@ def test_add_wrong_keys(store):
                 "measures": [[1.0, 2.0], [3.0, 4.0]],
                 # Missing `solution` key.
             },
-            {},  # Empty extra_args.
-            [],  # Empty transforms.
         )
 
 
@@ -91,8 +103,6 @@ def test_add_mismatch_indices(store):
                 "measures": [[1.0, 2.0], [3.0, 4.0]],
                 "solution": [np.zeros(10), np.ones(10)],
             },
-            {},  # Empty extra_args.
-            [],  # Empty transforms.
         )
 
 
@@ -105,8 +115,6 @@ def test_simple_add_retrieve_clear(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     assert len(store) == 2
@@ -137,13 +145,26 @@ def test_add_duplicate_indices(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     assert len(store) == 1
     assert np.all(store.occupied == [0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
     assert np.all(store.occupied_list == [3])
+
+
+def test_add_nothing(store):
+    store.add(
+        [],
+        {
+            "objective": [],
+            "measures": [],
+            "solution": [],
+        },
+    )
+
+    assert len(store) == 0
+    assert np.all(store.occupied == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    assert np.all(store.occupied_list == [])
 
 
 def test_dtypes(store):
@@ -154,8 +175,6 @@ def test_dtypes(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     _, data = store.retrieve([5, 3])
@@ -176,8 +195,6 @@ def test_retrieve_duplicate_indices(store):
             "measures": [[3.0, 4.0]],
             "solution": [np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     occupied, data = store.retrieve([3, 3])
@@ -220,8 +237,6 @@ def test_retrieve(return_type, store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     occupied, data = store.retrieve([5, 3], return_type=return_type)
@@ -279,8 +294,6 @@ def test_retrieve_custom_fields(store, return_type):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     occupied, data = store.retrieve([5, 3],
@@ -317,72 +330,12 @@ def test_retrieve_single_field(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     occupied, data = store.retrieve([5, 3], fields="objective")
 
     assert np.all(occupied == [True, True])
     assert np.all(data == [2.0, 1.0])
-
-
-def test_add_simple_transform(store):
-
-    def obj_meas(indices, new_data, add_info, extra_args, occupied, cur_data):
-        # pylint: disable = unused-argument
-        new_data["objective"] = np.sum(new_data["solution"], axis=1)
-        new_data["measures"] = np.asarray(new_data["solution"])[:, :2]
-        add_info.update(extra_args)
-        add_info["bar"] = 5
-        return indices, new_data, add_info
-
-    add_info = store.add(
-        [3, 5],
-        {
-            "solution": [np.ones(10), 2 * np.ones(10)],
-        },
-        {"foo": 4},
-        [obj_meas],
-    )
-
-    assert add_info == {"foo": 4, "bar": 5}
-
-    assert len(store) == 2
-    assert np.all(store.occupied == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
-    assert np.all(np.sort(store.occupied_list) == [3, 5])
-
-    occupied, data = store.retrieve([3, 5])
-
-    assert np.all(occupied == [True, True])
-    assert data.keys() == set(["objective", "measures", "solution", "index"])
-    assert np.all(data["objective"] == [10.0, 20.0])
-    assert np.all(data["measures"] == [[1.0, 1.0], [2.0, 2.0]])
-    assert np.all(data["solution"] == [np.ones(10), 2 * np.ones(10)])
-    assert np.all(data["index"] == [3, 5])
-
-
-def test_add_empty_transform(store):
-    # new_data should be able to take on arbitrary values when no indices are
-    # returned, so we make it an empty dict here.
-    def empty(indices, new_data, add_info, extra_args, occupied, cur_data):
-        # pylint: disable = unused-argument
-        return [], {}, {}
-
-    add_info = store.add(
-        [3, 5],
-        {
-            "solution": [np.ones(10), 2 * np.ones(10)],
-        },
-        {"foo": 4},
-        [empty],
-    )
-
-    assert add_info == {}
-
-    assert len(store) == 0
-    assert np.all(~store.occupied)
-    assert len(store.occupied_list) == 0
 
 
 def test_resize_bad_capacity(store):
@@ -398,8 +351,6 @@ def test_resize_to_double_capacity(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     store.resize(store.capacity * 2)
@@ -421,8 +372,6 @@ def test_as_raw_dict(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     d = store.as_raw_dict()
@@ -462,8 +411,6 @@ def test_from_raw_dict(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     new_store = ArrayStore.from_raw_dict(store.as_raw_dict())
@@ -490,8 +437,6 @@ def test_data(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     d = store.data()
@@ -520,8 +465,6 @@ def test_data_with_tuple_return_type(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     d = store.data(return_type="tuple")
@@ -550,8 +493,6 @@ def test_data_with_pandas_return_type(store):
             "measures": [[1.0, 2.0], [3.0, 4.0]],
             "solution": [np.zeros(10), np.ones(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     df = store.data(return_type="pandas")
@@ -591,8 +532,6 @@ def test_iteration(store):
             "measures": [[1.0, 2.0]],
             "solution": [np.zeros(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     for entry in store:
@@ -612,8 +551,6 @@ def test_add_during_iteration(store):
             "measures": [[1.0, 2.0]],
             "solution": [np.zeros(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     # Even with just one entry, adding during iteration should still raise an
@@ -627,8 +564,6 @@ def test_add_during_iteration(store):
                     "measures": [[3.0, 4.0]],
                     "solution": [np.ones(10)],
                 },
-                {},  # Empty extra_args.
-                [],  # Empty transforms.
             )
 
 
@@ -640,8 +575,6 @@ def test_clear_during_iteration(store):
             "measures": [[1.0, 2.0]],
             "solution": [np.zeros(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     with pytest.raises(RuntimeError):
@@ -657,8 +590,6 @@ def test_clear_and_add_during_iteration(store):
             "measures": [[1.0, 2.0]],
             "solution": [np.zeros(10)],
         },
-        {},  # Empty extra_args.
-        [],  # Empty transforms.
     )
 
     with pytest.raises(RuntimeError):
@@ -671,6 +602,4 @@ def test_clear_and_add_during_iteration(store):
                     "measures": [[3.0, 4.0]],
                     "solution": [np.ones(10)],
                 },
-                {},  # Empty extra_args.
-                [],  # Empty transforms.
             )

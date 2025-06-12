@@ -6,9 +6,9 @@ from functools import cached_property
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
-from pandas import DataFrame
 
 from ribs._utils import readonly
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 
 
 class Update(IntEnum):
@@ -74,8 +74,8 @@ class ArrayStore:
             "measures": [[0, 0], [2, 1], [3, 5]],
         }
 
-    The ArrayStore supports several further operations, in particular a flexible
-    :meth:`add` method that inserts data into the ArrayStore.
+    The ArrayStore supports several further operations, such as an :meth:`add`
+    method that inserts data into the ArrayStore.
 
     Args:
         field_desc (dict): Description of fields in the array store. The
@@ -214,6 +214,22 @@ class ArrayStore:
         return {name: arr.dtype for name, arr in self._fields.items()}
 
     @cached_property
+    def dtypes_with_index(self):
+        """dict: Data types of fields in the store, plus the index.
+
+        Example:
+
+            ::
+
+                store.dtypes == {
+                    "objective": np.float32,
+                    "measures": np.float32,
+                    "index": np.int32,
+                }
+        """
+        return self.dtypes | {"index": np.int32}
+
+    @cached_property
     def field_list(self):
         """list: List of fields in the store.
 
@@ -226,6 +242,21 @@ class ArrayStore:
         # Python dicts are ordered, so this will follow the same order as in the
         # constructor.
         return list(self._fields)
+
+    @cached_property
+    def field_list_with_index(self):
+        """list: List of fields in the store, plus the index.
+
+        The index is always added at the end of the list.
+
+        Example:
+
+            ::
+
+                store.field_list_with_index == \
+                        ["objective", "measures", "index"]
+        """
+        return list(self._fields) + ["index"]
 
     def retrieve(self, indices, fields=None, return_type="dict"):
         """Collects data at the given indices.
@@ -286,8 +317,9 @@ class ArrayStore:
                 tuple will be ordered according to the ``field_desc`` argument
                 in the constructor, along with ``index`` as the last field.
 
-              - ``return_type="pandas"``: A :class:`pandas.DataFrame` with the
-                following columns (by default):
+              - ``return_type="pandas"``: An
+                :class:`~ribs.archives.ArchiveDataFrame` with the following
+                columns (by default):
 
                 - For fields that are scalars, a single column with the field
                   name. For example, ``objective`` would have a single column
@@ -371,7 +403,7 @@ class ArrayStore:
             data = tuple(data)
         elif return_type == "pandas":
             # Data above are already copied, so no need to copy again.
-            data = DataFrame(data, copy=False)
+            data = ArchiveDataFrame(data, copy=False)
 
         return occupied, data
 
@@ -389,99 +421,52 @@ class ArrayStore:
         """
         return self.retrieve(self.occupied_list, fields, return_type)[1]
 
-    def add(self, indices, new_data, extra_args, transforms):
+    def add(self, indices, data):
         """Adds new data to the store at the given indices.
 
-        The indices, new_data, and add_info are passed through transforms before
-        adding to the store. The general idea is that these transforms will
-        gradually modify the indices, new_data, and add_info. For instance, they
-        can add new fields to new_data (new_data may not initially have all the
-        same fields as the store). Alternatively, they can filter out duplicate
-        indices, eg if multiple entries are being inserted at the same index we
-        can choose one with the best objective. As another example, the
-        transforms can add stats to the add_info or delete fields from the
-        add_info.
+        Example:
 
-        The signature of a transform is as follows::
+            ::
 
-            def transform(indices, new_data, add_info, extra_args,
-                          occupied, cur_data) ->
-                (indices, new_data, add_info):
+                indices = [4, 7, 8]
+                data = {"objective": [1.0, 2.0, 3.0]}
+                store.add(indices, data)
+                ...
 
-        Transform parameters:
-
-        - **indices** (array-like): Array of indices at which new_data should be
-          inserted.
-        - **new_data** (dict): New data for the given indices. Maps from field
-          name to the array of new data for that field.
-        - **add_info** (dict): Information to return to the user about the
-          addition process. Example info includes whether each entry was
-          ultimately inserted into the store, as well as general statistics.
-          For the first transform, this will be an empty dict.
-        - **extra_args** (dict): Additional arguments for the transform.
-        - **occupied** (array-like): Whether the given indices are currently
-          occupied. Same as that given by :meth:`retrieve`.
-        - **cur_data** (dict): Data at the current indices in the store. Same as
-          that given by :meth:`retrieve`.
-
-        Transform outputs:
-
-        - **indices** (array-like): Modified indices. We do NOT assume that the
-          final indices will be unique.
-        - **new_data** (dict): Modified new_data. At the end of the transforms,
-          it should have the same keys as the store. If ``indices`` is empty,
-          ``new_data`` will be ignored.
-        - **add_info** (dict): Modified add_info.
+                # Now, index 4 will have `objective` of 1.0, index 7 will have
+                # `objective` of 2.0, and index 8 will have objective of 3.0.
 
         Args:
-            indices (array-like): Initial list of indices for addition.
-            new_data (dict): Initial data for addition.
-            extra_args (dict): Dict containing additional arguments to pass to
-                the transforms. The dict is passed directly (i.e., no unpacking
-                like with kwargs).
-            transforms (list): List of transforms on the data to be added.
-
-        Returns:
-            dict: Final ``add_info`` from the transforms. ``new_data`` and
-            ``indices`` are not returned; rather, the ``new_data`` is added into
-            the store at ``indices``.
+            indices (array-like): List of indices for addition.
+            data (dict): Dict with data to add at each index. The dict maps from
+                field names to arrays of data for each field.
 
         Raise:
-            ValueError: The final version of ``new_data`` does not have the same
-                keys as the fields of this store.
-            ValueError: The final version of ``new_data`` has fields that have a
-                different length than ``indices``.
+            ValueError: ``data`` does not have the same keys as the fields of
+                this store.
+            ValueError: ``data`` has fields that have a different length than
+                ``indices``.
         """
         self._props["updates"][Update.ADD] += 1
 
-        add_info = {}
-        for transform in transforms:
-            occupied, cur_data = self.retrieve(indices)
-            indices, new_data, add_info = transform(indices, new_data, add_info,
-                                                    extra_args, occupied,
-                                                    cur_data)
-
-        # Shortcut when there is nothing to add to the store.
         if len(indices) == 0:
-            return add_info
+            return
 
-        # Verify that the array shapes match the indices.
-        for name, arr in new_data.items():
+        for name, arr in data.items():
             if len(arr) != len(indices):
                 raise ValueError(
-                    f"In `new_data`, the array for `{name}` has length "
+                    f"In `data`, the array for `{name}` has length "
                     f"{len(arr)} but should be the same length as indices "
                     f"({len(indices)})")
 
-        # Verify that new_data ends up with the correct fields after the
-        # transforms.
-        if new_data.keys() != self._fields.keys():
+        if data.keys() != self._fields.keys():
             raise ValueError(
-                f"`new_data` had keys {new_data.keys()} but should have the "
+                f"`data` has keys {data.keys()} but should have the "
                 f"same keys as this ArrayStore, i.e., {self._fields.keys()}. "
-                "You may be seeing this error if your archive has "
-                "extra_fields but the fields were not passed into "
-                "archive.add() or scheduler.tell().")
+                "This error may occur if the archive has extra_fields but the "
+                "fields were not passed to archive.add() or scheduler.tell(). "
+                "This can also occur if the archive and result_archive have "
+                "different extra_fields.")
 
         # Update occupancy data.
         unique_indices = np.where(aggregate(indices, 1, func="len") != 0)[0]
@@ -498,9 +483,7 @@ class ArrayStore:
         # unique indices. In contrast, here we let NumPy's default behavior
         # handle duplicate indices.
         for name, arr in self._fields.items():
-            arr[indices] = new_data[name]
-
-        return add_info
+            arr[indices] = data[name]
 
     def clear(self):
         """Removes all entries from the store."""
