@@ -53,6 +53,11 @@ def test_init(shape):
             (shape[2],) if isinstance(shape[2], int) else shape[2], np.float32),
     }
     assert store.field_list == ["objective", "measures", "solution"]
+    assert store.dtypes == {
+        "objective": np.float32,
+        "measures": np.float32,
+        "solution": np.float32,
+    }
 
 
 @pytest.fixture
@@ -136,6 +141,21 @@ def test_add_duplicate_indices(store):
     assert len(store) == 1
     assert np.all(store.occupied == [0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
     assert np.all(store.occupied_list == [3])
+
+
+def test_add_nothing(store):
+    store.add(
+        [],
+        {
+            "objective": [],
+            "measures": [],
+            "solution": [],
+        },
+    )
+
+    assert len(store) == 0
+    assert np.all(store.occupied == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    assert np.all(store.occupied_list == [])
 
 
 def test_dtypes(store):
