@@ -211,6 +211,8 @@ class ArrayStore:
                     "measures": np.float32,
                 }
         """
+        # Calling `.type` retrieves the numpy scalar type; see:
+        # https://numpy.org/doc/stable/reference/arrays.scalars.html#arrays-scalars-built-in
         return {name: arr.dtype.type for name, arr in self._fields.items()}
 
     @cached_property
