@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Remove transforms from archive add operations
+  ({pr}`525`)
 - Add retessellate method to GridArchive ({pr}`516`)
 - **Backwards-incompatible:** Tidy up operator implementation ({pr}`507`,
   {pr}`510`)

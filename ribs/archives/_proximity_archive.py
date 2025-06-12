@@ -1,5 +1,6 @@
 """Contains the ProximityArchive."""
 import numpy as np
+from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import cKDTree
 
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
@@ -9,9 +10,6 @@ from ribs.archives._archive_base_2 import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
-from ribs.archives._transforms import (batch_entries_with_threshold,
-                                       compute_best_index,
-                                       compute_objective_sum)
 from ribs.archives._utils import parse_dtype
 
 
@@ -446,6 +444,17 @@ class ProximityArchive(ArchiveBase):
 
     ## Methods for writing to the archive ##
 
+    def _maybe_resize(self, new_size):
+        """Resizes the store by doubling its capacity.
+
+        We may need to double the capacity multiple times. The log2 below
+        indicates how many times we would need to double the capacity, and
+        we obtain the final multiplier by raising to a power of 2.
+        """
+        if new_size > self.capacity:
+            multiplier = 2**int(np.ceil(np.log2(new_size / self.capacity)))
+            self._store.resize(multiplier * self.capacity)
+
     def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
 
@@ -556,97 +565,166 @@ class ProximityArchive(ArchiveBase):
             },
         )
 
-        if self.local_competition:
+        # Delete these so that we only use the clean, validated data in `data`.
+        del solution, objective, measures, fields
+
+        if not self.local_competition:
+            # Regular addition -- add solutions that are novel enough.
+            novelty = self.compute_novelty(measures=data["measures"])
+            novel_enough = novelty >= self.novelty_threshold
+            n_novel_enough = np.sum(novel_enough)
+            new_size = len(self) + n_novel_enough
+            self._maybe_resize(new_size)
+
+            add_info = {}
+            add_info["status"] = np.zeros(len(data["measures"]), dtype=np.int32)
+            add_info["status"][novel_enough] = 2  # New solution.
+            add_info["novelty"] = novelty
+
+            if n_novel_enough > 0:
+                # Filter the data to solutions that were novel enough.
+                data = {key: val[novel_enough] for key, val in data.items()}
+
+                # These are the new indices where novel solutions will be
+                # placed. We append to the current collection of solutions by
+                # getting the next `new_size` indices.
+                indices = np.arange(len(self), new_size)
+
+                # TODO (btjanaka): Placeholder -- will remove.
+                data["threshold"] = data["objective"]
+
+                # Add to archive.
+                self._store.add(indices, data)
+
+                # Compute statistics.
+                best_index = indices[np.argmax(data["objective"])]
+                objective_sum = self._objective_sum + np.sum(data["objective"])
+                self._stats_update(objective_sum, best_index)
+
+                # Make a new tree with the updated solutions.
+                self._cur_kd_tree = cKDTree(self._store.data("measures"),
+                                            **self._ckdtree_kwargs)
+
+            return add_info
+
+        else:
+            batch_size = len(data["measures"])
+            # Addition with local competition. The key difference from above is
+            # that solutions that are not novel enough have the potential to
+            # replace their nearest neighbors in the archive. As such, similar
+            # to GridArchive.add, we need to handle batch additions.
             novelty, local_competition = self.compute_novelty(
                 measures=data["measures"],
                 local_competition=data["objective"],
             )
-        else:
-            novelty = self.compute_novelty(measures=data["measures"])
-
-        novel_enough = novelty >= self.novelty_threshold
-        n_novel_enough = np.sum(novel_enough)
-        new_size = len(self) + n_novel_enough
-
-        if self.local_competition:
-            # In the case of local competition, we consider all solutions for
-            # addition.
-            add_indices = np.empty(len(novelty), dtype=np.int32)
-
-            # New solutions are assigned the new indices.
-            add_indices[novel_enough] = np.arange(len(self), new_size)
-
-            # Solutions that were not novel enough have the potential to replace
-            # their nearest neighbors in the archive.
+            novel_enough = novelty >= self.novelty_threshold
             not_novel_enough = ~novel_enough
-            n_not_novel_enough = len(novelty) - n_novel_enough
-            if n_not_novel_enough > 0:
-                add_indices[not_novel_enough] = \
-                    self.index_of(data["measures"][not_novel_enough])
+            n_novel_enough = np.sum(novel_enough)
+            n_not_novel_enough = batch_size - n_novel_enough
+            new_size = len(self) + n_novel_enough
+            self._maybe_resize(new_size)
 
-            add_data = data
-        else:
-            # Without local competition, the only solutions that can be added
-            # are the ones that were novel enough.
-            add_indices = np.arange(len(self), new_size)
-            add_data = {key: val[novel_enough] for key, val in data.items()}
+            # Separate out the novel data for the final addition. New solutions
+            # are assigned indices such that they append to the current store.
+            novel_data = {name: arr[novel_enough] for name, arr in data.items()}
+            novel_indices = np.arange(len(self), new_size)
 
-        if new_size > self.capacity:
-            # Resize the store by doubling its capacity. We may need to double
-            # the capacity multiple times. The log2 below indicates how many
-            # times we would need to double the capacity. We obtain the final
-            # multiplier by raising to a power of 2.
-            multiplier = 2**int(np.ceil(np.log2(new_size / self.capacity)))
-            self._store.resize(multiplier * self.capacity)
+            # Separate out the non-novel data for further processing. Solutions
+            # that were not novel enough have the potential to replace their
+            # nearest neighbors in the archive.
+            data = {name: arr[not_novel_enough] for name, arr in data.items()}
+            indices = (self.index_of(data["measures"]) if n_not_novel_enough > 0
+                       else np.array([], dtype=np.int32))
 
-        add_info = self._store.add(
-            add_indices,
-            add_data,
-            {
-                "dtype": self.dtypes["objective"],
-                "learning_rate": 1.0,
-                # Note that when only novelty is considered, objectives default
-                # to 0, so all solutions specified will be added because the
-                # threshold_min is -np.inf.
-                "threshold_min": -np.inf,
-                "objective_sum": self._objective_sum,
-            },
-            [
-                batch_entries_with_threshold,
-                compute_objective_sum,
-                compute_best_index,
-            ],
-        )
+            # All entries are occupied since these solutions were not novel, and
+            # their index from `index_of` is the index of their nearest
+            # neighbor.
+            _, cur_data = self._store.retrieve(indices)
+            cur_objective = cur_data["objective"]
 
-        objective_sum = add_info.pop("objective_sum")
-        best_index = add_info.pop("best_index")
+            # Can only be used to index `data` and `indices`.
+            improve_existing = data["objective"] > cur_objective
 
-        # Add novelty to the data.
-        add_info["novelty"] = novelty
-
-        if self.local_competition:
-            # add_info contains results for all solutions. We also want to
-            # return local_competition info.
+            # Information to return about the addition.
+            add_info = {}
+            add_info["status"] = np.zeros(batch_size, dtype=np.int32)
+            add_info["status"][novel_enough] = 2
+            # Sets to 1 if improves over the neighbor.
+            add_info["status"][not_novel_enough] = improve_existing
+            add_info["value"] = np.empty(batch_size,
+                                         dtype=self.dtypes["objective"])
+            add_info["value"][novel_enough] = novel_data["objective"]
+            add_info["value"][not_novel_enough] = \
+                    data["objective"] - cur_objective
+            add_info["novelty"] = novelty
             add_info["local_competition"] = local_competition
-        else:
-            # add_info only contains results for the solutions that were novel
-            # enough. Here we create an add_info that contains results for all
-            # solutions.
-            all_status = np.zeros(len(data["measures"]), dtype=np.int32)
-            all_status[novel_enough] = add_info["status"]
-            add_info["status"] = all_status
 
-            # We ignore objective/threshold when only novelty is considered.
-            del add_info["value"]
+            if np.any(improve_existing):
+                # Select all solutions that can be inserted due to beating their
+                # neighbors -- at this point, there are still conflicts in the
+                # insertions, e.g., multiple solutions can map to index 0.
+                indices = indices[improve_existing]
+                data = {
+                    name: arr[improve_existing] for name, arr in data.items()
+                }
+                cur_objective = cur_objective[improve_existing]
 
-        if not np.all(add_info["status"] == 0):
-            self._stats_update(objective_sum, best_index)
+                # Retrieve indices of solutions that _should_ be inserted into
+                # the archive. Currently, multiple solutions may be inserted at
+                # each archive index, but we only want to insert the maximum
+                # among these solutions. Thus, we obtain the argmax for each
+                # archive index.
+                #
+                # We use a fill_value of -1 to indicate archive indices that
+                # were not covered in the batch. Note that the length of
+                # archive_argmax is only max(indices), rather than the total
+                # number of grid cells. However, this is okay because we only
+                # need the indices of the solutions, which we store in
+                # should_insert.
+                #
+                # aggregate() always chooses the first item if there are ties,
+                # so the first elite will be inserted if there is a tie. See
+                # their default numpy implementation for more info:
+                # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
+                archive_argmax = aggregate(indices,
+                                           data["objective"],
+                                           func="argmax",
+                                           fill_value=-1)
+                should_insert = archive_argmax[archive_argmax != -1]
 
-            # Make a new tree with the updated solutions.
-            self._cur_kd_tree = cKDTree(self._store.data("measures"),
-                                        **self._ckdtree_kwargs)
+                # Select only solutions that will be inserted into the archive.
+                indices = indices[should_insert]
+                data = {name: arr[should_insert] for name, arr in data.items()}
+                cur_objective = cur_objective[should_insert]
 
-        return add_info
+            # TODO (btjanaka): Placeholder -- will remove.
+            data["threshold"] = data["objective"]
+            novel_data["threshold"] = novel_data["objective"]
+
+            if np.any(improve_existing) or n_novel_enough > 0:
+                combined_indices = np.concatenate((indices, novel_indices),
+                                                  axis=0)
+                combined_data = {
+                    name: np.concatenate((data[name], novel_data[name]), axis=0)
+                    for name in data
+                }
+                # Insert the solutions that improved over their neighbors, as
+                # well as the solutions that are novel.
+                self._store.add(combined_indices, combined_data)
+
+                # Compute statistics.
+                objective_sum = (self._objective_sum +
+                                 np.sum(novel_data["objective"]) +
+                                 np.sum(data["objective"] - cur_objective))
+                best_index = combined_indices[np.argmax(
+                    combined_data["objective"])]
+                self._stats_update(objective_sum, best_index)
+
+                # Make a new tree with the updated solutions.
+                self._cur_kd_tree = cKDTree(self._store.data("measures"),
+                                            **self._ckdtree_kwargs)
+
+            return add_info
 
     def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution into the archive.

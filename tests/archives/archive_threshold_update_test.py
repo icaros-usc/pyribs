@@ -3,7 +3,9 @@ import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
-from ribs.archives._transforms import _compute_thresholds
+
+# pylint: disable-next = protected-access
+_compute_thresholds = GridArchive._compute_thresholds
 
 # pylint: disable = redefined-outer-name, missing-function-docstring
 
