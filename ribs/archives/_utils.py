@@ -16,6 +16,11 @@ def parse_dtype(dtype):
                              "'objective', and 'measures' keys.")
         dtype_dict = dtype
     else:
+        if dtype not in ["f", np.float32, "d", np.float64]:
+            raise ValueError(
+                'Unsupported dtype. Must be np.float32 or np.float64, or dict '
+                '{"solution": <dtype>, "objective": <dtype>, '
+                '"measures": <dtype>}')
         dtype_dict = {
             "solution": dtype,
             "objective": dtype,
