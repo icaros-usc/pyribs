@@ -4,8 +4,7 @@ from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import cKDTree
 
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
-                         check_shape, np_scalar, validate_batch,
-                         validate_single)
+                         check_shape, validate_batch, validate_single)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
@@ -164,13 +163,11 @@ class ProximityArchive(ArchiveBase):
 
         # Set up constant properties.
         self._k_neighbors = int(k_neighbors)
-        self._novelty_threshold = np_scalar(novelty_threshold,
-                                            dtype=self.dtypes["measures"])
+        self._novelty_threshold = self.dtypes["measures"](novelty_threshold)
         self._local_competition = local_competition
         self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
                                 ckdtree_kwargs.copy())
-        self._qd_score_offset = np_scalar(qd_score_offset,
-                                          self.dtypes["objective"])
+        self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
 
         # Set up k-D tree with current measures in the archive. Updated on
         # add().
@@ -262,27 +259,25 @@ class ProximityArchive(ArchiveBase):
 
     def _stats_reset(self):
         """Resets the archive stats."""
-        zero = np_scalar(0.0, dtype=self.dtypes["objective"])
-
         self._stats = ArchiveStats(
             num_elites=0,
-            coverage=zero,
-            qd_score=zero,
-            norm_qd_score=zero,
+            coverage=self.dtypes["objective"](0.0),
+            qd_score=self.dtypes["objective"](0.0),
+            norm_qd_score=self.dtypes["objective"](0.0),
             obj_max=None,
             obj_mean=None,
         )
         self._best_elite = None
-        self._objective_sum = zero
+        self._objective_sum = self.dtypes["objective"](0.0)
 
     def _stats_update(self, new_objective_sum, new_best_index):
         """Updates statistics based on a new sum of objective values
         (new_objective_sum) and the index of a potential new best elite
         (new_best_index)."""
         self._objective_sum = new_objective_sum
-        new_qd_score = (self._objective_sum -
-                        np_scalar(len(self), dtype=self.dtypes["objective"]) *
-                        self._qd_score_offset)
+        new_qd_score = (
+            self._objective_sum -
+            self.dtypes["objective"](len(self)) * self._qd_score_offset)
 
         _, new_best_elite = self._store.retrieve([new_best_index])
 
@@ -298,14 +293,11 @@ class ProximityArchive(ArchiveBase):
 
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=np_scalar(len(self) / self.cells,
-                               dtype=self.dtypes["objective"]),
+            coverage=self.dtypes["objective"](len(self) / self.cells),
             qd_score=new_qd_score,
-            norm_qd_score=np_scalar(new_qd_score / self.cells,
-                                    dtype=self.dtypes["objective"]),
+            norm_qd_score=self.dtypes["objective"](new_qd_score / self.cells),
             obj_max=new_obj_max,
-            obj_mean=np_scalar(self._objective_sum / len(self),
-                               dtype=self.dtypes["objective"]),
+            obj_mean=self.dtypes["objective"](self._objective_sum / len(self)),
         )
 
     def index_of(self, measures) -> np.ndarray:
