@@ -69,7 +69,10 @@ def assert_archive_elites(
                 data["measures"][j], measures_batch[i]
             )
             index_match = (
-                grid_indices_batch is None or data["index"][j] == index_batch[i]
+                grid_indices_batch is None
+                or
+                # pylint: disable-next = possibly-used-before-assignment
+                data["index"][j] == index_batch[i]
             )
 
             # Used for testing custom fields.

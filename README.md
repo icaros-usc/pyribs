@@ -96,7 +96,7 @@ in pyribs operates as follows:
 
 ## Installation
 
-pyribs supports Python 3.8 and above. The vast majority of users can install
+pyribs supports Python 3.9 and above. The vast majority of users can install
 pyribs by running:
 
 ```bash

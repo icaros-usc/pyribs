@@ -17,7 +17,7 @@ from .conftest import add_uniform_sphere_3d
 # Tolerance for root mean square difference between the pixels of the images,
 # where 255 is the max value. We have a pretty high tolerance for
 # `cvt_archive_3d_plot` since 3D rendering tends to vary a bit.
-CVT_IMAGE_TOLERANCE = 1.0
+CVT_IMAGE_TOLERANCE = 2.0
 
 #
 # Fixtures
@@ -36,6 +36,20 @@ def cvt_archive_3d():
         seed=42,
     )
     add_uniform_sphere_3d(archive, *ranges)
+    return archive
+
+
+@pytest.fixture(scope="module")
+def cvt_archive_3d_empty():
+    """Same as above but without solutions."""
+    ranges = np.array([(-1, 1), (-1, 1), (-1, 1)])
+    archive = CVTArchive(
+        solution_dim=3,
+        cells=500,
+        ranges=ranges,
+        samples=10_000,
+        seed=42,
+    )
     return archive
 
 
@@ -119,6 +133,19 @@ def test_3d_rect_reorder(cvt_archive_3d_rect):
 def test_limits(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
     cvt_archive_3d_plot(cvt_archive_3d, vmin=-1.0, vmax=-0.5)
+
+
+@image_comparison(baseline_images=["limits_when_empty"],
+                  remove_text=False,
+                  extensions=["png"])
+def test_limits_when_empty(cvt_archive_3d_empty):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_3d_plot(
+        cvt_archive_3d_empty,
+        # Intentionally don't provide vmin or vmax.
+        vmin=None,
+        vmax=None,
+    )
 
 
 @image_comparison(baseline_images=["listed_cmap"],

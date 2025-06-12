@@ -33,7 +33,7 @@ Ready to contribute? Here's how to set up pyribs for local development.
 
    ```bash
    cd pyribs
-   conda create --prefix ./env python=3.8  # 3.8 is the minimum version pyribs supports.
+   conda create --prefix ./env python=3.9  # 3.9 is the minimum version pyribs supports.
    conda activate ./env
    pip install -e .[all,dev]  # `all` contains dependencies for all extras of pyribs.
                               # `dev` contains development dependencies.
@@ -203,10 +203,7 @@ from `master` into the corresponding release branch.
 
 1. Check that the latest version of the docs is building on Read the Docs.
 1. Create a PR into master after doing the following:
-   1. Update the version with `bump2version`:
-      ```bash
-      bump2version minor
-      ```
+   1. Update the version by editing `__version__` in `ribs/__init__.py`.
    1. Add all necessary info on the version to `HISTORY.md`.
 1. Once the PR above has been merged, create a release branch from master called
    `release/0.<NUM>.x`, e.g., `release/0.6.x`.
@@ -235,10 +232,7 @@ from `master` into the corresponding release branch.
 
 1. Check that the latest version of the docs is building on Read the Docs.
 1. Create a PR into master after doing the following:
-   1. Update the version with `bump2version`:
-      ```bash
-      bump2version patch
-      ```
+   1. Update the version by editing `__version__` in `ribs/__init__.py`.
    1. Add all necessary info on the version to `HISTORY.md`.
 1. Once the PR above has been merged, checkout the release branch for the
    corresponding minor version, e.g., for `0.6.2`, check out `release/0.6.x`.

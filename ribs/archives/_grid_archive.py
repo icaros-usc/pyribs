@@ -1,16 +1,24 @@
 """Contains the GridArchive."""
 import numpy as np
+from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import (
+from ribs._utils import ((
     check_batch_shape,
     check_finite,
     check_is_1d,
+                         check_shape,
     check_shape,
     np_scalar,
     validate_batch,
     validate_single,
-)
+), validate_batch,
+                         validate_single)
 from ribs.archives._archive_base_2 import ArchiveBase
+from ribs.archives._archive_stats import ArchiveStats
+from ribs.archives._array_store import ArrayStore
+from ribs.archives._cqd_score_result import CQDScoreResult
+from ribs.archives._utils import (fill_sentinel_values, parse_dtype,
+                                  validate_cma_mae_settings)
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
@@ -122,12 +130,12 @@ class GridArchive(ArchiveBase):
         # Set up the ArrayStore, which is a data structure that stores all the
         # elites' data in arrays sharing a common index.
         extra_fields = extra_fields or {}
-        reserved_fields = {"solution", "objective", "measures", "threshold", "index"}
+        reserved_fields = {
+            "solution", "objective", "measures", "threshold", "index"
+        }
         if reserved_fields & extra_fields.keys():
-            raise ValueError(
-                "The following names are not allowed in "
-                f"extra_fields: {reserved_fields}"
-            )
+            raise ValueError("The following names are not allowed in "
+                             f"extra_fields: {reserved_fields}")
         dtype = parse_dtype(dtype)
         self._store = ArrayStore(
             field_desc={
@@ -144,22 +152,20 @@ class GridArchive(ArchiveBase):
 
         # Set up constant properties.
         if len(self._dims) != len(ranges):
-            raise ValueError(
-                f"dims (length {len(self._dims)}) and ranges "
-                f"(length {len(ranges)}) must be the same length"
-            )
+            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
+                             f"(length {len(ranges)}) must be the same length")
         ranges = list(zip(*ranges))  # Rearrange into lower and upper bounds.
         self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
         self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
-        self._boundaries = self._compute_boundaries(
-            self._dims, self._lower_bounds, self._upper_bounds
-        )
+        self._boundaries = self._compute_boundaries(self._dims,
+                                                    self._lower_bounds,
+                                                    self._upper_bounds)
         self._epsilon = np_scalar(epsilon, dtype=self.dtypes["measures"])
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
-            learning_rate, threshold_min, self.dtypes["threshold"]
-        )
-        self._qd_score_offset = np_scalar(qd_score_offset, self.dtypes["objective"])
+            learning_rate, threshold_min, self.dtypes["threshold"])
+        self._qd_score_offset = np_scalar(qd_score_offset,
+                                          self.dtypes["objective"])
 
         # Set up statistics.
         self._stats = None
@@ -173,7 +179,8 @@ class GridArchive(ArchiveBase):
     def _compute_boundaries(dims, lower_bounds, upper_bounds):
         """Computes grid cell boundaries of the archive."""
         boundaries = []
-        for dim, lower_bound, upper_bound in zip(dims, lower_bounds, upper_bounds):
+        for dim, lower_bound, upper_bound in zip(dims, lower_bounds,
+                                                 upper_bounds):
             boundaries.append(np.linspace(lower_bound, upper_bound, dim + 1))
         return boundaries
 
@@ -181,7 +188,7 @@ class GridArchive(ArchiveBase):
 
     @property
     def field_list(self):
-        return self._store.field_list
+        return self._store.field_list_with_index
 
     @property
     def stats(self):
@@ -193,7 +200,7 @@ class GridArchive(ArchiveBase):
 
     @property
     def dtypes(self):
-        return self._store.dtypes
+        return self._store.dtypes_with_index
 
     ## Properties that are not in ArchiveBase ##
     ## Roughly ordered by the parameter list in the constructor. ##
@@ -317,18 +324,14 @@ class GridArchive(ArchiveBase):
         (new_objective_sum) and the index of a potential new best elite
         (new_best_index)."""
         self._objective_sum = new_objective_sum
-        new_qd_score = (
-            self._objective_sum
-            - np_scalar(len(self), dtype=self.dtypes["objective"])
-            * self._qd_score_offset
-        )
+        new_qd_score = (self._objective_sum -
+                        np_scalar(len(self), dtype=self.dtypes["objective"]) *
+                        self._qd_score_offset)
 
         _, new_best_elite = self._store.retrieve([new_best_index])
 
-        if (
-            self._stats.obj_max is None
-            or new_best_elite["objective"] > self._stats.obj_max
-        ):
+        if (self._stats.obj_max is None or
+                new_best_elite["objective"] > self._stats.obj_max):
             # Convert batched values to single values.
             new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
@@ -339,15 +342,14 @@ class GridArchive(ArchiveBase):
 
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=np_scalar(len(self) / self.cells, dtype=self.dtypes["objective"]),
+            coverage=np_scalar(len(self) / self.cells,
+                               dtype=self.dtypes["objective"]),
             qd_score=new_qd_score,
-            norm_qd_score=np_scalar(
-                new_qd_score / self.cells, dtype=self.dtypes["objective"]
-            ),
+            norm_qd_score=np_scalar(new_qd_score / self.cells,
+                                    dtype=self.dtypes["objective"]),
             obj_max=new_obj_max,
-            obj_mean=np_scalar(
-                self._objective_sum / len(self), dtype=self.dtypes["objective"]
-            ),
+            obj_mean=np_scalar(self._objective_sum / len(self),
+                               dtype=self.dtypes["objective"]),
         )
 
     def index_of(self, measures):
@@ -456,14 +458,53 @@ class GridArchive(ArchiveBase):
         int_indices = np.asarray(int_indices)
         check_is_1d(int_indices, "int_indices")
 
-        return np.asarray(
-            np.unravel_index(
-                int_indices,
-                self._dims,
-            )
-        ).T.astype(np.int32)
+        return np.asarray(np.unravel_index(
+            int_indices,
+            self._dims,
+        )).T.astype(np.int32)
 
     ## Methods for writing to the archive ##
+
+    @staticmethod
+    def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
+                            dtype):
+        """Computes new thresholds with the CMA-MAE batch threshold update rule.
+
+        If entries in `indices` are duplicated, they receive the same threshold.
+        """
+        if len(indices) == 0:
+            return np.array([], dtype=dtype)
+
+        # Compute the number of objectives inserted into each cell. Note that we
+        # index with `indices` to place the counts at all relevant indices. For
+        # instance, if we had an array [1,2,3,1,5], we would end up with
+        # [2,1,1,2,1] (there are 2 1's, 1 2, 1 3, 2 1's, and 1 5).
+        #
+        # All objective_sizes should be > 0 since we only retrieve counts for
+        # indices in `indices`.
+        objective_sizes = aggregate(indices, 1, func="len",
+                                    fill_value=0)[indices]
+
+        # Compute the sum of the objectives inserted into each cell -- again, we
+        # index with `indices`.
+        objective_sums = aggregate(indices,
+                                   objective,
+                                   func="sum",
+                                   fill_value=np.nan)[indices]
+
+        # Update the threshold with the batch update rule from Fontaine 2023
+        # (https://arxiv.org/abs/2205.10752).
+        #
+        # Unlike in single_entry_with_threshold, we do not need to worry about
+        # cur_threshold having -np.inf here as a result of threshold_min being
+        # -np.inf. This is because the case with threshold_min = -np.inf is
+        # handled separately since we compute the new threshold based on the max
+        # objective in each cell in that case.
+        ratio = np_scalar(1.0 - learning_rate, dtype=dtype)**objective_sizes
+        new_threshold = (ratio * cur_threshold +
+                         (objective_sums / objective_sizes) * (1 - ratio))
+
+        return new_threshold
 
     def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
@@ -485,9 +526,9 @@ class GridArchive(ArchiveBase):
         in the appendix of `Fontaine 2023 <https://arxiv.org/abs/2205.10752>`_.
 
         .. note:: The indices of all arguments should "correspond" to each
-            other, i.e., ``solution[i]``, ``objective[i]``,
-            ``measures[i]``, and should be the solution parameters,
-            objective, and measures for solution ``i``.
+            other, i.e., ``solution[i]``, ``objective[i]``, and ``measures[i]``
+            should be the solution parameters, objective, and measures for
+            solution ``i``.
 
         Args:
             solution (array-like): (batch_size, :attr:`solution_dim`) array of
@@ -567,26 +608,105 @@ class GridArchive(ArchiveBase):
             },
         )
 
-        add_info = self._store.add(
-            self.index_of(data["measures"]),
-            data,
-            {
-                "dtype": self.dtypes["threshold"],
-                "learning_rate": self._learning_rate,
-                "threshold_min": self._threshold_min,
-                "objective_sum": self._objective_sum,
-            },
-            [
-                batch_entries_with_threshold,
-                compute_objective_sum,
-                compute_best_index,
-            ],
-        )
+        # Delete these so that we only use the clean, validated data in `data`.
+        del solution, objective, measures, fields
 
-        objective_sum = add_info.pop("objective_sum")
-        best_index = add_info.pop("best_index")
-        if not np.all(add_info["status"] == 0):
-            self._stats_update(objective_sum, best_index)
+        # Information to return about the addition.
+        add_info = {}
+
+        # Retrieve indices of the archive cells.
+        indices = self.index_of(data["measures"])
+        batch_size = len(indices)
+
+        # Retrieve current data and thresholds. Unoccupied cells default to
+        # threshold_min.
+        cur_occupied, cur_data = self._store.retrieve(indices)
+        cur_threshold = cur_data["threshold"]
+        cur_threshold[~cur_occupied] = self.threshold_min
+
+        # Compute status -- arrays below are all boolean arrays of length
+        # batch_size.
+        #
+        # When we want CMA-ME behavior, the threshold defaults to -inf for new
+        # cells, which satisfies the condition for can_insert.
+        can_insert = data["objective"] > cur_threshold
+        is_new = can_insert & ~cur_occupied
+        improve_existing = can_insert & cur_occupied
+        add_info["status"] = np.zeros(batch_size, dtype=np.int32)
+        add_info["status"][is_new] = 2
+        add_info["status"][improve_existing] = 1
+
+        # If threshold_min is -inf, then we want CMA-ME behavior, which computes
+        # the improvement value of new solutions w.r.t zero. Otherwise, we
+        # compute improvement with respect to threshold_min.
+        cur_threshold[is_new] = (np_scalar(0.0, dtype=self.dtypes["threshold"])
+                                 if self.threshold_min == -np.inf else
+                                 self.threshold_min)
+        add_info["value"] = data["objective"] - cur_threshold
+
+        # Return early if we cannot insert anything -- continuing throws a
+        # ValueError in aggregate() since index[can_insert] would be empty.
+        if not np.any(can_insert):
+            return add_info
+
+        # Select all solutions that _can_ be inserted -- at this point, there
+        # are still conflicts in the insertions, e.g., multiple solutions can
+        # map to index 0.
+        indices = indices[can_insert]
+        data = {name: arr[can_insert] for name, arr in data.items()}
+        cur_threshold = cur_threshold[can_insert]
+
+        # Compute the new threshold associated with each entry.
+        if self.threshold_min == -np.inf:
+            # Regular archive behavior: thresholds are just the objectives.
+            new_threshold = data["objective"]
+        else:
+            # Batch threshold update described in Fontaine 2023
+            # (https://arxiv.org/abs/2205.10752). This computation is based on
+            # the mean objective of all solutions in the batch that could have
+            # been inserted into each cell.
+            new_threshold = self._compute_thresholds(indices, data["objective"],
+                                                     cur_threshold,
+                                                     self.learning_rate,
+                                                     self.dtypes["threshold"])
+
+        # Retrieve indices of solutions that _should_ be inserted into the
+        # archive. Currently, multiple solutions may be inserted at each archive
+        # index, but we only want to insert the maximum among these solutions.
+        # Thus, we obtain the argmax for each archive index.
+        #
+        # We use a fill_value of -1 to indicate archive indices that were not
+        # covered in the batch. Note that the length of archive_argmax is only
+        # max(indices), rather than the total number of grid cells. However,
+        # this is okay because we only need the indices of the solutions, which
+        # we store in should_insert.
+        #
+        # aggregate() always chooses the first item if there are ties, so the
+        # first elite will be inserted if there is a tie. See their default
+        # numpy implementation for more info:
+        # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
+        archive_argmax = aggregate(indices,
+                                   data["objective"],
+                                   func="argmax",
+                                   fill_value=-1)
+        should_insert = archive_argmax[archive_argmax != -1]
+
+        # Select only solutions that will be inserted into the archive.
+        indices = indices[should_insert]
+        data = {name: arr[should_insert] for name, arr in data.items()}
+        data["threshold"] = new_threshold[should_insert]
+
+        # Insert elites into the store.
+        self._store.add(indices, data)
+
+        # Compute statistics.
+        cur_objective = cur_data["objective"]
+        cur_objective[~cur_occupied] = 0.0
+        cur_objective = cur_objective[can_insert][should_insert]
+        objective_sum = (self._objective_sum +
+                         np.sum(data["objective"] - cur_objective))
+        best_index = indices[np.argmax(data["objective"])]
+        self._stats_update(objective_sum, best_index)
 
         return add_info
 
@@ -600,10 +720,9 @@ class GridArchive(ArchiveBase):
         also updated if the solution was inserted.
 
         .. note::
-            To make it more amenable to modifications, this method's
-            implementation is designed to be readable at the cost of
-            performance, e.g., none of its operations are modified. :meth:`add`
-            should be used if performance is required.
+            This method is provided as an easier-to-understand implementation
+            that has less performance due to inserting only one solution at a
+            time. For better performance, see :meth:`add`.
 
         Args:
             solution (array-like): Parameters of the solution.
@@ -631,33 +750,85 @@ class GridArchive(ArchiveBase):
             },
         )
 
-        for name, arr in data.items():
-            data[name] = np.expand_dims(arr, axis=0)
+        # Delete these so that we only use the clean, validated data in `data`.
+        del solution, objective, measures, fields
 
-        add_info = self._store.add(
-            np.expand_dims(self.index_of_single(measures), axis=0),
-            data,
-            {
-                "dtype": self.dtypes["threshold"],
-                "learning_rate": self._learning_rate,
-                "threshold_min": self._threshold_min,
-                "objective_sum": self._objective_sum,
-            },
-            [
-                single_entry_with_threshold,
-                compute_objective_sum,
-                compute_best_index,
-            ],
-        )
+        # Information to return about the addition.
+        add_info = {}
 
-        objective_sum = add_info.pop("objective_sum")
-        best_index = add_info.pop("best_index")
+        # Identify the archive cell.
+        index = self.index_of_single(data["measures"])
 
-        for name, arr in add_info.items():
-            add_info[name] = arr[0]
+        # Retrieve current data of the cell.
+        cur_occupied, cur_data = self._store.retrieve([index])
+        cur_occupied = cur_occupied[0]
 
-        if add_info["status"]:
-            self._stats_update(objective_sum, best_index)
+        if cur_occupied:
+            # If the cell is currently occupied, the threshold comes from the
+            # current data of the elite in the cell.
+            cur_threshold = cur_data["threshold"][0]
+        else:
+            # If the cell is not currently occupied, the threshold needs special
+            # settings.
+            #
+            # If threshold_min is -inf, then we want CMA-ME behavior, which
+            # computes the improvement value with a threshold of zero for new
+            # solutions. Otherwise, we will set cur_threshold to threshold_min.
+            cur_threshold = (np_scalar(0.0, dtype=self.dtypes["threshold"])
+                             if self.threshold_min == -np.inf else
+                             self.threshold_min)
+
+        # Retrieve candidate objective.
+        objective = data["objective"]
+
+        # Compute status and threshold.
+        add_info["status"] = np.int32(0)  # NOT_ADDED
+
+        # Now we check whether a solution should be added to the archive. We use
+        # the addition rule from MAP-Elites (Fig. 2 of Mouret 2015
+        # https://arxiv.org/pdf/1504.04909.pdf), with modifications for CMA-MAE.
+
+        # This checks if a new solution is discovered in the archive. Note that
+        # regular MAP-Elites only checks `not cur_occupied`. CMA-MAE has an
+        # additional `threshold_min` that the objective must exceed for new
+        # cells. If CMA-MAE is not being used, then `threshold_min` is -np.inf,
+        # making this check identical to that of MAP-Elites.
+        is_new = not cur_occupied and self.threshold_min < objective
+
+        # This checks whether the solution improves an existing cell in the
+        # archive, i.e., whether it performs better than the current elite in
+        # this cell. Vanilla MAP-Elites compares to the objective of the cell's
+        # current elite. CMA-MAE compares to a threshold value that updates
+        # over time (i.e., cur_threshold). When learning_rate is set to 1.0 (the
+        # default value), we recover the same rule as in MAP-Elites because
+        # cur_threshold is equivalent to the objective of the solution in the
+        # cell.
+        improve_existing = cur_occupied and cur_threshold < objective
+
+        if is_new or improve_existing:
+            if improve_existing:
+                add_info["status"] = np.int32(1)  # IMPROVE_EXISTING
+            else:
+                add_info["status"] = np.int32(2)  # NEW
+
+            # This calculation works in the case where threshold_min is -inf
+            # because cur_threshold will be set to 0.0 instead.
+            data["threshold"] = [(cur_threshold * (1.0 - self.learning_rate) +
+                                  objective * self.learning_rate)]
+
+            # Insert elite into the store.
+            self._store.add(index[None], {
+                name: np.expand_dims(arr, axis=0) for name, arr in data.items()
+            })
+
+            # Update stats.
+            cur_objective = (cur_data["objective"] if cur_occupied else
+                             np_scalar(0.0, self.dtypes["objective"]))
+            self._stats_update(self._objective_sum + objective - cur_objective,
+                               index)
+
+        # Value is the improvement over the current threshold (can be negative).
+        add_info["value"] = objective - cur_threshold
 
         return add_info
 
@@ -675,19 +846,7 @@ class GridArchive(ArchiveBase):
         check_finite(measures, "measures")
 
         occupied, data = self._store.retrieve(self.index_of(measures))
-        unoccupied = ~occupied
-
-        for name, arr in data.items():
-            if arr.dtype == object:
-                fill_val = None
-            elif name == "index":
-                fill_val = -1
-            elif np.issubdtype(arr.dtype, np.integer):
-                fill_val = 0
-            else:  # Floating-point and other fields.
-                fill_val = np.nan
-
-            arr[unoccupied] = fill_val
+        fill_sentinel_values(occupied, data)
 
         return occupied, data
 
@@ -744,40 +903,37 @@ class GridArchive(ArchiveBase):
                 not match the current measure space dimensionality.
         """
         if not np.isclose(self.learning_rate, 1):
-            raise ValueError(
-                "Cannot retessellate an archive with " "learning rate not equal to 1."
-            )
+            raise ValueError("Cannot retessellate an archive with "
+                             "learning rate not equal to 1.")
         if len(new_dims) != self.measure_dim:
             raise ValueError(
                 "The measure space dimensionality indicated in `new_dims` "
                 f"is {len(new_dims)}, but this archive has a measure space "
-                f"dimensionality of {self.measure_dim}."
-            )
+                f"dimensionality of {self.measure_dim}.")
 
         cur_data = self.data()
-        del cur_data["index"]
+        del cur_data['index']
         # Note: No need to clear the store since we just replace it below.
 
         self._dims = np.array(new_dims, dtype=np.int32)
-        self._boundaries = self._compute_boundaries(
-            self._dims, self._lower_bounds, self._upper_bounds
-        )
-        self._store = ArrayStore(self._store.field_desc, capacity=np.prod(self._dims))
+        self._boundaries = self._compute_boundaries(self._dims,
+                                                    self._lower_bounds,
+                                                    self._upper_bounds)
+        self._store = ArrayStore(self._store.field_desc,
+                                 capacity=np.prod(self._dims))
 
         self.add(**cur_data)
 
     ## CQD Score ##
 
-    def cqd_score(
-        self,
-        iterations,
-        target_points,
-        penalties,
-        obj_min,
-        obj_max,
-        dist_max=None,
-        dist_ord=None,
-    ):
+    def cqd_score(self,
+                  iterations,
+                  target_points,
+                  penalties,
+                  obj_min,
+                  obj_max,
+                  dist_max=None,
+                  dist_ord=None):
         """Computes the CQD score of the archive.
 
         The Continuous Quality Diversity (CQD) score was introduced in
@@ -828,14 +984,13 @@ class GridArchive(ArchiveBase):
             ValueError: target_points or penalties is an array with the wrong
                 shape.
         """
-        if not (hasattr(self, "upper_bounds") and hasattr(self, "lower_bounds")) and (
-            dist_max is None or np.isscalar(target_points)
-        ):
+        if (not (hasattr(self, "upper_bounds") and
+                 hasattr(self, "lower_bounds")) and
+            (dist_max is None or np.isscalar(target_points))):
             raise RuntimeError(
                 "When the archive does not have lower_bounds and "
                 "upper_bounds properties, dist_max must be specified, "
-                "and target_points must be an array"
-            )
+                "and target_points must be an array")
 
         if np.isscalar(target_points):
             # pylint: disable = no-member
@@ -847,23 +1002,19 @@ class GridArchive(ArchiveBase):
         else:
             # Copy since this is returned.
             target_points = np.copy(target_points)
-            if (
-                target_points.ndim != 3
-                or target_points.shape[0] != iterations
-                or target_points.shape[2] != self.measure_dim
-            ):
+            if (target_points.ndim != 3 or
+                    target_points.shape[0] != iterations or
+                    target_points.shape[2] != self.measure_dim):
                 raise ValueError(
                     "Expected target_points to be a 3D array with "
                     f"shape ({iterations}, n, {self.measure_dim}) "
                     "(i.e. shape (iterations, n, measure_dim)) but it had "
-                    f"shape {target_points.shape}"
-                )
+                    f"shape {target_points.shape}")
 
         if dist_max is None:
             # pylint: disable = no-member
-            dist_max = np.linalg.norm(
-                self.upper_bounds - self.lower_bounds, ord=dist_ord
-            )
+            dist_max = np.linalg.norm(self.upper_bounds - self.lower_bounds,
+                                      ord=dist_ord)
 
         if np.isscalar(penalties):
             penalties = np.linspace(0, 1, penalties)

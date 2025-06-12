@@ -2,15 +2,13 @@
 
 The rankers implemented in this file are intended to be used with emitters.
 Specifically, a ranker object should be initialized or passed in the emitters.
-The ``Ranker`` object will define the :meth:`~RankerBase.rank` method which
+The ``Ranker`` object will define the :meth:`~RankerBase.rank` method that
 returns the result of a descending argsort of the solutions. It will also define
-a :meth:`~RankerBase.reset` method which resets the internal state of the
-object.
+a :meth:`~RankerBase.reset` method that resets the internal state of the object.
 
 When specifying which ranker to use for each emitter, one could either pass in
-the full name of a ranker, e.g. "ImprovementRanker", or the abbreviated name of
-a ranker, e.g. "imp".
-The supported abbreviations are:
+the full name of a ranker, e.g., "ImprovementRanker", or the abbreviated name of
+a ranker, e.g., "imp". The supported abbreviations are:
 
 * ``density``: :class:`DensityRanker`
 * ``imp``: :class:`ImprovementRanker`
@@ -366,19 +364,14 @@ Ranks solutions based on novelty scores.
 class DensityRanker(RankerBase):
     """Ranks solutions based on density in measure space.
 
-    The archive must be a :class:`~ribs.archives.DensityArchive` or have a
-    ``compute_density`` method.
+    This ranker can only be used with archives that return the ``density`` field
+    from their ``add`` method, such as
+    :meth:`ribs.archives.DensityArchive.add`.
     """
 
     def rank(self, emitter, archive, data, add_info):
-        try:
-            density = archive.compute_density(data["measures"])
-        except AttributeError as e:
-            raise AttributeError("DensityRanker requires that the archive have"
-                                 "a compute_density method.") from e
-
         # Lower density is better, so we sort as normal (i.e., ascending order).
-        return np.argsort(density), density
+        return np.argsort(add_info["density"]), add_info["density"]
 
     rank.__doc__ = f"""
 Ranks solutions based on density in measure space.

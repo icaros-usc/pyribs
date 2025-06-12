@@ -14,10 +14,10 @@ class EmitterBase(ABC):
     DQD emitters should override :meth:`ask_dqd` and :meth:`tell_dqd` methods.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive to use when creating and
-            inserting solutions. For instance, this can be
+        archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
-        solution_dim (int): The dimension of solutions produced by this emitter.
+        solution_dim (int): The dimensionality of solutions produced by this
+            emitter.
         bounds (None or array-like): Bounds of the solution space. Pass None to
             indicate there are no bounds. Alternatively, pass an array-like to
             specify the bounds for each dim. Each element in this array-like can
@@ -34,7 +34,7 @@ class EmitterBase(ABC):
         self._solution_dim = solution_dim
         (self._lower_bounds,
          self._upper_bounds) = self._process_bounds(bounds, self._solution_dim,
-                                                    archive.dtypes["measures"])
+                                                    archive.dtypes["solution"])
 
     @staticmethod
     def _process_bounds(bounds, solution_dim, dtype):

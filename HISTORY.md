@@ -6,14 +6,25 @@
 
 #### API
 
+- **Backwards-incompatible:** Make archive field_list and dtypes props include
+  index ({pr}`532`)
+- **Backwards-incompatible:** Remove thresholds from SlidingBoundariesArchive
+  ({pr}`527`)
+- **Backwards-incompatible:** Remove transforms from archive add operations
+  ({pr}`525`)
+- Add retessellate method to GridArchive ({pr}`516`)
+- **Backwards-incompatible:** Tidy up operator implementation ({pr}`507`,
+  {pr}`510`)
+- Drop Python 3.8 support and remove pinned requirements {{pr}`497`)
 - **Backwards-incompatible:** BanditScheduler: Add emitter_pool and active attr;
   remove emitters attr ({pr}`494`)
-- Add DensityRanker for density descent search ({pr}`483`)
+- Add DensityRanker for density descent search ({pr}`483`, {pr}`504`)
 - Add NoveltyRanker for novelty search ({pr}`477`)
 - Add proximity_archive_plot for visualizing ProximityArchive ({pr}`476`,
-  {pr}`480`)
+  {pr}`480`, {pr}`523`)
 - Support novelty search with local competition in ProximityArchive ({pr}`481`)
-- Add ProximityArchive for novelty search ({pr}`472`, {pr}`479`, {pr}`484`)
+- Add ProximityArchive for novelty search ({pr}`472`, {pr}`479`, {pr}`484`,
+  {pr}`521`, {pr}`527`)
 - Support diversity optimization in Scheduler.tell ({pr}`473`)
 - Allow specifying separate dtypes for solution, objective, and measures
   ({pr}`471`)
@@ -22,11 +33,14 @@
 
 #### Bugs
 
+- Make emitter bounds dtype match solution dtype ({pr}`519`)
 - Fix `BanditScheduler` behaviour: the number of active emitters remains stable
   ({pr}`489`)
 
 #### Documentation
 
+- Update sphere example for consistency ({pr}`505`)
+- DQD tutorial edits ({pr}`500`)
 - Add version selector to docs ({pr}`495`)
 - Update gymnasium and lunar lander version ({pr}`493`)
 - Add tutorial page on Optuna integration ({pr}`492`)
@@ -37,6 +51,14 @@
 
 #### Improvements
 
+- Refactor archives into single-file implementations ({pr}`518`, {pr}`521`,
+  {pr}`526`, {pr}`528`, {pr}`529`, {pr}`530`, {pr}`533`)
+- Make ArrayStore.data return ArchiveDataFrame instead of DataFrame ({pr}`522`)
+- Migrate to pyproject.toml ({pr}`514`)
+- Set vmin and vmax to None if archive is empty in ribs.visualize ({pr}`513`,
+  {pr}`523`)
+- Remove operators from GaussianEmitter and IsoLineEmitter ({pr}`508`)
+- Update QDax visualizations to match QDax 0.5.0 ({pr}`502`)
 - Skip qdax tests if qdax not installed ({pr}`491`)
 - Move yapf after isort in pre-commit ({pr}`490`)
 - Remove `_cells` attribute from ArchiveBase ({pr}`475`)
@@ -81,6 +103,7 @@ https://docs.pyribs.org/en/stable/whats-new.html
 
 #### API
 
+- Add GeneticAlgorithmEmitter with Internal Operator Support ({pr} `427`)
 - Support alternative centroid generation methods in CVTArchive ({pr}`417`,
   {pr}`437`)
 - Add PyCMAEvolutionStrategy for using pycma in ES emitters ({pr}`434`)
