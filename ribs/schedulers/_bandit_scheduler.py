@@ -73,8 +73,6 @@ class BanditScheduler:
         ValueError: Invalid value for ``add_mode``.
         ValueError: The ``result_archive`` and ``archive`` are the same object
             (``result_archive`` should not be passed in in this case).
-        ValueError: The ``result_archive`` and ``archive`` have different
-            fields.
     """
 
     def __init__(self,
@@ -133,13 +131,6 @@ class BanditScheduler:
                 "Note that `BanditScheduler.result_archive` already "
                 "defaults to be the same as `archive` if you pass "
                 "`result_archive=None`")
-
-        if (result_archive is not None and
-                set(archive.field_list) != set(result_archive.field_list)):
-            raise ValueError("`archive` and `result_archive` should have the "
-                             "same set of fields. This may be the result of "
-                             "passing extra_fields to archive but not to "
-                             "result_archive.")
 
         self._archive = archive
         self._emitter_pool = np.array(emitter_pool)

@@ -186,9 +186,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         # Set up the ArrayStore, which is a data structure that stores all the
         # elites' data in arrays sharing a common index.
         extra_fields = extra_fields or {}
-        reserved_fields = {
-            "solution", "objective", "measures", "threshold", "index"
-        }
+        reserved_fields = {"solution", "objective", "measures", "index"}
         if reserved_fields & extra_fields.keys():
             raise ValueError("The following names are not allowed in "
                              f"extra_fields: {reserved_fields}")
@@ -198,9 +196,6 @@ class SlidingBoundariesArchive(ArchiveBase):
                 "solution": ((self.solution_dim,), dtype["solution"]),
                 "objective": ((), dtype["objective"]),
                 "measures": ((self.measure_dim,), dtype["measures"]),
-                # Must be same dtype as the objective since they share
-                # calculations.
-                "threshold": ((), dtype["objective"]),
                 **extra_fields,
             },
             capacity=np.prod(self._dims),
@@ -511,7 +506,6 @@ class SlidingBoundariesArchive(ArchiveBase):
         cur_data = self._store.data()
 
         # These fields are only computed by the archive.
-        cur_data.pop("threshold")
         cur_data.pop("index")
 
         new_data_single = list(self._buffer)  # List of dicts.
@@ -597,7 +591,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         # Retrieve candidate objective.
         objective = data["objective"]
 
-        # Compute status and threshold.
+        # Set up status.
         add_info["status"] = np.int32(0)  # NOT_ADDED
 
         # Now we check whether a solution should be added to the archive. We use
@@ -609,9 +603,6 @@ class SlidingBoundariesArchive(ArchiveBase):
                 add_info["status"] = np.int32(1)  # IMPROVE_EXISTING
             else:
                 add_info["status"] = np.int32(2)  # NEW
-
-            # TODO (btjanaka): Placeholder -- will remove.
-            data["threshold"] = data["objective"]
 
             # Insert elite into the store.
             self._store.add(index[None], {
@@ -854,15 +845,3 @@ class SlidingBoundariesArchive(ArchiveBase):
             dist_max=dist_max,
             dist_ord=dist_ord,
         )
-
-    # TODO (btjanaka): Placeholder -- will remove.
-    @property
-    def learning_rate(self):
-        """float: The learning rate for threshold updates."""
-        return 1.0
-
-    # TODO (btjanaka): Placeholder -- will remove.
-    @property
-    def threshold_min(self):
-        """float: The initial threshold value for all the cells."""
-        return -np.inf

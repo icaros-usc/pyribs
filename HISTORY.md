@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Remove thresholds from SlidingBoundariesArchive
+  ({pr}`527`)
 - **Backwards-incompatible:** Remove transforms from archive add operations
   ({pr}`525`)
 - Add retessellate method to GridArchive ({pr}`516`)
@@ -20,7 +22,7 @@
   {pr}`480`, {pr}`523`)
 - Support novelty search with local competition in ProximityArchive ({pr}`481`)
 - Add ProximityArchive for novelty search ({pr}`472`, {pr}`479`, {pr}`484`,
-  {pr}`521`)
+  {pr}`521`, {pr}`527`)
 - Support diversity optimization in Scheduler.tell ({pr}`473`)
 - Allow specifying separate dtypes for solution, objective, and measures
   ({pr}`471`)

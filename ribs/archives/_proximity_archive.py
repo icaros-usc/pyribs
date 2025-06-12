@@ -145,9 +145,7 @@ class ProximityArchive(ArchiveBase):
         # Set up the ArrayStore, which is a data structure that stores all the
         # elites' data in arrays sharing a common index.
         extra_fields = extra_fields or {}
-        reserved_fields = {
-            "solution", "objective", "measures", "threshold", "index"
-        }
+        reserved_fields = {"solution", "objective", "measures", "index"}
         if reserved_fields & extra_fields.keys():
             raise ValueError("The following names are not allowed in "
                              f"extra_fields: {reserved_fields}")
@@ -159,9 +157,6 @@ class ProximityArchive(ArchiveBase):
                 "solution": ((self.solution_dim,), dtype["solution"]),
                 "objective": ((), dtype["objective"]),
                 "measures": ((self.measure_dim,), dtype["measures"]),
-                # Must be same dtype as the objective since they share
-                # calculations.
-                "threshold": ((), dtype["objective"]),
                 **extra_fields,
             },
             capacity=initial_capacity,
@@ -590,9 +585,6 @@ class ProximityArchive(ArchiveBase):
                 # getting the next `new_size` indices.
                 indices = np.arange(len(self), new_size)
 
-                # TODO (btjanaka): Placeholder -- will remove.
-                data["threshold"] = data["objective"]
-
                 # Add to archive.
                 self._store.add(indices, data)
 
@@ -696,10 +688,6 @@ class ProximityArchive(ArchiveBase):
                 indices = indices[should_insert]
                 data = {name: arr[should_insert] for name, arr in data.items()}
                 cur_objective = cur_objective[should_insert]
-
-            # TODO (btjanaka): Placeholder -- will remove.
-            data["threshold"] = data["objective"]
-            novel_data["threshold"] = novel_data["objective"]
 
             if np.any(improve_existing) or n_novel_enough > 0:
                 combined_indices = np.concatenate((indices, novel_indices),
