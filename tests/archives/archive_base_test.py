@@ -42,7 +42,7 @@ def test_dict_dtype():
         },
     )
 
-    assert archive.dtypes["solution"] == object
+    assert archive.dtypes["solution"] == np.dtype(object)
     assert archive.dtypes["objective"] == np.float32
     assert archive.dtypes["measures"] == np.float32
     assert archive.dtypes["threshold"] == np.float32

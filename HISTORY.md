@@ -51,6 +51,8 @@
 
 #### Improvements
 
+- Remove `np_scalar` util by making archive dtypes be numpy scalar types
+  ({pr}`534`)
 - Refactor archives into single-file implementations ({pr}`518`, {pr}`521`,
   {pr}`526`, {pr}`528`, {pr}`529`, {pr}`530`, {pr}`533`)
 - Make ArrayStore.data return ArchiveDataFrame instead of DataFrame ({pr}`522`)

@@ -1,33 +1,37 @@
 """Utilities specific to archives."""
 import numpy as np
 
-from ribs._utils import np_scalar
-
 
 def parse_dtype(dtype):
-    """Parses dtypes for the archive."""
-    # Convert str dtypes to np.dtype.
-    if isinstance(dtype, str):
-        dtype = np.dtype(dtype)
+    """Parses dtypes for the archive.
 
-    # np.dtype is not np.float32 or np.float64, but it compares equal.
-    if dtype in [np.float32, np.float64]:
-        return {
-            "solution": dtype,
-            "objective": dtype,
-            "measures": dtype,
-        }
-    elif isinstance(dtype, dict):
+    At the end, all dtypes will be scalar types like np.float32 or np.float64 --
+    note that this is different from the numpy.dtype like np.dtype("f"). See
+    here: https://numpy.org/doc/stable/reference/arrays.dtypes.html
+    """
+    if isinstance(dtype, dict):
         if ("solution" not in dtype or "objective" not in dtype or
                 "measures" not in dtype):
             raise ValueError("If dtype is a dict, it must contain 'solution',"
                              "'objective', and 'measures' keys.")
-        return dtype
+        dtype_dict = dtype
     else:
-        raise ValueError(
-            'Unsupported dtype. Must be np.float32 or np.float64, '
-            'or dict of the form '
-            '{"solution": <dtype>, "objective": <dtype>, "measures": <dtype>}')
+        if dtype not in ["f", np.float32, "d", np.float64]:
+            raise ValueError(
+                'Unsupported dtype. Must be np.float32 or np.float64, or dict '
+                '{"solution": <dtype>, "objective": <dtype>, '
+                '"measures": <dtype>}')
+        dtype_dict = {
+            "solution": dtype,
+            "objective": dtype,
+            "measures": dtype,
+        }
+
+    # Cast everything to scalar types, including string abbreviations like "f".
+    for key in dtype_dict:
+        dtype_dict[key] = np.dtype(dtype_dict[key]).type
+
+    return dtype_dict
 
 
 def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
@@ -44,8 +48,8 @@ def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
     if threshold_min == -np.inf and learning_rate != 1.0:
         raise ValueError("threshold_min can only be -np.inf if "
                          "learning_rate is 1.0")
-    learning_rate = np_scalar(learning_rate, dtype)
-    threshold_min = np_scalar(threshold_min, dtype)
+    learning_rate = dtype(learning_rate)
+    threshold_min = dtype(threshold_min)
     return learning_rate, threshold_min
 
 

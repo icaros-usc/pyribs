@@ -1,7 +1,7 @@
 """Provides the IsoLineEmitter."""
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_shape, np_scalar
+from ribs._utils import check_batch_shape, check_shape
 from ribs.emitters._emitter_base import EmitterBase
 
 
@@ -70,8 +70,8 @@ class IsoLineEmitter(EmitterBase):
 
         self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
-        self._iso_sigma = np_scalar(iso_sigma, dtype=archive.dtypes["solution"])
-        self._line_sigma = np_scalar(line_sigma, archive.dtypes["solution"])
+        self._iso_sigma = archive.dtypes["solution"](iso_sigma)
+        self._line_sigma = archive.dtypes["solution"](line_sigma)
         self._x0 = None
         self._initial_solutions = None
 
