@@ -211,7 +211,10 @@ class ArrayStore:
                     "measures": np.float32,
                 }
         """
-        return {name: arr.dtype for name, arr in self._fields.items()}
+        # Calling `.type` retrieves the numpy scalar type, which is callable:
+        # - https://numpy.org/doc/stable/reference/arrays.scalars.html
+        # - https://numpy.org/doc/stable/reference/arrays.dtypes.html
+        return {name: arr.dtype.type for name, arr in self._fields.items()}
 
     @cached_property
     def dtypes_with_index(self):

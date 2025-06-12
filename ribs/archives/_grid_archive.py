@@ -3,8 +3,7 @@ import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
-                         check_shape, np_scalar, validate_batch,
-                         validate_single)
+                         check_shape, validate_batch, validate_single)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
@@ -143,11 +142,10 @@ class GridArchive(ArchiveBase):
         self._boundaries = self._compute_boundaries(self._dims,
                                                     self._lower_bounds,
                                                     self._upper_bounds)
-        self._epsilon = np_scalar(epsilon, dtype=self.dtypes["measures"])
+        self._epsilon = self.dtypes["measures"](epsilon)
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
             learning_rate, threshold_min, self.dtypes["threshold"])
-        self._qd_score_offset = np_scalar(qd_score_offset,
-                                          self.dtypes["objective"])
+        self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
 
         # Set up statistics.
         self._stats = None
@@ -288,27 +286,25 @@ class GridArchive(ArchiveBase):
 
     def _stats_reset(self):
         """Resets the archive stats."""
-        zero = np_scalar(0.0, dtype=self.dtypes["objective"])
-
         self._stats = ArchiveStats(
             num_elites=0,
-            coverage=zero,
-            qd_score=zero,
-            norm_qd_score=zero,
+            coverage=self.dtypes["objective"](0.0),
+            qd_score=self.dtypes["objective"](0.0),
+            norm_qd_score=self.dtypes["objective"](0.0),
             obj_max=None,
             obj_mean=None,
         )
         self._best_elite = None
-        self._objective_sum = zero
+        self._objective_sum = self.dtypes["objective"](0.0)
 
     def _stats_update(self, new_objective_sum, new_best_index):
         """Updates statistics based on a new sum of objective values
         (new_objective_sum) and the index of a potential new best elite
         (new_best_index)."""
         self._objective_sum = new_objective_sum
-        new_qd_score = (self._objective_sum -
-                        np_scalar(len(self), dtype=self.dtypes["objective"]) *
-                        self._qd_score_offset)
+        new_qd_score = (
+            self._objective_sum -
+            self.dtypes["objective"](len(self)) * self._qd_score_offset)
 
         _, new_best_elite = self._store.retrieve([new_best_index])
 
@@ -324,14 +320,11 @@ class GridArchive(ArchiveBase):
 
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=np_scalar(len(self) / self.cells,
-                               dtype=self.dtypes["objective"]),
+            coverage=self.dtypes["objective"](len(self) / self.cells),
             qd_score=new_qd_score,
-            norm_qd_score=np_scalar(new_qd_score / self.cells,
-                                    dtype=self.dtypes["objective"]),
+            norm_qd_score=self.dtypes["objective"](new_qd_score / self.cells),
             obj_max=new_obj_max,
-            obj_mean=np_scalar(self._objective_sum / len(self),
-                               dtype=self.dtypes["objective"]),
+            obj_mean=self.dtypes["objective"](self._objective_sum / len(self)),
         )
 
     def index_of(self, measures):
@@ -482,7 +475,7 @@ class GridArchive(ArchiveBase):
         # -np.inf. This is because the case with threshold_min = -np.inf is
         # handled separately since we compute the new threshold based on the max
         # objective in each cell in that case.
-        ratio = np_scalar(1.0 - learning_rate, dtype=dtype)**objective_sizes
+        ratio = dtype(1.0 - learning_rate)**objective_sizes
         new_threshold = (ratio * cur_threshold +
                          (objective_sums / objective_sizes) * (1 - ratio))
 
@@ -621,7 +614,7 @@ class GridArchive(ArchiveBase):
         # If threshold_min is -inf, then we want CMA-ME behavior, which computes
         # the improvement value of new solutions w.r.t zero. Otherwise, we
         # compute improvement with respect to threshold_min.
-        cur_threshold[is_new] = (np_scalar(0.0, dtype=self.dtypes["threshold"])
+        cur_threshold[is_new] = (self.dtypes["threshold"](0.0)
                                  if self.threshold_min == -np.inf else
                                  self.threshold_min)
         add_info["value"] = data["objective"] - cur_threshold
@@ -756,9 +749,8 @@ class GridArchive(ArchiveBase):
             # If threshold_min is -inf, then we want CMA-ME behavior, which
             # computes the improvement value with a threshold of zero for new
             # solutions. Otherwise, we will set cur_threshold to threshold_min.
-            cur_threshold = (np_scalar(0.0, dtype=self.dtypes["threshold"])
-                             if self.threshold_min == -np.inf else
-                             self.threshold_min)
+            cur_threshold = (self.dtypes["threshold"](0.0) if self.threshold_min
+                             == -np.inf else self.threshold_min)
 
         # Retrieve candidate objective.
         objective = data["objective"]
@@ -804,8 +796,8 @@ class GridArchive(ArchiveBase):
             })
 
             # Update stats.
-            cur_objective = (cur_data["objective"] if cur_occupied else
-                             np_scalar(0.0, self.dtypes["objective"]))
+            cur_objective = (cur_data["objective"]
+                             if cur_occupied else self.dtypes["objective"](0.0))
             self._stats_update(self._objective_sum + objective - cur_objective,
                                index)
 

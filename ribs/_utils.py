@@ -4,21 +4,6 @@ import numbers
 import numpy as np
 
 
-def np_scalar(scalar, dtype):
-    """Casts the scalar to the given numpy dtype.
-
-    This is useful for making sure all our scalars are in the correct dtype.
-
-    It is possible to just use np.array(scalar, dtype=dtype) since
-    zero-dimensional arrays behave like scalars, but the scalar would still show
-    up as an array if calling type().
-
-    It is also possible to use np.array(scalar, dtype=dtype).item(), but item()
-    converts outputs to standard Python objects, not numpy scalars.
-    """
-    return np.array([scalar], dtype=dtype)[0]
-
-
 def check_finite(x, name):
     """Checks that x is finite (i.e. not infinity or NaN).
 
@@ -210,8 +195,7 @@ def validate_single(archive, data, none_objective_ok=False):
         if not none_objective_ok:
             raise ValueError("objective cannot be None")
     else:
-        data["objective"] = np_scalar(data["objective"],
-                                      archive.dtypes["objective"])
+        data["objective"] = archive.dtypes["objective"](data["objective"])
         check_finite(data["objective"], "objective")
 
     data["measures"] = np.asarray(data["measures"])
