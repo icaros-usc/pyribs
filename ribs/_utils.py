@@ -210,8 +210,7 @@ def validate_single(archive, data, none_objective_ok=False):
         if not none_objective_ok:
             raise ValueError("objective cannot be None")
     else:
-        data["objective"] = np_scalar(data["objective"],
-                                      archive.dtypes["objective"])
+        data["objective"] = archive.dtypes["objective"](data["objective"])
         check_finite(data["objective"], "objective")
 
     data["measures"] = np.asarray(data["measures"])
