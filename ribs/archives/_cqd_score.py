@@ -62,8 +62,8 @@ def cqd_score(
 
     Args:
         archive (ArchiveBase): Archive for which to compute the CQD score. The
-            archive must have implemented the
-            :meth:`~ribs.archives.ArchiveBase.data` method.
+            archive must implement the :meth:`~ribs.archives.ArchiveBase.data`
+            method.
         iterations (int): Number of times to compute the CQD score.
         target_points (array-like): (iterations, n, measure_dim) array that
             lists n target points to use on each iteration.
