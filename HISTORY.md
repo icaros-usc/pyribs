@@ -2,6 +2,9 @@
 
 ## (Forthcoming)
 
+- Implement BOP-Elites by adding BayesianOptimizationEmitter and
+  BayesianOptimizationScheduler; add BOP-Elites demo ({pr}`496`)
+
 ### Changelog
 
 #### API
@@ -82,9 +85,6 @@ makes a couple of minor usability improvements, such as better error checking.
 - Raise error if `result_archive` and `archive` have different fields
   ({pr}`461`)
 - Warn user if resampling for bounds takes too long in ESs ({pr}`462`)
-- Implement BOP-Elites by adding BayesianOptimizationEmitter and
-  BayesianOptimizationScheduler ({pr}`496`)
-- Add BOP-Elites demo
 
 #### Documentation
 

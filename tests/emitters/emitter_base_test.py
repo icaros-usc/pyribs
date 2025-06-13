@@ -3,16 +3,18 @@ import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
-from ribs.emitters import (BayesianOptimizationEmitter,
-                           EvolutionStrategyEmitter, GaussianEmitter,
+from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
                            GradientArborescenceEmitter, IsoLineEmitter)
 
 # pylint: disable = redefined-outer-name
 
 
 @pytest.fixture(params=[
-    "GaussianEmitter", "IsoLineEmitter", "ImprovementEmitter",
-    "RandomDirectionEmitter", "OptimizingEmitter", "BayesianOptimizationEmitter"
+    "GaussianEmitter",
+    "IsoLineEmitter",
+    "ImprovementEmitter",
+    "RandomDirectionEmitter",
+    "OptimizingEmitter",
 ])
 def emitter_fixture(request, archive_fixture):
     """Creates an archive, emitter, and initial solution.
@@ -49,9 +51,6 @@ def emitter_fixture(request, archive_fixture):
                                            sigma0=5,
                                            ranker="2obj",
                                            batch_size=batch_size)
-    elif emitter_type == "BayesianOptimizationEmitter":
-        emitter = BayesianOptimizationEmitter(archive, [[-1, 1]] * 4,
-                                              num_initial_samples=batch_size)
     else:
         raise NotImplementedError(f"Unknown emitter type {emitter_type}")
 
@@ -83,8 +82,10 @@ def test_ask_emits_correct_num_sols_on_nonempty_archive(emitter_fixture):
 
 # pylint:disable = possibly-used-before-assignment
 @pytest.mark.parametrize(
-    "emitter_type", ["GradientArborescenceEmitter", "EvolutionStrategyEmitter"],
-    ids=["GAEmitter", "ESEmitter"])
+    "emitter_type",
+    ["GradientArborescenceEmitter", "EvolutionStrategyEmitter"],
+    ids=["GAEmitter", "ESEmitter"],
+)
 @pytest.mark.parametrize(
     "wrong_array,offsets",
     [

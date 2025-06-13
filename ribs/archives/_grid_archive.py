@@ -2,33 +2,15 @@
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import ((
-    check_batch_shape,
-    check_finite,
-    check_is_1d,
-                         check_shape,
-    check_shape,
-    np_scalar,
-    validate_batch,
-    validate_single,
-), validate_batch,
+from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
+                         check_shape, np_scalar, validate_batch,
                          validate_single)
-from ribs.archives._archive_base_2 import ArchiveBase
+from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._utils import (fill_sentinel_values, parse_dtype,
                                   validate_cma_mae_settings)
-from ribs.archives._archive_stats import ArchiveStats
-from ribs.archives._array_store import ArrayStore
-from ribs.archives._cqd_score_result import CQDScoreResult
-from ribs.archives._transforms import (
-    batch_entries_with_threshold,
-    compute_best_index,
-    compute_objective_sum,
-    single_entry_with_threshold,
-)
-from ribs.archives._utils import parse_dtype, validate_cma_mae_settings
 
 
 class GridArchive(ArchiveBase):
@@ -391,10 +373,9 @@ class GridArchive(ArchiveBase):
         # Adding epsilon accounts for floating point precision errors from
         # transforming measures. We then cast to int32 to obtain integer
         # indices.
-        grid_indices = (
-            (self._dims * (measures - self._lower_bounds) + self._epsilon)
-            / self._interval_size
-        ).astype(np.int32)
+        grid_indices = ((self._dims *
+                         (measures - self._lower_bounds) + self._epsilon) /
+                        self._interval_size).astype(np.int32)
 
         # Clip indices to the archive dimensions (for example, for 20 cells, we
         # want indices to run from 0 to 19).
@@ -437,7 +418,8 @@ class GridArchive(ArchiveBase):
                 :attr:`measure_dim`)
         """
         grid_indices = np.asarray(grid_indices)
-        check_batch_shape(grid_indices, "grid_indices", self.measure_dim, "measure_dim")
+        check_batch_shape(grid_indices, "grid_indices", self.measure_dim,
+                          "measure_dim")
 
         return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
@@ -501,8 +483,8 @@ class GridArchive(ArchiveBase):
         # handled separately since we compute the new threshold based on the max
         # objective in each cell in that case.
         ratio = np_scalar(1.0 - learning_rate, dtype=dtype)**objective_sizes
-        new_threshold = (ratio * cur_threshold +
-                         (objective_sums / objective_sizes) * (1 - ratio))
+        new_threshold = ratio * cur_threshold + (objective_sums /
+                                                 objective_sizes) * (1 - ratio)
 
         return new_threshold
 
@@ -665,10 +647,13 @@ class GridArchive(ArchiveBase):
             # (https://arxiv.org/abs/2205.10752). This computation is based on
             # the mean objective of all solutions in the batch that could have
             # been inserted into each cell.
-            new_threshold = self._compute_thresholds(indices, data["objective"],
-                                                     cur_threshold,
-                                                     self.learning_rate,
-                                                     self.dtypes["threshold"])
+            new_threshold = self._compute_thresholds(
+                indices,
+                data["objective"],
+                cur_threshold,
+                self.learning_rate,
+                self.dtypes["threshold"],
+            )
 
         # Retrieve indices of solutions that _should_ be inserted into the
         # archive. Currently, multiple solutions may be inserted at each archive
@@ -703,8 +688,8 @@ class GridArchive(ArchiveBase):
         cur_objective = cur_data["objective"]
         cur_objective[~cur_occupied] = 0.0
         cur_objective = cur_objective[can_insert][should_insert]
-        objective_sum = (self._objective_sum +
-                         np.sum(data["objective"] - cur_objective))
+        objective_sum = self._objective_sum + np.sum(data["objective"] -
+                                                     cur_objective)
         best_index = indices[np.argmax(data["objective"])]
         self._stats_update(objective_sum, best_index)
 
@@ -817,9 +802,13 @@ class GridArchive(ArchiveBase):
                                   objective * self.learning_rate)]
 
             # Insert elite into the store.
-            self._store.add(index[None], {
-                name: np.expand_dims(arr, axis=0) for name, arr in data.items()
-            })
+            self._store.add(
+                index[None],
+                {
+                    name: np.expand_dims(arr, axis=0)
+                    for name, arr in data.items()
+                },
+            )
 
             # Update stats.
             cur_objective = (cur_data["objective"] if cur_occupied else
@@ -912,7 +901,7 @@ class GridArchive(ArchiveBase):
                 f"dimensionality of {self.measure_dim}.")
 
         cur_data = self.data()
-        del cur_data['index']
+        del cur_data["index"]
         # Note: No need to clear the store since we just replace it below.
 
         self._dims = np.array(new_dims, dtype=np.int32)
@@ -926,14 +915,16 @@ class GridArchive(ArchiveBase):
 
     ## CQD Score ##
 
-    def cqd_score(self,
-                  iterations,
-                  target_points,
-                  penalties,
-                  obj_min,
-                  obj_max,
-                  dist_max=None,
-                  dist_ord=None):
+    def cqd_score(
+        self,
+        iterations,
+        target_points,
+        penalties,
+        obj_min,
+        obj_max,
+        dist_max=None,
+        dist_ord=None,
+    ):
         """Computes the CQD score of the archive.
 
         The Continuous Quality Diversity (CQD) score was introduced in
@@ -984,9 +975,9 @@ class GridArchive(ArchiveBase):
             ValueError: target_points or penalties is an array with the wrong
                 shape.
         """
-        if (not (hasattr(self, "upper_bounds") and
-                 hasattr(self, "lower_bounds")) and
-            (dist_max is None or np.isscalar(target_points))):
+        if not (hasattr(self, "upper_bounds") and
+                hasattr(self, "lower_bounds")) and (dist_max is None or
+                                                    np.isscalar(target_points)):
             raise RuntimeError(
                 "When the archive does not have lower_bounds and "
                 "upper_bounds properties, dist_max must be specified, "

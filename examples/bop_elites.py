@@ -7,7 +7,7 @@ this example, please install pymoo with:
 import json
 import time
 from pathlib import Path
-from typing import List
+from typing import Tuple
 
 import fire
 import matplotlib.pyplot as plt
@@ -93,19 +93,21 @@ def save_heatmap(archive, heatmap_path):
     plt.close(plt.gcf())
 
 
-# pylint:disable = too-many-positional-arguments, dangerous-default-value
-def main(iterations: int = 1000,
-         solution_dim: int = 4,
-         search_nrestarts: int = 5,
-         entropy_ejie: bool = False,
-         upscale_schedule: List[List] = [[5, 5], [10, 10], [25, 25]],
-         num_initial_samples: int = 20,
-         initial_solutions: np.ndarray = None,
-         batch_size: int = 8,
-         num_emitters: int = 1,
-         seed: int = 42,
-         outdir: str = "test_logs",
-         log_every: int = 20):
+# pylint:disable = too-many-positional-arguments
+def main(
+    iterations: int = 1000,
+    solution_dim: int = 4,
+    search_nrestarts: int = 5,
+    entropy_ejie: bool = False,
+    upscale_schedule: Tuple[Tuple] = ((5, 5), (10, 10), (25, 25)),
+    num_initial_samples: int = 20,
+    initial_solutions: np.ndarray = None,
+    batch_size: int = 8,
+    num_emitters: int = 1,
+    seed: int = 42,
+    outdir: str = "test_logs",
+    log_every: int = 20,
+):
     """Main function for running BOP-Elites on the sphere domain."""
     # logdir for saving experiment data
     logdir = Path(outdir)
@@ -166,7 +168,7 @@ def main(iterations: int = 1000,
         "Itr. Time": {
             "x": [0],
             "y": [0.0],
-        }
+        },
     }
 
     for i in tqdm.trange(1, iterations + 1):

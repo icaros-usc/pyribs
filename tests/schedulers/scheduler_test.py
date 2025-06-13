@@ -3,9 +3,8 @@ import numpy as np
 import pytest
 
 from ribs.archives import GridArchive, ProximityArchive
-from ribs.emitters import BayesianOptimizationEmitter, GaussianEmitter
-from ribs.schedulers import (BanditScheduler, BayesianOptimizationScheduler,
-                             Scheduler)
+from ribs.emitters import GaussianEmitter
+from ribs.schedulers import BanditScheduler, Scheduler
 
 from ..archives.grid_archive_test import assert_archive_elites
 
@@ -37,11 +36,13 @@ def add_mode(request):
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_attributes(scheduler_type):
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)],
-                          threshold_min=1.0,
-                          learning_rate=1.0)
+    archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=1.0,
+        learning_rate=1.0,
+    )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
 
     if scheduler_type == "Scheduler":
@@ -109,11 +110,13 @@ def test_ask_fails_when_called_twice(scheduler_fixture):
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_warn_nothing_added_to_archive(scheduler_type):
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)],
-                          threshold_min=1.0,
-                          learning_rate=1.0)
+    archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=1.0,
+        learning_rate=1.0,
+    )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters)
@@ -132,16 +135,20 @@ def test_warn_nothing_added_to_archive(scheduler_type):
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_warn_nothing_added_to_result_archive(scheduler_type):
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)],
-                          threshold_min=-np.inf,
-                          learning_rate=1.0)
-    result_archive = GridArchive(solution_dim=2,
-                                 dims=[100, 100],
-                                 ranges=[(-1, 1), (-1, 1)],
-                                 threshold_min=10.0,
-                                 learning_rate=1.0)
+    archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=-np.inf,
+        learning_rate=1.0,
+    )
+    result_archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=10.0,
+        learning_rate=1.0,
+    )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(
@@ -169,15 +176,17 @@ def test_warn_nothing_added_to_result_archive(scheduler_type):
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_result_archive_mismatch_fields(scheduler_type):
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)],
-                          threshold_min=-np.inf,
-                          learning_rate=1.0,
-                          extra_fields={
-                              "metadata": ((), object),
-                              "square": ((2, 2), np.int32)
-                          })
+    archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=-np.inf,
+        learning_rate=1.0,
+        extra_fields={
+            "metadata": ((), object),
+            "square": ((2, 2), np.int32)
+        },
+    )
     result_archive = GridArchive(solution_dim=2,
                                  dims=[100, 100],
                                  ranges=[(-1, 1), (-1, 1)])
@@ -201,31 +210,37 @@ def test_result_archive_mismatch_fields(scheduler_type):
 
     # The ArrayStore in the archives should throw an error when we try to add.
     with pytest.raises(ValueError):
-        scheduler.tell(np.zeros(4),
-                       np.zeros((4, 2)),
-                       metadata=np.zeros(4, dtype=object),
-                       square=np.zeros((4, 2, 2)))
+        scheduler.tell(
+            np.zeros(4),
+            np.zeros((4, 2)),
+            metadata=np.zeros(4, dtype=object),
+            square=np.zeros((4, 2, 2)),
+        )
 
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_result_archive_same_fields_with_threshold(scheduler_type):
     """GridArchive has a threshold field and ProximityArchive does not, but they
     should still operate together because the extra_fields are identical."""
-    archive = ProximityArchive(solution_dim=2,
-                               measure_dim=2,
-                               k_neighbors=5,
-                               novelty_threshold=0.01,
-                               extra_fields={
-                                   "metadata": ((), object),
-                                   "square": ((2, 2), np.int32)
-                               })
-    result_archive = GridArchive(solution_dim=2,
-                                 dims=[100, 100],
-                                 ranges=[(-1, 1), (-1, 1)],
-                                 extra_fields={
-                                     "metadata": ((), object),
-                                     "square": ((2, 2), np.int32)
-                                 })
+    archive = ProximityArchive(
+        solution_dim=2,
+        measure_dim=2,
+        k_neighbors=5,
+        novelty_threshold=0.01,
+        extra_fields={
+            "metadata": ((), object),
+            "square": ((2, 2), np.int32)
+        },
+    )
+    result_archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        extra_fields={
+            "metadata": ((), object),
+            "square": ((2, 2), np.int32)
+        },
+    )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
 
     if scheduler_type == "Scheduler":
@@ -245,10 +260,12 @@ def test_result_archive_same_fields_with_threshold(scheduler_type):
     scheduler.ask()
 
     # The ArrayStore in the archives should throw an error when we try to add.
-    scheduler.tell(np.zeros(4),
-                   np.zeros((4, 2)),
-                   metadata=np.zeros(4, dtype=object),
-                   square=np.zeros((4, 2, 2)))
+    scheduler.tell(
+        np.zeros(4),
+        np.zeros((4, 2)),
+        metadata=np.zeros(4, dtype=object),
+        square=np.zeros((4, 2, 2)),
+    )
 
 
 def test_tell_inserts_solutions_into_archive(add_mode):
@@ -289,8 +306,14 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode):
 
     # The sum of all the emitters' batch sizes is 6.
     batch_size = 6
-    measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0],
-                      [0.0, 0.0], [0.0, 1.0]]
+    measures_batch = [
+        [1.0, 1.0],
+        [-1.0, 1.0],
+        [-1.0, -1.0],
+        [1.0, -1.0],
+        [0.0, 0.0],
+        [0.0, 1.0],
+    ]
 
     _ = scheduler.ask()
     scheduler.tell(np.ones(batch_size), measures_batch)
@@ -305,10 +328,12 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode):
 
 def test_tell_with_fields(add_mode):
     batch_size = 4
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)],
-                          extra_fields={"metadata": ((), object)})
+    archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        extra_fields={"metadata": ((), object)},
+    )
     emitters = [
         GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)
     ]
@@ -445,52 +470,3 @@ def test_constant_active_emitters_bandit_scheduler():
         scheduler.tell(objective, measures)
 
         assert scheduler.active.sum() == expected_active
-
-
-def test_bayesopt_wrong_emitter_type():
-    """When BayesianOptimizationScheduler is initialized with emitters that
-    are not of type BayesianOptimizationEmitter, it should raise a TypeError.
-    """
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)])
-    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
-
-    with pytest.raises(TypeError):
-        BayesianOptimizationScheduler(archive, emitters)
-
-
-@pytest.mark.parametrize(
-    "wrong_upscale_schedules",
-    [[None, [[2, 2]]], [[[2, 2], [4, 4]], [[2, 2], [4, 4], [8, 8]]],
-     [[[2, 2], [4, 4]], [[2, 2], [8, 8]]]],
-    ids=["one_None", "num_res_mismatch", "res_mismatch"])
-def test_bayesopt_mismatched_upscale_schedules(wrong_upscale_schedules):
-    """When BayesianOptimizationScheduler is initialized with multiple
-    emitters, all emitters must have exactly the same upscale schedule.
-    If not, it should raise a ValueError.
-    """
-    archive = GridArchive(solution_dim=4,
-                          dims=[2, 2],
-                          ranges=[(-1, 1), (-1, 1)])
-    emitter1_upscale_schedule, emitter2_upscale_schedule = \
-        wrong_upscale_schedules
-    emitters = [
-        BayesianOptimizationEmitter(
-            archive=archive,
-            bounds=[[-1, 1]] * 4,
-            upscale_schedule=emitter1_upscale_schedule,
-            num_initial_samples=1,
-            seed=0,
-        ),
-        BayesianOptimizationEmitter(
-            archive=archive,
-            bounds=[[-1, 1]] * 4,
-            upscale_schedule=emitter2_upscale_schedule,
-            num_initial_samples=1,
-            seed=1,
-        ),
-    ]
-
-    with pytest.raises(ValueError):
-        BayesianOptimizationScheduler(archive, emitters)
