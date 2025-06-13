@@ -462,7 +462,7 @@ def test_nonfinite_inputs(data):
 #
 
 
-def test_lc_add_none():
+def test_lc_add_single_none():
     archive = ProximityArchive(
         solution_dim=3,
         measure_dim=2,
@@ -473,7 +473,22 @@ def test_lc_add_none():
     )
 
     with pytest.raises(ValueError):
+        # objective can't be None.
         archive.add_single([1, 2, 3], None, [0, 0])
+
+
+def test_lc_add_batch_none():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=1,
+        novelty_threshold=1.0,
+        initial_capacity=1,
+        local_competition=True,
+    )
+
+    with pytest.raises(ValueError):
+        archive.add([[1, 2, 3], [4, 5, 6]], None, [[0, 0], [1, 1]])
 
 
 def test_lc_add_single(add_mode):
