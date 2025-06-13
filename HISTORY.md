@@ -42,6 +42,7 @@
 
 #### Documentation
 
+- Refactor archives into single-file implementations ({pr}`518`)
 - Update sphere example for consistency ({pr}`505`)
 - DQD tutorial edits ({pr}`500`)
 - Add version selector to docs ({pr}`495`)
