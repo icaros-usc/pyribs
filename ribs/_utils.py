@@ -61,7 +61,7 @@ def check_solution_batch_dim(array,
                              batch_size,
                              is_1d=False,
                              extra_msg=""):
-    """Checks the batch dimension of an array with respect to solution."""
+    """Checks the batch dimension of an array with respect to the solutions."""
     if array.shape[0] != batch_size:
         raise ValueError(f"{array_name} does not match the batch dimension of "
                          "solution -- since solution has shape "
