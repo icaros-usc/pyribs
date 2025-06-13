@@ -147,12 +147,11 @@ class GridArchive(ArchiveBase):
             learning_rate, threshold_min, self.dtypes["threshold"])
         self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
 
-        # Set up statistics.
-        self._stats = None
+        # Set up statistics -- objective_sum is the sum of all objective values
+        # in the archive; it is useful for computing qd_score and obj_mean.
         self._best_elite = None
-        # Sum of all objective values in the archive; useful for computing
-        # qd_score and obj_mean.
         self._objective_sum = None
+        self._stats = None
         self._stats_reset()
 
     @staticmethod
@@ -286,6 +285,8 @@ class GridArchive(ArchiveBase):
 
     def _stats_reset(self):
         """Resets the archive stats."""
+        self._best_elite = None
+        self._objective_sum = self.dtypes["objective"](0.0)
         self._stats = ArchiveStats(
             num_elites=0,
             coverage=self.dtypes["objective"](0.0),
@@ -294,30 +295,25 @@ class GridArchive(ArchiveBase):
             obj_max=None,
             obj_mean=None,
         )
-        self._best_elite = None
-        self._objective_sum = self.dtypes["objective"](0.0)
 
     def _stats_update(self, new_objective_sum, new_best_index):
         """Updates statistics based on a new sum of objective values
         (new_objective_sum) and the index of a potential new best elite
         (new_best_index)."""
+        _, new_best_elite = self._store.retrieve([new_best_index])
+        new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
+
+        if (self._stats.obj_max is None or
+                new_best_elite["objective"] > self._stats.obj_max):
+            self._best_elite = new_best_elite
+            new_obj_max = new_best_elite["objective"]
+        else:
+            new_obj_max = self._stats.obj_max
+
         self._objective_sum = new_objective_sum
         new_qd_score = (
             self._objective_sum -
             self.dtypes["objective"](len(self)) * self._qd_score_offset)
-
-        _, new_best_elite = self._store.retrieve([new_best_index])
-
-        if (self._stats.obj_max is None or
-                new_best_elite["objective"] > self._stats.obj_max):
-            # Convert batched values to single values.
-            new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
-
-            new_obj_max = new_best_elite["objective"]
-            self._best_elite = new_best_elite
-        else:
-            new_obj_max = self._stats.obj_max
-
         self._stats = ArchiveStats(
             num_elites=len(self),
             coverage=self.dtypes["objective"](len(self) / self.cells),
