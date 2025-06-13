@@ -61,10 +61,10 @@ def check_solution_batch_dim(array,
                              batch_size,
                              is_1d=False,
                              extra_msg=""):
-    """Checks the batch dimension of an array with respect to solution_batch."""
+    """Checks the batch dimension of an array with respect to solution."""
     if array.shape[0] != batch_size:
         raise ValueError(f"{array_name} does not match the batch dimension of "
-                         "solution_batch -- since solution_batch has shape "
+                         "solution -- since solution has shape "
                          f"({batch_size}, ..), {array_name} should have shape "
                          f"({batch_size},{'' if is_1d else ' ..'}), but it has "
                          f"shape {array.shape}.{extra_msg}")
@@ -86,7 +86,7 @@ def validate_batch(archive,
     array. We then perform checks on the array, including seeing if its batch
     size matches the batch size of data["solution"].
     """
-    # Process and validate solution_batch.
+    # Process and validate solution.
     data["solution"] = np.asarray(data["solution"])
     check_batch_shape(data["solution"], "solution", archive.solution_dim,
                       "solution_dim", "")
