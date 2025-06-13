@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Move cqd_score into a separate function
+  ({pr}`536`)
 - **Backwards-incompatible:** Make archive field_list and dtypes props include
   index ({pr}`532`)
 - **Backwards-incompatible:** Remove thresholds from SlidingBoundariesArchive
@@ -39,6 +41,7 @@
 
 #### Documentation
 
+- Add cqd_score example ({pr}`536`)
 - Update sphere example for consistency ({pr}`505`)
 - DQD tutorial edits ({pr}`500`)
 - Add version selector to docs ({pr}`495`)
