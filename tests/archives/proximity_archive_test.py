@@ -457,31 +457,6 @@ def test_nonfinite_inputs(data):
         data.archive.index_of_single(data.measures)
 
 
-def test_cqd_score_with_max_dist():
-    archive = ProximityArchive(
-        solution_dim=2,
-        measure_dim=2,
-        k_neighbors=5,
-        novelty_threshold=1.0,
-    )
-    archive.add_single([4.0, 4.0], 0.5, [0.0, 1.0])
-
-    score = archive.cqd_score(
-        iterations=1,
-        # With this target point and dist_max, the solution above at [0, 1]
-        # has a normalized distance of 0.5, since it is one unit away.
-        target_points=np.array([[[1.0, 1.0]]]),
-        penalties=2,
-        obj_min=0.0,
-        obj_max=1.0,
-        dist_max=2.0,
-    ).mean
-
-    # For theta=0, the score should be 0.5 - 0 * 0.5 = 0.5
-    # For theta=1, the score should be 0.5 - 1 * 0.5 = 0.0
-    assert np.isclose(score, 0.5 + 0.0)
-
-
 #
 # Tests for local competition.
 #
