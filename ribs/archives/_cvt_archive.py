@@ -874,7 +874,7 @@ class CVTArchive(ArchiveBase):
             })
 
             # Update stats.
-            cur_objective = (cur_data["objective"]
+            cur_objective = (cur_data["objective"][0]
                              if cur_occupied else self.dtypes["objective"](0.0))
             self._stats_update(self._objective_sum + objective - cur_objective,
                                index)
