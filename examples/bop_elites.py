@@ -20,20 +20,20 @@ from ribs.schedulers import BayesianOptimizationScheduler
 from ribs.visualize import grid_archive_heatmap
 
 
-def sphere(solution_batch):
+def sphere(solutions):
     """Sphere function evaluation and measures for a batch of solutions.
 
     Args:
-        solution_batch (np.ndarray): (batch_size, dim) batch of solutions.
+        solutions (np.ndarray): (batch_size, dim) batch of solutions.
     Returns:
-        objective_batch (np.ndarray): (batch_size,) batch of objectives.
-        objective_grad_batch (np.ndarray): (batch_size, solution_dim) batch of
+        objectives (np.ndarray): (batch_size,) batch of objectives.
+        objective_grads (np.ndarray): (batch_size, solution_dim) batch of
             objective gradients.
-        measures_batch (np.ndarray): (batch_size, 2) batch of measures.
-        measures_grad_batch (np.ndarray): (batch_size, 2, solution_dim) batch of
+        measures (np.ndarray): (batch_size, 2) batch of measures.
+        measure_grads (np.ndarray): (batch_size, 2, solution_dim) batch of
             measure gradients.
     """
-    dim = solution_batch.shape[1]
+    dim = solutions.shape[1]
 
     # Shift the Sphere function so that the optimal value is at x_i = 2.048.
     sphere_shift = 5.12 * 0.4
@@ -41,17 +41,17 @@ def sphere(solution_batch):
     # Normalize the objective to the range [0, 100] where 100 is optimal.
     best_obj = 0.0
     worst_obj = (-5.12 - sphere_shift)**2 * dim
-    raw_obj = np.sum(np.square(solution_batch - sphere_shift), axis=1)
-    objective_batch = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
+    raw_obj = np.sum(np.square(solutions - sphere_shift), axis=1)
+    objectives = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
 
     # Compute gradient of the objective.
-    objective_grad_batch = -2 * (solution_batch - sphere_shift)
+    objective_grads = -2 * (solutions - sphere_shift)
 
     # Calculate measures.
-    clipped = solution_batch.copy()
+    clipped = solutions.copy()
     clip_mask = (clipped < -5.12) | (clipped > 5.12)
     clipped[clip_mask] = 5.12 / clipped[clip_mask]
-    measures_batch = np.concatenate(
+    measures = np.concatenate(
         (
             np.sum(clipped[:, :dim // 2], axis=1, keepdims=True),
             np.sum(clipped[:, dim // 2:], axis=1, keepdims=True),
@@ -60,8 +60,8 @@ def sphere(solution_batch):
     )
 
     # Compute gradient of the measures.
-    derivatives = np.ones(solution_batch.shape)
-    derivatives[clip_mask] = -5.12 / np.square(solution_batch[clip_mask])
+    derivatives = np.ones(solutions.shape)
+    derivatives[clip_mask] = -5.12 / np.square(solutions[clip_mask])
 
     mask_0 = np.concatenate((np.ones(dim // 2), np.zeros(dim - dim // 2)))
     mask_1 = np.concatenate((np.zeros(dim // 2), np.ones(dim - dim // 2)))
@@ -69,13 +69,13 @@ def sphere(solution_batch):
     d_measure0 = derivatives * mask_0
     d_measure1 = derivatives * mask_1
 
-    measures_grad_batch = np.stack((d_measure0, d_measure1), axis=1)
+    measure_grads = np.stack((d_measure0, d_measure1), axis=1)
 
     return (
-        objective_batch,
-        objective_grad_batch,
-        measures_batch,
-        measures_grad_batch,
+        objectives,
+        objective_grads,
+        measures,
+        measure_grads,
     )
 
 
@@ -174,9 +174,9 @@ def main(
     for i in tqdm.trange(1, iterations + 1):
         itr_start_time = time.time()
 
-        sol = scheduler.ask()
-        obj, _, meas, _ = sphere(sol)
-        scheduler.tell(obj, meas)
+        solutions = scheduler.ask()
+        objectives, _, measures, _ = sphere(solutions)
+        scheduler.tell(objectives, measures)
 
         final_itr = i == iterations
         if i % log_every == 0 or final_itr:
