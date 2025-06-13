@@ -61,7 +61,7 @@ python examples/lunar_lander.py --iterations 5 --outdir "${LUNAR_LANDER_OUTPUT}"
 #
 
 install_deps examples/cqd_score.py
-python examples/cqd_score.py
+python examples/cqd_score.py --itrs 10
 
 # Cleanup.
 rm -rf $TMPDIR
