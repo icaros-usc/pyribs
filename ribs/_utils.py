@@ -86,7 +86,7 @@ def validate_batch(archive,
     array. We then perform checks on the array, including seeing if its batch
     size matches the batch size of data["solution"].
     """
-    # Process and validate solution.
+    # Process and validate solutions.
     data["solution"] = np.asarray(data["solution"])
     check_batch_shape(data["solution"], "solution", archive.solution_dim,
                       "solution_dim", "")
