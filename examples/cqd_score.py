@@ -1,4 +1,4 @@
-"""Example of computing the CQD Score on an archive.
+"""Example of computing the CQD score on an archive.
 
 Install the following dependencies before running this example:
     pip install fire
