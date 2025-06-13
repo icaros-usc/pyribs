@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Move cqd_score into a separate function
+  ({pr}`537`)
 - **Backwards-incompatible:** Make archive field_list and dtypes props include
   index ({pr}`532`)
 - **Backwards-incompatible:** Remove thresholds from SlidingBoundariesArchive
@@ -39,6 +41,7 @@
 
 #### Documentation
 
+- Add cqd_score example ({pr}`537`)
 - Update sphere example for consistency ({pr}`505`)
 - DQD tutorial edits ({pr}`500`)
 - Add version selector to docs ({pr}`495`)
@@ -54,7 +57,7 @@
 - Remove `np_scalar` util by making archive dtypes be numpy scalar types
   ({pr}`534`)
 - Refactor archives into single-file implementations ({pr}`518`, {pr}`521`,
-  {pr}`526`, {pr}`528`, {pr}`529`, {pr}`530`, {pr}`533`)
+  {pr}`526`, {pr}`528`, {pr}`529`, {pr}`530`, {pr}`533`, {pr}`535`)
 - Make ArrayStore.data return ArchiveDataFrame instead of DataFrame ({pr}`522`)
 - Migrate to pyproject.toml ({pr}`514`)
 - Set vmin and vmax to None if archive is empty in ribs.visualize ({pr}`513`,

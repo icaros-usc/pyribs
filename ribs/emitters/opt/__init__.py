@@ -6,7 +6,10 @@ This subpackage contains evolution strategies that inherit from
 pass in the optimizer class itself, or the string name of the optimizer, or an
 abbreviated name. The abbreviations are listed below.
 
-For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
+Evolution Strategies
+--------------------
+
+These evolution strategies inherit from :class:`EvolutionStrategyBase`:
 
 * ``cma_es``: :class:`CMAEvolutionStrategy`
 * ``lm_ma_es``: :class:`LMMAEvolutionStrategy`
@@ -24,7 +27,10 @@ For evolution strategies (inheriting from :class:`EvolutionStrategyBase`):
     ribs.emitters.opt.SeparableCMAEvolutionStrategy
     ribs.emitters.opt.EvolutionStrategyBase
 
-For gradient-based optimizers (inheriting from :class:`GradientOptBase`):
+Gradient-Based Optimizers
+-------------------------
+
+These gradient-based optimizers inherit from :class:`GradientOptBase`:
 
 * ``adam``: :class:`AdamOpt`
 * ``gradient_ascent``: :class:`GradientAscentOpt`
