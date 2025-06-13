@@ -57,36 +57,28 @@ def assert_archive_elites(
 
             if solution_batch is not None:
                 if data["solution"].dtype.kind == "f":
-                    solution_match = np.allclose(data["solution"][j], solution_batch[i])
+                    solution_match = np.allclose(data["solution"][j],
+                                                 solution_batch[i])
                 else:
-                    solution_match = np.all(data["solution"][j] == solution_batch[i])
+                    solution_match = np.all(
+                        data["solution"][j] == solution_batch[i])
             else:
                 solution_match = True
-            objective_match = objective_batch is None or np.isclose(
-                data["objective"][j], objective_batch[i]
-            )
-            measures_match = measures_batch is None or np.allclose(
-                data["measures"][j], measures_batch[i]
-            )
+            objective_match = (objective_batch is None or np.isclose(
+                data["objective"][j], objective_batch[i]))
+            measures_match = (measures_batch is None or np.allclose(
+                data["measures"][j], measures_batch[i]))
             index_match = (
-                grid_indices_batch is None
-                or
+                grid_indices_batch is None or
                 # pylint: disable-next = possibly-used-before-assignment
-                data["index"][j] == index_batch[i]
-            )
+                data["index"][j] == index_batch[i])
 
             # Used for testing custom fields.
-            metadata_match = (
-                metadata_batch is None or data["metadata"][j] == metadata_batch[i]
-            )
+            metadata_match = (metadata_batch is None or
+                              data["metadata"][j] == metadata_batch[i])
 
-            if (
-                solution_match
-                and objective_match
-                and measures_match
-                and index_match
-                and metadata_match
-            ):
+            if (solution_match and objective_match and measures_match and
+                    index_match and metadata_match):
                 archive_covered[j] = True
 
     assert np.all(archive_covered)
@@ -130,13 +122,8 @@ def test_add_single_to_archive(data, use_list, add_mode):
 
     assert add_info["status"] == AddStatus.NEW
     assert np.isclose(add_info["value"], data.objective)
-    assert_archive_elite(
-        data.archive_with_elite,
-        data.solution,
-        data.objective,
-        data.measures,
-        data.grid_indices,
-    )
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices)
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
@@ -158,36 +145,37 @@ def test_add_single_to_archive_negative_objective(data, use_list, add_mode):
 
     assert add_info["status"] == AddStatus.NEW
     assert np.isclose(add_info["value"], -data.objective)
-    assert_archive_elite(
-        data.archive_with_elite,
-        data.solution,
-        data.objective,
-        data.measures,
-        data.grid_indices,
-    )
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices)
 
 
 def test_add_single_with_low_measures(data, add_mode):
     measures = np.array([-2, -3])
     indices = (0, 0)
     if add_mode == "single":
-        add_info = data.archive.add_single(data.solution, data.objective, measures)
+        add_info = data.archive.add_single(data.solution, data.objective,
+                                           measures)
     else:
-        add_info = data.archive.add([data.solution], [data.objective], [measures])
+        add_info = data.archive.add([data.solution], [data.objective],
+                                    [measures])
 
     assert add_info["status"]
-    assert_archive_elite(data.archive, data.solution, data.objective, measures, indices)
+    assert_archive_elite(data.archive, data.solution, data.objective, measures,
+                         indices)
 
 
 def test_add_single_with_high_measures(data, add_mode):
     measures = np.array([2, 3])
     indices = (9, 19)
     if add_mode == "single":
-        add_info = data.archive.add_single(data.solution, data.objective, measures)
+        add_info = data.archive.add_single(data.solution, data.objective,
+                                           measures)
     else:
-        add_info = data.archive.add([data.solution], [data.objective], [measures])
+        add_info = data.archive.add([data.solution], [data.objective],
+                                    [measures])
     assert add_info["status"]
-    assert_archive_elite(data.archive, data.solution, data.objective, measures, indices)
+    assert_archive_elite(data.archive, data.solution, data.objective, measures,
+                         indices)
 
 
 def test_add_single_and_overwrite(data, add_mode):
@@ -196,23 +184,18 @@ def test_add_single_and_overwrite(data, add_mode):
     high_objective = data.objective + 1.0
 
     if add_mode == "single":
-        add_info = data.archive_with_elite.add_single(
-            arbitrary_sol, high_objective, data.measures
-        )
+        add_info = data.archive_with_elite.add_single(arbitrary_sol,
+                                                      high_objective,
+                                                      data.measures)
     else:
-        add_info = data.archive_with_elite.add(
-            [arbitrary_sol], [high_objective], [data.measures]
-        )
+        add_info = data.archive_with_elite.add([arbitrary_sol],
+                                               [high_objective],
+                                               [data.measures])
 
     assert add_info["status"] == AddStatus.IMPROVE_EXISTING
     assert np.isclose(add_info["value"], high_objective - data.objective)
-    assert_archive_elite(
-        data.archive_with_elite,
-        arbitrary_sol,
-        high_objective,
-        data.measures,
-        data.grid_indices,
-    )
+    assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
+                         data.measures, data.grid_indices)
 
 
 def test_add_single_without_overwrite(data, add_mode):
@@ -221,23 +204,17 @@ def test_add_single_without_overwrite(data, add_mode):
     low_objective = data.objective - 1.0
 
     if add_mode == "single":
-        add_info = data.archive_with_elite.add_single(
-            arbitrary_sol, low_objective, data.measures
-        )
+        add_info = data.archive_with_elite.add_single(arbitrary_sol,
+                                                      low_objective,
+                                                      data.measures)
     else:
-        add_info = data.archive_with_elite.add(
-            [arbitrary_sol], [low_objective], [data.measures]
-        )
+        add_info = data.archive_with_elite.add([arbitrary_sol], [low_objective],
+                                               [data.measures])
 
     assert add_info["status"] == AddStatus.NOT_ADDED
     assert np.isclose(add_info["value"], low_objective - data.objective)
-    assert_archive_elite(
-        data.archive_with_elite,
-        data.solution,
-        data.objective,
-        data.measures,
-        data.grid_indices,
-    )
+    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
+                         data.measures, data.grid_indices)
 
 
 def test_add_single_threshold_update(add_mode):
@@ -290,14 +267,16 @@ def test_add_single_after_clear(data):
 
     https://github.com/icaros-usc/pyribs/pull/260
     """
-    add_info = data.archive.add_single(data.solution, data.objective, data.measures)
+    add_info = data.archive.add_single(data.solution, data.objective,
+                                       data.measures)
 
     assert add_info["status"] == 2
     assert add_info["value"] == data.objective
 
     data.archive.clear()
 
-    add_info = data.archive.add_single(data.solution, data.objective, data.measures)
+    add_info = data.archive.add_single(data.solution, data.objective,
+                                       data.measures)
 
     assert add_info["status"] == 2
     assert add_info["value"] == data.objective
@@ -515,8 +494,8 @@ def test_add_batch_threshold_update():
 
     assert (add_info["status"] == [2, 2, 2, 2, 2, 0]).all()
     assert np.isclose(
-        add_info["value"], [1.0, 2.0, 3.0, 11.0, 101.0, -9.0]
-    ).all()  # [...] - (-1.0)
+        add_info["value"],
+        [1.0, 2.0, 3.0, 11.0, 101.0, -9.0]).all()  # [...] - (-1.0)
 
     # Thresholds based on batch update rule should now be
     # (1 - 0.1)**3 * -1.0 + (0.0 + 1.0 + 2.0) / 3 * (1 - (1 - 0.1)**3) = -0.458
@@ -573,7 +552,8 @@ def test_add_batch_threshold_update_inf_threshold_min():
 
     # Value is same as objective since these are new cells.
     assert (add_info["status"] == [2, 2, 2, 2, 2, 2]).all()
-    assert np.isclose(add_info["value"], [0.0, 1.0, 2.0, -10.0, 10.0, 100.0]).all()
+    assert np.isclose(add_info["value"],
+                      [0.0, 1.0, 2.0, -10.0, 10.0, 100.0]).all()
 
     # Thresholds are updated based on maximum values in each cell, i.e. 2.0 and
     # 100.0.
@@ -640,7 +620,8 @@ def test_add_batch_wrong_batch_size(data):
 
 
 def test_grid_to_int_index(data):
-    assert data.archive.grid_to_int_index([data.grid_indices])[0] == data.int_index
+    assert (data.archive.grid_to_int_index([data.grid_indices
+                                           ])[0] == data.int_index)
 
 
 def test_grid_to_int_index_wrong_shape(data):
@@ -650,8 +631,8 @@ def test_grid_to_int_index_wrong_shape(data):
 
 def test_int_to_grid_index(data):
     assert np.all(
-        data.archive.int_to_grid_index([data.int_index])[0] == data.grid_indices
-    )
+        data.archive.int_to_grid_index([data.int_index])[0] ==
+        data.grid_indices)
 
 
 def test_int_to_grid_index_wrong_shape(data):
@@ -659,7 +640,8 @@ def test_int_to_grid_index_wrong_shape(data):
         data.archive.int_to_grid_index(data.int_index)
 
 
-@pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32],
+                         ids=["float64", "float32"])
 def test_values_go_to_correct_bin(dtype):
     """Bins tend to be a bit fuzzy at the edges due to floating point precision
     errors, so this test checks if we can get everything to land in the correct
@@ -730,7 +712,9 @@ def test_cqd_score_detects_wrong_shapes(data):
 
 
 def test_cqd_score_with_one_elite():
-    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
 
     score = archive.cqd_score(
@@ -750,7 +734,9 @@ def test_cqd_score_with_one_elite():
 
 
 def test_cqd_score_with_max_dist():
-    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 0.5, [0.0, 1.0])
 
     score = archive.cqd_score(
@@ -770,7 +756,9 @@ def test_cqd_score_with_max_dist():
 
 
 def test_cqd_score_l1_norm():
-    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 0.5, [0.0, 0.0])
 
     score = archive.cqd_score(
@@ -792,7 +780,9 @@ def test_cqd_score_l1_norm():
 
 
 def test_cqd_score_full_output():
-    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
 
     result = archive.cqd_score(
@@ -800,15 +790,13 @@ def test_cqd_score_full_output():
         # With this target point, the solution above at [0, 0] has a normalized
         # distance of 0.5, since it is halfway between the archive bounds of
         # (-1, -1) and (1, 1).
-        target_points=np.array(
-            [
-                [[1.0, 1.0]],
-                [[1.0, 1.0]],
-                [[1.0, 1.0]],
-                [[-1.0, -1.0]],
-                [[-1.0, -1.0]],
-            ]
-        ),
+        target_points=np.array([
+            [[1.0, 1.0]],
+            [[1.0, 1.0]],
+            [[1.0, 1.0]],
+            [[-1.0, -1.0]],
+            [[-1.0, -1.0]],
+        ]),
         penalties=2,
         obj_min=0.0,
         obj_max=1.0,
@@ -822,17 +810,13 @@ def test_cqd_score_full_output():
     assert np.all(
         np.isclose(
             result.target_points,
-            np.array(
-                [
-                    [[1.0, 1.0]],
-                    [[1.0, 1.0]],
-                    [[1.0, 1.0]],
-                    [[-1.0, -1.0]],
-                    [[-1.0, -1.0]],
-                ]
-            ),
-        )
-    )
+            np.array([
+                [[1.0, 1.0]],
+                [[1.0, 1.0]],
+                [[1.0, 1.0]],
+                [[-1.0, -1.0]],
+                [[-1.0, -1.0]],
+            ])))
     assert np.all(np.isclose(result.penalties, [0.0, 1.0]))
     assert np.isclose(result.obj_min, 0.0)
     assert np.isclose(result.obj_max, 1.0)
@@ -842,7 +826,9 @@ def test_cqd_score_full_output():
 
 
 def test_cqd_score_with_two_elites():
-    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2,
+                          dims=[10, 10],
+                          ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 0.25, [0.0, 0.0])  # Elite 1.
     archive.add_single([4.0, 4.0], 0.0, [1.0, 1.0])  # Elite 2.
 

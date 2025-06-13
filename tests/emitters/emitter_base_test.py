@@ -10,11 +10,8 @@ from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
 
 
 @pytest.fixture(params=[
-    "GaussianEmitter",
-    "IsoLineEmitter",
-    "ImprovementEmitter",
-    "RandomDirectionEmitter",
-    "OptimizingEmitter",
+    "GaussianEmitter", "IsoLineEmitter", "ImprovementEmitter",
+    "RandomDirectionEmitter", "OptimizingEmitter"
 ])
 def emitter_fixture(request, archive_fixture):
     """Creates an archive, emitter, and initial solution.
@@ -80,12 +77,9 @@ def test_ask_emits_correct_num_sols_on_nonempty_archive(emitter_fixture):
 #
 
 
-# pylint:disable = possibly-used-before-assignment
 @pytest.mark.parametrize(
-    "emitter_type",
-    ["GradientArborescenceEmitter", "EvolutionStrategyEmitter"],
-    ids=["GAEmitter", "ESEmitter"],
-)
+    "emitter_type", ["GradientArborescenceEmitter", "EvolutionStrategyEmitter"],
+    ids=["GAEmitter", "ESEmitter"])
 @pytest.mark.parametrize(
     "wrong_array,offsets",
     [
