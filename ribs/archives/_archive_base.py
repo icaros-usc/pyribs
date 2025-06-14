@@ -42,19 +42,6 @@ class ArchiveBase(ABC):
     ## Properties of the archive ##
 
     @property
-    def field_list(self):
-        """list: List of data fields in the archive."""
-        raise NotImplementedError(
-            "`field_list` has not been implemented in this archive")
-
-    @property
-    def dtypes(self):
-        """dict: Mapping from field name to dtype for all fields in the
-        archive."""
-        raise NotImplementedError(
-            "`dtypes` has not been implemented in this archive")
-
-    @property
     def solution_dim(self):
         """int: Dimensionality of the solution space."""
         return self._solution_dim
@@ -71,6 +58,19 @@ class ArchiveBase(ABC):
     def measure_dim(self):
         """int: Dimensionality of the measure space."""
         return self._measure_dim
+
+    @property
+    def field_list(self):
+        """list: List of data fields in the archive."""
+        raise NotImplementedError(
+            "`field_list` has not been implemented in this archive")
+
+    @property
+    def dtypes(self):
+        """dict: Mapping from field name to dtype for all fields in the
+        archive."""
+        raise NotImplementedError(
+            "`dtypes` has not been implemented in this archive")
 
     @property
     def stats(self):
