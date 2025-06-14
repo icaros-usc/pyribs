@@ -1,12 +1,8 @@
 """Contains the DensityArchive."""
-
-from functools import cached_property
-
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_finite, readonly
+from ribs._utils import check_batch_shape, check_finite
 from ribs.archives._archive_base import ArchiveBase
-from ribs.archives._array_store import ArrayStore
 from ribs.archives._utils import parse_dtype
 
 
@@ -154,7 +150,7 @@ class DensityArchive(ArchiveBase):
         #      self._fm_loss = FlowMatchingLoss(self._fm)
         #      self._fm_opt = torch.optim.AdamW(self._fm.parameters(), lr=1e-3)
 
-    ## Properties ##
+    ## Properties inherited from ArchiveBase ##
 
     # Necessary to implement this since `Scheduler` calls it.
     @property
@@ -163,20 +159,25 @@ class DensityArchive(ArchiveBase):
         elites, we always mark it as not empty."""
         return False
 
+    ## Properties that are not in ArchiveBase ##
+
     # TODO: Expose the buffer?
 
     ## Utilities ##
 
-    def compute_density(self, measures_batch):
+    def compute_density(self, measures):
+        # TODO: docstring
         """Calculates density."""
+        measures = np.asarray(measures)
+
         if self._density_method == "kde":
             # TODO: implement bandwidth selection rules
             bandwidth = self._bandwidth
             # For some reason this is faster
-            density = np.empty((measures_batch.shape[0],))
-            for j in range(measures_batch.shape[0]):
-                density[j] = gaussian_kde_measures(measures_batch[j],
-                                                   self._buffer, bandwidth)
+            density = np.empty((measures.shape[0],))
+            for j in range(measures.shape[0]):
+                density[j] = gaussian_kde_measures(measures[j], self._buffer,
+                                                   bandwidth)
             return density
             # density = gaussian_kde_measures_batch(measures_batch,
             #                                       self._buffer, bandwidth)
@@ -196,12 +197,82 @@ class DensityArchive(ArchiveBase):
 
     def add(
         self,
-        solution=None,
-        measures=None,
-        objective=None,
+        solution,
+        objective,
+        measures,
         **fields,
     ):
-        # TODO: Input validation!
+        # TODO: docstring
+        """
+
+        Args:
+            solution (None or array-like): Included for API consistency.
+            objective (None or array-like): Included for API consistency.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array with
+                measure space coordinates of all the solutions.
+            fields (keyword arguments): Included for API consistency.
+
+        Returns:
+            dict: Information describing the result of the add operation. The
+            dict contains the following keys:
+
+            - ``"status"`` (:class:`numpy.ndarray` of :class:`int`): An array of
+              integers that represent the "status" obtained when attempting to
+              insert each solution in the batch. Each item has the following
+              possible values:
+
+              - ``0``: The solution was not added to the archive.
+              - ``1``: The solution improved the objective value of a cell
+                which was already in the archive.
+              - ``2``: The solution discovered a new cell in the archive.
+
+              All statuses (and values, below) are computed with respect to the
+              *current* archive. For example, if two solutions both introduce
+              the same new archive cell, then both will be marked with ``2``.
+
+              The alternative is to depend on the order of the solutions in the
+              batch -- for example, if we have two solutions ``a`` and ``b``
+              that introduce the same new cell in the archive, ``a`` could be
+              inserted first with status ``2``, and ``b`` could be inserted
+              second with status ``1`` because it improves upon ``a``. However,
+              our implementation does **not** do this.
+
+              To convert statuses to a more semantic format, cast all statuses
+              to :class:`AddStatus`, e.g., with ``[AddStatus(s) for s in
+              add_info["status"]]``.
+
+            - ``"value"`` (:class:`numpy.ndarray` of
+              :attr:`dtypes` ["objective"]): An array with values for each
+              solution in the batch. With the default values of ``learning_rate
+              = 1.0`` and ``threshold_min = -np.inf``, the meaning of each value
+              depends on the corresponding ``status`` and is identical to that
+              in CMA-ME (`Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_):
+
+              - ``0`` (not added): The value is the "negative improvement,"
+                i.e., the objective of the solution passed in minus the
+                objective of the elite still in the archive (this value is
+                negative because the solution did not have a high enough
+                objective to be added to the archive).
+              - ``1`` (improve existing cell): The value is the "improvement,"
+                i.e., the objective of the solution passed in minus the
+                objective of the elite previously in the archive.
+              - ``2`` (new cell): The value is just the objective of the
+                solution.
+
+              In contrast, for other values of ``learning_rate`` and
+              ``threshold_min``, each value is equivalent to the objective value
+              of the solution minus the threshold of its corresponding cell in
+              the archive.
+
+        Raises:
+            ValueError: The array arguments do not match their specified shapes.
+            ValueError: ``objective`` or ``measures`` has non-finite values (inf
+                or NaN).
+        """
+        measures = np.asarray(measures)
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim",
+                          "")
+        check_finite(measures, "measures")
 
         input_measures = measures  # TODO: Get rid
         batch_size = measures.shape[0]
@@ -248,10 +319,7 @@ class DensityArchive(ArchiveBase):
                 self._fm_opt.step()
 
         return {
-            # TODO
-            "status": np.full(batch_size, 2),
-            #  "objective": np.ones(batch_size),
-            #  "measures": np.ones(batch_size),
+            "status": np.full(batch_size, 2, dtype=np.int32),
             # TODO: Should density be calculated here instead?
             "density": input_density,
         }
