@@ -18,8 +18,7 @@ from ribs.archives._utils import (fill_sentinel_values, parse_dtype,
 
 class CVTArchive(ArchiveBase):
     # pylint: disable = too-many-public-methods
-    """An archive that divides the entire measure space into a fixed number of
-    cells.
+    """An archive that tessellates the measure space with centroids.
 
     This archive originates in `Vassiliades 2018
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
@@ -301,16 +300,16 @@ class CVTArchive(ArchiveBase):
         return self._store.field_list_with_index
 
     @property
+    def dtypes(self):
+        return self._store.dtypes_with_index
+
+    @property
     def stats(self):
         return self._stats
 
     @property
     def empty(self):
         return len(self._store) == 0
-
-    @property
-    def dtypes(self):
-        return self._store.dtypes_with_index
 
     ## Properties that are not in ArchiveBase ##
     ## Roughly ordered by the parameter list in the constructor. ##

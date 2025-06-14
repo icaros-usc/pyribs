@@ -241,16 +241,16 @@ class SlidingBoundariesArchive(ArchiveBase):
         return self._store.field_list_with_index
 
     @property
+    def dtypes(self):
+        return self._store.dtypes_with_index
+
+    @property
     def stats(self):
         return self._stats
 
     @property
     def empty(self):
         return len(self._store) == 0
-
-    @property
-    def dtypes(self):
-        return self._store.dtypes_with_index
 
     ## Properties that are not in ArchiveBase ##
     ## Roughly ordered by the parameter list in the constructor. ##
