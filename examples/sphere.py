@@ -708,6 +708,9 @@ CONFIG = {
         # Hyperparameters from Density Descent paper:
         # https://arxiv.org/abs/2312.11331
         "is_dqd": False,
+        # In DDS, the DensityArchive does not store any solutions, so emitters
+        # must use the result archive instead.
+        "pass_result_archive_to_emitters": True,
         "archive": {
             "class": DensityArchive,
             "kwargs": {
@@ -819,10 +822,16 @@ def create_scheduler(config, algorithm, seed=None):
 
     # Create archive.
     archive_class = config["archive"]["class"]
-    if archive_class in [DensityArchive, ProximityArchive]:
-        # These two archives take `measure_dim` instead of `ranges`.
+    if archive_class == ProximityArchive:
+        # Takes `measure_dim` instead of `ranges`.
         archive = archive_class(
             solution_dim=solution_dim,
+            measure_dim=len(bounds),
+            seed=seed,
+            **config["archive"]["kwargs"],
+        )
+    elif archive_class == DensityArchive:
+        archive = archive_class(
             measure_dim=len(bounds),
             seed=seed,
             **config["archive"]["kwargs"],
@@ -841,10 +850,19 @@ def create_scheduler(config, algorithm, seed=None):
     else:
         result_archive = config["result_archive"]["class"](
             solution_dim=solution_dim,
+            # Note that using ranges here means we assume the result archive is
+            # a GridArchive or CVTArchive. This will need to be modified for
+            # other result archives.
             ranges=bounds,
             seed=seed,
             **config["result_archive"]["kwargs"],
         )
+
+    # Usually, emitters take in the archive. However, it may sometimes be
+    # necessary to take in the result_archive, such as in DDS.
+    archive_for_emitter = (result_archive
+                           if config.get("pass_result_archive_to_emitters") else
+                           archive)
 
     # Create emitters. Each emitter needs a different seed so that they do not
     # all do the same thing, hence we create an rng here to generate seeds. The
@@ -855,7 +873,7 @@ def create_scheduler(config, algorithm, seed=None):
         emitter_class = e["class"]
         emitters += [
             emitter_class(
-                archive,
+                archive_for_emitter,
                 x0=initial_sol,
                 **e["kwargs"],
                 seed=s,
