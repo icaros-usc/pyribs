@@ -1,5 +1,4 @@
 """Contains the DensityArchive."""
-import numba as nb
 import numpy as np
 from scipy.spatial.distance import cdist
 
@@ -160,10 +159,6 @@ class DensityArchive(ArchiveBase):
 
         if self._density_method == "kde":
             return gaussian_kde_measures(measures, self.buffer, self._bandwidth)
-
-            # kernel = stats.gaussian_kde(self._buffer.T,
-            # bw_method=self._bandwidth)
-            # return kernel.evaluate(measures.T)
         # TODO
         #  elif self._density_method == "fm":
         #      density = self._fm.log_prob(
@@ -238,8 +233,8 @@ class DensityArchive(ArchiveBase):
         n_fill = 0
         if buffer_size > self._n_occupied:
             n_fill = min(buffer_size - self._n_occupied, batch_size)
-            self._buffer[self._n_occupied:self._n_occupied +
-                         n_fill] = (measures[:n_fill])
+            self._buffer[self._n_occupied:self._n_occupied + n_fill] = \
+                measures[:n_fill]
             remaining_measures = measures[n_fill:]
             self._n_occupied += n_fill
         else:
