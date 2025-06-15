@@ -158,6 +158,8 @@ class DensityArchive(ArchiveBase):
         measures = np.asarray(measures)
 
         if self._density_method == "kde":
+            # Use self.buffer instead of self._buffer since self.buffer only
+            # contains the valid entries of the buffer.
             return gaussian_kde_measures(measures, self.buffer, self._bandwidth)
         # TODO
         #  elif self._density_method == "fm":
