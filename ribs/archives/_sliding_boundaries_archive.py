@@ -524,13 +524,14 @@ class SlidingBoundariesArchive(ArchiveBase):
     def add(self, solution, objective, measures, **fields):
         """Inserts a batch of solutions into the archive.
 
-        .. note:: Unlike in other archives, this method (currently) is not truly
-            batched; rather, it is implemented by calling :meth:`add_single` on
-            the solutions in the batch, in the order that they are passed in. As
+        .. note:: Unlike in other archives, this method is not truly batched;
+            rather, it is implemented by calling :meth:`add_single` on the
+            solutions in the batch, in the order that they are passed in. As
             such, this method is *not* invariant to the ordering of the
             solutions in the batch.
 
-        See :meth:`ArchiveBase.add` for arguments and return values.
+        See :meth:`~add_single` and :meth:`ribs.archives.GridArchive.add` for
+        arguments and return values.
         """
         new_data = validate_batch(
             self,
@@ -615,7 +616,21 @@ class SlidingBoundariesArchive(ArchiveBase):
         re-adding all of the solutions stored in the buffer `and` the current
         archive.
 
-        See :meth:`ArchiveBase.add_single` for arguments and return values.
+        Args:
+            solution (array-like): Parameters of the solution.
+            objective (float): Objective function evaluation of the solution.
+            measures (array-like): Coordinates in measure space of the solution.
+            fields (keyword arguments): Additional data for the solution.
+
+        Returns:
+            dict: Information describing the result of the add operation. The
+            dict contains ``status`` and ``value`` keys, exactly as in
+            :meth:`ribs.archives.GridArchive.add`.
+
+        Raises:
+            ValueError: The array arguments do not match their specified shapes.
+            ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
+                has non-finite values.
         """
         data = validate_single(
             self,
