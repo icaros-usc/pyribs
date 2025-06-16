@@ -1,6 +1,7 @@
 """Contains the DensityArchive."""
 import numpy as np
 from scipy.spatial.distance import cdist
+from sklearn.neighbors import KernelDensity
 
 from ribs._utils import check_batch_shape, check_finite, readonly
 from ribs.archives._archive_base import ArchiveBase
@@ -70,9 +71,14 @@ class DensityArchive(ArchiveBase):
         measure_dim (int): Dimension of the measure space.
         buffer_size (int): Size of the buffer of measures.
         density_method (str): Method for computing density. Currently supports
-            ``"kde"`` (KDE -- kernel density estimator).
-        bandwidth (float): Bandwidth when using ``kde`` as the density
-            estimator.
+            ``"kde"`` (KDE -- kernel density estimator), ``"kde_sklearn"`` (KDE
+            using :class:`sklearn.neighbors.KernelDensity`).
+        bandwidth (float): Bandwidth when using ``kde`` or ``kde_sklearn`` as
+            the ``density_method``.
+        sklearn_kwargs (dict): kwargs for
+            :class:`sklearn.neighbors.KernelDensity` when using
+            ``"kde_sklearn"`` as the ``density_method``. Note that bandwidth is
+            already passed in via the ``bandwidth`` parameter above.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type or dict): Data type of the measures.
@@ -91,6 +97,7 @@ class DensityArchive(ArchiveBase):
         buffer_size=10000,
         density_method="kde",
         bandwidth=None,
+        sklearn_kwargs=None,
         seed=None,
         dtype=np.float64,
     ):
@@ -120,6 +127,10 @@ class DensityArchive(ArchiveBase):
         if self._density_method == "kde":
             # Kernel density estimation
             self._bandwidth = bandwidth
+        elif self._density_method == "kde_sklearn":
+            self._bandwidth = bandwidth
+            self._sklearn_kwargs = ({} if sklearn_kwargs is None else
+                                    sklearn_kwargs.copy())
         else:
             raise ValueError(f"Unknown density_method '{self._density_method}'")
 
@@ -161,6 +172,14 @@ class DensityArchive(ArchiveBase):
                 self.buffer,
                 self._bandwidth,
             ).astype(self._measure_dtype)
+        elif self._density_method == "kde_sklearn":
+            if self.buffer.shape[0] == 0:
+                return np.zeros(measures.shape[0], dtype=measures.dtype)
+            kde = KernelDensity(
+                bandwidth=self._bandwidth,
+                **self._sklearn_kwargs,
+            ).fit(self.buffer)
+            return kde.score_samples(measures).astype(self._measure_dtype)
         else:
             raise ValueError(f"Unknown density_method '{self._density_method}'")
 
