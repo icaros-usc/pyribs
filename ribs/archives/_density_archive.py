@@ -16,6 +16,8 @@ def gkern(x):
 def gaussian_kde_measures(measures, buffer, h):
     """Evaluates kernel density estimation with a Gaussian kernel.
 
+    The density is defined as zero if the buffer is empty.
+
     Args:
         measures (numpy.ndarray): (measures_batch_size, measure_dim) array
             of measures at which to estimate density.
@@ -25,18 +27,19 @@ def gaussian_kde_measures(measures, buffer, h):
     Returns:
         Evaluation of KDE(m).
     """
+    if buffer.shape[0] == 0:
+        return np.zeros(measures.shape[0], dtype=measures.dtype)
+
     # (measures_batch_size, buffer_batch_size)
     norms = cdist(measures, buffer) / h
 
-    t = np.sum(gkern(norms), axis=1)  # (measures_batch_size,)
+    # (measures_batch_size,)
+    t = np.sum(gkern(norms), axis=1)
 
-    sol = t / (buffer.shape[0] * h)
-
-    return sol
+    return t / (buffer.shape[0] * h)
 
 
 # TODO: Comment out CNF code for now.
-# TODO: There's an overflow error somewhere? Try tracing the warning.
 
 
 class DensityArchive(ArchiveBase):
