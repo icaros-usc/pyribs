@@ -220,7 +220,7 @@ class DensityArchive(ArchiveBase):
             ValueError: The array arguments do not match their specified shapes.
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self._measure_dtype)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim",
                           "")
         check_finite(measures, "measures")
