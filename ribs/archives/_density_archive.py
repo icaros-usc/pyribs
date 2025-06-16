@@ -115,15 +115,6 @@ class DensityArchive(ArchiveBase):
         if self._density_method == "kde":
             # Kernel density estimation
             self._bandwidth = bandwidth
-        # TODO
-        #  elif self._density_method == "fm":
-        #      self._device = "cuda" if torch.cuda.is_available() else "cpu"
-        #      print("device ", self._device)
-        #      # Flow Matching
-        #      self._fm = CNF(measure_dim,
-        #                     hidden_features=[256] * 3).to(self._device)
-        #      self._fm_loss = FlowMatchingLoss(self._fm)
-        #      self._fm_opt = torch.optim.AdamW(self._fm.parameters(), lr=1e-3)
         else:
             raise ValueError(f"Unknown density_method '{self._density_method}'")
 
@@ -165,12 +156,6 @@ class DensityArchive(ArchiveBase):
                 self.buffer,
                 self._bandwidth,
             ).astype(self._measure_dtype)
-        # TODO
-        #  elif self._density_method == "fm":
-        #      density = self._fm.log_prob(
-        #          torch.from_numpy(measures_batch).to(self._device,
-        #                                              torch.float32))
-        #      return density.cpu().detach().numpy()
         else:
             raise ValueError(f"Unknown density_method '{self._density_method}'")
 
@@ -260,17 +245,5 @@ class DensityArchive(ArchiveBase):
             skip = min(self._n_skip, n_remaining)
             n_remaining -= skip
             self._n_skip -= skip
-
-        # TODO
-        #  # Training CNF.
-        #  if self._density_method == "fm":
-        #      for _ in range(20):
-        #          samples = np.random.randint(0, self._n_occupied, (256,))
-        #          x = torch.from_numpy(self._buffer[samples]).to(
-        #              self._device, torch.float32)
-
-        #          self._fm_opt.zero_grad()
-        #          self._fm_loss(x).backward()
-        #          self._fm_opt.step()
 
         return add_info
