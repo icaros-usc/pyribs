@@ -21,7 +21,7 @@
 - **Backwards-incompatible:** BanditScheduler: Add emitter_pool and active attr;
   remove emitters attr ({pr}`494`)
 - Add DensityArchive and DensityRanker for Density Descent Search ({pr}`483`,
-  {pr}`504`, {pr}`487`, {pr}`543`)
+  {pr}`504`, {pr}`487`, {pr}`543`, {pr}`546`)
 - Add NoveltyRanker for novelty search ({pr}`477`)
 - Add proximity_archive_plot for visualizing ProximityArchive ({pr}`476`,
   {pr}`480`, {pr}`523`)

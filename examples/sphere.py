@@ -81,6 +81,8 @@ DDS:
 - `dds`: Density Descent Search (Lee 2024; https://arxiv.org/abs/2312.11331)
   with a KDE as the density estimator. Uses DensityArchive and
   EvolutionStrategyEmitter with DensityRanker.
+- `dds_kde_sklearn`: Density Descent Search using scikit-learn's KernelDensity
+  as the density estimator.
 
 Outputs are saved in the `sphere_output/` directory by default. The archive is
 saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
@@ -712,9 +714,51 @@ CONFIG = {
         "archive": {
             "class": DensityArchive,
             "kwargs": {
+                "buffer_size": 10000,
                 "density_method": "kde",
                 "bandwidth": 25.6,
+            }
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
+            }
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 1.5,
+                "ranker": "density",
+                "selection_rule": "mu",
+                "restart_rule": "basic",
+                "batch_size": 36
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "dds_kde_sklearn": {
+        # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
+        "is_dqd": False,
+        # In DDS, the DensityArchive does not store any solutions, so emitters
+        # must use the result archive instead.
+        "pass_result_archive_to_emitters": True,
+        "archive": {
+            "class": DensityArchive,
+            "kwargs": {
+                # `density_method` and `sklearn_kwargs` are the only differences
+                # from the `dds` config above. `kde_sklearn` tends to be slower
+                # but it has more options available.
                 "buffer_size": 10000,
+                "density_method": "kde_sklearn",
+                "bandwidth": 25.6,
+                "sklearn_kwargs": {
+                    "kernel": "gaussian",
+                }
             }
         },
         "result_archive": {
