@@ -72,7 +72,9 @@ class DensityArchive(ArchiveBase):
         buffer_size (int): Size of the buffer of measures.
         density_method (str): Method for computing density. Currently supports
             ``"kde"`` (KDE -- kernel density estimator), ``"kde_sklearn"`` (KDE
-            using :class:`sklearn.neighbors.KernelDensity`).
+            using :class:`sklearn.neighbors.KernelDensity`). Note that when
+            ``"kde_sklearn"`` is used, this archive computes *log density*; see
+            :meth:`sklearn.neighbors.KernelDensity.score_samples` for more info.
         bandwidth (float): Bandwidth when using ``kde`` or ``kde_sklearn`` as
             the ``density_method``.
         sklearn_kwargs (dict): kwargs for
@@ -178,7 +180,9 @@ class DensityArchive(ArchiveBase):
             kde = KernelDensity(
                 bandwidth=self._bandwidth,
                 **self._sklearn_kwargs,
-            ).fit(self.buffer)
+            ).fit(
+                self.buffer
+            )  # Note that this is log density with some normalization added on.
             return kde.score_samples(measures).astype(self._measure_dtype)
         else:
             raise ValueError(f"Unknown density_method '{self._density_method}'")
@@ -221,7 +225,11 @@ class DensityArchive(ArchiveBase):
 
             - ``"density"`` (:class:`numpy.ndarray` of the dtype passed in at
               init): The density values of the measure passed in, before the
-              buffer or density estimator was updated.
+              buffer or density estimator was updated. Note that when
+              ``"kde_sklearn"`` is used as the ``density_method``, *log density*
+              is computed; see
+              :meth:`sklearn.neighbors.KernelDensity.score_samples` for more
+              info.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
