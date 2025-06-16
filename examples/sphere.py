@@ -637,8 +637,7 @@ CONFIG = {
 
     ## Novelty Search ##
     "ns_cma": {
-        # Hyperparameters from Density Descent paper:
-        # https://arxiv.org/abs/2312.11331
+        # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
         "is_dqd": False,
         "archive": {
             "class": ProximityArchive,
@@ -705,8 +704,7 @@ CONFIG = {
 
     ## DDS ##
     "dds": {
-        # Hyperparameters from Density Descent paper:
-        # https://arxiv.org/abs/2312.11331
+        # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
         "is_dqd": False,
         # In DDS, the DensityArchive does not store any solutions, so emitters
         # must use the result archive instead.
