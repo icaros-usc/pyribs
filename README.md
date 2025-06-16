@@ -163,6 +163,7 @@ emitters = [
         archive,
         x0=[0.0] * 10,
         sigma0=0.1,
+        batch_size=36,
     ) for _ in range(3)
 ]
 scheduler = Scheduler(archive, emitters)
@@ -171,12 +172,12 @@ for itr in range(1000):
     solutions = scheduler.ask()
 
     # Optimize the 10D negative Sphere function.
-    objective_batch = -np.sum(np.square(solutions), axis=1)
+    objectives = -np.sum(np.square(solutions), axis=1)
 
     # Measures: first 2 coordinates of each 10D solution.
-    measures_batch = solutions[:, :2]
+    measures = solutions[:, :2]
 
-    scheduler.tell(objective_batch, measures_batch)
+    scheduler.tell(objectives, measures)
 ```
 
 To visualize this archive with Matplotlib, we then use the
