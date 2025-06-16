@@ -23,11 +23,12 @@ def test_add_to_buffer():
     assert np.all(archive.buffer == np.arange(10).reshape((5, 2)))
 
 
-def test_initial_density():
+@pytest.mark.parametrize("density_method", ["kde", "kde_sklearn"])
+def test_initial_density(density_method):
     archive = DensityArchive(
         measure_dim=2,
         buffer_size=10000,
-        density_method="kde",
+        density_method=density_method,
         bandwidth=2.0,
     )
 
@@ -39,13 +40,14 @@ def test_initial_density():
     assert_allclose(add_info["density"], np.zeros(5))
 
 
+@pytest.mark.parametrize("density_method", ["kde", "kde_sklearn"])
 @pytest.mark.parametrize("dtype", [np.float64, np.float32],
                          ids=["float64", "float32"])
-def test_density_dtype(dtype):
+def test_density_dtype(density_method, dtype):
     archive = DensityArchive(
         measure_dim=2,
         buffer_size=10000,
-        density_method="kde",
+        density_method=density_method,
         bandwidth=2.0,
         dtype=dtype,
     )
@@ -58,12 +60,15 @@ def test_density_dtype(dtype):
     assert density.dtype == dtype
 
 
-def test_density_after_add():
+# We only test actual density for `kde` since that is the one for which we know
+# the true value. `kde_sklearn` is a lot more complicated.
+@pytest.mark.parametrize("density_method", ["kde"])
+def test_density_after_add(density_method):
     bandwidth = 2.0
     archive = DensityArchive(
         measure_dim=2,
         buffer_size=10000,
-        density_method="kde",
+        density_method=density_method,
         bandwidth=bandwidth,
     )
 
