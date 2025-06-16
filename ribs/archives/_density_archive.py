@@ -183,7 +183,8 @@ class DensityArchive(ArchiveBase):
         measures,
         **fields,
     ):
-        """Adds measures to the buffer and updates the density estimator.
+        """Adds measures to the buffer and updates the density estimator if
+        necessary.
 
         The measures are added to the buffer with reservoir sampling to enable
         sampling uniformly from the incoming solutions.
