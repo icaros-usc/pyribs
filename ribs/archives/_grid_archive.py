@@ -515,10 +515,10 @@ class GridArchive(ArchiveBase):
             dict: Information describing the result of the add operation. The
             dict contains the following keys:
 
-            - ``"status"`` (:class:`numpy.ndarray` of :class:`int`): An array of
-              integers that represent the "status" obtained when attempting to
-              insert each solution in the batch. Each item has the following
-              possible values:
+            - ``"status"`` (:class:`numpy.ndarray` of :class:`numpy.int32`): An
+              array of integers that represent the "status" obtained when
+              attempting to insert each solution in the batch. Each item has the
+              following possible values:
 
               - ``0``: The solution was not added to the archive.
               - ``1``: The solution improved the objective value of a cell
