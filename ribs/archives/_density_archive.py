@@ -177,12 +177,11 @@ class DensityArchive(ArchiveBase):
         elif self._density_method == "kde_sklearn":
             if self.buffer.shape[0] == 0:
                 return np.zeros(measures.shape[0], dtype=measures.dtype)
+            # Note that this is log density with some normalization too.
             kde = KernelDensity(
                 bandwidth=self._bandwidth,
                 **self._sklearn_kwargs,
-            ).fit(
-                self.buffer
-            )  # Note that this is log density with some normalization added on.
+            ).fit(self.buffer)
             return kde.score_samples(measures).astype(self._measure_dtype)
         else:
             raise ValueError(f"Unknown density_method '{self._density_method}'")
