@@ -81,6 +81,8 @@ DDS:
 - `dds`: Density Descent Search (Lee 2024; https://arxiv.org/abs/2312.11331)
   with a KDE as the density estimator. Uses DensityArchive and
   EvolutionStrategyEmitter with DensityRanker.
+- `dds_kde_sklearn`: Density Descent Search using scikit-learn's KernelDensity
+  as the density estimator.
 
 Outputs are saved in the `sphere_output/` directory by default. The archive is
 saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
