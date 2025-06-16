@@ -39,6 +39,11 @@ def gaussian_kde_measures(measures, buffer, h):
     return t / (buffer.shape[0] * h)
 
 
+# Developer Notes:
+# - The documentation for this class is hacked -- to add new methods, manually
+#   modify the template in docs/_templates/autosummary/class.rst
+
+
 class DensityArchive(ArchiveBase):
     """An archive that models the density of solutions in measure space.
 

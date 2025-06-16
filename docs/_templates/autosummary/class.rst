@@ -13,6 +13,9 @@
    {%- if name == "ArchiveDataFrame" %}
    :no-inherited-members:
    :members:
+   {%- elif name == "DensityArchive" %}
+   :no-inherited-members:
+   :members: add, compute_density, buffer, empty, measure_dim, objective_dim, solution_dim
    {% endif %}
 
    {% block methods %}
@@ -23,6 +26,9 @@
    {% if name == "ArchiveDataFrame" %}
        ~{{ name }}.get_field
        ~{{ name }}.iterelites
+   {% elif name == "DensityArchive" %}
+       ~{{ name }}.add
+       ~{{ name }}.compute_density
    {% else %}
      {% for item in all_methods %}
        {%- if not item.startswith('_') or item in ['__len__',
@@ -47,6 +53,12 @@
 
    .. autosummary::
    {% if name == "ArchiveDataFrame" %}
+   {% elif name == "DensityArchive" %}
+       ~{{ name }}.buffer
+       ~{{ name }}.empty
+       ~{{ name }}.measure_dim
+       ~{{ name }}.objective_dim
+       ~{{ name }}.solution_dim
    {% else %}
      {% for item in attributes %}
        ~{{ name }}.{{ item }}
