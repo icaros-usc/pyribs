@@ -39,9 +39,6 @@ def gaussian_kde_measures(measures, buffer, h):
     return t / (buffer.shape[0] * h)
 
 
-# TODO: Comment out CNF code for now.
-
-
 class DensityArchive(ArchiveBase):
     """An archive that models the density of solutions in measure space.
 
@@ -263,15 +260,16 @@ class DensityArchive(ArchiveBase):
             n_remaining -= skip
             self._n_skip -= skip
 
-        # Training CNF.
-        if self._density_method == "fm":
-            for _ in range(20):
-                samples = np.random.randint(0, self._n_occupied, (256,))
-                x = torch.from_numpy(self._buffer[samples]).to(
-                    self._device, torch.float32)
+        # TODO
+        #  # Training CNF.
+        #  if self._density_method == "fm":
+        #      for _ in range(20):
+        #          samples = np.random.randint(0, self._n_occupied, (256,))
+        #          x = torch.from_numpy(self._buffer[samples]).to(
+        #              self._device, torch.float32)
 
-                self._fm_opt.zero_grad()
-                self._fm_loss(x).backward()
-                self._fm_opt.step()
+        #          self._fm_opt.zero_grad()
+        #          self._fm_loss(x).backward()
+        #          self._fm_opt.step()
 
         return add_info
