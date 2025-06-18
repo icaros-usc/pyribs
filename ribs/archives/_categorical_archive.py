@@ -460,7 +460,6 @@ class CategoricalArchive(ArchiveBase):
             ValueError: ``objective`` or ``measures`` has non-finite values (inf
                 or NaN).
         """
-        # TODO: Validation?
         data = validate_batch(
             self,
             {
@@ -603,7 +602,6 @@ class CategoricalArchive(ArchiveBase):
             ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
                 has non-finite values.
         """
-        # TODO: Validation?
         data = validate_single(
             self,
             {
