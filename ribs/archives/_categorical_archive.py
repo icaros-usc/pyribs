@@ -2,32 +2,28 @@
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
-                         check_shape, validate_batch, validate_single)
+from ribs._utils import (check_batch_shape, check_shape, validate_batch,
+                         validate_single)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
+from ribs.archives._grid_archive import GridArchive
 from ribs.archives._utils import (fill_sentinel_values, parse_dtype,
                                   validate_cma_mae_settings)
 
 
 class CategoricalArchive(ArchiveBase):
     # pylint: disable = too-many-public-methods
-    # TODO: docstring
     """An archive where each dimension is divided into categories.
 
-    This archive is the container described in `Mouret 2015
-    <https://arxiv.org/pdf/1504.04909.pdf>`_. It can be visualized as an
-    n-dimensional grid in the measure space that is divided into a certain
-    number of cells in each dimension. Each cell contains an elite, i.e., a
+    This archive is similar to a :class:`~ribs.archives.GridArchive`, except
+    that each measure is a categorical variable. Just like GridArchive, it can
+    be visualized as an n-dimensional grid in the measure space that is divided
+    into cells along each dimension. Each cell contains an elite, i.e., a
     solution that *maximizes* the objective function and has measures that lie
-    within that cell.
-
-    This archive also implements the idea of *soft archives* that have
-    *thresholds*, as introduced in `Fontaine 2023
-    <https://arxiv.org/abs/2205.10752>`_. To learn more about thresholds,
-    including the ``learning_rate`` and ``threshold_min`` parameters, please
-    refer to the tutorial :doc:`/tutorials/cma_mae`.
+    within that cell. This archive also implements the idea of *soft archives*
+    that have *thresholds*, as introduced in `Fontaine 2023
+    <https://arxiv.org/abs/2205.10752>`_.
 
     By default, this archive stores the following data fields: ``solution``,
     ``objective``, ``measures``, ``threshold``, and ``index``. The ``threshold``
@@ -35,7 +31,9 @@ class CategoricalArchive(ArchiveBase):
     into a cell, while the integer ``index`` uniquely identifies each cell.
 
     Args:
-        solution_dim (int): Dimensionality of the solution space.
+        solution_dim (int or tuple of int): Dimensionality of the solution
+            space. Scalar or multi-dimensional solution shapes are allowed by
+            passing an empty tuple or tuple of integers, respectively.
         categories (list of list of any): The name of each category for each
             dimension of the measure space. The length of this list is the
             dimensionality of the measure space. An example is ``[["A", "B",
@@ -58,11 +56,13 @@ class CategoricalArchive(ArchiveBase):
             ``objective - (-300)``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
-        dtype (str or data-type or dict): Data type of the solutions,
-            objectives, and measures. This can be ``"f"`` / ``np.float32``,
-            ``"d"`` / ``np.float64``, or a dict specifying separate dtypes, of
-            the form ``{"solution": <dtype>, "objective": <dtype>, "measures":
-            <dtype>}``.
+        dtype (str or data-type or dict): There are two options for this
+            parameter. First, it can be just the data type of the solutions and
+            objectives, with the measures defaulting to a dtype of ``object``.
+            In this case, ``dtype`` can be ``"f"`` / ``np.float32`` or ``"d"`` /
+            ``np.float64``. Second, ``dtype`` can be a dict specifying separate
+            dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
+            "measures": <dtype>}``.
         extra_fields (dict): Description of extra fields of data that is stored
             next to elite data like solutions and objectives. The description is
             a dict mapping from a field name (str) to a tuple of ``(shape,
@@ -74,7 +74,6 @@ class CategoricalArchive(ArchiveBase):
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
-        ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
     def __init__(
@@ -110,16 +109,14 @@ class CategoricalArchive(ArchiveBase):
         if reserved_fields & extra_fields.keys():
             raise ValueError("The following names are not allowed in "
                              f"extra_fields: {reserved_fields}")
-        #  dtype = parse_dtype(dtype)
-        # TODO
-        # solution can be any dtype
-        # measures can be any dtype
-        # objective must be floating
-        dtype = {
-            "solution": object,
-            "measures": object,
-            "objective": np.float64
-        }
+        if not isinstance(dtype, dict):
+            # Make measures default to `object` dtype.
+            dtype = {
+                "solution": dtype,
+                "measures": object,
+                "objective": dtype,
+            }
+        dtype = parse_dtype(dtype)
         self._store = ArrayStore(
             field_desc={
                 "solution": (self.solution_dim, dtype["solution"]),
@@ -320,54 +317,13 @@ class CategoricalArchive(ArchiveBase):
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        # TODO: Remove checks.
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
 
-    # TODO: Turn these into utils?
-    def grid_to_int_index(self, grid_indices):
-        """Converts a batch of grid indices into a batch of integer indices.
-
-        Refer to :meth:`index_of` for more info.
-
-        Args:
-            grid_indices (array-like): (batch_size, :attr:`measure_dim`)
-                array of indices in the archive grid.
-        Returns:
-            numpy.ndarray: (batch_size,) array of integer indices.
-        Raises:
-            ValueError: ``grid_indices`` is not of shape (batch_size,
-                :attr:`measure_dim`)
-        """
-        grid_indices = np.asarray(grid_indices)
-        check_batch_shape(grid_indices, "grid_indices", self.measure_dim,
-                          "measure_dim")
-
-        return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
-
-    def int_to_grid_index(self, int_indices):
-        """Converts a batch of indices into indices in the archive's grid.
-
-        Refer to :meth:`index_of` for more info.
-
-        Args:
-            int_indices (array-like): (batch_size,) array of integer
-                indices such as those output by :meth:`index_of`.
-        Returns:
-            numpy.ndarray: (batch_size, :attr:`measure_dim`) array of indices
-            in the archive grid.
-        Raises:
-            ValueError: ``int_indices`` is not of shape (batch_size,).
-        """
-        int_indices = np.asarray(int_indices)
-        check_is_1d(int_indices, "int_indices")
-
-        return np.asarray(np.unravel_index(
-            int_indices,
-            self._dims,
-        )).T.astype(np.int32)
+    # Copy these methods from GridArchive.
+    int_to_grid_index = GridArchive.int_to_grid_index
+    grid_to_int_index = GridArchive.grid_to_int_index
 
     ## Methods for writing to the archive ##
 
@@ -504,6 +460,7 @@ class CategoricalArchive(ArchiveBase):
             ValueError: ``objective`` or ``measures`` has non-finite values (inf
                 or NaN).
         """
+        # TODO: Validation?
         data = validate_batch(
             self,
             {
@@ -646,6 +603,7 @@ class CategoricalArchive(ArchiveBase):
             ValueError: ``objective`` is non-finite (inf or NaN) or ``measures``
                 has non-finite values.
         """
+        # TODO: Validation?
         data = validate_single(
             self,
             {
@@ -745,12 +703,9 @@ class CategoricalArchive(ArchiveBase):
     ## Methods for reading from the archive ##
     ## Refer to ArchiveBase for documentation of these methods. ##
 
-    # TODO: Update checks in each method.
-
     def retrieve(self, measures):
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
 
         occupied, data = self._store.retrieve(self.index_of(measures))
         fill_sentinel_values(occupied, data)
@@ -758,9 +713,8 @@ class CategoricalArchive(ArchiveBase):
         return occupied, data
 
     def retrieve_single(self, measures):
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
 
         occupied, data = self.retrieve(measures[None])
 
