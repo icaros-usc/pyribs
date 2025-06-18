@@ -783,3 +783,89 @@ def test_retessellate_into_smaller_dims():
         measures_batch=[[-0.75, -0.75]],
         grid_indices_batch=[[0, 0]],
     )
+
+
+def test_scalar_solutions():
+    archive = GridArchive(solution_dim=(),
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
+    assert archive.solution_dim == ()
+
+    add_info = archive.add(
+        solution=[1, 2, 3, 4],
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective=[0, 0, 0, 1],
+        measures=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+    )
+    assert (add_info["status"] == 2).all()
+    assert np.isclose(add_info["value"], [0, 0, 0, 1]).all()
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=3,
+        solution_batch=[1, 2, 4],
+        objective_batch=[0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
+    )
+
+
+def test_str_solutions():
+    archive = GridArchive(
+        solution_dim=(),
+        dims=[10, 20],
+        ranges=[(-1, 1), (-2, 2)],
+        dtype={
+            "solution": object,
+            "objective": np.float32,
+            "measures": np.float32
+        },
+    )
+    assert archive.solution_dim == ()
+    assert archive.dtypes["solution"] == np.object_
+
+    add_info = archive.add(
+        solution=["One", "Two", "Three", "Four"],
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective=[0, 0, 0, 1],
+        measures=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+    )
+    assert (add_info["status"] == 2).all()
+    assert np.isclose(add_info["value"], [0, 0, 0, 1]).all()
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=3,
+        solution_batch=["One", "Two", "Four"],
+        objective_batch=[0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
+    )
+
+
+def test_multi_dim_solutions():
+    archive = GridArchive(solution_dim=(2, 3),
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
+    assert archive.solution_dim == (2, 3)
+
+    add_info = archive.add(
+        solution=np.arange(4 * 2 * 3).reshape((4, 2, 3)),
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective=[0, 0, 0, 1],
+        measures=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+    )
+    assert (add_info["status"] == 2).all()
+    assert np.isclose(add_info["value"], [0, 0, 0, 1]).all()
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=3,
+        solution_batch=np.arange(4 * 2 * 3).reshape((4, 2, 3))[[0, 1, 3]],
+        objective_batch=[0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
+    )
