@@ -122,7 +122,8 @@ def validate_batch(archive,
                                      batch_size,
                                      is_1d=False,
                                      extra_msg="")
-            check_finite(arr, "measures")
+            if np.issubdtype(arr.dtype, np.number):
+                check_finite(arr, "measures")
 
         else:
             arr = np.asarray(arr)
@@ -201,7 +202,8 @@ def validate_single(archive, data, none_objective_ok=False):
     data["measures"] = np.asarray(data["measures"])
     check_shape(data["measures"], "measures", archive.measure_dim,
                 "measure_dim")
-    check_finite(data["measures"], "measures")
+    if np.issubdtype(data["measures"].dtype, np.number):
+        check_finite(data["measures"], "measures")
 
     return data
 
