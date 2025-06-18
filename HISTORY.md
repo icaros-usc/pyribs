@@ -43,6 +43,7 @@
 
 #### Documentation
 
+- Add Novelty Search with Kheperax tutorial ({pr}`552`)
 - Add cqd_score example ({pr}`537`)
 - Update sphere example for consistency ({pr}`505`)
 - DQD tutorial edits ({pr}`500`)
