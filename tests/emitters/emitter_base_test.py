@@ -72,6 +72,14 @@ def test_ask_emits_correct_num_sols_on_nonempty_archive(emitter_fixture):
     assert solutions.shape == (batch_size, len(x0))
 
 
+def test_default_ask_dqd_has_correct_sol_shape():
+    archive = GridArchive(solution_dim=(),
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
+    emitter = GaussianEmitter(archive, sigma=0.1, x0=1.0)
+    assert emitter.ask_dqd().shape == (0,)
+
+
 #
 # tell()
 #
@@ -114,6 +122,8 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
                                            sigma0=1.0,
                                            ranker="imp",
                                            batch_size=batch_size)
+    else:
+        raise RuntimeError()
 
     solution_batch = np.ones((batch_size, archive.solution_dim))
     objective_batch = np.ones(batch_size)
