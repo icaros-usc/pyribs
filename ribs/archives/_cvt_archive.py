@@ -66,7 +66,9 @@ class CVTArchive(ArchiveBase):
         :pr:`38`.
 
     Args:
-        solution_dim (int): Dimensionality of the solution space.
+        solution_dim (int or tuple of int): Dimensionality of the solution
+            space. Scalar or multi-dimensional solution shapes are allowed by
+            passing an empty tuple or tuple of integers, respectively.
         cells (int): The number of cells to use in the archive, equivalent to
             the number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
@@ -177,9 +179,9 @@ class CVTArchive(ArchiveBase):
         dtype = parse_dtype(dtype)
         self._store = ArrayStore(
             field_desc={
-                "solution": ((self.solution_dim,), dtype["solution"]),
+                "solution": (self.solution_dim, dtype["solution"]),
                 "objective": ((), dtype["objective"]),
-                "measures": ((self.measure_dim,), dtype["measures"]),
+                "measures": (self.measure_dim, dtype["measures"]),
                 # Must be same dtype as the objective since they share
                 # calculations.
                 "threshold": ((), dtype["objective"]),
