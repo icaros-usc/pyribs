@@ -2,18 +2,18 @@
 from ribs.archives import CategoricalArchive
 
 
-def test_init():
+def test_properties():
     archive = CategoricalArchive(
         solution_dim=(),
         categories=[
-            ["Alpha", "Beta", "Gamma"],
+            ["A", "B", "C"],
             ["One", "Two", "Three", "Four"],
         ],
     )
 
     assert (archive.dims == [3, 4]).all()
     assert archive.categories == [
-        ["Alpha", "Beta", "Gamma"],
+        ["A", "B", "C"],
         ["One", "Two", "Three", "Four"],
     ]
 
@@ -22,13 +22,12 @@ def test_index_of():
     archive = CategoricalArchive(
         solution_dim=(),
         categories=[
-            ["Alpha", "Beta", "Gamma"],
+            ["A", "B", "C"],
             ["One", "Two", "Three", "Four"],
         ],
     )
 
-    indices = archive.index_of([["Alpha", "One"], ["Beta", "Two"],
-                                ["Gamma", "Four"]])
+    indices = archive.index_of([["A", "One"], ["B", "Two"], ["C", "Four"]])
     expected_indices = [
         0,  # [0, 0]
         5,  # [1, 1]
