@@ -6,6 +6,7 @@
 
 #### API
 
+- Add CategoricalArchive ({pr}`549`)
 - Support solutions with non-1D shapes ({pr}`550`)
 - **Backwards-incompatible:** Move cqd_score into a separate function
   ({pr}`537`)
