@@ -120,13 +120,11 @@ class CategoricalArchive(ArchiveBase):
             "measures": object,
             "objective": np.float64
         }
-        solution_dim = (self.solution_dim,) \
-            if isinstance(self.solution_dim, int) else self.solution_dim
         self._store = ArrayStore(
             field_desc={
-                "solution": (solution_dim, dtype["solution"]),
+                "solution": (self.solution_dim, dtype["solution"]),
                 "objective": ((), dtype["objective"]),
-                "measures": ((self.measure_dim,), dtype["measures"]),
+                "measures": (self.measure_dim, dtype["measures"]),
                 # Must be same dtype as the objective since they share
                 # calculations.
                 "threshold": ((), dtype["objective"]),
