@@ -61,7 +61,9 @@ class ProximityArchive(ArchiveBase):
     identifies each cell.
 
     Args:
-        solution_dim (int): Dimensionality of the solution space.
+        solution_dim (int or tuple of int): Dimensionality of the solution
+            space. Scalar or multi-dimensional solution shapes are allowed by
+            passing an empty tuple or tuple of integers, respectively.
         measure_dim (int): Dimensionality of the measure space.
         k_neighbors (int): The maximum number of nearest neighbors for computing
             novelty (`maximum` here is indicated since there may be fewer than
@@ -152,9 +154,9 @@ class ProximityArchive(ArchiveBase):
         dtype = parse_dtype(dtype)
         self._store = ArrayStore(
             field_desc={
-                "solution": ((self.solution_dim,), dtype["solution"]),
+                "solution": (self.solution_dim, dtype["solution"]),
                 "objective": ((), dtype["objective"]),
-                "measures": ((self.measure_dim,), dtype["measures"]),
+                "measures": (self.measure_dim, dtype["measures"]),
                 **extra_fields,
             },
             capacity=initial_capacity,

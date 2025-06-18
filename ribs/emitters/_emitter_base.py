@@ -1,4 +1,5 @@
 """Provides EmitterBase."""
+import numbers
 from abc import ABC
 
 import numpy as np
@@ -16,8 +17,8 @@ class EmitterBase(ABC):
     Args:
         archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
-        solution_dim (int): The dimensionality of solutions produced by this
-            emitter.
+        solution_dim (int or tuple of int): The dimensionality of solutions
+            produced by this emitter.
         bounds (None or array-like): Bounds of the solution space. Pass None to
             indicate there are no bounds. Alternatively, pass an array-like to
             specify the bounds for each dim. Each element in this array-like can
@@ -73,7 +74,8 @@ class EmitterBase(ABC):
 
     @property
     def solution_dim(self):
-        """int: The dimension of solutions produced by this emitter."""
+        """int or tuple of int: Dimensionality of solutions produced by this
+        emitter."""
         return self._solution_dim
 
     @property
@@ -101,7 +103,10 @@ class EmitterBase(ABC):
 
         Returns an empty array by default.
         """
-        return np.empty((0, self.solution_dim),
+        solution_dim = (self.solution_dim,) \
+                       if isinstance(self.solution_dim, numbers.Integral) \
+                       else self.solution_dim
+        return np.empty((0,) + solution_dim,
                         dtype=self.archive.dtypes["solution"])
 
     def tell(self, solution, objective, measures, add_info, **fields):
@@ -131,7 +136,10 @@ class EmitterBase(ABC):
         This method only needs to be implemented by emitters used in DQD. The
         method returns an empty array by default.
         """
-        return np.empty((0, self.solution_dim),
+        solution_dim = (self.solution_dim,) \
+                       if isinstance(self.solution_dim, numbers.Integral) \
+                       else self.solution_dim
+        return np.empty((0,) + solution_dim,
                         dtype=self.archive.dtypes["solution"])
 
     def tell_dqd(self, solution, objective, measures, jacobian, add_info,
