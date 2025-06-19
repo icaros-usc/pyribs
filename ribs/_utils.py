@@ -4,21 +4,6 @@ import numbers
 import numpy as np
 
 
-def np_scalar(scalar, dtype):
-    """Casts the scalar to the given numpy dtype.
-
-    This is useful for making sure all our scalars are in the correct dtype.
-
-    It is possible to just use np.array(scalar, dtype=dtype) since
-    zero-dimensional arrays behave like scalars, but the scalar would still show
-    up as an array if calling type().
-
-    It is also possible to use np.array(scalar, dtype=dtype).item(), but item()
-    converts outputs to standard Python objects, not numpy scalars.
-    """
-    return np.array([scalar], dtype=dtype)[0]
-
-
 def check_finite(x, name):
     """Checks that x is finite (i.e. not infinity or NaN).
 
@@ -76,10 +61,10 @@ def check_solution_batch_dim(array,
                              batch_size,
                              is_1d=False,
                              extra_msg=""):
-    """Checks the batch dimension of an array with respect to solution_batch."""
+    """Checks the batch dimension of an array with respect to the solutions."""
     if array.shape[0] != batch_size:
         raise ValueError(f"{array_name} does not match the batch dimension of "
-                         "solution_batch -- since solution_batch has shape "
+                         "solution -- since solution has shape "
                          f"({batch_size}, ..), {array_name} should have shape "
                          f"({batch_size},{'' if is_1d else ' ..'}), but it has "
                          f"shape {array.shape}.{extra_msg}")
@@ -101,7 +86,7 @@ def validate_batch(archive,
     array. We then perform checks on the array, including seeing if its batch
     size matches the batch size of data["solution"].
     """
-    # Process and validate solution_batch.
+    # Process and validate solutions.
     data["solution"] = np.asarray(data["solution"])
     check_batch_shape(data["solution"], "solution", archive.solution_dim,
                       "solution_dim", "")
@@ -210,8 +195,7 @@ def validate_single(archive, data, none_objective_ok=False):
         if not none_objective_ok:
             raise ValueError("objective cannot be None")
     else:
-        data["objective"] = np_scalar(data["objective"],
-                                      archive.dtypes["objective"])
+        data["objective"] = archive.dtypes["objective"](data["objective"])
         check_finite(data["objective"], "objective")
 
     data["measures"] = np.asarray(data["measures"])

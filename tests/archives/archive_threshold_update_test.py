@@ -2,10 +2,18 @@
 import numpy as np
 import pytest
 
-from ribs.archives import GridArchive
+from ribs.archives import CVTArchive, GridArchive
 
-# pylint: disable-next = protected-access
-_compute_thresholds = GridArchive._compute_thresholds
+
+@pytest.fixture(params=["grid", "cvt"])
+def _compute_thresholds(request):
+    """Grabs the _compute_thresholds func from archives that use it."""
+    return {
+        # pylint: disable = protected-access
+        "grid": GridArchive._compute_thresholds,
+        "cvt": CVTArchive._compute_thresholds,
+    }[request.param]
+
 
 # pylint: disable = redefined-outer-name, missing-function-docstring
 
@@ -32,7 +40,7 @@ def calc_expected_threshold(additions, cell_value, learning_rate):
 
 
 @pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
-def test_threshold_update_for_one_cell(learning_rate):
+def test_threshold_update_for_one_cell(learning_rate, _compute_thresholds):
     cur_threshold = np.full(5, -3.1)
     objective = np.array([0.1, 0.3, 0.9, 400.0, 42.0])
     indices = np.zeros(5, dtype=np.int32)
@@ -48,7 +56,8 @@ def test_threshold_update_for_one_cell(learning_rate):
 
 
 @pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
-def test_threshold_update_for_multiple_cells(learning_rate):
+def test_threshold_update_for_multiple_cells(learning_rate,
+                                             _compute_thresholds):
     cur_threshold = np.repeat([-3.1, 0.4, 2.9], 5)
     objective = np.array([
         0.1, 0.3, 0.9, 400.0, 42.0, 0.44, 0.53, 0.51, 0.80, 0.71, 33.6, 61.78,
@@ -68,7 +77,7 @@ def test_threshold_update_for_multiple_cells(learning_rate):
     assert np.all(np.isclose(result_test, result_true))
 
 
-def test_threshold_update_for_empty_objective_and_index():
+def test_threshold_update_for_empty_objective_and_index(_compute_thresholds):
     cur_threshold = np.array([])
     objective = np.array([])  # Empty objective.
     indices = np.array([], dtype=np.int32)  # Empty index.

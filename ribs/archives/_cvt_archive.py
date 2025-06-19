@@ -7,21 +7,18 @@ from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from scipy.stats.qmc import Halton, Sobol
 from sklearn.cluster import k_means
 
-from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
-                         check_shape, np_scalar, validate_batch,
-                         validate_single)
+from ribs._utils import (check_batch_shape, check_finite, check_shape,
+                         validate_batch, validate_single)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
-from ribs.archives._cqd_score_result import CQDScoreResult
 from ribs.archives._utils import (fill_sentinel_values, parse_dtype,
                                   validate_cma_mae_settings)
 
 
 class CVTArchive(ArchiveBase):
     # pylint: disable = too-many-public-methods
-    """An archive that divides the entire measure space into a fixed number of
-    cells.
+    """An archive that tessellates the measure space with centroids.
 
     This archive originates in `Vassiliades 2018
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
@@ -69,7 +66,9 @@ class CVTArchive(ArchiveBase):
         :pr:`38`.
 
     Args:
-        solution_dim (int): Dimensionality of the solution space.
+        solution_dim (int or tuple of int): Dimensionality of the solution
+            space. Scalar or multi-dimensional solution shapes are allowed by
+            passing an empty tuple or tuple of integers, respectively.
         cells (int): The number of cells to use in the archive, equivalent to
             the number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
@@ -180,9 +179,9 @@ class CVTArchive(ArchiveBase):
         dtype = parse_dtype(dtype)
         self._store = ArrayStore(
             field_desc={
-                "solution": ((self.solution_dim,), dtype["solution"]),
+                "solution": (self.solution_dim, dtype["solution"]),
                 "objective": ((), dtype["objective"]),
-                "measures": ((self.measure_dim,), dtype["measures"]),
+                "measures": (self.measure_dim, dtype["measures"]),
                 # Must be same dtype as the objective since they share
                 # calculations.
                 "threshold": ((), dtype["objective"]),
@@ -198,15 +197,13 @@ class CVTArchive(ArchiveBase):
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
             learning_rate, threshold_min, self.dtypes["threshold"])
-        self._qd_score_offset = np_scalar(qd_score_offset,
-                                          self.dtypes["objective"])
+        self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
 
-        # Set up statistics.
-        self._stats = None
+        # Set up statistics -- objective_sum is the sum of all objective values
+        # in the archive; it is useful for computing qd_score and obj_mean.
         self._best_elite = None
-        # Sum of all objective values in the archive; useful for computing
-        # qd_score and obj_mean.
         self._objective_sum = None
+        self._stats = None
         self._stats_reset()
 
         # Apply default args for k-means. Users can easily override these,
@@ -305,16 +302,16 @@ class CVTArchive(ArchiveBase):
         return self._store.field_list_with_index
 
     @property
+    def dtypes(self):
+        return self._store.dtypes_with_index
+
+    @property
     def stats(self):
         return self._stats
 
     @property
     def empty(self):
         return len(self._store) == 0
-
-    @property
-    def dtypes(self):
-        return self._store.dtypes_with_index
 
     ## Properties that are not in ArchiveBase ##
     ## Roughly ordered by the parameter list in the constructor. ##
@@ -407,50 +404,42 @@ class CVTArchive(ArchiveBase):
 
     def _stats_reset(self):
         """Resets the archive stats."""
-        zero = np_scalar(0.0, dtype=self.dtypes["objective"])
-
+        self._best_elite = None
+        self._objective_sum = self.dtypes["objective"](0.0)
         self._stats = ArchiveStats(
             num_elites=0,
-            coverage=zero,
-            qd_score=zero,
-            norm_qd_score=zero,
+            coverage=self.dtypes["objective"](0.0),
+            qd_score=self.dtypes["objective"](0.0),
+            norm_qd_score=self.dtypes["objective"](0.0),
             obj_max=None,
             obj_mean=None,
         )
-        self._best_elite = None
-        self._objective_sum = zero
 
     def _stats_update(self, new_objective_sum, new_best_index):
         """Updates statistics based on a new sum of objective values
         (new_objective_sum) and the index of a potential new best elite
         (new_best_index)."""
-        self._objective_sum = new_objective_sum
-        new_qd_score = (self._objective_sum -
-                        np_scalar(len(self), dtype=self.dtypes["objective"]) *
-                        self._qd_score_offset)
-
         _, new_best_elite = self._store.retrieve([new_best_index])
+        new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
         if (self._stats.obj_max is None or
                 new_best_elite["objective"] > self._stats.obj_max):
-            # Convert batched values to single values.
-            new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
-
-            new_obj_max = new_best_elite["objective"]
             self._best_elite = new_best_elite
+            new_obj_max = new_best_elite["objective"]
         else:
             new_obj_max = self._stats.obj_max
 
+        self._objective_sum = new_objective_sum
+        new_qd_score = (
+            self._objective_sum -
+            self.dtypes["objective"](len(self)) * self._qd_score_offset)
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=np_scalar(len(self) / self.cells,
-                               dtype=self.dtypes["objective"]),
+            coverage=self.dtypes["objective"](len(self) / self.cells),
             qd_score=new_qd_score,
-            norm_qd_score=np_scalar(new_qd_score / self.cells,
-                                    dtype=self.dtypes["objective"]),
+            norm_qd_score=self.dtypes["objective"](new_qd_score / self.cells),
             obj_max=new_obj_max,
-            obj_mean=np_scalar(self._objective_sum / len(self),
-                               dtype=self.dtypes["objective"]),
+            obj_mean=self.dtypes["objective"](self._objective_sum / len(self)),
         )
 
     def index_of(self, measures):
@@ -564,7 +553,7 @@ class CVTArchive(ArchiveBase):
         # -np.inf. This is because the case with threshold_min = -np.inf is
         # handled separately since we compute the new threshold based on the max
         # objective in each cell in that case.
-        ratio = np_scalar(1.0 - learning_rate, dtype=dtype)**objective_sizes
+        ratio = dtype(1.0 - learning_rate)**objective_sizes
         new_threshold = (ratio * cur_threshold +
                          (objective_sums / objective_sizes) * (1 - ratio))
 
@@ -609,10 +598,10 @@ class CVTArchive(ArchiveBase):
             dict: Information describing the result of the add operation. The
             dict contains the following keys:
 
-            - ``"status"`` (:class:`numpy.ndarray` of :class:`int`): An array of
-              integers that represent the "status" obtained when attempting to
-              insert each solution in the batch. Each item has the following
-              possible values:
+            - ``"status"`` (:class:`numpy.ndarray` of :class:`numpy.int32`): An
+              array of integers that represent the "status" obtained when
+              attempting to insert each solution in the batch. Each item has the
+              following possible values:
 
               - ``0``: The solution was not added to the archive.
               - ``1``: The solution improved the objective value of a cell
@@ -703,7 +692,7 @@ class CVTArchive(ArchiveBase):
         # If threshold_min is -inf, then we want CMA-ME behavior, which computes
         # the improvement value of new solutions w.r.t zero. Otherwise, we
         # compute improvement with respect to threshold_min.
-        cur_threshold[is_new] = (np_scalar(0.0, dtype=self.dtypes["threshold"])
+        cur_threshold[is_new] = (self.dtypes["threshold"](0.0)
                                  if self.threshold_min == -np.inf else
                                  self.threshold_min)
         add_info["value"] = data["objective"] - cur_threshold
@@ -838,9 +827,8 @@ class CVTArchive(ArchiveBase):
             # If threshold_min is -inf, then we want CMA-ME behavior, which
             # computes the improvement value with a threshold of zero for new
             # solutions. Otherwise, we will set cur_threshold to threshold_min.
-            cur_threshold = (np_scalar(0.0, dtype=self.dtypes["threshold"])
-                             if self.threshold_min == -np.inf else
-                             self.threshold_min)
+            cur_threshold = (self.dtypes["threshold"](0.0) if self.threshold_min
+                             == -np.inf else self.threshold_min)
 
         # Retrieve candidate objective.
         objective = data["objective"]
@@ -886,8 +874,8 @@ class CVTArchive(ArchiveBase):
             })
 
             # Update stats.
-            cur_objective = (cur_data["objective"] if cur_occupied else
-                             np_scalar(0.0, self.dtypes["objective"]))
+            cur_objective = (cur_data["objective"][0]
+                             if cur_occupied else self.dtypes["objective"](0.0))
             self._stats_update(self._objective_sum + objective - cur_objective,
                                index)
 
@@ -934,140 +922,3 @@ class CVTArchive(ArchiveBase):
         selected_indices = self._store.occupied_list[random_indices]
         _, elites = self._store.retrieve(selected_indices)
         return elites
-
-    ## CQD Score ##
-
-    def cqd_score(self,
-                  iterations,
-                  target_points,
-                  penalties,
-                  obj_min,
-                  obj_max,
-                  dist_max=None,
-                  dist_ord=None):
-        """Computes the CQD score of the archive.
-
-        The Continuous Quality Diversity (CQD) score was introduced in
-        `Kent 2022 <https://dl.acm.org/doi/10.1145/3520304.3534018>`_.
-
-        .. note:: This method by default assumes that the archive has an
-            ``upper_bounds`` and ``lower_bounds`` property which delineate the
-            bounds of the measure space, as is the case in
-            :class:`~ribs.archives.GridArchive`,
-            :class:`~ribs.archives.CVTArchive`, and
-            :class:`~ribs.archives.SlidingBoundariesArchive`.  If this is not
-            the case, ``dist_max`` must be passed in, and ``target_points`` must
-            be an array of custom points.
-
-        Args:
-            iterations (int): Number of times to compute the CQD score. The mean
-                CQD score across these iterations is returned.
-            target_points (int or array-like): Number of target points to
-                generate, or an (iterations, n, measure_dim) array which
-                lists n target points to list on each iteration. When an int is
-                passed, the points are sampled uniformly within the bounds of
-                the measure space.
-            penalties (int or array-like): Number of penalty values over which
-                to compute the score (the values are distributed evenly over the
-                range [0,1]). Alternatively, this may be a 1D array which
-                explicitly lists the penalty values. Known as :math:`\\theta` in
-                Kent 2022.
-            obj_min (float): Minimum objective value, used when normalizing the
-                objectives.
-            obj_max (float): Maximum objective value, used when normalizing the
-                objectives.
-            dist_max (float): Maximum distance between points in measure space.
-                Defaults to the distance between the extremes of the measure
-                space bounds (the type of distance is computed with the order
-                specified by ``dist_ord``). Known as :math:`\\delta_{max}` in
-                Kent 2022.
-            dist_ord: Order of the norm to use for calculating measure space
-                distance; this is passed to :func:`numpy.linalg.norm` as the
-                ``ord`` argument. See :func:`numpy.linalg.norm` for possible
-                values. The default is to use Euclidean distance (L2 norm).
-        Returns:
-            The mean CQD score obtained with ``iterations`` rounds of
-            calculations.
-        Raises:
-            RuntimeError: The archive does not have the bounds properties
-                mentioned above, and dist_max is not specified or the target
-                points are not provided.
-            ValueError: target_points or penalties is an array with the wrong
-                shape.
-        """
-        if (not (hasattr(self, "upper_bounds") and
-                 hasattr(self, "lower_bounds")) and
-            (dist_max is None or np.isscalar(target_points))):
-            raise RuntimeError(
-                "When the archive does not have lower_bounds and "
-                "upper_bounds properties, dist_max must be specified, "
-                "and target_points must be an array")
-
-        if np.isscalar(target_points):
-            # pylint: disable = no-member
-            target_points = self._rng.uniform(
-                low=self.lower_bounds,
-                high=self.upper_bounds,
-                size=(iterations, target_points, self.measure_dim),
-            )
-        else:
-            # Copy since this is returned.
-            target_points = np.copy(target_points)
-            if (target_points.ndim != 3 or
-                    target_points.shape[0] != iterations or
-                    target_points.shape[2] != self.measure_dim):
-                raise ValueError(
-                    "Expected target_points to be a 3D array with "
-                    f"shape ({iterations}, n, {self.measure_dim}) "
-                    "(i.e. shape (iterations, n, measure_dim)) but it had "
-                    f"shape {target_points.shape}")
-
-        if dist_max is None:
-            # pylint: disable = no-member
-            dist_max = np.linalg.norm(self.upper_bounds - self.lower_bounds,
-                                      ord=dist_ord)
-
-        if np.isscalar(penalties):
-            penalties = np.linspace(0, 1, penalties)
-        else:
-            penalties = np.copy(penalties)  # Copy since this is returned.
-            check_is_1d(penalties, "penalties")
-
-        objective_batch = self._store.data("objective")
-        measures_batch = self._store.data("measures")
-
-        norm_objectives = objective_batch / (obj_max - obj_min)
-
-        scores = np.zeros(iterations)
-
-        for itr in range(iterations):
-            # Distance calculation -- start by taking the difference between
-            # each measure i and all the target points.
-            distances = measures_batch[:, None] - target_points[itr]
-
-            # (len(archive), n_target_points) array of distances.
-            distances = np.linalg.norm(distances, ord=dist_ord, axis=2)
-
-            norm_distances = distances / dist_max
-
-            for penalty in penalties:
-                # Known as omega in Kent 2022 -- a (len(archive),
-                # n_target_points) array.
-                values = norm_objectives[:, None] - penalty * norm_distances
-
-                # (n_target_points,) array.
-                max_values_per_target = np.max(values, axis=0)
-
-                scores[itr] += np.sum(max_values_per_target)
-
-        return CQDScoreResult(
-            iterations=iterations,
-            mean=np.mean(scores),
-            scores=scores,
-            target_points=target_points,
-            penalties=penalties,
-            obj_min=obj_min,
-            obj_max=obj_max,
-            dist_max=dist_max,
-            dist_ord=dist_ord,
-        )

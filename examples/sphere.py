@@ -77,6 +77,13 @@ Novelty Search:
   competition turned on. Thus, the archive returns two-stage improvement
   information that is fed to the EvolutionStrategyEmitter just like in CMA-ME.
 
+DDS:
+- `dds`: Density Descent Search (Lee 2024; https://arxiv.org/abs/2312.11331)
+  with a KDE as the density estimator. Uses DensityArchive and
+  EvolutionStrategyEmitter with DensityRanker.
+- `dds_kde_sklearn`: Density Descent Search using scikit-learn's KernelDensity
+  as the density estimator.
+
 Outputs are saved in the `sphere_output/` directory by default. The archive is
 saved as a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the
 heatmap are saved as `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about
@@ -111,7 +118,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 
-from ribs.archives import CVTArchive, GridArchive, ProximityArchive
+from ribs.archives import (CVTArchive, DensityArchive, GridArchive,
+                           ProximityArchive)
 from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
                            GradientArborescenceEmitter, GradientOperatorEmitter,
                            IsoLineEmitter)
@@ -631,12 +639,11 @@ CONFIG = {
 
     ## Novelty Search ##
     "ns_cma": {
+        # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
         "is_dqd": False,
         "archive": {
             "class": ProximityArchive,
             "kwargs": {
-                # Hyperparameters from Density Descent paper:
-                # https://arxiv.org/abs/2312.11331
                 "k_neighbors": 15,
                 "novelty_threshold": 0.037 * 512,
             }
@@ -688,6 +695,86 @@ CONFIG = {
                 "selection_rule": "filter",
                 "restart_rule": "no_improvement",
                 "batch_size": 36,
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+
+    ## DDS ##
+    "dds": {
+        # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
+        "is_dqd": False,
+        # In DDS, the DensityArchive does not store any solutions, so emitters
+        # must use the result archive instead.
+        "pass_result_archive_to_emitters": True,
+        "archive": {
+            "class": DensityArchive,
+            "kwargs": {
+                "buffer_size": 10000,
+                "density_method": "kde",
+                "bandwidth": 25.6,
+            }
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
+            }
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 1.5,
+                "ranker": "density",
+                "selection_rule": "mu",
+                "restart_rule": "basic",
+                "batch_size": 36
+            },
+            "num_emitters": 15
+        }],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {}
+        }
+    },
+    "dds_kde_sklearn": {
+        # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
+        "is_dqd": False,
+        # In DDS, the DensityArchive does not store any solutions, so emitters
+        # must use the result archive instead.
+        "pass_result_archive_to_emitters": True,
+        "archive": {
+            "class": DensityArchive,
+            "kwargs": {
+                # `density_method` and `sklearn_kwargs` are the only differences
+                # from the `dds` config above. `kde_sklearn` tends to be slower
+                # but it has more options available.
+                "buffer_size": 10000,
+                "density_method": "kde_sklearn",
+                "bandwidth": 25.6,
+                "sklearn_kwargs": {
+                    "kernel": "gaussian",
+                }
+            }
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
+            }
+        },
+        "emitters": [{
+            "class": EvolutionStrategyEmitter,
+            "kwargs": {
+                "sigma0": 1.5,
+                "ranker": "density",
+                "selection_rule": "mu",
+                "restart_rule": "basic",
+                "batch_size": 36
             },
             "num_emitters": 15
         }],
@@ -778,9 +865,15 @@ def create_scheduler(config, algorithm, seed=None):
     # Create archive.
     archive_class = config["archive"]["class"]
     if archive_class == ProximityArchive:
-        # ProximityArchive takes `measure_dim` instead of `ranges`.
+        # Takes `measure_dim` instead of `ranges`.
         archive = archive_class(
             solution_dim=solution_dim,
+            measure_dim=len(bounds),
+            seed=seed,
+            **config["archive"]["kwargs"],
+        )
+    elif archive_class == DensityArchive:
+        archive = archive_class(
             measure_dim=len(bounds),
             seed=seed,
             **config["archive"]["kwargs"],
@@ -799,10 +892,19 @@ def create_scheduler(config, algorithm, seed=None):
     else:
         result_archive = config["result_archive"]["class"](
             solution_dim=solution_dim,
+            # Note that using ranges here means we assume the result archive is
+            # a GridArchive or CVTArchive. This will need to be modified for
+            # other result archives.
             ranges=bounds,
             seed=seed,
             **config["result_archive"]["kwargs"],
         )
+
+    # Usually, emitters take in the archive. However, it may sometimes be
+    # necessary to take in the result_archive, such as in DDS.
+    archive_for_emitter = (result_archive
+                           if config.get("pass_result_archive_to_emitters") else
+                           archive)
 
     # Create emitters. Each emitter needs a different seed so that they do not
     # all do the same thing, hence we create an rng here to generate seeds. The
@@ -813,7 +915,7 @@ def create_scheduler(config, algorithm, seed=None):
         emitter_class = e["class"]
         emitters += [
             emitter_class(
-                archive,
+                archive_for_emitter,
                 x0=initial_sol,
                 **e["kwargs"],
                 seed=s,

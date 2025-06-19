@@ -3,8 +3,7 @@ import numbers
 
 import numpy as np
 
-from ribs._utils import (check_batch_shape, check_shape, np_scalar,
-                         validate_batch)
+from ribs._utils import check_batch_shape, check_shape, validate_batch
 from ribs.emitters._emitter_base import EmitterBase
 
 
@@ -102,6 +101,7 @@ class GradientOperatorEmitter(EmitterBase):
 
     def __init__(self,
                  archive,
+                 *,
                  sigma,
                  sigma_g,
                  initial_solutions=None,
@@ -141,10 +141,9 @@ class GradientOperatorEmitter(EmitterBase):
                               archive.solution_dim, "archive.solution_dim")
 
         self._rng = np.random.default_rng(seed)
-        self._sigma = np_scalar(sigma,
-                                dtype=archive.dtypes["solution"]) if isinstance(
-                                    sigma, numbers.Real) else np.array(sigma)
-        self._sigma_g = np_scalar(sigma_g, dtype=archive.dtypes["solution"])
+        self._sigma = archive.dtypes["solution"](sigma) if isinstance(
+            sigma, numbers.Real) else np.array(sigma)
+        self._sigma_g = archive.dtypes["solution"](sigma_g)
         self._line_sigma = line_sigma
         self._use_isolinedd = operator_type != 'isotropic'
         self._measure_gradients = measure_gradients

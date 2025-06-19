@@ -691,165 +691,6 @@ def test_nonfinite_inputs(data):
         data.archive.index_of_single(data.measures)
 
 
-def test_cqd_score_detects_wrong_shapes(data):
-    with pytest.raises(ValueError):
-        data.archive.cqd_score(
-            iterations=1,
-            target_points=np.array([1.0]),  # Should be 3D.
-            penalties=2,
-            obj_min=0.0,
-            obj_max=1.0,
-        )
-
-    with pytest.raises(ValueError):
-        data.archive.cqd_score(
-            iterations=1,
-            target_points=3,
-            penalties=[[1.0, 1.0]],  # Should be 1D.
-            obj_min=0.0,
-            obj_max=1.0,
-        )
-
-
-def test_cqd_score_with_one_elite():
-    archive = GridArchive(solution_dim=2,
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
-    archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
-
-    score = archive.cqd_score(
-        iterations=1,
-        # With this target point, the solution above at [0, 0] has a normalized
-        # distance of 0.5, since it is halfway between the archive bounds of
-        # (-1, -1) and (1, 1).
-        target_points=np.array([[[1.0, 1.0]]]),
-        penalties=2,
-        obj_min=0.0,
-        obj_max=1.0,
-    ).mean
-
-    # For theta=0, the score should be 1.0 - 0 * 0.5 = 1.0
-    # For theta=1, the score should be 1.0 - 1 * 0.5 = 0.5
-    assert np.isclose(score, 1.0 + 0.5)
-
-
-def test_cqd_score_with_max_dist():
-    archive = GridArchive(solution_dim=2,
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
-    archive.add_single([4.0, 4.0], 0.5, [0.0, 1.0])
-
-    score = archive.cqd_score(
-        iterations=1,
-        # With this target point and dist_max, the solution above at [0, 1]
-        # has a normalized distance of 0.5, since it is one unit away.
-        target_points=np.array([[[1.0, 1.0]]]),
-        penalties=2,
-        obj_min=0.0,
-        obj_max=1.0,
-        dist_max=2.0,
-    ).mean
-
-    # For theta=0, the score should be 0.5 - 0 * 0.5 = 0.5
-    # For theta=1, the score should be 0.5 - 1 * 0.5 = 0.0
-    assert np.isclose(score, 0.5 + 0.0)
-
-
-def test_cqd_score_l1_norm():
-    archive = GridArchive(solution_dim=2,
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
-    archive.add_single([4.0, 4.0], 0.5, [0.0, 0.0])
-
-    score = archive.cqd_score(
-        iterations=1,
-        # With this target point and dist_max, the solution above at [0, 0]
-        # has a normalized distance of 1.0, since it is two units away.
-        target_points=np.array([[[1.0, 1.0]]]),
-        penalties=2,
-        obj_min=0.0,
-        obj_max=1.0,
-        dist_max=2.0,
-        # L1 norm.
-        dist_ord=1,
-    ).mean
-
-    # For theta=0, the score should be 0.5 - 0 * 1.0 = 0.5
-    # For theta=1, the score should be 0.5 - 1 * 1.0 = -0.5
-    assert np.isclose(score, 0.5 + -0.5)
-
-
-def test_cqd_score_full_output():
-    archive = GridArchive(solution_dim=2,
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
-    archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
-
-    result = archive.cqd_score(
-        iterations=5,
-        # With this target point, the solution above at [0, 0] has a normalized
-        # distance of 0.5, since it is halfway between the archive bounds of
-        # (-1, -1) and (1, 1).
-        target_points=np.array([
-            [[1.0, 1.0]],
-            [[1.0, 1.0]],
-            [[1.0, 1.0]],
-            [[-1.0, -1.0]],
-            [[-1.0, -1.0]],
-        ]),
-        penalties=2,
-        obj_min=0.0,
-        obj_max=1.0,
-    )
-
-    # For theta=0, the score should be 1.0 - 0 * 0.5 = 1.0
-    # For theta=1, the score should be 1.0 - 1 * 0.5 = 0.5
-    assert result.iterations == 5
-    assert np.isclose(result.mean, 1.0 + 0.5)
-    assert np.all(np.isclose(result.scores, 1.0 + 0.5))
-    assert np.all(
-        np.isclose(
-            result.target_points,
-            np.array([
-                [[1.0, 1.0]],
-                [[1.0, 1.0]],
-                [[1.0, 1.0]],
-                [[-1.0, -1.0]],
-                [[-1.0, -1.0]],
-            ])))
-    assert np.all(np.isclose(result.penalties, [0.0, 1.0]))
-    assert np.isclose(result.obj_min, 0.0)
-    assert np.isclose(result.obj_max, 1.0)
-    # Distance from (-1,-1) to (1,1).
-    assert np.isclose(result.dist_max, 2 * np.sqrt(2))
-    assert result.dist_ord is None
-
-
-def test_cqd_score_with_two_elites():
-    archive = GridArchive(solution_dim=2,
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
-    archive.add_single([4.0, 4.0], 0.25, [0.0, 0.0])  # Elite 1.
-    archive.add_single([4.0, 4.0], 0.0, [1.0, 1.0])  # Elite 2.
-
-    score = archive.cqd_score(
-        iterations=1,
-        # With this target point, Elite 1 at [0, 0] has a normalized distance of
-        # 0.5, since it is halfway between the archive bounds of (-1, -1) and
-        # (1, 1).
-        #
-        # Elite 2 has a normalized distance of 0, since it is exactly at [1, 1].
-        target_points=np.array([[[1.0, 1.0]]]),
-        penalties=2,  # Penalties of 0 and 1.
-        obj_min=0.0,
-        obj_max=1.0,
-    ).mean
-
-    # For theta=0, the score should be max(0.25 - 0 * 0.5, 0 - 0 * 0) = 0.25
-    # For theta=1, the score should be max(0.25 - 1 * 0.5, 0 - 1 * 0) = 0
-    assert np.isclose(score, 0.25 + 0)
-
-
 def test_retessellate_bad_learning_rate():
     archive = GridArchive(
         solution_dim=3,
@@ -941,4 +782,90 @@ def test_retessellate_into_smaller_dims():
         objective_batch=[2.0],
         measures_batch=[[-0.75, -0.75]],
         grid_indices_batch=[[0, 0]],
+    )
+
+
+def test_scalar_solutions():
+    archive = GridArchive(solution_dim=(),
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
+    assert archive.solution_dim == ()
+
+    add_info = archive.add(
+        solution=[1, 2, 3, 4],
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective=[0, 0, 0, 1],
+        measures=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+    )
+    assert (add_info["status"] == 2).all()
+    assert np.isclose(add_info["value"], [0, 0, 0, 1]).all()
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=3,
+        solution_batch=[1, 2, 4],
+        objective_batch=[0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
+    )
+
+
+def test_str_solutions():
+    archive = GridArchive(
+        solution_dim=(),
+        dims=[10, 20],
+        ranges=[(-1, 1), (-2, 2)],
+        dtype={
+            "solution": object,
+            "objective": np.float32,
+            "measures": np.float32
+        },
+    )
+    assert archive.solution_dim == ()
+    assert archive.dtypes["solution"] == np.object_
+
+    add_info = archive.add(
+        solution=["One", "Two", "Three", "Four"],
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective=[0, 0, 0, 1],
+        measures=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+    )
+    assert (add_info["status"] == 2).all()
+    assert np.isclose(add_info["value"], [0, 0, 0, 1]).all()
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=3,
+        solution_batch=["One", "Two", "Four"],
+        objective_batch=[0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
+    )
+
+
+def test_multi_dim_solutions():
+    archive = GridArchive(solution_dim=(2, 3),
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
+    assert archive.solution_dim == (2, 3)
+
+    add_info = archive.add(
+        solution=np.arange(4 * 2 * 3).reshape((4, 2, 3)),
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective=[0, 0, 0, 1],
+        measures=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+    )
+    assert (add_info["status"] == 2).all()
+    assert np.isclose(add_info["value"], [0, 0, 0, 1]).all()
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=3,
+        solution_batch=np.arange(4 * 2 * 3).reshape((4, 2, 3))[[0, 1, 3]],
+        objective_batch=[0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
     )

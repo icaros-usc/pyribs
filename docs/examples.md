@@ -5,6 +5,7 @@
 
 examples/sphere
 examples/lunar_lander
+examples/cqd_score
 ```
 
 These examples provide single Python files with fewer explanations than
@@ -16,3 +17,5 @@ of each file, then follow the usage instructions. Here are the current examples:
 - {doc}`examples/lunar_lander`: An extended version of the
   [Lunar Lander tutorial](tutorials/lunar_lander) which distributes evaluations
   with Dask and adds other features such as a command-line interface.
+- {doc}`examples/cqd_score`: An example of how to use
+  {func}`~ribs.archives.cqd_score`.

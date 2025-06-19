@@ -25,7 +25,9 @@ class ArchiveBase(ABC):
     :class:`NotImplementedError` when called.
 
     Args:
-        solution_dim (int): Dimensionality of the solution space.
+        solution_dim (int or tuple of int): Dimensionality of the solution
+            space. Scalar or multi-dimensional solution shapes are allowed by
+            passing an empty tuple or tuple of integers, respectively.
         objective_dim (int or empty tuple): Dimensionality of the objective
             space. For single-objective optimization problems where the
             objective is a scalar, this argument should be an empty tuple
@@ -42,21 +44,8 @@ class ArchiveBase(ABC):
     ## Properties of the archive ##
 
     @property
-    def field_list(self):
-        """list: List of data fields in the archive."""
-        raise NotImplementedError(
-            "`field_list` has not been implemented in this archive")
-
-    @property
-    def dtypes(self):
-        """dict: Mapping from field name to dtype for all fields in the
-        archive."""
-        raise NotImplementedError(
-            "`dtypes` has not been implemented in this archive")
-
-    @property
     def solution_dim(self):
-        """int: Dimensionality of the solution space."""
+        """int or tuple of int: Dimensionality of the solution space."""
         return self._solution_dim
 
     @property
@@ -71,6 +60,19 @@ class ArchiveBase(ABC):
     def measure_dim(self):
         """int: Dimensionality of the measure space."""
         return self._measure_dim
+
+    @property
+    def field_list(self):
+        """list: List of data fields in the archive."""
+        raise NotImplementedError(
+            "`field_list` has not been implemented in this archive")
+
+    @property
+    def dtypes(self):
+        """dict: Mapping from field name to dtype for all fields in the
+        archive."""
+        raise NotImplementedError(
+            "`dtypes` has not been implemented in this archive")
 
     @property
     def stats(self):

@@ -55,23 +55,6 @@ The following tutorials show how pyribs can be applied to a variety of problems.
 - {doc}`tutorials/optuna`: Details on how pyribs can be integrated with the
   [Optuna](https://optuna.org) framework for hyperparameter optimization.
 
-<!--
-
-## Features
-
-Finally, these tutorials provide a closer look at some of the features of
-pyribs.
-
-```{toctree}
-:hidden:
-
-tutorials/features/example
-```
-
-- {doc}`tutorials/features/example`: Placeholder for upcoming tutorials!
-
--->
-
 <!-- How MyST handles section labels: https://jupyterbook.org/en/stable/content/references.html -->
 
 (running-locally)=

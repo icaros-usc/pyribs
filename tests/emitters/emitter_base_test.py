@@ -72,6 +72,18 @@ def test_ask_emits_correct_num_sols_on_nonempty_archive(emitter_fixture):
     assert solutions.shape == (batch_size, len(x0))
 
 
+@pytest.mark.parametrize("shape", [(), 4, (5,), (3, 3)])
+def test_default_ask_dqd_has_correct_sol_shape(shape):
+    archive = GridArchive(solution_dim=shape,
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
+    emitter = GaussianEmitter(archive, sigma=0.1, x0=np.ones(shape))
+
+    expected_shape = (0, 4) if shape == 4 else (0,) + shape
+
+    assert emitter.ask_dqd().shape == expected_shape
+
+
 #
 # tell()
 #
@@ -114,6 +126,8 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
                                            sigma0=1.0,
                                            ranker="imp",
                                            batch_size=batch_size)
+    else:
+        raise RuntimeError()
 
     solution_batch = np.ones((batch_size, archive.solution_dim))
     objective_batch = np.ones(batch_size)
