@@ -57,6 +57,8 @@ jobs:
         run: pip install .[visualize]
       - name: Test visualize extra
         run: pytest tests/visualize
+      - name: Test pymoo extra
+        run: pytest tests/emitters_pymoo tests/schedulers_pymoo
   visualize_qdax:
     runs-on: ubuntu-latest
     steps:
