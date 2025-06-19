@@ -55,6 +55,8 @@ jobs:
         run: pytest tests/emitters_pycma
       - name: Install visualize dep
         run: pip install .[visualize]
+      - name: Install pymoo
+        run: pip install .[pymoo]
       - name: Test visualize extra
         run: pytest tests/visualize
       - name: Test pymoo extra
