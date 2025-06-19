@@ -46,7 +46,7 @@
 
 - Add cqd_score example ({pr}`537`)
 - Update sphere example for consistency ({pr}`505`)
-- Tutorial edits ({pr}`500`, {pr}`553`)
+- Tutorial edits ({pr}`500`, {pr}`553`, {pr}`554`)
 - Add version selector to docs ({pr}`495`)
 - Update gymnasium and lunar lander version ({pr}`493`)
 - Add tutorial page on Optuna integration ({pr}`492`)
