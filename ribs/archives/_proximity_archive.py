@@ -17,10 +17,11 @@ class ProximityArchive(ArchiveBase):
     defined via proximity to other solutions in measure space.
 
     This archive originates in Novelty Search and is described in `Lehman 2011
-    <http://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf>`_. Solutions are added to
-    the archive if their `novelty` exceeds a certain threshold. `Novelty`
-    :math:`\\rho` is defined as the average (Euclidean) distance in measure
-    space to the :math:`k`-nearest neighbors of the solution in the archive:
+    <https://web.archive.org/web/20220707041732/https://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf>`_.
+    Solutions are added to the archive if their `novelty` exceeds a certain
+    threshold. `Novelty` :math:`\\rho` is defined as the average (Euclidean)
+    distance in measure space to the :math:`k`-nearest neighbors of the solution
+    in the archive:
 
     .. math::
 
@@ -32,7 +33,7 @@ class ProximityArchive(ArchiveBase):
 
     This archive also supports the local competition computation from Novelty
     Search with Local Competition, described in `Lehman 2011b
-    <http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
+    <https://web.archive.org/web/20111206122453/http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
 
     .. note:: When used for diversity optimization, this archive does not
         require any objectives, and ``objective=None`` can be passed into
