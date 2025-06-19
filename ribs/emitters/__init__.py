@@ -15,13 +15,13 @@ inheriting from :class:`~ribs.emitters.EmitterBase`.
 .. autosummary::
     :toctree:
 
+    ribs.emitters.BayesianOptimizationEmitter
     ribs.emitters.EvolutionStrategyEmitter
     ribs.emitters.GaussianEmitter
     ribs.emitters.GeneticAlgorithmEmitter
     ribs.emitters.GradientArborescenceEmitter
     ribs.emitters.GradientOperatorEmitter
     ribs.emitters.IsoLineEmitter
-    ribs.emitters.BayesianOptimizationEmitter
     ribs.emitters.EmitterBase
 """
 from ribs.emitters._bayesian_opt_emitter import BayesianOptimizationEmitter
@@ -35,12 +35,12 @@ from ribs.emitters._gradient_operator_emitter import GradientOperatorEmitter
 from ribs.emitters._iso_line_emitter import IsoLineEmitter
 
 __all__ = [
+    "BayesianOptimizationEmitter",
     "EvolutionStrategyEmitter",
     "GaussianEmitter",
     "GeneticAlgorithmEmitter",
     "GradientArborescenceEmitter",
     "GradientOperatorEmitter",
     "IsoLineEmitter",
-    "BayesianOptimizationEmitter",
     "EmitterBase",
 ]
