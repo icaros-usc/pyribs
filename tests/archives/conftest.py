@@ -3,8 +3,8 @@ import numpy as np
 import pytest
 from box import Box
 
-from ribs.archives import (CVTArchive, GridArchive, ProximityArchive,
-                           SlidingBoundariesArchive)
+from ribs.archives import (CategoricalArchive, CVTArchive, GridArchive,
+                           ProximityArchive, SlidingBoundariesArchive)
 
 
 @pytest.fixture
@@ -42,6 +42,7 @@ def add_mode(request):
 #
 
 ARCHIVE_NAMES = [
+    "CategoricalArchive",
     "GridArchive",
     "CVTArchive-brute_force",
     "CVTArchive-kd_tree",
@@ -67,7 +68,10 @@ def get_archive_data(name, dtype=np.float64):
     # Characteristics of a single solution to insert into archive_with_elite.
     solution = np.array([1., 2., 3.])
     objective = 1.0
-    measures = np.array([0.25, 0.25])
+    if name == "CategoricalArchive":
+        measures = np.array(["B", "Two"], dtype=object)
+    else:
+        measures = np.array([0.25, 0.25])
 
     if name == "GridArchive":
         # Grid archive with 10 cells and range (-1, 1) in first dim, and 20
@@ -145,6 +149,27 @@ def get_archive_data(name, dtype=np.float64):
             novelty_threshold=novelty_threshold,
             initial_capacity=capacity,
             dtype=dtype)
+    elif name == "CategoricalArchive":
+        cells = 3 * 4
+        grid_indices = (1, 1)
+        archive = CategoricalArchive(
+            solution_dim=len(solution),
+            categories=[
+                ["A", "B", "C"],
+                ["One", "Two", "Three", "Four"],
+            ],
+            dtype=dtype,
+        )
+        archive_with_elite = CategoricalArchive(
+            solution_dim=len(solution),
+            categories=[
+                ["A", "B", "C"],
+                ["One", "Two", "Three", "Four"],
+            ],
+            dtype=dtype,
+        )
+    else:
+        raise ValueError(f"Unknown name {name}")
 
     archive_with_elite.add_single(solution, objective, measures)
 
