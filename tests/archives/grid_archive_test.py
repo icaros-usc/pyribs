@@ -64,10 +64,20 @@ def assert_archive_elites(
                         data["solution"][j] == solution_batch[i])
             else:
                 solution_match = True
+
             objective_match = (objective_batch is None or np.isclose(
                 data["objective"][j], objective_batch[i]))
-            measures_match = (measures_batch is None or np.allclose(
-                data["measures"][j], measures_batch[i]))
+
+            if measures_batch is not None:
+                if data["solution"].dtype.kind == "f":
+                    measures_match = np.allclose(data["measures"][j],
+                                                 measures_batch[i])
+                else:
+                    measures_match = np.all(
+                        data["measures"][j] == measures_batch[i])
+            else:
+                measures_match = True
+
             index_match = (
                 grid_indices_batch is None or
                 # pylint: disable-next = possibly-used-before-assignment
