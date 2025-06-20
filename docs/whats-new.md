@@ -24,7 +24,7 @@ Pyribs v0.8.0 introduces implementations of several new algorithms:
   {class}`~ribs.emitters.BayesianOptimizationEmitter` and
   {class}`~ribs.schedulers.BayesianOptimizationScheduler`. An example of running
   BOP-Elites is available in the example here: {doc}`examples/bop_elites`.
-  - As part of BOP-Elites, a new
+  - As part of implementing BOP-Elites, a new
     {class}`~ribs.archives.GridArchive.retessellate` method has been added to
     GridArchive to allow changing the layout of the grid.
   - Thanks to [@szhaovas](https://github.com/szhaovas) for working on this
