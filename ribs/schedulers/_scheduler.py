@@ -29,6 +29,10 @@ class Scheduler:
             selected from :mod:`ribs.archives`.
         emitters (list of ribs.archives.EmitterBase): A list of emitter objects,
             e.g. :class:`ribs.emitters.GaussianEmitter`.
+        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
+            CMA-MAE, the archive does not store all the best-performing
+            solutions. The ``result_archive`` is a secondary archive where we
+            can store all the best-performing solutions.
         add_mode (str): Indicates how solutions should be added to the archive.
             The default is "batch", which adds all solutions with one call to
             :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single"
@@ -37,10 +41,6 @@ class Scheduler:
             included for legacy reasons, as it was the only mode of operation in
             pyribs 0.4.0 and before. We highly recommend using "batch" mode
             since it is significantly faster.
-        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
-            CMA-MAE, the archive does not store all the best-performing
-            solutions. The ``result_archive`` is a secondary archive where we
-            can store all the best-performing solutions.
     Raises:
         TypeError: The ``emitters`` argument was not a list of emitters.
         ValueError: The emitters passed in do not have the same solution
@@ -56,8 +56,8 @@ class Scheduler:
     def __init__(self,
                  archive,
                  emitters,
-                 *,
                  result_archive=None,
+                 *,
                  add_mode="batch"):
         try:
             if len(emitters) == 0:
