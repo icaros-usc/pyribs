@@ -2,7 +2,7 @@
 
 __author__ = "ICAROS Lab pyribs Team"
 __email__ = "team@pyribs.org"
-__version__ = "0.7.1"
+__version__ = "0.8.0"
 
 from ribs import archives, emitters, schedulers
 
