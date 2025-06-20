@@ -49,7 +49,7 @@ def test_attributes(scheduler_type):
         assert scheduler.archive == archive
         assert scheduler.emitters == emitters
     else:
-        scheduler = BanditScheduler(archive, emitters, 1)
+        scheduler = BanditScheduler(archive, emitters, num_active=1)
 
         assert scheduler.archive == archive
         assert scheduler.emitter_pool == emitters
@@ -117,7 +117,7 @@ def test_warn_nothing_added_to_archive(scheduler_type):
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters)
     else:
-        scheduler = BanditScheduler(archive, emitters, 1)
+        scheduler = BanditScheduler(archive, emitters, num_active=1)
 
     _ = scheduler.ask()
     with pytest.warns(UserWarning):
@@ -145,12 +145,10 @@ def test_warn_nothing_added_to_result_archive(scheduler_type):
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters, result_archive)
     else:
-        scheduler = BanditScheduler(
-            archive,
-            emitters,
-            1,
-            result_archive=result_archive,
-        )
+        scheduler = BanditScheduler(archive,
+                                    emitters,
+                                    result_archive,
+                                    num_active=1)
 
     _ = scheduler.ask()
     with pytest.warns(UserWarning):
@@ -181,12 +179,10 @@ def test_result_archive_mismatch_fields(scheduler_type):
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters, result_archive)
     else:
-        scheduler = BanditScheduler(
-            archive,
-            emitters,
-            1,
-            result_archive=result_archive,
-        )
+        scheduler = BanditScheduler(archive,
+                                    emitters,
+                                    result_archive,
+                                    num_active=1)
 
     scheduler.ask()
 
@@ -225,8 +221,8 @@ def test_result_archive_same_fields_with_threshold(scheduler_type):
         scheduler = BanditScheduler(
             archive,
             emitters,
-            1,
-            result_archive=result_archive,
+            result_archive,
+            num_active=1,
         )
 
     scheduler.ask()
@@ -329,7 +325,10 @@ def test_tell_with_none_objective(scheduler_type, add_mode):
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters, add_mode=add_mode)
     else:
-        scheduler = BanditScheduler(archive, emitters, 1, add_mode=add_mode)
+        scheduler = BanditScheduler(archive,
+                                    emitters,
+                                    num_active=1,
+                                    add_mode=add_mode)
 
     solutions = scheduler.ask()
 
