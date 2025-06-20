@@ -116,6 +116,6 @@ Past editions of "What's New" are available below.
 ```{toctree}
 :maxdepth: 1
 
-whats-new/0.7.0
-whats-new/0.5.0
+whats-new/v0.7.0
+whats-new/v0.5.0
 ```
