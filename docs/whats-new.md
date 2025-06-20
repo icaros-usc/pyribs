@@ -33,6 +33,9 @@ Pyribs v0.8.0 introduces implementations of several new algorithms:
 We have also added a {class}`~ribs.archives.CategoricalArchive` where the
 measures can be categorical values, e.g., `["Cat", "Dog", "Mouse"]`.
 
+The {doc}`supported-algorithms` page now includes a list of algorithms supported
+in pyribs.
+
 ## 📜 Single-File Implementations for Archives
 
 To make it easier to understand current archives and create new archives, we
@@ -88,10 +91,12 @@ part of an ongoing effort to streamline the library:
 - `archive.dtype` has been replaced with a more expressive `archive.dtypes`
   dictionary, since solutions, objectives and measures can now have different
   dtypes.
-- `cqd_score` is now a separate utility function, instead of being a method on
-  the archives.
-- The `field_list` and `dtypes` properties on current archives now include the
-  `index` field, since `index` is no longer a required part of archives.
+- {class}`~ribs.archives.cqd_score` is now a separate utility function, instead
+  of being a method on the archives.
+- The {attr}`~ribs.archives.ArchiveBase.field_list` and
+  {attr}`~ribs.archives.ArchiveBase.dtypes` properties on current archives
+  include the `index` field, since `index` is no longer a required part of
+  archives.
 - Archive `add` methods and the {class}`~ribs.archives.ArrayStore` have been
   simplified to no longer use "transforms," which significantly complicated the
   implementation.
