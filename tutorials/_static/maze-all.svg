@@ -1,0 +1,2666 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="76.199997mm"
+   height="76.199997mm"
+   viewBox="0 0 76.199997 76.199997"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (1:1.4.2+202505120738+ebf0e940d0)"
+   sodipodi:docname="maze-all.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.4449635"
+     inkscape:cx="82.35502"
+     inkscape:cy="123.87856"
+     inkscape:window-width="1920"
+     inkscape:window-height="1043"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <clipPath
+       id="p03db528aa0">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect14" />
+    </clipPath>
+    <clipPath
+       id="clipPath1">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect1" />
+    </clipPath>
+    <clipPath
+       id="clipPath2">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect2" />
+    </clipPath>
+    <clipPath
+       id="clipPath3">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect3" />
+    </clipPath>
+    <clipPath
+       id="clipPath4">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect4" />
+    </clipPath>
+    <clipPath
+       id="clipPath5">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect5" />
+    </clipPath>
+    <clipPath
+       id="clipPath6">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect6" />
+    </clipPath>
+    <clipPath
+       id="clipPath7">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect7" />
+    </clipPath>
+    <clipPath
+       id="clipPath8">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect8" />
+    </clipPath>
+    <clipPath
+       id="clipPath9">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect9" />
+    </clipPath>
+    <clipPath
+       id="clipPath10">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect10" />
+    </clipPath>
+    <clipPath
+       id="SVGID_2_">
+      <ellipse
+         id="use5"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_4_">
+      <ellipse
+         id="use6"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_6_">
+      <ellipse
+         id="use7"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_8_">
+      <ellipse
+         id="use8"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="clipPath11">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect11" />
+    </clipPath>
+    <clipPath
+       id="clipPath12">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect12" />
+    </clipPath>
+    <clipPath
+       id="clipPath13">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect13" />
+    </clipPath>
+    <clipPath
+       id="clipPath15">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect15" />
+    </clipPath>
+    <ellipse
+       id="ellipse18"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse19"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse20"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse21"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <path
+       id="m57af566826"
+       d="m 0,-10 -2.24514,6.90983 H -9.510565 L -3.632713,1.18034 -5.877853,8.09017 0,3.81966 5.877853,8.09017 3.632713,1.18034 9.510565,-3.09017 H 2.24514 Z"
+       style="stroke:#008000;stroke-linejoin:bevel" />
+    <path
+       id="mbb3e91bae3"
+       d="M 0,6 C 1.591219,6 3.117479,5.367802 4.242641,4.242641 5.367802,3.117479 6,1.591219 6,0 6,-1.591219 5.367802,-3.117479 4.242641,-4.242641 3.117479,-5.367802 1.591219,-6 0,-6 -1.591219,-6 -3.117479,-5.367802 -4.242641,-4.242641 -5.367802,-3.117479 -6,-1.591219 -6,0 -6,1.591219 -5.367802,3.117479 -4.242641,4.242641 -3.117479,5.367802 -1.591219,6 0,6 Z"
+       style="stroke:#ff0000" />
+    <clipPath
+       id="p03db528aa0-0-8-2-5-3">
+      <rect
+         x="0"
+         y="0"
+         width="216"
+         height="216"
+         id="rect14-3-8-6-0-5" />
+    </clipPath>
+    <clipPath
+       id="SVGID_2_-6">
+      <ellipse
+         id="use5-7"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_4_-3">
+      <ellipse
+         id="use6-6"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_6_-5">
+      <ellipse
+         id="use7-6"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_8_-3">
+      <ellipse
+         id="use8-9"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <ellipse
+       id="ellipse14"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse15"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse16"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse17"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <clipPath
+       id="SVGID_2_-64">
+      <ellipse
+         id="use5-3"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_4_-33">
+      <ellipse
+         id="use6-8"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_6_-6">
+      <ellipse
+         id="use7-0"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_8_-4">
+      <ellipse
+         id="use8-8"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <ellipse
+       id="ellipse1-0"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse2-2"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse3-1"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse4-8"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <clipPath
+       id="SVGID_2_-6-0">
+      <ellipse
+         id="use5-7-3"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_4_-3-9">
+      <ellipse
+         id="use6-6-1"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_6_-5-9">
+      <ellipse
+         id="use7-6-6"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_8_-3-9">
+      <ellipse
+         id="use8-9-3"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <ellipse
+       id="ellipse7-2"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse8-8"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse9-6"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse10-3"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <clipPath
+       id="SVGID_2_-2">
+      <ellipse
+         id="use5-8"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_4_-38">
+      <ellipse
+         id="use6-0"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_6_-4">
+      <ellipse
+         id="use7-09"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_8_-1">
+      <ellipse
+         id="use8-96"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <ellipse
+       id="ellipse1-4"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse2-3"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse3-6"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse4-9"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <clipPath
+       id="SVGID_2_-1">
+      <ellipse
+         id="use5-0"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_4_-4">
+      <ellipse
+         id="use6-87"
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_6_-0">
+      <ellipse
+         id="use7-8"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <clipPath
+       id="SVGID_8_-6">
+      <ellipse
+         id="use8-2"
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="stroke-linecap:butt;stroke-linejoin:round" />
+    </clipPath>
+    <ellipse
+       id="ellipse1-9"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse2-9"
+       cx="13.69"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse3-7"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+    <ellipse
+       id="ellipse4-0"
+       cx="114.38"
+       cy="66.889999"
+       rx="9.3299999"
+       ry="17.34" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-76.200001,-85.725)">
+    <g
+       id="patch_1"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 0,216 H 216 V 0 H 0 Z"
+         style="fill:#ffffff;stroke-linecap:butt;stroke-linejoin:round"
+         id="path1" />
+    </g>
+    <g
+       id="line2d_3"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 9.818182,9.818182 V 206.18182"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path4" />
+    </g>
+    <g
+       id="line2d_4"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 9.818182,206.18182 H 206.18182"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path5" />
+    </g>
+    <g
+       id="line2d_5"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 206.18182,206.18182 V 9.818182"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path6" />
+    </g>
+    <g
+       id="line2d_6"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 206.18182,9.818182 H 9.818182"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path7" />
+    </g>
+    <g
+       id="line2d_7"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 58.909091,157.09091 V 58.909091"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path8" />
+    </g>
+    <g
+       id="line2d_8"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 37.309091,117.81818 9.818182,78.545455"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path9" />
+    </g>
+    <g
+       id="line2d_9"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 58.909091,58.909091 9.818182,49.090909"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path10" />
+    </g>
+    <g
+       id="line2d_10"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 58.909091,58.909091 139.41818,34.363636"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path11" />
+    </g>
+    <g
+       id="line2d_11"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 79.527273,206.18182 112.90909,169.85454"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path12" />
+    </g>
+    <g
+       id="line2d_12"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="m 58.909091,108 98.181819,55.96364"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path13" />
+    </g>
+    <g
+       id="line2d_13"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 206.18182,157.09091 95.236364,98.181818"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
+         id="path14" />
+    </g>
+    <g
+       id="svg14-6"
+       transform="matrix(0.35277777,0,0,0.35277777,127.07206,101.05214)"
+       style="stroke-linecap:butt;stroke-linejoin:round">
+      <g
+         id="g26"
+         transform="matrix(0.20027617,0,0,0.20027617,26.677317,59.808237)"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <path
+           d="M 86.05,35.16 H 41.64 V 21.19 c 0,-6.51 5.27,-11.78 11.78,-11.78 h 20.85 c 6.51,0 11.78,5.27 11.78,11.78 z"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path1-6" />
+        <path
+           d="m 55.12,11.62 c -0.64,-1.89 -4.14,-0.77 -5.95,0.32 -1.81,1.09 -4.34,3.97 -3.43,4.7 0.9,0.72 2.38,-1.12 5.53,-1.99 2.93,-0.81 4.38,-1.47 3.85,-3.03 z"
+           style="fill:#ffffff;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path2-7" />
+        <path
+           d="M 88.73,24.77 H 39.01 v -2.1 c 0,-1.79 1.45,-3.24 3.24,-3.24 H 85.5 c 1.79,0 3.24,1.45 3.24,3.24 v 2.1 z"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path3-5" />
+        <path
+           d="m 119.73,58.05 2.06,-45.88 c 0.06,-1.39 1.21,-2.49 2.61,-2.49 v 0 c 1.44,0 2.61,1.17 2.61,2.61 v 58.98 c 0,0.83 -0.4,1.62 -1.07,2.11 l -7.41,5.41 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path4-3" />
+        <path
+           d="M 8.27,58.05 6.22,12.17 C 6.15,10.78 5,9.68 3.61,9.68 v 0 C 2.17,9.68 1,10.85 1,12.29 v 58.98 c 0,0.83 0.4,1.62 1.07,2.11 l 7.41,5.41 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path5-5" />
+        <ellipse
+           cx="13.69"
+           cy="66.889999"
+           rx="9.3299999"
+           ry="17.34"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="ellipse5" />
+        <g
+           id="g5"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs5">
+            <ellipse
+               id="ellipse1"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath16">
+            <ellipse
+               id="use1"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="2.6199999"
+             x="12.22"
+             y="49.540001"
+             clip-path="url(#SVGID_2_)"
+             id="rect16" />
+        </g>
+        <g
+           id="g6"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs6">
+            <ellipse
+               id="ellipse2"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath17">
+            <ellipse
+               id="use2-6"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             transform="rotate(180,13.8448,66.88625)"
+             width="2.6199999"
+             x="12.54"
+             y="49.540001"
+             clip-path="url(#SVGID_4_)"
+             id="rect17" />
+        </g>
+        <ellipse
+           cx="114.38"
+           cy="66.889999"
+           rx="9.3299999"
+           ry="17.34"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="ellipse6" />
+        <g
+           id="g7"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs7">
+            <ellipse
+               id="ellipse3"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath18">
+            <ellipse
+               id="use3-2"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             transform="rotate(180,114.5371,66.88625)"
+             width="2.6199999"
+             x="113.23"
+             y="49.540001"
+             clip-path="url(#SVGID_6_)"
+             id="rect18" />
+        </g>
+        <g
+           id="g8"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs8">
+            <ellipse
+               id="ellipse4"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath19">
+            <ellipse
+               id="use4"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="2.6199999"
+             x="112.91"
+             y="49.540001"
+             clip-path="url(#SVGID_8_)"
+             id="rect19" />
+        </g>
+        <path
+           d="M 111.12,35.15 100.05,24.33 C 98.02,22.35 95.31,21.24 92.47,21.24 H 35.73 c -2.83,0 -5.55,1.11 -7.58,3.09 L 17.08,35.15 c -2.09,2.04 -3.26,4.83 -3.26,7.75 V 56.32 83.5 96.92 c 0,2.92 1.18,5.71 3.26,7.75 l 11.07,10.82 c 2.03,1.98 4.74,3.09 7.58,3.09 h 56.74 c 2.83,0 5.55,-1.11 7.58,-3.09 l 11.07,-10.82 c 2.09,-2.04 3.26,-4.83 3.26,-7.75 V 83.51 56.33 42.9 c 0,-2.91 -1.18,-5.71 -3.26,-7.75 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path8-9" />
+        <g
+           id="g12"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <g
+             id="g9"
+             style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+            <circle
+               cx="40.279999"
+               cy="55.889999"
+               r="14.63"
+               style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle8" />
+            <circle
+               cx="40.279999"
+               cy="55.889999"
+               r="9.1999998"
+               style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle9" />
+          </g>
+          <g
+             id="g11"
+             style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+            <circle
+               cx="86.959999"
+               cy="55.889999"
+               r="14.63"
+               style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle10" />
+            <circle
+               cx="86.959999"
+               cy="55.889999"
+               r="9.1999998"
+               style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle11" />
+          </g>
+        </g>
+        <path
+           d="m 8.04,52.98 c 0,0 -4.96,11.58 -2.18,23.16 L 2.37,73.59 c 0,0 0.28,-5.78 1.99,-12.15 1.72,-6.39 3.68,-8.46 3.68,-8.46 z"
+           style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path12-1" />
+        <path
+           d="m 119.96,52.98 c 0,0 4.96,11.58 2.18,23.16 l 3.49,-2.55 c 0,0 -0.28,-5.78 -1.99,-12.15 -1.72,-6.39 -3.68,-8.46 -3.68,-8.46 z"
+           style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path13-2" />
+        <path
+           d="M 43.36,33.98"
+           style="fill:#93bfc6;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path14-7" />
+        <g
+           id="g16"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <path
+             d="m 61.85,65.7 -5.39,12.95 c -0.56,1.34 0.43,2.82 1.88,2.82 h 10.57 c 1.44,0 2.43,-1.46 1.89,-2.79 L 65.62,65.73 C 64.94,64.04 62.55,64.02 61.85,65.7 Z"
+             style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path15" />
+          <path
+             d="m 63.46,67.6 c -1.09,-0.31 -1.42,1.41 -2,2.92 -0.96,2.53 -1.22,3.71 -0.69,3.9 0.7,0.26 1.31,-0.54 2.25,-2.83 0.9,-2.15 1.36,-3.73 0.44,-3.99 z"
+             style="fill:#eda29b;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path16" />
+        </g>
+        <g
+           id="g19"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="48.389999"
+             x2="48.389999"
+             y1="90.330002"
+             y2="100.54"
+             id="line16" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="58.970001"
+             x2="58.970001"
+             y1="90.330002"
+             y2="100.54"
+             id="line17" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="69.559998"
+             x2="69.559998"
+             y1="90.330002"
+             y2="100.54"
+             id="line18" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="80.139999"
+             x2="80.139999"
+             y1="90.330002"
+             y2="100.54"
+             id="line19" />
+          <path
+             d="M 81.99,100.54 H 46.21 c -4.91,0 -8.9,-3.98 -8.9,-8.9 v -1.31 h 53.57 v 1.31 c 0,4.91 -3.98,8.9 -8.89,8.9 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path19" />
+        </g>
+        <path
+           d="M 82.87,100.54 H 45.33 c -4.42,0 -8.01,-3.59 -8.01,-8.01 v 0 c 0,-1.22 0.99,-2.2 2.2,-2.2 h 49.17 c 1.22,0 2.2,0.99 2.2,2.2 v 0 c -0.01,4.42 -3.59,8.01 -8.02,8.01 z"
+           style="fill:#546e7a;stroke:#546e7a;stroke-width:14.9793;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+           id="path20" />
+        <path
+           d="m 46.82,91.52 v 8.4 c 0,0 -9.5,-0.78 -9.5,-8.28 z"
+           style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path21" />
+        <path
+           d="m 81.3,91.52 v 8.4 c 0,0 9.5,-0.78 9.5,-8.28 z"
+           style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path22" />
+        <g
+           id="g25"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="50.709999"
+             y="92.470001"
+             id="rect22" />
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="60.52"
+             y="92.470001"
+             id="rect23" />
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="70.330002"
+             y="92.470001"
+             id="rect24" />
+          <path
+             d="m 80.38,98.43 h -0.24 v -5.96 h 6.2 v 0 c 0,3.29 -2.67,5.96 -5.96,5.96 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path24" />
+          <path
+             d="m 47.11,98.43 h -0.24 c -3.29,0 -5.96,-2.67 -5.96,-5.96 v 0 h 6.2 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path25" />
+        </g>
+      </g>
+    </g>
+    <g
+       id="svg14-6-4"
+       transform="matrix(0.35277777,0,0,0.35277777,127.3866,72.173551)"
+       style="stroke-linecap:butt;stroke-linejoin:round">
+      <g
+         id="g26-4"
+         transform="matrix(0.20027617,0,0,0.20027617,26.677317,59.808237)"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <path
+           d="M 86.05,35.16 H 41.64 V 21.19 c 0,-6.51 5.27,-11.78 11.78,-11.78 h 20.85 c 6.51,0 11.78,5.27 11.78,11.78 z"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path1-6-9" />
+        <path
+           d="m 55.12,11.62 c -0.64,-1.89 -4.14,-0.77 -5.95,0.32 -1.81,1.09 -4.34,3.97 -3.43,4.7 0.9,0.72 2.38,-1.12 5.53,-1.99 2.93,-0.81 4.38,-1.47 3.85,-3.03 z"
+           style="fill:#ffffff;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path2-7-93" />
+        <path
+           d="M 88.73,24.77 H 39.01 v -2.1 c 0,-1.79 1.45,-3.24 3.24,-3.24 H 85.5 c 1.79,0 3.24,1.45 3.24,3.24 v 2.1 z"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path3-5-6" />
+        <path
+           d="m 119.73,58.05 2.06,-45.88 c 0.06,-1.39 1.21,-2.49 2.61,-2.49 v 0 c 1.44,0 2.61,1.17 2.61,2.61 v 58.98 c 0,0.83 -0.4,1.62 -1.07,2.11 l -7.41,5.41 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path4-3-0" />
+        <path
+           d="M 8.27,58.05 6.22,12.17 C 6.15,10.78 5,9.68 3.61,9.68 v 0 C 2.17,9.68 1,10.85 1,12.29 v 58.98 c 0,0.83 0.4,1.62 1.07,2.11 l 7.41,5.41 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path5-5-5" />
+        <ellipse
+           cx="13.69"
+           cy="66.889999"
+           rx="9.3299999"
+           ry="17.34"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="ellipse5-0" />
+        <g
+           id="g5-2"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs5-9">
+            <ellipse
+               id="ellipse31"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath16-3">
+            <ellipse
+               id="use1-5"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="2.6199999"
+             x="12.22"
+             y="49.540001"
+             clip-path="url(#SVGID_2_-2)"
+             id="rect16-1" />
+        </g>
+        <g
+           id="g6-7"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs6-4">
+            <ellipse
+               id="ellipse32"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath17-1">
+            <ellipse
+               id="use2-6-4"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             transform="rotate(180,13.8448,66.88625)"
+             width="2.6199999"
+             x="12.54"
+             y="49.540001"
+             clip-path="url(#SVGID_4_-38)"
+             id="rect17-6" />
+        </g>
+        <ellipse
+           cx="114.38"
+           cy="66.889999"
+           rx="9.3299999"
+           ry="17.34"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="ellipse6-9" />
+        <g
+           id="g7-42"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs7-2">
+            <ellipse
+               id="ellipse33"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath18-4">
+            <ellipse
+               id="use3-2-1"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             transform="rotate(180,114.5371,66.88625)"
+             width="2.6199999"
+             x="113.23"
+             y="49.540001"
+             clip-path="url(#SVGID_6_-4)"
+             id="rect18-2" />
+        </g>
+        <g
+           id="g8-8"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs8-8">
+            <ellipse
+               id="ellipse34"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath19-2">
+            <ellipse
+               id="use4-8"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="2.6199999"
+             x="112.91"
+             y="49.540001"
+             clip-path="url(#SVGID_8_-1)"
+             id="rect19-8" />
+        </g>
+        <path
+           d="M 111.12,35.15 100.05,24.33 C 98.02,22.35 95.31,21.24 92.47,21.24 H 35.73 c -2.83,0 -5.55,1.11 -7.58,3.09 L 17.08,35.15 c -2.09,2.04 -3.26,4.83 -3.26,7.75 V 56.32 83.5 96.92 c 0,2.92 1.18,5.71 3.26,7.75 l 11.07,10.82 c 2.03,1.98 4.74,3.09 7.58,3.09 h 56.74 c 2.83,0 5.55,-1.11 7.58,-3.09 l 11.07,-10.82 c 2.09,-2.04 3.26,-4.83 3.26,-7.75 V 83.51 56.33 42.9 c 0,-2.91 -1.18,-5.71 -3.26,-7.75 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path8-9-8" />
+        <g
+           id="g12-6"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <g
+             id="g9-8"
+             style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+            <circle
+               cx="40.279999"
+               cy="55.889999"
+               r="14.63"
+               style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle8-3" />
+            <circle
+               cx="40.279999"
+               cy="55.889999"
+               r="9.1999998"
+               style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle9-8" />
+          </g>
+          <g
+             id="g11-33"
+             style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+            <circle
+               cx="86.959999"
+               cy="55.889999"
+               r="14.63"
+               style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle10-3" />
+            <circle
+               cx="86.959999"
+               cy="55.889999"
+               r="9.1999998"
+               style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle11-8" />
+          </g>
+        </g>
+        <path
+           d="m 8.04,52.98 c 0,0 -4.96,11.58 -2.18,23.16 L 2.37,73.59 c 0,0 0.28,-5.78 1.99,-12.15 1.72,-6.39 3.68,-8.46 3.68,-8.46 z"
+           style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path12-1-0" />
+        <path
+           d="m 119.96,52.98 c 0,0 4.96,11.58 2.18,23.16 l 3.49,-2.55 c 0,0 -0.28,-5.78 -1.99,-12.15 -1.72,-6.39 -3.68,-8.46 -3.68,-8.46 z"
+           style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path13-2-47" />
+        <path
+           d="M 43.36,33.98"
+           style="fill:#93bfc6;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path14-7-68" />
+        <g
+           id="g16-9"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <path
+             d="m 61.85,65.7 -5.39,12.95 c -0.56,1.34 0.43,2.82 1.88,2.82 h 10.57 c 1.44,0 2.43,-1.46 1.89,-2.79 L 65.62,65.73 C 64.94,64.04 62.55,64.02 61.85,65.7 Z"
+             style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path15-0" />
+          <path
+             d="m 63.46,67.6 c -1.09,-0.31 -1.42,1.41 -2,2.92 -0.96,2.53 -1.22,3.71 -0.69,3.9 0.7,0.26 1.31,-0.54 2.25,-2.83 0.9,-2.15 1.36,-3.73 0.44,-3.99 z"
+             style="fill:#eda29b;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path16-68" />
+        </g>
+        <g
+           id="g19-7"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="48.389999"
+             x2="48.389999"
+             y1="90.330002"
+             y2="100.54"
+             id="line16-9" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="58.970001"
+             x2="58.970001"
+             y1="90.330002"
+             y2="100.54"
+             id="line17-0" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="69.559998"
+             x2="69.559998"
+             y1="90.330002"
+             y2="100.54"
+             id="line18-3" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="80.139999"
+             x2="80.139999"
+             y1="90.330002"
+             y2="100.54"
+             id="line19-3" />
+          <path
+             d="M 81.99,100.54 H 46.21 c -4.91,0 -8.9,-3.98 -8.9,-8.9 v -1.31 h 53.57 v 1.31 c 0,4.91 -3.98,8.9 -8.89,8.9 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path19-3" />
+        </g>
+        <path
+           d="M 82.87,100.54 H 45.33 c -4.42,0 -8.01,-3.59 -8.01,-8.01 v 0 c 0,-1.22 0.99,-2.2 2.2,-2.2 h 49.17 c 1.22,0 2.2,0.99 2.2,2.2 v 0 c -0.01,4.42 -3.59,8.01 -8.02,8.01 z"
+           style="fill:#546e7a;stroke:#546e7a;stroke-width:14.9793;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+           id="path20-7" />
+        <path
+           d="m 46.82,91.52 v 8.4 c 0,0 -9.5,-0.78 -9.5,-8.28 z"
+           style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path21-3" />
+        <path
+           d="m 81.3,91.52 v 8.4 c 0,0 9.5,-0.78 9.5,-8.28 z"
+           style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path22-26" />
+        <g
+           id="g25-52"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="50.709999"
+             y="92.470001"
+             id="rect22-6" />
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="60.52"
+             y="92.470001"
+             id="rect23-5" />
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="70.330002"
+             y="92.470001"
+             id="rect24-87" />
+          <path
+             d="m 80.38,98.43 h -0.24 v -5.96 h 6.2 v 0 c 0,3.29 -2.67,5.96 -5.96,5.96 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path24-9" />
+          <path
+             d="m 47.11,98.43 h -0.24 c -3.29,0 -5.96,-2.67 -5.96,-5.96 v 0 h 6.2 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path25-6" />
+        </g>
+      </g>
+    </g>
+    <path
+       style="fill:none;stroke:#999999;stroke-width:1.05833;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:3.175, 3.175;stroke-dashoffset:0"
+       d="m 92.132728,152.91954 c 0,0 15.773932,-18.09419 25.071062,-11.7138 9.29713,6.38038 19.97707,10.27738 22.59942,3.96629 3.02141,-7.27148 -35.39305,-20.14285 -33.90338,-25.59325 3.15135,-11.53015 26.63411,-18.09897 23.31879,-22.087597 -2.3023,-2.769867 -2.55891,-7.57336 -38.81771,-1.375274"
+       id="path23"
+       sodipodi:nodetypes="cssssc" />
+    <g
+       id="line2d_2"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 40.254545,29.454545"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#008000;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:round"
+         id="path3" />
+      <defs
+         id="defs3">
+        <path
+           id="path17"
+           d="m 0,-10 -2.24514,6.90983 H -9.510565 L -3.632713,1.18034 -5.877853,8.09017 0,3.81966 5.877853,8.09017 3.632713,1.18034 9.510565,-3.09017 H 2.24514 Z"
+           style="stroke:#008000;stroke-linejoin:bevel" />
+      </defs>
+      <g
+         clip-path="url(#p03db528aa0)"
+         id="g3"
+         style="stroke-linecap:butt;stroke-linejoin:round">
+        <use
+           xlink:href="#m57af566826"
+           x="40.254543"
+           y="29.454544"
+           style="fill:#008000;stroke:#008000;stroke-linecap:butt;stroke-linejoin:bevel"
+           id="use3" />
+      </g>
+    </g>
+    <path
+       style="fill:none;stroke:#999999;stroke-width:1.05833;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:3.175, 3.175"
+       d="m 92.132728,152.91954 c 0,0 2.021184,-35.88257 -1.411233,-42.53038"
+       id="path17-8"
+       sodipodi:nodetypes="cc" />
+    <g
+       id="g26-1"
+       transform="matrix(0.07065298,0,0,0.07065298,86.125547,107.66202)"
+       style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+      <path
+         d="M 86.05,35.16 H 41.64 V 21.19 c 0,-6.51 5.27,-11.78 11.78,-11.78 h 20.85 c 6.51,0 11.78,5.27 11.78,11.78 z"
+         style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path1-6-2" />
+      <path
+         d="m 55.12,11.62 c -0.64,-1.89 -4.14,-0.77 -5.95,0.32 -1.81,1.09 -4.34,3.97 -3.43,4.7 0.9,0.72 2.38,-1.12 5.53,-1.99 2.93,-0.81 4.38,-1.47 3.85,-3.03 z"
+         style="fill:#ffffff;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path2-7-9" />
+      <path
+         d="M 88.73,24.77 H 39.01 v -2.1 c 0,-1.79 1.45,-3.24 3.24,-3.24 H 85.5 c 1.79,0 3.24,1.45 3.24,3.24 v 2.1 z"
+         style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path3-5-3" />
+      <path
+         d="m 119.73,58.05 2.06,-45.88 c 0.06,-1.39 1.21,-2.49 2.61,-2.49 v 0 c 1.44,0 2.61,1.17 2.61,2.61 v 58.98 c 0,0.83 -0.4,1.62 -1.07,2.11 l -7.41,5.41 z"
+         style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path4-3-9" />
+      <path
+         d="M 8.27,58.05 6.22,12.17 C 6.15,10.78 5,9.68 3.61,9.68 v 0 C 2.17,9.68 1,10.85 1,12.29 v 58.98 c 0,0.83 0.4,1.62 1.07,2.11 l 7.41,5.41 z"
+         style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path5-5-0" />
+      <ellipse
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="ellipse5-8" />
+      <g
+         id="g5-8"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <defs
+           id="defs5-5">
+          <ellipse
+             id="ellipse7"
+             cx="13.69"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34" />
+        </defs>
+        <clipPath
+           id="clipPath1-0">
+          <ellipse
+             id="use1-9"
+             cx="13.69"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34"
+             style="stroke-linecap:butt;stroke-linejoin:round" />
+        </clipPath>
+        <rect
+           height="34.689999"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           width="2.6199999"
+           x="12.22"
+           y="49.540001"
+           clip-path="url(#SVGID_2_-6)"
+           id="rect5-6" />
+      </g>
+      <g
+         id="g6-3"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <defs
+           id="defs6-8">
+          <ellipse
+             id="ellipse8"
+             cx="13.69"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34" />
+        </defs>
+        <clipPath
+           id="clipPath2-5">
+          <ellipse
+             id="use2-6-6"
+             cx="13.69"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34"
+             style="stroke-linecap:butt;stroke-linejoin:round" />
+        </clipPath>
+        <rect
+           height="34.689999"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           transform="rotate(180,13.8448,66.88625)"
+           width="2.6199999"
+           x="12.54"
+           y="49.540001"
+           clip-path="url(#SVGID_4_-3)"
+           id="rect6-1" />
+      </g>
+      <ellipse
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="ellipse6-1" />
+      <g
+         id="g7-5"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <defs
+           id="defs7-9">
+          <ellipse
+             id="ellipse9"
+             cx="114.38"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34" />
+        </defs>
+        <clipPath
+           id="clipPath3-8">
+          <ellipse
+             id="use3-2-4"
+             cx="114.38"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34"
+             style="stroke-linecap:butt;stroke-linejoin:round" />
+        </clipPath>
+        <rect
+           height="34.689999"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           transform="rotate(180,114.5371,66.88625)"
+           width="2.6199999"
+           x="113.23"
+           y="49.540001"
+           clip-path="url(#SVGID_6_-5)"
+           id="rect7-8" />
+      </g>
+      <g
+         id="g8-1"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <defs
+           id="defs8-0">
+          <ellipse
+             id="ellipse10"
+             cx="114.38"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34" />
+        </defs>
+        <clipPath
+           id="clipPath4-3">
+          <ellipse
+             id="use4-0"
+             cx="114.38"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34"
+             style="stroke-linecap:butt;stroke-linejoin:round" />
+        </clipPath>
+        <rect
+           height="34.689999"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           width="2.6199999"
+           x="112.91"
+           y="49.540001"
+           clip-path="url(#SVGID_8_-3)"
+           id="rect8-4" />
+      </g>
+      <path
+         d="M 111.12,35.15 100.05,24.33 C 98.02,22.35 95.31,21.24 92.47,21.24 H 35.73 c -2.83,0 -5.55,1.11 -7.58,3.09 L 17.08,35.15 c -2.09,2.04 -3.26,4.83 -3.26,7.75 V 56.32 83.5 96.92 c 0,2.92 1.18,5.71 3.26,7.75 l 11.07,10.82 c 2.03,1.98 4.74,3.09 7.58,3.09 h 56.74 c 2.83,0 5.55,-1.11 7.58,-3.09 l 11.07,-10.82 c 2.09,-2.04 3.26,-4.83 3.26,-7.75 V 83.51 56.33 42.9 c 0,-2.91 -1.18,-5.71 -3.26,-7.75 z"
+         style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path8-9-4" />
+      <g
+         id="g12-4"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <g
+           id="g9-4"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <circle
+             cx="40.279999"
+             cy="55.889999"
+             r="14.63"
+             style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="circle8-7" />
+          <circle
+             cx="40.279999"
+             cy="55.889999"
+             r="9.1999998"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="circle9-6" />
+        </g>
+        <g
+           id="g11-3"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <circle
+             cx="86.959999"
+             cy="55.889999"
+             r="14.63"
+             style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="circle10-1" />
+          <circle
+             cx="86.959999"
+             cy="55.889999"
+             r="9.1999998"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="circle11-7" />
+        </g>
+      </g>
+      <path
+         d="m 8.04,52.98 c 0,0 -4.96,11.58 -2.18,23.16 L 2.37,73.59 c 0,0 0.28,-5.78 1.99,-12.15 1.72,-6.39 3.68,-8.46 3.68,-8.46 z"
+         style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path12-1-5" />
+      <path
+         d="m 119.96,52.98 c 0,0 4.96,11.58 2.18,23.16 l 3.49,-2.55 c 0,0 -0.28,-5.78 -1.99,-12.15 -1.72,-6.39 -3.68,-8.46 -3.68,-8.46 z"
+         style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path13-2-9" />
+      <path
+         d="M 43.36,33.98"
+         style="fill:#93bfc6;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path14-7-6" />
+      <g
+         id="g16-2"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <path
+           d="m 61.85,65.7 -5.39,12.95 c -0.56,1.34 0.43,2.82 1.88,2.82 h 10.57 c 1.44,0 2.43,-1.46 1.89,-2.79 L 65.62,65.73 C 64.94,64.04 62.55,64.02 61.85,65.7 Z"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path15-1" />
+        <path
+           d="m 63.46,67.6 c -1.09,-0.31 -1.42,1.41 -2,2.92 -0.96,2.53 -1.22,3.71 -0.69,3.9 0.7,0.26 1.31,-0.54 2.25,-2.83 0.9,-2.15 1.36,-3.73 0.44,-3.99 z"
+           style="fill:#eda29b;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path16-7" />
+      </g>
+      <g
+         id="g19-8"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <line
+           style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           x1="48.389999"
+           x2="48.389999"
+           y1="90.330002"
+           y2="100.54"
+           id="line16-5" />
+        <line
+           style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           x1="58.970001"
+           x2="58.970001"
+           y1="90.330002"
+           y2="100.54"
+           id="line17-7" />
+        <line
+           style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           x1="69.559998"
+           x2="69.559998"
+           y1="90.330002"
+           y2="100.54"
+           id="line18-4" />
+        <line
+           style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           x1="80.139999"
+           x2="80.139999"
+           y1="90.330002"
+           y2="100.54"
+           id="line19-1" />
+        <path
+           d="M 81.99,100.54 H 46.21 c -4.91,0 -8.9,-3.98 -8.9,-8.9 v -1.31 h 53.57 v 1.31 c 0,4.91 -3.98,8.9 -8.89,8.9 z"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path19-8" />
+      </g>
+      <path
+         d="M 82.87,100.54 H 45.33 c -4.42,0 -8.01,-3.59 -8.01,-8.01 v 0 c 0,-1.22 0.99,-2.2 2.2,-2.2 h 49.17 c 1.22,0 2.2,0.99 2.2,2.2 v 0 c -0.01,4.42 -3.59,8.01 -8.02,8.01 z"
+         style="fill:#546e7a;stroke:#546e7a;stroke-width:14.9793;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+         id="path20-5" />
+      <path
+         d="m 46.82,91.52 v 8.4 c 0,0 -9.5,-0.78 -9.5,-8.28 z"
+         style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path21-9" />
+      <path
+         d="m 81.3,91.52 v 8.4 c 0,0 9.5,-0.78 9.5,-8.28 z"
+         style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path22-7" />
+      <g
+         id="g25-5"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <rect
+           height="5.96"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           width="6.1999998"
+           x="50.709999"
+           y="92.470001"
+           id="rect22-3" />
+        <rect
+           height="5.96"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           width="6.1999998"
+           x="60.52"
+           y="92.470001"
+           id="rect23-8" />
+        <rect
+           height="5.96"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           width="6.1999998"
+           x="70.330002"
+           y="92.470001"
+           id="rect24-8" />
+        <path
+           d="m 80.38,98.43 h -0.24 v -5.96 h 6.2 v 0 c 0,3.29 -2.67,5.96 -5.96,5.96 z"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path24-3" />
+        <path
+           d="m 47.11,98.43 h -0.24 c -3.29,0 -5.96,-2.67 -5.96,-5.96 v 0 h 6.2 z"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path25-1" />
+      </g>
+    </g>
+    <g
+       id="svg14-6-7"
+       transform="matrix(0.35277777,0,0,0.35277777,81.069486,74.550887)"
+       style="stroke-linecap:butt;stroke-linejoin:round">
+      <g
+         id="g26-7"
+         transform="matrix(0.20027617,0,0,0.20027617,26.677317,59.808237)"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <path
+           d="M 86.05,35.16 H 41.64 V 21.19 c 0,-6.51 5.27,-11.78 11.78,-11.78 h 20.85 c 6.51,0 11.78,5.27 11.78,11.78 z"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path1-6-6" />
+        <path
+           d="m 55.12,11.62 c -0.64,-1.89 -4.14,-0.77 -5.95,0.32 -1.81,1.09 -4.34,3.97 -3.43,4.7 0.9,0.72 2.38,-1.12 5.53,-1.99 2.93,-0.81 4.38,-1.47 3.85,-3.03 z"
+           style="fill:#ffffff;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path2-7-4" />
+        <path
+           d="M 88.73,24.77 H 39.01 v -2.1 c 0,-1.79 1.45,-3.24 3.24,-3.24 H 85.5 c 1.79,0 3.24,1.45 3.24,3.24 v 2.1 z"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path3-5-30" />
+        <path
+           d="m 119.73,58.05 2.06,-45.88 c 0.06,-1.39 1.21,-2.49 2.61,-2.49 v 0 c 1.44,0 2.61,1.17 2.61,2.61 v 58.98 c 0,0.83 -0.4,1.62 -1.07,2.11 l -7.41,5.41 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path4-3-3" />
+        <path
+           d="M 8.27,58.05 6.22,12.17 C 6.15,10.78 5,9.68 3.61,9.68 v 0 C 2.17,9.68 1,10.85 1,12.29 v 58.98 c 0,0.83 0.4,1.62 1.07,2.11 l 7.41,5.41 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path5-5-09" />
+        <ellipse
+           cx="13.69"
+           cy="66.889999"
+           rx="9.3299999"
+           ry="17.34"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="ellipse5-2" />
+        <g
+           id="g5-5"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs5-4">
+            <ellipse
+               id="ellipse11"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath16-5">
+            <ellipse
+               id="use1-94"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="2.6199999"
+             x="12.22"
+             y="49.540001"
+             clip-path="url(#SVGID_2_-64)"
+             id="rect16-6" />
+        </g>
+        <g
+           id="g6-9"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs6-2">
+            <ellipse
+               id="ellipse12"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath17-4">
+            <ellipse
+               id="use2-6-7"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             transform="rotate(180,13.8448,66.88625)"
+             width="2.6199999"
+             x="12.54"
+             y="49.540001"
+             clip-path="url(#SVGID_4_-33)"
+             id="rect17-7" />
+        </g>
+        <ellipse
+           cx="114.38"
+           cy="66.889999"
+           rx="9.3299999"
+           ry="17.34"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="ellipse6-5" />
+        <g
+           id="g7-4"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs7-8">
+            <ellipse
+               id="ellipse13"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath18-2">
+            <ellipse
+               id="use3-2-8"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             transform="rotate(180,114.5371,66.88625)"
+             width="2.6199999"
+             x="113.23"
+             y="49.540001"
+             clip-path="url(#SVGID_6_-6)"
+             id="rect18-9" />
+        </g>
+        <g
+           id="g8-3"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs8-6">
+            <ellipse
+               id="ellipse22"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath19-0">
+            <ellipse
+               id="use4-2"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="2.6199999"
+             x="112.91"
+             y="49.540001"
+             clip-path="url(#SVGID_8_-4)"
+             id="rect19-1" />
+        </g>
+        <path
+           d="M 111.12,35.15 100.05,24.33 C 98.02,22.35 95.31,21.24 92.47,21.24 H 35.73 c -2.83,0 -5.55,1.11 -7.58,3.09 L 17.08,35.15 c -2.09,2.04 -3.26,4.83 -3.26,7.75 V 56.32 83.5 96.92 c 0,2.92 1.18,5.71 3.26,7.75 l 11.07,10.82 c 2.03,1.98 4.74,3.09 7.58,3.09 h 56.74 c 2.83,0 5.55,-1.11 7.58,-3.09 l 11.07,-10.82 c 2.09,-2.04 3.26,-4.83 3.26,-7.75 V 83.51 56.33 42.9 c 0,-2.91 -1.18,-5.71 -3.26,-7.75 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path8-9-0" />
+        <g
+           id="g12-5"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <g
+             id="g9-1"
+             style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+            <circle
+               cx="40.279999"
+               cy="55.889999"
+               r="14.63"
+               style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle8-1" />
+            <circle
+               cx="40.279999"
+               cy="55.889999"
+               r="9.1999998"
+               style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle9-0" />
+          </g>
+          <g
+             id="g11-8"
+             style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+            <circle
+               cx="86.959999"
+               cy="55.889999"
+               r="14.63"
+               style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle10-5" />
+            <circle
+               cx="86.959999"
+               cy="55.889999"
+               r="9.1999998"
+               style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle11-0" />
+          </g>
+        </g>
+        <path
+           d="m 8.04,52.98 c 0,0 -4.96,11.58 -2.18,23.16 L 2.37,73.59 c 0,0 0.28,-5.78 1.99,-12.15 1.72,-6.39 3.68,-8.46 3.68,-8.46 z"
+           style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path12-1-6" />
+        <path
+           d="m 119.96,52.98 c 0,0 4.96,11.58 2.18,23.16 l 3.49,-2.55 c 0,0 -0.28,-5.78 -1.99,-12.15 -1.72,-6.39 -3.68,-8.46 -3.68,-8.46 z"
+           style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path13-2-4" />
+        <path
+           d="M 43.36,33.98"
+           style="fill:#93bfc6;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path14-7-62" />
+        <g
+           id="g16-5"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <path
+             d="m 61.85,65.7 -5.39,12.95 c -0.56,1.34 0.43,2.82 1.88,2.82 h 10.57 c 1.44,0 2.43,-1.46 1.89,-2.79 L 65.62,65.73 C 64.94,64.04 62.55,64.02 61.85,65.7 Z"
+             style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path15-8" />
+          <path
+             d="m 63.46,67.6 c -1.09,-0.31 -1.42,1.41 -2,2.92 -0.96,2.53 -1.22,3.71 -0.69,3.9 0.7,0.26 1.31,-0.54 2.25,-2.83 0.9,-2.15 1.36,-3.73 0.44,-3.99 z"
+             style="fill:#eda29b;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path16-6" />
+        </g>
+        <g
+           id="g19-2"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="48.389999"
+             x2="48.389999"
+             y1="90.330002"
+             y2="100.54"
+             id="line16-8" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="58.970001"
+             x2="58.970001"
+             y1="90.330002"
+             y2="100.54"
+             id="line17-4" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="69.559998"
+             x2="69.559998"
+             y1="90.330002"
+             y2="100.54"
+             id="line18-7" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="80.139999"
+             x2="80.139999"
+             y1="90.330002"
+             y2="100.54"
+             id="line19-2" />
+          <path
+             d="M 81.99,100.54 H 46.21 c -4.91,0 -8.9,-3.98 -8.9,-8.9 v -1.31 h 53.57 v 1.31 c 0,4.91 -3.98,8.9 -8.89,8.9 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path19-4" />
+        </g>
+        <path
+           d="M 82.87,100.54 H 45.33 c -4.42,0 -8.01,-3.59 -8.01,-8.01 v 0 c 0,-1.22 0.99,-2.2 2.2,-2.2 h 49.17 c 1.22,0 2.2,0.99 2.2,2.2 v 0 c -0.01,4.42 -3.59,8.01 -8.02,8.01 z"
+           style="fill:#546e7a;stroke:#546e7a;stroke-width:14.9793;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+           id="path20-0" />
+        <path
+           d="m 46.82,91.52 v 8.4 c 0,0 -9.5,-0.78 -9.5,-8.28 z"
+           style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path21-6" />
+        <path
+           d="m 81.3,91.52 v 8.4 c 0,0 9.5,-0.78 9.5,-8.28 z"
+           style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path22-2" />
+        <g
+           id="g25-9"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="50.709999"
+             y="92.470001"
+             id="rect22-9" />
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="60.52"
+             y="92.470001"
+             id="rect23-0" />
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="70.330002"
+             y="92.470001"
+             id="rect24-81" />
+          <path
+             d="m 80.38,98.43 h -0.24 v -5.96 h 6.2 v 0 c 0,3.29 -2.67,5.96 -5.96,5.96 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path24-31" />
+          <path
+             d="m 47.11,98.43 h -0.24 c -3.29,0 -5.96,-2.67 -5.96,-5.96 v 0 h 6.2 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path25-10" />
+        </g>
+      </g>
+    </g>
+    <path
+       style="fill:none;stroke:#999999;stroke-width:1.05833;stroke-linecap:round;stroke-dasharray:3.175, 3.175"
+       d="m 109.79727,114.367 c 0,0 13.76625,-3.82505 27.81758,7.9573"
+       id="path26"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#999999;stroke-width:1.05833;stroke-linecap:round;stroke-dasharray:3.175, 3.175"
+       d="m 92.132728,152.91954 c 0,0 10.415722,-15.14503 11.322052,-17.86403"
+       id="path27"
+       sodipodi:nodetypes="cc" />
+    <g
+       id="line2d_1"
+       style="stroke-linecap:butt;stroke-linejoin:round"
+       transform="matrix(0.35277777,0,0,0.35277777,76.200001,85.725)">
+      <path
+         d="M 45.163636,190.47273"
+         clip-path="url(#p03db528aa0)"
+         style="fill:none;stroke:#ff0000;stroke-width:1.5;stroke-linecap:square;stroke-linejoin:round"
+         id="path2" />
+      <defs
+         id="defs2">
+        <path
+           id="path18"
+           d="M 0,6 C 1.591219,6 3.117479,5.367802 4.242641,4.242641 5.367802,3.117479 6,1.591219 6,0 6,-1.591219 5.367802,-3.117479 4.242641,-4.242641 3.117479,-5.367802 1.591219,-6 0,-6 -1.591219,-6 -3.117479,-5.367802 -4.242641,-4.242641 -5.367802,-3.117479 -6,-1.591219 -6,0 -6,1.591219 -5.367802,3.117479 -4.242641,4.242641 -3.117479,5.367802 -1.591219,6 0,6 Z"
+           style="stroke:#ff0000" />
+      </defs>
+      <g
+         clip-path="url(#p03db528aa0)"
+         id="g2"
+         style="stroke-linecap:butt;stroke-linejoin:round">
+        <use
+           xlink:href="#mbb3e91bae3"
+           x="45.163635"
+           y="190.47273"
+           style="fill:#ff0000;stroke:#ff0000;stroke-linecap:butt;stroke-linejoin:round"
+           id="use2" />
+      </g>
+    </g>
+    <g
+       id="g26-1-0"
+       transform="matrix(0.07065298,0,0,0.07065298,98.452433,130.13712)"
+       style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+      <path
+         d="M 86.05,35.16 H 41.64 V 21.19 c 0,-6.51 5.27,-11.78 11.78,-11.78 h 20.85 c 6.51,0 11.78,5.27 11.78,11.78 z"
+         style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path1-6-2-5" />
+      <path
+         d="m 55.12,11.62 c -0.64,-1.89 -4.14,-0.77 -5.95,0.32 -1.81,1.09 -4.34,3.97 -3.43,4.7 0.9,0.72 2.38,-1.12 5.53,-1.99 2.93,-0.81 4.38,-1.47 3.85,-3.03 z"
+         style="fill:#ffffff;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path2-7-9-6" />
+      <path
+         d="M 88.73,24.77 H 39.01 v -2.1 c 0,-1.79 1.45,-3.24 3.24,-3.24 H 85.5 c 1.79,0 3.24,1.45 3.24,3.24 v 2.1 z"
+         style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path3-5-3-6" />
+      <path
+         d="m 119.73,58.05 2.06,-45.88 c 0.06,-1.39 1.21,-2.49 2.61,-2.49 v 0 c 1.44,0 2.61,1.17 2.61,2.61 v 58.98 c 0,0.83 -0.4,1.62 -1.07,2.11 l -7.41,5.41 z"
+         style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path4-3-9-4" />
+      <path
+         d="M 8.27,58.05 6.22,12.17 C 6.15,10.78 5,9.68 3.61,9.68 v 0 C 2.17,9.68 1,10.85 1,12.29 v 58.98 c 0,0.83 0.4,1.62 1.07,2.11 l 7.41,5.41 z"
+         style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path5-5-0-0" />
+      <ellipse
+         cx="13.69"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="ellipse5-8-0" />
+      <g
+         id="g5-8-4"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <defs
+           id="defs5-5-6">
+          <ellipse
+             id="ellipse27"
+             cx="13.69"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34" />
+        </defs>
+        <clipPath
+           id="clipPath1-0-6">
+          <ellipse
+             id="use1-9-7"
+             cx="13.69"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34"
+             style="stroke-linecap:butt;stroke-linejoin:round" />
+        </clipPath>
+        <rect
+           height="34.689999"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           width="2.6199999"
+           x="12.22"
+           y="49.540001"
+           clip-path="url(#SVGID_2_-6-0)"
+           id="rect5-6-5" />
+      </g>
+      <g
+         id="g6-3-6"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <defs
+           id="defs6-8-9">
+          <ellipse
+             id="ellipse28"
+             cx="13.69"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34" />
+        </defs>
+        <clipPath
+           id="clipPath2-5-7">
+          <ellipse
+             id="use2-6-6-2"
+             cx="13.69"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34"
+             style="stroke-linecap:butt;stroke-linejoin:round" />
+        </clipPath>
+        <rect
+           height="34.689999"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           transform="rotate(180,13.8448,66.88625)"
+           width="2.6199999"
+           x="12.54"
+           y="49.540001"
+           clip-path="url(#SVGID_4_-3-9)"
+           id="rect6-1-8" />
+      </g>
+      <ellipse
+         cx="114.38"
+         cy="66.889999"
+         rx="9.3299999"
+         ry="17.34"
+         style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="ellipse6-1-2" />
+      <g
+         id="g7-5-9"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <defs
+           id="defs7-9-9">
+          <ellipse
+             id="ellipse29"
+             cx="114.38"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34" />
+        </defs>
+        <clipPath
+           id="clipPath3-8-0">
+          <ellipse
+             id="use3-2-4-2"
+             cx="114.38"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34"
+             style="stroke-linecap:butt;stroke-linejoin:round" />
+        </clipPath>
+        <rect
+           height="34.689999"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           transform="rotate(180,114.5371,66.88625)"
+           width="2.6199999"
+           x="113.23"
+           y="49.540001"
+           clip-path="url(#SVGID_6_-5-9)"
+           id="rect7-8-7" />
+      </g>
+      <g
+         id="g8-1-6"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <defs
+           id="defs8-0-1">
+          <ellipse
+             id="ellipse30"
+             cx="114.38"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34" />
+        </defs>
+        <clipPath
+           id="clipPath4-3-2">
+          <ellipse
+             id="use4-0-1"
+             cx="114.38"
+             cy="66.889999"
+             rx="9.3299999"
+             ry="17.34"
+             style="stroke-linecap:butt;stroke-linejoin:round" />
+        </clipPath>
+        <rect
+           height="34.689999"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           width="2.6199999"
+           x="112.91"
+           y="49.540001"
+           clip-path="url(#SVGID_8_-3-9)"
+           id="rect8-4-5" />
+      </g>
+      <path
+         d="M 111.12,35.15 100.05,24.33 C 98.02,22.35 95.31,21.24 92.47,21.24 H 35.73 c -2.83,0 -5.55,1.11 -7.58,3.09 L 17.08,35.15 c -2.09,2.04 -3.26,4.83 -3.26,7.75 V 56.32 83.5 96.92 c 0,2.92 1.18,5.71 3.26,7.75 l 11.07,10.82 c 2.03,1.98 4.74,3.09 7.58,3.09 h 56.74 c 2.83,0 5.55,-1.11 7.58,-3.09 l 11.07,-10.82 c 2.09,-2.04 3.26,-4.83 3.26,-7.75 V 83.51 56.33 42.9 c 0,-2.91 -1.18,-5.71 -3.26,-7.75 z"
+         style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path8-9-4-9" />
+      <g
+         id="g12-4-9"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <g
+           id="g9-4-1"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <circle
+             cx="40.279999"
+             cy="55.889999"
+             r="14.63"
+             style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="circle8-7-4" />
+          <circle
+             cx="40.279999"
+             cy="55.889999"
+             r="9.1999998"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="circle9-6-9" />
+        </g>
+        <g
+           id="g11-3-1"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <circle
+             cx="86.959999"
+             cy="55.889999"
+             r="14.63"
+             style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="circle10-1-0" />
+          <circle
+             cx="86.959999"
+             cy="55.889999"
+             r="9.1999998"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="circle11-7-7" />
+        </g>
+      </g>
+      <path
+         d="m 8.04,52.98 c 0,0 -4.96,11.58 -2.18,23.16 L 2.37,73.59 c 0,0 0.28,-5.78 1.99,-12.15 1.72,-6.39 3.68,-8.46 3.68,-8.46 z"
+         style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path12-1-5-5" />
+      <path
+         d="m 119.96,52.98 c 0,0 4.96,11.58 2.18,23.16 l 3.49,-2.55 c 0,0 -0.28,-5.78 -1.99,-12.15 -1.72,-6.39 -3.68,-8.46 -3.68,-8.46 z"
+         style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path13-2-9-8" />
+      <path
+         d="M 43.36,33.98"
+         style="fill:#93bfc6;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path14-7-6-7" />
+      <g
+         id="g16-2-0"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <path
+           d="m 61.85,65.7 -5.39,12.95 c -0.56,1.34 0.43,2.82 1.88,2.82 h 10.57 c 1.44,0 2.43,-1.46 1.89,-2.79 L 65.62,65.73 C 64.94,64.04 62.55,64.02 61.85,65.7 Z"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path15-1-4" />
+        <path
+           d="m 63.46,67.6 c -1.09,-0.31 -1.42,1.41 -2,2.92 -0.96,2.53 -1.22,3.71 -0.69,3.9 0.7,0.26 1.31,-0.54 2.25,-2.83 0.9,-2.15 1.36,-3.73 0.44,-3.99 z"
+           style="fill:#eda29b;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path16-7-8" />
+      </g>
+      <g
+         id="g19-8-0"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <line
+           style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           x1="48.389999"
+           x2="48.389999"
+           y1="90.330002"
+           y2="100.54"
+           id="line16-5-4" />
+        <line
+           style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           x1="58.970001"
+           x2="58.970001"
+           y1="90.330002"
+           y2="100.54"
+           id="line17-7-2" />
+        <line
+           style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           x1="69.559998"
+           x2="69.559998"
+           y1="90.330002"
+           y2="100.54"
+           id="line18-4-9" />
+        <line
+           style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           x1="80.139999"
+           x2="80.139999"
+           y1="90.330002"
+           y2="100.54"
+           id="line19-1-6" />
+        <path
+           d="M 81.99,100.54 H 46.21 c -4.91,0 -8.9,-3.98 -8.9,-8.9 v -1.31 h 53.57 v 1.31 c 0,4.91 -3.98,8.9 -8.89,8.9 z"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path19-8-1" />
+      </g>
+      <path
+         d="M 82.87,100.54 H 45.33 c -4.42,0 -8.01,-3.59 -8.01,-8.01 v 0 c 0,-1.22 0.99,-2.2 2.2,-2.2 h 49.17 c 1.22,0 2.2,0.99 2.2,2.2 v 0 c -0.01,4.42 -3.59,8.01 -8.02,8.01 z"
+         style="fill:#546e7a;stroke:#546e7a;stroke-width:14.9793;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+         id="path20-5-0" />
+      <path
+         d="m 46.82,91.52 v 8.4 c 0,0 -9.5,-0.78 -9.5,-8.28 z"
+         style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path21-9-4" />
+      <path
+         d="m 81.3,91.52 v 8.4 c 0,0 9.5,-0.78 9.5,-8.28 z"
+         style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+         id="path22-7-2" />
+      <g
+         id="g25-5-2"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <rect
+           height="5.96"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           width="6.1999998"
+           x="50.709999"
+           y="92.470001"
+           id="rect22-3-2" />
+        <rect
+           height="5.96"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           width="6.1999998"
+           x="60.52"
+           y="92.470001"
+           id="rect23-8-0" />
+        <rect
+           height="5.96"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           width="6.1999998"
+           x="70.330002"
+           y="92.470001"
+           id="rect24-8-5" />
+        <path
+           d="m 80.38,98.43 h -0.24 v -5.96 h 6.2 v 0 c 0,3.29 -2.67,5.96 -5.96,5.96 z"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path24-3-5" />
+        <path
+           d="m 47.11,98.43 h -0.24 c -3.29,0 -5.96,-2.67 -5.96,-5.96 v 0 h 6.2 z"
+           style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path25-1-2" />
+      </g>
+    </g>
+    <path
+       style="fill:none;stroke:#999999;stroke-width:1.05833;stroke-linecap:round;stroke-dasharray:3.175, 3.175"
+       d="m 119.28706,106.13612 c 0,0 19.19108,4.7073 22.42799,-5.26238"
+       id="path30"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#999999;stroke-width:1.05833;stroke-linecap:round;stroke-dasharray:3.175, 3.175"
+       d="m 123.03868,144.76287 c 0,0 5.52769,11.05487 13.14123,9.13606"
+       id="path34"
+       sodipodi:nodetypes="cc" />
+    <g
+       id="svg14-6-9"
+       transform="matrix(0.35277777,0,0,0.35277777,127.90258,127.30208)"
+       style="stroke-linecap:butt;stroke-linejoin:round">
+      <g
+         id="g26-3"
+         transform="matrix(0.20027617,0,0,0.20027617,26.677317,59.808237)"
+         style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+        <path
+           d="M 86.05,35.16 H 41.64 V 21.19 c 0,-6.51 5.27,-11.78 11.78,-11.78 h 20.85 c 6.51,0 11.78,5.27 11.78,11.78 z"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path1-6-92" />
+        <path
+           d="m 55.12,11.62 c -0.64,-1.89 -4.14,-0.77 -5.95,0.32 -1.81,1.09 -4.34,3.97 -3.43,4.7 0.9,0.72 2.38,-1.12 5.53,-1.99 2.93,-0.81 4.38,-1.47 3.85,-3.03 z"
+           style="fill:#ffffff;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path2-7-8" />
+        <path
+           d="M 88.73,24.77 H 39.01 v -2.1 c 0,-1.79 1.45,-3.24 3.24,-3.24 H 85.5 c 1.79,0 3.24,1.45 3.24,3.24 v 2.1 z"
+           style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path3-5-301" />
+        <path
+           d="m 119.73,58.05 2.06,-45.88 c 0.06,-1.39 1.21,-2.49 2.61,-2.49 v 0 c 1.44,0 2.61,1.17 2.61,2.61 v 58.98 c 0,0.83 -0.4,1.62 -1.07,2.11 l -7.41,5.41 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path4-3-7" />
+        <path
+           d="M 8.27,58.05 6.22,12.17 C 6.15,10.78 5,9.68 3.61,9.68 v 0 C 2.17,9.68 1,10.85 1,12.29 v 58.98 c 0,0.83 0.4,1.62 1.07,2.11 l 7.41,5.41 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path5-5-8" />
+        <ellipse
+           cx="13.69"
+           cy="66.889999"
+           rx="9.3299999"
+           ry="17.34"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="ellipse5-9" />
+        <g
+           id="g5-1"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs5-54">
+            <ellipse
+               id="ellipse35"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath16-2">
+            <ellipse
+               id="use1-57"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="2.6199999"
+             x="12.22"
+             y="49.540001"
+             clip-path="url(#SVGID_2_-1)"
+             id="rect16-4" />
+        </g>
+        <g
+           id="g6-99"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs6-45">
+            <ellipse
+               id="ellipse36"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath17-3">
+            <ellipse
+               id="use2-6-5"
+               cx="13.69"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             transform="rotate(180,13.8448,66.88625)"
+             width="2.6199999"
+             x="12.54"
+             y="49.540001"
+             clip-path="url(#SVGID_4_-4)"
+             id="rect17-70" />
+        </g>
+        <ellipse
+           cx="114.38"
+           cy="66.889999"
+           rx="9.3299999"
+           ry="17.34"
+           style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="ellipse6-8" />
+        <g
+           id="g7-1"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs7-99">
+            <ellipse
+               id="ellipse37"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath18-8">
+            <ellipse
+               id="use3-2-2"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             transform="rotate(180,114.5371,66.88625)"
+             width="2.6199999"
+             x="113.23"
+             y="49.540001"
+             clip-path="url(#SVGID_6_-0)"
+             id="rect18-5" />
+        </g>
+        <g
+           id="g8-34"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <defs
+             id="defs8-9">
+            <ellipse
+               id="ellipse38"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34" />
+          </defs>
+          <clipPath
+             id="clipPath19-20">
+            <ellipse
+               id="use4-1"
+               cx="114.38"
+               cy="66.889999"
+               rx="9.3299999"
+               ry="17.34"
+               style="stroke-linecap:butt;stroke-linejoin:round" />
+          </clipPath>
+          <rect
+             height="34.689999"
+             style="fill:#ce453e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="2.6199999"
+             x="112.91"
+             y="49.540001"
+             clip-path="url(#SVGID_8_-6)"
+             id="rect19-9" />
+        </g>
+        <path
+           d="M 111.12,35.15 100.05,24.33 C 98.02,22.35 95.31,21.24 92.47,21.24 H 35.73 c -2.83,0 -5.55,1.11 -7.58,3.09 L 17.08,35.15 c -2.09,2.04 -3.26,4.83 -3.26,7.75 V 56.32 83.5 96.92 c 0,2.92 1.18,5.71 3.26,7.75 l 11.07,10.82 c 2.03,1.98 4.74,3.09 7.58,3.09 h 56.74 c 2.83,0 5.55,-1.11 7.58,-3.09 l 11.07,-10.82 c 2.09,-2.04 3.26,-4.83 3.26,-7.75 V 83.51 56.33 42.9 c 0,-2.91 -1.18,-5.71 -3.26,-7.75 z"
+           style="fill:#78a3ad;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path8-9-6" />
+        <g
+           id="g12-2"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <g
+             id="g9-12"
+             style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+            <circle
+               cx="40.279999"
+               cy="55.889999"
+               r="14.63"
+               style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle8-0" />
+            <circle
+               cx="40.279999"
+               cy="55.889999"
+               r="9.1999998"
+               style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle9-7" />
+          </g>
+          <g
+             id="g11-31"
+             style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+            <circle
+               cx="86.959999"
+               cy="55.889999"
+               r="14.63"
+               style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle10-19" />
+            <circle
+               cx="86.959999"
+               cy="55.889999"
+               r="9.1999998"
+               style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+               id="circle11-05" />
+          </g>
+        </g>
+        <path
+           d="m 8.04,52.98 c 0,0 -4.96,11.58 -2.18,23.16 L 2.37,73.59 c 0,0 0.28,-5.78 1.99,-12.15 1.72,-6.39 3.68,-8.46 3.68,-8.46 z"
+           style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path12-1-67" />
+        <path
+           d="m 119.96,52.98 c 0,0 4.96,11.58 2.18,23.16 l 3.49,-2.55 c 0,0 -0.28,-5.78 -1.99,-12.15 -1.72,-6.39 -3.68,-8.46 -3.68,-8.46 z"
+           style="fill:#64878e;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path13-2-7" />
+        <path
+           d="M 43.36,33.98"
+           style="fill:#93bfc6;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path14-7-4" />
+        <g
+           id="g16-0"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <path
+             d="m 61.85,65.7 -5.39,12.95 c -0.56,1.34 0.43,2.82 1.88,2.82 h 10.57 c 1.44,0 2.43,-1.46 1.89,-2.79 L 65.62,65.73 C 64.94,64.04 62.55,64.02 61.85,65.7 Z"
+             style="fill:#e06055;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path15-6" />
+          <path
+             d="m 63.46,67.6 c -1.09,-0.31 -1.42,1.41 -2,2.92 -0.96,2.53 -1.22,3.71 -0.69,3.9 0.7,0.26 1.31,-0.54 2.25,-2.83 0.9,-2.15 1.36,-3.73 0.44,-3.99 z"
+             style="fill:#eda29b;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path16-4" />
+        </g>
+        <g
+           id="g19-74"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="48.389999"
+             x2="48.389999"
+             y1="90.330002"
+             y2="100.54"
+             id="line16-85" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="58.970001"
+             x2="58.970001"
+             y1="90.330002"
+             y2="100.54"
+             id="line17-8" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="69.559998"
+             x2="69.559998"
+             y1="90.330002"
+             y2="100.54"
+             id="line18-2" />
+          <line
+             style="fill:#eceff1;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             x1="80.139999"
+             x2="80.139999"
+             y1="90.330002"
+             y2="100.54"
+             id="line19-6" />
+          <path
+             d="M 81.99,100.54 H 46.21 c -4.91,0 -8.9,-3.98 -8.9,-8.9 v -1.31 h 53.57 v 1.31 c 0,4.91 -3.98,8.9 -8.89,8.9 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path19-0" />
+        </g>
+        <path
+           d="M 82.87,100.54 H 45.33 c -4.42,0 -8.01,-3.59 -8.01,-8.01 v 0 c 0,-1.22 0.99,-2.2 2.2,-2.2 h 49.17 c 1.22,0 2.2,0.99 2.2,2.2 v 0 c -0.01,4.42 -3.59,8.01 -8.02,8.01 z"
+           style="fill:#546e7a;stroke:#546e7a;stroke-width:14.9793;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+           id="path20-6" />
+        <path
+           d="m 46.82,91.52 v 8.4 c 0,0 -9.5,-0.78 -9.5,-8.28 z"
+           style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path21-64" />
+        <path
+           d="m 81.3,91.52 v 8.4 c 0,0 9.5,-0.78 9.5,-8.28 z"
+           style="fill:#546e7a;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+           id="path22-6" />
+        <g
+           id="g25-2"
+           style="stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round">
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="50.709999"
+             y="92.470001"
+             id="rect22-8" />
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="60.52"
+             y="92.470001"
+             id="rect23-9" />
+          <rect
+             height="5.96"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             width="6.1999998"
+             x="70.330002"
+             y="92.470001"
+             id="rect24-6" />
+          <path
+             d="m 80.38,98.43 h -0.24 v -5.96 h 6.2 v 0 c 0,3.29 -2.67,5.96 -5.96,5.96 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path24-0" />
+          <path
+             d="m 47.11,98.43 h -0.24 c -3.29,0 -5.96,-2.67 -5.96,-5.96 v 0 h 6.2 z"
+             style="fill:#b8e9f4;stroke-width:3.74483;stroke-linecap:butt;stroke-linejoin:round"
+             id="path25-7" />
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

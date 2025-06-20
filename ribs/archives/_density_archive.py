@@ -48,7 +48,7 @@ def gaussian_kde_measures(measures, buffer, h):
 class DensityArchive(ArchiveBase):
     """An archive that models the density of solutions in measure space.
 
-    This archive originates in Density Descent Search in `Lee 2023
+    This archive originates in Density Descent Search in `Lee 2024
     <https://dl.acm.org/doi/10.1145/3638529.3654001>`_. It maintains a buffer of
     measures, and using that buffer, it builds a density estimator such as a
     KDE. The density estimator indicates which areas of measure space have, for

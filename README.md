@@ -43,12 +43,12 @@ heatmaps (archives) as output where each cell contains the best discovered
 representative of a region in measure space.
 
 > In the QD literature, measure function outputs have also been referred to as
-> "behavioral characteristics," "behavior descriptors," or "feature
-> descriptors."
+> "behavioral characteristics," "behavior descriptors," "feature descriptors,"
+> and "outcomes."
 
-Recent years have seen the development of a large number of QD algorithms. To
-represent these and future algorithms, we have developed the highly modular RIBS
-framework. RIBS divides a QD algorithm into three components:
+Recent years have seen the advent of many QD algorithms. To represent these and
+future algorithms, we have developed the highly modular RIBS framework. RIBS
+divides a QD algorithm into three components:
 
 - An **archive**, which saves generated solutions within measure space.
 - One or more **emitters**, where each emitter is an algorithm which generates
@@ -58,7 +58,7 @@ framework. RIBS divides a QD algorithm into three components:
   **emitters**. The **scheduler** also provides an interface for requesting new
   candidate solutions and telling the algorithm how candidates performed.
 
-By interchanging these components, a user can compose a large number of QD
+Interchanging these components enables a user to compose a large number of QD
 algorithms.
 
 Pyribs is an implementation of the RIBS framework designed to support a wide
@@ -75,11 +75,10 @@ three principles:
   limited computational resources.
 
 In contrast to other QD libraries, pyribs is "bare-bones." For example, like
-[pycma](https://pypi.org/project/cma/), pyribs focuses solely on optimizing
+[pycma](https://pypi.org/project/cma/), pyribs focuses on optimizing
 fixed-dimensional continuous domains. Focusing on this one commonly-occurring
 problem allows us to optimize the library for performance as well as ease of
-use. Refer to the list of [additional QD libraries](#additional-qd-libraries)
-below if you need to handle additional use cases.
+use.
 
 Following the RIBS framework (shown in the figure below), a standard algorithm
 in pyribs operates as follows:
@@ -198,6 +197,13 @@ plt.show()
 **The documentation is available online [here](https://docs.pyribs.org/). We
 suggest that new users start with the
 [tutorials](https://docs.pyribs.org/en/stable/tutorials.html).**
+
+## Supported Algorithms
+
+By implementing the RIBS framework, pyribs makes it possible to implement a wide
+variety of QD algorithms by interchanging the individual components. For
+examples of algorithms that can be implemented in pyribs, see
+[this list](https://docs.pyribs.org/en/stable/supported-algorithms.html).
 
 ## Paper and Citation
 

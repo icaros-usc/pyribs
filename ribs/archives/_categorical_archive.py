@@ -1,82 +1,47 @@
-"""Contains the CVTArchive."""
-import numbers
-
+"""Contains the CategoricalArchive."""
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
-from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
-from scipy.stats.qmc import Halton, Sobol
-from sklearn.cluster import k_means
 
-from ribs._utils import (check_batch_shape, check_finite, check_shape,
-                         validate_batch, validate_single)
+from ribs._utils import (check_batch_shape, check_shape, validate_batch,
+                         validate_single)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
+from ribs.archives._grid_archive import GridArchive
 from ribs.archives._utils import (fill_sentinel_values, parse_dtype,
                                   validate_cma_mae_settings)
 
 
-class CVTArchive(ArchiveBase):
+class CategoricalArchive(ArchiveBase):
     # pylint: disable = too-many-public-methods
-    """An archive that tessellates the measure space with centroids.
+    """An archive where each dimension is divided into categories.
 
-    This archive originates in `Vassiliades 2018
-    <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
-    Tessellation (CVT) to divide an n-dimensional measure space into k cells.
-    The CVT is created by sampling points uniformly from the n-dimensional
-    measure space and using k-means clustering to identify k centroids. When
-    items are inserted into the archive, we identify their cell by identifying
-    the closest centroid in measure space (using Euclidean distance). For
-    k-means clustering, we use :func:`sklearn.cluster.k_means`.
+    This archive is similar to a :class:`~ribs.archives.GridArchive`, except
+    that each measure is a categorical variable. Just like GridArchive, it can
+    be visualized as an n-dimensional grid in the measure space that is divided
+    into cells along each dimension. Each cell contains an elite, i.e., a
+    solution that *maximizes* the objective function and has measures that lie
+    within that cell. This archive also implements the idea of *soft archives*
+    that have *thresholds*, as introduced in `Fontaine 2023
+    <https://arxiv.org/abs/2205.10752>`_.
 
-    By default, finding the closest centroid is done in roughly
-    O(log(number of cells)) time using :class:`scipy.spatial.cKDTree`. To switch
-    to brute force, which takes O(number of cells) time, pass
-    ``use_kd_tree=False``.
-
-    To compare the performance of using the k-D tree vs brute force, we ran
-    benchmarks where we inserted 1k batches of 100 solutions into a 2D archive
-    with varying numbers of cells. We took the minimum over 5 runs for each data
-    point, as recommended in the docs for :meth:`timeit.Timer.repeat`.  Note the
-    logarithmic scales. This plot was generated on a reasonably modern laptop.
-
-    .. image:: ../_static/imgs/cvt_add_plot.png
-        :alt: Runtime to insert 100k entries into CVTArchive
-
-    Across almost all numbers of cells, using the k-D tree is faster than using
-    brute force. Thus, **we recommend always using the k-D tree.** See
-    `benchmarks/cvt_add.py
-    <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
-    in the project repo for more information about how this plot was generated.
-
-    Finally, if running multiple experiments, it may be beneficial to use the
-    same centroids across each experiment. Doing so can keep experiments
-    consistent and reduce execution time. To do this, either (1) construct
-    custom centroids and pass them in via the ``custom_centroids`` argument, or
-    (2) access the centroids created in the first archive with :attr:`centroids`
-    and pass them into ``custom_centroids`` when constructing archives for
-    subsequent experiments.
-
-    .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
-        <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds,
-        including the ``learning_rate`` and ``threshold_min`` parameters, refer
-        to our tutorial :doc:`/tutorials/cma_mae`.
-
-    .. note:: For more information on our choice of k-D tree implementation, see
-        :pr:`38`.
+    By default, this archive stores the following data fields: ``solution``,
+    ``objective``, ``measures``, ``threshold``, and ``index``. The ``threshold``
+    is the value that a solution's objective value must exceed to be inserted
+    into a cell, while the integer ``index`` uniquely identifies each cell.
 
     Args:
         solution_dim (int or tuple of int): Dimensionality of the solution
             space. Scalar or multi-dimensional solution shapes are allowed by
             passing an empty tuple or tuple of integers, respectively.
-        cells (int): The number of cells to use in the archive, equivalent to
-            the number of centroids/areas in the CVT.
-        ranges (array-like of (float, float)): Upper and lower bound of each
-            dimension of the measure space, e.g. ``[(-1, 1), (-2, 2)]``
-            indicates the first dimension should have bounds :math:`[-1,1]`
-            (inclusive), and the second dimension should have bounds
-            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
-            ``dims``.
+        categories (list of list of any): The name of each category for each
+            dimension of the measure space. The length of this list is the
+            dimensionality of the measure space. An example is ``[["A", "B",
+            "C"], ["One", "Two", "Three", "Four"]]``, which defines a 2D measure
+            space where the first dimension has categories ``["A", "B", "C"]``
+            and the second has categories ``["One", "Two", "Three", "Four"]``.
+            While any object can be used for the category name, strings are
+            expected to be the typical use case.
         learning_rate (float): The learning rate for threshold updates. Defaults
             to 1.0.
         threshold_min (float): The initial threshold value for all the cells.
@@ -89,13 +54,15 @@ class CVTArchive(ArchiveBase):
             objectives in the archive, e.g., if your objectives go as low as
             -300, pass in -300 so that each objective will be transformed as
             ``objective - (-300)``.
-        seed (int): Value to seed the random number generator as well as
-            :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
-        dtype (str or data-type or dict): Data type of the solutions,
-            objectives, and measures. This can be ``"f"`` / ``np.float32``,
-            ``"d"`` / ``np.float64``, or a dict specifying separate dtypes, of
-            the form ``{"solution": <dtype>, "objective": <dtype>, "measures":
-            <dtype>}``.
+        seed (int): Value to seed the random number generator. Set to None to
+            avoid a fixed seed.
+        dtype (str or data-type or dict): There are two options for this
+            parameter. First, it can be just the data type of the solutions and
+            objectives, with the measures defaulting to a dtype of ``object``.
+            In this case, ``dtype`` can be ``"f"`` / ``np.float32`` or ``"d"`` /
+            ``np.float64``. Second, ``dtype`` can be a dict specifying separate
+            dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
+            "measures": <dtype>}``.
         extra_fields (dict): Description of extra fields of data that is stored
             next to elite data like solutions and objectives. The description is
             a dict mapping from a field name (str) to a tuple of ``(shape,
@@ -104,67 +71,33 @@ class CVTArchive(ArchiveBase):
             and a "bar" field that contains 10D values. Note that field names
             must be valid Python identifiers, and names already used in the
             archive are not allowed.
-        custom_centroids (array-like): If passed in, this (cells, measure_dim)
-            array will be used as the centroids of the CVT instead of generating
-            new ones. In this case, ``samples`` will be ignored, and
-            ``archive.samples`` will be None. This can be useful when one wishes
-            to use the same CVT across experiments for fair comparison.
-        centroid_method (str): Pass in the following methods for
-            generating centroids: "random", "sobol", "scrambled_sobol",
-            "halton". Default method is "kmeans". These methods are derived from
-            Mouret 2023: https://dl.acm.org/doi/pdf/10.1145/3583133.3590726.
-            Note: Samples are only used when method is "kmeans".
-        samples (int or array-like): If it is an int, this specifies the number
-            of samples to generate when creating the CVT. Otherwise, this must
-            be a (num_samples, measure_dim) array where samples[i] is a sample
-            to use when creating the CVT. It can be useful to pass in custom
-            samples when there are restrictions on what samples in the measure
-            space are (physically) possible.
-        k_means_kwargs (dict): kwargs for :func:`~sklearn.cluster.k_means`. By
-            default, we pass in `n_init=1`, `init="random"`,
-            `algorithm="lloyd"`, and `random_state=seed`.
-        use_kd_tree (bool): If True, use a k-D tree for finding the closest
-            centroid when inserting into the archive. If False, brute force will
-            be used instead.
-        ckdtree_kwargs (dict): kwargs for :class:`~scipy.spatial.cKDTree`. By
-            default, we do not pass in any kwargs.
-        chunk_size (int): If passed, brute forcing the closest centroid search
-            will chunk the distance calculations to compute chunk_size inputs at
-            a time.
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
-        ValueError: The ``samples`` array or the ``custom_centroids`` array has
-            the wrong shape.
     """
 
     def __init__(
         self,
         *,
         solution_dim,
-        cells,
-        ranges,
+        categories,
         learning_rate=None,
         threshold_min=-np.inf,
         qd_score_offset=0.0,
         seed=None,
         dtype=np.float64,
         extra_fields=None,
-        custom_centroids=None,
-        centroid_method="kmeans",
-        samples=100_000,
-        k_means_kwargs=None,
-        use_kd_tree=True,
-        ckdtree_kwargs=None,
-        chunk_size=None,
     ):
         self._rng = np.random.default_rng(seed)
+        self._categories = [list(measure_dim) for measure_dim in categories]
+        self._dims = np.array([len(measure_dim) for measure_dim in categories],
+                              dtype=np.int32)
 
         ArchiveBase.__init__(
             self,
             solution_dim=solution_dim,
             objective_dim=(),
-            measure_dim=len(ranges),
+            measure_dim=len(self._categories),
         )
 
         # Set up the ArrayStore, which is a data structure that stores all the
@@ -176,6 +109,13 @@ class CVTArchive(ArchiveBase):
         if reserved_fields & extra_fields.keys():
             raise ValueError("The following names are not allowed in "
                              f"extra_fields: {reserved_fields}")
+        if not isinstance(dtype, dict):
+            # Make measures default to `object` dtype.
+            dtype = {
+                "solution": dtype,
+                "measures": object,
+                "objective": dtype,
+            }
         dtype = parse_dtype(dtype)
         self._store = ArrayStore(
             field_desc={
@@ -187,14 +127,15 @@ class CVTArchive(ArchiveBase):
                 "threshold": ((), dtype["objective"]),
                 **extra_fields,
             },
-            capacity=cells,
+            capacity=np.prod(self._dims),
         )
 
         # Set up constant properties.
-        ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
-        self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
-        self._interval_size = self._upper_bounds - self._lower_bounds
+        self._category_to_idx = [
+            # Map from the category names in each dimension to integer indices.
+            dict(zip(measure_dim, range(len(measure_dim))))
+            for measure_dim in categories
+        ]
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
             learning_rate, threshold_min, self.dtypes["threshold"])
         self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
@@ -205,95 +146,6 @@ class CVTArchive(ArchiveBase):
         self._objective_sum = None
         self._stats = None
         self._stats_reset()
-
-        # Apply default args for k-means. Users can easily override these,
-        # particularly if they want higher quality clusters.
-        self._k_means_kwargs = ({} if k_means_kwargs is None else
-                                k_means_kwargs.copy())
-        self._k_means_kwargs.setdefault(
-            # Only run one iter to be fast.
-            "n_init",
-            1)
-        self._k_means_kwargs.setdefault(
-            # The default "k-means++" takes very long to init.
-            "init",
-            "random")
-        self._k_means_kwargs.setdefault("algorithm", "lloyd")
-        self._k_means_kwargs.setdefault("random_state", seed)
-
-        if custom_centroids is None:
-            self._samples = None
-            if centroid_method == "kmeans":
-                if not isinstance(samples, numbers.Integral):
-                    # Validate shape of custom samples.
-                    samples = np.asarray(samples, dtype=self.dtypes["measures"])
-                    if samples.shape[1] != self._measure_dim:
-                        raise ValueError(
-                            f"Samples has shape {samples.shape} but must be of "
-                            f"shape (n_samples, len(ranges)="
-                            f"{self._measure_dim})")
-                    self._samples = samples
-                else:
-                    self._samples = self._rng.uniform(
-                        self._lower_bounds,
-                        self._upper_bounds,
-                        size=(samples, self._measure_dim),
-                    ).astype(self.dtypes["measures"])
-
-                self._centroids = k_means(self._samples, self.cells,
-                                          **self._k_means_kwargs)[0]
-
-                if self._centroids.shape[0] < self.cells:
-                    raise RuntimeError(
-                        "While generating the CVT, k-means clustering found "
-                        f"{self._centroids.shape[0]} centroids, but this "
-                        f"archive needs {self.cells} cells. This most "
-                        "likely happened because there are too few samples "
-                        "and/or too many cells.")
-            elif centroid_method == "random":
-                # Generates random centroids.
-                self._centroids = self._rng.uniform(self._lower_bounds,
-                                                    self._upper_bounds,
-                                                    size=(self.cells,
-                                                          self._measure_dim))
-            elif centroid_method == "sobol":
-                # Generates centroids as a Sobol sequence.
-                sampler = Sobol(d=self._measure_dim, scramble=False)
-                sobol_nums = sampler.random(n=self.cells)
-                self._centroids = (self._lower_bounds + sobol_nums *
-                                   (self._upper_bounds - self._lower_bounds))
-            elif centroid_method == "scrambled_sobol":
-                # Generates centroids as a scrambled Sobol sequence.
-                sampler = Sobol(d=self._measure_dim, scramble=True)
-                sobol_nums = sampler.random(n=self.cells)
-                self._centroids = (self._lower_bounds + sobol_nums *
-                                   (self._upper_bounds - self._lower_bounds))
-            elif centroid_method == "halton":
-                # Generates centroids with a Halton sequence.
-                sampler = Halton(d=self._measure_dim)
-                halton_nums = sampler.random(n=self.cells)
-                self._centroids = (self._lower_bounds + halton_nums *
-                                   (self._upper_bounds - self._lower_bounds))
-        else:
-            # Validate shape of `custom_centroids` when they are provided.
-            custom_centroids = np.asarray(custom_centroids,
-                                          dtype=self.dtypes["measures"])
-            if custom_centroids.shape != (cells, self._measure_dim):
-                raise ValueError(
-                    f"custom_centroids has shape {custom_centroids.shape} but "
-                    f"must be of shape (cells={cells}, len(ranges)="
-                    f"{self._measure_dim})")
-            self._centroids = custom_centroids
-            self._samples = None
-
-        self._use_kd_tree = use_kd_tree
-        self._centroid_kd_tree = None
-        self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
-                                ckdtree_kwargs.copy())
-        self._chunk_size = chunk_size
-        if self._use_kd_tree:
-            self._centroid_kd_tree = cKDTree(self._centroids,
-                                             **self._ckdtree_kwargs)
 
     ## Properties inherited from ArchiveBase ##
 
@@ -340,25 +192,20 @@ class CVTArchive(ArchiveBase):
         return self._best_elite
 
     @property
+    def categories(self):
+        """list of list of any: The categories in each dimension of the measure
+        space."""
+        return self._categories
+
+    @property
+    def dims(self):
+        """(measure_dim,) numpy.ndarray: Number of cells in each dimension."""
+        return self._dims
+
+    @property
     def cells(self):
         """int: Total number of cells in the archive."""
         return self._store.capacity
-
-    @property
-    def lower_bounds(self):
-        """(measure_dim,) numpy.ndarray: Lower bound of each dimension."""
-        return self._lower_bounds
-
-    @property
-    def upper_bounds(self):
-        """(measure_dim,) numpy.ndarray: Upper bound of each dimension."""
-        return self._upper_bounds
-
-    @property
-    def interval_size(self):
-        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds -
-        lower_bounds)."""
-        return self._interval_size
 
     @property
     def learning_rate(self):
@@ -375,22 +222,6 @@ class CVTArchive(ArchiveBase):
         """float: The offset which is subtracted from objective values when
         computing the QD score."""
         return self._qd_score_offset
-
-    @property
-    def centroids(self):
-        """(n_centroids, measure_dim) numpy.ndarray: The centroids used in the
-        CVT.
-        """
-        return self._centroids
-
-    @property
-    def samples(self):
-        """(num_samples, measure_dim) numpy.ndarray: The samples used in
-        creating the CVT.
-
-        Will be None if custom centroids were passed in to the archive.
-        """
-        return self._samples
 
     ## dunder methods ##
 
@@ -443,58 +274,33 @@ class CVTArchive(ArchiveBase):
         )
 
     def index_of(self, measures):
-        """Finds the indices of the centroid closest to the given coordinates in
-        measure space.
+        """Returns archive indices for the given batch of measures.
 
-        If ``index_batch`` is the batch of indices returned by this method, then
-        ``archive.centroids[index_batch[i]]`` holds the coordinates of the
-        centroid closest to ``measures[i]``. See :attr:`centroids` for more
-        info.
-
-        The centroid indices are located using either the k-D tree or brute
-        force, depending on the value of ``use_kd_tree`` in the constructor.
+        This is by done by mapping from the category name to the cell indices,
+        and then converting to integer indices with :meth:`grid_to_int_index`.
 
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
         Returns:
-            numpy.ndarray: (batch_size,) array of centroid indices
-            corresponding to each measure space coordinate.
+            numpy.ndarray: (batch_size,) array of integer indices representing
+            the flattened grid coordinates.
         Raises:
             ValueError: ``measures`` is not of shape (batch_size,
                 :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
 
-        if self._use_kd_tree:
-            _, indices = self._centroid_kd_tree.query(measures)
-            return indices.astype(np.int32)
-        else:
-            expanded_measures = np.expand_dims(measures, axis=1)
-            # Compute indices chunks at a time
-            if self._chunk_size is not None and \
-                    self._chunk_size < measures.shape[0]:
-                indices = []
-                chunks = np.array_split(
-                    expanded_measures,
-                    np.ceil(len(expanded_measures) / self._chunk_size))
-                for chunk in chunks:
-                    distances = chunk - self.centroids
-                    distances = np.sum(np.square(distances), axis=2)
-                    current_res = np.argmin(distances, axis=1).astype(np.int32)
-                    indices.append(current_res)
-                return np.concatenate(tuple(indices))
-            else:
-                # Brute force distance calculation -- start by taking the
-                # difference between each measure i and all the centroids.
-                distances = expanded_measures - self.centroids
-                # Compute the total squared distance -- no need to compute
-                # actual distance with a sqrt.
-                distances = np.sum(np.square(distances), axis=2)
-                return np.argmin(distances, axis=1).astype(np.int32)
+        # yapf: disable
+        grid_indices = [
+            [self._category_to_idx[i][m] for i, m in enumerate(measure)]
+            for measure in measures
+        ]
+        # yapf: enable
+
+        return self.grid_to_int_index(grid_indices)
 
     def index_of_single(self, measures):
         """Returns the index of the measures for one solution.
@@ -511,10 +317,13 @@ class CVTArchive(ArchiveBase):
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
+
+    # Copy these methods from GridArchive.
+    int_to_grid_index = GridArchive.int_to_grid_index
+    grid_to_int_index = GridArchive.grid_to_int_index
 
     ## Methods for writing to the archive ##
 
@@ -893,9 +702,8 @@ class CVTArchive(ArchiveBase):
     ## Refer to ArchiveBase for documentation of these methods. ##
 
     def retrieve(self, measures):
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
 
         occupied, data = self._store.retrieve(self.index_of(measures))
         fill_sentinel_values(occupied, data)
@@ -903,9 +711,8 @@ class CVTArchive(ArchiveBase):
         return occupied, data
 
     def retrieve_single(self, measures):
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
-        check_finite(measures, "measures")
 
         occupied, data = self.retrieve(measures[None])
 

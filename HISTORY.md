@@ -6,6 +6,11 @@
 
 #### API
 
+- Allow result_archive to be positional arg in schedulers ({pr}`557`)
+- **Backwards-incompatible:** Make `num_active` a keyword-only arg in
+  BanditScheduler ({pr}`557`)
+- Add CategoricalArchive ({pr}`549`)
+- Support solutions with non-1D shapes ({pr}`550`)
 - **Backwards-incompatible:** Move cqd_score into a separate function
   ({pr}`537`)
 - **Backwards-incompatible:** Make archive field_list and dtypes props include
@@ -42,9 +47,11 @@
 
 #### Documentation
 
+- Add Novelty Search with Kheperax tutorial ({pr}`552`)
+- Add Supported Algorithms page ({pr}`559`)
 - Add cqd_score example ({pr}`537`)
 - Update sphere example for consistency ({pr}`505`)
-- DQD tutorial edits ({pr}`500`)
+- Tutorial edits ({pr}`500`, {pr}`553`, {pr}`554`)
 - Add version selector to docs ({pr}`495`)
 - Update gymnasium and lunar lander version ({pr}`493`)
 - Add tutorial page on Optuna integration ({pr}`492`)

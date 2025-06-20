@@ -17,10 +17,11 @@ class ProximityArchive(ArchiveBase):
     defined via proximity to other solutions in measure space.
 
     This archive originates in Novelty Search and is described in `Lehman 2011
-    <http://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf>`_. Solutions are added to
-    the archive if their `novelty` exceeds a certain threshold. `Novelty`
-    :math:`\\rho` is defined as the average (Euclidean) distance in measure
-    space to the :math:`k`-nearest neighbors of the solution in the archive:
+    <https://web.archive.org/web/20220707041732/https://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf>`_.
+    Solutions are added to the archive if their `novelty` exceeds a certain
+    threshold. `Novelty` :math:`\\rho` is defined as the average (Euclidean)
+    distance in measure space to the :math:`k`-nearest neighbors of the solution
+    in the archive:
 
     .. math::
 
@@ -32,7 +33,7 @@ class ProximityArchive(ArchiveBase):
 
     This archive also supports the local competition computation from Novelty
     Search with Local Competition, described in `Lehman 2011b
-    <http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
+    <https://web.archive.org/web/20111206122453/http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
 
     .. note:: When used for diversity optimization, this archive does not
         require any objectives, and ``objective=None`` can be passed into
@@ -61,7 +62,9 @@ class ProximityArchive(ArchiveBase):
     identifies each cell.
 
     Args:
-        solution_dim (int): Dimensionality of the solution space.
+        solution_dim (int or tuple of int): Dimensionality of the solution
+            space. Scalar or multi-dimensional solution shapes are allowed by
+            passing an empty tuple or tuple of integers, respectively.
         measure_dim (int): Dimensionality of the measure space.
         k_neighbors (int): The maximum number of nearest neighbors for computing
             novelty (`maximum` here is indicated since there may be fewer than
@@ -152,9 +155,9 @@ class ProximityArchive(ArchiveBase):
         dtype = parse_dtype(dtype)
         self._store = ArrayStore(
             field_desc={
-                "solution": ((self.solution_dim,), dtype["solution"]),
+                "solution": (self.solution_dim, dtype["solution"]),
                 "objective": ((), dtype["objective"]),
-                "measures": ((self.measure_dim,), dtype["measures"]),
+                "measures": (self.measure_dim, dtype["measures"]),
                 **extra_fields,
             },
             capacity=initial_capacity,

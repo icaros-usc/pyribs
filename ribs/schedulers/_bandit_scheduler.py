@@ -38,6 +38,10 @@ class BanditScheduler:
             select from, e.g. :class:`ribs.emitters.GaussianEmitter`. On the
             first iteration, the first `num_active` emitters from the
             emitter_pool will be activated.
+        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
+            CMA-MAE, the archive does not store all the best-performing
+            solutions. The ``result_archive`` is a secondary archive where we
+            can store all the best-performing solutions.
         num_active (int): The number of active emitters at a time. Active
             emitters are used when calling ask-tell.
         zeta (float): Hyperparamter of UCB1 that balances the trade-off between
@@ -57,10 +61,6 @@ class BanditScheduler:
             included for legacy reasons, as it was the only mode of operation
             in pyribs 0.4.0 and before. We highly recommend using "batch" mode
             since it is significantly faster.
-        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
-            CMA-MAE, the archive does not store all the best-performing
-            solutions. The ``result_archive`` is a secondary archive where we
-            can store all the best-performing solutions.
     Raises:
         TypeError: The ``emitter_pool`` argument was not a list of emitters.
         ValueError: Number of active emitters is less than one.
@@ -78,11 +78,11 @@ class BanditScheduler:
     def __init__(self,
                  archive,
                  emitter_pool,
-                 num_active,
+                 result_archive=None,
                  *,
+                 num_active,
                  reselect="terminated",
                  zeta=0.05,
-                 result_archive=None,
                  add_mode="batch"):
         if num_active < 1:
             raise ValueError("num_active cannot be less than 1.")

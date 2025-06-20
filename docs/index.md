@@ -9,6 +9,7 @@
 
 tutorials
 examples
+supported-algorithms
 whats-new
 ```
 

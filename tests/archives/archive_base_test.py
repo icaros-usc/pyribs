@@ -2,12 +2,16 @@
 import numpy as np
 import pytest
 
-from ribs.archives import (CVTArchive, GridArchive, ProximityArchive,
-                           SlidingBoundariesArchive)
+from ribs.archives import (CategoricalArchive, CVTArchive, GridArchive,
+                           ProximityArchive, SlidingBoundariesArchive)
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
-MAE_ARCHIVES = (GridArchive, CVTArchive)
+MAE_ARCHIVES = (
+    CategoricalArchive,
+    CVTArchive,
+    GridArchive,
+)
 
 # pylint: disable = redefined-outer-name
 
@@ -24,9 +28,15 @@ def test_str_dtype_float(name, dtype):
     archive = get_archive_data(name, str_dtype).archive
     assert archive.dtypes["solution"] == np_dtype
     assert archive.dtypes["objective"] == np_dtype
-    assert archive.dtypes["measures"] == np_dtype
+
+    if isinstance(archive, CategoricalArchive):
+        assert archive.dtypes["measures"] == np.object_
+    else:
+        assert archive.dtypes["measures"] == np_dtype
+
     if isinstance(archive, MAE_ARCHIVES):
         assert archive.dtypes["threshold"] == np_dtype
+
     assert archive.dtypes["index"] == np.int32
 
 
@@ -42,7 +52,7 @@ def test_dict_dtype():
         },
     )
 
-    assert archive.dtypes["solution"] == np.dtype(object)
+    assert archive.dtypes["solution"] == np.object_
     assert archive.dtypes["objective"] == np.float32
     assert archive.dtypes["measures"] == np.float32
     assert archive.dtypes["threshold"] == np.float32
@@ -427,9 +437,15 @@ def test_retrieve_empty_values(data):
         assert not occupied[0]
         assert np.all(np.isnan(elites["solution"][0]))
         assert np.isnan(elites["objective"])
-        assert np.all(np.isnan(elites["measures"][0]))
+
+        if isinstance(data.archive, CategoricalArchive):
+            assert all(m is None for m in elites["measures"][0])
+        else:
+            assert np.all(np.isnan(elites["measures"][0]))
+
         if isinstance(data.archive, MAE_ARCHIVES):
             assert np.isnan(elites["threshold"])
+
         assert elites["index"][0] == -1
 
 
@@ -460,9 +476,15 @@ def test_retrieve_single_empty_values(data):
         assert not occupied
         assert np.all(np.isnan(elite["solution"]))
         assert np.isnan(elite["objective"])
-        assert np.all(np.isnan(elite["measures"]))
+
+        if isinstance(data.archive, CategoricalArchive):
+            assert all(m is None for m in elite["measures"])
+        else:
+            assert np.all(np.isnan(elite["measures"]))
+
         if isinstance(data.archive_with_elite, MAE_ARCHIVES):
             assert np.isnan(elite["threshold"])
+
         assert elite["index"] == -1
 
 
@@ -497,8 +519,13 @@ def test_pandas_data(name, with_elite, dtype):
     expected_cols = ([f"solution_{i}" for i in range(solution_dim)] +
                      ["objective"] +
                      [f"measures_{i}" for i in range(measure_dim)])
-    expected_dtypes = ([dtype for _ in range(solution_dim)] + [dtype] +
-                       [dtype for _ in range(measure_dim)])
+
+    expected_dtypes = [dtype for _ in range(solution_dim)] + [dtype]
+    if isinstance(data.archive, CategoricalArchive):
+        expected_dtypes += [np.object_ for _ in range(measure_dim)]
+    else:
+        expected_dtypes += [dtype for _ in range(measure_dim)]
+
     expected_data = [*data.solution, data.objective, *data.measures]
 
     if isinstance(data.archive, MAE_ARCHIVES):
@@ -525,8 +552,11 @@ def test_pandas_data(name, with_elite, dtype):
             index = df.loc[0, "index"]
             assert (data.archive_with_elite.centroids[index] == data.centroid
                    ).all()
-        elif isinstance(data.archive_with_elite,
-                        (GridArchive, SlidingBoundariesArchive)):
+        elif isinstance(data.archive_with_elite, (
+                CategoricalArchive,
+                GridArchive,
+                SlidingBoundariesArchive,
+        )):
             # These archives have expected grid indices.
             assert df.loc[0, "index"] == data.archive.grid_to_int_index(
                 [data.grid_indices])[0]
@@ -534,4 +564,6 @@ def test_pandas_data(name, with_elite, dtype):
             # Archives where indices can't be tested.
             assert isinstance(data.archive_with_elite, (ProximityArchive,))
 
-        assert (df.iloc[0, :len(expected_data)] == expected_data).all()
+        # Comparing the df to the list of expected data seems to make things be
+        # marked unequal when the dtypes are mixed between object and scalar.
+        assert list(df.iloc[0, :len(expected_data)]) == expected_data

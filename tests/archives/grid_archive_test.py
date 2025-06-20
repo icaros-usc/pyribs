@@ -64,10 +64,20 @@ def assert_archive_elites(
                         data["solution"][j] == solution_batch[i])
             else:
                 solution_match = True
+
             objective_match = (objective_batch is None or np.isclose(
                 data["objective"][j], objective_batch[i]))
-            measures_match = (measures_batch is None or np.allclose(
-                data["measures"][j], measures_batch[i]))
+
+            if measures_batch is not None:
+                if data["solution"].dtype.kind == "f":
+                    measures_match = np.allclose(data["measures"][j],
+                                                 measures_batch[i])
+                else:
+                    measures_match = np.all(
+                        data["measures"][j] == measures_batch[i])
+            else:
+                measures_match = True
+
             index_match = (
                 grid_indices_batch is None or
                 # pylint: disable-next = possibly-used-before-assignment
@@ -782,4 +792,90 @@ def test_retessellate_into_smaller_dims():
         objective_batch=[2.0],
         measures_batch=[[-0.75, -0.75]],
         grid_indices_batch=[[0, 0]],
+    )
+
+
+def test_scalar_solutions():
+    archive = GridArchive(solution_dim=(),
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
+    assert archive.solution_dim == ()
+
+    add_info = archive.add(
+        solution=[1, 2, 3, 4],
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective=[0, 0, 0, 1],
+        measures=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+    )
+    assert (add_info["status"] == 2).all()
+    assert np.isclose(add_info["value"], [0, 0, 0, 1]).all()
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=3,
+        solution_batch=[1, 2, 4],
+        objective_batch=[0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
+    )
+
+
+def test_str_solutions():
+    archive = GridArchive(
+        solution_dim=(),
+        dims=[10, 20],
+        ranges=[(-1, 1), (-2, 2)],
+        dtype={
+            "solution": object,
+            "objective": np.float32,
+            "measures": np.float32
+        },
+    )
+    assert archive.solution_dim == ()
+    assert archive.dtypes["solution"] == np.object_
+
+    add_info = archive.add(
+        solution=["One", "Two", "Three", "Four"],
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective=[0, 0, 0, 1],
+        measures=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+    )
+    assert (add_info["status"] == 2).all()
+    assert np.isclose(add_info["value"], [0, 0, 0, 1]).all()
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=3,
+        solution_batch=["One", "Two", "Four"],
+        objective_batch=[0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
+    )
+
+
+def test_multi_dim_solutions():
+    archive = GridArchive(solution_dim=(2, 3),
+                          dims=[10, 20],
+                          ranges=[(-1, 1), (-2, 2)])
+    assert archive.solution_dim == (2, 3)
+
+    add_info = archive.add(
+        solution=np.arange(4 * 2 * 3).reshape((4, 2, 3)),
+        # The first two solutions end up in separate cells, and the next two end
+        # up in the same cell.
+        objective=[0, 0, 0, 1],
+        measures=[[0, 0], [0.25, 0.25], [0.5, 0.5], [0.5, 0.5]],
+    )
+    assert (add_info["status"] == 2).all()
+    assert np.isclose(add_info["value"], [0, 0, 0, 1]).all()
+
+    assert_archive_elites(
+        archive=archive,
+        batch_size=3,
+        solution_batch=np.arange(4 * 2 * 3).reshape((4, 2, 3))[[0, 1, 3]],
+        objective_batch=[0, 0, 1],
+        measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+        grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
     )
