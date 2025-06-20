@@ -1,5 +1,9 @@
-"""Example script of running BOP-Elites on the sphere domain. Before running
-this example, please install pymoo with:
+"""Example script of running BOP-Elites on the sphere domain.
+
+BOP-Elites was introduced in Kent 2024:
+https://ieeexplore.ieee.org/abstract/document/10472301
+
+Before running this example, please install pymoo with:
 
     pip install ribs[pymoo]
 """

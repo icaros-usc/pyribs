@@ -20,8 +20,9 @@ class BayesianOptimizationEmitter(EmitterBase):
     of Elites* (EJIE) acquisition values. This emitter requires the
     `pymoo <https://pypi.org/project/pymoo/>`_ package.
 
-    Refer to `Kent et al. 2024 <https://ieeexplore.ieee.org/abstract/document
-    /10472301>` for more information.
+    Refer to `Kent et al. 2024
+    <https://ieeexplore.ieee.org/abstract/document/10472301>` for more
+    information.
 
     Args:
         archive (ribs.archives.GridArchive): An archive to use when creating

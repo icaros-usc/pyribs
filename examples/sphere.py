@@ -1,4 +1,4 @@
-"""Runs various QD algorithms on the Sphere function.
+"""Runs various QD algorithms on the sphere linear projection benchmark.
 
 Install the following dependencies before running this example:
     pip install ribs[visualize] tqdm fire
