@@ -1,11 +1,16 @@
 # History
 
-## (Forthcoming)
+## 0.8.0
+
+To learn about this release, see our page on What's New in v0.8.0:
+https://docs.pyribs.org/en/stable/whats-new.html
 
 ### Changelog
 
 #### API
 
+- Implement BOP-Elites by adding BayesianOptimizationEmitter and
+  BayesianOptimizationScheduler; add BOP-Elites demo ({pr}`496`)
 - Allow result_archive to be positional arg in schedulers ({pr}`557`)
 - **Backwards-incompatible:** Make `num_active` a keyword-only arg in
   BanditScheduler ({pr}`557`)
@@ -107,7 +112,7 @@ makes a couple of minor usability improvements, such as better error checking.
 ## 0.7.0
 
 To learn about this release, see our page on What's New in v0.7.0:
-https://docs.pyribs.org/en/stable/whats-new.html
+https://docs.pyribs.org/en/stable/whats-new/v0.7.0.html
 
 ### Changelog
 
@@ -274,7 +279,7 @@ There were no changes to library functionality in this release.
 ## 0.5.0
 
 To learn about this release, see our page on What's New in v0.5.0:
-https://docs.pyribs.org/en/stable/whats-new.html
+https://docs.pyribs.org/en/stable/whats-new/v0.5.0.html
 
 ### Changelog
 
