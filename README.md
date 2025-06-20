@@ -198,6 +198,13 @@ plt.show()
 suggest that new users start with the
 [tutorials](https://docs.pyribs.org/en/stable/tutorials.html).**
 
+## Supported Algorithms
+
+By implementing the RIBS framework, pyribs makes it possible to implement a wide
+variety of QD algorithms by interchanging the individual components. For
+examples of algorithms that can be implemented in pyribs, see
+[this list](https://docs.pyribs.org/en/stable/supported-algorithms.html).
+
 ## Paper and Citation
 
 Two years after the initial release of pyribs, we released a paper that
