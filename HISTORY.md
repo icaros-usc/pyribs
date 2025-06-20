@@ -6,6 +6,9 @@
 
 #### API
 
+- Allow result_archive to be positional arg in schedulers ({pr}`557`)
+- **Backwards-incompatible:** Make `num_active` a keyword-only arg in
+  BanditScheduler ({pr}`557`)
 - Add CategoricalArchive ({pr}`549`)
 - Support solutions with non-1D shapes ({pr}`550`)
 - **Backwards-incompatible:** Move cqd_score into a separate function

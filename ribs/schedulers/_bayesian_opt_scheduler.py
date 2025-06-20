@@ -17,6 +17,10 @@ class BayesianOptimizationScheduler(Scheduler):
         archive (ribs.archives.GridArchive): An archive object.
         emitters (list of ribs.emitters.BayesianOptimizationEmitter): A list of
             emitter objects.
+        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
+            CMA-MAE, the archive does not store all the best-performing
+            solutions. The ``result_archive`` is a secondary archive where we
+            can store all the best-performing solutions.
         add_mode (str): Indicates how solutions should be added to the archive.
             The default is "batch", which adds all solutions with one call to
             :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single"
@@ -25,10 +29,6 @@ class BayesianOptimizationScheduler(Scheduler):
             included for legacy reasons, as it was the only mode of operation in
             pyribs 0.4.0 and before. We highly recommend using "batch" mode
             since it is significantly faster.
-        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
-            CMA-MAE, the archive does not store all the best-performing
-            solutions. The ``result_archive`` is a secondary archive where we
-            can store all the best-performing solutions.
 
     Raises:
         TypeError: Some emitters are not BayesianOptimizationEmitter.
@@ -38,13 +38,10 @@ class BayesianOptimizationScheduler(Scheduler):
     def __init__(self,
                  archive,
                  emitters,
-                 *,
                  result_archive=None,
+                 *,
                  add_mode="batch"):
-        super().__init__(archive,
-                         emitters,
-                         result_archive=result_archive,
-                         add_mode=add_mode)
+        super().__init__(archive, emitters, result_archive, add_mode=add_mode)
 
         # Checks that all emitters are BayesianOptimizationEmitter and have the
         # same upscale schedule
