@@ -13,6 +13,7 @@ tutorial page has a link to open the tutorial in Google Colab.
 tutorials/lunar_lander
 tutorials/cma_mae
 tutorials/tom_cruise_dqd
+tutorials/ns_maze
 tutorials/qdhf
 tutorials/scalable_cma_mae
 ```
@@ -28,6 +29,8 @@ the other algorithm tutorials.
 - {doc}`tutorials/tom_cruise_dqd`: Covers CMA-MEGA and CMA-MAEGA, two algorithms
   designed for differentiable quality diversity problems (QD problems where
   gradients are available).
+- {doc}`tutorials/ns_maze`: Describes Novelty Search, an essential precursor to
+  QD algorithms, and shows how to apply it in a classic domain.
 - {doc}`tutorials/qdhf`: Illustrates how to implement the QDHF algorithm on the
   problem of latent space illumination with a stable diffusion model.
 - {doc}`tutorials/scalable_cma_mae`: How to use variants of CMA-MAE that scale
