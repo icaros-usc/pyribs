@@ -6,6 +6,8 @@
 
 #### API
 
+- Implement BOP-Elites by adding BayesianOptimizationEmitter and
+  BayesianOptimizationScheduler; add BOP-Elites demo ({pr}`496`)
 - Allow result_archive to be positional arg in schedulers ({pr}`557`)
 - **Backwards-incompatible:** Make `num_active` a keyword-only arg in
   BanditScheduler ({pr}`557`)
