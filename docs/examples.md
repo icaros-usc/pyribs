@@ -22,6 +22,6 @@ of each file, then follow the usage instructions. Here are the current examples:
   Elites (BOP-Elites), an algorithm that adapts methods from Bayesian
   optimization to model the objective and measure functions and select solutions
   to evaluate.
-- {doc}`examples/cqd_score`: An example of how to compute Continuous QD Score,
-  an extension of QD Score that accounts for the tradeoff between objective
-  values and distance to desired measure values.
+- {doc}`examples/cqd_score`: An example of how to compute Continuous QD Score, a
+  metric that accounts for the tradeoff between objective values and distance to
+  desired measure values.
