@@ -143,11 +143,7 @@ def test_warn_nothing_added_to_result_archive(scheduler_type):
                                  learning_rate=1.0)
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
     if scheduler_type == "Scheduler":
-        scheduler = Scheduler(
-            archive,
-            emitters,
-            result_archive=result_archive,
-        )
+        scheduler = Scheduler(archive, emitters, result_archive)
     else:
         scheduler = BanditScheduler(
             archive,
@@ -183,11 +179,7 @@ def test_result_archive_mismatch_fields(scheduler_type):
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
 
     if scheduler_type == "Scheduler":
-        scheduler = Scheduler(
-            archive,
-            emitters,
-            result_archive=result_archive,
-        )
+        scheduler = Scheduler(archive, emitters, result_archive)
     else:
         scheduler = BanditScheduler(
             archive,
@@ -228,11 +220,7 @@ def test_result_archive_same_fields_with_threshold(scheduler_type):
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
 
     if scheduler_type == "Scheduler":
-        scheduler = Scheduler(
-            archive,
-            emitters,
-            result_archive=result_archive,
-        )
+        scheduler = Scheduler(archive, emitters, result_archive)
     else:
         scheduler = BanditScheduler(
             archive,

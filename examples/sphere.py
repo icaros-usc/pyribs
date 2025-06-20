@@ -926,7 +926,7 @@ def create_scheduler(config, algorithm, seed=None):
     scheduler = config["scheduler"]["class"](
         archive,
         emitters,
-        result_archive=result_archive,
+        result_archive,
         **config["scheduler"]["kwargs"],
     )
 
