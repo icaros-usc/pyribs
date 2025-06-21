@@ -52,7 +52,7 @@ https://docs.pyribs.org/en/stable/whats-new.html
 
 #### Documentation
 
-- Add Novelty Search with Kheperax tutorial ({pr}`552`)
+- Add Novelty Search with Kheperax tutorial ({pr}`552`, {pr}`560`)
 - Add Supported Algorithms page ({pr}`559`)
 - Add cqd_score example ({pr}`537`)
 - Update sphere example for consistency ({pr}`505`)
