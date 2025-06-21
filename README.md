@@ -339,7 +339,7 @@ papers:
     copyright = {arXiv.org perpetual, non-exclusive license}
   }
   ```
-- **Scalable CMA-MAE:** [Tjanaka 2022](https://arxiv.org/abs/2210.02622)
+- **Scalable CMA-MAE:** [Tjanaka 2023](https://arxiv.org/abs/2210.02622)
   ```
   @ARTICLE{10243102,
     author={Tjanaka, Bryon and Fontaine, Matthew C. and Lee, David H. and Kalkar, Aniruddha and Nikolaidis, Stefanos},
