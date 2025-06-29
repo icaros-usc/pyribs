@@ -1,5 +1,14 @@
 # History
 
+## (Forthcoming)
+
+### Changelog
+
+#### API
+
+- **Backwards-incompatible:** Remove convenience extras ribs[pymoo] and
+  ribs[pycma] ({pr}`567`)
+
 ## 0.8.0
 
 To learn about this release, see our page on What's New in v0.8.0:
