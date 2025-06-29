@@ -8,10 +8,11 @@ from ribs.schedulers._scheduler import Scheduler
 
 
 class BayesianOptimizationScheduler(Scheduler):
-    """This scheduler is mostly the same as :class:`~Scheduler`, except it
-    supports upscaling the archives associated with its emitters. It should be
-    used in conjunction with :class:`~ribs.emitters.BayesianOptimizationEmitter`
-    and :class:`~ribs.archives.GridArchive`.
+    """Similar to :class:`~Scheduler` with support for upscaling archives.
+
+    This scheduler should only be used in conjunction with
+    :class:`~ribs.emitters.BayesianOptimizationEmitter` and
+    :class:`~ribs.archives.GridArchive`.
 
     Args:
         archive (ribs.archives.GridArchive): An archive object.
