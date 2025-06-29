@@ -8,7 +8,7 @@ from ribs.schedulers._scheduler import Scheduler
 
 
 class BayesianOptimizationScheduler(Scheduler):
-    """Similar to :class:`~Scheduler` with support for upscaling archives.
+    """Similar to :class:`~Scheduler` but with support for upscaling archives.
 
     This scheduler should only be used in conjunction with
     :class:`~ribs.emitters.BayesianOptimizationEmitter` and
