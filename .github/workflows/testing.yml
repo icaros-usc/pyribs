@@ -53,7 +53,7 @@ jobs:
         run: pip install .[visualize]
       - name: Test visualize extra
         run: pytest tests/visualize
-      - name: Install cma dep
+      - name: Install cma
         run: pip install cma
       - name: Test cma extra
         run: pytest tests/emitters_pycma
