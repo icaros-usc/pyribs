@@ -69,7 +69,7 @@ def assert_archive_elites(
                 data["objective"][j], objective_batch[i]))
 
             if measures_batch is not None:
-                if data["solution"].dtype.kind == "f":
+                if data["measures"].dtype.kind == "f":
                     measures_match = np.allclose(data["measures"][j],
                                                  measures_batch[i])
                 else:
