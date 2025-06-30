@@ -10,6 +10,12 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
     """Wrapper around the pycma
     :class:`~cma.evolution_strategy.CMAEvolutionStrategy`.
 
+    .. note::
+
+        This optimizer requires the `pycma <https://github.com/CMA-ES/pycma>`_
+        package, which can be installed with ``pip install cma`` or ``conda
+        install cma``.
+
     Args:
         sigma0 (float): Initial step size.
         batch_size (int or str): Number of solutions to evaluate at a time. This
@@ -83,8 +89,8 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             import cma
         except ImportError as e:
             raise ImportError(
-                "pycma must be installed -- please run "
-                "`pip install ribs[pycma]` or `pip install cma`") from e
+                "pycma must be installed -- please run `pip install cma` or "
+                "`conda install cma`") from e
 
         self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)
 

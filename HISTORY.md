@@ -1,5 +1,20 @@
 # History
 
+## 0.8.1
+
+This release makes some minor updates to 0.8.0.
+
+### Changelog
+
+#### API
+
+- **Backwards-incompatible:** Remove convenience extras ribs[pymoo] and
+  ribs[pycma] ({pr}`567`)
+
+#### Documentation
+
+- Update Discord and X links in README ({pr}`566`)
+
 ## 0.8.0
 
 To learn about this release, see our page on What's New in v0.8.0:
