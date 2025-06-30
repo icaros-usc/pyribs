@@ -14,7 +14,8 @@ These evolution strategies inherit from :class:`EvolutionStrategyBase`:
 * ``cma_es``: :class:`CMAEvolutionStrategy`
 * ``lm_ma_es``: :class:`LMMAEvolutionStrategy`
 * ``openai_es``: :class:`OpenAIEvolutionStrategy`
-* ``pycma_es``: :class:`PyCMAEvolutionStrategy`
+* ``pycma_es``: :class:`PyCMAEvolutionStrategy` (requires `pycma
+  <https://github.com/CMA-ES/pycma>`_ to be installed)
 * ``sep_cma_es``: :class:`SeparableCMAEvolutionStrategy`
 
 .. autosummary::
