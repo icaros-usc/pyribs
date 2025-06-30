@@ -2,6 +2,8 @@
 
 ## 0.8.1
 
+This release makes some minor updates to 0.8.0.
+
 ### Changelog
 
 #### API
