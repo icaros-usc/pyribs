@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from ribs.archives import GridArchive, ProximityArchive
+from ribs.archives import CategoricalArchive, GridArchive, ProximityArchive
 from ribs.emitters import GaussianEmitter
 from ribs.schedulers import BanditScheduler, Scheduler
 
@@ -431,3 +431,39 @@ def test_constant_active_emitters_bandit_scheduler():
         scheduler.tell(objective, measures)
 
         assert scheduler.active.sum() == expected_active
+
+
+def test_scheduler_with_categorical_archive(add_mode):
+    batch_size = 4
+    archive = CategoricalArchive(
+        solution_dim=2,
+        categories=[
+            ["A", "B", "C"],
+            ["One", "Two", "Three", "Four"],
+        ],
+        dtype={
+            "solution": np.float32,
+            "objective": np.float32,
+            "measures": object,
+        },
+    )
+    emitters = [
+        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)
+    ]
+    scheduler = Scheduler(archive, emitters, add_mode=add_mode)
+
+    measures_batch = [["A", "Four"], ["B", "Three"], ["C", "One"], ["C", "Two"]]
+
+    _ = scheduler.ask()  # Ignore the actual values of the solutions.
+    # We pass in 4 solutions with unique measures, so all should go into
+    # the archive.
+    scheduler.tell(np.ones(batch_size), measures_batch)
+
+    print(archive.data())
+
+    assert_archive_elites(
+        archive=scheduler.archive,
+        batch_size=batch_size,
+        objective_batch=np.ones(batch_size),
+        measures_batch=measures_batch,
+    )
