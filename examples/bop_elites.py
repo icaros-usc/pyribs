@@ -3,9 +3,8 @@
 BOP-Elites was introduced in Kent 2024:
 https://ieeexplore.ieee.org/abstract/document/10472301
 
-Before running this example, please install pymoo with:
-
-    pip install ribs[pymoo]
+Install the following dependencies before running this example:
+    pip install ribs[visualize] pymoo tqdm fire
 """
 
 import json

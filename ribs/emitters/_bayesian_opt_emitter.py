@@ -15,14 +15,18 @@ from ribs.emitters._emitter_base import EmitterBase
 
 class BayesianOptimizationEmitter(EmitterBase):
     """A sample-efficient emitter that models objective and measure functions
-    with gaussian process surrogate models and uses Bayesian Optimisation to
-    emit solutions that are predicted to have high *Expected Joint Improvement
-    of Elites* (EJIE) acquisition values. This emitter requires the
-    `pymoo <https://pypi.org/project/pymoo/>`_ package.
+    with Gaussian process surrogate models.
 
-    Refer to `Kent et al. 2024
-    <https://ieeexplore.ieee.org/abstract/document/10472301>` for more
+    Bayesian Optimisation is used to emit solutions that are predicted to have
+    high *Expected Joint Improvement of Elites* (EJIE) acquisition values. Refer
+    to `Kent et al. 2024
+    <https://ieeexplore.ieee.org/abstract/document/10472301>`_ for more
     information.
+
+    .. note::
+
+        This emitter requires the `pymoo <https://pymoo.org>`_ package, which
+        can be installed with ``pip install pymoo`` or ``conda install pymoo``.
 
     Args:
         archive (ribs.archives.GridArchive): An archive to use when creating
@@ -84,8 +88,8 @@ class BayesianOptimizationEmitter(EmitterBase):
                 DefaultSingleObjectiveTermination
         except ImportError as e:
             raise ImportError(
-                "pymoo must be installed -- please run "
-                "`pip install ribs[pymoo]` or `pip install pymoo`") from e
+                "pymoo must be installed -- please run `pip install pymoo` "
+                "or `conda install pymoo`") from e
         self._pymoo_mods = {
             'PatternSearch':
                 PatternSearch,

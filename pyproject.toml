@@ -46,23 +46,13 @@ visualize = [
   "matplotlib>=3.0.0",
   "shapely>=2.0.0",
 ]
-pycma = [
-  "cma",
-]
-pymoo = [
-  "pymoo",
-]
-# All dependencies except for dev. Don't worry if there are duplicate
-# dependencies, since setuptools automatically handles duplicates.
 all = [
   ### visualize ###
   "matplotlib>=3.0.0",
   "shapely>=2.0.0",
 
-  ### cma ###
+  ### Extra dependencies used by various components. ###
   "cma",
-
-  ### pymoo ###
   "pymoo",
 ]
 dev = [
