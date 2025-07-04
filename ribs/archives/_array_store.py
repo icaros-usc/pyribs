@@ -35,7 +35,7 @@ class ArrayStoreIterator:
 
         Raises RuntimeError if the store was modified.
         """
-        if not np.all(self.state == self.store._props["updates"]):
+        if self.state != self.store._props["updates"]:
             # This check should go before the StopIteration check because a call
             # to clear() would cause the len(self.store) to be 0 and thus
             # trigger StopIteration.
@@ -103,7 +103,7 @@ class ArrayStore:
             * "occupied_list": Array of size ``(capacity,)`` listing all
               occupied indices in the store. Only the first ``n_occupied``
               elements will be valid.
-            * "updates": Int array recording number of calls to functions that
+            * "updates": Int list recording number of calls to functions that
               modified the store.
 
         _fields (dict): Holds all the arrays with their data.
@@ -123,7 +123,7 @@ class ArrayStore:
             "occupied": self.xp.zeros(capacity, dtype=bool),
             "n_occupied": 0,
             "occupied_list": self.xp.empty(capacity, dtype=self.xp.int32),
-            "updates": self.xp.array([0, 0]),
+            "updates": [0, 0],
         }
 
         self._fields = {}
