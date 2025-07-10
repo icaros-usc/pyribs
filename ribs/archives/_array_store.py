@@ -4,8 +4,6 @@ import numbers
 from enum import IntEnum
 from functools import cached_property
 
-from numpy_groupies import aggregate_nb as aggregate
-
 from ribs._utils import readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 
@@ -480,9 +478,14 @@ class ArrayStore:
                 "This can also occur if the archive and result_archive have "
                 "different extra_fields.")
 
+        # Determine the unique indices. These operations are preferred over
+        # `np.unique(indices)` because they operate in linear time, while
+        # np.unique must sort the input.
+        indices_occupied = self.xp.zeros(self.capacity, dtype=bool)
+        indices_occupied[indices] = True
+        unique_indices = self.xp.nonzero(indices_occupied)[0]
+
         # Update occupancy data.
-        # TODO: where?
-        unique_indices = np.where(aggregate(indices, 1, func="len") != 0)[0]
         cur_occupied = self._props["occupied"][unique_indices]
         new_indices = unique_indices[~cur_occupied]
         n_occupied = self._props["n_occupied"]
