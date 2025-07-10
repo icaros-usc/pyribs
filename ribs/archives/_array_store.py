@@ -482,8 +482,8 @@ class ArrayStore:
                 "different extra_fields.")
 
         # Determine the unique indices. These operations are preferred over
-        # `np.unique(indices)` because they operate in linear time, while
-        # np.unique must sort the input.
+        # `xp.unique_values(indices)` because they operate in linear time, while
+        # unique_values usually sorts the input.
         indices_occupied = self.xp.zeros(self.capacity, dtype=bool)
         indices_occupied[indices] = True
         unique_indices = self.xp.nonzero(indices_occupied)[0]
