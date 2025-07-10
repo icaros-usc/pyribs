@@ -216,6 +216,16 @@ def readonly(arr):
     return arr
 
 
+def np_readonly(arr):
+    """Sets an array to be readonly if it is a numpy array."""
+    if isinstance(arr, np_compat.ndarray):
+        readonly_arr = arr.view()
+        readonly_arr.flags.writeable = False
+        return readonly_arr
+    else:
+        return arr
+
+
 def xp_namespace(xp):
     """Utility for retrieving a namespace compatible with the array API.
 

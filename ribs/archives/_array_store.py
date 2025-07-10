@@ -4,7 +4,7 @@ import numbers
 from enum import IntEnum
 from functools import cached_property
 
-from ribs._utils import readonly, xp_namespace
+from ribs._utils import np_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 
 
@@ -171,13 +171,13 @@ class ArrayStore:
     def occupied(self):
         """numpy.ndarray: Boolean array of size ``(capacity,)`` indicating
         whether each index has a data entry."""
-        return readonly(self._props["occupied"].view())
+        return np_readonly(self._props["occupied"])
 
     @property
     def occupied_list(self):
         """numpy.ndarray: int32 array listing all occupied indices in the
         store."""
-        return readonly(
+        return np_readonly(
             self._props["occupied_list"][:self._props["n_occupied"]])
 
     @cached_property
@@ -558,12 +558,10 @@ class ArrayStore:
         Returns:
             dict: See description above.
         """
-        # TODO: Fix this for xp -- make it a special case?
         d = {}
         for prefix, attr in [("props", self._props), ("fields", self._fields)]:
             for name, val in attr.items():
-                if isinstance(val, np.ndarray):
-                    val = readonly(val.view())
+                val = np_readonly(val)
                 d[f"{prefix}.{name}"] = val
         return d
 
