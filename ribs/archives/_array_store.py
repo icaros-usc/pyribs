@@ -114,13 +114,13 @@ class ArrayStore:
     """
 
     def __init__(self, field_desc, capacity, xp=None):
-        self.xp = xp_namespace(xp)
+        self._xp = xp_namespace(xp)
 
         self._props = {
             "capacity": capacity,
-            "occupied": self.xp.zeros(capacity, dtype=bool),
+            "occupied": self._xp.zeros(capacity, dtype=bool),
             "n_occupied": 0,
-            "occupied_list": self.xp.empty(capacity, dtype=self.xp.int32),
+            "occupied_list": self._xp.empty(capacity, dtype=self._xp.int32),
             "updates": [0, 0],
         }
 
@@ -136,7 +136,7 @@ class ArrayStore:
                 field_shape = (field_shape,)
 
             array_shape = (capacity,) + tuple(field_shape)
-            self._fields[name] = self.xp.empty(array_shape, dtype=dtype)
+            self._fields[name] = self._xp.empty(array_shape, dtype=dtype)
 
     def __len__(self):
         """Number of occupied indices in the store, i.e., number of indices that
@@ -236,7 +236,7 @@ class ArrayStore:
                     "index": np.int32,
                 }
         """
-        return self.dtypes | {"index": self.xp.int32}
+        return self.dtypes | {"index": self._xp.int32}
 
     @cached_property
     def field_list(self):
@@ -360,7 +360,7 @@ class ArrayStore:
             ValueError: Invalid return_type provided.
         """
         single_field = isinstance(fields, str)
-        indices = self.xp.asarray(indices, dtype=self.xp.int32)
+        indices = self._xp.asarray(indices, dtype=self._xp.int32)
         occupied = self._props["occupied"][indices]  # Induces copy.
 
         if single_field:
@@ -383,7 +383,7 @@ class ArrayStore:
             # Note that fancy indexing with indices already creates a copy, so
             # only `indices` needs to be copied explicitly.
             if name == "index":
-                arr = self.xp.asarray(indices, copy=True)
+                arr = self._xp.asarray(indices, copy=True)
             elif name in self._fields:
                 arr = self._fields[name][indices]  # Induces copy.
             else:
@@ -484,9 +484,9 @@ class ArrayStore:
         # Determine the unique indices. These operations are preferred over
         # `xp.unique_values(indices)` because they operate in linear time, while
         # unique_values usually sorts the input.
-        indices_occupied = self.xp.zeros(self.capacity, dtype=bool)
+        indices_occupied = self._xp.zeros(self.capacity, dtype=bool)
         indices_occupied[indices] = True
-        unique_indices = self.xp.nonzero(indices_occupied)[0]
+        unique_indices = self._xp.nonzero(indices_occupied)[0]
 
         # Update occupancy data.
         cur_occupied = self._props["occupied"][unique_indices]
@@ -528,17 +528,17 @@ class ArrayStore:
         self._props["capacity"] = capacity
 
         cur_occupied = self._props["occupied"]
-        self._props["occupied"] = self.xp.zeros(capacity, dtype=bool)
+        self._props["occupied"] = self._xp.zeros(capacity, dtype=bool)
         self._props["occupied"][:cur_capacity] = cur_occupied
 
         cur_occupied_list = self._props["occupied_list"]
-        self._props["occupied_list"] = self.xp.empty(capacity,
-                                                     dtype=self.xp.int32)
+        self._props["occupied_list"] = self._xp.empty(capacity,
+                                                      dtype=self._xp.int32)
         self._props["occupied_list"][:cur_capacity] = cur_occupied_list
 
         for name, cur_arr in self._fields.items():
             new_shape = (capacity,) + cur_arr.shape[1:]
-            self._fields[name] = self.xp.empty(new_shape, dtype=cur_arr.dtype)
+            self._fields[name] = self._xp.empty(new_shape, dtype=cur_arr.dtype)
             self._fields[name][:cur_capacity] = cur_arr
 
     def as_raw_dict(self):
