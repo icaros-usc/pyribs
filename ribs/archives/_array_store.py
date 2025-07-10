@@ -58,6 +58,7 @@ class ArrayStoreIterator:
 # relevant library.
 # TODO: Add device argument too! We also need to consider device on all asarray
 # calls.
+# TODO: Test with torch and cupy dtypes.
 class ArrayStore:
     """Maintains a set of arrays that share a common dimension.
 
@@ -361,6 +362,7 @@ class ArrayStore:
         """
         single_field = isinstance(fields, str)
         indices = self._xp.asarray(indices, dtype=self._xp.int32)
+        # TODO: Is this comment correct?
         occupied = self._props["occupied"][indices]  # Induces copy.
 
         if single_field:
