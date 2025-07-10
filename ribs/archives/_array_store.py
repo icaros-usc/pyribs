@@ -411,7 +411,10 @@ class ArrayStore:
         if return_type == "tuple":
             data = tuple(data)
         elif return_type == "pandas":
-            # TODO: Unsure how dataframes hold up.
+            # TODO: We could move all data to CPU when this method is called
+            # with pandas? We could also provide a general option to do this for
+            # any return type given.
+
             # Data above are already copied, so no need to copy again.
             data = ArchiveDataFrame(data, copy=False)
 
@@ -529,7 +532,8 @@ class ArrayStore:
         self._props["occupied"][:cur_capacity] = cur_occupied
 
         cur_occupied_list = self._props["occupied_list"]
-        self._props["occupied_list"] = self.xp.empty(capacity, dtype=np.int32)
+        self._props["occupied_list"] = self.xp.empty(capacity,
+                                                     dtype=self.xp.int32)
         self._props["occupied_list"][:cur_capacity] = cur_occupied_list
 
         for name, cur_arr in self._fields.items():
@@ -554,7 +558,7 @@ class ArrayStore:
         Returns:
             dict: See description above.
         """
-        # TODO: Fix this for xp
+        # TODO: Fix this for xp -- make it a special case?
         d = {}
         for prefix, attr in [("props", self._props), ("fields", self._fields)]:
             for name, val in attr.items():
