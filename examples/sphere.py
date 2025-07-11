@@ -881,12 +881,16 @@ def create_scheduler(config, algorithm, seed=None, xp=None, device=None):
             solution_dim=solution_dim,
             measure_dim=len(bounds),
             seed=seed,
+            xp=xp,
+            device=device,
             **config["archive"]["kwargs"],
         )
     elif archive_class == DensityArchive:
         archive = archive_class(
             measure_dim=len(bounds),
             seed=seed,
+            xp=xp,
+            device=device,
             **config["archive"]["kwargs"],
         )
     else:
@@ -894,6 +898,8 @@ def create_scheduler(config, algorithm, seed=None, xp=None, device=None):
             solution_dim=solution_dim,
             ranges=bounds,
             seed=seed,
+            xp=xp,
+            device=device,
             **config["archive"]["kwargs"],
         )
 
@@ -908,6 +914,8 @@ def create_scheduler(config, algorithm, seed=None, xp=None, device=None):
             # other result archives.
             ranges=bounds,
             seed=seed,
+            xp=xp,
+            device=device,
             **config["result_archive"]["kwargs"],
         )
 
@@ -930,6 +938,7 @@ def create_scheduler(config, algorithm, seed=None, xp=None, device=None):
                 x0=initial_sol,
                 **e["kwargs"],
                 seed=s,
+                # TODO: Device for emitters
             ) for s in seed_sequence.spawn(e["num_emitters"])
         ]
 
@@ -1061,7 +1070,6 @@ def sphere_main(
             scheduler.tell_dqd(objectives, measures, jacobians)
 
         solutions = scheduler.ask()
-        # TODO: Rewrite sphere
         objectives, _, measures, _ = sphere(solutions)
         scheduler.tell(objectives, measures)
         non_logging_time += time.time() - itr_start
