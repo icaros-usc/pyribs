@@ -56,8 +56,6 @@ class ArrayStoreIterator:
 
 # TODO: Mention xp in docstring -- types in the field_desc have to be from the
 # relevant library.
-# TODO: Add device argument too! We also need to consider device on all asarray
-# calls.
 # TODO: Test with torch and cupy dtypes.
 class ArrayStore:
     """Maintains a set of arrays that share a common dimension.
@@ -91,6 +89,7 @@ class ArrayStore:
         xp (array_namespace): Optional array namespace. Should be compatible
             with the array API standard, or supported by array-api-compat.
             Defaults to ``numpy``.
+        device (device): Device for arrays.
 
     Attributes:
         _props (dict): Properties that are common to every ArrayStore.
@@ -114,14 +113,21 @@ class ArrayStore:
             valid Python identifier.
     """
 
-    def __init__(self, field_desc, capacity, xp=None):
+    def __init__(self, field_desc, capacity, xp=None, device=None):
         self._xp = xp_namespace(xp)
+        self._device = device
 
         self._props = {
-            "capacity": capacity,
-            "occupied": self._xp.zeros(capacity, dtype=bool),
-            "n_occupied": 0,
-            "occupied_list": self._xp.empty(capacity, dtype=self._xp.int32),
+            "capacity":
+                capacity,
+            "occupied":
+                self._xp.zeros(capacity, dtype=bool, device=self._device),
+            "n_occupied":
+                0,
+            "occupied_list":
+                self._xp.empty(capacity,
+                               dtype=self._xp.int32,
+                               device=self._device),
             "updates": [0, 0],
         }
 
@@ -137,7 +143,9 @@ class ArrayStore:
                 field_shape = (field_shape,)
 
             array_shape = (capacity,) + tuple(field_shape)
-            self._fields[name] = self._xp.empty(array_shape, dtype=dtype)
+            self._fields[name] = self._xp.empty(array_shape,
+                                                dtype=dtype,
+                                                device=self._device)
 
     def __len__(self):
         """Number of occupied indices in the store, i.e., number of indices that
@@ -218,10 +226,7 @@ class ArrayStore:
                     "measures": np.float32,
                 }
         """
-        # Calling `.type` retrieves the numpy scalar type, which is callable:
-        # - https://numpy.org/doc/stable/reference/arrays.scalars.html
-        # - https://numpy.org/doc/stable/reference/arrays.dtypes.html
-        return {name: arr.dtype.type for name, arr in self._fields.items()}
+        return {name: arr.dtype for name, arr in self._fields.items()}
 
     @cached_property
     def dtypes_with_index(self):
@@ -361,7 +366,9 @@ class ArrayStore:
             ValueError: Invalid return_type provided.
         """
         single_field = isinstance(fields, str)
-        indices = self._xp.asarray(indices, dtype=self._xp.int32)
+        indices = self._xp.asarray(indices,
+                                   dtype=self._xp.int32,
+                                   device=self._device)
         # TODO: Is this comment correct?
         occupied = self._props["occupied"][indices]  # Induces copy.
 
@@ -486,7 +493,9 @@ class ArrayStore:
         # Determine the unique indices. These operations are preferred over
         # `xp.unique_values(indices)` because they operate in linear time, while
         # unique_values usually sorts the input.
-        indices_occupied = self._xp.zeros(self.capacity, dtype=bool)
+        indices_occupied = self._xp.zeros(self.capacity,
+                                          dtype=bool,
+                                          device=self._device)
         indices_occupied[indices] = True
         unique_indices = self._xp.nonzero(indices_occupied)[0]
 
@@ -530,17 +539,22 @@ class ArrayStore:
         self._props["capacity"] = capacity
 
         cur_occupied = self._props["occupied"]
-        self._props["occupied"] = self._xp.zeros(capacity, dtype=bool)
+        self._props["occupied"] = self._xp.zeros(capacity,
+                                                 dtype=bool,
+                                                 device=self._device)
         self._props["occupied"][:cur_capacity] = cur_occupied
 
         cur_occupied_list = self._props["occupied_list"]
         self._props["occupied_list"] = self._xp.empty(capacity,
-                                                      dtype=self._xp.int32)
+                                                      dtype=self._xp.int32,
+                                                      device=self._device)
         self._props["occupied_list"][:cur_capacity] = cur_occupied_list
 
         for name, cur_arr in self._fields.items():
             new_shape = (capacity,) + cur_arr.shape[1:]
-            self._fields[name] = self._xp.empty(new_shape, dtype=cur_arr.dtype)
+            self._fields[name] = self._xp.empty(new_shape,
+                                                dtype=cur_arr.dtype,
+                                                device=self._device)
             self._fields[name][:cur_capacity] = cur_arr
 
     def as_raw_dict(self):
