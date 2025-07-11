@@ -116,7 +116,9 @@ from pathlib import Path
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 import tqdm
+from array_api_compat import array_namespace
 
 from ribs.archives import (CVTArchive, DensityArchive, GridArchive,
                            ProximityArchive)
@@ -790,15 +792,17 @@ def sphere(solutions):
     """Sphere function evaluation and measures for a batch of solutions.
 
     Args:
-        solutions (np.ndarray): (batch_size, dim) batch of solutions.
+        solutions (ndarray): (batch_size, dim) batch of solutions.
     Returns:
-        objectives (np.ndarray): (batch_size,) batch of objectives.
-        objective_grads (np.ndarray): (batch_size, solution_dim) batch of
-            objective gradients.
-        measures (np.ndarray): (batch_size, 2) batch of measures.
-        measure_grads (np.ndarray): (batch_size, 2, solution_dim) batch of
-            measure gradients.
+        objectives (ndarray): (batch_size,) batch of objectives.
+        objective_grads (ndarray): (batch_size, solution_dim) batch of objective
+            gradients.
+        measures (ndarray): (batch_size, 2) batch of measures.
+        measure_grads (ndarray): (batch_size, 2, solution_dim) batch of measure
+            gradients.
     """
+    xp = array_namespace(solutions)
+
     dim = solutions.shape[1]
 
     # Shift the Sphere function so that the optimal value is at x_i = 2.048.
@@ -807,30 +811,30 @@ def sphere(solutions):
     # Normalize the objective to the range [0, 100] where 100 is optimal.
     best_obj = 0.0
     worst_obj = (-5.12 - sphere_shift)**2 * dim
-    raw_obj = np.sum(np.square(solutions - sphere_shift), axis=1)
+    raw_obj = xp.sum(xp.square(solutions - sphere_shift), axis=1)
     objectives = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
 
     # Compute gradient of the objective.
     objective_grads = -2 * (solutions - sphere_shift)
 
     # Calculate measures.
-    clipped = solutions.copy()
+    clipped = xp.asarray(solutions, copy=True)
     clip_mask = (clipped < -5.12) | (clipped > 5.12)
     clipped[clip_mask] = 5.12 / clipped[clip_mask]
-    measures = np.concatenate(
+    measures = xp.concat(
         (
-            np.sum(clipped[:, :dim // 2], axis=1, keepdims=True),
-            np.sum(clipped[:, dim // 2:], axis=1, keepdims=True),
+            xp.sum(clipped[:, :dim // 2], axis=1, keepdims=True),
+            xp.sum(clipped[:, dim // 2:], axis=1, keepdims=True),
         ),
         axis=1,
     )
 
     # Compute gradient of the measures.
-    derivatives = np.ones(solutions.shape)
+    derivatives = xp.ones(solutions.shape, device=solutions.device)
     derivatives[clip_mask] = -5.12 / np.square(solutions[clip_mask])
 
-    mask_0 = np.concatenate((np.ones(dim // 2), np.zeros(dim - dim // 2)))
-    mask_1 = np.concatenate((np.zeros(dim // 2), np.ones(dim - dim // 2)))
+    mask_0 = xp.concat((np.ones(dim // 2), np.zeros(dim - dim // 2)))
+    mask_1 = xp.concat((np.zeros(dim // 2), np.ones(dim - dim // 2)))
 
     d_measure0 = derivatives * mask_0
     d_measure1 = derivatives * mask_1
@@ -845,7 +849,7 @@ def sphere(solutions):
     )
 
 
-def create_scheduler(config, algorithm, seed=None):
+def create_scheduler(config, algorithm, seed=None, xp=None, device=None):
     """Creates a scheduler based on the algorithm.
 
     Args:
@@ -958,15 +962,19 @@ def save_heatmap(archive, heatmap_path):
     plt.close(plt.gcf())
 
 
-def sphere_main(algorithm,
-                dim=100,
-                itrs=10000,
-                grid_dims=None,
-                learning_rate=None,
-                es=None,
-                outdir="sphere_output",
-                log_freq=250,
-                seed=None):
+def sphere_main(
+    algorithm,
+    dim=100,
+    itrs=10000,
+    grid_dims=None,
+    learning_rate=None,
+    es=None,
+    outdir="sphere_output",
+    log_freq=250,
+    seed=None,
+    xp=None,
+    device=None,
+):
     """Demo on the Sphere function.
 
     Args:
@@ -981,6 +989,8 @@ def sphere_main(algorithm,
         log_freq (int): Number of iterations to wait before recording metrics
             and saving heatmap.
         seed (int): Seed for the algorithm. By default, there is no seed.
+        xp (array_namespace): Optional array namespace. Defaults to numpy.
+        device (device): Device for performing computations.
     """
     config = copy.deepcopy(CONFIG[algorithm])
 
@@ -1009,10 +1019,13 @@ def sphere_main(algorithm,
     if not outdir.is_dir():
         outdir.mkdir()
 
-    scheduler = create_scheduler(config, algorithm, seed=seed)
+    scheduler = create_scheduler(config,
+                                 algorithm,
+                                 seed=seed,
+                                 xp=xp,
+                                 device=device)
     result_archive = scheduler.result_archive
-    is_dqd = config["is_dqd"]
-    itrs = config["itrs"]
+
     metrics = {
         "QD Score": {
             "x": [0],
@@ -1023,9 +1036,11 @@ def sphere_main(algorithm,
             "y": [0.0],
         },
     }
-
     non_logging_time = 0.0
     save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
+
+    is_dqd = config["is_dqd"]
+    itrs = config["itrs"]
 
     for itr in tqdm.trange(1, itrs + 1):
         itr_start = time.time()
@@ -1039,6 +1054,7 @@ def sphere_main(algorithm,
             scheduler.tell_dqd(objectives, measures, jacobians)
 
         solutions = scheduler.ask()
+        # TODO: Rewrite sphere
         objectives, _, measures, _ = sphere(solutions)
         scheduler.tell(objectives, measures)
         non_logging_time += time.time() - itr_start
