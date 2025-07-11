@@ -29,7 +29,7 @@ classifiers = [
 ]
 requires-python = ">=3.9.0"
 dependencies = [
-  # numpy>=1.17.0 is when default_rng becomes available;
+  # numpy>=1.22.0 is when Array API gains support;
   # scikit-learn 1.1.0 requires numpy 1.17.3+
   "numpy>=1.17.3",
   "numpy_groupies>=0.9.16",  # Supports Python 3.7 and up.
