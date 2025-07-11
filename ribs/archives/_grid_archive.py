@@ -1,4 +1,5 @@
 """Contains the GridArchive."""
+import numpy as np  # TODO: remove
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,

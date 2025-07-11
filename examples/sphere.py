@@ -788,6 +788,7 @@ CONFIG = {
 }
 
 
+# TODO: Cast scalars to the dtype of the array.
 def sphere(solutions):
     """Sphere function evaluation and measures for a batch of solutions.
 

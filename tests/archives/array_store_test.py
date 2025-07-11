@@ -1,5 +1,4 @@
 """Tests for ArrayStore."""
-import numpy as np
 import pytest
 
 from ribs.archives import ArrayStore
@@ -30,45 +29,50 @@ def test_init_invalid_field():
 
 @pytest.mark.parametrize("shape", [((), (2,), (10,)), ((), 2, 10)],
                          ids=["tuple", "int"])
-def test_init(shape):
+def test_init(xp_and_device, shape):
+    xp, device = xp_and_device
+
     capacity = 10
     store = ArrayStore(
         {
-            "objective": (shape[0], np.float32),
-            "measures": (shape[1], np.float32),
-            "solution": (shape[2], np.float32),
+            "objective": (shape[0], xp.float32),
+            "measures": (shape[1], xp.float32),
+            "solution": (shape[2], xp.float32),
         },
-        capacity,
+        capacity=capacity,
+        xp=xp,
+        device=device,
     )
 
     assert len(store) == 0
     assert store.capacity == capacity
-    assert np.all(~store.occupied)
+    assert xp.all(~store.occupied)
     assert len(store.occupied_list) == 0
     assert store.field_desc == {
-        "objective": (shape[0], np.float32),
+        "objective": (shape[0], xp.float32),
         "measures": (
-            (shape[1],) if isinstance(shape[1], int) else shape[1], np.float32),
+            (shape[1],) if isinstance(shape[1], int) else shape[1], xp.float32),
         "solution": (
-            (shape[2],) if isinstance(shape[2], int) else shape[2], np.float32),
+            (shape[2],) if isinstance(shape[2], int) else shape[2], xp.float32),
     }
     assert store.field_list == ["objective", "measures", "solution"]
     assert store.field_list_with_index == [
         "objective", "measures", "solution", "index"
     ]
     assert store.dtypes == {
-        "objective": np.float32,
-        "measures": np.float32,
-        "solution": np.float32,
+        "objective": xp.float32,
+        "measures": xp.float32,
+        "solution": xp.float32,
     }
     assert store.dtypes_with_index == {
-        "objective": np.float32,
-        "measures": np.float32,
-        "solution": np.float32,
-        "index": np.int32,
+        "objective": xp.float32,
+        "measures": xp.float32,
+        "solution": xp.float32,
+        "index": xp.int32,
     }
 
 
+# TODO: Add xp_and_device to tests; remove numpy.
 @pytest.fixture
 def store():
     """Simple ArrayStore for testing."""
