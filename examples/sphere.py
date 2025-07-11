@@ -792,16 +792,17 @@ def sphere(solutions):
     """Sphere function evaluation and measures for a batch of solutions.
 
     Args:
-        solutions (ndarray): (batch_size, dim) batch of solutions.
+        solutions (array): (batch_size, dim) batch of solutions.
     Returns:
-        objectives (ndarray): (batch_size,) batch of objectives.
-        objective_grads (ndarray): (batch_size, solution_dim) batch of objective
+        objectives (array): (batch_size,) batch of objectives.
+        objective_grads (array): (batch_size, solution_dim) batch of objective
             gradients.
-        measures (ndarray): (batch_size, 2) batch of measures.
-        measure_grads (ndarray): (batch_size, 2, solution_dim) batch of measure
+        measures (array): (batch_size, 2) batch of measures.
+        measure_grads (array): (batch_size, 2, solution_dim) batch of measure
             gradients.
     """
     xp = array_namespace(solutions)
+    device = solutions.device
 
     dim = solutions.shape[1]
 
@@ -830,16 +831,22 @@ def sphere(solutions):
     )
 
     # Compute gradient of the measures.
-    derivatives = xp.ones(solutions.shape, device=solutions.device)
-    derivatives[clip_mask] = -5.12 / np.square(solutions[clip_mask])
+    derivatives = xp.ones(solutions.shape, device=device)
+    derivatives[clip_mask] = -5.12 / xp.square(solutions[clip_mask])
 
-    mask_0 = xp.concat((np.ones(dim // 2), np.zeros(dim - dim // 2)))
-    mask_1 = xp.concat((np.zeros(dim // 2), np.ones(dim - dim // 2)))
+    mask_0 = xp.concat((
+        xp.ones(dim // 2, device=device),
+        xp.zeros(dim - dim // 2, device=device),
+    ))
+    mask_1 = xp.concat((
+        xp.zeros(dim // 2, device=device),
+        xp.ones(dim - dim // 2, device=device),
+    ))
 
     d_measure0 = derivatives * mask_0
     d_measure1 = derivatives * mask_1
 
-    measure_grads = np.stack((d_measure0, d_measure1), axis=1)
+    measure_grads = xp.stack((d_measure0, d_measure1), axis=1)
 
     return (
         objectives,
