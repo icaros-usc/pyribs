@@ -72,17 +72,19 @@ def test_init(xp_and_device, shape):
     }
 
 
-# TODO: Add xp_and_device to tests; remove numpy.
 @pytest.fixture
-def store():
+def store(xp_and_device):
     """Simple ArrayStore for testing."""
+    xp, device = xp_and_device
     return ArrayStore(
         field_desc={
-            "objective": ((), np.float32),
-            "measures": ((2,), np.float32),
-            "solution": ((10,), np.float32),
+            "objective": ((), xp.float32),
+            "measures": ((2,), xp.float32),
+            "solution": ((10,), xp.float32),
         },
         capacity=10,
+        xp=xp,
+        device=device,
     )
 
 
@@ -98,46 +100,82 @@ def test_add_wrong_keys(store):
         )
 
 
-def test_add_mismatch_indices(store):
+def test_add_mismatch_indices(store, xp_and_device):
+    xp, device = xp_and_device
+
     with pytest.raises(ValueError):
         store.add(
             [0, 1],
             {
                 "objective": [1.0, 2.0, 3.0],  # Length 3 instead of 2.
                 "measures": [[1.0, 2.0], [3.0, 4.0]],
-                "solution": [np.zeros(10), np.ones(10)],
+                "solution": [xp.zeros(10), xp.ones(10)],
             },
         )
 
 
-def test_simple_add_retrieve_clear(store):
+def test_simple_add_retrieve_clear(store, xp_and_device):
     """Add without transforms, retrieve the data, and clear the archive."""
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
     assert len(store) == 2
-    assert np.all(store.occupied == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
-    assert np.all(np.sort(store.occupied_list) == [3, 5])
+    assert xp.all(store.occupied == xp.asarray(
+        [0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+        dtype=bool,
+        device=device,
+    ))
+    assert xp.all(
+        xp.sort(store.occupied_list) == xp.asarray(
+            [3, 5],
+            dtype=xp.int32,
+            device=device,
+        ))
 
     occupied, data = store.retrieve([5, 3])
 
-    assert np.all(occupied == [True, True])
+    assert xp.all(occupied == xp.asarray(
+        [True, True],
+        dtype=bool,
+        device=device,
+    ))
     assert data.keys() == set(["objective", "measures", "solution", "index"])
-    assert np.all(data["objective"] == [2.0, 1.0])
-    assert np.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
-    assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
-    assert np.all(data["index"] == [5, 3])
+    assert xp.all(data["objective"] == xp.asarray(
+        [2.0, 1.0],
+        dtype=xp.float32,
+        device=device,
+    ))
+    assert xp.all(data["measures"] == xp.asarray(
+        [[3.0, 4.0], [1.0, 2.0]],
+        dtype=xp.float32,
+        device=device,
+    ))
+    assert xp.all(data["solution"] == xp.stack(
+        (xp.ones(10), xp.zeros(10)),
+        axis=0,
+    ))
+    assert xp.all(data["index"] == xp.asarray(
+        [5, 3],
+        dtype=xp.int32,
+        device=device,
+    ))
 
     store.clear()
 
     assert len(store) == 0
-    assert np.all(store.occupied == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    assert xp.all(store.occupied == xp.asarray(
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        dtype=bool,
+        device=device,
+    ))
     assert len(store.occupied_list) == 0
 
 

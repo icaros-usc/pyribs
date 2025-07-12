@@ -513,13 +513,15 @@ class ArrayStore:
         # unique indices. In contrast, here we let NumPy's default behavior
         # handle duplicate indices.
         for name, arr in self._fields.items():
-            arr[indices] = data[name]
+            arr[indices] = self._xp.asarray(data[name],
+                                            dtype=arr.dtype,
+                                            device=self._device)
 
     def clear(self):
         """Removes all entries from the store."""
         self._props["updates"][Update.CLEAR] += 1
         self._props["n_occupied"] = 0  # Effectively clears occupied_list too.
-        self._props["occupied"].fill(False)
+        self._props["occupied"][:] = False
 
     def resize(self, capacity):
         """Resizes the store to the given capacity.
