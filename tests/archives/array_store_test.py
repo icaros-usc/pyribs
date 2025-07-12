@@ -670,32 +670,44 @@ def test_data_with_pandas_return_type(store):
             ((df.loc[0] == row1).all() and (df.loc[1] == row0).all()))
 
 
-def test_iteration(store):
+def test_iteration(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3],
         {
             "objective": [1.0],
             "measures": [[1.0, 2.0]],
-            "solution": [xp.zeros(10)],
+            "solution": xp.zeros((1, 10)),
         },
     )
 
     for entry in store:
         assert entry.keys() == set(
             ["objective", "measures", "solution", "index"])
-        assert xp.all(entry["objective"] == [1.0])
-        assert xp.all(entry["measures"] == [[1.0, 2.0]])
-        assert xp.all(entry["solution"] == [xp.zeros(10)])
-        assert xp.all(entry["index"] == [3])
+        assert entry["objective"] == 1.0
+        assert xp.all(entry["measures"] == xp.asarray(
+            [1.0, 2.0],
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert xp.all(entry["solution"] == xp.zeros(
+            10,
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert entry["index"] == 3
 
 
-def test_add_during_iteration(store):
+def test_add_during_iteration(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3],
         {
             "objective": [1.0],
             "measures": [[1.0, 2.0]],
-            "solution": [xp.zeros(10)],
+            "solution": xp.zeros((1, 10)),
         },
     )
 
@@ -708,18 +720,20 @@ def test_add_during_iteration(store):
                 {
                     "objective": [2.0],
                     "measures": [[3.0, 4.0]],
-                    "solution": [xp.ones(10)],
+                    "solution": xp.ones((1, 10)),
                 },
             )
 
 
-def test_clear_during_iteration(store):
+def test_clear_during_iteration(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3],
         {
             "objective": [1.0],
             "measures": [[1.0, 2.0]],
-            "solution": [xp.zeros(10)],
+            "solution": xp.zeros((1, 10)),
         },
     )
 
