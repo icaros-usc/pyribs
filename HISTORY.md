@@ -1,5 +1,13 @@
 # History
 
+## (Forthcoming)
+
+### Changelog
+
+#### API
+
+- Support array backends via Array API Standard ({pr}`571`)
+
 ## 0.8.1
 
 This release makes some minor updates to 0.8.0.
