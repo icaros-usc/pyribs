@@ -10,7 +10,7 @@ For information on running tests, see [CONTRIBUTING.md](../CONTRIBUTING.md).
 ## External Libraries
 
 Some features of pyribs require external libraries that are optional and thus
-not specified in the default installation command. We separate these tests into
+not specified in the default installation command. We place these tests into
 separate directories, such as `visualize_qdax/` and `emitters_pycma/`.
 
 ## Additional Tests
