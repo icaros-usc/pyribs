@@ -24,8 +24,6 @@ try:
 except ImportError:
     pass
 
-# TODO: Add cupy
-
 
 @pytest.fixture(params=xp_available_backends)
 def xp_and_device(request):
