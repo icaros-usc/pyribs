@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from array_api_compat import array_namespace
 
-# Array API backend handling. Adapted from:
+# Array API backend handling. Adapted from scipy:
 # https://github.com/scipy/scipy/blob/888ca356eda34481e0e32b1be48c1262077d79a7/scipy/conftest.py#L283
 xp_available_backends = [
     pytest.param(
