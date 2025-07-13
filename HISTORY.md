@@ -6,7 +6,7 @@
 
 #### API
 
-- Support array backends via Array API Standard ({pr}`573`)
+- Support array backends via Python array API Standard ({pr}`573`)
 
 ## 0.8.1
 
