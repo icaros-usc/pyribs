@@ -95,7 +95,7 @@ in pyribs operates as follows:
 
 ## Installation
 
-pyribs supports Python 3.9 and above. The vast majority of users can install
+Pyribs supports Python 3.9 and above. The vast majority of users can install
 pyribs by running:
 
 ```bash
@@ -122,6 +122,12 @@ python -c "import ribs; print(ribs.__version__)"
 ```
 
 You should see a version number in the output.
+
+**Experimental:** Pyribs is experimenting with adding support for running QD
+algorithms in PyTorch via the
+[Python array API standard](https://data-apis.org/array-api/latest/). To enable
+this functionality, [install PyTorch](https://pytorch.org), such as with
+`pip install torch`.
 
 ## Usage
 
