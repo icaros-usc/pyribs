@@ -1,84 +1,99 @@
 """Tests for ArrayStore."""
-import numpy as np
 import pytest
+from array_api_compat import numpy as np
 
 from ribs.archives import ArrayStore
 
 # pylint: disable = redefined-outer-name
 
 
-def test_init_reserved_field():
+def test_init_reserved_field(xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     with pytest.raises(ValueError):
         ArrayStore(
             {
-                "index": ((), np.float32),
+                "index": ((), xp.float32),
             },
-            10,
+            capacity=10,
+            xp=xp,
+            device=device,
         )
 
 
-def test_init_invalid_field():
+def test_init_invalid_field(xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     with pytest.raises(ValueError):
         ArrayStore(
             {
                 # The space makes this an invalid identifier.
-                "foo bar": ((), np.float32),
+                "foo bar": ((), xp.float32),
             },
-            10,
+            capacity=10,
+            xp=xp,
+            device=device,
         )
 
 
 @pytest.mark.parametrize("shape", [((), (2,), (10,)), ((), 2, 10)],
                          ids=["tuple", "int"])
-def test_init(shape):
+def test_init(xp_and_device, shape):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     capacity = 10
     store = ArrayStore(
         {
-            "objective": (shape[0], np.float32),
-            "measures": (shape[1], np.float32),
-            "solution": (shape[2], np.float32),
+            "objective": (shape[0], xp.float32),
+            "measures": (shape[1], xp.float32),
+            "solution": (shape[2], xp.float32),
         },
-        capacity,
+        capacity=capacity,
+        xp=xp,
+        device=device,
     )
 
     assert len(store) == 0
     assert store.capacity == capacity
-    assert np.all(~store.occupied)
+    assert xp.all(~store.occupied)
     assert len(store.occupied_list) == 0
     assert store.field_desc == {
-        "objective": (shape[0], np.float32),
+        "objective": (shape[0], xp.float32),
         "measures": (
-            (shape[1],) if isinstance(shape[1], int) else shape[1], np.float32),
+            (shape[1],) if isinstance(shape[1], int) else shape[1], xp.float32),
         "solution": (
-            (shape[2],) if isinstance(shape[2], int) else shape[2], np.float32),
+            (shape[2],) if isinstance(shape[2], int) else shape[2], xp.float32),
     }
     assert store.field_list == ["objective", "measures", "solution"]
     assert store.field_list_with_index == [
         "objective", "measures", "solution", "index"
     ]
     assert store.dtypes == {
-        "objective": np.float32,
-        "measures": np.float32,
-        "solution": np.float32,
+        "objective": xp.float32,
+        "measures": xp.float32,
+        "solution": xp.float32,
     }
     assert store.dtypes_with_index == {
-        "objective": np.float32,
-        "measures": np.float32,
-        "solution": np.float32,
-        "index": np.int32,
+        "objective": xp.float32,
+        "measures": xp.float32,
+        "solution": xp.float32,
+        "index": xp.int32,
     }
 
 
 @pytest.fixture
-def store():
+def store(xp_and_device):
     """Simple ArrayStore for testing."""
+    xp, device = xp_and_device  # pylint: disable = unused-variable
     return ArrayStore(
         field_desc={
-            "objective": ((), np.float32),
-            "measures": ((2,), np.float32),
-            "solution": ((10,), np.float32),
+            "objective": ((), xp.float32),
+            "measures": ((2,), xp.float32),
+            "solution": ((10,), xp.float32),
         },
         capacity=10,
+        xp=xp,
+        device=device,
     )
 
 
@@ -94,65 +109,113 @@ def test_add_wrong_keys(store):
         )
 
 
-def test_add_mismatch_indices(store):
+def test_add_mismatch_indices(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     with pytest.raises(ValueError):
         store.add(
             [0, 1],
             {
                 "objective": [1.0, 2.0, 3.0],  # Length 3 instead of 2.
                 "measures": [[1.0, 2.0], [3.0, 4.0]],
-                "solution": [np.zeros(10), np.ones(10)],
+                "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
             },
         )
 
 
-def test_simple_add_retrieve_clear(store):
+def test_simple_add_retrieve_clear(store, xp_and_device):
     """Add without transforms, retrieve the data, and clear the archive."""
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
     assert len(store) == 2
-    assert np.all(store.occupied == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
-    assert np.all(np.sort(store.occupied_list) == [3, 5])
+    assert xp.all(store.occupied == xp.asarray(
+        [0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+        dtype=bool,
+        device=device,
+    ))
+    assert xp.all(
+        xp.sort(store.occupied_list) == xp.asarray(
+            [3, 5],
+            dtype=xp.int32,
+            device=device,
+        ))
 
     occupied, data = store.retrieve([5, 3])
 
-    assert np.all(occupied == [True, True])
+    assert xp.all(occupied == xp.asarray(
+        [True, True],
+        dtype=bool,
+        device=device,
+    ))
     assert data.keys() == set(["objective", "measures", "solution", "index"])
-    assert np.all(data["objective"] == [2.0, 1.0])
-    assert np.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
-    assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
-    assert np.all(data["index"] == [5, 3])
+    assert xp.all(data["objective"] == xp.asarray(
+        [2.0, 1.0],
+        dtype=xp.float32,
+        device=device,
+    ))
+    assert xp.all(data["measures"] == xp.asarray(
+        [[3.0, 4.0], [1.0, 2.0]],
+        dtype=xp.float32,
+        device=device,
+    ))
+    assert xp.all(data["solution"] == xp.stack(
+        (xp.ones(10, device=device), xp.zeros(10, device=device)),
+        axis=0,
+    ))
+    assert xp.all(data["index"] == xp.asarray(
+        [5, 3],
+        dtype=xp.int32,
+        device=device,
+    ))
 
     store.clear()
 
     assert len(store) == 0
-    assert np.all(store.occupied == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    assert xp.all(store.occupied == xp.asarray(
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        dtype=bool,
+        device=device,
+    ))
     assert len(store.occupied_list) == 0
 
 
-def test_add_duplicate_indices(store):
+def test_add_duplicate_indices(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store.add(
         [3, 3],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
     assert len(store) == 1
-    assert np.all(store.occupied == [0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
-    assert np.all(store.occupied_list == [3])
+    assert xp.all(store.occupied == xp.asarray(
+        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+        dtype=bool,
+        device=device,
+    ))
+    assert xp.all(store.occupied_list == xp.asarray(
+        [3],
+        dtype=xp.int32,
+        device=device,
+    ))
 
 
-def test_add_nothing(store):
+def test_add_nothing(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store.add(
         [],
         {
@@ -163,17 +226,27 @@ def test_add_nothing(store):
     )
 
     assert len(store) == 0
-    assert np.all(store.occupied == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    assert np.all(store.occupied_list == [])
+    assert xp.all(store.occupied == xp.asarray(
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        dtype=bool,
+        device=device,
+    ))
+    assert xp.all(store.occupied_list == xp.asarray(
+        [],
+        dtype=xp.int32,
+        device=device,
+    ))
 
 
-def test_dtypes(store):
+def test_dtypes(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
@@ -181,30 +254,51 @@ def test_dtypes(store):
 
     # Index is always int32, and other fields were defined as float32 in the
     # `store` fixture.
-    assert data["objective"].dtype == np.float32
-    assert data["measures"].dtype == np.float32
-    assert data["solution"].dtype == np.float32
-    assert data["index"].dtype == np.int32
+    assert data["objective"].dtype == xp.float32
+    assert data["measures"].dtype == xp.float32
+    assert data["solution"].dtype == xp.float32
+    assert data["index"].dtype == xp.int32
 
 
-def test_retrieve_duplicate_indices(store):
+def test_retrieve_duplicate_indices(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store.add(
         [3],
         {
             "objective": [2.0],
             "measures": [[3.0, 4.0]],
-            "solution": [np.ones(10)],
+            "solution": xp.ones((1, 10)),
         },
     )
 
     occupied, data = store.retrieve([3, 3])
 
-    assert np.all(occupied == [True, True])
+    assert xp.all(occupied == xp.asarray(
+        [True, True],
+        dtype=bool,
+        device=device,
+    ))
     assert data.keys() == set(["objective", "measures", "solution", "index"])
-    assert np.all(data["objective"] == [2.0, 2.0])
-    assert np.all(data["measures"] == [[3.0, 4.0], [3.0, 4.0]])
-    assert np.all(data["solution"] == [np.ones(10), np.ones(10)])
-    assert np.all(data["index"] == [3, 3])
+    assert xp.all(data["objective"] == xp.asarray(
+        [2.0, 2.0],
+        dtype=xp.float32,
+        device=device,
+    ))
+    assert xp.all(data["measures"] == xp.asarray(
+        [[3.0, 4.0], [3.0, 4.0]],
+        dtype=xp.float32,
+        device=device,
+    ))
+    assert xp.all(data["solution"] == xp.stack(
+        (xp.ones(10, device=device), xp.ones(10, device=device)),
+        axis=0,
+    ))
+    assert xp.all(data["index"] == xp.asarray(
+        [3, 3],
+        dtype=xp.int32,
+        device=device,
+    ))
 
 
 def test_retrieve_invalid_fields(store):
@@ -217,46 +311,93 @@ def test_retrieve_invalid_return_type(store):
         store.retrieve([0, 1], return_type="foo")
 
 
-def test_retrieve_pandas_2d_fields(store):
+def test_retrieve_pandas_2d_fields(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store = ArrayStore(
         {
-            "solution": ((10, 10), np.float32),
+            "solution": ((10, 10), xp.float32),
         },
-        10,
+        capacity=10,
+        xp=xp,
+        device=device,
     )
+
     with pytest.raises(ValueError):
         store.retrieve([], return_type="pandas")
 
 
 @pytest.mark.parametrize("return_type", ["dict", "tuple", "pandas"])
-def test_retrieve(return_type, store):
+def test_retrieve(return_type, store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
     occupied, data = store.retrieve([5, 3], return_type=return_type)
 
     if return_type == "dict":
-        assert np.all(occupied == [True, True])
+        assert xp.all(occupied == xp.asarray(
+            [True, True],
+            dtype=bool,
+            device=device,
+        ))
         assert data.keys() == set(
             ["objective", "measures", "solution", "index"])
-        assert np.all(data["objective"] == [2.0, 1.0])
-        assert np.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
-        assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
-        assert np.all(data["index"] == [5, 3])
+        assert xp.all(data["objective"] == xp.asarray(
+            [2.0, 1.0],
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert xp.all(data["measures"] == xp.asarray(
+            [[3.0, 4.0], [1.0, 2.0]],
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert xp.all(data["solution"] == xp.stack(
+            (xp.ones(10, device=device), xp.zeros(10, device=device)),
+            axis=0,
+        ))
+        assert xp.all(data["index"] == xp.asarray(
+            [5, 3],
+            dtype=xp.int32,
+            device=device,
+        ))
     elif return_type == "tuple":
         objective, measures, solution, index = data
-        assert np.all(occupied == [True, True])
-        assert np.all(objective == [2.0, 1.0])
-        assert np.all(measures == [[3.0, 4.0], [1.0, 2.0]])
-        assert np.all(solution == [np.ones(10), np.zeros(10)])
-        assert np.all(index == [5, 3])
+        assert xp.all(occupied == xp.asarray(
+            [True, True],
+            dtype=bool,
+            device=device,
+        ))
+        assert xp.all(objective == xp.asarray(
+            [2.0, 1.0],
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert xp.all(measures == xp.asarray(
+            [[3.0, 4.0], [1.0, 2.0]],
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert xp.all(solution == xp.stack(
+            (xp.ones(10, device=device), xp.zeros(10, device=device)),
+            axis=0,
+        ))
+        assert xp.all(index == xp.asarray(
+            [5, 3],
+            dtype=xp.int32,
+            device=device,
+        ))
     elif return_type == "pandas":
+        # In the case of pandas return types, everything should be converted to
+        # NumPy before being passed to pandas.
         df = data
         assert (df.columns == [
             "objective",
@@ -286,13 +427,15 @@ def test_retrieve(return_type, store):
 
 
 @pytest.mark.parametrize("return_type", ["dict", "tuple", "pandas"])
-def test_retrieve_custom_fields(store, return_type):
+def test_retrieve_custom_fields(store, return_type, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
@@ -301,14 +444,38 @@ def test_retrieve_custom_fields(store, return_type):
                                     return_type=return_type)
 
     if return_type == "dict":
-        assert np.all(occupied == [True, True])
+        assert xp.all(occupied == xp.asarray(
+            [True, True],
+            dtype=bool,
+            device=device,
+        ))
         assert data.keys() == set(["index", "objective"])
-        assert np.all(data["index"] == [5, 3])
-        assert np.all(data["objective"] == [2.0, 1.0])
+        assert xp.all(data["index"] == xp.asarray(
+            [5, 3],
+            dtype=xp.int32,
+            device=device,
+        ))
+        assert xp.all(data["objective"] == xp.asarray(
+            [2.0, 1.0],
+            dtype=xp.float32,
+            device=device,
+        ))
     elif return_type == "tuple":
-        assert np.all(occupied == [True, True])
-        assert np.all(data[0] == [5, 3])
-        assert np.all(data[1] == [2.0, 1.0])
+        assert xp.all(occupied == xp.asarray(
+            [True, True],
+            dtype=bool,
+            device=device,
+        ))
+        assert xp.all(data[0] == xp.asarray(
+            [5, 3],
+            dtype=xp.int32,
+            device=device,
+        ))
+        assert xp.all(data[1] == xp.asarray(
+            [2.0, 1.0],
+            dtype=xp.float32,
+            device=device,
+        ))
     elif return_type == "pandas":
         df = data
         assert (df.columns == [
@@ -322,20 +489,30 @@ def test_retrieve_custom_fields(store, return_type):
         assert np.all(df["objective"] == [2.0, 1.0])
 
 
-def test_retrieve_single_field(store):
+def test_retrieve_single_field(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
     occupied, data = store.retrieve([5, 3], fields="objective")
 
-    assert np.all(occupied == [True, True])
-    assert np.all(data == [2.0, 1.0])
+    assert xp.all(occupied == xp.asarray(
+        [True, True],
+        dtype=bool,
+        device=device,
+    ))
+    assert xp.all(data == xp.asarray(
+        [2.0, 1.0],
+        dtype=xp.float32,
+        device=device,
+    ))
 
 
 def test_resize_bad_capacity(store):
@@ -343,99 +520,50 @@ def test_resize_bad_capacity(store):
         store.resize(store.capacity)
 
 
-def test_resize_to_double_capacity(store):
+def test_resize_to_double_capacity(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
     store.resize(store.capacity * 2)
 
     assert len(store) == 2
-    assert np.all(store.occupied ==
-                  [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    assert np.all(np.sort(store.occupied_list) == [3, 5])
+    assert xp.all(store.occupied == xp.asarray(
+        [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        dtype=bool,
+        device=device,
+    ))
+    assert xp.all(
+        xp.sort(store.occupied_list) == xp.asarray(
+            [3, 5],
+            dtype=xp.int32,
+            device=device,
+        ))
 
     # Spot-check the fields.
-    assert np.all(store._fields["objective"][[3, 5]] == [1.0, 2.0])
+    assert xp.all(store._fields["objective"][[3, 5]] == xp.asarray(
+        [1.0, 2.0],
+        dtype=xp.float32,
+        device=device,
+    ))
 
 
-def test_as_raw_dict(store):
+def test_data(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
-        },
-    )
-
-    d = store.as_raw_dict()
-
-    assert d.keys() == set([
-        "props.capacity",
-        "props.occupied",
-        "props.n_occupied",
-        "props.occupied_list",
-        "props.updates",
-        "fields.objective",
-        "fields.measures",
-        "fields.solution",
-    ])
-    assert d["props.capacity"] == 10
-    assert np.all(d["props.occupied"] == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
-    assert d["props.n_occupied"] == 2
-    assert np.all(np.sort(d["props.occupied_list"][:2]) == [3, 5])
-    assert np.all(d["props.updates"] == [1, 0])  # 1 add, 0 clear.
-    assert np.all(d["fields.objective"][[3, 5]] == [1.0, 2.0])
-    assert np.all(d["fields.measures"][[3, 5]] == [[1.0, 2.0], [3.0, 4.0]])
-    assert np.all(d["fields.solution"][[3, 5]] == [np.zeros(10), np.ones(10)])
-
-
-def test_from_raw_dict_invalid_props(store):
-    d = store.as_raw_dict()
-    del d["props.capacity"]
-    with pytest.raises(ValueError):
-        ArrayStore.from_raw_dict(d)
-
-
-def test_from_raw_dict(store):
-    store.add(
-        [3, 5],
-        {
-            "objective": [1.0, 2.0],
-            "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
-        },
-    )
-
-    new_store = ArrayStore.from_raw_dict(store.as_raw_dict())
-
-    assert len(new_store) == 2
-    assert np.all(new_store.occupied == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
-    assert np.all(np.sort(new_store.occupied_list) == [3, 5])
-
-    occupied, data = new_store.retrieve([5, 3])
-
-    assert np.all(occupied == [True, True])
-    assert data.keys() == set(["objective", "measures", "solution", "index"])
-    assert np.all(data["objective"] == [2.0, 1.0])
-    assert np.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
-    assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
-    assert np.all(data["index"] == [5, 3])
-
-
-def test_data(store):
-    store.add(
-        [3, 5],
-        {
-            "objective": [1.0, 2.0],
-            "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
@@ -444,12 +572,24 @@ def test_data(store):
     assert d.keys() == set(["objective", "measures", "solution", "index"])
     assert all(len(v) == 2 for v in d.values())
 
-    row0 = np.concatenate(([1.0, 1.0, 2.0], np.zeros(10), [3]))
-    row1 = np.concatenate(([2.0, 3.0, 4.0], np.ones(10), [5]))
+    row0 = xp.concat((
+        xp.asarray([1.0, 1.0, 2.0], dtype=xp.float32, device=device),
+        xp.zeros(10, dtype=xp.float32, device=device),
+        xp.asarray([3], dtype=xp.float32, device=device),
+    ))
+    row1 = xp.concat((
+        xp.asarray([2.0, 3.0, 4.0], dtype=xp.float32, device=device),
+        xp.ones(10, dtype=xp.float32, device=device),
+        xp.asarray([5], dtype=xp.float32, device=device),
+    ))
 
     flat = [
-        np.concatenate(([d["objective"][i]], d["measures"][i], d["solution"][i],
-                        [d["index"][i]])) for i in range(2)
+        xp.concat((
+            d["objective"][i][None],
+            d["measures"][i],
+            d["solution"][i],
+            d["index"][i][None],
+        )) for i in range(2)
     ]
 
     # Either permutation.
@@ -457,13 +597,15 @@ def test_data(store):
             ((flat[0] == row1).all() and (flat[1] == row0).all()))
 
 
-def test_data_with_tuple_return_type(store):
+def test_data_with_tuple_return_type(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
@@ -472,12 +614,24 @@ def test_data_with_tuple_return_type(store):
     assert len(d) == 4  # 3 fields and 1 index.
     assert all(len(v) == 2 for v in d)
 
-    row0 = np.concatenate(([1.0, 1.0, 2.0], np.zeros(10), [3]))
-    row1 = np.concatenate(([2.0, 3.0, 4.0], np.ones(10), [5]))
+    row0 = xp.concat((
+        xp.asarray([1.0, 1.0, 2.0], dtype=xp.float32, device=device),
+        xp.zeros(10, dtype=xp.float32, device=device),
+        xp.asarray([3], dtype=xp.float32, device=device),
+    ))
+    row1 = xp.concat((
+        xp.asarray([2.0, 3.0, 4.0], dtype=xp.float32, device=device),
+        xp.ones(10, dtype=xp.float32, device=device),
+        xp.asarray([5], dtype=xp.float32, device=device),
+    ))
 
     flat = [
-        np.concatenate(([d[0][i]], d[1][i], d[2][i], [d[3][i]]))
-        for i in range(2)
+        xp.concat((
+            d[0][i][None],
+            d[1][i],
+            d[2][i],
+            d[3][i][None],
+        )) for i in range(2)
     ]
 
     # Either permutation.
@@ -485,13 +639,15 @@ def test_data_with_tuple_return_type(store):
             ((flat[0] == row1).all() and (flat[1] == row0).all()))
 
 
-def test_data_with_pandas_return_type(store):
+def test_data_with_pandas_return_type(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [np.zeros(10), np.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
@@ -516,40 +672,52 @@ def test_data_with_pandas_return_type(store):
     assert (df.dtypes == [np.float32] * 13 + [np.int32]).all()
     assert len(df) == 2
 
-    row0 = np.concatenate(([1.0, 1.0, 2.0], np.zeros(10), [3]))
-    row1 = np.concatenate(([2.0, 3.0, 4.0], np.ones(10), [5]))
+    row0 = np.concat(([1.0, 1.0, 2.0], np.zeros(10), [3]))
+    row1 = np.concat(([2.0, 3.0, 4.0], np.ones(10), [5]))
 
     # Either permutation.
     assert (((df.loc[0] == row0).all() and (df.loc[1] == row1).all()) or
             ((df.loc[0] == row1).all() and (df.loc[1] == row0).all()))
 
 
-def test_iteration(store):
+def test_iteration(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3],
         {
             "objective": [1.0],
             "measures": [[1.0, 2.0]],
-            "solution": [np.zeros(10)],
+            "solution": xp.zeros((1, 10)),
         },
     )
 
     for entry in store:
         assert entry.keys() == set(
             ["objective", "measures", "solution", "index"])
-        assert np.all(entry["objective"] == [1.0])
-        assert np.all(entry["measures"] == [[1.0, 2.0]])
-        assert np.all(entry["solution"] == [np.zeros(10)])
-        assert np.all(entry["index"] == [3])
+        assert entry["objective"] == 1.0
+        assert xp.all(entry["measures"] == xp.asarray(
+            [1.0, 2.0],
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert xp.all(entry["solution"] == xp.zeros(
+            10,
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert entry["index"] == 3
 
 
-def test_add_during_iteration(store):
+def test_add_during_iteration(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store.add(
         [3],
         {
             "objective": [1.0],
             "measures": [[1.0, 2.0]],
-            "solution": [np.zeros(10)],
+            "solution": xp.zeros((1, 10)),
         },
     )
 
@@ -562,18 +730,20 @@ def test_add_during_iteration(store):
                 {
                     "objective": [2.0],
                     "measures": [[3.0, 4.0]],
-                    "solution": [np.ones(10)],
+                    "solution": xp.ones((1, 10)),
                 },
             )
 
 
-def test_clear_during_iteration(store):
+def test_clear_during_iteration(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store.add(
         [3],
         {
             "objective": [1.0],
             "measures": [[1.0, 2.0]],
-            "solution": [np.zeros(10)],
+            "solution": xp.zeros((1, 10)),
         },
     )
 
@@ -582,13 +752,15 @@ def test_clear_during_iteration(store):
             store.clear()
 
 
-def test_clear_and_add_during_iteration(store):
+def test_clear_and_add_during_iteration(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store.add(
         [3],
         {
             "objective": [1.0],
             "measures": [[1.0, 2.0]],
-            "solution": [np.zeros(10)],
+            "solution": xp.zeros((1, 10)),
         },
     )
 
@@ -600,6 +772,6 @@ def test_clear_and_add_during_iteration(store):
                 {
                     "objective": [2.0],
                     "measures": [[3.0, 4.0]],
-                    "solution": [np.ones(10)],
+                    "solution": xp.ones((1, 10)),
                 },
             )
