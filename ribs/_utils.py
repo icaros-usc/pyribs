@@ -1,7 +1,9 @@
 """Miscellaneous internal utilities."""
 import numbers
 
-import numpy as np
+import array_api_compat.numpy as np_compat
+import numpy as np  # TODO (#576): Remove import of np
+from array_api_compat import array_namespace
 
 
 def check_finite(x, name):
@@ -208,7 +210,33 @@ def validate_single(archive, data, none_objective_ok=False):
     return data
 
 
+# TODO (#576): Replace all calls to readonly with arr_readonly below.
 def readonly(arr):
     """Sets an array to be readonly."""
     arr.flags.writeable = False
     return arr
+
+
+def arr_readonly(arr):
+    """Sets an array to be readonly if possible. Inteded to support arrays
+    across libraries; currently only supports numpy."""
+    if isinstance(arr, np_compat.ndarray):
+        readonly_arr = arr.view()
+        readonly_arr.flags.writeable = False
+        return readonly_arr
+    else:
+        return arr
+
+
+def xp_namespace(xp):
+    """Utility for retrieving a namespace compatible with the array API.
+
+    Expects to receive an argument like `torch` or `numpy`.
+
+    Adapted from scipy:
+    https://github.com/scipy/scipy/blob/4d3dcc103612a2edaec7069638b7f8d0d75cab8b/scipy/signal/windows/_windows.py#L44-L50
+
+    For more context, see:
+    https://github.com/data-apis/array-api-compat/issues/342
+    """
+    return np_compat if xp is None else array_namespace(xp.empty(0))
