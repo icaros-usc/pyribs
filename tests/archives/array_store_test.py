@@ -168,7 +168,7 @@ def test_simple_add_retrieve_clear(store, xp_and_device):
         device=device,
     ))
     assert xp.all(data["solution"] == xp.stack(
-        (xp.ones(10), xp.zeros(10)),
+        (xp.ones(10, device=device), xp.zeros(10, device=device)),
         axis=0,
     ))
     assert xp.all(data["index"] == xp.asarray(
@@ -291,7 +291,7 @@ def test_retrieve_duplicate_indices(store, xp_and_device):
         device=device,
     ))
     assert xp.all(data["solution"] == xp.stack(
-        (xp.ones(10), xp.ones(10)),
+        (xp.ones(10, device=device), xp.ones(10, device=device)),
         axis=0,
     ))
     assert xp.all(data["index"] == xp.asarray(
@@ -361,7 +361,7 @@ def test_retrieve(return_type, store, xp_and_device):
             device=device,
         ))
         assert xp.all(data["solution"] == xp.stack(
-            (xp.ones(10), xp.zeros(10)),
+            (xp.ones(10, device=device), xp.zeros(10, device=device)),
             axis=0,
         ))
         assert xp.all(data["index"] == xp.asarray(
@@ -387,7 +387,7 @@ def test_retrieve(return_type, store, xp_and_device):
             device=device,
         ))
         assert xp.all(solution == xp.stack(
-            (xp.ones(10), xp.zeros(10)),
+            (xp.ones(10, device=device), xp.zeros(10, device=device)),
             axis=0,
         ))
         assert xp.all(index == xp.asarray(
@@ -604,7 +604,7 @@ def test_as_raw_dict(store, xp_and_device):
         device=device,
     ))
     assert xp.all(d["fields.solution"][[3, 5]] == xp.stack(
-        (xp.zeros(10), xp.ones(10)),
+        (xp.zeros(10, device=device), xp.ones(10, device=device)),
         axis=0,
     ))
 
@@ -662,7 +662,7 @@ def test_from_raw_dict(store, xp_and_device):
         device=device,
     ))
     assert xp.all(data["solution"] == xp.stack(
-        (xp.ones(10), xp.zeros(10)),
+        (xp.ones(10, device=device), xp.zeros(10, device=device)),
         axis=0,
     ))
     assert xp.all(data["index"] == xp.asarray(
