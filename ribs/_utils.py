@@ -2,7 +2,7 @@
 import numbers
 
 import array_api_compat.numpy as np_compat
-import numpy as np  # TODO: Remove import of np
+import numpy as np  # TODO (#576): Remove import of np
 from array_api_compat import array_namespace
 
 
@@ -210,14 +210,16 @@ def validate_single(archive, data, none_objective_ok=False):
     return data
 
 
+# TODO (#576): Replace all calls to readonly with arr_readonly below.
 def readonly(arr):
     """Sets an array to be readonly."""
     arr.flags.writeable = False
     return arr
 
 
-def np_readonly(arr):
-    """Sets an array to be readonly if it is a numpy array."""
+def arr_readonly(arr):
+    """Sets an array to be readonly if possible. Inteded to support arrays
+    across libraries; currently only supports numpy."""
     if isinstance(arr, np_compat.ndarray):
         readonly_arr = arr.view()
         readonly_arr.flags.writeable = False

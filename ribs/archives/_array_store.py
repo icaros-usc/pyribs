@@ -6,7 +6,7 @@ from functools import cached_property
 
 from array_api_compat import is_numpy_array, is_torch_array
 
-from ribs._utils import np_readonly, xp_namespace
+from ribs._utils import arr_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 
 
@@ -185,12 +185,12 @@ class ArrayStore:
     def occupied(self):
         """array: Boolean array of size ``(capacity,)`` indicating whether each
         index has a data entry."""
-        return np_readonly(self._props["occupied"])
+        return arr_readonly(self._props["occupied"])
 
     @property
     def occupied_list(self):
         """array: int32 array listing all occupied indices in the store."""
-        return np_readonly(
+        return arr_readonly(
             self._props["occupied_list"][:self._props["n_occupied"]])
 
     @cached_property
