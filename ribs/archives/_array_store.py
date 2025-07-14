@@ -4,7 +4,7 @@ import numbers
 from enum import IntEnum
 from functools import cached_property
 
-from array_api_compat import is_numpy_array, is_torch_array
+from array_api_compat import is_numpy_array, is_numpy_namespace, is_torch_array
 
 from ribs._utils import arr_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
@@ -230,7 +230,14 @@ class ArrayStore:
                     "measures": np.float32,
                 }
         """
-        return {name: arr.dtype for name, arr in self._fields.items()}
+        if is_numpy_namespace(self._xp):
+            # TODO (#577): In NumPy, we currently want the scalar type (i.e.,
+            # arr.dtype.type rather than arr.dtype), which is callable.
+            # Ultimately, this should be switched to just be the dtype to be
+            # compatible across array libraries.
+            return {name: arr.dtype.type for name, arr in self._fields.items()}
+        else:
+            return {name: arr.dtype for name, arr in self._fields.items()}
 
     @cached_property
     def dtypes_with_index(self):
