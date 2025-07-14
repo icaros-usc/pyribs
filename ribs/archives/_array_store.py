@@ -4,6 +4,8 @@ import numbers
 from enum import IntEnum
 from functools import cached_property
 
+from array_api_compat import is_numpy_namespace, is_torch_namespace
+
 from ribs._utils import np_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 
@@ -54,15 +56,12 @@ class ArrayStoreIterator:
         return d
 
 
-# TODO: Mention xp in docstring -- types in the field_desc have to be from the
-# relevant library.
-# TODO: Test with torch and cupy dtypes.
 class ArrayStore:
     """Maintains a set of arrays that share a common dimension.
 
     The ArrayStore consists of several *fields* of data that are manipulated
-    simultaneously via batch operations. Each field is a NumPy array with a
-    dimension of ``(capacity, ...)`` and can be of any type.
+    simultaneously via batch operations. Each field is an array with a dimension
+    of ``(capacity, ...)`` and can be of any type.
 
     Since the arrays all share a common first dimension, they also share a
     common index. For instance, if we :meth:`retrieve` the data at indices ``[0,
@@ -76,6 +75,12 @@ class ArrayStore:
 
     The ArrayStore supports several further operations, such as an :meth:`add`
     method that inserts data into the ArrayStore.
+
+    By default, the arrays in the ArrayStore are NumPy arrays. However, through
+    support for the `Python array API standard
+    <https://data-apis.org/array-api/latest/>`_, it is possible to use arrays
+    from other libraries like PyTorch by passing in arguments for ``xp`` and
+    ``device``.
 
     Args:
         field_desc (dict): Description of fields in the array store. The
@@ -178,14 +183,13 @@ class ArrayStore:
 
     @property
     def occupied(self):
-        """numpy.ndarray: Boolean array of size ``(capacity,)`` indicating
-        whether each index has a data entry."""
+        """array: Boolean array of size ``(capacity,)`` indicating whether each
+        index has a data entry."""
         return np_readonly(self._props["occupied"])
 
     @property
     def occupied_list(self):
-        """numpy.ndarray: int32 array listing all occupied indices in the
-        store."""
+        """array: int32 array listing all occupied indices in the store."""
         return np_readonly(
             self._props["occupied_list"][:self._props["n_occupied"]])
 
@@ -280,8 +284,9 @@ class ArrayStore:
             indices (array-like): List of indices at which to collect data.
             fields (str or array-like of str): List of fields to include. By
                 default, all fields will be included, with an additional "index"
-                as the last field ("index" can also be placed anywhere in this
-                list). This can also be a single str indicating a field name.
+                as the last field. The "index" field can also be added anywhere
+                in this list of fields. This argument can also be a single str
+                indicating a field name.
             return_type (str): Type of data to return. See the ``data`` returned
                 below. Ignored if ``fields`` is a str.
 
@@ -358,6 +363,10 @@ class ArrayStore:
                 Like the other return types, the columns can be adjusted with
                 the ``fields`` parameter.
 
+                .. note:: This return type will require copying all fields in
+                    the ArrayStore into NumPy arrays, if they are not already
+                    NumPy arrays.
+
             All data returned by this method will be a copy, i.e., the data will
             not update as the store changes.
 
@@ -369,8 +378,9 @@ class ArrayStore:
         indices = self._xp.asarray(indices,
                                    dtype=self._xp.int32,
                                    device=self._device)
-        # TODO: Is this comment correct?
-        occupied = self._props["occupied"][indices]  # Induces copy.
+
+        # Induces copy (in numpy, at least).
+        occupied = self._props["occupied"][indices]
 
         if single_field:
             data = None
@@ -389,8 +399,8 @@ class ArrayStore:
         for name in fields:
             # Collect array data.
             #
-            # Note that fancy indexing with indices already creates a copy, so
-            # only `indices` needs to be copied explicitly.
+            # Note that fancy indexing with indices already creates a copy (in
+            # numpy, at least), so only `indices` needs to be copied explicitly.
             if name == "index":
                 arr = self._xp.asarray(indices, copy=True)
             elif name in self._fields:
@@ -406,6 +416,16 @@ class ArrayStore:
             elif return_type == "tuple":
                 data.append(arr)
             elif return_type == "pandas":
+                # Array must be converted to NumPy.
+                if is_numpy_namespace(self._xp):
+                    pass
+                elif is_torch_namespace(self._xp):
+                    arr = arr.cpu().detach().numpy()
+                else:
+                    raise NotImplementedError(
+                        "The pandas return type is currently only supported "
+                        "with numpy and torch arrays.")
+
                 if len(arr.shape) == 1:  # Scalar entries.
                     data[name] = arr
                 elif len(arr.shape) == 2:  # 1D array entries.
@@ -420,10 +440,6 @@ class ArrayStore:
         if return_type == "tuple":
             data = tuple(data)
         elif return_type == "pandas":
-            # TODO: We could move all data to CPU when this method is called
-            # with pandas? We could also provide a general option to do this for
-            # any return type given.
-
             # Data above are already copied, so no need to copy again.
             data = ArchiveDataFrame(data, copy=False)
 
@@ -510,7 +526,7 @@ class ArrayStore:
 
         # Insert into the ArrayStore. Note that we do not assume indices are
         # unique. Hence, when updating occupancy data above, we computed the
-        # unique indices. In contrast, here we let NumPy's default behavior
+        # unique indices. In contrast, here we let the array's default behavior
         # handle duplicate indices.
         for name, arr in self._fields.items():
             arr[indices] = self._xp.asarray(data[name],
@@ -616,5 +632,4 @@ class ArrayStore:
 
         store._props = props
         store._fields = fields
-
         return store
