@@ -6,7 +6,8 @@
 
 #### API
 
-- Support array backends via Python array API Standard ({pr}`573`, {pr}`571`)
+- Support array backends via Python array API Standard ({issue}`570`, {pr}`573`,
+  {pr}`571`, {pr}`578`)
 - **Backwards-incompatible:** Remove raw_dict methods from ArrayStore
   ({pr}`575`)
 
