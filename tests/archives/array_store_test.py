@@ -1,5 +1,6 @@
 """Tests for ArrayStore."""
 import pytest
+from array_api_compat import numpy as np
 
 from ribs.archives import ArrayStore
 
@@ -14,7 +15,9 @@ def test_init_reserved_field(xp_and_device):
             {
                 "index": ((), xp.float32),
             },
-            10,
+            capacity=10,
+            xp=xp,
+            device=device,
         )
 
 
@@ -27,7 +30,9 @@ def test_init_invalid_field(xp_and_device):
                 # The space makes this an invalid identifier.
                 "foo bar": ((), xp.float32),
             },
-            10,
+            capacity=10,
+            xp=xp,
+            device=device,
         )
 
 
@@ -113,7 +118,7 @@ def test_add_mismatch_indices(store, xp_and_device):
             {
                 "objective": [1.0, 2.0, 3.0],  # Length 3 instead of 2.
                 "measures": [[1.0, 2.0], [3.0, 4.0]],
-                "solution": [xp.zeros(10), xp.ones(10)],
+                "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
             },
         )
 
@@ -313,44 +318,86 @@ def test_retrieve_pandas_2d_fields(store, xp_and_device):
         {
             "solution": ((10, 10), xp.float32),
         },
-        10,
+        capacity=10,
+        xp=xp,
+        device=device,
     )
 
-    # TODO: retrieve pandas
     with pytest.raises(ValueError):
         store.retrieve([], return_type="pandas")
 
 
-# TODO
 @pytest.mark.parametrize("return_type", ["dict", "tuple", "pandas"])
-def test_retrieve(return_type, store):
+def test_retrieve(return_type, store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [xp.zeros(10), xp.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
     occupied, data = store.retrieve([5, 3], return_type=return_type)
 
     if return_type == "dict":
-        assert xp.all(occupied == [True, True])
+        assert xp.all(occupied == xp.asarray(
+            [True, True],
+            dtype=bool,
+            device=device,
+        ))
         assert data.keys() == set(
             ["objective", "measures", "solution", "index"])
-        assert xp.all(data["objective"] == [2.0, 1.0])
-        assert xp.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
-        assert xp.all(data["solution"] == [xp.ones(10), xp.zeros(10)])
-        assert xp.all(data["index"] == [5, 3])
+        assert xp.all(data["objective"] == xp.asarray(
+            [2.0, 1.0],
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert xp.all(data["measures"] == xp.asarray(
+            [[3.0, 4.0], [1.0, 2.0]],
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert xp.all(data["solution"] == xp.stack(
+            (xp.ones(10), xp.zeros(10)),
+            axis=0,
+        ))
+        assert xp.all(data["index"] == xp.asarray(
+            [5, 3],
+            dtype=xp.int32,
+            device=device,
+        ))
     elif return_type == "tuple":
         objective, measures, solution, index = data
-        assert xp.all(occupied == [True, True])
-        assert xp.all(objective == [2.0, 1.0])
-        assert xp.all(measures == [[3.0, 4.0], [1.0, 2.0]])
-        assert xp.all(solution == [xp.ones(10), xp.zeros(10)])
-        assert xp.all(index == [5, 3])
+        assert xp.all(occupied == xp.asarray(
+            [True, True],
+            dtype=bool,
+            device=device,
+        ))
+        assert xp.all(objective == xp.asarray(
+            [2.0, 1.0],
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert xp.all(measures == xp.asarray(
+            [[3.0, 4.0], [1.0, 2.0]],
+            dtype=xp.float32,
+            device=device,
+        ))
+        assert xp.all(solution == xp.stack(
+            (xp.ones(10), xp.zeros(10)),
+            axis=0,
+        ))
+        assert xp.all(index == xp.asarray(
+            [5, 3],
+            dtype=xp.int32,
+            device=device,
+        ))
     elif return_type == "pandas":
+        # In the case of pandas return types, everything should be converted to
+        # NumPy before being passed to pandas.
         df = data
         assert (df.columns == [
             "objective",
@@ -368,25 +415,27 @@ def test_retrieve(return_type, store):
             "solution_9",
             "index",
         ]).all()
-        assert (df.dtypes == [xp.float32] * 13 + [xp.int32]).all()
+        assert (df.dtypes == [np.float32] * 13 + [np.int32]).all()
         assert len(df) == 2
-        assert xp.all(occupied == [True, True])
-        assert xp.all(df["objective"] == [2.0, 1.0])
-        assert xp.all(df["measures_0"] == [3.0, 1.0])
-        assert xp.all(df["measures_1"] == [4.0, 2.0])
+        assert np.all(occupied == [True, True])
+        assert np.all(df["objective"] == [2.0, 1.0])
+        assert np.all(df["measures_0"] == [3.0, 1.0])
+        assert np.all(df["measures_1"] == [4.0, 2.0])
         for i in range(10):
-            assert xp.all(df[f"solution_{i}"] == [1, 0])
-        assert xp.all(df["index"] == [5, 3])
+            assert np.all(df[f"solution_{i}"] == [1, 0])
+        assert np.all(df["index"] == [5, 3])
 
 
 @pytest.mark.parametrize("return_type", ["dict", "tuple", "pandas"])
-def test_retrieve_custom_fields(store, return_type):
+def test_retrieve_custom_fields(store, return_type, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [xp.zeros(10), xp.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
@@ -395,41 +444,75 @@ def test_retrieve_custom_fields(store, return_type):
                                     return_type=return_type)
 
     if return_type == "dict":
-        assert xp.all(occupied == [True, True])
+        assert xp.all(occupied == xp.asarray(
+            [True, True],
+            dtype=bool,
+            device=device,
+        ))
         assert data.keys() == set(["index", "objective"])
-        assert xp.all(data["index"] == [5, 3])
-        assert xp.all(data["objective"] == [2.0, 1.0])
+        assert xp.all(data["index"] == xp.asarray(
+            [5, 3],
+            dtype=xp.int32,
+            device=device,
+        ))
+        assert xp.all(data["objective"] == xp.asarray(
+            [2.0, 1.0],
+            dtype=xp.float32,
+            device=device,
+        ))
     elif return_type == "tuple":
-        assert xp.all(occupied == [True, True])
-        assert xp.all(data[0] == [5, 3])
-        assert xp.all(data[1] == [2.0, 1.0])
+        assert xp.all(occupied == xp.asarray(
+            [True, True],
+            dtype=bool,
+            device=device,
+        ))
+        assert xp.all(data[0] == xp.asarray(
+            [5, 3],
+            dtype=xp.int32,
+            device=device,
+        ))
+        assert xp.all(data[1] == xp.asarray(
+            [2.0, 1.0],
+            dtype=xp.float32,
+            device=device,
+        ))
     elif return_type == "pandas":
         df = data
         assert (df.columns == [
             "index",
             "objective",
         ]).all()
-        assert (df.dtypes == [xp.int32, xp.float32]).all()
+        assert (df.dtypes == [np.int32, np.float32]).all()
         assert len(df) == 2
-        assert xp.all(occupied == [True, True])
-        assert xp.all(df["index"] == [5, 3])
-        assert xp.all(df["objective"] == [2.0, 1.0])
+        assert np.all(occupied == [True, True])
+        assert np.all(df["index"] == [5, 3])
+        assert np.all(df["objective"] == [2.0, 1.0])
 
 
-def test_retrieve_single_field(store):
+def test_retrieve_single_field(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [xp.zeros(10), xp.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
     occupied, data = store.retrieve([5, 3], fields="objective")
 
-    assert xp.all(occupied == [True, True])
-    assert xp.all(data == [2.0, 1.0])
+    assert xp.all(occupied == xp.asarray(
+        [True, True],
+        dtype=bool,
+        device=device,
+    ))
+    assert xp.all(data == xp.asarray(
+        [2.0, 1.0],
+        dtype=xp.float32,
+        device=device,
+    ))
 
 
 def test_resize_bad_capacity(store):
@@ -437,25 +520,39 @@ def test_resize_bad_capacity(store):
         store.resize(store.capacity)
 
 
-def test_resize_to_double_capacity(store):
+def test_resize_to_double_capacity(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [xp.zeros(10), xp.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
     store.resize(store.capacity * 2)
 
     assert len(store) == 2
-    assert xp.all(store.occupied ==
-                  [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    assert xp.all(xp.sort(store.occupied_list) == [3, 5])
+    assert xp.all(store.occupied == xp.asarray(
+        [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        dtype=bool,
+        device=device,
+    ))
+    assert xp.all(
+        xp.sort(store.occupied_list) == xp.asarray(
+            [3, 5],
+            dtype=xp.int32,
+            device=device,
+        ))
 
     # Spot-check the fields.
-    assert xp.all(store._fields["objective"][[3, 5]] == [1.0, 2.0])
+    assert xp.all(store._fields["objective"][[3, 5]] == xp.asarray(
+        [1.0, 2.0],
+        dtype=xp.float32,
+        device=device,
+    ))
 
 
 def test_as_raw_dict(store, xp_and_device):
@@ -575,13 +672,15 @@ def test_from_raw_dict(store, xp_and_device):
     ))
 
 
-def test_data(store):
+def test_data(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [xp.zeros(10), xp.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
@@ -590,12 +689,24 @@ def test_data(store):
     assert d.keys() == set(["objective", "measures", "solution", "index"])
     assert all(len(v) == 2 for v in d.values())
 
-    row0 = xp.concatenate(([1.0, 1.0, 2.0], xp.zeros(10), [3]))
-    row1 = xp.concatenate(([2.0, 3.0, 4.0], xp.ones(10), [5]))
+    row0 = xp.concat((
+        xp.asarray([1.0, 1.0, 2.0], dtype=xp.float32, device=device),
+        xp.zeros(10, dtype=xp.float32, device=device),
+        xp.asarray([3], dtype=xp.float32, device=device),
+    ))
+    row1 = xp.concat((
+        xp.asarray([2.0, 3.0, 4.0], dtype=xp.float32, device=device),
+        xp.ones(10, dtype=xp.float32, device=device),
+        xp.asarray([5], dtype=xp.float32, device=device),
+    ))
 
     flat = [
-        xp.concatenate(([d["objective"][i]], d["measures"][i], d["solution"][i],
-                        [d["index"][i]])) for i in range(2)
+        xp.concat((
+            d["objective"][i][None],
+            d["measures"][i],
+            d["solution"][i],
+            d["index"][i][None],
+        )) for i in range(2)
     ]
 
     # Either permutation.
@@ -603,13 +714,15 @@ def test_data(store):
             ((flat[0] == row1).all() and (flat[1] == row0).all()))
 
 
-def test_data_with_tuple_return_type(store):
+def test_data_with_tuple_return_type(store, xp_and_device):
+    xp, device = xp_and_device
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [xp.zeros(10), xp.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
@@ -618,12 +731,24 @@ def test_data_with_tuple_return_type(store):
     assert len(d) == 4  # 3 fields and 1 index.
     assert all(len(v) == 2 for v in d)
 
-    row0 = xp.concatenate(([1.0, 1.0, 2.0], xp.zeros(10), [3]))
-    row1 = xp.concatenate(([2.0, 3.0, 4.0], xp.ones(10), [5]))
+    row0 = xp.concat((
+        xp.asarray([1.0, 1.0, 2.0], dtype=xp.float32, device=device),
+        xp.zeros(10, dtype=xp.float32, device=device),
+        xp.asarray([3], dtype=xp.float32, device=device),
+    ))
+    row1 = xp.concat((
+        xp.asarray([2.0, 3.0, 4.0], dtype=xp.float32, device=device),
+        xp.ones(10, dtype=xp.float32, device=device),
+        xp.asarray([5], dtype=xp.float32, device=device),
+    ))
 
     flat = [
-        xp.concatenate(([d[0][i]], d[1][i], d[2][i], [d[3][i]]))
-        for i in range(2)
+        xp.concat((
+            d[0][i][None],
+            d[1][i],
+            d[2][i],
+            d[3][i][None],
+        )) for i in range(2)
     ]
 
     # Either permutation.
@@ -631,13 +756,15 @@ def test_data_with_tuple_return_type(store):
             ((flat[0] == row1).all() and (flat[1] == row0).all()))
 
 
-def test_data_with_pandas_return_type(store):
+def test_data_with_pandas_return_type(store, xp_and_device):
+    xp, device = xp_and_device  # pylint: disable = unused-variable
+
     store.add(
         [3, 5],
         {
             "objective": [1.0, 2.0],
             "measures": [[1.0, 2.0], [3.0, 4.0]],
-            "solution": [xp.zeros(10), xp.ones(10)],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
         },
     )
 
@@ -659,11 +786,11 @@ def test_data_with_pandas_return_type(store):
         "solution_9",
         "index",
     ]).all()
-    assert (df.dtypes == [xp.float32] * 13 + [xp.int32]).all()
+    assert (df.dtypes == [np.float32] * 13 + [np.int32]).all()
     assert len(df) == 2
 
-    row0 = xp.concatenate(([1.0, 1.0, 2.0], xp.zeros(10), [3]))
-    row1 = xp.concatenate(([2.0, 3.0, 4.0], xp.ones(10), [5]))
+    row0 = np.concat(([1.0, 1.0, 2.0], np.zeros(10), [3]))
+    row1 = np.concat(([2.0, 3.0, 4.0], np.ones(10), [5]))
 
     # Either permutation.
     assert (((df.loc[0] == row0).all() and (df.loc[1] == row1).all()) or
@@ -700,7 +827,7 @@ def test_iteration(store, xp_and_device):
 
 
 def test_add_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device
+    xp, device = xp_and_device  # pylint: disable = unused-variable
 
     store.add(
         [3],
@@ -726,7 +853,7 @@ def test_add_during_iteration(store, xp_and_device):
 
 
 def test_clear_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device
+    xp, device = xp_and_device  # pylint: disable = unused-variable
 
     store.add(
         [3],
