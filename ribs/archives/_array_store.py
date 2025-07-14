@@ -4,7 +4,7 @@ import numbers
 from enum import IntEnum
 from functools import cached_property
 
-from array_api_compat import is_numpy_namespace, is_torch_namespace
+from array_api_compat import is_numpy_array, is_torch_array
 
 from ribs._utils import np_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
@@ -277,6 +277,19 @@ class ArrayStore:
         """
         return list(self._fields) + ["index"]
 
+    @staticmethod
+    def _convert_to_numpy(arr):
+        """If needed, converts the given array to a numpy array for the pandas
+        return type in `retrieve`."""
+        if is_numpy_array(arr):
+            return arr
+        elif is_torch_array(arr):
+            return arr.cpu().detach().numpy()
+        else:
+            raise NotImplementedError(
+                "The pandas return type is currently only supported "
+                "with numpy and torch arrays.")
+
     def retrieve(self, indices, fields=None, return_type="dict"):
         """Collects data at the given indices.
 
@@ -416,15 +429,7 @@ class ArrayStore:
             elif return_type == "tuple":
                 data.append(arr)
             elif return_type == "pandas":
-                # Array must be converted to NumPy.
-                if is_numpy_namespace(self._xp):
-                    pass
-                elif is_torch_namespace(self._xp):
-                    arr = arr.cpu().detach().numpy()
-                else:
-                    raise NotImplementedError(
-                        "The pandas return type is currently only supported "
-                        "with numpy and torch arrays.")
+                arr = self._convert_to_numpy(arr)
 
                 if len(arr.shape) == 1:  # Scalar entries.
                     data[name] = arr
@@ -440,6 +445,8 @@ class ArrayStore:
         if return_type == "tuple":
             data = tuple(data)
         elif return_type == "pandas":
+            occupied = self._convert_to_numpy(occupied)
+
             # Data above are already copied, so no need to copy again.
             data = ArchiveDataFrame(data, copy=False)
 
