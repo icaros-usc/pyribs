@@ -77,6 +77,8 @@ jobs:
         run: pip install .[dev]
       - name: Install torch
         run: pip install torch
+      - name: Install cupy
+        run: pip install cupy-cuda12x
       - name: Test core
         run: >
           pytest tests/archives tests/emitters tests/schedulers
