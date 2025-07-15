@@ -24,6 +24,21 @@ try:
 except ImportError:
     pass
 
+try:
+    import cupy as cp
+    from cupy_backends.cuda.api.runtime import CUDARuntimeError
+
+    cp.empty(0)  # Triggers CUDARuntimeError if there is no GPU available.
+
+    xp_available_backends.append(
+        pytest.param((cp, cp.cuda.Device(0)), id="cupy-gpu"))
+except ImportError:
+    # CuPy not installed.
+    pass
+except CUDARuntimeError:
+    # GPU not available.
+    pass
+
 
 @pytest.fixture(params=xp_available_backends)
 def xp_and_device(request):

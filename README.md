@@ -124,10 +124,11 @@ python -c "import ribs; print(ribs.__version__)"
 You should see a version number in the output.
 
 **Experimental:** Pyribs is experimenting with adding support for running QD
-algorithms in PyTorch via the
+algorithms in PyTorch and CuPy via the
 [Python array API standard](https://data-apis.org/array-api/latest/). To enable
-this functionality, [install PyTorch](https://pytorch.org), such as with
-`pip install torch`.
+this functionality, install [PyTorch](https://pytorch.org), such as with
+`pip install torch`, and [CuPy](https://cupy.dev), such as with
+`pip install cupy-cuda12x`.
 
 ## Usage
 
