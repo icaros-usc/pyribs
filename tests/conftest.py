@@ -26,7 +26,7 @@ except ImportError:
 
 try:
     import cupy as cp
-    import cupy_backends
+    from cupy_backends.cuda.api.runtime import CUDARuntimeError
 
     cp.empty(0)  # Triggers CUDARuntimeError if there is no GPU available.
 
@@ -35,7 +35,7 @@ try:
 except ImportError:
     # CuPy not installed.
     pass
-except cupy_backends.cuda.api.runtime.CUDARuntimeError:
+except CUDARuntimeError:
     # GPU not available.
     pass
 
