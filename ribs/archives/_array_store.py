@@ -4,7 +4,13 @@ import numbers
 from enum import IntEnum
 from functools import cached_property
 
-from array_api_compat import is_numpy_array, is_numpy_namespace, is_torch_array
+from array_api_compat import (is_cupy_array, is_numpy_array, is_numpy_namespace,
+                              is_torch_array)
+
+try:
+    from array_api_compat import cupy as cp
+except ImportError:
+    pass
 
 from ribs._utils import arr_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
@@ -292,10 +298,12 @@ class ArrayStore:
             return arr
         elif is_torch_array(arr):
             return arr.cpu().detach().numpy()
+        elif is_cupy_array(arr):
+            return cp.asnumpy(arr)
         else:
             raise NotImplementedError(
                 "The pandas return type is currently only supported "
-                "with numpy and torch arrays.")
+                "with NumPy, PyTorch, and CuPy arrays.")
 
     def retrieve(self, indices, fields=None, return_type="dict"):
         """Collects data at the given indices.
