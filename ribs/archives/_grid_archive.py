@@ -1,9 +1,10 @@
 """Contains the GridArchive."""
-import numpy as np
+import numpy as np  # TODO: remove
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (check_batch_shape, check_finite, check_is_1d,
-                         check_shape, validate_batch, validate_single)
+                         check_shape, validate_batch, validate_single,
+                         xp_namespace)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
@@ -79,6 +80,9 @@ class GridArchive(ArchiveBase):
             and a "bar" field that contains 10D values. Note that field names
             must be valid Python identifiers, and names already used in the
             archive are not allowed.
+        xp (array_namespace): Optional array namespace. Should be compatible
+            with the array API standard, or supported by array-api-compat.
+            Defaults to ``numpy``.
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
@@ -98,9 +102,12 @@ class GridArchive(ArchiveBase):
         seed=None,
         dtype=np.float64,
         extra_fields=None,
+        xp=None,
     ):
+        self._xp = xp_namespace(xp)
+
         self._rng = np.random.default_rng(seed)
-        self._dims = np.array(dims, dtype=np.int32)
+        self._dims = self._xp.asarray(dims, dtype=self._xp.int32)
 
         ArchiveBase.__init__(
             self,
@@ -129,7 +136,8 @@ class GridArchive(ArchiveBase):
                 "threshold": ((), dtype["objective"]),
                 **extra_fields,
             },
-            capacity=np.prod(self._dims),
+            capacity=self._xp.prod(self._dims),
+            xp=self._xp,
         )
 
         # Set up constant properties.
@@ -137,8 +145,10 @@ class GridArchive(ArchiveBase):
             raise ValueError(f"dims (length {len(self._dims)}) and ranges "
                              f"(length {len(ranges)}) must be the same length")
         ranges = list(zip(*ranges))  # Rearrange into lower and upper bounds.
-        self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
-        self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
+        self._lower_bounds = self._xp.asarray(ranges[0],
+                                              dtype=self.dtypes["measures"])
+        self._upper_bounds = self._xp.asarray(ranges[1],
+                                              dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._boundaries = self._compute_boundaries(self._dims,
                                                     self._lower_bounds,
@@ -155,13 +165,13 @@ class GridArchive(ArchiveBase):
         self._stats = None
         self._stats_reset()
 
-    @staticmethod
-    def _compute_boundaries(dims, lower_bounds, upper_bounds):
+    def _compute_boundaries(self, dims, lower_bounds, upper_bounds):
         """Computes grid cell boundaries of the archive."""
         boundaries = []
         for dim, lower_bound, upper_bound in zip(dims, lower_bounds,
                                                  upper_bounds):
-            boundaries.append(np.linspace(lower_bound, upper_bound, dim + 1))
+            boundaries.append(
+                self._xp.linspace(lower_bound, upper_bound, dim + 1))
         return boundaries
 
     ## Properties inherited from ArchiveBase ##
@@ -356,7 +366,7 @@ class GridArchive(ArchiveBase):
                 :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = self._xp.asarray(measures)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
@@ -365,11 +375,11 @@ class GridArchive(ArchiveBase):
         # indices.
         grid_indices = ((self._dims *
                          (measures - self._lower_bounds) + self._epsilon) /
-                        self._interval_size).astype(np.int32)
+                        self._interval_size).astype(self._xp.int32)
 
         # Clip indices to the archive dimensions (for example, for 20 cells, we
         # want indices to run from 0 to 19).
-        grid_indices = np.clip(grid_indices, 0, self._dims - 1)
+        grid_indices = self._xp.clip(grid_indices, 0, self._dims - 1)
 
         return self.grid_to_int_index(grid_indices)
 
@@ -388,7 +398,7 @@ class GridArchive(ArchiveBase):
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = self._xp.asarray(measures)
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
@@ -407,7 +417,7 @@ class GridArchive(ArchiveBase):
             ValueError: ``grid_indices`` is not of shape (batch_size,
                 :attr:`measure_dim`)
         """
-        grid_indices = np.asarray(grid_indices)
+        grid_indices = self._xp.asarray(grid_indices)
         check_batch_shape(grid_indices, "grid_indices", self.measure_dim,
                           "measure_dim")
 
