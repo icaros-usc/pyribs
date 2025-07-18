@@ -16,10 +16,10 @@ repos:
     hooks:
       - id: isort
         name: isort (python)
-  - repo: https://github.com/google/yapf
-    rev: v0.40.1
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.4
     hooks:
-      - id: yapf
+      - id: ruff-format
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.0.2
     hooks:
