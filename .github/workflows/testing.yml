@@ -22,7 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Skip pylint since not all of our code passes pylint.
-      SKIP: pylint
+      # TODO (btjanaka): Remove ruff-format and format the whole codebase.
+      SKIP: pylint, ruff-format
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3

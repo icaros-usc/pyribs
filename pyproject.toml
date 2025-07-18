@@ -55,9 +55,10 @@ all = [
   "pymoo",
 ]
 dev = [
-  "pip>=20.3",
-  "pylint",
+  # Tools
+  "isort",
   "ruff",
+  "pylint",
   "pre-commit",
 
   # Testing
