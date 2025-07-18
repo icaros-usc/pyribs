@@ -21,8 +21,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     env:
-      # Skipped for now since we just added pre-commit and not all of our code
-      # perfectly passes pylint.
+      # Skip pylint since not all of our code passes pylint.
       SKIP: pylint
     steps:
       - uses: actions/checkout@v4
