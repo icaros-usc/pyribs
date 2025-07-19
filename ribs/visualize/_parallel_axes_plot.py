@@ -1,4 +1,5 @@
 """Provides parallel_axes_plot."""
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,19 +11,21 @@ from ribs.visualize._utils import retrieve_cmap, set_cbar, validate_df
 # pylint: disable = too-many-arguments
 
 
-def parallel_axes_plot(archive,
-                       ax=None,
-                       *,
-                       df=None,
-                       measure_order=None,
-                       cmap="magma",
-                       linewidth=1.5,
-                       alpha=0.8,
-                       vmin=None,
-                       vmax=None,
-                       sort_archive=False,
-                       cbar="auto",
-                       cbar_kwargs=None):
+def parallel_axes_plot(
+    archive,
+    ax=None,
+    *,
+    df=None,
+    measure_order=None,
+    cmap="magma",
+    linewidth=1.5,
+    alpha=0.8,
+    vmin=None,
+    vmax=None,
+    sort_archive=False,
+    cbar="auto",
+    cbar_kwargs=None,
+):
     """Visualizes archive elites in measure space with a parallel axes plot.
 
     This visualization is meant to show the coverage of the measure space at a
@@ -143,21 +146,27 @@ def parallel_axes_plot(archive,
             cols = np.array(measure_order)
             axis_labels = [f"measure_{i}" for i in cols]
         elif all(
-                len(measure) == 2 and isinstance(measure[0], int) and
-                isinstance(measure[1], str) for measure in measure_order):
+            len(measure) == 2
+            and isinstance(measure[0], int)
+            and isinstance(measure[1], str)
+            for measure in measure_order
+        ):
             cols, axis_labels = zip(*measure_order)
             cols = np.array(cols)
         else:
-            raise TypeError("measure_order must be a list of ints or a list of"
-                            "tuples in the form (int, str)")
+            raise TypeError(
+                "measure_order must be a list of ints or a list of"
+                "tuples in the form (int, str)"
+            )
 
         if np.max(cols) >= archive.measure_dim:
-            raise ValueError(f"Invalid Measures: requested measures index "
-                             f"{np.max(cols)}, but archive only has "
-                             f"{archive.measure_dim} measures.")
+            raise ValueError(
+                f"Invalid Measures: requested measures index "
+                f"{np.max(cols)}, but archive only has "
+                f"{archive.measure_dim} measures."
+            )
         if any(measure < 0 for measure in cols):
-            raise ValueError("Invalid Measures: requested a negative measure"
-                             " index.")
+            raise ValueError("Invalid Measures: requested a negative measure index.")
 
         # Find the indices of the requested order.
         lower_bounds = archive.lower_bounds[cols]
@@ -177,36 +186,34 @@ def parallel_axes_plot(archive,
     # Transform all data to be in the first axis coordinates.
     normalized_ys = np.zeros_like(ys)
     normalized_ys[:, 0] = ys[:, 0]
-    normalized_ys[:, 1:] = (
-        (ys[:, 1:] - lower_bounds[1:]) / y_ranges[1:] * y_ranges[0] +
-        lower_bounds[0])
+    normalized_ys[:, 1:] = (ys[:, 1:] - lower_bounds[1:]) / y_ranges[1:] * y_ranges[
+        0
+    ] + lower_bounds[0]
 
     # Copy the axis for the other measures.
     axs = [host_ax] + [host_ax.twinx() for i in range(len(cols) - 1)]
     for i, axis in enumerate(axs):
         axis.set_ylim(lower_bounds[i], upper_bounds[i])
-        axis.spines['top'].set_visible(False)
-        axis.spines['bottom'].set_visible(False)
+        axis.spines["top"].set_visible(False)
+        axis.spines["bottom"].set_visible(False)
         if axis != host_ax:
-            axis.spines['left'].set_visible(False)
-            axis.yaxis.set_ticks_position('right')
+            axis.spines["left"].set_visible(False)
+            axis.yaxis.set_ticks_position("right")
             axis.spines["right"].set_position(("axes", i / (len(cols) - 1)))
 
     host_ax.set_xlim(0, len(cols) - 1)
     host_ax.set_xticks(range(len(cols)))
     host_ax.set_xticklabels(axis_labels)
-    host_ax.tick_params(axis='x', which='major', pad=7)
-    host_ax.spines['right'].set_visible(False)
+    host_ax.tick_params(axis="x", which="major", pad=7)
+    host_ax.spines["right"].set_visible(False)
     host_ax.xaxis.tick_top()
 
     for elite_ys, objective in zip(normalized_ys, objectives):
         # Draw straight lines between the axes in the appropriate color.
         color = cmap(norm(objective))
-        host_ax.plot(range(len(cols)),
-                     elite_ys,
-                     c=color,
-                     alpha=alpha,
-                     linewidth=linewidth)
+        host_ax.plot(
+            range(len(cols)), elite_ys, c=color, alpha=alpha, linewidth=linewidth
+        )
 
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)

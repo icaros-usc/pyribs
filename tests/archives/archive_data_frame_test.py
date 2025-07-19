@@ -1,4 +1,5 @@
 """Tests for ArchiveDataFrame."""
+
 import numpy as np
 import pytest
 
@@ -15,28 +16,37 @@ def data():
     measures_batch = 3 * np.arange(5).reshape(5, 1)
     index_batch = 4 * np.arange(5, dtype=int)
     metadata_batch = [{"a": 1}, {"b": 2}, {"c": 3}, {"d": 4}, {"e": 5}]
-    return (solution_batch, objective_batch, measures_batch, index_batch,
-            metadata_batch)
+    return (
+        solution_batch,
+        objective_batch,
+        measures_batch,
+        index_batch,
+        metadata_batch,
+    )
 
 
 @pytest.fixture
 def df(data):
     """Mimics an ArchiveDataFrame that a data method would generate."""
-    (solution_batch, objective_batch, measures_batch, index_batch,
-     metadata_batch) = data
-    return ArchiveDataFrame({
-        "solution_0": solution_batch[:, 0],
-        "objective": objective_batch,
-        # Fancy name to test field handling.
-        "foo__bar_measures_3_0": measures_batch[:, 0],
-        "metadata": metadata_batch,
-        "index": index_batch,
-    })
+    (solution_batch, objective_batch, measures_batch, index_batch, metadata_batch) = (
+        data
+    )
+    return ArchiveDataFrame(
+        {
+            "solution_0": solution_batch[:, 0],
+            "objective": objective_batch,
+            # Fancy name to test field handling.
+            "foo__bar_measures_3_0": measures_batch[:, 0],
+            "metadata": metadata_batch,
+            "index": index_batch,
+        }
+    )
 
 
 def test_iterelites(data, df):
-    for elite, (solution, objective, measures, index,
-                metadata) in zip(df.iterelites(), zip(*data)):
+    for elite, (solution, objective, measures, index, metadata) in zip(
+        df.iterelites(), zip(*data)
+    ):
         assert np.isclose(elite["solution"], solution).all()
         assert np.isclose(elite["objective"], objective)
         assert np.isclose(elite["foo__bar_measures_3"], measures).all()
@@ -45,8 +55,9 @@ def test_iterelites(data, df):
 
 
 def test_get_field(data, df):
-    (solution_batch, objective_batch, measures_batch, index_batch,
-     metadata_batch) = data
+    (solution_batch, objective_batch, measures_batch, index_batch, metadata_batch) = (
+        data
+    )
     assert np.isclose(df.get_field("solution"), solution_batch).all()
     assert np.isclose(df.get_field("objective"), objective_batch).all()
     assert np.isclose(df.get_field("foo__bar_measures_3"), measures_batch).all()

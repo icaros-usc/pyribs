@@ -15,6 +15,7 @@ operator, or an abbreviated name. The supported abbreviations are:
     ribs.emitters.operators.IsoLineOperator
     ribs.emitters.operators.OperatorBase
 """
+
 from ribs.emitters.operators._gaussian import GaussianOperator
 from ribs.emitters.operators._iso_line import IsoLineOperator
 from ribs.emitters.operators._operator_base import OperatorBase
@@ -38,7 +39,8 @@ def _get_op(operator):
             operator = _NAME_TO_OP_MAP[operator]
             return operator
         else:
-            raise ValueError(f"`{operator}` is not the full or abbreviated "
-                             "name of a valid operator")
+            raise ValueError(
+                f"`{operator}` is not the full or abbreviated name of a valid operator"
+            )
 
     raise ValueError(f"`{operator}` is not a string")

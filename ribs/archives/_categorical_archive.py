@@ -1,15 +1,18 @@
 """Contains the CategoricalArchive."""
+
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import (check_batch_shape, check_shape, validate_batch,
-                         validate_single)
+from ribs._utils import check_batch_shape, check_shape, validate_batch, validate_single
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._grid_archive import GridArchive
-from ribs.archives._utils import (fill_sentinel_values, parse_dtype,
-                                  validate_cma_mae_settings)
+from ribs.archives._utils import (
+    fill_sentinel_values,
+    parse_dtype,
+    validate_cma_mae_settings,
+)
 
 
 class CategoricalArchive(ArchiveBase):
@@ -90,8 +93,9 @@ class CategoricalArchive(ArchiveBase):
     ):
         self._rng = np.random.default_rng(seed)
         self._categories = [list(measure_dim) for measure_dim in categories]
-        self._dims = np.array([len(measure_dim) for measure_dim in categories],
-                              dtype=np.int32)
+        self._dims = np.array(
+            [len(measure_dim) for measure_dim in categories], dtype=np.int32
+        )
 
         ArchiveBase.__init__(
             self,
@@ -103,12 +107,12 @@ class CategoricalArchive(ArchiveBase):
         # Set up the ArrayStore, which is a data structure that stores all the
         # elites' data in arrays sharing a common index.
         extra_fields = extra_fields or {}
-        reserved_fields = {
-            "solution", "objective", "measures", "threshold", "index"
-        }
+        reserved_fields = {"solution", "objective", "measures", "threshold", "index"}
         if reserved_fields & extra_fields.keys():
-            raise ValueError("The following names are not allowed in "
-                             f"extra_fields: {reserved_fields}")
+            raise ValueError(
+                "The following names are not allowed in "
+                f"extra_fields: {reserved_fields}"
+            )
         if not isinstance(dtype, dict):
             # Make measures default to `object` dtype.
             dtype = {
@@ -137,7 +141,8 @@ class CategoricalArchive(ArchiveBase):
             for measure_dim in categories
         ]
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
-            learning_rate, threshold_min, self.dtypes["threshold"])
+            learning_rate, threshold_min, self.dtypes["threshold"]
+        )
         self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
 
         # Set up statistics -- objective_sum is the sum of all objective values
@@ -253,8 +258,10 @@ class CategoricalArchive(ArchiveBase):
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
-        if (self._stats.obj_max is None or
-                new_best_elite["objective"] > self._stats.obj_max):
+        if (
+            self._stats.obj_max is None
+            or new_best_elite["objective"] > self._stats.obj_max
+        ):
             self._best_elite = new_best_elite
             new_obj_max = new_best_elite["objective"]
         else:
@@ -262,8 +269,9 @@ class CategoricalArchive(ArchiveBase):
 
         self._objective_sum = new_objective_sum
         new_qd_score = (
-            self._objective_sum -
-            self.dtypes["objective"](len(self)) * self._qd_score_offset)
+            self._objective_sum
+            - self.dtypes["objective"](len(self)) * self._qd_score_offset
+        )
         self._stats = ArchiveStats(
             num_elites=len(self),
             coverage=self.dtypes["objective"](len(self) / self.cells),
@@ -293,12 +301,10 @@ class CategoricalArchive(ArchiveBase):
         measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
 
-        # yapf: disable
         grid_indices = [
             [self._category_to_idx[i][m] for i, m in enumerate(measure)]
             for measure in measures
         ]
-        # yapf: enable
 
         return self.grid_to_int_index(grid_indices)
 
@@ -328,8 +334,7 @@ class CategoricalArchive(ArchiveBase):
     ## Methods for writing to the archive ##
 
     @staticmethod
-    def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
-                            dtype):
+    def _compute_thresholds(indices, objective, cur_threshold, learning_rate, dtype):
         """Computes new thresholds with the CMA-MAE batch threshold update rule.
 
         If entries in `indices` are duplicated, they receive the same threshold.
@@ -344,15 +349,13 @@ class CategoricalArchive(ArchiveBase):
         #
         # All objective_sizes should be > 0 since we only retrieve counts for
         # indices in `indices`.
-        objective_sizes = aggregate(indices, 1, func="len",
-                                    fill_value=0)[indices]
+        objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]
 
         # Compute the sum of the objectives inserted into each cell -- again, we
         # index with `indices`.
-        objective_sums = aggregate(indices,
-                                   objective,
-                                   func="sum",
-                                   fill_value=np.nan)[indices]
+        objective_sums = aggregate(indices, objective, func="sum", fill_value=np.nan)[
+            indices
+        ]
 
         # Update the threshold with the batch update rule from Fontaine 2023
         # (https://arxiv.org/abs/2205.10752).
@@ -362,9 +365,10 @@ class CategoricalArchive(ArchiveBase):
         # -np.inf. This is because the case with threshold_min = -np.inf is
         # handled separately since we compute the new threshold based on the max
         # objective in each cell in that case.
-        ratio = dtype(1.0 - learning_rate)**objective_sizes
-        new_threshold = (ratio * cur_threshold +
-                         (objective_sums / objective_sizes) * (1 - ratio))
+        ratio = dtype(1.0 - learning_rate) ** objective_sizes
+        new_threshold = ratio * cur_threshold + (objective_sums / objective_sizes) * (
+            1 - ratio
+        )
 
         return new_threshold
 
@@ -501,9 +505,11 @@ class CategoricalArchive(ArchiveBase):
         # If threshold_min is -inf, then we want CMA-ME behavior, which computes
         # the improvement value of new solutions w.r.t zero. Otherwise, we
         # compute improvement with respect to threshold_min.
-        cur_threshold[is_new] = (self.dtypes["threshold"](0.0)
-                                 if self.threshold_min == -np.inf else
-                                 self.threshold_min)
+        cur_threshold[is_new] = (
+            self.dtypes["threshold"](0.0)
+            if self.threshold_min == -np.inf
+            else self.threshold_min
+        )
         add_info["value"] = data["objective"] - cur_threshold
 
         # Return early if we cannot insert anything -- continuing throws a
@@ -527,10 +533,13 @@ class CategoricalArchive(ArchiveBase):
             # (https://arxiv.org/abs/2205.10752). This computation is based on
             # the mean objective of all solutions in the batch that could have
             # been inserted into each cell.
-            new_threshold = self._compute_thresholds(indices, data["objective"],
-                                                     cur_threshold,
-                                                     self.learning_rate,
-                                                     self.dtypes["threshold"])
+            new_threshold = self._compute_thresholds(
+                indices,
+                data["objective"],
+                cur_threshold,
+                self.learning_rate,
+                self.dtypes["threshold"],
+            )
 
         # Retrieve indices of solutions that _should_ be inserted into the
         # archive. Currently, multiple solutions may be inserted at each archive
@@ -547,10 +556,9 @@ class CategoricalArchive(ArchiveBase):
         # first elite will be inserted if there is a tie. See their default
         # numpy implementation for more info:
         # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-        archive_argmax = aggregate(indices,
-                                   data["objective"],
-                                   func="argmax",
-                                   fill_value=-1)
+        archive_argmax = aggregate(
+            indices, data["objective"], func="argmax", fill_value=-1
+        )
         should_insert = archive_argmax[archive_argmax != -1]
 
         # Select only solutions that will be inserted into the archive.
@@ -565,8 +573,7 @@ class CategoricalArchive(ArchiveBase):
         cur_objective = cur_data["objective"]
         cur_objective[~cur_occupied] = 0.0
         cur_objective = cur_objective[can_insert][should_insert]
-        objective_sum = (self._objective_sum +
-                         np.sum(data["objective"] - cur_objective))
+        objective_sum = self._objective_sum + np.sum(data["objective"] - cur_objective)
         best_index = indices[np.argmax(data["objective"])]
         self._stats_update(objective_sum, best_index)
 
@@ -636,8 +643,11 @@ class CategoricalArchive(ArchiveBase):
             # If threshold_min is -inf, then we want CMA-ME behavior, which
             # computes the improvement value with a threshold of zero for new
             # solutions. Otherwise, we will set cur_threshold to threshold_min.
-            cur_threshold = (self.dtypes["threshold"](0.0) if self.threshold_min
-                             == -np.inf else self.threshold_min)
+            cur_threshold = (
+                self.dtypes["threshold"](0.0)
+                if self.threshold_min == -np.inf
+                else self.threshold_min
+            )
 
         # Retrieve candidate objective.
         objective = data["objective"]
@@ -674,19 +684,24 @@ class CategoricalArchive(ArchiveBase):
 
             # This calculation works in the case where threshold_min is -inf
             # because cur_threshold will be set to 0.0 instead.
-            data["threshold"] = [(cur_threshold * (1.0 - self.learning_rate) +
-                                  objective * self.learning_rate)]
+            data["threshold"] = (
+                cur_threshold * (1.0 - self.learning_rate)
+                + objective * self.learning_rate
+            )
 
             # Insert elite into the store.
-            self._store.add(index[None], {
-                name: np.expand_dims(arr, axis=0) for name, arr in data.items()
-            })
+            self._store.add(
+                index[None],
+                {name: np.expand_dims(arr, axis=0) for name, arr in data.items()},
+            )
 
             # Update stats.
-            cur_objective = (cur_data["objective"][0]
-                             if cur_occupied else self.dtypes["objective"](0.0))
-            self._stats_update(self._objective_sum + objective - cur_objective,
-                               index)
+            cur_objective = (
+                cur_data["objective"][0]
+                if cur_occupied
+                else self.dtypes["objective"](0.0)
+            )
+            self._stats_update(self._objective_sum + objective - cur_objective, index)
 
         # Value is the improvement over the current threshold (can be negative).
         add_info["value"] = objective - cur_threshold

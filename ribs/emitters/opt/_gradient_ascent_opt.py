@@ -4,6 +4,7 @@ Adapted from:
 https://github.com/icaros-usc/dqd/blob/main/ribs/emitters/opt/_adam.py
 https://github.com/hardmaru/estool/blob/master/es.py
 """
+
 import numpy as np
 
 from ribs.emitters.opt._gradient_opt_base import GradientOptBase

@@ -1,4 +1,5 @@
 """Provides the AddStatus for all archives to use."""
+
 from enum import IntEnum
 
 
@@ -39,6 +40,7 @@ class AddStatus(IntEnum):
 
             AddStatus.NEW > AddStatus.IMPROVE_EXISTING > AddStatus.NOT_ADDED
     """
+
     NOT_ADDED = 0
     IMPROVE_EXISTING = 1
     NEW = 2

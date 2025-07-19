@@ -32,6 +32,7 @@ a ranker, e.g., "imp". The supported abbreviations are:
     ribs.emitters.rankers.TwoStageRandomDirectionRanker
     ribs.emitters.rankers.RankerBase
 """
+
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -156,8 +157,7 @@ class TwoStageImprovementRanker(RankerBase):
     def rank(self, emitter, archive, data, add_info):
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, value_0], ..., [status_n, value_n]]
-        ranking_values = np.stack((add_info["status"], add_info["value"]),
-                                  axis=-1)
+        ranking_values = np.stack((add_info["status"], add_info["value"]), axis=-1)
 
         # New solutions sort ahead of improved ones, which sort ahead of ones
         # that were not added.
@@ -325,8 +325,7 @@ class TwoStageObjectiveRanker(RankerBase):
     def rank(self, emitter, archive, data, add_info):
         # To avoid using an array of tuples, ranking_values is a 2D array
         # [[status_0, objective_0], ..., [status_0, objective_n]]
-        ranking_values = np.stack((add_info["status"], data["objective"]),
-                                  axis=-1)
+        ranking_values = np.stack((add_info["status"], data["objective"]), axis=-1)
 
         # Sort by whether the solution was added into the archive, followed
         # by the objective values.
@@ -419,12 +418,14 @@ def _get_ranker(klass, seed):
     if isinstance(klass, str):
         if klass in _NAME_TO_RANKER_MAP:
             return _NAME_TO_RANKER_MAP[klass](seed)
-        raise ValueError(f"`{klass}` is not the full or abbreviated "
-                         "name of a valid ranker")
+        raise ValueError(
+            f"`{klass}` is not the full or abbreviated name of a valid ranker"
+        )
     if callable(klass):
         ranker = klass(seed)
         if isinstance(ranker, RankerBase):
             return ranker
-        raise ValueError(f"Callable `{klass}` did not return an instance "
-                         "of RankerBase.")
+        raise ValueError(
+            f"Callable `{klass}` did not return an instance of RankerBase."
+        )
     raise ValueError(f"`{klass}` is neither a callable nor a string")

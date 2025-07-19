@@ -1,4 +1,5 @@
 """Provides ArchiveStats."""
+
 import dataclasses
 
 import numpy as np

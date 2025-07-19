@@ -1,4 +1,5 @@
 """Provides the GradientOperatorEmitter."""
+
 import numbers
 
 import numpy as np
@@ -99,21 +100,23 @@ class GradientOperatorEmitter(EmitterBase):
         ValueError: There is an error in the bounds configuration.
     """
 
-    def __init__(self,
-                 archive,
-                 *,
-                 sigma,
-                 sigma_g,
-                 initial_solutions=None,
-                 x0=None,
-                 line_sigma=0.0,
-                 measure_gradients=False,
-                 normalize_grad=False,
-                 epsilon=1e-8,
-                 operator_type='isotropic',
-                 bounds=None,
-                 batch_size=64,
-                 seed=None):
+    def __init__(
+        self,
+        archive,
+        *,
+        sigma,
+        sigma_g,
+        initial_solutions=None,
+        x0=None,
+        line_sigma=0.0,
+        measure_gradients=False,
+        normalize_grad=False,
+        epsilon=1e-8,
+        operator_type="isotropic",
+        bounds=None,
+        batch_size=64,
+        seed=None,
+    ):
         EmitterBase.__init__(
             self,
             archive=archive,
@@ -127,25 +130,31 @@ class GradientOperatorEmitter(EmitterBase):
         if x0 is None and initial_solutions is None:
             raise ValueError("Either x0 or initial_solutions must be provided.")
         if x0 is not None and initial_solutions is not None:
-            raise ValueError(
-                "x0 and initial_solutions cannot both be provided.")
+            raise ValueError("x0 and initial_solutions cannot both be provided.")
 
         if x0 is not None:
             self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
-            check_shape(self._x0, "x0", archive.solution_dim,
-                        "archive.solution_dim")
+            check_shape(self._x0, "x0", archive.solution_dim, "archive.solution_dim")
         elif initial_solutions is not None:
             self._initial_solutions = np.asarray(
-                initial_solutions, dtype=archive.dtypes["solution"])
-            check_batch_shape(self._initial_solutions, "initial_solutions",
-                              archive.solution_dim, "archive.solution_dim")
+                initial_solutions, dtype=archive.dtypes["solution"]
+            )
+            check_batch_shape(
+                self._initial_solutions,
+                "initial_solutions",
+                archive.solution_dim,
+                "archive.solution_dim",
+            )
 
         self._rng = np.random.default_rng(seed)
-        self._sigma = archive.dtypes["solution"](sigma) if isinstance(
-            sigma, numbers.Real) else np.array(sigma)
+        self._sigma = (
+            archive.dtypes["solution"](sigma)
+            if isinstance(sigma, numbers.Real)
+            else np.array(sigma)
+        )
         self._sigma_g = archive.dtypes["solution"](sigma_g)
         self._line_sigma = line_sigma
-        self._use_isolinedd = operator_type != 'isotropic'
+        self._use_isolinedd = operator_type != "isotropic"
         self._measure_gradients = measure_gradients
         self._normalize_grad = normalize_grad
         self._epsilon = epsilon
@@ -219,8 +228,9 @@ class GradientOperatorEmitter(EmitterBase):
                 size=(self.batch_size, self.solution_dim),
             ).astype(self.archive.dtypes["solution"])
 
-            directions = self.archive.sample_elites(
-                self._batch_size)["solution"] - parents
+            directions = (
+                self.archive.sample_elites(self._batch_size)["solution"] - parents
+            )
 
             line_gaussian = self._rng.normal(
                 loc=0.0,
@@ -268,8 +278,9 @@ class GradientOperatorEmitter(EmitterBase):
             return self._initial_solutions
 
         if self._jacobian_batch is None:
-            raise RuntimeError("Please call ask_dqd() and tell_dqd() "
-                               "before calling ask().")
+            raise RuntimeError(
+                "Please call ask_dqd() and tell_dqd() before calling ask()."
+            )
 
         if self._measure_gradients:
             noise = self._rng.normal(
@@ -278,7 +289,8 @@ class GradientOperatorEmitter(EmitterBase):
                 size=self._jacobian_batch.shape[:2],
             )
             noise[:, 0] = np.abs(
-                noise[:, 0])  # obj coefficient forced to be non-negative
+                noise[:, 0]
+            )  # obj coefficient forced to be non-negative
             noise = np.expand_dims(noise, axis=2)
             offsets = np.sum(self._jacobian_batch * noise, axis=1)
             sols = offsets + self._parents
@@ -289,8 +301,7 @@ class GradientOperatorEmitter(EmitterBase):
 
         return sols
 
-    def tell_dqd(self, solution, objective, measures, jacobian, add_info,
-                 **fields):
+    def tell_dqd(self, solution, objective, measures, jacobian, add_info, **fields):
         """Gives the emitter results of evaluating solutions from ask_dqd().
 
         Args:
@@ -326,7 +337,6 @@ class GradientOperatorEmitter(EmitterBase):
         # normalize gradients + set jacobian
         # jacobian is obtained from evaluating solutions of ask_dqd()
         if self._normalize_grad:
-            norms = np.linalg.norm(jacobian, axis=2,
-                                   keepdims=True) + self._epsilon
+            norms = np.linalg.norm(jacobian, axis=2, keepdims=True) + self._epsilon
             jacobian /= norms
         self._jacobian_batch = jacobian

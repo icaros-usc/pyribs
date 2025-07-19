@@ -6,6 +6,7 @@ https://github.com/hardmaru/estool/blob/master/es.py
 https://github.com/openai/evolution-strategies-starter/blob/master/es_distributed/optimizers.py
 https://pytorch.org/docs/stable/generated/torch.optim.Adam.html
 """
+
 import numpy as np
 
 from ribs.emitters.opt._gradient_opt_base import GradientOptBase
@@ -31,13 +32,14 @@ class AdamOpt(GradientOptBase):
     """
 
     def __init__(  # pylint: disable = super-init-not-called
-            self,
-            theta0,
-            lr=0.001,
-            beta1=0.9,
-            beta2=0.999,
-            epsilon=1e-8,
-            l2_coeff=0.0):
+        self,
+        theta0,
+        lr=0.001,
+        beta1=0.9,
+        beta2=0.999,
+        epsilon=1e-8,
+        l2_coeff=0.0,
+    ):
         self._m = None
         self._v = None
         self._t = None
@@ -71,10 +73,8 @@ class AdamOpt(GradientOptBase):
 
         self._t += 1
 
-        a = (self._lr * np.sqrt(1 - self._beta2**self._t) /
-             (1 - self._beta1**self._t))
+        a = self._lr * np.sqrt(1 - self._beta2**self._t) / (1 - self._beta1**self._t)
         self._m = self._beta1 * self._m + (1 - self._beta1) * gradient
-        self._v = (self._beta2 * self._v + (1 - self._beta2) *
-                   (gradient * gradient))
+        self._v = self._beta2 * self._v + (1 - self._beta2) * (gradient * gradient)
         step = -a * self._m / (np.sqrt(self._v) + self._epsilon)
         self._theta += step

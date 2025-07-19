@@ -1,4 +1,5 @@
 """Provides ArchiveBase."""
+
 from abc import ABC
 
 
@@ -65,14 +66,14 @@ class ArchiveBase(ABC):
     def field_list(self):
         """list: List of data fields in the archive."""
         raise NotImplementedError(
-            "`field_list` has not been implemented in this archive")
+            "`field_list` has not been implemented in this archive"
+        )
 
     @property
     def dtypes(self):
         """dict: Mapping from field name to dtype for all fields in the
         archive."""
-        raise NotImplementedError(
-            "`dtypes` has not been implemented in this archive")
+        raise NotImplementedError("`dtypes` has not been implemented in this archive")
 
     @property
     def stats(self):
@@ -80,21 +81,18 @@ class ArchiveBase(ABC):
 
         See :class:`~ribs.archives.ArchiveStats` for more info.
         """
-        raise NotImplementedError(
-            "`stats` has not been implemented in this archive")
+        raise NotImplementedError("`stats` has not been implemented in this archive")
 
     @property
     def empty(self):
         """bool: Whether the archive is empty."""
-        raise NotImplementedError(
-            "`empty` has not been implemented in this archive")
+        raise NotImplementedError("`empty` has not been implemented in this archive")
 
     ## dunder methods ##
 
     def __len__(self):
         """Number of elites in the archive."""
-        raise NotImplementedError(
-            "`__len__` has not been implemented in this archive")
+        raise NotImplementedError("`__len__` has not been implemented in this archive")
 
     def __iter__(self):
         """Creates an iterator over the elites in the archive.
@@ -109,8 +107,7 @@ class ArchiveBase(ABC):
                     elite["measures"]
                     ...
         """
-        raise NotImplementedError(
-            "`__iter__` has not been implemented in this archive")
+        raise NotImplementedError("`__iter__` has not been implemented in this archive")
 
     ## Methods for writing to the archive ##
 
@@ -142,8 +139,7 @@ class ArchiveBase(ABC):
             dict: Information describing the result of the add operation. The
             content of the dict is to be determined by child classes.
         """
-        raise NotImplementedError(
-            "`add` has not been implemented in this archive")
+        raise NotImplementedError("`add` has not been implemented in this archive")
 
     def add_single(self, solution, objective, measures, **fields):
         """Inserts a single solution and its data into the archive.
@@ -160,15 +156,15 @@ class ArchiveBase(ABC):
             :meth:`add`, the content of this dict is decided by child classes.
         """
         raise NotImplementedError(
-            "`add_single` has not been implemented in this archive")
+            "`add_single` has not been implemented in this archive"
+        )
 
     def clear(self):
         """Resets the archive, e.g., by removing all elites in it.
 
         After calling this method, the archive should be :attr:`empty`.
         """
-        raise NotImplementedError(
-            "`clear` has not been implemented in this archive")
+        raise NotImplementedError("`clear` has not been implemented in this archive")
 
     ## Methods for reading from the archive ##
 
@@ -204,8 +200,7 @@ class ArchiveBase(ABC):
                 :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        raise NotImplementedError(
-            "`retrieve` has not been implemented in this archive")
+        raise NotImplementedError("`retrieve` has not been implemented in this archive")
 
     def retrieve_single(self, measures):
         """Queries the archive for an elite with the given measures.
@@ -230,7 +225,8 @@ class ArchiveBase(ABC):
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         raise NotImplementedError(
-            "`retrieve_single` has not been implemented in this archive")
+            "`retrieve_single` has not been implemented in this archive"
+        )
 
     def data(self, fields=None, return_type="dict"):
         """Returns data of the elites in the archive.
@@ -309,8 +305,7 @@ class ArchiveBase(ABC):
               Like the other return types, the columns returned can be adjusted
               with the ``fields`` parameter.
         """
-        raise NotImplementedError(
-            "`data` has not been implemented in this archive")
+        raise NotImplementedError("`data` has not been implemented in this archive")
 
     def sample_elites(self, n):
         """Randomly samples elites from the archive.
@@ -337,4 +332,5 @@ class ArchiveBase(ABC):
             IndexError: The archive is empty.
         """
         raise NotImplementedError(
-            "`sample_elites` has not been implemented in this archive")
+            "`sample_elites` has not been implemented in this archive"
+        )

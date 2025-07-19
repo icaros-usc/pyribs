@@ -1,29 +1,36 @@
 """Provides proximity_archive_plot."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ribs.visualize._utils import (retrieve_cmap, set_cbar, validate_df,
-                                   validate_heatmap_visual_args)
+from ribs.visualize._utils import (
+    retrieve_cmap,
+    set_cbar,
+    validate_df,
+    validate_heatmap_visual_args,
+)
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
 
 
-def proximity_archive_plot(archive,
-                           ax=None,
-                           *,
-                           df=None,
-                           transpose_measures=False,
-                           cmap="magma",
-                           aspect="auto",
-                           ms=None,
-                           lower_bounds=None,
-                           upper_bounds=None,
-                           vmin=None,
-                           vmax=None,
-                           cbar="auto",
-                           cbar_kwargs=None,
-                           rasterized=False):
+def proximity_archive_plot(
+    archive,
+    ax=None,
+    *,
+    df=None,
+    transpose_measures=False,
+    cmap="magma",
+    aspect="auto",
+    ms=None,
+    lower_bounds=None,
+    upper_bounds=None,
+    vmin=None,
+    vmax=None,
+    cbar="auto",
+    cbar_kwargs=None,
+    rasterized=False,
+):
     """Plots scatterplot of a :class:`~ribs.archives.ProximityArchive` with
     2D measure space.
 
@@ -144,8 +151,12 @@ def proximity_archive_plot(archive,
         ValueError: The archive is not 2D.
     """
     validate_heatmap_visual_args(
-        aspect, cbar, archive.measure_dim, [2],
-        "Plot can only be made for a 2D ProximityArchive")
+        aspect,
+        cbar,
+        archive.measure_dim,
+        [2],
+        "Plot can only be made for a 2D ProximityArchive",
+    )
 
     if aspect is None:
         aspect = "auto"
@@ -191,18 +202,22 @@ def proximity_archive_plot(archive,
     ax.set_aspect(aspect)
 
     # Create the plot.
-    vmin = (np.min(objective_batch)
-            if vmin is None and len(objective_batch) > 0 else vmin)
-    vmax = (np.max(objective_batch)
-            if vmax is None and len(objective_batch) > 0 else vmax)
-    t = ax.scatter(x,
-                   y,
-                   s=ms,
-                   c=objective_batch,
-                   cmap=cmap,
-                   vmin=vmin,
-                   vmax=vmax,
-                   rasterized=rasterized)
+    vmin = (
+        np.min(objective_batch) if vmin is None and len(objective_batch) > 0 else vmin
+    )
+    vmax = (
+        np.max(objective_batch) if vmax is None and len(objective_batch) > 0 else vmax
+    )
+    t = ax.scatter(
+        x,
+        y,
+        s=ms,
+        c=objective_batch,
+        cmap=cmap,
+        vmin=vmin,
+        vmax=vmax,
+        rasterized=rasterized,
+    )
 
     # Create color bar.
     set_cbar(t, ax, cbar, cbar_kwargs)

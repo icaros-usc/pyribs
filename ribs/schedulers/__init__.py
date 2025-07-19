@@ -15,9 +15,9 @@ performs in previous iterations.
     ribs.schedulers.BanditScheduler
     ribs.schedulers.BayesianOptimizationScheduler
 """
+
 from ribs.schedulers._bandit_scheduler import BanditScheduler
-from ribs.schedulers._bayesian_opt_scheduler import \
-    BayesianOptimizationScheduler
+from ribs.schedulers._bayesian_opt_scheduler import BayesianOptimizationScheduler
 from ribs.schedulers._scheduler import Scheduler
 
 __all__ = [

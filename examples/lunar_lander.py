@@ -49,6 +49,7 @@ Usage:
 Help:
     python lunar_lander.py --help
 """
+
 import json
 import time
 from pathlib import Path
@@ -164,8 +165,9 @@ def create_scheduler(seed, n_emitters, sigma0, batch_size):
     # emitters will produce different solutions because they get different
     # responses when inserting into the archive. However, using different seeds
     # avoids this problem altogether.
-    seeds = ([None] * n_emitters
-             if seed is None else [seed + i for i in range(n_emitters)])
+    seeds = (
+        [None] * n_emitters if seed is None else [seed + i for i in range(n_emitters)]
+    )
 
     # We use the EvolutionStrategyEmitter to create an ImprovementEmitter.
     emitters = [
@@ -176,7 +178,8 @@ def create_scheduler(seed, n_emitters, sigma0, batch_size):
             ranker="2imp",
             batch_size=batch_size,
             seed=s,
-        ) for s in seeds
+        )
+        for s in seeds
     ]
 
     scheduler = Scheduler(archive, emitters)
@@ -251,7 +254,8 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
                 f"> {itr} itrs completed after {elapsed_time:.2f} s\n"
                 f"  - Max Score: {metrics['Max Score']['y'][-1]}\n"
                 f"  - Archive Size: {metrics['Archive Size']['y'][-1]}\n"
-                f"  - QD Score: {metrics['QD Score']['y'][-1]}")
+                f"  - QD Score: {metrics['QD Score']['y'][-1]}"
+            )
 
     return metrics
 
@@ -310,7 +314,8 @@ def save_ccdf(archive, filename):
         50,  # Number of cells.
         histtype="step",
         density=False,
-        cumulative=-1)  # CCDF rather than CDF.
+        cumulative=-1,  # CCDF rather than CDF.
+    )
     ax.set_xlabel("Objectives")
     ax.set_ylabel("Num. Entries")
     ax.set_title("Distribution of Archive Objectives")
@@ -341,28 +346,31 @@ def run_evaluation(outdir, env_seed):
 
     for idx in indices:
         model = solutions[idx]
-        reward, impact_x_pos, impact_y_vel = simulate(model, env_seed,
-                                                      video_env)
-        print(f"=== Index {idx} ===\n"
-              "Model:\n"
-              f"{model}\n"
-              f"Reward: {reward}\n"
-              f"Impact x-pos: {impact_x_pos}\n"
-              f"Impact y-vel: {impact_y_vel}\n")
+        reward, impact_x_pos, impact_y_vel = simulate(model, env_seed, video_env)
+        print(
+            f"=== Index {idx} ===\n"
+            "Model:\n"
+            f"{model}\n"
+            f"Reward: {reward}\n"
+            f"Impact x-pos: {impact_x_pos}\n"
+            f"Impact y-vel: {impact_y_vel}\n"
+        )
 
     video_env.close()
 
 
-def lunar_lander_main(workers=4,
-                      env_seed=52,
-                      iterations=500,
-                      log_freq=25,
-                      n_emitters=5,
-                      batch_size=30,
-                      sigma0=1.0,
-                      seed=None,
-                      outdir="lunar_lander_output",
-                      run_eval=False):
+def lunar_lander_main(
+    workers=4,
+    env_seed=52,
+    iterations=500,
+    log_freq=25,
+    n_emitters=5,
+    batch_size=30,
+    sigma0=1.0,
+    seed=None,
+    outdir="lunar_lander_output",
+    run_eval=False,
+):
     """Uses CMA-ME to train linear agents in Lunar Lander.
 
     Args:

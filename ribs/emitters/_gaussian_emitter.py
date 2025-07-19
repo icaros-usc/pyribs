@@ -1,4 +1,5 @@
 """Provides the GaussianEmitter."""
+
 import numpy as np
 
 from ribs._utils import check_batch_shape, check_shape
@@ -42,15 +43,17 @@ class GaussianEmitter(EmitterBase):
         ValueError: There is an error in the bounds configuration.
     """
 
-    def __init__(self,
-                 archive,
-                 *,
-                 sigma,
-                 x0=None,
-                 initial_solutions=None,
-                 bounds=None,
-                 batch_size=64,
-                 seed=None):
+    def __init__(
+        self,
+        archive,
+        *,
+        sigma,
+        x0=None,
+        initial_solutions=None,
+        bounds=None,
+        batch_size=64,
+        seed=None,
+    ):
         EmitterBase.__init__(
             self,
             archive,
@@ -67,18 +70,21 @@ class GaussianEmitter(EmitterBase):
         if x0 is None and initial_solutions is None:
             raise ValueError("Either x0 or initial_solutions must be provided.")
         if x0 is not None and initial_solutions is not None:
-            raise ValueError(
-                "x0 and initial_solutions cannot both be provided.")
+            raise ValueError("x0 and initial_solutions cannot both be provided.")
 
         if x0 is not None:
             self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
-            check_shape(self._x0, "x0", archive.solution_dim,
-                        "archive.solution_dim")
+            check_shape(self._x0, "x0", archive.solution_dim, "archive.solution_dim")
         elif initial_solutions is not None:
             self._initial_solutions = np.asarray(
-                initial_solutions, dtype=archive.dtypes["solution"])
-            check_batch_shape(self._initial_solutions, "initial_solutions",
-                              archive.solution_dim, "archive.solution_dim")
+                initial_solutions, dtype=archive.dtypes["solution"]
+            )
+            check_batch_shape(
+                self._initial_solutions,
+                "initial_solutions",
+                archive.solution_dim,
+                "archive.solution_dim",
+            )
 
     @property
     def x0(self):

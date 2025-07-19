@@ -1,4 +1,5 @@
 """Shared functionality for all tests."""
+
 import numpy as np
 import pytest
 from array_api_compat import array_namespace
@@ -16,11 +17,13 @@ try:
     import torch
 
     xp_available_backends.append(
-        pytest.param((torch, torch.device("cpu")), id="torch-cpu"))
+        pytest.param((torch, torch.device("cpu")), id="torch-cpu")
+    )
 
     if torch.cuda.is_available():
         xp_available_backends.append(
-            pytest.param((torch, torch.device("cuda")), id="torch-cuda"))
+            pytest.param((torch, torch.device("cuda")), id="torch-cuda")
+        )
 except ImportError:
     pass
 
@@ -30,8 +33,7 @@ try:
 
     cp.empty(0)  # Triggers CUDARuntimeError if there is no GPU available.
 
-    xp_available_backends.append(
-        pytest.param((cp, cp.cuda.Device(0)), id="cupy-gpu"))
+    xp_available_backends.append(pytest.param((cp, cp.cuda.Device(0)), id="cupy-gpu"))
 except ImportError:
     # CuPy not installed.
     pass

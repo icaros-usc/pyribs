@@ -1,4 +1,5 @@
 """Tests for cqd_score."""
+
 import numpy as np
 import pytest
 
@@ -45,9 +46,7 @@ def test_cqd_score_detects_wrong_shapes(data):
 
 
 def test_cqd_score_with_one_elite():
-    archive = GridArchive(solution_dim=2,
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
 
     score = cqd_score(
@@ -69,9 +68,7 @@ def test_cqd_score_with_one_elite():
 
 
 def test_cqd_score_with_max_dist():
-    archive = GridArchive(solution_dim=2,
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 0.5, [0.0, 1.0])
 
     score = cqd_score(
@@ -92,9 +89,7 @@ def test_cqd_score_with_max_dist():
 
 
 def test_cqd_score_l1_norm():
-    archive = GridArchive(solution_dim=2,
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 0.5, [0.0, 0.0])
 
     score = cqd_score(
@@ -117,9 +112,7 @@ def test_cqd_score_l1_norm():
 
 
 def test_cqd_score_full_output():
-    archive = GridArchive(solution_dim=2,
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 1.0, [0.0, 0.0])
 
     result = cqd_score(
@@ -128,13 +121,15 @@ def test_cqd_score_full_output():
         # With this target point, the solution above at [0, 0] has a normalized
         # distance of 0.5, since it is halfway between the archive bounds of
         # (-1, -1) and (1, 1).
-        target_points=np.array([
-            [[1.0, 1.0]],
-            [[1.0, 1.0]],
-            [[1.0, 1.0]],
-            [[-1.0, -1.0]],
-            [[-1.0, -1.0]],
-        ]),
+        target_points=np.array(
+            [
+                [[1.0, 1.0]],
+                [[1.0, 1.0]],
+                [[1.0, 1.0]],
+                [[-1.0, -1.0]],
+                [[-1.0, -1.0]],
+            ]
+        ),
         penalties=2,
         obj_min=0.0,
         obj_max=1.0,
@@ -149,13 +144,17 @@ def test_cqd_score_full_output():
     assert np.all(
         np.isclose(
             result.target_points,
-            np.array([
-                [[1.0, 1.0]],
-                [[1.0, 1.0]],
-                [[1.0, 1.0]],
-                [[-1.0, -1.0]],
-                [[-1.0, -1.0]],
-            ])))
+            np.array(
+                [
+                    [[1.0, 1.0]],
+                    [[1.0, 1.0]],
+                    [[1.0, 1.0]],
+                    [[-1.0, -1.0]],
+                    [[-1.0, -1.0]],
+                ]
+            ),
+        )
+    )
     assert np.all(np.isclose(result.penalties, [0.0, 1.0]))
     assert np.isclose(result.obj_min, 0.0)
     assert np.isclose(result.obj_max, 1.0)
@@ -165,9 +164,7 @@ def test_cqd_score_full_output():
 
 
 def test_cqd_score_with_two_elites():
-    archive = GridArchive(solution_dim=2,
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
     archive.add_single([4.0, 4.0], 0.25, [0.0, 0.0])  # Elite 1.
     archive.add_single([4.0, 4.0], 0.0, [1.0, 1.0])  # Elite 2.
 

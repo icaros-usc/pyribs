@@ -1,4 +1,5 @@
 """ES that wraps pycma."""
+
 import numpy as np
 from threadpoolctl import threadpool_limits
 
@@ -37,15 +38,16 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
     """
 
     def __init__(  # pylint: disable = super-init-not-called
-            self,
-            sigma0,
-            solution_dim,
-            batch_size=None,
-            seed=None,
-            dtype=np.float64,
-            lower_bounds=None,
-            upper_bounds=None,
-            opts=None):
+        self,
+        sigma0,
+        solution_dim,
+        batch_size=None,
+        seed=None,
+        dtype=np.float64,
+        lower_bounds=None,
+        upper_bounds=None,
+        opts=None,
+    ):
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
@@ -62,7 +64,8 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         # https://github.com/CMA-ES/pycma/issues/221
         self._rng = np.random.default_rng(seed)
         self._opts["randn"] = lambda batch_size, n: self._rng.standard_normal(
-            (batch_size, n))
+            (batch_size, n)
+        )
         self._opts["seed"] = np.nan
 
         self._opts.setdefault("verbose", -9)
@@ -90,7 +93,8 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         except ImportError as e:
             raise ImportError(
                 "pycma must be installed -- please run `pip install cma` or "
-                "`conda install cma`") from e
+                "`conda install cma`"
+            ) from e
 
         self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)
 
@@ -127,8 +131,10 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
 
         # Fitness is too flat (only applies if there are at least 2 parents).
         # NOTE: We use norm here because we may have multiple ranking values.
-        if (len(ranking_values) >= 2 and
-                np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12):
+        if (
+            len(ranking_values) >= 2
+            and np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12
+        ):
             return True
 
         return False
@@ -167,5 +173,6 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             # at the ranks of the solutions during search. However, it does look
             # at values in the termination criterion, hence we use custom
             # conditions in check_stop.
-            self._es.tell(self._solutions[ranking_indices],
-                          np.arange(len(ranking_indices)))
+            self._es.tell(
+                self._solutions[ranking_indices], np.arange(len(ranking_indices))
+            )

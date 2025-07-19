@@ -1,18 +1,28 @@
 """Tests that should work for all emitters."""
+
 import numpy as np
 import pytest
 
 from ribs.archives import GridArchive
-from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           GradientArborescenceEmitter, IsoLineEmitter)
+from ribs.emitters import (
+    EvolutionStrategyEmitter,
+    GaussianEmitter,
+    GradientArborescenceEmitter,
+    IsoLineEmitter,
+)
 
 # pylint: disable = redefined-outer-name
 
 
-@pytest.fixture(params=[
-    "GaussianEmitter", "IsoLineEmitter", "ImprovementEmitter",
-    "RandomDirectionEmitter", "OptimizingEmitter"
-])
+@pytest.fixture(
+    params=[
+        "GaussianEmitter",
+        "IsoLineEmitter",
+        "ImprovementEmitter",
+        "RandomDirectionEmitter",
+        "OptimizingEmitter",
+    ]
+)
 def emitter_fixture(request, archive_fixture):
     """Creates an archive, emitter, and initial solution.
 
@@ -24,30 +34,21 @@ def emitter_fixture(request, archive_fixture):
     batch_size = 3
 
     if emitter_type == "GaussianEmitter":
-        emitter = GaussianEmitter(archive,
-                                  sigma=5,
-                                  x0=x0,
-                                  batch_size=batch_size)
+        emitter = GaussianEmitter(archive, sigma=5, x0=x0, batch_size=batch_size)
     elif emitter_type == "IsoLineEmitter":
         emitter = IsoLineEmitter(archive, x0=x0, batch_size=batch_size)
     elif emitter_type == "ImprovementEmitter":
-        emitter = EvolutionStrategyEmitter(archive,
-                                           x0=x0,
-                                           sigma0=5,
-                                           ranker="2imp",
-                                           batch_size=batch_size)
+        emitter = EvolutionStrategyEmitter(
+            archive, x0=x0, sigma0=5, ranker="2imp", batch_size=batch_size
+        )
     elif emitter_type == "RandomDirectionEmitter":
-        emitter = EvolutionStrategyEmitter(archive,
-                                           x0=x0,
-                                           sigma0=5,
-                                           ranker="2rd",
-                                           batch_size=batch_size)
+        emitter = EvolutionStrategyEmitter(
+            archive, x0=x0, sigma0=5, ranker="2rd", batch_size=batch_size
+        )
     elif emitter_type == "OptimizingEmitter":
-        emitter = EvolutionStrategyEmitter(archive,
-                                           x0=x0,
-                                           sigma0=5,
-                                           ranker="2obj",
-                                           batch_size=batch_size)
+        emitter = EvolutionStrategyEmitter(
+            archive, x0=x0, sigma0=5, ranker="2obj", batch_size=batch_size
+        )
     else:
         raise NotImplementedError(f"Unknown emitter type {emitter_type}")
 
@@ -74,9 +75,7 @@ def test_ask_emits_correct_num_sols_on_nonempty_archive(emitter_fixture):
 
 @pytest.mark.parametrize("shape", [(), 4, (5,), (3, 3)])
 def test_default_ask_dqd_has_correct_sol_shape(shape):
-    archive = GridArchive(solution_dim=shape,
-                          dims=[10, 20],
-                          ranges=[(-1, 1), (-2, 2)])
+    archive = GridArchive(solution_dim=shape, dims=[10, 20], ranges=[(-1, 1), (-2, 2)])
     emitter = GaussianEmitter(archive, sigma=0.1, x0=np.ones(shape))
 
     expected_shape = (0, 4) if shape == 4 else (0,) + shape
@@ -90,8 +89,10 @@ def test_default_ask_dqd_has_correct_sol_shape(shape):
 
 
 @pytest.mark.parametrize(
-    "emitter_type", ["GradientArborescenceEmitter", "EvolutionStrategyEmitter"],
-    ids=["GAEmitter", "ESEmitter"])
+    "emitter_type",
+    ["GradientArborescenceEmitter", "EvolutionStrategyEmitter"],
+    ids=["GAEmitter", "ESEmitter"],
+)
 @pytest.mark.parametrize(
     "wrong_array,offsets",
     [
@@ -115,17 +116,13 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
     batch_size = 3
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
     if emitter_type == "GradientArborescenceEmitter":
-        emitter = GradientArborescenceEmitter(archive,
-                                              x0=np.array([0]),
-                                              sigma0=1.0,
-                                              lr=0.1,
-                                              batch_size=batch_size)
+        emitter = GradientArborescenceEmitter(
+            archive, x0=np.array([0]), sigma0=1.0, lr=0.1, batch_size=batch_size
+        )
     elif emitter_type == "EvolutionStrategyEmitter":
-        emitter = EvolutionStrategyEmitter(archive,
-                                           x0=np.array([0]),
-                                           sigma0=1.0,
-                                           ranker="imp",
-                                           batch_size=batch_size)
+        emitter = EvolutionStrategyEmitter(
+            archive, x0=np.array([0]), sigma0=1.0, ranker="imp", batch_size=batch_size
+        )
     else:
         raise RuntimeError()
 
@@ -133,29 +130,36 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
     objective_batch = np.ones(batch_size)
     measures_batch = np.ones((batch_size, archive.measure_dim))
     jacobian_batch = np.ones(
-        (batch_size, archive.measure_dim + 1, archive.solution_dim))
+        (batch_size, archive.measure_dim + 1, archive.solution_dim)
+    )
     status_batch = np.ones(batch_size)
     value_batch = np.ones(batch_size)
 
     for offset in offsets:
         if wrong_array == "solution_batch":
-            solution_batch = np.ones((
-                batch_size + offset[0],
-                archive.solution_dim + offset[1],
-            ))
+            solution_batch = np.ones(
+                (
+                    batch_size + offset[0],
+                    archive.solution_dim + offset[1],
+                )
+            )
         elif wrong_array == "objective_batch":
             objective_batch = np.ones(batch_size + offset[0])
         elif wrong_array == "measures_batch":
-            measures_batch = np.ones((
-                batch_size + offset[0],
-                archive.measure_dim + offset[1],
-            ))
+            measures_batch = np.ones(
+                (
+                    batch_size + offset[0],
+                    archive.measure_dim + offset[1],
+                )
+            )
         elif wrong_array == "jacobian_batch":
-            jacobian_batch = np.ones((
-                batch_size + offset[0],
-                archive.measure_dim + 1 + offset[1],
-                archive.solution_dim + offset[2],
-            ))
+            jacobian_batch = np.ones(
+                (
+                    batch_size + offset[0],
+                    archive.measure_dim + 1 + offset[1],
+                    archive.solution_dim + offset[2],
+                )
+            )
         elif wrong_array == "status_batch":
             status_batch = np.ones(batch_size + offset[0])
         elif wrong_array == "value_batch":
@@ -188,10 +192,7 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
                 solution_batch,
                 objective_batch,
                 measures_batch,
-                {
-                    "status": status_batch,
-                    "value": value_batch
-                },
+                {"status": status_batch, "value": value_batch},
             )
 
 
@@ -231,7 +232,8 @@ def test_array_bound_bad_entry_fails(archive_fixture):
 
 
 @pytest.mark.parametrize(
-    "emitter_type", ["GaussianEmitter", "IsoLineEmitter", "ImprovementEmitter"])
+    "emitter_type", ["GaussianEmitter", "IsoLineEmitter", "ImprovementEmitter"]
+)
 def test_emitters_fail_when_x0_not_1d(emitter_type, archive_fixture):
     archive, _ = archive_fixture
     x0 = [[1], [1]]
@@ -242,7 +244,4 @@ def test_emitters_fail_when_x0_not_1d(emitter_type, archive_fixture):
         elif emitter_type == "IsoLineEmitter":
             _ = IsoLineEmitter(archive, x0=x0)
         elif emitter_type == "ImprovementEmitter":
-            _ = EvolutionStrategyEmitter(archive,
-                                         x0=x0,
-                                         sigma0=5,
-                                         ranker="2imp")
+            _ = EvolutionStrategyEmitter(archive, x0=x0, sigma0=5, ranker="2imp")

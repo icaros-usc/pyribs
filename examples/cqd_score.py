@@ -3,6 +3,7 @@
 Install the following dependencies before running this example:
     pip install fire
 """
+
 import fire
 import numpy as np
 
@@ -25,7 +26,8 @@ def main(itrs=1000):
             x0=[0.0] * 10,
             sigma0=0.1,
             batch_size=36,
-        ) for _ in range(3)
+        )
+        for _ in range(3)
     ]
     scheduler = Scheduler(archive, emitters)
 
@@ -67,8 +69,7 @@ def main(itrs=1000):
                 penalties=5,
                 obj_min=0.0,
                 obj_max=2.0,
-                dist_max=np.linalg.norm(archive.upper_bounds -
-                                        archive.lower_bounds),
+                dist_max=np.linalg.norm(archive.upper_bounds - archive.lower_bounds),
             )
 
             # The `result` is an instance of CQDScoreResult that contains a
