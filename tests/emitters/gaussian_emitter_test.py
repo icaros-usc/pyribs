@@ -1,4 +1,5 @@
 """Tests for the GaussianEmitter."""
+
 import numpy as np
 import pytest
 
@@ -9,10 +10,7 @@ def test_properties_are_correct(archive_fixture):
     archive, x0 = archive_fixture
     sigma = 1
     batch_size = 2
-    emitter = GaussianEmitter(archive,
-                              sigma=sigma,
-                              x0=x0,
-                              batch_size=batch_size)
+    emitter = GaussianEmitter(archive, sigma=sigma, x0=x0, batch_size=batch_size)
 
     assert np.all(emitter.x0 == x0)
     assert emitter.sigma == sigma
@@ -22,9 +20,7 @@ def test_properties_are_correct(archive_fixture):
 def test_initial_solutions_are_correct(archive_fixture):
     archive, _ = archive_fixture
     initial_solutions = [[0, 1, 2, 3], [-1, -2, -3, -4]]
-    emitter = GaussianEmitter(archive,
-                              sigma=1.0,
-                              initial_solutions=initial_solutions)
+    emitter = GaussianEmitter(archive, sigma=1.0, initial_solutions=initial_solutions)
 
     assert np.all(emitter.ask() == initial_solutions)
     assert np.all(emitter.initial_solutions == initial_solutions)
@@ -49,10 +45,7 @@ def test_both_x0_and_initial_solutions_provided(archive_fixture):
     archive, x0 = archive_fixture
     initial_solutions = [[0, 1, 2, 3], [-1, -2, -3, -4]]
     with pytest.raises(ValueError):
-        GaussianEmitter(archive,
-                        sigma=1.0,
-                        x0=x0,
-                        initial_solutions=initial_solutions)
+        GaussianEmitter(archive, sigma=1.0, x0=x0, initial_solutions=initial_solutions)
 
 
 def test_upper_bounds_enforced(archive_fixture):

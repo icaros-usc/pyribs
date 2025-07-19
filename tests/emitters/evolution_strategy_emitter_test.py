@@ -1,4 +1,5 @@
 """Tests for EvolutionStrategyEmitter."""
+
 import numpy as np
 import pytest
 
@@ -20,21 +21,22 @@ def emitter_fixture(request):
         Tuple of (archive, emitter, batch_size, x0).
     """
     x0 = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    archive = GridArchive(solution_dim=len(x0),
-                          dims=[10, 10],
-                          ranges=[(-1, 1), (-1, 1)])
-    emitter = EvolutionStrategyEmitter(archive,
-                                       x0=x0,
-                                       sigma0=1.0,
-                                       ranker=request.param[0],
-                                       es=request.param[1])
+    archive = GridArchive(
+        solution_dim=len(x0), dims=[10, 10], ranges=[(-1, 1), (-1, 1)]
+    )
+    emitter = EvolutionStrategyEmitter(
+        archive, x0=x0, sigma0=1.0, ranker=request.param[0], es=request.param[1]
+    )
 
     return emitter, archive, x0
 
 
-@pytest.mark.parametrize("emitter_fixture", [("imp", es) for es in ES_LIST],
-                         ids=[f"imp-{es}" for es in ES_LIST],
-                         indirect=True)
+@pytest.mark.parametrize(
+    "emitter_fixture",
+    [("imp", es) for es in ES_LIST],
+    ids=[f"imp-{es}" for es in ES_LIST],
+    indirect=True,
+)
 def test_auto_batch_size(emitter_fixture):
     emitter, *_ = emitter_fixture
     assert emitter.batch_size is not None
@@ -42,9 +44,7 @@ def test_auto_batch_size(emitter_fixture):
 
 
 def test_list_as_initial_solution():
-    archive = GridArchive(solution_dim=10,
-                          dims=[20, 20],
-                          ranges=[(-1.0, 1.0)] * 2)
+    archive = GridArchive(solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2)
     emitter = EvolutionStrategyEmitter(archive, x0=[0.0] * 10, sigma0=1.0)
 
     # The list was passed in but should be converted to a numpy array.
@@ -52,13 +52,11 @@ def test_list_as_initial_solution():
     assert (emitter.x0 == np.zeros(10)).all()
 
 
-@pytest.mark.parametrize("dtype", [np.float64, np.float32],
-                         ids=["float64", "float32"])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
 def test_dtypes(dtype):
-    archive = GridArchive(solution_dim=10,
-                          dims=[20, 20],
-                          ranges=[(-1.0, 1.0)] * 2,
-                          dtype=dtype)
+    archive = GridArchive(
+        solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2, dtype=dtype
+    )
     emitter = EvolutionStrategyEmitter(archive, x0=np.zeros(10), sigma0=1.0)
     assert emitter.x0.dtype == dtype
 
@@ -80,13 +78,8 @@ def test_seed_sequence():
 
 @pytest.mark.parametrize("es", ES_LIST)
 def test_sphere(es):
-    archive = GridArchive(solution_dim=10,
-                          dims=[20, 20],
-                          ranges=[(-1.0, 1.0)] * 2)
-    emitter = EvolutionStrategyEmitter(archive,
-                                       x0=np.zeros(10),
-                                       sigma0=1.0,
-                                       es=es)
+    archive = GridArchive(solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2)
+    emitter = EvolutionStrategyEmitter(archive, x0=np.zeros(10), sigma0=1.0, es=es)
 
     # Try running with the negative sphere function for a few iterations.
     for _ in range(5):
@@ -105,14 +98,10 @@ if __name__ == "__main__":
     # it is designed to hang. Comment out the different emitters to test
     # different ESs.
 
-    archive = GridArchive(solution_dim=31,
-                          dims=[20, 20],
-                          ranges=[(-1.0, 1.0)] * 2)
-    emitter = EvolutionStrategyEmitter(archive,
-                                       x0=np.zeros(31),
-                                       sigma0=1.0,
-                                       bounds=[(0, 1.0)] * 31,
-                                       es="cma_es")
+    archive = GridArchive(solution_dim=31, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2)
+    emitter = EvolutionStrategyEmitter(
+        archive, x0=np.zeros(31), sigma0=1.0, bounds=[(0, 1.0)] * 31, es="cma_es"
+    )
     #  emitter = EvolutionStrategyEmitter(archive,
     #                                     x0=np.zeros(31),
     #                                     sigma0=1.0,

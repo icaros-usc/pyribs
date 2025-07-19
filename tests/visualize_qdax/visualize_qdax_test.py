@@ -3,6 +3,7 @@
 Instructions are identical as in visualize_test.py, but images are stored in
 tests/visualize_qdax_test/baseline_images/visualize_qdax_test instead.
 """
+
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -12,12 +13,10 @@ from matplotlib.testing.decorators import image_comparison
 from ribs.visualize import qdax_repertoire_3d_plot, qdax_repertoire_heatmap
 
 try:
-    # This is an edge case where yapf and isort disagree.
-    # yapf: disable
     from qdax.core.containers.mapelites_repertoire import (
-        MapElitesRepertoire, compute_cvt_centroids)
-
-    # yapf: enable
+        MapElitesRepertoire,
+        compute_cvt_centroids,
+    )
 except ImportError:
     pytest.skip(allow_module_level=True)
 
@@ -38,7 +37,8 @@ def clean_matplotlib():
     baseline_images=["qdax_repertoire_heatmap"],
     remove_text=False,
     extensions=["png"],
-    tol=0.1)  # See CVT_IMAGE_TOLERANCE in cvt_archive_heatmap_test.py
+    tol=0.1,  # See CVT_IMAGE_TOLERANCE in cvt_archive_heatmap_test.py
+)
 def test_qdax_repertoire_heatmap():
     plt.figure(figsize=(8, 6))
 
@@ -53,8 +53,9 @@ def test_qdax_repertoire_heatmap():
     )
 
     # Create initial population.
-    init_pop_x, init_pop_y = jnp.meshgrid(jnp.linspace(-1, 1, 50),
-                                          jnp.linspace(-1, 1, 50))
+    init_pop_x, init_pop_y = jnp.meshgrid(
+        jnp.linspace(-1, 1, 50), jnp.linspace(-1, 1, 50)
+    )
     init_pop = jnp.stack((init_pop_x.flatten(), init_pop_y.flatten()), axis=1)
 
     # Create repertoire with the initial population inserted.
@@ -74,7 +75,8 @@ def test_qdax_repertoire_heatmap():
     baseline_images=["qdax_repertoire_3d_plot"],
     remove_text=False,
     extensions=["png"],
-    tol=0.1)  # See CVT_IMAGE_TOLERANCE in cvt_archive_3d_plot_test.py
+    tol=0.1,  # See CVT_IMAGE_TOLERANCE in cvt_archive_3d_plot_test.py
+)
 def test_qdax_repertoire_3d_plot():
     plt.figure(figsize=(8, 6))
 

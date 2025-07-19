@@ -1,4 +1,5 @@
 """Tests for the ProximityArchive."""
+
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
@@ -50,19 +51,24 @@ def assert_archive_elites(
             if archive_covered[j]:
                 continue
 
-            solution_match = (solution_batch is None or np.isclose(
-                data["solution"][j], solution_batch[i]).all())
-            objective_match = (objective_batch is None or np.isclose(
-                data["objective"][j], objective_batch[i]))
-            measures_match = (measures_batch is None or np.isclose(
-                data["measures"][j], measures_batch[i]).all())
+            solution_match = (
+                solution_batch is None
+                or np.isclose(data["solution"][j], solution_batch[i]).all()
+            )
+            objective_match = objective_batch is None or np.isclose(
+                data["objective"][j], objective_batch[i]
+            )
+            measures_match = (
+                measures_batch is None
+                or np.isclose(data["measures"][j], measures_batch[i]).all()
+            )
 
             # Used for testing custom fields.
-            metadata_match = (metadata_batch is None or
-                              data["metadata"][j] == metadata_batch[i])
+            metadata_match = (
+                metadata_batch is None or data["metadata"][j] == metadata_batch[i]
+            )
 
-            if (solution_match and objective_match and measures_match and
-                    metadata_match):
+            if solution_match and objective_match and measures_match and metadata_match:
                 archive_covered[j] = True
 
     assert np.all(archive_covered)
@@ -241,8 +247,7 @@ def test_add_with_multiple_neighbors(point):
     assert add_info["status"] == 2
     assert_allclose(
         add_info["novelty"],
-        np.mean(np.linalg.norm(np.array(point)[None] - [[0, 0], [2, 0]],
-                               axis=1)),
+        np.mean(np.linalg.norm(np.array(point)[None] - [[0, 0], [2, 0]], axis=1)),
     )
 
 
@@ -287,11 +292,14 @@ def test_add_batch_all_new():
     )
 
     assert (add_info["status"] == 2).all()
-    assert_allclose(add_info["novelty"], [
-        np.mean([1, 2]),
-        np.mean([1, np.sqrt(2)]),
-        np.mean([2, 1]),
-    ])
+    assert_allclose(
+        add_info["novelty"],
+        [
+            np.mean([1, 2]),
+            np.mean([1, np.sqrt(2)]),
+            np.mean([2, 1]),
+        ],
+    )
 
 
 def test_add_batch_none_inserted():
@@ -320,10 +328,13 @@ def test_add_batch_none_inserted():
     )
 
     assert (add_info["status"] == 0).all()
-    assert_allclose(add_info["novelty"], [
-        np.mean([0.4, 0.6]),
-        np.mean([0.1, np.sqrt(0.1**2 + 1)]),
-    ])
+    assert_allclose(
+        add_info["novelty"],
+        [
+            np.mean([0.4, 0.6]),
+            np.mean([0.1, np.sqrt(0.1**2 + 1)]),
+        ],
+    )
 
 
 def test_add_batch_mixed_statuses():
@@ -352,13 +363,16 @@ def test_add_batch_mixed_statuses():
     )
 
     assert (add_info["status"] == [2, 0, 2, 0, 2]).all()
-    assert_allclose(add_info["novelty"], [
-        np.mean([1, 2]),
-        np.mean([0.4, 0.6]),
-        np.mean([1, np.sqrt(2)]),
-        np.mean([0.1, np.sqrt(0.1**2 + 1)]),
-        np.mean([2, 1]),
-    ])
+    assert_allclose(
+        add_info["novelty"],
+        [
+            np.mean([1, 2]),
+            np.mean([0.4, 0.6]),
+            np.mean([1, np.sqrt(2)]),
+            np.mean([0.1, np.sqrt(0.1**2 + 1)]),
+            np.mean([2, 1]),
+        ],
+    )
 
 
 def test_add_batch_wrong_shapes(data):
@@ -427,8 +441,7 @@ def test_retrieve():
         measures=[[0, 0], [1, 0], [1, 1], [0, 1]],
     )
 
-    occupied, data = archive.retrieve([[0.1, 0.1], [10.0, 0], [1.5, 1.5],
-                                       [0, 0.55]])
+    occupied, data = archive.retrieve([[0.1, 0.1], [10.0, 0], [1.5, 1.5], [0, 0.55]])
 
     assert np.all(occupied)
     assert_allclose(data["measures"], [[0, 0], [1, 0], [1, 1], [0, 1]])
@@ -501,7 +514,7 @@ def test_lc_add_single(add_mode):
         local_competition=True,
     )
 
-    solution = np.array([1., 2., 3.])
+    solution = np.array([1.0, 2.0, 3.0])
     measures = np.array([0.25, 0.25])
 
     if add_mode == "single":
@@ -531,7 +544,7 @@ def test_lc_add_single_after_clear():
         local_competition=True,
     )
 
-    solution = np.array([1., 2., 3.])
+    solution = np.array([1.0, 2.0, 3.0])
     measures = np.array([0.25, 0.25])
 
     add_info = archive.add_single(solution, 5.0, measures)
@@ -566,10 +579,9 @@ def test_lc_add_novel_solution():
     # Should be added since novelty threshold is 1.0.
     add_info = archive.add_single([1, 2, 3], 2.0, [1, 0])
 
-    assert_archive_elites(archive,
-                          2,
-                          objective_batch=[1.0, 2.0],
-                          measures_batch=[[0, 0], [1, 0]])
+    assert_archive_elites(
+        archive, 2, objective_batch=[1.0, 2.0], measures_batch=[[0, 0], [1, 0]]
+    )
 
     assert add_info["status"] == 2
     assert add_info["novelty"] == 1.0
@@ -593,10 +605,7 @@ def test_lc_add_non_novel_solution():
     # but the objective is 2.0 over 1.0.
     add_info = archive.add_single([1, 2, 3], 2.0, [0.5, 0])
 
-    assert_archive_elites(archive,
-                          1,
-                          objective_batch=[2.0],
-                          measures_batch=[[0.5, 0]])
+    assert_archive_elites(archive, 1, objective_batch=[2.0], measures_batch=[[0.5, 0]])
 
     assert add_info["status"] == 1
     assert_allclose(add_info["novelty"], 0.5)
@@ -620,10 +629,7 @@ def test_lc_add_non_novel_low_performing_solution():
     # performant enough because objective is 0.0 when 1.0 is needed.
     add_info = archive.add_single([1, 2, 3], 0.0, [0.5, 0])
 
-    assert_archive_elites(archive,
-                          1,
-                          objective_batch=[1.0],
-                          measures_batch=[[0, 0]])
+    assert_archive_elites(archive, 1, objective_batch=[1.0], measures_batch=[[0, 0]])
 
     assert add_info["status"] == 0
     assert_allclose(add_info["novelty"], 0.5)
@@ -649,15 +655,16 @@ def test_lc_add_with_multiple_neighbors(point):
     # and [2, 0], so its average distance is always at least 1.0.
     add_info = archive.add_single([1, 2, 3], 1.0, point)
 
-    assert_archive_elites(archive,
-                          3,
-                          objective_batch=[0.0, 2.0, 1.0],
-                          measures_batch=[[0, 0], [2, 0], point])
+    assert_archive_elites(
+        archive,
+        3,
+        objective_batch=[0.0, 2.0, 1.0],
+        measures_batch=[[0, 0], [2, 0], point],
+    )
     assert add_info["status"] == 2
     assert_allclose(
         add_info["novelty"],
-        np.mean(np.linalg.norm(np.array(point)[None] - [[0, 0], [2, 0]],
-                               axis=1)),
+        np.mean(np.linalg.norm(np.array(point)[None] - [[0, 0], [2, 0]], axis=1)),
     )
     assert_equal(add_info["local_competition"], 1)
     assert_allclose(add_info["value"], 1.0)
@@ -691,11 +698,14 @@ def test_lc_add_batch_all_new():
     )
 
     assert (add_info["status"] == 2).all()
-    assert_allclose(add_info["novelty"], [
-        np.mean([1, 2]),
-        np.mean([1, np.sqrt(2)]),
-        np.mean([2, 1]),
-    ])
+    assert_allclose(
+        add_info["novelty"],
+        [
+            np.mean([1, 2]),
+            np.mean([1, np.sqrt(2)]),
+            np.mean([2, 1]),
+        ],
+    )
     assert_equal(add_info["local_competition"], [0, 1, 2])
     assert_allclose(add_info["value"], [-1, 1, 3])
 
@@ -728,10 +738,13 @@ def test_lc_add_batch_none_inserted():
     )
 
     assert (add_info["status"] == 0).all()
-    assert_allclose(add_info["novelty"], [
-        np.mean([0.4, 0.6]),
-        np.mean([0.1, np.sqrt(0.1**2 + 1)]),
-    ])
+    assert_allclose(
+        add_info["novelty"],
+        [
+            np.mean([0.4, 0.6]),
+            np.mean([0.1, np.sqrt(0.1**2 + 1)]),
+        ],
+    )
     assert_equal(add_info["local_competition"], [0, 0])
     assert_allclose(add_info["value"], [-1 - 2, -2 - 0])
 
@@ -764,13 +777,16 @@ def test_lc_add_batch_mixed_statuses():
     )
 
     assert (add_info["status"] == [2, 0, 1, 0, 2]).all()
-    assert_allclose(add_info["novelty"], [
-        np.mean([1, 2]),
-        np.mean([0.4, 0.6]),
-        np.mean([0.5, np.sqrt(1**2 + 0.5**2)]),
-        np.mean([0.1, np.sqrt(0.1**2 + 1)]),
-        np.mean([2, 1]),
-    ])
+    assert_allclose(
+        add_info["novelty"],
+        [
+            np.mean([1, 2]),
+            np.mean([0.4, 0.6]),
+            np.mean([0.5, np.sqrt(1**2 + 0.5**2)]),
+            np.mean([0.1, np.sqrt(0.1**2 + 1)]),
+            np.mean([2, 1]),
+        ],
+    )
     assert_equal(add_info["local_competition"], [0, 0, 1, 0, 2])
     assert_allclose(add_info["value"], [-2, -1, 1, -3, 5])
 
@@ -804,11 +820,14 @@ def test_lc_add_batch_replace_same_cell():
     )
 
     assert (add_info["status"] == [1, 1, 1, 2]).all()
-    assert_allclose(add_info["novelty"], [
-        np.mean([0.1, np.sqrt(1**2 + 0.1**2)]),
-        np.mean([0.2, np.sqrt(1**2 + 0.2**2)]),
-        np.mean([0.3, np.sqrt(1**2 + 0.3**2)]),
-        np.mean([3, 2]),
-    ])
+    assert_allclose(
+        add_info["novelty"],
+        [
+            np.mean([0.1, np.sqrt(1**2 + 0.1**2)]),
+            np.mean([0.2, np.sqrt(1**2 + 0.2**2)]),
+            np.mean([0.3, np.sqrt(1**2 + 0.3**2)]),
+            np.mean([3, 2]),
+        ],
+    )
     assert_equal(add_info["local_competition"], [1, 1, 2, 0])
     assert_allclose(add_info["value"], [1, 2, 3, 0])

@@ -2,6 +2,7 @@
 
 See README.md for instructions on writing tests.
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -29,7 +30,7 @@ def add_uniform_sphere_1d(archive, x_range):
     x = np.linspace(x_range[0], x_range[1], 100)
     archive.add(
         solution=x[:, None],
-        objective=-x**2,
+        objective=-(x**2),
         measures=x[:, None],
     )
 

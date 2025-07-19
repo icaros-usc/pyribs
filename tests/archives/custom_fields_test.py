@@ -1,4 +1,5 @@
 """Tests involving custom fields in the archive."""
+
 import numpy as np
 import pytest
 
@@ -22,10 +23,7 @@ def field_archive(data):
         solution_dim=data.archive.solution_dim,
         dims=data.archive.dims,
         ranges=list(zip(data.archive.lower_bounds, data.archive.upper_bounds)),
-        extra_fields={
-            "metadata": ((), object),
-            "square": ((2, 2), np.int32)
-        },
+        extra_fields={"metadata": ((), object), "square": ((2, 2), np.int32)},
     )
 
 

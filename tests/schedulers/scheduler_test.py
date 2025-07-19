@@ -1,4 +1,5 @@
 """Tests for Scheduler and BanditScheduler."""
+
 import numpy as np
 import pytest
 
@@ -16,14 +17,11 @@ def scheduler_fixture():
     """Returns a Scheduler with GridArchive and one GaussianEmitter."""
     solution_dim = 2
     num_solutions = 4
-    archive = GridArchive(solution_dim=solution_dim,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(
+        solution_dim=solution_dim, dims=[100, 100], ranges=[(-1, 1), (-1, 1)]
+    )
     emitters = [
-        GaussianEmitter(archive,
-                        sigma=1,
-                        x0=[0.0, 0.0],
-                        batch_size=num_solutions)
+        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=num_solutions)
     ]
     return Scheduler(archive, emitters), solution_dim, num_solutions
 
@@ -36,11 +34,13 @@ def add_mode(request):
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_attributes(scheduler_type):
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)],
-                          threshold_min=1.0,
-                          learning_rate=1.0)
+    archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=1.0,
+        learning_rate=1.0,
+    )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
 
     if scheduler_type == "Scheduler":
@@ -58,9 +58,7 @@ def test_attributes(scheduler_type):
 
 
 def test_init_fails_with_non_list():
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2, dims=[100, 100], ranges=[(-1, 1), (-1, 1)])
 
     # Just a single emitter not in a list.
     emitters = GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=1)
@@ -71,23 +69,18 @@ def test_init_fails_with_non_list():
 
 def test_init_fails_with_no_emitters():
     # arbitrary sol_dim
-    archive = GridArchive(solution_dim=10,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=10, dims=[100, 100], ranges=[(-1, 1), (-1, 1)])
     emitters = []
     with pytest.raises(ValueError):
         Scheduler(archive, emitters)
 
 
 def test_init_fails_on_non_unique_emitter_instances():
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2, dims=[100, 100], ranges=[(-1, 1), (-1, 1)])
 
     # All emitters are the same instance. This is bad because the same emitter
     # gets called multiple times.
-    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=1)
-               ] * 5
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=1)] * 5
 
     with pytest.raises(ValueError):
         Scheduler(archive, emitters)
@@ -108,11 +101,13 @@ def test_ask_fails_when_called_twice(scheduler_fixture):
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_warn_nothing_added_to_archive(scheduler_type):
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)],
-                          threshold_min=1.0,
-                          learning_rate=1.0)
+    archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=1.0,
+        learning_rate=1.0,
+    )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters)
@@ -131,24 +126,25 @@ def test_warn_nothing_added_to_archive(scheduler_type):
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_warn_nothing_added_to_result_archive(scheduler_type):
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)],
-                          threshold_min=-np.inf,
-                          learning_rate=1.0)
-    result_archive = GridArchive(solution_dim=2,
-                                 dims=[100, 100],
-                                 ranges=[(-1, 1), (-1, 1)],
-                                 threshold_min=10.0,
-                                 learning_rate=1.0)
+    archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=-np.inf,
+        learning_rate=1.0,
+    )
+    result_archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=10.0,
+        learning_rate=1.0,
+    )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters, result_archive)
     else:
-        scheduler = BanditScheduler(archive,
-                                    emitters,
-                                    result_archive,
-                                    num_active=1)
+        scheduler = BanditScheduler(archive, emitters, result_archive, num_active=1)
 
     _ = scheduler.ask()
     with pytest.warns(UserWarning):
@@ -162,57 +158,53 @@ def test_warn_nothing_added_to_result_archive(scheduler_type):
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_result_archive_mismatch_fields(scheduler_type):
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)],
-                          threshold_min=-np.inf,
-                          learning_rate=1.0,
-                          extra_fields={
-                              "metadata": ((), object),
-                              "square": ((2, 2), np.int32)
-                          })
-    result_archive = GridArchive(solution_dim=2,
-                                 dims=[100, 100],
-                                 ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        threshold_min=-np.inf,
+        learning_rate=1.0,
+        extra_fields={"metadata": ((), object), "square": ((2, 2), np.int32)},
+    )
+    result_archive = GridArchive(
+        solution_dim=2, dims=[100, 100], ranges=[(-1, 1), (-1, 1)]
+    )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
 
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters, result_archive)
     else:
-        scheduler = BanditScheduler(archive,
-                                    emitters,
-                                    result_archive,
-                                    num_active=1)
+        scheduler = BanditScheduler(archive, emitters, result_archive, num_active=1)
 
     scheduler.ask()
 
     # The ArrayStore in the archives should throw an error when we try to add.
     with pytest.raises(ValueError):
-        scheduler.tell(np.zeros(4),
-                       np.zeros((4, 2)),
-                       metadata=np.zeros(4, dtype=object),
-                       square=np.zeros((4, 2, 2)))
+        scheduler.tell(
+            np.zeros(4),
+            np.zeros((4, 2)),
+            metadata=np.zeros(4, dtype=object),
+            square=np.zeros((4, 2, 2)),
+        )
 
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_result_archive_same_fields_with_threshold(scheduler_type):
     """GridArchive has a threshold field and ProximityArchive does not, but they
     should still operate together because the extra_fields are identical."""
-    archive = ProximityArchive(solution_dim=2,
-                               measure_dim=2,
-                               k_neighbors=5,
-                               novelty_threshold=0.01,
-                               extra_fields={
-                                   "metadata": ((), object),
-                                   "square": ((2, 2), np.int32)
-                               })
-    result_archive = GridArchive(solution_dim=2,
-                                 dims=[100, 100],
-                                 ranges=[(-1, 1), (-1, 1)],
-                                 extra_fields={
-                                     "metadata": ((), object),
-                                     "square": ((2, 2), np.int32)
-                                 })
+    archive = ProximityArchive(
+        solution_dim=2,
+        measure_dim=2,
+        k_neighbors=5,
+        novelty_threshold=0.01,
+        extra_fields={"metadata": ((), object), "square": ((2, 2), np.int32)},
+    )
+    result_archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        extra_fields={"metadata": ((), object), "square": ((2, 2), np.int32)},
+    )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
 
     if scheduler_type == "Scheduler":
@@ -228,20 +220,18 @@ def test_result_archive_same_fields_with_threshold(scheduler_type):
     scheduler.ask()
 
     # The ArrayStore in the archives should throw an error when we try to add.
-    scheduler.tell(np.zeros(4),
-                   np.zeros((4, 2)),
-                   metadata=np.zeros(4, dtype=object),
-                   square=np.zeros((4, 2, 2)))
+    scheduler.tell(
+        np.zeros(4),
+        np.zeros((4, 2)),
+        metadata=np.zeros(4, dtype=object),
+        square=np.zeros((4, 2, 2)),
+    )
 
 
 def test_tell_inserts_solutions_into_archive(add_mode):
     batch_size = 4
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)])
-    emitters = [
-        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)
-    ]
+    archive = GridArchive(solution_dim=2, dims=[100, 100], ranges=[(-1, 1), (-1, 1)])
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)]
     scheduler = Scheduler(archive, emitters, add_mode=add_mode)
 
     measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
@@ -260,9 +250,7 @@ def test_tell_inserts_solutions_into_archive(add_mode):
 
 
 def test_tell_inserts_solutions_with_multiple_emitters(add_mode):
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(solution_dim=2, dims=[100, 100], ranges=[(-1, 1), (-1, 1)])
     emitters = [
         GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=1),
         GaussianEmitter(archive, sigma=1, x0=[0.5, 0.5], batch_size=2),
@@ -272,8 +260,14 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode):
 
     # The sum of all the emitters' batch sizes is 6.
     batch_size = 6
-    measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0],
-                      [0.0, 0.0], [0.0, 1.0]]
+    measures_batch = [
+        [1.0, 1.0],
+        [-1.0, 1.0],
+        [-1.0, -1.0],
+        [1.0, -1.0],
+        [0.0, 0.0],
+        [0.0, 1.0],
+    ]
 
     _ = scheduler.ask()
     scheduler.tell(np.ones(batch_size), measures_batch)
@@ -288,13 +282,13 @@ def test_tell_inserts_solutions_with_multiple_emitters(add_mode):
 
 def test_tell_with_fields(add_mode):
     batch_size = 4
-    archive = GridArchive(solution_dim=2,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)],
-                          extra_fields={"metadata": ((), object)})
-    emitters = [
-        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)
-    ]
+    archive = GridArchive(
+        solution_dim=2,
+        dims=[100, 100],
+        ranges=[(-1, 1), (-1, 1)],
+        extra_fields={"metadata": ((), object)},
+    )
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)]
     scheduler = Scheduler(archive, emitters, add_mode=add_mode)
 
     measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
@@ -302,9 +296,7 @@ def test_tell_with_fields(add_mode):
     _ = scheduler.ask()  # Ignore the actual values of the solutions.
     # We pass in 4 solutions with unique measures, so all should go into
     # the archive.
-    scheduler.tell(np.ones(batch_size),
-                   measures_batch,
-                   metadata=["a", "b", "c", "d"])
+    scheduler.tell(np.ones(batch_size), measures_batch, metadata=["a", "b", "c", "d"])
 
     assert_archive_elites(
         archive=scheduler.archive,
@@ -317,18 +309,14 @@ def test_tell_with_fields(add_mode):
 
 @pytest.mark.parametrize("scheduler_type", ["Scheduler", "BanditScheduler"])
 def test_tell_with_none_objective(scheduler_type, add_mode):
-    archive = ProximityArchive(solution_dim=2,
-                               measure_dim=2,
-                               k_neighbors=1,
-                               novelty_threshold=1.0)
+    archive = ProximityArchive(
+        solution_dim=2, measure_dim=2, k_neighbors=1, novelty_threshold=1.0
+    )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=4)]
     if scheduler_type == "Scheduler":
         scheduler = Scheduler(archive, emitters, add_mode=add_mode)
     else:
-        scheduler = BanditScheduler(archive,
-                                    emitters,
-                                    num_active=1,
-                                    add_mode=add_mode)
+        scheduler = BanditScheduler(archive, emitters, num_active=1, add_mode=add_mode)
 
     solutions = scheduler.ask()
 
@@ -407,14 +395,12 @@ def test_constant_active_emitters_bandit_scheduler():
     solution_dim = 2
     num_solutions = 4
     expected_active = 3
-    archive = GridArchive(solution_dim=solution_dim,
-                          dims=[100, 100],
-                          ranges=[(-1, 1), (-1, 1)])
+    archive = GridArchive(
+        solution_dim=solution_dim, dims=[100, 100], ranges=[(-1, 1), (-1, 1)]
+    )
     emitters = [
-        GaussianEmitter(archive,
-                        sigma=1,
-                        x0=[0.0, 0.0],
-                        batch_size=num_solutions) for _ in range(10)
+        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=num_solutions)
+        for _ in range(10)
     ]
     scheduler = BanditScheduler(archive, emitters, num_active=expected_active)
     num_loops = 10
@@ -447,9 +433,7 @@ def test_scheduler_with_categorical_archive(add_mode):
             "measures": object,
         },
     )
-    emitters = [
-        GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)
-    ]
+    emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)]
     scheduler = Scheduler(archive, emitters, add_mode=add_mode)
 
     measures_batch = [["A", "Four"], ["B", "Three"], ["C", "One"], ["C", "Two"]]
