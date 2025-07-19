@@ -111,6 +111,7 @@ readme = {file = ["README.md", "HISTORY.md"], content-type = "text/markdown"}
 [tool.isort]
 known_first_party = "ribs"
 line_length = 88
+multi_line_output = 3  # Matches ruff.
 
 [tool.pytest.ini_options]
 python_files = "*_test.py"
