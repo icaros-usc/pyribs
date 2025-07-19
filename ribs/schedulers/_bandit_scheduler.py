@@ -1,4 +1,5 @@
 """Provides the Bandit Scheduler."""
+
 import warnings
 from collections import defaultdict
 
@@ -75,29 +76,34 @@ class BanditScheduler:
             (``result_archive`` should not be passed in in this case).
     """
 
-    def __init__(self,
-                 archive,
-                 emitter_pool,
-                 result_archive=None,
-                 *,
-                 num_active,
-                 reselect="terminated",
-                 zeta=0.05,
-                 add_mode="batch"):
+    def __init__(
+        self,
+        archive,
+        emitter_pool,
+        result_archive=None,
+        *,
+        num_active,
+        reselect="terminated",
+        zeta=0.05,
+        add_mode="batch",
+    ):
         if num_active < 1:
             raise ValueError("num_active cannot be less than 1.")
 
         try:
             if len(emitter_pool) < num_active:
-                raise ValueError(f"The emitter pool must contain at least"
-                                 f"num_active emitters, but only"
-                                 f"{len(emitter_pool)} are given.")
+                raise ValueError(
+                    f"The emitter pool must contain at least"
+                    f"num_active emitters, but only"
+                    f"{len(emitter_pool)} are given."
+                )
         except TypeError as exception:
             # TypeError will be raised by len(). We avoid directly checking if
             # `emitter_pool` is an instance of list since we do not want to be
             # too restrictive.
-            raise TypeError("`emitter_pool` must be a list of emitter objects."
-                           ) from exception
+            raise TypeError(
+                "`emitter_pool` must be a list of emitter objects."
+            ) from exception
 
         emitter_ids = set(id(e) for e in emitter_pool)
         if len(emitter_ids) != len(emitter_pool):
@@ -106,7 +112,8 @@ class BanditScheduler:
                 "had the same id). If emitters were created with something "
                 "like [EmitterClass(...)] * n, instead use "
                 "[EmitterClass(...) for _ in range(n)] so that all emitters "
-                "are unique instances.")
+                "are unique instances."
+            )
 
         self._solution_dim = emitter_pool[0].solution_dim
 
@@ -115,22 +122,26 @@ class BanditScheduler:
                 raise ValueError(
                     "All emitters must have the same solution dim, but "
                     f"Emitter {idx} has dimension {emitter.solution_dim}, "
-                    f"while Emitter 0 has dimension {self._solution_dim}")
+                    f"while Emitter 0 has dimension {self._solution_dim}"
+                )
 
         if reselect not in ["terminated", "all"]:
-            raise ValueError("add_mode must either be 'terminated' or 'all',"
-                             f"but it was '{reselect}'")
+            raise ValueError(
+                f"add_mode must either be 'terminated' or 'all',but it was '{reselect}'"
+            )
 
         if add_mode not in ["single", "batch"]:
-            raise ValueError("add_mode must either be 'batch' or 'single', but "
-                             f"it was '{add_mode}'")
+            raise ValueError(
+                f"add_mode must either be 'batch' or 'single', but it was '{add_mode}'"
+            )
 
         if archive is result_archive:
             raise ValueError(
                 "`archive` has same id as `result_archive` -- "
                 "Note that `BanditScheduler.result_archive` already "
                 "defaults to be the same as `archive` if you pass "
-                "`result_archive=None`")
+                "`result_archive=None`"
+            )
 
         self._archive = archive
         self._emitter_pool = np.array(emitter_pool)
@@ -182,8 +193,7 @@ class BanditScheduler:
         If `result_archive` was not passed to the constructor, this property is
         the same as :attr:`archive`.
         """
-        return (self._archive
-                if self._result_archive is None else self._result_archive)
+        return self._archive if self._result_archive is None else self._result_archive
 
     def ask_dqd(self):
         """Generates a batch of solutions by calling ask_dqd() on all DQD
@@ -196,8 +206,7 @@ class BanditScheduler:
             NotImplementedError: This method is not supported by this
                 scheduler.
         """
-        raise NotImplementedError("ask_dqd() is not supported by"
-                                  "BanditScheduler.")
+        raise NotImplementedError("ask_dqd() is not supported byBanditScheduler.")
 
     def ask(self):
         """Generates a batch of solutions by calling ask() on all active
@@ -219,17 +228,20 @@ class BanditScheduler:
                 ask method.
         """
         if self._last_called == "ask":
-            raise RuntimeError("ask cannot be called immediately after " +
-                               self._last_called)
+            raise RuntimeError(
+                "ask cannot be called immediately after " + self._last_called
+            )
         self._last_called = "ask"
 
         if self._reselect == "terminated":
             # Reselect terminated emitters. Emitters are terminated if their
             # restarts attribute have incremented.
-            emitter_restarts = np.array([
-                emitter.restarts if hasattr(emitter, "restarts") else -1
-                for emitter in self._emitter_pool
-            ])
+            emitter_restarts = np.array(
+                [
+                    emitter.restarts if hasattr(emitter, "restarts") else -1
+                    for emitter in self._emitter_pool
+                ]
+            )
             reselect = emitter_restarts > self._restarts
 
             # If the emitter does not have "restarts" attribute, assume it
@@ -267,11 +279,11 @@ class BanditScheduler:
             )  # np.inf forces to select emitters that were not yet selected
             update_ucb = self._selection != 0
             if update_ucb.any():
-                ucb1[update_ucb] = (
-                    self._success[update_ucb] / self._selection[update_ucb] +
-                    self._zeta * np.sqrt(
-                        np.log(self._success.sum()) /
-                        self._selection[update_ucb]))
+                ucb1[update_ucb] = self._success[update_ucb] / self._selection[
+                    update_ucb
+                ] + self._zeta * np.sqrt(
+                    np.log(self._success.sum()) / self._selection[update_ucb]
+                )
             # Activate top emitters based on UCB1, until there are num_active
             # active emitters. Activate only inactive emitters.
             activate = np.argsort(ucb1)[::-1]
@@ -292,9 +304,11 @@ class BanditScheduler:
             self._num_emitted[i] = len(emitter_sols)
 
         # In case the emitters didn't return any solutions.
-        self._cur_solutions = np.concatenate(
-            self._cur_solutions, axis=0) if self._cur_solutions else np.empty(
-                (0, self._solution_dim))
+        self._cur_solutions = (
+            np.concatenate(self._cur_solutions, axis=0)
+            if self._cur_solutions
+            else np.empty((0, self._solution_dim))
+        )
         return self._cur_solutions
 
     def _check_length(self, name, arr):
@@ -304,7 +318,8 @@ class BanditScheduler:
             raise ValueError(
                 f"{name} should have length {len(self._cur_solutions)} "
                 "(this is the number of solutions output by ask()) but "
-                f"has length {len(arr)}")
+                f"has length {len(arr)}"
+            )
 
     # pylint: disable-next = protected-access
     _validate_tell_data = Scheduler._validate_tell_data
@@ -319,8 +334,7 @@ class BanditScheduler:
             NotImplementedError: This method is not supported by this
                 scheduler.
         """
-        raise NotImplementedError("tell_dqd() is not supported by"
-                                  "BanditScheduler.")
+        raise NotImplementedError("tell_dqd() is not supported byBanditScheduler.")
 
     def tell(self, objective, measures, **fields):
         """Returns info for solutions from :meth:`ask`.
@@ -352,11 +366,13 @@ class BanditScheduler:
             raise RuntimeError("tell() was called without calling ask().")
         self._last_called = "tell"
 
-        data = self._validate_tell_data({
-            "objective": objective,
-            "measures": measures,
-            **fields,
-        })
+        data = self._validate_tell_data(
+            {
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            }
+        )
 
         archive_empty_before = self.archive.empty
         if self._result_archive is not None:
@@ -376,8 +392,7 @@ class BanditScheduler:
 
             for i in range(len(self._cur_solutions)):
                 single_data = {
-                    name: None if arr is None else arr[i]
-                    for name, arr in data.items()
+                    name: None if arr is None else arr[i] for name, arr in data.items()
                 }
                 single_info = self.archive.add_single(**single_data)
                 for name, val in single_info.items():
@@ -395,8 +410,7 @@ class BanditScheduler:
             warnings.warn(Scheduler.EMPTY_WARNING.format(name="archive"))
         if self._result_archive is not None:
             if result_archive_empty_before and self.result_archive.empty:
-                warnings.warn(
-                    Scheduler.EMPTY_WARNING.format(name="result_archive"))
+                warnings.warn(Scheduler.EMPTY_WARNING.format(name="result_archive"))
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
@@ -412,8 +426,6 @@ class BanditScheduler:
                     name: None if arr is None else arr[pos:end]
                     for name, arr in data.items()
                 },
-                add_info={
-                    name: arr[pos:end] for name, arr in add_info.items()
-                },
+                add_info={name: arr[pos:end] for name, arr in add_info.items()},
             )
             pos = end

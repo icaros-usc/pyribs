@@ -1,4 +1,5 @@
 """Contains the DensityArchive."""
+
 import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KernelDensity
@@ -115,8 +116,7 @@ class DensityArchive(ArchiveBase):
         )
 
         # Buffer for storing the measures.
-        self._buffer = np.empty((buffer_size, measure_dim),
-                                dtype=self._measure_dtype)
+        self._buffer = np.empty((buffer_size, measure_dim), dtype=self._measure_dtype)
         # Number of occupied entries in the buffer.
         self._n_occupied = 0
         # Acceptance threshold for the buffer.
@@ -131,8 +131,9 @@ class DensityArchive(ArchiveBase):
             self._bandwidth = bandwidth
         elif self._density_method == "kde_sklearn":
             self._bandwidth = bandwidth
-            self._sklearn_kwargs = ({} if sklearn_kwargs is None else
-                                    sklearn_kwargs.copy())
+            self._sklearn_kwargs = (
+                {} if sklearn_kwargs is None else sklearn_kwargs.copy()
+            )
         else:
             raise ValueError(f"Unknown density_method '{self._density_method}'")
 
@@ -151,7 +152,7 @@ class DensityArchive(ArchiveBase):
     def buffer(self):
         """numpy.ndarray: Buffer of measures considered in the density
         estimator. Shape (n, :attr:`measure_dim`)."""
-        return readonly(self._buffer[:self._n_occupied])
+        return readonly(self._buffer[: self._n_occupied])
 
     ## Utilities ##
 
@@ -235,8 +236,7 @@ class DensityArchive(ArchiveBase):
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures, dtype=self._measure_dtype)
-        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim",
-                          "")
+        check_batch_shape(measures, "measures", self.measure_dim, "measure_dim", "")
         check_finite(measures, "measures")
         batch_size = len(measures)
         buffer_size = len(self._buffer)
@@ -256,8 +256,9 @@ class DensityArchive(ArchiveBase):
         n_fill = 0
         if buffer_size > self._n_occupied:
             n_fill = min(buffer_size - self._n_occupied, batch_size)
-            self._buffer[self._n_occupied:self._n_occupied + n_fill] = \
-                measures[:n_fill]
+            self._buffer[self._n_occupied : self._n_occupied + n_fill] = measures[
+                :n_fill
+            ]
             remaining_measures = measures[n_fill:]
             self._n_occupied += n_fill
         else:
@@ -271,8 +272,7 @@ class DensityArchive(ArchiveBase):
                 replace = self._rng.integers(buffer_size)
                 self._buffer[replace] = remaining_measures[self._n_skip]
                 self._w *= np.exp(np.log(self._rng.uniform()) / buffer_size)
-                self._n_skip = int(
-                    np.log(self._rng.uniform()) / np.log(1 - self._w))
+                self._n_skip = int(np.log(self._rng.uniform()) / np.log(1 - self._w))
             skip = min(self._n_skip, n_remaining)
             n_remaining -= skip
             self._n_skip -= skip

@@ -1,4 +1,5 @@
 """Provides OperatorBase."""
+
 from abc import ABC, abstractmethod
 
 

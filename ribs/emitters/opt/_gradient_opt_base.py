@@ -1,4 +1,5 @@
 """Provides GradientOptBase."""
+
 from abc import ABC, abstractmethod
 
 

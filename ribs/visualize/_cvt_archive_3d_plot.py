@@ -1,12 +1,17 @@
 """Provides cvt_archive_3d_plot."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
-from ribs.visualize._utils import (retrieve_cmap, set_cbar, validate_df,
-                                   validate_heatmap_visual_args)
+from ribs.visualize._utils import (
+    retrieve_cmap,
+    set_cbar,
+    validate_df,
+    validate_heatmap_visual_args,
+)
 
 
 def cvt_archive_3d_plot(
@@ -207,12 +212,18 @@ def cvt_archive_3d_plot(
     """
     # We don't have an aspect arg here so we just pass None.
     validate_heatmap_visual_args(
-        None, cbar, archive.measure_dim, [3],
-        "This plot can only be made for a 3D CVTArchive")
+        None,
+        cbar,
+        archive.measure_dim,
+        [3],
+        "This plot can only be made for a 3D CVTArchive",
+    )
 
     if plot_samples and archive.samples is None:
-        raise ValueError("Samples are not available for this archive, but "
-                         "`plot_samples` was passed in.")
+        raise ValueError(
+            "Samples are not available for this archive, but "
+            "`plot_samples` was passed in."
+        )
 
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
@@ -236,7 +247,8 @@ def cvt_archive_3d_plot(
         if sorted(measure_order) != [0, 1, 2]:
             raise ValueError(
                 "measure_order should be a permutation of [0, 1, 2] but "
-                f"received {measure_order}")
+                f"received {measure_order}"
+            )
         measures_batch = measures_batch[:, measure_order]
         lower_bounds = lower_bounds[measure_order]
         upper_bounds = upper_bounds[measure_order]
@@ -247,14 +259,12 @@ def cvt_archive_3d_plot(
     if vmin is None:
         # Defaulting to -inf (and inf for max_obj) allows the computations after
         # this to proceed smoothly.
-        min_obj = (np.min(objective_batch)
-                   if len(objective_batch) > 0 else -np.inf)
+        min_obj = np.min(objective_batch) if len(objective_batch) > 0 else -np.inf
     else:
         min_obj = vmin
 
     if vmax is None:
-        max_obj = (np.max(objective_batch)
-                   if len(objective_batch) > 0 else np.inf)
+        max_obj = np.max(objective_batch) if len(objective_batch) > 0 else np.inf
     else:
         max_obj = vmax
 
@@ -305,8 +315,18 @@ def cvt_archive_3d_plot(
     zmax_reflec[:, 2] = zmax + (zmax - centroids[:, 2])
 
     vor = Voronoi(
-        np.concatenate((centroids, xmin_reflec, ymin_reflec, zmin_reflec,
-                        xmax_reflec, ymax_reflec, zmax_reflec)))
+        np.concatenate(
+            (
+                centroids,
+                xmin_reflec,
+                ymin_reflec,
+                zmin_reflec,
+                xmax_reflec,
+                ymax_reflec,
+                zmax_reflec,
+            )
+        )
+    )
 
     # Collect the vertices of the ridges of each cell -- the boundary between
     # two points in a Voronoi diagram is referred to as a ridge; in 3D, the
@@ -322,8 +342,7 @@ def cvt_archive_3d_plot(
     # so the centroid points all have indices less than len(centroids).
     max_centroid_idx = len(centroids)
 
-    for ridge_points, ridge_vertices in zip(vor.ridge_points,
-                                            vor.ridge_vertices):
+    for ridge_points, ridge_vertices in zip(vor.ridge_points, vor.ridge_vertices):
         a, b = ridge_points
         # Record the ridge. We are only interested in a ridge if it involves one
         # of our centroid points, hence the check for max_idx.
@@ -344,7 +363,8 @@ def cvt_archive_3d_plot(
     cmap_idx = ~np.isnan(objs)
     cmap_objs = objs[cmap_idx]
     normalized_objs = np.clip(
-        (np.asarray(cmap_objs) - min_obj) / (max_obj - min_obj), 0.0, 1.0)
+        (np.asarray(cmap_objs) - min_obj) / (max_obj - min_obj), 0.0, 1.0
+    )
 
     # Create an array of facecolors in RGBA format that defaults to transparent
     # white.
@@ -361,33 +381,28 @@ def cvt_archive_3d_plot(
             edgecolor=[ec for _ in vertices],
             facecolor=facecolors,
             lw=lw,
-        ))
+        )
+    )
 
     if plot_elites:
-        ax.scatter(measures_batch[:, 0],
-                   measures_batch[:, 1],
-                   measures_batch[:, 2],
-                   s=elite_ms,
-                   c=objective_batch,
-                   cmap=cmap,
-                   vmin=min_obj,
-                   vmax=max_obj,
-                   lw=0.0,
-                   alpha=elite_alpha)
+        ax.scatter(
+            measures_batch[:, 0],
+            measures_batch[:, 1],
+            measures_batch[:, 2],
+            s=elite_ms,
+            c=objective_batch,
+            cmap=cmap,
+            vmin=min_obj,
+            vmax=max_obj,
+            lw=0.0,
+            alpha=elite_alpha,
+        )
     if plot_samples:
-        ax.plot(samples[:, 0],
-                samples[:, 1],
-                samples[:, 2],
-                "o",
-                c="grey",
-                ms=ms)
+        ax.plot(samples[:, 0], samples[:, 1], samples[:, 2], "o", c="grey", ms=ms)
     if plot_centroids:
-        ax.plot(centroids[:, 0],
-                centroids[:, 1],
-                centroids[:, 2],
-                "o",
-                c="black",
-                ms=ms)
+        ax.plot(
+            centroids[:, 0], centroids[:, 1], centroids[:, 2], "o", c="black", ms=ms
+        )
 
     # Create color bar.
     mappable = ScalarMappable(cmap=cmap)

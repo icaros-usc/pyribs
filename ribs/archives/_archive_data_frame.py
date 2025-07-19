@@ -1,4 +1,5 @@
 """Provides ArchiveDataFrame."""
+
 import re
 
 import pandas as pd
@@ -80,8 +81,7 @@ class ArchiveDataFrame(pd.DataFrame):
         return ArchiveDataFrame
 
     def iterelites(self):
-        """Iterator that outputs every elite in the ArchiveDataFrame as a dict.
-        """
+        """Iterator that outputs every elite in the ArchiveDataFrame as a dict."""
         # Identify fields in the data frame. There are some edge cases here,
         # such as if someone purposely names their field with an underscore and
         # a number at the end like "foobar_0", but it covers most cases.
@@ -96,7 +96,7 @@ class ArchiveDataFrame(pd.DataFrame):
                 # vector fields like "measures_0".
 
                 # Exclude last val and underscore - note negative sign.
-                field_name = col[:-(len(split[-1]) + 1)]
+                field_name = col[: -(len(split[-1]) + 1)]
 
                 fields[field_name] = None
             else:
@@ -109,9 +109,7 @@ class ArchiveDataFrame(pd.DataFrame):
         n_elites = len(self)
 
         return map(
-            lambda i: {
-                name: arr[i] for name, arr in fields.items()
-            },
+            lambda i: {name: arr[i] for name, arr in fields.items()},
             range(n_elites),
         )
 

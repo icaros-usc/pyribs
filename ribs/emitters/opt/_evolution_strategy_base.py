@@ -1,4 +1,5 @@
 """Provides EvolutionStrategyBase."""
+
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -12,7 +13,8 @@ BOUNDS_WARNING = (
     f"{BOUNDS_SAMPLING_THRESHOLD} times. This may indicate that your solution "
     "space bounds are too tight. When bounds are passed in, the ES resamples "
     "until all solutions are within the bounds -- if the bounds are too tight "
-    "or the distribution is too large, the ES will resample forever.")
+    "or the distribution is too large, the ES will resample forever."
+)
 
 
 class EvolutionStrategyBase(ABC):
@@ -44,14 +46,16 @@ class EvolutionStrategyBase(ABC):
             bounds (and pass np.inf instead of -np.inf).
     """
 
-    def __init__(self,
-                 sigma0,
-                 solution_dim,
-                 batch_size=None,
-                 seed=None,
-                 dtype=np.float64,
-                 lower_bounds=-np.inf,
-                 upper_bounds=np.inf):
+    def __init__(
+        self,
+        sigma0,
+        solution_dim,
+        batch_size=None,
+        seed=None,
+        dtype=np.float64,
+        lower_bounds=-np.inf,
+        upper_bounds=np.inf,
+    ):
         pass
 
     @abstractmethod

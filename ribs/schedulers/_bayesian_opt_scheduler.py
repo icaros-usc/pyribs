@@ -36,12 +36,7 @@ class BayesianOptimizationScheduler(Scheduler):
         ValueError: Not all emitters have the same upscale schedule.
     """
 
-    def __init__(self,
-                 archive,
-                 emitters,
-                 result_archive=None,
-                 *,
-                 add_mode="batch"):
+    def __init__(self, archive, emitters, result_archive=None, *, add_mode="batch"):
         super().__init__(archive, emitters, result_archive, add_mode=add_mode)
 
         # Checks that all emitters are BayesianOptimizationEmitter and have the
@@ -51,27 +46,32 @@ class BayesianOptimizationScheduler(Scheduler):
             if not isinstance(e, BayesianOptimizationEmitter):
                 raise TypeError(
                     "All emitters must be of type BayesianOptimizationEmitter, "
-                    f"but emitter{i} has type {e.__class__.__name__}")
+                    f"but emitter{i} has type {e.__class__.__name__}"
+                )
 
             if i == 0:
                 this_upscale_schedule = e.upscale_schedule
             else:
                 other_upscale_schedule = e.upscale_schedule
                 # pylint: disable=unidiomatic-typecheck
-                if (type(this_upscale_schedule) != type(other_upscale_schedule)
-                        or this_upscale_schedule.shape
-                        != other_upscale_schedule.shape or np.any(
-                            this_upscale_schedule != other_upscale_schedule)):
+                if (
+                    type(this_upscale_schedule) != type(other_upscale_schedule)
+                    or this_upscale_schedule.shape != other_upscale_schedule.shape
+                    or np.any(this_upscale_schedule != other_upscale_schedule)
+                ):
                     raise ValueError(
                         "All emitters must have the same upscale schedule. "
                         "emitter0 has upscale schedule "
                         f"{this_upscale_schedule}, but emitter{i} has upscale "
-                        f"schedule {other_upscale_schedule}.")
+                        f"schedule {other_upscale_schedule}."
+                    )
 
         # Checks that ``archive`` is a GridArchive
         if not isinstance(archive, GridArchive):
-            raise TypeError("Archive type must be GridArchive. Actually got "
-                            f"{archive.__class__.__name__}")
+            raise TypeError(
+                "Archive type must be GridArchive. Actually got "
+                f"{archive.__class__.__name__}"
+            )
 
         if this_upscale_schedule is None:
             self._upscale_schedule = None
@@ -89,12 +89,10 @@ class BayesianOptimizationScheduler(Scheduler):
         self._archive = new_archive
 
     def ask_dqd(self):
-        raise NotImplementedError(
-            "BayesianOptimization currently does not support DQD")
+        raise NotImplementedError("BayesianOptimization currently does not support DQD")
 
     def tell_dqd(self, objective, measures, jacobian, **fields):
-        raise NotImplementedError(
-            "BayesianOptimization currently does not support DQD")
+        raise NotImplementedError("BayesianOptimization currently does not support DQD")
 
     def tell(self, objective, measures, **fields):
         """Updates :attr:`emitters` and the :attr:`archive` with new data.
@@ -107,27 +105,26 @@ class BayesianOptimizationScheduler(Scheduler):
             raise RuntimeError("tell() was called without calling ask().")
         self._last_called = "tell"
 
-        data = self._validate_tell_data({
-            "objective": objective,
-            "measures": measures,
-            **fields,
-        })
+        data = self._validate_tell_data(
+            {
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            }
+        )
 
         add_info = self._add_to_archives(data)
 
         pos = 0
         this_upscale_res = None
-        for i, (emitter, n) in enumerate(zip(self._emitters,
-                                             self._num_emitted)):
+        for i, (emitter, n) in enumerate(zip(self._emitters, self._num_emitted)):
             end = pos + n
             upscale_res = emitter.tell(
                 **{
                     name: None if arr is None else arr[pos:end]
                     for name, arr in data.items()
                 },
-                add_info={
-                    name: arr[pos:end] for name, arr in add_info.items()
-                },
+                add_info={name: arr[pos:end] for name, arr in add_info.items()},
             )
             pos = end
 
@@ -141,7 +138,8 @@ class BayesianOptimizationScheduler(Scheduler):
                             "Emitters returned different upscale resolutions "
                             "when they should return the same. Emitter0 "
                             f"returned resolution {this_upscale_res}, but "
-                            f"emitter{i} returned resolution {upscale_res}")
+                            f"emitter{i} returned resolution {upscale_res}"
+                        )
 
         # If the upscale resolution is not None, upscales :attr:`archive` and
         # all emitter archives.

@@ -1,4 +1,5 @@
 """Iso Line Operator"""
+
 import numpy as np
 
 from ribs.emitters.operators._operator_base import OperatorBase
@@ -30,7 +31,7 @@ class IsoLineOperator(OperatorBase):
         return 2
 
     def ask(self, parents):
-        """ Adds Isotropic Guassian noise and directional noise to parents.
+        """Adds Isotropic Guassian noise and directional noise to parents.
 
         Args:
             parents (array-like): (2, batch_size, solution_dim) parents[0] array

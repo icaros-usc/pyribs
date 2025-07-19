@@ -1,4 +1,5 @@
 """Provides the GeneticAlgorithmEmitter."""
+
 import numpy as np
 
 from ribs._utils import check_batch_shape, check_shape
@@ -38,16 +39,18 @@ class GeneticAlgorithmEmitter(EmitterBase):
         ValueError: There is an error in the bounds configuration.
     """
 
-    def __init__(self,
-                 archive,
-                 *,
-                 operator,
-                 operator_kwargs=None,
-                 x0=None,
-                 initial_solutions=None,
-                 bounds=None,
-                 batch_size=64,
-                 seed=None):
+    def __init__(
+        self,
+        archive,
+        *,
+        operator,
+        operator_kwargs=None,
+        x0=None,
+        initial_solutions=None,
+        bounds=None,
+        batch_size=64,
+        seed=None,
+    ):
         EmitterBase.__init__(
             self,
             archive,
@@ -62,18 +65,21 @@ class GeneticAlgorithmEmitter(EmitterBase):
         if x0 is None and initial_solutions is None:
             raise ValueError("Either x0 or initial_solutions must be provided.")
         if x0 is not None and initial_solutions is not None:
-            raise ValueError(
-                "x0 and initial_solutions cannot both be provided.")
+            raise ValueError("x0 and initial_solutions cannot both be provided.")
 
         if x0 is not None:
             self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
-            check_shape(self._x0, "x0", archive.solution_dim,
-                        "archive.solution_dim")
+            check_shape(self._x0, "x0", archive.solution_dim, "archive.solution_dim")
         elif initial_solutions is not None:
             self._initial_solutions = np.asarray(
-                initial_solutions, dtype=archive.dtypes["solution"])
-            check_batch_shape(self._initial_solutions, "initial_solutions",
-                              archive.solution_dim, "archive.solution_dim")
+                initial_solutions, dtype=archive.dtypes["solution"]
+            )
+            check_batch_shape(
+                self._initial_solutions,
+                "initial_solutions",
+                archive.solution_dim,
+                "archive.solution_dim",
+            )
 
         operator_class = _get_op(operator)
         self._operator = operator_class(
@@ -123,25 +129,21 @@ class GeneticAlgorithmEmitter(EmitterBase):
 
         if self._operator.parent_type == 1:
             if self.archive.empty:
-                parents = np.repeat(self.x0[None],
-                                    repeats=self.batch_size,
-                                    axis=0)
+                parents = np.repeat(self.x0[None], repeats=self.batch_size, axis=0)
             else:
-                parents = self.archive.sample_elites(
-                    self.batch_size)["solution"]
+                parents = self.archive.sample_elites(self.batch_size)["solution"]
             return self._clip(self._operator.ask(parents))
 
         elif self._operator.parent_type == 2:
             if self.archive.empty:
-                parents = np.repeat(self.x0[None],
-                                    repeats=2 * self.batch_size,
-                                    axis=0)
+                parents = np.repeat(self.x0[None], repeats=2 * self.batch_size, axis=0)
             else:
-                parents = self.archive.sample_elites(
-                    2 * self.batch_size)["solution"]
+                parents = self.archive.sample_elites(2 * self.batch_size)["solution"]
             return self._clip(
-                self._operator.ask(parents.reshape(2, self.batch_size, -1)))
+                self._operator.ask(parents.reshape(2, self.batch_size, -1))
+            )
 
         else:
             raise ValueError(
-                f"Unknown operator `parent_type` {self._operator.parent_type}")
+                f"Unknown operator `parent_type` {self._operator.parent_type}"
+            )

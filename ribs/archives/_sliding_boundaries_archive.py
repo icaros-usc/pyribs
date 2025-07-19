@@ -5,8 +5,13 @@ from collections import deque
 import numpy as np
 from sortedcontainers import SortedList
 
-from ribs._utils import (check_batch_shape, check_finite, check_shape,
-                         validate_batch, validate_single)
+from ribs._utils import (
+    check_batch_shape,
+    check_finite,
+    check_shape,
+    validate_batch,
+    validate_single,
+)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
@@ -188,8 +193,10 @@ class SlidingBoundariesArchive(ArchiveBase):
         extra_fields = extra_fields or {}
         reserved_fields = {"solution", "objective", "measures", "index"}
         if reserved_fields & extra_fields.keys():
-            raise ValueError("The following names are not allowed in "
-                             f"extra_fields: {reserved_fields}")
+            raise ValueError(
+                "The following names are not allowed in "
+                f"extra_fields: {reserved_fields}"
+            )
         dtype = parse_dtype(dtype)
         self._store = ArrayStore(
             field_desc={
@@ -203,8 +210,10 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         # Set up constant properties.
         if len(self._dims) != len(ranges):
-            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
-                             f"(length {len(ranges)}) must be the same length")
+            raise ValueError(
+                f"dims (length {len(self._dims)}) and ranges "
+                f"(length {len(ranges)}) must be the same length"
+            )
         ranges = list(zip(*ranges))
         self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
         self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
@@ -215,13 +224,17 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         # Initialize the boundaries -- allocate an extra entry in each row so we
         # can put the upper bound at the end.
-        self._boundaries = np.full((self.measure_dim, np.max(self._dims) + 1),
-                                   np.nan,
-                                   dtype=self.dtypes["measures"])
+        self._boundaries = np.full(
+            (self.measure_dim, np.max(self._dims) + 1),
+            np.nan,
+            dtype=self.dtypes["measures"],
+        )
         for i, (dim, lower_bound, upper_bound) in enumerate(
-                zip(self._dims, self._lower_bounds, self._upper_bounds)):
-            self._boundaries[i, :dim + 1] = np.linspace(lower_bound,
-                                                        upper_bound, dim + 1)
+            zip(self._dims, self._lower_bounds, self._upper_bounds)
+        ):
+            self._boundaries[i, : dim + 1] = np.linspace(
+                lower_bound, upper_bound, dim + 1
+            )
 
         # Create buffer.
         self._buffer = SolutionBuffer(buffer_capacity, self.measure_dim)
@@ -326,9 +339,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         bounds of all the cells in dimension ``i``, use ``boundaries[i][:-1]``,
         and to access all the upper bounds, use ``boundaries[i][1:]``.
         """
-        return [
-            bound[:dim + 1] for bound, dim in zip(self._boundaries, self._dims)
-        ]
+        return [bound[: dim + 1] for bound, dim in zip(self._boundaries, self._dims)]
 
     ## dunder methods ##
 
@@ -360,8 +371,10 @@ class SlidingBoundariesArchive(ArchiveBase):
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
-        if (self._stats.obj_max is None or
-                new_best_elite["objective"] > self._stats.obj_max):
+        if (
+            self._stats.obj_max is None
+            or new_best_elite["objective"] > self._stats.obj_max
+        ):
             self._best_elite = new_best_elite
             new_obj_max = new_best_elite["objective"]
         else:
@@ -369,8 +382,9 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         self._objective_sum = new_objective_sum
         new_qd_score = (
-            self._objective_sum -
-            self.dtypes["objective"](len(self)) * self._qd_score_offset)
+            self._objective_sum
+            - self.dtypes["objective"](len(self)) * self._qd_score_offset
+        )
         self._stats = ArchiveStats(
             num_elites=len(self),
             coverage=self.dtypes["objective"](len(self) / self.cells),
@@ -425,12 +439,16 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         # Clip measures + epsilon to the range
         # [lower_bounds, upper_bounds - epsilon].
-        measures = np.clip(measures + self._epsilon, self._lower_bounds,
-                           self._upper_bounds - self._epsilon)
+        measures = np.clip(
+            measures + self._epsilon,
+            self._lower_bounds,
+            self._upper_bounds - self._epsilon,
+        )
 
         idx_cols = []
-        for boundary, dim, measures_col in zip(self._boundaries, self._dims,
-                                               measures.T):
+        for boundary, dim, measures_col in zip(
+            self._boundaries, self._dims, measures.T
+        ):
             idx_col = np.searchsorted(boundary[:dim], measures_col)
             # The maximum index returned by searchsorted is `dim`, and since we
             # subtract 1, the max will be dim - 1 which is within the range of
@@ -511,14 +529,11 @@ class SlidingBoundariesArchive(ArchiveBase):
         self.clear()
 
         final_data = {
-            name: np.concatenate((cur_data[name], new_data[name]))
-            for name in cur_data
+            name: np.concatenate((cur_data[name], new_data[name])) for name in cur_data
         }
 
         for i in range(len(final_data["solution"])):
-            self._basic_add_single({
-                name: arr[i] for name, arr in final_data.items()
-            })
+            self._basic_add_single({name: arr[i] for name, arr in final_data.items()})
         return self._basic_add_single(last_data)
 
     ## Methods for writing to the archive ##
@@ -548,9 +563,9 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         add_info = {}
         for i in range(batch_size):
-            single_info = self.add_single(**{
-                name: arr[i] for name, arr in new_data.items()
-            })
+            single_info = self.add_single(
+                **{name: arr[i] for name, arr in new_data.items()}
+            )
 
             if i == 0:
                 # Initialize add_info.
@@ -576,8 +591,9 @@ class SlidingBoundariesArchive(ArchiveBase):
         # Retrieve current data of the cell.
         cur_occupied, cur_data = self._store.retrieve([index])
         cur_occupied = cur_occupied[0]
-        cur_objective = (cur_data["objective"][0]
-                         if cur_occupied else self.dtypes["objective"](0.0))
+        cur_objective = (
+            cur_data["objective"][0] if cur_occupied else self.dtypes["objective"](0.0)
+        )
 
         # Retrieve candidate objective.
         objective = data["objective"]
@@ -589,20 +605,20 @@ class SlidingBoundariesArchive(ArchiveBase):
         # the addition rule from MAP-Elites (Fig. 2 of Mouret 2015
         # https://arxiv.org/pdf/1504.04909.pdf).
 
-        if (not cur_occupied or (cur_occupied and objective > cur_objective)):
+        if not cur_occupied or (cur_occupied and objective > cur_objective):
             if cur_occupied:
                 add_info["status"] = np.int32(1)  # IMPROVE_EXISTING
             else:
                 add_info["status"] = np.int32(2)  # NEW
 
             # Insert elite into the store.
-            self._store.add(index[None], {
-                name: np.expand_dims(arr, axis=0) for name, arr in data.items()
-            })
+            self._store.add(
+                index[None],
+                {name: np.expand_dims(arr, axis=0) for name, arr in data.items()},
+            )
 
             # Update stats.
-            self._stats_update(self._objective_sum + objective - cur_objective,
-                               index)
+            self._stats_update(self._objective_sum + objective - cur_objective, index)
 
         # Value is the improvement over the current objective (can be negative).
         add_info["value"] = objective - cur_objective
@@ -653,11 +669,10 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         if self._total_num_sol % self._remap_frequency == 0:
             add_info = self._remap()
-            self._lower_bounds = np.array(
-                [bound[0] for bound in self._boundaries])
-            self._upper_bounds = np.array([
-                bound[dim] for bound, dim in zip(self._boundaries, self._dims)
-            ])
+            self._lower_bounds = np.array([bound[0] for bound in self._boundaries])
+            self._upper_bounds = np.array(
+                [bound[dim] for bound, dim in zip(self._boundaries, self._dims)]
+            )
             self._interval_size = self._upper_bounds - self._lower_bounds
         else:
             add_info = self._basic_add_single(data)

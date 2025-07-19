@@ -1,11 +1,16 @@
 """Provides ArrayStore."""
+
 import itertools
 import numbers
 from enum import IntEnum
 from functools import cached_property
 
-from array_api_compat import (is_cupy_array, is_numpy_array, is_numpy_namespace,
-                              is_torch_array)
+from array_api_compat import (
+    is_cupy_array,
+    is_numpy_array,
+    is_numpy_namespace,
+    is_torch_array,
+)
 
 try:
     from array_api_compat import cupy as cp
@@ -18,6 +23,7 @@ from ribs.archives._archive_data_frame import ArchiveDataFrame
 
 class Update(IntEnum):
     """Indices into the updates array in ArrayStore."""
+
     ADD = 0
     CLEAR = 1
 
@@ -46,8 +52,8 @@ class ArrayStoreIterator:
             # to clear() would cause the len(self.store) to be 0 and thus
             # trigger StopIteration.
             raise RuntimeError(
-                "ArrayStore was modified with add() or clear() during "
-                "iteration.")
+                "ArrayStore was modified with add() or clear() during iteration."
+            )
 
         if self.iter_idx >= len(self.store):
             raise StopIteration
@@ -129,16 +135,12 @@ class ArrayStore:
         self._device = device
 
         self._props = {
-            "capacity":
-                capacity,
-            "occupied":
-                self._xp.zeros(capacity, dtype=bool, device=self._device),
-            "n_occupied":
-                0,
-            "occupied_list":
-                self._xp.empty(capacity,
-                               dtype=self._xp.int32,
-                               device=self._device),
+            "capacity": capacity,
+            "occupied": self._xp.zeros(capacity, dtype=bool, device=self._device),
+            "n_occupied": 0,
+            "occupied_list": self._xp.empty(
+                capacity, dtype=self._xp.int32, device=self._device
+            ),
             "updates": [0, 0],
         }
 
@@ -147,16 +149,15 @@ class ArrayStore:
             if name == "index":
                 raise ValueError(f"`{name}` is a reserved field name.")
             if not name.isidentifier():
-                raise ValueError(
-                    f"Field names must be valid identifiers: `{name}`")
+                raise ValueError(f"Field names must be valid identifiers: `{name}`")
 
             if isinstance(field_shape, numbers.Integral):
                 field_shape = (field_shape,)
 
             array_shape = (capacity,) + tuple(field_shape)
-            self._fields[name] = self._xp.empty(array_shape,
-                                                dtype=dtype,
-                                                device=self._device)
+            self._fields[name] = self._xp.empty(
+                array_shape, dtype=dtype, device=self._device
+            )
 
     def __len__(self):
         """Number of occupied indices in the store, i.e., number of indices that
@@ -196,8 +197,7 @@ class ArrayStore:
     @property
     def occupied_list(self):
         """array: int32 array listing all occupied indices in the store."""
-        return arr_readonly(
-            self._props["occupied_list"][:self._props["n_occupied"]])
+        return arr_readonly(self._props["occupied_list"][: self._props["n_occupied"]])
 
     @cached_property
     def field_desc(self):
@@ -218,10 +218,7 @@ class ArrayStore:
         1 entry (e.g., ``(5,)``). Since dicts in Python are ordered, note that
         this dict will have the same order as in the constructor.
         """
-        return {
-            name: (arr.shape[1:], arr.dtype)
-            for name, arr in self._fields.items()
-        }
+        return {name: (arr.shape[1:], arr.dtype) for name, arr in self._fields.items()}
 
     @cached_property
     def dtypes(self):
@@ -303,7 +300,8 @@ class ArrayStore:
         else:
             raise NotImplementedError(
                 "The pandas return type is currently only supported "
-                "with NumPy, PyTorch, and CuPy arrays.")
+                "with NumPy, PyTorch, and CuPy arrays."
+            )
 
     def retrieve(self, indices, fields=None, return_type="dict"):
         """Collects data at the given indices.
@@ -403,9 +401,7 @@ class ArrayStore:
             ValueError: Invalid return_type provided.
         """
         single_field = isinstance(fields, str)
-        indices = self._xp.asarray(indices,
-                                   dtype=self._xp.int32,
-                                   device=self._device)
+        indices = self._xp.asarray(indices, dtype=self._xp.int32, device=self._device)
 
         # Induces copy (in numpy, at least).
         occupied = self._props["occupied"][indices]
@@ -454,7 +450,8 @@ class ArrayStore:
                 else:
                     raise ValueError(
                         f"Field `{name}` has shape {arr.shape[1:]} -- "
-                        "cannot convert fields with shape >1D to Pandas")
+                        "cannot convert fields with shape >1D to Pandas"
+                    )
 
         # Postprocess return data.
         if return_type == "tuple":
@@ -517,7 +514,8 @@ class ArrayStore:
                 raise ValueError(
                     f"In `data`, the array for `{name}` has length "
                     f"{len(arr)} but should be the same length as indices "
-                    f"({len(indices)})")
+                    f"({len(indices)})"
+                )
 
         if data.keys() != self._fields.keys():
             raise ValueError(
@@ -526,14 +524,15 @@ class ArrayStore:
                 "This error may occur if the archive has extra_fields but the "
                 "fields were not passed to archive.add() or scheduler.tell(). "
                 "This can also occur if the archive and result_archive have "
-                "different extra_fields.")
+                "different extra_fields."
+            )
 
         # Determine the unique indices. These operations are preferred over
         # `xp.unique_values(indices)` because they operate in linear time, while
         # unique_values usually sorts the input.
-        indices_occupied = self._xp.zeros(self.capacity,
-                                          dtype=bool,
-                                          device=self._device)
+        indices_occupied = self._xp.zeros(
+            self.capacity, dtype=bool, device=self._device
+        )
         indices_occupied[indices] = True
         unique_indices = self._xp.nonzero(indices_occupied)[0]
 
@@ -542,8 +541,9 @@ class ArrayStore:
         new_indices = unique_indices[~cur_occupied]
         n_occupied = self._props["n_occupied"]
         self._props["occupied"][new_indices] = True
-        self._props["occupied_list"][n_occupied:n_occupied +
-                                     len(new_indices)] = new_indices
+        self._props["occupied_list"][n_occupied : n_occupied + len(new_indices)] = (
+            new_indices
+        )
         self._props["n_occupied"] = n_occupied + len(new_indices)
 
         # Insert into the ArrayStore. Note that we do not assume indices are
@@ -551,9 +551,9 @@ class ArrayStore:
         # unique indices. In contrast, here we let the array's default behavior
         # handle duplicate indices.
         for name, arr in self._fields.items():
-            arr[indices] = self._xp.asarray(data[name],
-                                            dtype=arr.dtype,
-                                            device=self._device)
+            arr[indices] = self._xp.asarray(
+                data[name], dtype=arr.dtype, device=self._device
+            )
 
     def clear(self):
         """Removes all entries from the store."""
@@ -573,26 +573,27 @@ class ArrayStore:
         if capacity <= self._props["capacity"]:
             raise ValueError(
                 f"New capacity ({capacity}) must be greater than current "
-                f"capacity ({self._props['capacity']}.")
+                f"capacity ({self._props['capacity']}."
+            )
 
         cur_capacity = self._props["capacity"]
         self._props["capacity"] = capacity
 
         cur_occupied = self._props["occupied"]
-        self._props["occupied"] = self._xp.zeros(capacity,
-                                                 dtype=bool,
-                                                 device=self._device)
+        self._props["occupied"] = self._xp.zeros(
+            capacity, dtype=bool, device=self._device
+        )
         self._props["occupied"][:cur_capacity] = cur_occupied
 
         cur_occupied_list = self._props["occupied_list"]
-        self._props["occupied_list"] = self._xp.empty(capacity,
-                                                      dtype=self._xp.int32,
-                                                      device=self._device)
+        self._props["occupied_list"] = self._xp.empty(
+            capacity, dtype=self._xp.int32, device=self._device
+        )
         self._props["occupied_list"][:cur_capacity] = cur_occupied_list
 
         for name, cur_arr in self._fields.items():
             new_shape = (capacity,) + cur_arr.shape[1:]
-            self._fields[name] = self._xp.empty(new_shape,
-                                                dtype=cur_arr.dtype,
-                                                device=self._device)
+            self._fields[name] = self._xp.empty(
+                new_shape, dtype=cur_arr.dtype, device=self._device
+            )
             self._fields[name][:cur_capacity] = cur_arr

@@ -27,6 +27,7 @@ run:
     import cvt_add  # The name of this file.
     cvt_add.plot_times(*cvt_add.load_times())
 """
+
 import json
 import timeit
 from functools import partial
@@ -37,10 +38,7 @@ import numpy as np
 from ribs.archives import CVTArchive
 
 
-def save_times(n_cells,
-               brute_force_t,
-               kd_tree_t,
-               filename="cvt_add_times.json"):
+def save_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_times.json"):
     """Saves a dict of the results to the given file."""
     with open(filename, "w") as file:
         json.dump(
@@ -48,7 +46,9 @@ def save_times(n_cells,
                 "n_cells": n_cells,
                 "brute_force_t": brute_force_t,
                 "kd_tree_t": kd_tree_t,
-            }, file)
+            },
+            file,
+        )
 
 
 def load_times(filename="cvt_add_times.json"):
@@ -62,8 +62,7 @@ def plot_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_plot.png"):
     """Plots the results to the given file."""
     fig, ax = plt.subplots(figsize=(4, 4))
     fig.tight_layout()
-    ax.set_title(
-        "Runtime to insert 1k batches of 100 2D entries\ninto CVTArchive")
+    ax.set_title("Runtime to insert 1k batches of 100 2D entries\ninto CVTArchive")
     ax.set_xlabel("log(number of cells in archive)")
     ax.set_ylabel("log(time) (s)")
     ax.set_yscale("log")
@@ -89,24 +88,27 @@ def main():
     # Set up these archives so we can use the same centroids across all
     # experiments for a certain number of cells (and also save time).
     ref_archives = {
-        cells:
-            CVTArchive(
-                solution_dim=all_solution_batch.shape[2],
-                cells=cells,
-                ranges=[(-1, 1), (-1, 1)],
-                # Use 200k cells to avoid dropping clusters. However, note that we
-                # no longer test with 10k cells.
-                samples=100_000 if cells != 10_000 else 200_000,
-                use_kd_tree=False) for cells in n_cells
+        cells: CVTArchive(
+            solution_dim=all_solution_batch.shape[2],
+            cells=cells,
+            ranges=[(-1, 1), (-1, 1)],
+            # Use 200k cells to avoid dropping clusters. However, note that we
+            # no longer test with 10k cells.
+            samples=100_000 if cells != 10_000 else 200_000,
+            use_kd_tree=False,
+        )
+        for cells in n_cells
     }
 
     def setup(cells, use_kd_tree):
         nonlocal archive
-        archive = CVTArchive(solution_dim=all_solution_batch.shape[2],
-                             cells=cells,
-                             ranges=[(-1, 1), (-1, 1)],
-                             custom_centroids=ref_archives[cells].centroids,
-                             use_kd_tree=use_kd_tree)
+        archive = CVTArchive(
+            solution_dim=all_solution_batch.shape[2],
+            cells=cells,
+            ranges=[(-1, 1), (-1, 1)],
+            custom_centroids=ref_archives[cells].centroids,
+            use_kd_tree=use_kd_tree,
+        )
 
     def add_entries():
         nonlocal archive
@@ -122,12 +124,13 @@ def main():
     kd_tree_t = []
     for cells in n_cells:
         for use_kd_tree in (False, True):
-            print(f"--------------\n"
-                  f"Cells: {cells}\n"
-                  f"Method: {'k-D Tree' if use_kd_tree else 'Brute Force'}")
+            print(
+                f"--------------\n"
+                f"Cells: {cells}\n"
+                f"Method: {'k-D Tree' if use_kd_tree else 'Brute Force'}"
+            )
             setup_func = partial(setup, cells, use_kd_tree)
-            res_t = min(
-                timeit.repeat(add_entries, setup_func, repeat=5, number=1))
+            res_t = min(timeit.repeat(add_entries, setup_func, repeat=5, number=1))
             print(f"Time: {res_t} s")
 
             if use_kd_tree:

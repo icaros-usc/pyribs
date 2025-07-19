@@ -108,6 +108,7 @@ Example:
 Help:
     python sphere.py --help
 """
+
 import copy
 import json
 import time
@@ -118,11 +119,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 
-from ribs.archives import (CVTArchive, DensityArchive, GridArchive,
-                           ProximityArchive)
-from ribs.emitters import (EvolutionStrategyEmitter, GaussianEmitter,
-                           GradientArborescenceEmitter, GradientOperatorEmitter,
-                           IsoLineEmitter)
+from ribs.archives import CVTArchive, DensityArchive, GridArchive, ProximityArchive
+from ribs.emitters import (
+    EvolutionStrategyEmitter,
+    GaussianEmitter,
+    GradientArborescenceEmitter,
+    GradientOperatorEmitter,
+    IsoLineEmitter,
+)
 from ribs.schedulers import BanditScheduler, Scheduler
 from ribs.visualize import cvt_archive_heatmap, grid_archive_heatmap
 
@@ -134,21 +138,23 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": GaussianEmitter,
-            "kwargs": {
-                "sigma": 0.5,
-                "batch_size": 540
-            },
-            "num_emitters": 1
-        }],
+        "emitters": [
+            {
+                "class": GaussianEmitter,
+                "kwargs": {
+                    "sigma": 0.5,
+                    "batch_size": 540,
+                },
+                "num_emitters": 1,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "line_map_elites": {
         "is_dqd": False,
@@ -156,22 +162,24 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": IsoLineEmitter,
-            "kwargs": {
-                "iso_sigma": 0.5,
-                "line_sigma": 0.2,
-                "batch_size": 540
-            },
-            "num_emitters": 1
-        }],
+        "emitters": [
+            {
+                "class": IsoLineEmitter,
+                "kwargs": {
+                    "iso_sigma": 0.5,
+                    "line_sigma": 0.2,
+                    "batch_size": 540,
+                },
+                "num_emitters": 1,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "cvt_map_elites": {
         "is_dqd": False,
@@ -180,22 +188,24 @@ CONFIG = {
             "kwargs": {
                 "cells": 10000,
                 "samples": 100000,
-                "use_kd_tree": True
-            }
+                "use_kd_tree": True,
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": GaussianEmitter,
-            "kwargs": {
-                "sigma": 0.5,
-                "batch_size": 540
-            },
-            "num_emitters": 1
-        }],
+        "emitters": [
+            {
+                "class": GaussianEmitter,
+                "kwargs": {
+                    "sigma": 0.5,
+                    "batch_size": 540,
+                },
+                "num_emitters": 1,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "line_cvt_map_elites": {
         "is_dqd": False,
@@ -204,25 +214,26 @@ CONFIG = {
             "kwargs": {
                 "cells": 10000,
                 "samples": 100000,
-                "use_kd_tree": True
-            }
+                "use_kd_tree": True,
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": IsoLineEmitter,
-            "kwargs": {
-                "iso_sigma": 0.5,
-                "line_sigma": 0.2,
-                "batch_size": 540
-            },
-            "num_emitters": 1
-        }],
+        "emitters": [
+            {
+                "class": IsoLineEmitter,
+                "kwargs": {
+                    "iso_sigma": 0.5,
+                    "line_sigma": 0.2,
+                    "batch_size": 540,
+                },
+                "num_emitters": 1,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
-
     ## Multi-Emitter MAP-Elites (ME-MAP-Elites) ##
     "me_map_elites": {
         "is_dqd": False,
@@ -230,51 +241,55 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "obj",
-                "batch_size": 36
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "obj",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
             },
-            "num_emitters": 15
-        }, {
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2rd",
-                "batch_size": 36
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2rd",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
             },
-            "num_emitters": 15
-        }, {
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2imp",
-                "batch_size": 36
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2imp",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
             },
-            "num_emitters": 15
-        }, {
-            "class": IsoLineEmitter,
-            "kwargs": {
-                "iso_sigma": 0.01,
-                "line_sigma": 0.1,
-                "batch_size": 36
+            {
+                "class": IsoLineEmitter,
+                "kwargs": {
+                    "iso_sigma": 0.01,
+                    "line_sigma": 0.1,
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
             },
-            "num_emitters": 15
-        }],
+        ],
         "scheduler": {
             "class": BanditScheduler,
             "kwargs": {
                 "num_active": 15,
-                "reselect": "terminated"
-            }
-        }
+                "reselect": "terminated",
+            },
+        },
     },
-
     ## CMA-ME ##
     "cma_me_imp": {
         "is_dqd": False,
@@ -282,24 +297,26 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2imp",
-                "selection_rule": "filter",
-                "restart_rule": "no_improvement",
-                "batch_size": 36
-            },
-            "num_emitters": 15
-        }],
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2imp",
+                    "selection_rule": "filter",
+                    "restart_rule": "no_improvement",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "cma_me_imp_mu": {
         "is_dqd": False,
@@ -307,24 +324,26 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2imp",
-                "selection_rule": "mu",
-                "restart_rule": "no_improvement",
-                "batch_size": 36
-            },
-            "num_emitters": 15
-        }],
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2imp",
+                    "selection_rule": "mu",
+                    "restart_rule": "no_improvement",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "cma_me_basic": {
         "is_dqd": False,
@@ -332,24 +351,26 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2imp",
-                "selection_rule": "mu",
-                "restart_rule": "basic",
-                "batch_size": 36
-            },
-            "num_emitters": 15
-        }],
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2imp",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "cma_me_rd": {
         "is_dqd": False,
@@ -357,24 +378,26 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2rd",
-                "selection_rule": "filter",
-                "restart_rule": "no_improvement",
-                "batch_size": 36
-            },
-            "num_emitters": 15
-        }],
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2rd",
+                    "selection_rule": "filter",
+                    "restart_rule": "no_improvement",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "cma_me_rd_mu": {
         "is_dqd": False,
@@ -382,24 +405,26 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2rd",
-                "selection_rule": "mu",
-                "restart_rule": "no_improvement",
-                "batch_size": 36
-            },
-            "num_emitters": 15
-        }],
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2rd",
+                    "selection_rule": "mu",
+                    "restart_rule": "no_improvement",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "cma_me_opt": {
         "is_dqd": False,
@@ -407,24 +432,26 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "obj",
-                "selection_rule": "mu",
-                "restart_rule": "basic",
-                "batch_size": 36
-            },
-            "num_emitters": 15
-        }],
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "obj",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "cma_me_mixed": {
         "is_dqd": False,
@@ -432,32 +459,34 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2rd",
-                "batch_size": 36
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2rd",
+                    "batch_size": 36,
+                },
+                "num_emitters": 7,
             },
-            "num_emitters": 7
-        }, {
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2imp",
-                "batch_size": 36
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2imp",
+                    "batch_size": 36,
+                },
+                "num_emitters": 8,
             },
-            "num_emitters": 8
-        }],
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
-
     ## DQD algorithms ##
     "og_map_elites": {
         "is_dqd": True,
@@ -465,26 +494,28 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": GradientOperatorEmitter,
-            "kwargs": {
-                "sigma": 0.5,
-                "sigma_g": 0.5,
-                "measure_gradients": False,
-                "normalize_grad": False,
-                # Divide by 2 since half of the solutions are used in ask_dqd(),
-                # and the other half are used in ask().
-                "batch_size": 540 // 2
-            },
-            "num_emitters": 1
-        }],
+        "emitters": [
+            {
+                "class": GradientOperatorEmitter,
+                "kwargs": {
+                    "sigma": 0.5,
+                    "sigma_g": 0.5,
+                    "measure_gradients": False,
+                    "normalize_grad": False,
+                    # Divide by 2 since half of the solutions are used in ask_dqd(),
+                    # and the other half are used in ask().
+                    "batch_size": 540 // 2,
+                },
+                "num_emitters": 1,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "omg_mega": {
         "is_dqd": True,
@@ -492,26 +523,28 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": GradientOperatorEmitter,
-            "kwargs": {
-                "sigma": 0.0,
-                "sigma_g": 10.0,
-                "measure_gradients": True,
-                "normalize_grad": True,
-                # Divide by 2 since half of the solutions are used in ask_dqd(),
-                # and the other half are used in ask().
-                "batch_size": 540 // 2
-            },
-            "num_emitters": 1
-        }],
+        "emitters": [
+            {
+                "class": GradientOperatorEmitter,
+                "kwargs": {
+                    "sigma": 0.0,
+                    "sigma_g": 10.0,
+                    "measure_gradients": True,
+                    "normalize_grad": True,
+                    # Divide by 2 since half of the solutions are used in ask_dqd(),
+                    # and the other half are used in ask().
+                    "batch_size": 540 // 2,
+                },
+                "num_emitters": 1,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "cma_mega": {
         "is_dqd": True,
@@ -519,26 +552,28 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": GradientArborescenceEmitter,
-            "kwargs": {
-                "sigma0": 10.0,
-                "lr": 1.0,
-                "grad_opt": "gradient_ascent",
-                "selection_rule": "mu",
-                # Subtract 1 since one solution is used in ask_dqd() and the
-                # rest are used in ask().
-                "batch_size": 36 - 1
-            },
-            "num_emitters": 15
-        }],
+        "emitters": [
+            {
+                "class": GradientArborescenceEmitter,
+                "kwargs": {
+                    "sigma0": 10.0,
+                    "lr": 1.0,
+                    "grad_opt": "gradient_ascent",
+                    "selection_rule": "mu",
+                    # Subtract 1 since one solution is used in ask_dqd() and the
+                    # rest are used in ask().
+                    "batch_size": 36 - 1,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "cma_mega_adam": {
         "is_dqd": True,
@@ -546,28 +581,29 @@ CONFIG = {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
+            },
         },
         "result_archive": None,
-        "emitters": [{
-            "class": GradientArborescenceEmitter,
-            "kwargs": {
-                "sigma0": 10.0,
-                "lr": 0.002,
-                "grad_opt": "adam",
-                "selection_rule": "mu",
-                # Subtract 1 since one solution is used in ask_dqd() and the
-                # rest are used in ask().
-                "batch_size": 36 - 1
-            },
-            "num_emitters": 15
-        }],
+        "emitters": [
+            {
+                "class": GradientArborescenceEmitter,
+                "kwargs": {
+                    "sigma0": 10.0,
+                    "lr": 0.002,
+                    "grad_opt": "adam",
+                    "selection_rule": "mu",
+                    # Subtract 1 since one solution is used in ask_dqd() and the
+                    # rest are used in ask().
+                    "batch_size": 36 - 1,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
-
     ## CMA-MAE and CMA-MAEGA ##
     "cma_mae": {
         "is_dqd": False,
@@ -576,30 +612,32 @@ CONFIG = {
             "kwargs": {
                 "dims": (100, 100),
                 "threshold_min": 0,
-                "learning_rate": 0.01
-            }
+                "learning_rate": 0.01,
+            },
         },
         "result_archive": {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "imp",
-                "selection_rule": "mu",
-                "restart_rule": "basic",
-                "batch_size": 36,
             },
-            "num_emitters": 15
-        }],
+        },
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "imp",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "cma_maega": {
         "is_dqd": True,
@@ -608,35 +646,36 @@ CONFIG = {
             "kwargs": {
                 "dims": (100, 100),
                 "threshold_min": 0,
-                "learning_rate": 0.01
-            }
+                "learning_rate": 0.01,
+            },
         },
         "result_archive": {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
-        },
-        "emitters": [{
-            "class": GradientArborescenceEmitter,
-            "kwargs": {
-                "sigma0": 10.0,
-                "lr": 1.0,
-                "ranker": "imp",
-                "grad_opt": "gradient_ascent",
-                "restart_rule": "basic",
-                # Subtract 1 since one solution is used in ask_dqd() and the
-                # rest are used in ask().
-                "batch_size": 36 - 1,
             },
-            "num_emitters": 15
-        }],
+        },
+        "emitters": [
+            {
+                "class": GradientArborescenceEmitter,
+                "kwargs": {
+                    "sigma0": 10.0,
+                    "lr": 1.0,
+                    "ranker": "imp",
+                    "grad_opt": "gradient_ascent",
+                    "restart_rule": "basic",
+                    # Subtract 1 since one solution is used in ask_dqd() and the
+                    # rest are used in ask().
+                    "batch_size": 36 - 1,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
-
     ## Novelty Search ##
     "ns_cma": {
         # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
@@ -646,29 +685,31 @@ CONFIG = {
             "kwargs": {
                 "k_neighbors": 15,
                 "novelty_threshold": 0.037 * 512,
-            }
+            },
         },
         "result_archive": {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "nov",
-                "selection_rule": "mu",
-                "restart_rule": "basic",
-                "batch_size": 36
             },
-            "num_emitters": 15
-        }],
+        },
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "nov",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "nslc_cma_imp": {
         "is_dqd": False,
@@ -679,31 +720,32 @@ CONFIG = {
                 # Note: This is untuned.
                 "novelty_threshold": 0.037 * 100,
                 "local_competition": True,
-            }
+            },
         },
         "result_archive": {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 0.5,
-                "ranker": "2imp",
-                "selection_rule": "filter",
-                "restart_rule": "no_improvement",
-                "batch_size": 36,
             },
-            "num_emitters": 15
-        }],
+        },
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "2imp",
+                    "selection_rule": "filter",
+                    "restart_rule": "no_improvement",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
-
     ## DDS ##
     "dds": {
         # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
@@ -717,29 +759,31 @@ CONFIG = {
                 "buffer_size": 10000,
                 "density_method": "kde",
                 "bandwidth": 25.6,
-            }
+            },
         },
         "result_archive": {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 1.5,
-                "ranker": "density",
-                "selection_rule": "mu",
-                "restart_rule": "basic",
-                "batch_size": 36
             },
-            "num_emitters": 15
-        }],
+        },
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 1.5,
+                    "ranker": "density",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
     "dds_kde_sklearn": {
         # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
@@ -758,30 +802,32 @@ CONFIG = {
                 "bandwidth": 25.6,
                 "sklearn_kwargs": {
                     "kernel": "gaussian",
-                }
-            }
+                },
+            },
         },
         "result_archive": {
             "class": GridArchive,
             "kwargs": {
                 "dims": (100, 100),
-            }
-        },
-        "emitters": [{
-            "class": EvolutionStrategyEmitter,
-            "kwargs": {
-                "sigma0": 1.5,
-                "ranker": "density",
-                "selection_rule": "mu",
-                "restart_rule": "basic",
-                "batch_size": 36
             },
-            "num_emitters": 15
-        }],
+        },
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 1.5,
+                    "ranker": "density",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
         "scheduler": {
             "class": Scheduler,
-            "kwargs": {}
-        }
+            "kwargs": {},
+        },
     },
 }
 
@@ -806,7 +852,7 @@ def sphere(solutions):
 
     # Normalize the objective to the range [0, 100] where 100 is optimal.
     best_obj = 0.0
-    worst_obj = (-5.12 - sphere_shift)**2 * dim
+    worst_obj = (-5.12 - sphere_shift) ** 2 * dim
     raw_obj = np.sum(np.square(solutions - sphere_shift), axis=1)
     objectives = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
 
@@ -819,8 +865,8 @@ def sphere(solutions):
     clipped[clip_mask] = 5.12 / clipped[clip_mask]
     measures = np.concatenate(
         (
-            np.sum(clipped[:, :dim // 2], axis=1, keepdims=True),
-            np.sum(clipped[:, dim // 2:], axis=1, keepdims=True),
+            np.sum(clipped[:, : dim // 2], axis=1, keepdims=True),
+            np.sum(clipped[:, dim // 2 :], axis=1, keepdims=True),
         ),
         axis=1,
     )
@@ -902,9 +948,9 @@ def create_scheduler(config, algorithm, seed=None):
 
     # Usually, emitters take in the archive. However, it may sometimes be
     # necessary to take in the result_archive, such as in DDS.
-    archive_for_emitter = (result_archive
-                           if config.get("pass_result_archive_to_emitters") else
-                           archive)
+    archive_for_emitter = (
+        result_archive if config.get("pass_result_archive_to_emitters") else archive
+    )
 
     # Create emitters. Each emitter needs a different seed so that they do not
     # all do the same thing, hence we create an rng here to generate seeds. The
@@ -919,7 +965,8 @@ def create_scheduler(config, algorithm, seed=None):
                 x0=initial_sol,
                 **e["kwargs"],
                 seed=s,
-            ) for s in seed_sequence.spawn(e["num_emitters"])
+            )
+            for s in seed_sequence.spawn(e["num_emitters"])
         ]
 
     # Create Scheduler
@@ -930,8 +977,10 @@ def create_scheduler(config, algorithm, seed=None):
         **config["scheduler"]["kwargs"],
     )
 
-    print(f"Create {scheduler.__class__.__name__} for {algorithm} "
-          f"using solution dim {solution_dim} and {len(emitters)} emitters.")
+    print(
+        f"Create {scheduler.__class__.__name__} for {algorithm} "
+        f"using solution dim {solution_dim} and {len(emitters)} emitters."
+    )
     return scheduler
 
 
@@ -954,19 +1003,22 @@ def save_heatmap(archive, heatmap_path):
         plt.savefig(heatmap_path)
     else:
         raise NotImplementedError(
-            "This script currently does not plot heatmaps for this archive.")
+            "This script currently does not plot heatmaps for this archive."
+        )
     plt.close(plt.gcf())
 
 
-def sphere_main(algorithm,
-                dim=100,
-                itrs=10000,
-                grid_dims=None,
-                learning_rate=None,
-                es=None,
-                outdir="sphere_output",
-                log_freq=250,
-                seed=None):
+def sphere_main(
+    algorithm,
+    dim=100,
+    itrs=10000,
+    grid_dims=None,
+    learning_rate=None,
+    es=None,
+    outdir="sphere_output",
+    log_freq=250,
+    seed=None,
+):
     """Demo on the Sphere function.
 
     Args:
@@ -1032,8 +1084,7 @@ def sphere_main(algorithm,
 
         if is_dqd:
             solutions = scheduler.ask_dqd()
-            (objectives, objective_grads, measures,
-             measure_grads) = sphere(solutions)
+            (objectives, objective_grads, measures, measure_grads) = sphere(solutions)
             objective_grads = np.expand_dims(objective_grads, axis=1)
             jacobians = np.concatenate((objective_grads, measure_grads), axis=1)
             scheduler.tell_dqd(objectives, measures, jacobians)
@@ -1048,21 +1099,21 @@ def sphere_main(algorithm,
         if itr % log_freq == 0 or final_itr:
             if final_itr:
                 result_archive.data(return_type="pandas").to_csv(
-                    outdir / f"{name}_archive.csv")
+                    outdir / f"{name}_archive.csv"
+                )
 
             # Record and display metrics.
             metrics["QD Score"]["x"].append(itr)
             metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
             metrics["Archive Coverage"]["x"].append(itr)
-            metrics["Archive Coverage"]["y"].append(
-                result_archive.stats.coverage)
+            metrics["Archive Coverage"]["y"].append(result_archive.stats.coverage)
             tqdm.tqdm.write(
                 f"Iteration {itr} | Archive Coverage: "
                 f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
-                f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
+                f"QD Score: {metrics['QD Score']['y'][-1]:.3f}"
+            )
 
-            save_heatmap(result_archive,
-                         str(outdir / f"{name}_heatmap_{itr:05d}.png"))
+            save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{itr:05d}.png"))
 
     # Plot metrics.
     print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")
@@ -1070,12 +1121,11 @@ def sphere_main(algorithm,
         plt.plot(values["x"], values["y"])
         plt.title(metric)
         plt.xlabel("Iteration")
-        plt.savefig(
-            str(outdir / f"{name}_{metric.lower().replace(' ', '_')}.png"))
+        plt.savefig(str(outdir / f"{name}_{metric.lower().replace(' ', '_')}.png"))
         plt.clf()
     with (outdir / f"{name}_metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     fire.Fire(sphere_main)

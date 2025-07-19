@@ -10,6 +10,7 @@ References:
 - https://doughellmann.com/posts/defining-custom-roles-in-sphinx/
 - https://www.sphinx-doc.org/en/master/development/tutorials/helloworld.html
 """
+
 from docutils import nodes, utils
 from docutils.parsers.rst.roles import set_classes
 
@@ -29,27 +30,23 @@ def make_link_node(rawtext, app, link_type, slug, options):
         if not base:
             raise AttributeError
     except AttributeError as e:
-        raise ValueError(
-            "github_repo_url configuration value is not set") from e
+        raise ValueError("github_repo_url configuration value is not set") from e
 
-    slash = '/' if base[-1] != '/' else ''
+    slash = "/" if base[-1] != "/" else ""
     ref = f"{base}{slash}{link_type}/{slug}/"
     set_classes(options)
-    node = nodes.reference(rawtext,
-                           f"#{utils.unescape(slug)}",
-                           refuri=ref,
-                           **options)
+    node = nodes.reference(rawtext, f"#{utils.unescape(slug)}", refuri=ref, **options)
     return node
 
 
 def github_link_role(
-        name,
-        rawtext,
-        text,
-        lineno,
-        inliner,
-        options=None,
-        content=(),  # pylint: disable = unused-argument
+    name,
+    rawtext,
+    text,
+    lineno,
+    inliner,
+    options=None,
+    content=(),  # pylint: disable = unused-argument
 ):
     """Link to a GitHub issue or pull request.
 
@@ -75,7 +72,8 @@ def github_link_role(
         msg = inliner.reporter.error(
             "GitHub issue number must be a number greater than or equal to 1; "
             f"'{text}' is invalid.",
-            line=lineno)
+            line=lineno,
+        )
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
 

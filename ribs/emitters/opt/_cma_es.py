@@ -3,6 +3,7 @@
 Adapted from Nikolaus Hansen's pycma:
 https://github.com/CMA-ES/pycma/blob/master/cma/purecma.py
 """
+
 import warnings
 
 import numba as nb
@@ -11,7 +12,10 @@ from threadpoolctl import threadpool_limits
 
 from ribs._utils import readonly
 from ribs.emitters.opt._evolution_strategy_base import (
-    BOUNDS_SAMPLING_THRESHOLD, BOUNDS_WARNING, EvolutionStrategyBase)
+    BOUNDS_SAMPLING_THRESHOLD,
+    BOUNDS_WARNING,
+    EvolutionStrategyBase,
+)
 
 
 class DecompMatrix:
@@ -66,10 +70,10 @@ class DecompMatrix:
         self.eigenvalues = np.abs(self.eigenvalues)
         self.eigenvalues = self.eigenvalues.real.astype(self.dtype)
         self.eigenbasis = self.eigenbasis.real.astype(self.dtype)
-        self.condition_number = (np.max(self.eigenvalues) /
-                                 np.min(self.eigenvalues))
-        self.invsqrt = (self.eigenbasis *
-                        (1 / np.sqrt(self.eigenvalues))) @ self.eigenbasis.T
+        self.condition_number = np.max(self.eigenvalues) / np.min(self.eigenvalues)
+        self.invsqrt = (
+            self.eigenbasis * (1 / np.sqrt(self.eigenvalues))
+        ) @ self.eigenbasis.T
 
         # Force symmetry.
         self.invsqrt = np.maximum(self.invsqrt, self.invsqrt.T)
@@ -99,16 +103,18 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     """
 
     def __init__(  # pylint: disable = super-init-not-called
-            self,
-            sigma0,
-            solution_dim,
-            batch_size=None,
-            seed=None,
-            dtype=np.float64,
-            lower_bounds=-np.inf,
-            upper_bounds=np.inf):
-        self.batch_size = (4 + int(3 * np.log(solution_dim))
-                           if batch_size is None else batch_size)
+        self,
+        sigma0,
+        solution_dim,
+        batch_size=None,
+        seed=None,
+        dtype=np.float64,
+        lower_bounds=-np.inf,
+        upper_bounds=np.inf,
+    ):
+        self.batch_size = (
+            4 + int(3 * np.log(solution_dim)) if batch_size is None else batch_size
+        )
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
@@ -124,8 +130,13 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         # Calculate gap between covariance matrix updates.
         num_parents = self.batch_size // 2
         *_, c1, cmu = self._calc_strat_params(num_parents)
-        self.lazy_gap_evals = (0.5 * self.solution_dim * self.batch_size *
-                               (c1 + cmu)**-1 / self.solution_dim**2)
+        self.lazy_gap_evals = (
+            0.5
+            * self.solution_dim
+            * self.batch_size
+            * (c1 + cmu) ** -1
+            / self.solution_dim**2
+        )
 
         # Strategy-specific params -> initialized in reset().
         self.current_eval = None
@@ -159,22 +170,24 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
 
         # Fitness is too flat (only applies if there are at least 2 parents).
         # NOTE: We use norm here because we may have multiple ranking values.
-        if (len(ranking_values) >= 2 and
-                np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12):
+        if (
+            len(ranking_values) >= 2
+            and np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12
+        ):
             return True
 
         return False
 
     @staticmethod
     @nb.jit(nopython=True)
-    def _transform_and_check_sol(unscaled_params, transform_mat, mean,
-                                 lower_bounds, upper_bounds):
+    def _transform_and_check_sol(
+        unscaled_params, transform_mat, mean, lower_bounds, upper_bounds
+    ):
         """Numba helper for transforming parameters to the solution space.
 
         Numba is important here since we may be resampling multiple times.
         """
-        solutions = ((transform_mat @ unscaled_params.T).T +
-                     np.expand_dims(mean, axis=0))
+        solutions = (transform_mat @ unscaled_params.T).T + np.expand_dims(mean, axis=0)
         out_of_bounds = np.logical_or(
             solutions < np.expand_dims(lower_bounds, axis=0),
             solutions > np.expand_dims(upper_bounds, axis=0),
@@ -188,8 +201,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         if batch_size is None:
             batch_size = self.batch_size
 
-        self._solutions = np.empty((batch_size, self.solution_dim),
-                                   dtype=self.dtype)
+        self._solutions = np.empty((batch_size, self.solution_dim), dtype=self.dtype)
         self.cov.update_eigensystem(self.current_eval, self.lazy_gap_evals)
         transform_mat = self.cov.eigenbasis * np.sqrt(self.cov.eigenvalues)
 
@@ -204,8 +216,12 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
                 (len(remaining_indices), self.solution_dim),
             ).astype(self.dtype)
             new_solutions, out_of_bounds = self._transform_and_check_sol(
-                unscaled_params, transform_mat, self.mean, self.lower_bounds,
-                self.upper_bounds)
+                unscaled_params,
+                transform_mat,
+                self.mean,
+                self.lower_bounds,
+                self.upper_bounds,
+            )
             self._solutions[remaining_indices] = new_solutions
 
             # Find indices in remaining_indices that are still out of bounds
@@ -223,22 +239,22 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     def _calc_strat_params(self, num_parents):
         """Calculates weights, mueff, and learning rates for CMA-ES."""
         # Create fresh weights for the number of parents found.
-        weights = (np.log(num_parents + 0.5) -
-                   np.log(np.arange(1, num_parents + 1)))
+        weights = np.log(num_parents + 0.5) - np.log(np.arange(1, num_parents + 1))
         total_weights = np.sum(weights)
         weights = weights / total_weights
         # Note: Since `weights` changes on the line above, np.sum(weights)
         # is NOT the same as total_weights.
-        mueff = np.sum(weights)**2 / np.sum(weights**2)
+        mueff = np.sum(weights) ** 2 / np.sum(weights**2)
 
         # Dynamically update these strategy-specific parameters.
-        cc = ((4 + mueff / self.solution_dim) /
-              (self.solution_dim + 4 + 2 * mueff / self.solution_dim))
+        cc = (4 + mueff / self.solution_dim) / (
+            self.solution_dim + 4 + 2 * mueff / self.solution_dim
+        )
         cs = (mueff + 2) / (self.solution_dim + mueff + 5)
-        c1 = 2 / ((self.solution_dim + 1.3)**2 + mueff)
+        c1 = 2 / ((self.solution_dim + 1.3) ** 2 + mueff)
         cmu = min(
             1 - c1,
-            2 * (mueff - 2 + 1 / mueff) / ((self.solution_dim + 2)**2 + mueff),
+            2 * (mueff - 2 + 1 / mueff) / ((self.solution_dim + 2) ** 2 + mueff),
         )
         return weights, mueff, cc, cs, c1, cmu
 
@@ -247,8 +263,11 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     def _calc_cov_update(cov, c1a, cmu, c1, pc, sigma, rank_mu_update, weights):
         """Calculates covariance matrix update."""
         rank_one_update = c1 * np.outer(pc, pc)
-        return (cov * (1 - c1a - cmu * np.sum(weights)) + rank_one_update * c1 +
-                rank_mu_update * cmu / (sigma**2))
+        return (
+            cov * (1 - c1a - cmu * np.sum(weights))
+            + rank_one_update * c1
+            + rank_mu_update * cmu / (sigma**2)
+        )
 
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
@@ -263,10 +282,15 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
 
         weights, mueff, cc, cs, c1, cmu = self._calc_strat_params(num_parents)
 
-        damps = (1 + 2 * max(
-            0,
-            np.sqrt((mueff - 1) / (self.solution_dim + 1)) - 1,
-        ) + cs)
+        damps = (
+            1
+            + 2
+            * max(
+                0,
+                np.sqrt((mueff - 1) / (self.solution_dim + 1)) - 1,
+            )
+            + cs
+        )
 
         # Recombination of the new mean.
         old_mean = self.mean
@@ -275,15 +299,16 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         # Update the evolution path.
         y = self.mean - old_mean
         z = np.matmul(self.cov.invsqrt, y)
-        self.ps = ((1 - cs) * self.ps +
-                   (np.sqrt(cs * (2 - cs) * mueff) / self.sigma) * z)
-        left = (np.sum(np.square(self.ps)) / self.solution_dim /
-                (1 - (1 - cs)**(2 * self.current_eval / self.batch_size)))
-        right = 2 + 4. / (self.solution_dim + 1)
+        self.ps = (1 - cs) * self.ps + (np.sqrt(cs * (2 - cs) * mueff) / self.sigma) * z
+        left = (
+            np.sum(np.square(self.ps))
+            / self.solution_dim
+            / (1 - (1 - cs) ** (2 * self.current_eval / self.batch_size))
+        )
+        right = 2 + 4.0 / (self.solution_dim + 1)
         hsig = 1 if left < right else 0
 
-        self.pc = ((1 - cc) * self.pc + hsig * np.sqrt(cc *
-                                                       (2 - cc) * mueff) * y)
+        self.pc = (1 - cc) * self.pc + hsig * np.sqrt(cc * (2 - cc) * mueff) * y
 
         # Adapt the covariance matrix.
         ys = parents - np.expand_dims(old_mean, axis=0)
@@ -292,12 +317,10 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         # and taking a weighted sum of the outer products.
         rank_mu_update = np.einsum("ki,kj", weighted_ys, ys)
         c1a = c1 * (1 - (1 - hsig**2) * cc * (2 - cc))
-        self.cov.cov = self._calc_cov_update(self.cov.cov, c1a, cmu, c1,
-                                             self.pc, self.sigma,
-                                             rank_mu_update, weights)
+        self.cov.cov = self._calc_cov_update(
+            self.cov.cov, c1a, cmu, c1, self.pc, self.sigma, rank_mu_update, weights
+        )
 
         # Update sigma.
         cn, sum_square_ps = cs / damps, np.sum(np.square(self.ps))
-        self.sigma *= np.exp(
-            min(1,
-                cn * (sum_square_ps / self.solution_dim - 1) / 2))
+        self.sigma *= np.exp(min(1, cn * (sum_square_ps / self.solution_dim - 1) / 2))
