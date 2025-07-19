@@ -1,10 +1,16 @@
 """Contains the ProximityArchive."""
+
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import cKDTree
 
-from ribs._utils import (check_batch_shape, check_finite, check_shape,
-                         validate_batch, validate_single)
+from ribs._utils import (
+    check_batch_shape,
+    check_finite,
+    check_shape,
+    validate_batch,
+    validate_single,
+)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
@@ -148,8 +154,10 @@ class ProximityArchive(ArchiveBase):
         extra_fields = extra_fields or {}
         reserved_fields = {"solution", "objective", "measures", "index"}
         if reserved_fields & extra_fields.keys():
-            raise ValueError("The following names are not allowed in "
-                             f"extra_fields: {reserved_fields}")
+            raise ValueError(
+                "The following names are not allowed in "
+                f"extra_fields: {reserved_fields}"
+            )
         if initial_capacity < 1:
             raise ValueError("initial_capacity must be at least 1.")
         dtype = parse_dtype(dtype)
@@ -167,14 +175,14 @@ class ProximityArchive(ArchiveBase):
         self._k_neighbors = int(k_neighbors)
         self._novelty_threshold = self.dtypes["measures"](novelty_threshold)
         self._local_competition = local_competition
-        self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
-                                ckdtree_kwargs.copy())
+        self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
         self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
 
         # Set up k-D tree with current measures in the archive. Updated on
         # add().
-        self._cur_kd_tree = cKDTree(self._store.data("measures"),
-                                    **self._ckdtree_kwargs)
+        self._cur_kd_tree = cKDTree(
+            self._store.data("measures"), **self._ckdtree_kwargs
+        )
 
         # Set up statistics -- objective_sum is the sum of all objective values
         # in the archive; it is useful for computing qd_score and obj_mean.
@@ -278,8 +286,10 @@ class ProximityArchive(ArchiveBase):
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
-        if (self._stats.obj_max is None or
-                new_best_elite["objective"] > self._stats.obj_max):
+        if (
+            self._stats.obj_max is None
+            or new_best_elite["objective"] > self._stats.obj_max
+        ):
             self._best_elite = new_best_elite
             new_obj_max = new_best_elite["objective"]
         else:
@@ -287,8 +297,9 @@ class ProximityArchive(ArchiveBase):
 
         self._objective_sum = new_objective_sum
         new_qd_score = (
-            self._objective_sum -
-            self.dtypes["objective"](len(self)) * self._qd_score_offset)
+            self._objective_sum
+            - self.dtypes["objective"](len(self)) * self._qd_score_offset
+        )
         self._stats = ArchiveStats(
             num_elites=len(self),
             coverage=self.dtypes["objective"](len(self) / self.cells),
@@ -330,7 +341,8 @@ class ProximityArchive(ArchiveBase):
                 "There were no solutions in the archive. "
                 "`ProximityArchive.index_of` computes the nearest "
                 "neighbor to the input measures, so there must be at least one "
-                "solution present in the archive.")
+                "solution present in the archive."
+            )
 
         _, indices = self._cur_kd_tree.query(measures)
         return indices.astype(np.int32)
@@ -386,13 +398,12 @@ class ProximityArchive(ArchiveBase):
         if self.empty:
             # Set default values for novelty and local competition when archive
             # is empty.
-            novelty = np.full(batch_size,
-                              self.novelty_threshold,
-                              dtype=self.dtypes["measures"])
+            novelty = np.full(
+                batch_size, self.novelty_threshold, dtype=self.dtypes["measures"]
+            )
 
             if use_local_competition:
-                local_competition_scores = np.zeros(len(novelty),
-                                                    dtype=np.int32)
+                local_competition_scores = np.zeros(len(novelty), dtype=np.int32)
         else:
             # Compute nearest neighbors.
             k_neighbors = min(len(self), self.k_neighbors)
@@ -410,7 +421,8 @@ class ProximityArchive(ArchiveBase):
                 # these indices are occupied since they are indices of solutions
                 # in the archive.
                 neighbor_objectives = self._store.retrieve(
-                    indices.ravel(), "objective")[1]
+                    indices.ravel(), "objective"
+                )[1]
                 neighbor_objectives = neighbor_objectives.reshape(indices.shape)
 
                 # Local competition is the number of neighbors who have a lower
@@ -437,7 +449,7 @@ class ProximityArchive(ArchiveBase):
         we obtain the final multiplier by raising to a power of 2.
         """
         if new_size > self.capacity:
-            multiplier = 2**int(np.ceil(np.log2(new_size / self.capacity)))
+            multiplier = 2 ** int(np.ceil(np.log2(new_size / self.capacity)))
             self._store.resize(multiplier * self.capacity)
 
     def add(self, solution, objective, measures, **fields):
@@ -534,11 +546,12 @@ class ProximityArchive(ArchiveBase):
         """
         if objective is None:
             if self.local_competition:
-                raise ValueError("If local competition is turned on, objective "
-                                 "must be passed in to add().")
+                raise ValueError(
+                    "If local competition is turned on, objective "
+                    "must be passed in to add()."
+                )
             else:
-                objective = np.zeros(len(solution),
-                                     dtype=self.dtypes["objective"])
+                objective = np.zeros(len(solution), dtype=self.dtypes["objective"])
 
         data = validate_batch(
             self,
@@ -584,8 +597,9 @@ class ProximityArchive(ArchiveBase):
                 self._stats_update(objective_sum, best_index)
 
                 # Make a new tree with the updated solutions.
-                self._cur_kd_tree = cKDTree(self._store.data("measures"),
-                                            **self._ckdtree_kwargs)
+                self._cur_kd_tree = cKDTree(
+                    self._store.data("measures"), **self._ckdtree_kwargs
+                )
 
             return add_info
 
@@ -615,8 +629,11 @@ class ProximityArchive(ArchiveBase):
             # that were not novel enough have the potential to replace their
             # nearest neighbors in the archive.
             data = {name: arr[not_novel_enough] for name, arr in data.items()}
-            indices = (self.index_of(data["measures"]) if n_not_novel_enough > 0
-                       else np.array([], dtype=np.int32))
+            indices = (
+                self.index_of(data["measures"])
+                if n_not_novel_enough > 0
+                else np.array([], dtype=np.int32)
+            )
 
             # All entries are occupied since these solutions were not novel, and
             # their index from `index_of` is the index of their nearest
@@ -633,11 +650,9 @@ class ProximityArchive(ArchiveBase):
             add_info["status"][novel_enough] = 2
             # Sets to 1 if improves over the neighbor.
             add_info["status"][not_novel_enough] = improve_existing
-            add_info["value"] = np.empty(batch_size,
-                                         dtype=self.dtypes["objective"])
+            add_info["value"] = np.empty(batch_size, dtype=self.dtypes["objective"])
             add_info["value"][novel_enough] = novel_data["objective"]
-            add_info["value"][not_novel_enough] = \
-                    data["objective"] - cur_objective
+            add_info["value"][not_novel_enough] = data["objective"] - cur_objective
             add_info["novelty"] = novelty
             add_info["local_competition"] = local_competition
 
@@ -646,9 +661,7 @@ class ProximityArchive(ArchiveBase):
                 # neighbors -- at this point, there are still conflicts in the
                 # insertions, e.g., multiple solutions can map to index 0.
                 indices = indices[improve_existing]
-                data = {
-                    name: arr[improve_existing] for name, arr in data.items()
-                }
+                data = {name: arr[improve_existing] for name, arr in data.items()}
                 cur_objective = cur_objective[improve_existing]
 
                 # Retrieve indices of solutions that _should_ be inserted into
@@ -668,10 +681,9 @@ class ProximityArchive(ArchiveBase):
                 # so the first elite will be inserted if there is a tie. See
                 # their default numpy implementation for more info:
                 # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-                archive_argmax = aggregate(indices,
-                                           data["objective"],
-                                           func="argmax",
-                                           fill_value=-1)
+                archive_argmax = aggregate(
+                    indices, data["objective"], func="argmax", fill_value=-1
+                )
                 should_insert = archive_argmax[archive_argmax != -1]
 
                 # Select only solutions that will be inserted into the archive.
@@ -680,8 +692,7 @@ class ProximityArchive(ArchiveBase):
                 cur_objective = cur_objective[should_insert]
 
             if np.any(improve_existing) or n_novel_enough > 0:
-                combined_indices = np.concatenate((indices, novel_indices),
-                                                  axis=0)
+                combined_indices = np.concatenate((indices, novel_indices), axis=0)
                 combined_data = {
                     name: np.concatenate((data[name], novel_data[name]), axis=0)
                     for name in data
@@ -691,16 +702,18 @@ class ProximityArchive(ArchiveBase):
                 self._store.add(combined_indices, combined_data)
 
                 # Compute statistics.
-                objective_sum = (self._objective_sum +
-                                 np.sum(novel_data["objective"]) +
-                                 np.sum(data["objective"] - cur_objective))
-                best_index = combined_indices[np.argmax(
-                    combined_data["objective"])]
+                objective_sum = (
+                    self._objective_sum
+                    + np.sum(novel_data["objective"])
+                    + np.sum(data["objective"] - cur_objective)
+                )
+                best_index = combined_indices[np.argmax(combined_data["objective"])]
                 self._stats_update(objective_sum, best_index)
 
                 # Make a new tree with the updated solutions.
-                self._cur_kd_tree = cKDTree(self._store.data("measures"),
-                                            **self._ckdtree_kwargs)
+                self._cur_kd_tree = cKDTree(
+                    self._store.data("measures"), **self._ckdtree_kwargs
+                )
 
             return add_info
 
@@ -728,8 +741,10 @@ class ProximityArchive(ArchiveBase):
         """
         if objective is None:
             if self.local_competition:
-                raise ValueError("If local competition is turned on, objective "
-                                 "must be passed in to add_single().")
+                raise ValueError(
+                    "If local competition is turned on, objective "
+                    "must be passed in to add_single()."
+                )
             else:
                 objective = 0.0
 

@@ -35,6 +35,7 @@ This subpackage also contains several utilities associated with the archives.
     ribs.archives.cqd_score
     ribs.archives.CQDScoreResult
 """
+
 from ribs.archives._add_status import AddStatus
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_data_frame import ArchiveDataFrame

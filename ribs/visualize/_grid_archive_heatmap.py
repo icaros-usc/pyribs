@@ -1,27 +1,35 @@
 """Provides grid_archive_heatmap."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ribs.visualize._utils import (archive_heatmap_1d, retrieve_cmap, set_cbar,
-                                   validate_df, validate_heatmap_visual_args)
+from ribs.visualize._utils import (
+    archive_heatmap_1d,
+    retrieve_cmap,
+    set_cbar,
+    validate_df,
+    validate_heatmap_visual_args,
+)
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
 
 
-def grid_archive_heatmap(archive,
-                         ax=None,
-                         *,
-                         df=None,
-                         transpose_measures=False,
-                         cmap="magma",
-                         aspect=None,
-                         vmin=None,
-                         vmax=None,
-                         cbar="auto",
-                         cbar_kwargs=None,
-                         rasterized=False,
-                         pcm_kwargs=None):
+def grid_archive_heatmap(
+    archive,
+    ax=None,
+    *,
+    df=None,
+    transpose_measures=False,
+    cmap="magma",
+    aspect=None,
+    vmin=None,
+    vmax=None,
+    cbar="auto",
+    cbar_kwargs=None,
+    rasterized=False,
+    pcm_kwargs=None,
+):
     """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 1D or 2D
     measure space.
 
@@ -134,8 +142,12 @@ def grid_archive_heatmap(archive,
         ValueError: The archive's measure dimension must be 1D or 2D.
     """
     validate_heatmap_visual_args(
-        aspect, cbar, archive.measure_dim, [1, 2],
-        "Heatmap can only be plotted for a 1D or 2D GridArchive")
+        aspect,
+        cbar,
+        archive.measure_dim,
+        [1, 2],
+        "Heatmap can only be plotted for a 1D or 2D GridArchive",
+    )
 
     if aspect is None:
         # Handles default aspects for different dims.
@@ -207,18 +219,26 @@ def grid_archive_heatmap(archive,
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        vmin = (np.min(objective_batch)
-                if vmin is None and len(objective_batch) > 0 else vmin)
-        vmax = (np.max(objective_batch)
-                if vmax is None and len(objective_batch) > 0 else vmax)
-        t = ax.pcolormesh(x_bounds,
-                          y_bounds,
-                          colors,
-                          cmap=cmap,
-                          vmin=vmin,
-                          vmax=vmax,
-                          rasterized=rasterized,
-                          **pcm_kwargs)
+        vmin = (
+            np.min(objective_batch)
+            if vmin is None and len(objective_batch) > 0
+            else vmin
+        )
+        vmax = (
+            np.max(objective_batch)
+            if vmax is None and len(objective_batch) > 0
+            else vmax
+        )
+        t = ax.pcolormesh(
+            x_bounds,
+            y_bounds,
+            colors,
+            cmap=cmap,
+            vmin=vmin,
+            vmax=vmax,
+            rasterized=rasterized,
+            **pcm_kwargs,
+        )
 
         # Create color bar.
         set_cbar(t, ax, cbar, cbar_kwargs)

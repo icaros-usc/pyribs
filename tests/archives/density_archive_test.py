@@ -1,4 +1,5 @@
 """Tests for the DensityArchive."""
+
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
@@ -41,8 +42,7 @@ def test_initial_density(density_method):
 
 
 @pytest.mark.parametrize("density_method", ["kde", "kde_sklearn"])
-@pytest.mark.parametrize("dtype", [np.float64, np.float32],
-                         ids=["float64", "float32"])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
 def test_density_dtype(density_method, dtype):
     archive = DensityArchive(
         measure_dim=2,
@@ -80,7 +80,10 @@ def test_density_after_add(density_method):
     # np.sqrt(2) away from [0, 0]. The density for all points is the same for
     # all points since all are equally far from [0, 0], and the final density is
     # the average, so it is the same as just one point.
-    expected_density = (np.exp(-0.5 * np.square(
-        (np.sqrt(2) / bandwidth))) / np.sqrt(2 * np.pi) / bandwidth)
+    expected_density = (
+        np.exp(-0.5 * np.square((np.sqrt(2) / bandwidth)))
+        / np.sqrt(2 * np.pi)
+        / bandwidth
+    )
 
     assert_allclose(density, np.array([expected_density]))

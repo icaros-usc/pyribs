@@ -1,4 +1,5 @@
 """Test for SlidingBoundariesArchive."""
+
 import numpy as np
 import pytest
 
@@ -41,16 +42,21 @@ def test_attributes_correctly_constructed(data):
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
 def test_add_to_archive(data, use_list):
     if use_list:
-        add_info = data.archive.add_single(list(data.solution), data.objective,
-                                           list(data.measures))
+        add_info = data.archive.add_single(
+            list(data.solution), data.objective, list(data.measures)
+        )
     else:
-        add_info = data.archive.add_single(data.solution, data.objective,
-                                           data.measures)
+        add_info = data.archive.add_single(data.solution, data.objective, data.measures)
 
     assert add_info["status"] == AddStatus.NEW
     assert np.isclose(add_info["value"], data.objective)
-    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
-                         data.measures, data.grid_indices)
+    assert_archive_elite(
+        data.archive_with_elite,
+        data.solution,
+        data.objective,
+        data.measures,
+        data.grid_indices,
+    )
 
 
 def test_add_and_overwrite(data):
@@ -58,12 +64,18 @@ def test_add_and_overwrite(data):
     arbitrary_sol = data.solution + 1
     high_objective = data.objective + 1.0
 
-    add_info = data.archive_with_elite.add_single(arbitrary_sol, high_objective,
-                                                  data.measures)
+    add_info = data.archive_with_elite.add_single(
+        arbitrary_sol, high_objective, data.measures
+    )
     assert add_info["status"] == AddStatus.IMPROVE_EXISTING
     assert np.isclose(add_info["value"], high_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, arbitrary_sol, high_objective,
-                         data.measures, data.grid_indices)
+    assert_archive_elite(
+        data.archive_with_elite,
+        arbitrary_sol,
+        high_objective,
+        data.measures,
+        data.grid_indices,
+    )
 
 
 def test_add_without_overwrite(data):
@@ -71,22 +83,30 @@ def test_add_without_overwrite(data):
     arbitrary_sol = data.solution + 1
     low_objective = data.objective - 1.0
 
-    add_info = data.archive_with_elite.add_single(arbitrary_sol, low_objective,
-                                                  data.measures)
+    add_info = data.archive_with_elite.add_single(
+        arbitrary_sol, low_objective, data.measures
+    )
     assert add_info["status"] == AddStatus.NOT_ADDED
     assert np.isclose(add_info["value"], low_objective - data.objective)
-    assert_archive_elite(data.archive_with_elite, data.solution, data.objective,
-                         data.measures, data.grid_indices)
+    assert_archive_elite(
+        data.archive_with_elite,
+        data.solution,
+        data.objective,
+        data.measures,
+        data.grid_indices,
+    )
 
 
 def test_initial_remap():
     """Checks that boundaries and entries are correct after initial remap."""
     # remap_frequency is (10 + 1) * (20 + 1)
-    archive = SlidingBoundariesArchive(solution_dim=2,
-                                       dims=[10, 20],
-                                       ranges=[(-1, 1), (-2, 2)],
-                                       remap_frequency=231,
-                                       buffer_capacity=1000)
+    archive = SlidingBoundariesArchive(
+        solution_dim=2,
+        dims=[10, 20],
+        ranges=[(-1, 1), (-2, 2)],
+        remap_frequency=231,
+        buffer_capacity=1000,
+    )
 
     # Buffer should have 230 entries after this (since the first entry is
     # skipped).
@@ -134,25 +154,28 @@ def test_add_to_archive_with_full_buffer(data):
 
     # After adding the same elite multiple times, there should only be one
     # elite, and it should be at (0, 0).
-    assert_archive_elite(data.archive, data.solution, data.objective,
-                         data.measures, (0, 0))
+    assert_archive_elite(
+        data.archive, data.solution, data.objective, data.measures, (0, 0)
+    )
 
     # Even if another elite is added, it should still go to the same cell
     # because the measures are clipped to the boundaries before being
     # inserted.
-    data.archive.add_single(2 * data.solution, 2 * data.objective,
-                            2 * data.measures)
-    assert_archive_elite(data.archive, 2 * data.solution, 2 * data.objective,
-                         2 * data.measures, (0, 0))
+    data.archive.add_single(2 * data.solution, 2 * data.objective, 2 * data.measures)
+    assert_archive_elite(
+        data.archive, 2 * data.solution, 2 * data.objective, 2 * data.measures, (0, 0)
+    )
 
 
 def test_adds_solutions_from_old_archive():
     """Solutions from previous archive should be inserted during remap."""
-    archive = SlidingBoundariesArchive(solution_dim=2,
-                                       dims=[10, 20],
-                                       ranges=[(-1, 1), (-2, 2)],
-                                       remap_frequency=231,
-                                       buffer_capacity=231)
+    archive = SlidingBoundariesArchive(
+        solution_dim=2,
+        dims=[10, 20],
+        ranges=[(-1, 1), (-2, 2)],
+        remap_frequency=231,
+        buffer_capacity=231,
+    )
 
     for x in np.linspace(-1, 1, 11):
         for y in np.linspace(-2, 2, 21):

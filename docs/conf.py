@@ -136,8 +136,11 @@ html_context = sphinx_material.get_html_context()
 html_theme = "sphinx_material"
 html_logo = "_static/imgs/icon.svg"
 html_favicon = "_static/imgs/favicon.ico"
-html_title = (f"pyribs (stable - v{version})" if READTHEDOCS_VERSION == "stable"
-              else f"pyribs ({READTHEDOCS_VERSION})")
+html_title = (
+    f"pyribs (stable - v{version})"
+    if READTHEDOCS_VERSION == "stable"
+    else f"pyribs ({READTHEDOCS_VERSION})"
+)
 
 # Tell Jinja2 templates the build is running on Read the Docs
 if os.environ.get("READTHEDOCS", "") == "True":
@@ -146,8 +149,9 @@ if os.environ.get("READTHEDOCS", "") == "True":
 # material theme options (see theme.conf for more information)
 html_theme_options = {
     "nav_title": "pyribs",
-    "base_url": (f"https://docs.pyribs.org/{READTHEDOCS_LANGUAGE}/"
-                 f"{READTHEDOCS_VERSION}/"),
+    "base_url": (
+        f"https://docs.pyribs.org/{READTHEDOCS_LANGUAGE}/{READTHEDOCS_VERSION}/"
+    ),
     "repo_url": github_repo_url,
     "repo_name": "pyribs",
     "google_analytics_account": None,
@@ -161,14 +165,11 @@ html_theme_options = {
     "color_accent": "purple",
     "touch_icon": None,
     "master_doc": False,
-    "nav_links": [{
-        "href": "index",
-        "internal": True,
-        "title": "Home"
-    },],
+    "nav_links": [
+        {"href": "index", "internal": True, "title": "Home"},
+    ],
     "heroes": {
-        "index":
-            "A bare-bones Python library for quality diversity optimization."
+        "index": "A bare-bones Python library for quality diversity optimization."
     },
     "version_dropdown": True,
     "version_json": None,
@@ -204,15 +205,12 @@ latex_elements = {
     # The paper size ("letterpaper" or "a4paper").
     #
     # "papersize": "letterpaper",
-
     # The font size ("10pt", "11pt" or "12pt").
     #
     # "pointsize": "10pt",
-
     # Additional stuff for the LaTeX preamble.
     #
     # "preamble": "",
-
     # Latex figure (float) alignment
     #
     # "figure_align": "htbp",
@@ -237,8 +235,15 @@ man_pages = [(master_doc, "ribs", "pyribs Documentation", [author], 1)]
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, "ribs", "pyribs Documentation", author, "ribs",
-     "One line description of project.", "Miscellaneous"),
+    (
+        master_doc,
+        "ribs",
+        "pyribs Documentation",
+        author,
+        "ribs",
+        "One line description of project.",
+        "Miscellaneous",
+    ),
 ]
 
 # -- Extension config -------------------------------------------------

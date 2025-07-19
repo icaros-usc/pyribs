@@ -1,4 +1,5 @@
 """Utilities specific to archives."""
+
 import numpy as np
 
 
@@ -10,17 +11,23 @@ def parse_dtype(dtype):
     here: https://numpy.org/doc/stable/reference/arrays.dtypes.html
     """
     if isinstance(dtype, dict):
-        if ("solution" not in dtype or "objective" not in dtype or
-                "measures" not in dtype):
-            raise ValueError("If dtype is a dict, it must contain 'solution',"
-                             "'objective', and 'measures' keys.")
+        if (
+            "solution" not in dtype
+            or "objective" not in dtype
+            or "measures" not in dtype
+        ):
+            raise ValueError(
+                "If dtype is a dict, it must contain 'solution',"
+                "'objective', and 'measures' keys."
+            )
         dtype_dict = dtype
     else:
         if dtype not in ["f", np.float32, "d", np.float64]:
             raise ValueError(
-                'Unsupported dtype. Must be np.float32 or np.float64, or dict '
+                "Unsupported dtype. Must be np.float32 or np.float64, or dict "
                 '{"solution": <dtype>, "objective": <dtype>, '
-                '"measures": <dtype>}')
+                '"measures": <dtype>}'
+            )
         dtype_dict = {
             "solution": dtype,
             "objective": dtype,
@@ -42,12 +49,12 @@ def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
             "threshold_min was set without setting learning_rate. "
             "Please note that threshold_min is only used in CMA-MAE; "
             "it is not intended to be used for only filtering archive "
-            "solutions. To run CMA-MAE, please also set learning_rate.")
+            "solutions. To run CMA-MAE, please also set learning_rate."
+        )
     if learning_rate is None:
         learning_rate = 1.0  # Default value.
     if threshold_min == -np.inf and learning_rate != 1.0:
-        raise ValueError("threshold_min can only be -np.inf if "
-                         "learning_rate is 1.0")
+        raise ValueError("threshold_min can only be -np.inf if learning_rate is 1.0")
     learning_rate = dtype(learning_rate)
     threshold_min = dtype(threshold_min)
     return learning_rate, threshold_min

@@ -1,4 +1,5 @@
 """Provides the Scheduler."""
+
 import warnings
 from collections import defaultdict
 
@@ -53,22 +54,17 @@ class Scheduler:
             (``result_archive`` should not be passed in in this case).
     """
 
-    def __init__(self,
-                 archive,
-                 emitters,
-                 result_archive=None,
-                 *,
-                 add_mode="batch"):
+    def __init__(self, archive, emitters, result_archive=None, *, add_mode="batch"):
         try:
             if len(emitters) == 0:
-                raise ValueError(
-                    "Pass in at least one emitter to the scheduler.")
+                raise ValueError("Pass in at least one emitter to the scheduler.")
         except TypeError as exception:
             # TypeError will be raised by len(). We avoid directly checking if
             # `emitters` is an instance of list since we do not want to be too
             # restrictive.
             raise TypeError(
-                "`emitters` must be a list of emitter objects.") from exception
+                "`emitters` must be a list of emitter objects."
+            ) from exception
 
         emitter_ids = set(id(e) for e in emitters)
         if len(emitter_ids) != len(emitters):
@@ -77,7 +73,8 @@ class Scheduler:
                 "had the same id). If emitters were created with something "
                 "like [EmitterClass(...)] * n, instead use "
                 "[EmitterClass(...) for _ in range(n)] so that all emitters "
-                "are unique instances.")
+                "are unique instances."
+            )
 
         self._solution_dim = emitters[0].solution_dim
 
@@ -86,17 +83,21 @@ class Scheduler:
                 raise ValueError(
                     "All emitters must have the same solution dim, but "
                     f"Emitter {idx} has dimension {emitter.solution_dim}, "
-                    f"while Emitter 0 has dimension {self._solution_dim}")
+                    f"while Emitter 0 has dimension {self._solution_dim}"
+                )
 
         if add_mode not in ["single", "batch"]:
-            raise ValueError("add_mode must either be 'batch' or 'single', but "
-                             f"it was '{add_mode}'")
+            raise ValueError(
+                f"add_mode must either be 'batch' or 'single', but it was '{add_mode}'"
+            )
 
         if archive is result_archive:
-            raise ValueError("`archive` has same id as `result_archive` -- "
-                             "Note that `Scheduler.result_archive` already "
-                             "defaults to be the same as `archive` if you pass "
-                             "`result_archive=None`")
+            raise ValueError(
+                "`archive` has same id as `result_archive` -- "
+                "Note that `Scheduler.result_archive` already "
+                "defaults to be the same as `archive` if you pass "
+                "`result_archive=None`"
+            )
 
         self._archive = archive
         self._emitters = emitters
@@ -131,8 +132,7 @@ class Scheduler:
         If `result_archive` was not passed to the constructor, this property is
         the same as :attr:`archive`.
         """
-        return (self._archive
-                if self._result_archive is None else self._result_archive)
+        return self._archive if self._result_archive is None else self._result_archive
 
     def ask_dqd(self):
         """Generates a batch of solutions by calling ask_dqd() on all DQD
@@ -149,8 +149,9 @@ class Scheduler:
                 ask method.
         """
         if self._last_called in ["ask", "ask_dqd"]:
-            raise RuntimeError("ask_dqd cannot be called immediately after " +
-                               self._last_called)
+            raise RuntimeError(
+                "ask_dqd cannot be called immediately after " + self._last_called
+            )
         self._last_called = "ask_dqd"
 
         self._cur_solutions = []
@@ -161,9 +162,11 @@ class Scheduler:
             self._num_emitted[i] = len(emitter_sols)
 
         # In case the emitters didn't return any solutions.
-        self._cur_solutions = np.concatenate(
-            self._cur_solutions, axis=0) if self._cur_solutions else np.empty(
-                (0, self._solution_dim))
+        self._cur_solutions = (
+            np.concatenate(self._cur_solutions, axis=0)
+            if self._cur_solutions
+            else np.empty((0, self._solution_dim))
+        )
         return self._cur_solutions
 
     def ask(self):
@@ -180,8 +183,9 @@ class Scheduler:
                 ask method.
         """
         if self._last_called in ["ask", "ask_dqd"]:
-            raise RuntimeError("ask cannot be called immediately after " +
-                               self._last_called)
+            raise RuntimeError(
+                "ask cannot be called immediately after " + self._last_called
+            )
         self._last_called = "ask"
 
         self._cur_solutions = []
@@ -192,9 +196,11 @@ class Scheduler:
             self._num_emitted[i] = len(emitter_sols)
 
         # In case the emitters didn't return any solutions.
-        self._cur_solutions = np.concatenate(
-            self._cur_solutions, axis=0) if self._cur_solutions else np.empty(
-                (0, self._solution_dim))
+        self._cur_solutions = (
+            np.concatenate(self._cur_solutions, axis=0)
+            if self._cur_solutions
+            else np.empty((0, self._solution_dim))
+        )
         return self._cur_solutions
 
     def _check_length(self, name, arr):
@@ -204,7 +210,8 @@ class Scheduler:
             raise ValueError(
                 f"{name} should have length {len(self._cur_solutions)} "
                 "(this is the number of solutions output by ask()) but "
-                f"has length {len(arr)}")
+                f"has length {len(arr)}"
+            )
 
     def _validate_tell_data(self, data):
         """Preprocesses data passed into tell methods."""
@@ -228,7 +235,8 @@ class Scheduler:
         "after adding solutions. "
         "One potential cause is that `threshold_min` is too high in this "
         "archive, i.e., solutions are not being inserted because their "
-        "objective value does not exceed `threshold_min`.")
+        "objective value does not exceed `threshold_min`."
+    )
 
     def _add_to_archives(self, data):
         """Adds solutions to both the regular archive and the result archive."""
@@ -251,8 +259,7 @@ class Scheduler:
 
             for i in range(len(self._cur_solutions)):
                 single_data = {
-                    name: None if arr is None else arr[i]
-                    for name, arr in data.items()
+                    name: None if arr is None else arr[i] for name, arr in data.items()
                 }
                 single_info = self.archive.add_single(**single_data)
                 for name, val in single_info.items():
@@ -303,15 +310,16 @@ class Scheduler:
             ValueError: One of the inputs has the wrong shape.
         """
         if self._last_called != "ask_dqd":
-            raise RuntimeError(
-                "tell_dqd() was called without calling ask_dqd().")
+            raise RuntimeError("tell_dqd() was called without calling ask_dqd().")
         self._last_called = "tell_dqd"
 
-        data = self._validate_tell_data({
-            "objective": objective,
-            "measures": measures,
-            **fields,
-        })
+        data = self._validate_tell_data(
+            {
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            }
+        )
 
         jacobian = np.asarray(jacobian)
         self._check_length("jacobian", jacobian)
@@ -328,9 +336,7 @@ class Scheduler:
                     for name, arr in data.items()
                 },
                 jacobian=jacobian[pos:end],
-                add_info={
-                    name: arr[pos:end] for name, arr in add_info.items()
-                },
+                add_info={name: arr[pos:end] for name, arr in add_info.items()},
             )
             pos = end
 
@@ -361,11 +367,13 @@ class Scheduler:
             raise RuntimeError("tell() was called without calling ask().")
         self._last_called = "tell"
 
-        data = self._validate_tell_data({
-            "objective": objective,
-            "measures": measures,
-            **fields,
-        })
+        data = self._validate_tell_data(
+            {
+                "objective": objective,
+                "measures": measures,
+                **fields,
+            }
+        )
 
         add_info = self._add_to_archives(data)
 
@@ -378,8 +386,6 @@ class Scheduler:
                     name: None if arr is None else arr[pos:end]
                     for name, arr in data.items()
                 },
-                add_info={
-                    name: arr[pos:end] for name, arr in add_info.items()
-                },
+                add_info={name: arr[pos:end] for name, arr in add_info.items()},
             )
             pos = end

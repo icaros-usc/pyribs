@@ -1,4 +1,5 @@
 """Tests for ArrayStore."""
+
 import numpy as np
 import pytest
 
@@ -28,8 +29,9 @@ def test_init_invalid_field():
         )
 
 
-@pytest.mark.parametrize("shape", [((), (2,), (10,)), ((), 2, 10)],
-                         ids=["tuple", "int"])
+@pytest.mark.parametrize(
+    "shape", [((), (2,), (10,)), ((), 2, 10)], ids=["tuple", "int"]
+)
 def test_init(shape):
     capacity = 10
     store = ArrayStore(
@@ -48,14 +50,16 @@ def test_init(shape):
     assert store.field_desc == {
         "objective": (shape[0], np.float32),
         "measures": (
-            (shape[1],) if isinstance(shape[1], int) else shape[1], np.float32),
+            (shape[1],) if isinstance(shape[1], int) else shape[1],
+            np.float32,
+        ),
         "solution": (
-            (shape[2],) if isinstance(shape[2], int) else shape[2], np.float32),
+            (shape[2],) if isinstance(shape[2], int) else shape[2],
+            np.float32,
+        ),
     }
     assert store.field_list == ["objective", "measures", "solution"]
-    assert store.field_list_with_index == [
-        "objective", "measures", "solution", "index"
-    ]
+    assert store.field_list_with_index == ["objective", "measures", "solution", "index"]
     assert store.dtypes == {
         "objective": np.float32,
         "measures": np.float32,
@@ -243,8 +247,7 @@ def test_retrieve(return_type, store):
 
     if return_type == "dict":
         assert np.all(occupied == [True, True])
-        assert data.keys() == set(
-            ["objective", "measures", "solution", "index"])
+        assert data.keys() == set(["objective", "measures", "solution", "index"])
         assert np.all(data["objective"] == [2.0, 1.0])
         assert np.all(data["measures"] == [[3.0, 4.0], [1.0, 2.0]])
         assert np.all(data["solution"] == [np.ones(10), np.zeros(10)])
@@ -258,22 +261,25 @@ def test_retrieve(return_type, store):
         assert np.all(index == [5, 3])
     elif return_type == "pandas":
         df = data
-        assert (df.columns == [
-            "objective",
-            "measures_0",
-            "measures_1",
-            "solution_0",
-            "solution_1",
-            "solution_2",
-            "solution_3",
-            "solution_4",
-            "solution_5",
-            "solution_6",
-            "solution_7",
-            "solution_8",
-            "solution_9",
-            "index",
-        ]).all()
+        assert (
+            df.columns
+            == [
+                "objective",
+                "measures_0",
+                "measures_1",
+                "solution_0",
+                "solution_1",
+                "solution_2",
+                "solution_3",
+                "solution_4",
+                "solution_5",
+                "solution_6",
+                "solution_7",
+                "solution_8",
+                "solution_9",
+                "index",
+            ]
+        ).all()
         assert (df.dtypes == [np.float32] * 13 + [np.int32]).all()
         assert len(df) == 2
         assert np.all(occupied == [True, True])
@@ -296,9 +302,9 @@ def test_retrieve_custom_fields(store, return_type):
         },
     )
 
-    occupied, data = store.retrieve([5, 3],
-                                    fields=["index", "objective"],
-                                    return_type=return_type)
+    occupied, data = store.retrieve(
+        [5, 3], fields=["index", "objective"], return_type=return_type
+    )
 
     if return_type == "dict":
         assert np.all(occupied == [True, True])
@@ -311,10 +317,13 @@ def test_retrieve_custom_fields(store, return_type):
         assert np.all(data[1] == [2.0, 1.0])
     elif return_type == "pandas":
         df = data
-        assert (df.columns == [
-            "index",
-            "objective",
-        ]).all()
+        assert (
+            df.columns
+            == [
+                "index",
+                "objective",
+            ]
+        ).all()
         assert (df.dtypes == [np.int32, np.float32]).all()
         assert len(df) == 2
         assert np.all(occupied == [True, True])
@@ -356,8 +365,9 @@ def test_resize_to_double_capacity(store):
     store.resize(store.capacity * 2)
 
     assert len(store) == 2
-    assert np.all(store.occupied ==
-                  [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    assert np.all(
+        store.occupied == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    )
     assert np.all(np.sort(store.occupied_list) == [3, 5])
 
     # Spot-check the fields.
@@ -376,16 +386,18 @@ def test_as_raw_dict(store):
 
     d = store.as_raw_dict()
 
-    assert d.keys() == set([
-        "props.capacity",
-        "props.occupied",
-        "props.n_occupied",
-        "props.occupied_list",
-        "props.updates",
-        "fields.objective",
-        "fields.measures",
-        "fields.solution",
-    ])
+    assert d.keys() == set(
+        [
+            "props.capacity",
+            "props.occupied",
+            "props.n_occupied",
+            "props.occupied_list",
+            "props.updates",
+            "fields.objective",
+            "fields.measures",
+            "fields.solution",
+        ]
+    )
     assert d["props.capacity"] == 10
     assert np.all(d["props.occupied"] == [0, 0, 0, 1, 0, 1, 0, 0, 0, 0])
     assert d["props.n_occupied"] == 2
@@ -448,13 +460,16 @@ def test_data(store):
     row1 = np.concatenate(([2.0, 3.0, 4.0], np.ones(10), [5]))
 
     flat = [
-        np.concatenate(([d["objective"][i]], d["measures"][i], d["solution"][i],
-                        [d["index"][i]])) for i in range(2)
+        np.concatenate(
+            ([d["objective"][i]], d["measures"][i], d["solution"][i], [d["index"][i]])
+        )
+        for i in range(2)
     ]
 
     # Either permutation.
-    assert (((flat[0] == row0).all() and (flat[1] == row1).all()) or
-            ((flat[0] == row1).all() and (flat[1] == row0).all()))
+    assert ((flat[0] == row0).all() and (flat[1] == row1).all()) or (
+        (flat[0] == row1).all() and (flat[1] == row0).all()
+    )
 
 
 def test_data_with_tuple_return_type(store):
@@ -475,14 +490,12 @@ def test_data_with_tuple_return_type(store):
     row0 = np.concatenate(([1.0, 1.0, 2.0], np.zeros(10), [3]))
     row1 = np.concatenate(([2.0, 3.0, 4.0], np.ones(10), [5]))
 
-    flat = [
-        np.concatenate(([d[0][i]], d[1][i], d[2][i], [d[3][i]]))
-        for i in range(2)
-    ]
+    flat = [np.concatenate(([d[0][i]], d[1][i], d[2][i], [d[3][i]])) for i in range(2)]
 
     # Either permutation.
-    assert (((flat[0] == row0).all() and (flat[1] == row1).all()) or
-            ((flat[0] == row1).all() and (flat[1] == row0).all()))
+    assert ((flat[0] == row0).all() and (flat[1] == row1).all()) or (
+        (flat[0] == row1).all() and (flat[1] == row0).all()
+    )
 
 
 def test_data_with_pandas_return_type(store):
@@ -497,22 +510,25 @@ def test_data_with_pandas_return_type(store):
 
     df = store.data(return_type="pandas")
 
-    assert (df.columns == [
-        "objective",
-        "measures_0",
-        "measures_1",
-        "solution_0",
-        "solution_1",
-        "solution_2",
-        "solution_3",
-        "solution_4",
-        "solution_5",
-        "solution_6",
-        "solution_7",
-        "solution_8",
-        "solution_9",
-        "index",
-    ]).all()
+    assert (
+        df.columns
+        == [
+            "objective",
+            "measures_0",
+            "measures_1",
+            "solution_0",
+            "solution_1",
+            "solution_2",
+            "solution_3",
+            "solution_4",
+            "solution_5",
+            "solution_6",
+            "solution_7",
+            "solution_8",
+            "solution_9",
+            "index",
+        ]
+    ).all()
     assert (df.dtypes == [np.float32] * 13 + [np.int32]).all()
     assert len(df) == 2
 
@@ -520,8 +536,9 @@ def test_data_with_pandas_return_type(store):
     row1 = np.concatenate(([2.0, 3.0, 4.0], np.ones(10), [5]))
 
     # Either permutation.
-    assert (((df.loc[0] == row0).all() and (df.loc[1] == row1).all()) or
-            ((df.loc[0] == row1).all() and (df.loc[1] == row0).all()))
+    assert ((df.loc[0] == row0).all() and (df.loc[1] == row1).all()) or (
+        (df.loc[0] == row1).all() and (df.loc[1] == row0).all()
+    )
 
 
 def test_iteration(store):
@@ -535,8 +552,7 @@ def test_iteration(store):
     )
 
     for entry in store:
-        assert entry.keys() == set(
-            ["objective", "measures", "solution", "index"])
+        assert entry.keys() == set(["objective", "measures", "solution", "index"])
         assert np.all(entry["objective"] == [1.0])
         assert np.all(entry["measures"] == [[1.0, 2.0]])
         assert np.all(entry["solution"] == [np.zeros(10)])

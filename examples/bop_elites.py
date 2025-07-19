@@ -43,7 +43,7 @@ def sphere(solutions):
 
     # Normalize the objective to the range [0, 100] where 100 is optimal.
     best_obj = 0.0
-    worst_obj = (-5.12 - sphere_shift)**2 * dim
+    worst_obj = (-5.12 - sphere_shift) ** 2 * dim
     raw_obj = np.sum(np.square(solutions - sphere_shift), axis=1)
     objectives = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
 
@@ -56,8 +56,8 @@ def sphere(solutions):
     clipped[clip_mask] = 5.12 / clipped[clip_mask]
     measures = np.concatenate(
         (
-            np.sum(clipped[:, :dim // 2], axis=1, keepdims=True),
-            np.sum(clipped[:, dim // 2:], axis=1, keepdims=True),
+            np.sum(clipped[:, : dim // 2], axis=1, keepdims=True),
+            np.sum(clipped[:, dim // 2 :], axis=1, keepdims=True),
         ),
         axis=1,
     )
@@ -150,14 +150,15 @@ def main(
             initial_solutions=initial_solutions,
             batch_size=batch_size,
             seed=seed + i,
-        ) for i in range(num_emitters)
+        )
+        for i in range(num_emitters)
     ]
 
     # Scheduler for managing multiple emitters (in what order we ask them for
     # solutions etc.).
-    scheduler = BayesianOptimizationScheduler(main_archive,
-                                              emitters,
-                                              result_archive=passive_archive)
+    scheduler = BayesianOptimizationScheduler(
+        main_archive, emitters, result_archive=passive_archive
+    )
 
     metrics = {
         "QD Score": {
@@ -185,21 +186,23 @@ def main(
         if i % log_every == 0 or final_itr:
             if final_itr:
                 scheduler.result_archive.data(return_type="pandas").to_csv(
-                    logdir / "final_archive.csv")
+                    logdir / "final_archive.csv"
+                )
 
             metrics["QD Score"]["x"].append(i)
-            metrics["QD Score"]["y"].append(
-                scheduler.result_archive.stats.qd_score)
+            metrics["QD Score"]["y"].append(scheduler.result_archive.stats.qd_score)
             metrics["Archive Coverage"]["x"].append(i)
             metrics["Archive Coverage"]["y"].append(
-                scheduler.result_archive.stats.coverage)
+                scheduler.result_archive.stats.coverage
+            )
             metrics["Itr. Time"]["x"].append(i)
             metrics["Itr. Time"]["y"].append(time.time() - itr_start_time)
 
             tqdm.tqdm.write(
                 f"Iteration {i} | Archive Coverage: "
                 f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
-                f"QD Score: {metrics['QD Score']['y'][-1]:.3f}")
+                f"QD Score: {metrics['QD Score']['y'][-1]:.3f}"
+            )
 
             save_heatmap(
                 scheduler.result_archive,

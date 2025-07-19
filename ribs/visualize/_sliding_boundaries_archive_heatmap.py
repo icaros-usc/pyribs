@@ -1,28 +1,35 @@
 """Provides sliding_boundaries_archive_heatmap."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ribs.visualize._utils import (retrieve_cmap, set_cbar, validate_df,
-                                   validate_heatmap_visual_args)
+from ribs.visualize._utils import (
+    retrieve_cmap,
+    set_cbar,
+    validate_df,
+    validate_heatmap_visual_args,
+)
 
 # Matplotlib functions tend to have a ton of args.
 # pylint: disable = too-many-arguments
 
 
-def sliding_boundaries_archive_heatmap(archive,
-                                       ax=None,
-                                       *,
-                                       df=None,
-                                       transpose_measures=False,
-                                       cmap="magma",
-                                       aspect="auto",
-                                       ms=None,
-                                       boundary_lw=0,
-                                       vmin=None,
-                                       vmax=None,
-                                       cbar="auto",
-                                       cbar_kwargs=None,
-                                       rasterized=False):
+def sliding_boundaries_archive_heatmap(
+    archive,
+    ax=None,
+    *,
+    df=None,
+    transpose_measures=False,
+    cmap="magma",
+    aspect="auto",
+    ms=None,
+    boundary_lw=0,
+    vmin=None,
+    vmax=None,
+    cbar="auto",
+    cbar_kwargs=None,
+    rasterized=False,
+):
     """Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with
     2D measure space.
 
@@ -110,8 +117,12 @@ def sliding_boundaries_archive_heatmap(archive,
         ValueError: The archive is not 2D.
     """
     validate_heatmap_visual_args(
-        aspect, cbar, archive.measure_dim, [2],
-        "Heatmap can only be plotted for a 2D SlidingBoundariesArchive")
+        aspect,
+        cbar,
+        archive.measure_dim,
+        [2],
+        "Heatmap can only be plotted for a 2D SlidingBoundariesArchive",
+    )
 
     if aspect is None:
         aspect = "auto"
@@ -150,34 +161,42 @@ def sliding_boundaries_archive_heatmap(archive,
     ax.set_aspect(aspect)
 
     # Create the plot.
-    vmin = (np.min(objective_batch)
-            if vmin is None and len(objective_batch) > 0 else vmin)
-    vmax = (np.max(objective_batch)
-            if vmax is None and len(objective_batch) > 0 else vmax)
-    t = ax.scatter(x,
-                   y,
-                   s=ms,
-                   c=objective_batch,
-                   cmap=cmap,
-                   vmin=vmin,
-                   vmax=vmax,
-                   rasterized=rasterized)
+    vmin = (
+        np.min(objective_batch) if vmin is None and len(objective_batch) > 0 else vmin
+    )
+    vmax = (
+        np.max(objective_batch) if vmax is None and len(objective_batch) > 0 else vmax
+    )
+    t = ax.scatter(
+        x,
+        y,
+        s=ms,
+        c=objective_batch,
+        cmap=cmap,
+        vmin=vmin,
+        vmax=vmax,
+        rasterized=rasterized,
+    )
     if boundary_lw > 0.0:
         # Careful with bounds here. Lines drawn along the x axis should extend
         # between the y bounds and vice versa -- see
         # https://github.com/icaros-usc/pyribs/issues/270
-        ax.vlines(x_boundary,
-                  lower_bounds[1],
-                  upper_bounds[1],
-                  color='k',
-                  linewidth=boundary_lw,
-                  rasterized=rasterized)
-        ax.hlines(y_boundary,
-                  lower_bounds[0],
-                  upper_bounds[0],
-                  color='k',
-                  linewidth=boundary_lw,
-                  rasterized=rasterized)
+        ax.vlines(
+            x_boundary,
+            lower_bounds[1],
+            upper_bounds[1],
+            color="k",
+            linewidth=boundary_lw,
+            rasterized=rasterized,
+        )
+        ax.hlines(
+            y_boundary,
+            lower_bounds[0],
+            upper_bounds[0],
+            color="k",
+            linewidth=boundary_lw,
+            rasterized=rasterized,
+        )
 
     # Create color bar.
     set_cbar(t, ax, cbar, cbar_kwargs)

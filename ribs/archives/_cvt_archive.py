@@ -1,4 +1,5 @@
 """Contains the CVTArchive."""
+
 import numbers
 
 import numpy as np
@@ -7,13 +8,21 @@ from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
 from scipy.stats.qmc import Halton, Sobol
 from sklearn.cluster import k_means
 
-from ribs._utils import (check_batch_shape, check_finite, check_shape,
-                         validate_batch, validate_single)
+from ribs._utils import (
+    check_batch_shape,
+    check_finite,
+    check_shape,
+    validate_batch,
+    validate_single,
+)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
-from ribs.archives._utils import (fill_sentinel_values, parse_dtype,
-                                  validate_cma_mae_settings)
+from ribs.archives._utils import (
+    fill_sentinel_values,
+    parse_dtype,
+    validate_cma_mae_settings,
+)
 
 
 class CVTArchive(ArchiveBase):
@@ -170,12 +179,12 @@ class CVTArchive(ArchiveBase):
         # Set up the ArrayStore, which is a data structure that stores all the
         # elites' data in arrays sharing a common index.
         extra_fields = extra_fields or {}
-        reserved_fields = {
-            "solution", "objective", "measures", "threshold", "index"
-        }
+        reserved_fields = {"solution", "objective", "measures", "threshold", "index"}
         if reserved_fields & extra_fields.keys():
-            raise ValueError("The following names are not allowed in "
-                             f"extra_fields: {reserved_fields}")
+            raise ValueError(
+                "The following names are not allowed in "
+                f"extra_fields: {reserved_fields}"
+            )
         dtype = parse_dtype(dtype)
         self._store = ArrayStore(
             field_desc={
@@ -196,7 +205,8 @@ class CVTArchive(ArchiveBase):
         self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
-            learning_rate, threshold_min, self.dtypes["threshold"])
+            learning_rate, threshold_min, self.dtypes["threshold"]
+        )
         self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
 
         # Set up statistics -- objective_sum is the sum of all objective values
@@ -208,16 +218,17 @@ class CVTArchive(ArchiveBase):
 
         # Apply default args for k-means. Users can easily override these,
         # particularly if they want higher quality clusters.
-        self._k_means_kwargs = ({} if k_means_kwargs is None else
-                                k_means_kwargs.copy())
+        self._k_means_kwargs = {} if k_means_kwargs is None else k_means_kwargs.copy()
         self._k_means_kwargs.setdefault(
             # Only run one iter to be fast.
             "n_init",
-            1)
+            1,
+        )
         self._k_means_kwargs.setdefault(
             # The default "k-means++" takes very long to init.
             "init",
-            "random")
+            "random",
+        )
         self._k_means_kwargs.setdefault("algorithm", "lloyd")
         self._k_means_kwargs.setdefault("random_state", seed)
 
@@ -231,7 +242,8 @@ class CVTArchive(ArchiveBase):
                         raise ValueError(
                             f"Samples has shape {samples.shape} but must be of "
                             f"shape (n_samples, len(ranges)="
-                            f"{self._measure_dim})")
+                            f"{self._measure_dim})"
+                        )
                     self._samples = samples
                 else:
                     self._samples = self._rng.uniform(
@@ -240,8 +252,9 @@ class CVTArchive(ArchiveBase):
                         size=(samples, self._measure_dim),
                     ).astype(self.dtypes["measures"])
 
-                self._centroids = k_means(self._samples, self.cells,
-                                          **self._k_means_kwargs)[0]
+                self._centroids = k_means(
+                    self._samples, self.cells, **self._k_means_kwargs
+                )[0]
 
                 if self._centroids.shape[0] < self.cells:
                     raise RuntimeError(
@@ -249,51 +262,56 @@ class CVTArchive(ArchiveBase):
                         f"{self._centroids.shape[0]} centroids, but this "
                         f"archive needs {self.cells} cells. This most "
                         "likely happened because there are too few samples "
-                        "and/or too many cells.")
+                        "and/or too many cells."
+                    )
             elif centroid_method == "random":
                 # Generates random centroids.
-                self._centroids = self._rng.uniform(self._lower_bounds,
-                                                    self._upper_bounds,
-                                                    size=(self.cells,
-                                                          self._measure_dim))
+                self._centroids = self._rng.uniform(
+                    self._lower_bounds,
+                    self._upper_bounds,
+                    size=(self.cells, self._measure_dim),
+                )
             elif centroid_method == "sobol":
                 # Generates centroids as a Sobol sequence.
                 sampler = Sobol(d=self._measure_dim, scramble=False)
                 sobol_nums = sampler.random(n=self.cells)
-                self._centroids = (self._lower_bounds + sobol_nums *
-                                   (self._upper_bounds - self._lower_bounds))
+                self._centroids = self._lower_bounds + sobol_nums * (
+                    self._upper_bounds - self._lower_bounds
+                )
             elif centroid_method == "scrambled_sobol":
                 # Generates centroids as a scrambled Sobol sequence.
                 sampler = Sobol(d=self._measure_dim, scramble=True)
                 sobol_nums = sampler.random(n=self.cells)
-                self._centroids = (self._lower_bounds + sobol_nums *
-                                   (self._upper_bounds - self._lower_bounds))
+                self._centroids = self._lower_bounds + sobol_nums * (
+                    self._upper_bounds - self._lower_bounds
+                )
             elif centroid_method == "halton":
                 # Generates centroids with a Halton sequence.
                 sampler = Halton(d=self._measure_dim)
                 halton_nums = sampler.random(n=self.cells)
-                self._centroids = (self._lower_bounds + halton_nums *
-                                   (self._upper_bounds - self._lower_bounds))
+                self._centroids = self._lower_bounds + halton_nums * (
+                    self._upper_bounds - self._lower_bounds
+                )
         else:
             # Validate shape of `custom_centroids` when they are provided.
-            custom_centroids = np.asarray(custom_centroids,
-                                          dtype=self.dtypes["measures"])
+            custom_centroids = np.asarray(
+                custom_centroids, dtype=self.dtypes["measures"]
+            )
             if custom_centroids.shape != (cells, self._measure_dim):
                 raise ValueError(
                     f"custom_centroids has shape {custom_centroids.shape} but "
                     f"must be of shape (cells={cells}, len(ranges)="
-                    f"{self._measure_dim})")
+                    f"{self._measure_dim})"
+                )
             self._centroids = custom_centroids
             self._samples = None
 
         self._use_kd_tree = use_kd_tree
         self._centroid_kd_tree = None
-        self._ckdtree_kwargs = ({} if ckdtree_kwargs is None else
-                                ckdtree_kwargs.copy())
+        self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
         self._chunk_size = chunk_size
         if self._use_kd_tree:
-            self._centroid_kd_tree = cKDTree(self._centroids,
-                                             **self._ckdtree_kwargs)
+            self._centroid_kd_tree = cKDTree(self._centroids, **self._ckdtree_kwargs)
 
     ## Properties inherited from ArchiveBase ##
 
@@ -422,8 +440,10 @@ class CVTArchive(ArchiveBase):
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
-        if (self._stats.obj_max is None or
-                new_best_elite["objective"] > self._stats.obj_max):
+        if (
+            self._stats.obj_max is None
+            or new_best_elite["objective"] > self._stats.obj_max
+        ):
             self._best_elite = new_best_elite
             new_obj_max = new_best_elite["objective"]
         else:
@@ -431,8 +451,9 @@ class CVTArchive(ArchiveBase):
 
         self._objective_sum = new_objective_sum
         new_qd_score = (
-            self._objective_sum -
-            self.dtypes["objective"](len(self)) * self._qd_score_offset)
+            self._objective_sum
+            - self.dtypes["objective"](len(self)) * self._qd_score_offset
+        )
         self._stats = ArchiveStats(
             num_elites=len(self),
             coverage=self.dtypes["objective"](len(self) / self.cells),
@@ -475,12 +496,12 @@ class CVTArchive(ArchiveBase):
         else:
             expanded_measures = np.expand_dims(measures, axis=1)
             # Compute indices chunks at a time
-            if self._chunk_size is not None and \
-                    self._chunk_size < measures.shape[0]:
+            if self._chunk_size is not None and self._chunk_size < measures.shape[0]:
                 indices = []
                 chunks = np.array_split(
                     expanded_measures,
-                    np.ceil(len(expanded_measures) / self._chunk_size))
+                    np.ceil(len(expanded_measures) / self._chunk_size),
+                )
                 for chunk in chunks:
                     distances = chunk - self.centroids
                     distances = np.sum(np.square(distances), axis=2)
@@ -519,8 +540,7 @@ class CVTArchive(ArchiveBase):
     ## Methods for writing to the archive ##
 
     @staticmethod
-    def _compute_thresholds(indices, objective, cur_threshold, learning_rate,
-                            dtype):
+    def _compute_thresholds(indices, objective, cur_threshold, learning_rate, dtype):
         """Computes new thresholds with the CMA-MAE batch threshold update rule.
 
         If entries in `indices` are duplicated, they receive the same threshold.
@@ -535,15 +555,13 @@ class CVTArchive(ArchiveBase):
         #
         # All objective_sizes should be > 0 since we only retrieve counts for
         # indices in `indices`.
-        objective_sizes = aggregate(indices, 1, func="len",
-                                    fill_value=0)[indices]
+        objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]
 
         # Compute the sum of the objectives inserted into each cell -- again, we
         # index with `indices`.
-        objective_sums = aggregate(indices,
-                                   objective,
-                                   func="sum",
-                                   fill_value=np.nan)[indices]
+        objective_sums = aggregate(indices, objective, func="sum", fill_value=np.nan)[
+            indices
+        ]
 
         # Update the threshold with the batch update rule from Fontaine 2023
         # (https://arxiv.org/abs/2205.10752).
@@ -553,9 +571,10 @@ class CVTArchive(ArchiveBase):
         # -np.inf. This is because the case with threshold_min = -np.inf is
         # handled separately since we compute the new threshold based on the max
         # objective in each cell in that case.
-        ratio = dtype(1.0 - learning_rate)**objective_sizes
-        new_threshold = (ratio * cur_threshold +
-                         (objective_sums / objective_sizes) * (1 - ratio))
+        ratio = dtype(1.0 - learning_rate) ** objective_sizes
+        new_threshold = ratio * cur_threshold + (objective_sums / objective_sizes) * (
+            1 - ratio
+        )
 
         return new_threshold
 
@@ -692,9 +711,11 @@ class CVTArchive(ArchiveBase):
         # If threshold_min is -inf, then we want CMA-ME behavior, which computes
         # the improvement value of new solutions w.r.t zero. Otherwise, we
         # compute improvement with respect to threshold_min.
-        cur_threshold[is_new] = (self.dtypes["threshold"](0.0)
-                                 if self.threshold_min == -np.inf else
-                                 self.threshold_min)
+        cur_threshold[is_new] = (
+            self.dtypes["threshold"](0.0)
+            if self.threshold_min == -np.inf
+            else self.threshold_min
+        )
         add_info["value"] = data["objective"] - cur_threshold
 
         # Return early if we cannot insert anything -- continuing throws a
@@ -718,10 +739,13 @@ class CVTArchive(ArchiveBase):
             # (https://arxiv.org/abs/2205.10752). This computation is based on
             # the mean objective of all solutions in the batch that could have
             # been inserted into each cell.
-            new_threshold = self._compute_thresholds(indices, data["objective"],
-                                                     cur_threshold,
-                                                     self.learning_rate,
-                                                     self.dtypes["threshold"])
+            new_threshold = self._compute_thresholds(
+                indices,
+                data["objective"],
+                cur_threshold,
+                self.learning_rate,
+                self.dtypes["threshold"],
+            )
 
         # Retrieve indices of solutions that _should_ be inserted into the
         # archive. Currently, multiple solutions may be inserted at each archive
@@ -738,10 +762,9 @@ class CVTArchive(ArchiveBase):
         # first elite will be inserted if there is a tie. See their default
         # numpy implementation for more info:
         # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-        archive_argmax = aggregate(indices,
-                                   data["objective"],
-                                   func="argmax",
-                                   fill_value=-1)
+        archive_argmax = aggregate(
+            indices, data["objective"], func="argmax", fill_value=-1
+        )
         should_insert = archive_argmax[archive_argmax != -1]
 
         # Select only solutions that will be inserted into the archive.
@@ -756,8 +779,7 @@ class CVTArchive(ArchiveBase):
         cur_objective = cur_data["objective"]
         cur_objective[~cur_occupied] = 0.0
         cur_objective = cur_objective[can_insert][should_insert]
-        objective_sum = (self._objective_sum +
-                         np.sum(data["objective"] - cur_objective))
+        objective_sum = self._objective_sum + np.sum(data["objective"] - cur_objective)
         best_index = indices[np.argmax(data["objective"])]
         self._stats_update(objective_sum, best_index)
 
@@ -827,8 +849,11 @@ class CVTArchive(ArchiveBase):
             # If threshold_min is -inf, then we want CMA-ME behavior, which
             # computes the improvement value with a threshold of zero for new
             # solutions. Otherwise, we will set cur_threshold to threshold_min.
-            cur_threshold = (self.dtypes["threshold"](0.0) if self.threshold_min
-                             == -np.inf else self.threshold_min)
+            cur_threshold = (
+                self.dtypes["threshold"](0.0)
+                if self.threshold_min == -np.inf
+                else self.threshold_min
+            )
 
         # Retrieve candidate objective.
         objective = data["objective"]
@@ -865,19 +890,24 @@ class CVTArchive(ArchiveBase):
 
             # This calculation works in the case where threshold_min is -inf
             # because cur_threshold will be set to 0.0 instead.
-            data["threshold"] = [(cur_threshold * (1.0 - self.learning_rate) +
-                                  objective * self.learning_rate)]
+            data["threshold"] = (
+                cur_threshold * (1.0 - self.learning_rate)
+                + objective * self.learning_rate
+            )
 
             # Insert elite into the store.
-            self._store.add(index[None], {
-                name: np.expand_dims(arr, axis=0) for name, arr in data.items()
-            })
+            self._store.add(
+                index[None],
+                {name: np.expand_dims(arr, axis=0) for name, arr in data.items()},
+            )
 
             # Update stats.
-            cur_objective = (cur_data["objective"][0]
-                             if cur_occupied else self.dtypes["objective"](0.0))
-            self._stats_update(self._objective_sum + objective - cur_objective,
-                               index)
+            cur_objective = (
+                cur_data["objective"][0]
+                if cur_occupied
+                else self.dtypes["objective"](0.0)
+            )
+            self._stats_update(self._objective_sum + objective - cur_objective, index)
 
         # Value is the improvement over the current threshold (can be negative).
         add_info["value"] = objective - cur_threshold

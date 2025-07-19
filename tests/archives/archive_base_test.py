@@ -1,9 +1,15 @@
 """Tests that are common across all archives."""
+
 import numpy as np
 import pytest
 
-from ribs.archives import (CategoricalArchive, CVTArchive, GridArchive,
-                           ProximityArchive, SlidingBoundariesArchive)
+from ribs.archives import (
+    CategoricalArchive,
+    CVTArchive,
+    GridArchive,
+    ProximityArchive,
+    SlidingBoundariesArchive,
+)
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
@@ -21,8 +27,9 @@ MAE_ARCHIVES = (
 
 
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
-@pytest.mark.parametrize("dtype", [("f", np.float32), ("d", np.float64)],
-                         ids=["f", "d"])
+@pytest.mark.parametrize(
+    "dtype", [("f", np.float32), ("d", np.float64)], ids=["f", "d"]
+)
 def test_str_dtype_float(name, dtype):
     str_dtype, np_dtype = dtype
     archive = get_archive_data(name, str_dtype).archive
@@ -61,10 +68,7 @@ def test_dict_dtype():
 
 def test_invalid_dtype():
     with pytest.raises(ValueError):
-        GridArchive(solution_dim=0,
-                    dims=[20, 20],
-                    ranges=[(-1, 1)] * 2,
-                    dtype=np.int32)
+        GridArchive(solution_dim=0, dims=[20, 20], ranges=[(-1, 1)] * 2, dtype=np.int32)
 
 
 def test_invalid_dict_dtype():
@@ -92,8 +96,10 @@ def test_iteration():
         assert np.isclose(elite["solution"], data.solution).all()
         assert np.isclose(elite["objective"], data.objective)
         assert np.isclose(elite["measures"], data.measures).all()
-        assert elite["index"] == data.archive_with_elite.grid_to_int_index(
-            [data.grid_indices])[0]
+        assert (
+            elite["index"]
+            == data.archive_with_elite.grid_to_int_index([data.grid_indices])[0]
+        )
 
 
 def test_add_during_iteration(add_mode):
@@ -103,13 +109,13 @@ def test_add_during_iteration(add_mode):
     with pytest.raises(RuntimeError):
         for _ in data.archive_with_elite:
             if add_mode == "single":
-                data.archive_with_elite.add_single(data.solution,
-                                                   data.objective + 1,
-                                                   data.measures)
+                data.archive_with_elite.add_single(
+                    data.solution, data.objective + 1, data.measures
+                )
             else:
-                data.archive_with_elite.add([data.solution],
-                                            [data.objective + 1],
-                                            [data.measures])
+                data.archive_with_elite.add(
+                    [data.solution], [data.objective + 1], [data.measures]
+                )
 
 
 def test_clear_during_iteration():
@@ -125,13 +131,13 @@ def test_clear_and_add_during_iteration(add_mode):
         for _ in data.archive_with_elite:
             data.archive_with_elite.clear()
             if add_mode == "single":
-                data.archive_with_elite.add_single(data.solution,
-                                                   data.objective + 1,
-                                                   data.measures)
+                data.archive_with_elite.add_single(
+                    data.solution, data.objective + 1, data.measures
+                )
             else:
-                data.archive_with_elite.add([data.solution],
-                                            [data.objective + 1],
-                                            [data.measures])
+                data.archive_with_elite.add(
+                    [data.solution], [data.objective + 1], [data.measures]
+                )
 
 
 #
@@ -139,8 +145,7 @@ def test_clear_and_add_during_iteration(add_mode):
 #
 
 
-@pytest.mark.parametrize("dtype", [np.float64, np.float32],
-                         ids=["float64", "float32"])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
 def test_stats_dtype(dtype):
     data = get_archive_data("GridArchive", dtype=dtype)
     assert isinstance(data.archive_with_elite.stats.num_elites, int)
@@ -153,10 +158,12 @@ def test_stats_dtype(dtype):
 
 @pytest.mark.parametrize("qd_score_offset", [0.0, -1.0])
 def test_stats_multiple_add(add_mode, qd_score_offset):
-    archive = GridArchive(solution_dim=3,
-                          dims=[10, 20],
-                          ranges=[(-1, 1), (-2, 2)],
-                          qd_score_offset=qd_score_offset)
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 20],
+        ranges=[(-1, 1), (-2, 2)],
+        qd_score_offset=qd_score_offset,
+    )
     if add_mode == "single":
         archive.add_single([1, 2, 3], 1.0, [0, 0])
         archive.add_single([1, 2, 3], 2.0, [0.25, 0.25])
@@ -182,16 +189,17 @@ def test_stats_multiple_add(add_mode, qd_score_offset):
 
 @pytest.mark.parametrize("qd_score_offset", [0.0, -1.0])
 def test_stats_add_and_overwrite(add_mode, qd_score_offset):
-    archive = GridArchive(solution_dim=3,
-                          dims=[10, 20],
-                          ranges=[(-1, 1), (-2, 2)],
-                          qd_score_offset=qd_score_offset)
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 20],
+        ranges=[(-1, 1), (-2, 2)],
+        qd_score_offset=qd_score_offset,
+    )
     if add_mode == "single":
         archive.add_single([1, 2, 3], 1.0, [0, 0])
         archive.add_single([1, 2, 3], 2.0, [0.25, 0.25])
         archive.add_single([1, 2, 3], 3.0, [-0.25, -0.25])
-        archive.add_single([1, 2, 3], 5.0,
-                           [0.25, 0.25])  # Overwrites the second add.
+        archive.add_single([1, 2, 3], 5.0, [0.25, 0.25])  # Overwrites the second add.
     else:
         solution_batch = [[1, 2, 3]] * 4
         objective_batch = [1.0, 2.0, 3.0, 5.0]
@@ -212,9 +220,7 @@ def test_stats_add_and_overwrite(add_mode, qd_score_offset):
 
 
 def test_best_elite(add_mode):
-    archive = GridArchive(solution_dim=3,
-                          dims=[10, 20],
-                          ranges=[(-1, 1), (-2, 2)])
+    archive = GridArchive(solution_dim=3, dims=[10, 20], ranges=[(-1, 1), (-2, 2)])
 
     # Initial elite is None.
     assert archive.best_elite is None
@@ -226,7 +232,11 @@ def test_best_elite(add_mode):
         archive.add([[1, 2, 3]], [1.0], [[0, 0]])
 
     assert archive.best_elite.keys() == {
-        "solution", "objective", "measures", "threshold", "index"
+        "solution",
+        "objective",
+        "measures",
+        "threshold",
+        "index",
     }
 
     assert archive.best_elite["solution"].shape == (3,)
@@ -258,11 +268,13 @@ def test_best_elite(add_mode):
 
 
 def test_best_elite_with_threshold(add_mode):
-    archive = GridArchive(solution_dim=3,
-                          dims=[10, 20],
-                          ranges=[(-1, 1), (-2, 2)],
-                          learning_rate=0.1,
-                          threshold_min=0.0)
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 20],
+        ranges=[(-1, 1), (-2, 2)],
+        learning_rate=0.1,
+        threshold_min=0.0,
+    )
 
     # Add an elite.
     if add_mode == "single":
@@ -371,12 +383,14 @@ def test_qd_score_offset_correct(data):
 def test_field_list_correct(data):
     if isinstance(data.archive, MAE_ARCHIVES):
         assert data.archive.field_list == [
-            "solution", "objective", "measures", "threshold", "index"
+            "solution",
+            "objective",
+            "measures",
+            "threshold",
+            "index",
         ]
     else:
-        assert data.archive.field_list == [
-            "solution", "objective", "measures", "index"
-        ]
+        assert data.archive.field_list == ["solution", "objective", "measures", "index"]
 
 
 def test_basic_stats(data):
@@ -394,18 +408,18 @@ def test_basic_stats(data):
         assert data.archive_with_elite.stats.norm_qd_score == data.objective
     else:
         assert data.archive_with_elite.stats.coverage == 1 / data.cells
-        assert (data.archive_with_elite.stats.norm_qd_score == data.objective /
-                data.cells)
+        assert (
+            data.archive_with_elite.stats.norm_qd_score == data.objective / data.cells
+        )
     assert data.archive_with_elite.stats.qd_score == data.objective
     assert data.archive_with_elite.stats.obj_max == data.objective
     assert data.archive_with_elite.stats.obj_mean == data.objective
 
 
 def test_unstructured_stats_after_none_objective():
-    archive = ProximityArchive(solution_dim=3,
-                               measure_dim=2,
-                               k_neighbors=1,
-                               novelty_threshold=1.0)
+    archive = ProximityArchive(
+        solution_dim=3, measure_dim=2, k_neighbors=1, novelty_threshold=1.0
+    )
     archive.add_single([1, 2, 3], None, [0, 0])
 
     assert archive.stats.coverage == 1.0
@@ -508,17 +522,18 @@ def test_sample_elites_fails_when_empty(data):
 
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
 @pytest.mark.parametrize("with_elite", [True, False], ids=["nonempty", "empty"])
-@pytest.mark.parametrize("dtype", [np.float64, np.float32],
-                         ids=["float64", "float32"])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
 def test_pandas_data(name, with_elite, dtype):
     data = get_archive_data(name, dtype)
 
     # Set up expected columns and data types.
     solution_dim = len(data.solution)
     measure_dim = len(data.measures)
-    expected_cols = ([f"solution_{i}" for i in range(solution_dim)] +
-                     ["objective"] +
-                     [f"measures_{i}" for i in range(measure_dim)])
+    expected_cols = (
+        [f"solution_{i}" for i in range(solution_dim)]
+        + ["objective"]
+        + [f"measures_{i}" for i in range(measure_dim)]
+    )
 
     expected_dtypes = [dtype for _ in range(solution_dim)] + [dtype]
     if isinstance(data.archive, CategoricalArchive):
@@ -550,20 +565,24 @@ def test_pandas_data(name, with_elite, dtype):
         if isinstance(data.archive_with_elite, CVTArchive):
             # For CVTArchive, we check the centroid because the index can vary.
             index = df.loc[0, "index"]
-            assert (data.archive_with_elite.centroids[index] == data.centroid
-                   ).all()
-        elif isinstance(data.archive_with_elite, (
+            assert (data.archive_with_elite.centroids[index] == data.centroid).all()
+        elif isinstance(
+            data.archive_with_elite,
+            (
                 CategoricalArchive,
                 GridArchive,
                 SlidingBoundariesArchive,
-        )):
+            ),
+        ):
             # These archives have expected grid indices.
-            assert df.loc[0, "index"] == data.archive.grid_to_int_index(
-                [data.grid_indices])[0]
+            assert (
+                df.loc[0, "index"]
+                == data.archive.grid_to_int_index([data.grid_indices])[0]
+            )
         else:
             # Archives where indices can't be tested.
             assert isinstance(data.archive_with_elite, (ProximityArchive,))
 
         # Comparing the df to the list of expected data seems to make things be
         # marked unequal when the dtypes are mixed between object and scalar.
-        assert list(df.iloc[0, :len(expected_data)]) == expected_data
+        assert list(df.iloc[0, : len(expected_data)]) == expected_data

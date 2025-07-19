@@ -1,4 +1,5 @@
 """Provides ArrayStore."""
+
 import itertools
 import numbers
 from enum import IntEnum
@@ -13,6 +14,7 @@ from ribs.archives._archive_data_frame import ArchiveDataFrame
 
 class Update(IntEnum):
     """Indices into the updates array in ArrayStore."""
+
     ADD = 0
     CLEAR = 1
 
@@ -41,8 +43,8 @@ class ArrayStoreIterator:
             # to clear() would cause the len(self.store) to be 0 and thus
             # trigger StopIteration.
             raise RuntimeError(
-                "ArrayStore was modified with add() or clear() during "
-                "iteration.")
+                "ArrayStore was modified with add() or clear() during iteration."
+            )
 
         if self.iter_idx >= len(self.store):
             raise StopIteration
@@ -123,8 +125,7 @@ class ArrayStore:
             if name == "index":
                 raise ValueError(f"`{name}` is a reserved field name.")
             if not name.isidentifier():
-                raise ValueError(
-                    f"Field names must be valid identifiers: `{name}`")
+                raise ValueError(f"Field names must be valid identifiers: `{name}`")
 
             if isinstance(field_shape, numbers.Integral):
                 field_shape = (field_shape,)
@@ -171,8 +172,7 @@ class ArrayStore:
     def occupied_list(self):
         """numpy.ndarray: int32 array listing all occupied indices in the
         store."""
-        return readonly(
-            self._props["occupied_list"][:self._props["n_occupied"]])
+        return readonly(self._props["occupied_list"][: self._props["n_occupied"]])
 
     @cached_property
     def field_desc(self):
@@ -193,10 +193,7 @@ class ArrayStore:
         1 entry (e.g., ``(5,)``). Since dicts in Python are ordered, note that
         this dict will have the same order as in the constructor.
         """
-        return {
-            name: (arr.shape[1:], arr.dtype)
-            for name, arr in self._fields.items()
-        }
+        return {name: (arr.shape[1:], arr.dtype) for name, arr in self._fields.items()}
 
     @cached_property
     def dtypes(self):
@@ -399,7 +396,8 @@ class ArrayStore:
                 else:
                     raise ValueError(
                         f"Field `{name}` has shape {arr.shape[1:]} -- "
-                        "cannot convert fields with shape >1D to Pandas")
+                        "cannot convert fields with shape >1D to Pandas"
+                    )
 
         # Postprocess return data.
         if return_type == "tuple":
@@ -460,7 +458,8 @@ class ArrayStore:
                 raise ValueError(
                     f"In `data`, the array for `{name}` has length "
                     f"{len(arr)} but should be the same length as indices "
-                    f"({len(indices)})")
+                    f"({len(indices)})"
+                )
 
         if data.keys() != self._fields.keys():
             raise ValueError(
@@ -469,7 +468,8 @@ class ArrayStore:
                 "This error may occur if the archive has extra_fields but the "
                 "fields were not passed to archive.add() or scheduler.tell(). "
                 "This can also occur if the archive and result_archive have "
-                "different extra_fields.")
+                "different extra_fields."
+            )
 
         # Update occupancy data.
         unique_indices = np.where(aggregate(indices, 1, func="len") != 0)[0]
@@ -477,8 +477,9 @@ class ArrayStore:
         new_indices = unique_indices[~cur_occupied]
         n_occupied = self._props["n_occupied"]
         self._props["occupied"][new_indices] = True
-        self._props["occupied_list"][n_occupied:n_occupied +
-                                     len(new_indices)] = new_indices
+        self._props["occupied_list"][n_occupied : n_occupied + len(new_indices)] = (
+            new_indices
+        )
         self._props["n_occupied"] = n_occupied + len(new_indices)
 
         # Insert into the ArrayStore. Note that we do not assume indices are
@@ -506,7 +507,8 @@ class ArrayStore:
         if capacity <= self._props["capacity"]:
             raise ValueError(
                 f"New capacity ({capacity}) must be greater than current "
-                f"capacity ({self._props['capacity']}.")
+                f"capacity ({self._props['capacity']}."
+            )
 
         cur_capacity = self._props["capacity"]
         self._props["capacity"] = capacity
@@ -565,17 +567,18 @@ class ArrayStore:
         store = ArrayStore({}, 0)  # Create an empty store.
 
         props = {
-            name[len("props."):]: arr
+            name[len("props.") :]: arr
             for name, arr in d.items()
             if name.startswith("props.")
         }
         if props.keys() != store._props.keys():
             raise ValueError(
                 f"Expected props to have keys {store._props.keys()} but "
-                f"only found {props.keys()}")
+                f"only found {props.keys()}"
+            )
 
         fields = {
-            name[len("fields."):]: arr
+            name[len("fields.") :]: arr
             for name, arr in d.items()
             if name.startswith("fields.")
         }

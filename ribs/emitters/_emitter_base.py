@@ -1,4 +1,5 @@
 """Provides EmitterBase."""
+
 import numbers
 from abc import ABC
 
@@ -33,9 +34,9 @@ class EmitterBase(ABC):
     def __init__(self, archive, *, solution_dim, bounds):
         self._archive = archive
         self._solution_dim = solution_dim
-        (self._lower_bounds,
-         self._upper_bounds) = self._process_bounds(bounds, self._solution_dim,
-                                                    archive.dtypes["solution"])
+        (self._lower_bounds, self._upper_bounds) = self._process_bounds(
+            bounds, self._solution_dim, archive.dtypes["solution"]
+        )
 
     @staticmethod
     def _process_bounds(bounds, solution_dim, dtype):
@@ -55,8 +56,9 @@ class EmitterBase(ABC):
 
         # Handle array-like bounds.
         if len(bounds) != solution_dim:
-            raise ValueError("If it is an array-like, bounds must have the "
-                             "same length as x0")
+            raise ValueError(
+                "If it is an array-like, bounds must have the same length as x0"
+            )
         for idx, bnd in enumerate(bounds):
             if bnd is None:
                 continue  # Bounds already default to -inf and inf.
@@ -103,11 +105,12 @@ class EmitterBase(ABC):
 
         Returns an empty array by default.
         """
-        solution_dim = (self.solution_dim,) \
-                       if isinstance(self.solution_dim, numbers.Integral) \
-                       else self.solution_dim
-        return np.empty((0,) + solution_dim,
-                        dtype=self.archive.dtypes["solution"])
+        solution_dim = (
+            (self.solution_dim,)
+            if isinstance(self.solution_dim, numbers.Integral)
+            else self.solution_dim
+        )
+        return np.empty((0,) + solution_dim, dtype=self.archive.dtypes["solution"])
 
     def tell(self, solution, objective, measures, add_info, **fields):
         """Gives the emitter results from evaluating solutions.
@@ -136,14 +139,14 @@ class EmitterBase(ABC):
         This method only needs to be implemented by emitters used in DQD. The
         method returns an empty array by default.
         """
-        solution_dim = (self.solution_dim,) \
-                       if isinstance(self.solution_dim, numbers.Integral) \
-                       else self.solution_dim
-        return np.empty((0,) + solution_dim,
-                        dtype=self.archive.dtypes["solution"])
+        solution_dim = (
+            (self.solution_dim,)
+            if isinstance(self.solution_dim, numbers.Integral)
+            else self.solution_dim
+        )
+        return np.empty((0,) + solution_dim, dtype=self.archive.dtypes["solution"])
 
-    def tell_dqd(self, solution, objective, measures, jacobian, add_info,
-                 **fields):
+    def tell_dqd(self, solution, objective, measures, jacobian, add_info, **fields):
         """Gives the emitter results from evaluating the gradient of the
         solutions, only used for DQD emitters.
 

@@ -1,4 +1,5 @@
 """Provides GaussianOperator."""
+
 import numpy as np
 
 from ribs.emitters.operators._operator_base import OperatorBase

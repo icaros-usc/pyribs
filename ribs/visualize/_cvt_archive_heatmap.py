@@ -1,4 +1,5 @@
 """Provides cvt_archive_heatmap."""
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,32 +7,39 @@ import shapely
 from matplotlib.cm import ScalarMappable
 from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
-from ribs.visualize._utils import (archive_heatmap_1d, retrieve_cmap, set_cbar,
-                                   validate_df, validate_heatmap_visual_args)
+from ribs.visualize._utils import (
+    archive_heatmap_1d,
+    retrieve_cmap,
+    set_cbar,
+    validate_df,
+    validate_heatmap_visual_args,
+)
 
 # Matplotlib functions tend to have a ton of args and statements.
 # pylint: disable = too-many-arguments, too-many-statements
 
 
-def cvt_archive_heatmap(archive,
-                        ax=None,
-                        *,
-                        df=None,
-                        transpose_measures=False,
-                        cmap="magma",
-                        aspect=None,
-                        lw=0.5,
-                        ec="black",
-                        vmin=None,
-                        vmax=None,
-                        cbar="auto",
-                        cbar_kwargs=None,
-                        rasterized=False,
-                        clip=False,
-                        plot_centroids=False,
-                        plot_samples=False,
-                        ms=1,
-                        pcm_kwargs=None):
+def cvt_archive_heatmap(
+    archive,
+    ax=None,
+    *,
+    df=None,
+    transpose_measures=False,
+    cmap="magma",
+    aspect=None,
+    lw=0.5,
+    ec="black",
+    vmin=None,
+    vmax=None,
+    cbar="auto",
+    cbar_kwargs=None,
+    rasterized=False,
+    clip=False,
+    plot_centroids=False,
+    plot_samples=False,
+    ms=1,
+    pcm_kwargs=None,
+):
     """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 1D or 2D
     measure space.
 
@@ -165,12 +173,18 @@ def cvt_archive_heatmap(archive,
             samples (e.g., due to using custom centroids during construction).
     """
     validate_heatmap_visual_args(
-        aspect, cbar, archive.measure_dim, [1, 2],
-        "Heatmap can only be plotted for a 1D or 2D CVTArchive")
+        aspect,
+        cbar,
+        archive.measure_dim,
+        [1, 2],
+        "Heatmap can only be plotted for a 1D or 2D CVTArchive",
+    )
 
     if plot_samples and archive.samples is None:
-        raise ValueError("Samples are not available for this archive, but "
-                         "`plot_samples` was passed in.")
+        raise ValueError(
+            "Samples are not available for this archive, but "
+            "`plot_samples` was passed in."
+        )
 
     if aspect is None:
         # Handles default aspects for different dims.
@@ -203,15 +217,17 @@ def cvt_archive_heatmap(archive,
         centroid_sort_idx = np.argsort(centroids_1d)
         sorted_centroids_1d = centroids_1d[centroid_sort_idx]
 
-        cell_boundaries = np.concatenate((
-            # Concatenate lower bound.
-            [archive.lower_bounds[0]],
-            # The boundaries can be found by taking the midpoints between the
-            # centroids.
-            (sorted_centroids_1d[:-1] + sorted_centroids_1d[1:]) / 2.0,
-            # Concatenate upper bound.
-            [archive.upper_bounds[0]],
-        ))
+        cell_boundaries = np.concatenate(
+            (
+                # Concatenate lower bound.
+                [archive.lower_bounds[0]],
+                # The boundaries can be found by taking the midpoints between the
+                # centroids.
+                (sorted_centroids_1d[:-1] + sorted_centroids_1d[1:]) / 2.0,
+                # Concatenate upper bound.
+                [archive.upper_bounds[0]],
+            )
+        )
 
         # centroid_sort_idx tells us which index to place the centroid at such
         # that it is sorted, i.e., it maps from the indices in the centroid
@@ -250,17 +266,21 @@ def cvt_archive_heatmap(archive,
         # Samples and centroids are plotted at y=0.5 so that they appear along
         # the center of the diagram.
         if plot_samples:
-            ax.plot(archive.samples[:, 0],
-                    np.full(len(archive.samples), 0.5),
-                    "o",
-                    c="grey",
-                    ms=ms)
+            ax.plot(
+                archive.samples[:, 0],
+                np.full(len(archive.samples), 0.5),
+                "o",
+                c="grey",
+                ms=ms,
+            )
         if plot_centroids:
-            ax.plot(archive.centroids[:, 0],
-                    np.full(len(archive.centroids), 0.5),
-                    "o",
-                    c="black",
-                    ms=ms)
+            ax.plot(
+                archive.centroids[:, 0],
+                np.full(len(archive.centroids), 0.5),
+                "o",
+                c="black",
+                ms=ms,
+            )
 
     elif archive.measure_dim == 2:
         # Retrieve data from archive.
@@ -274,8 +294,9 @@ def cvt_archive_heatmap(archive,
 
         # If clip is on, make it default to an archive bounding box.
         if clip and not isinstance(clip, shapely.Polygon):
-            clip = shapely.box(lower_bounds[0], lower_bounds[1],
-                               upper_bounds[0], upper_bounds[1])
+            clip = shapely.box(
+                lower_bounds[0], lower_bounds[1], upper_bounds[0], upper_bounds[1]
+            )
 
         if plot_samples:
             samples = archive.samples
@@ -308,7 +329,8 @@ def cvt_archive_heatmap(archive,
         min_obj, max_obj = np.inf, -np.inf
         pt_to_obj = dict(zip(index_batch, objective_batch))
         for pt_idx, region_idx in enumerate(
-                vor.point_region[:-4]):  # Exclude faraway_pts.
+            vor.point_region[:-4]
+        ):  # Exclude faraway_pts.
             if region_idx != -1 and pt_idx in pt_to_obj:
                 obj = pt_to_obj[pt_idx]
                 min_obj = min(min_obj, obj)
@@ -380,8 +402,8 @@ def cvt_archive_heatmap(archive,
         # Compute facecolors from the cmap. We first normalize the objectives
         # and clip them to [0, 1].
         normalized_objs = np.clip(
-            (np.asarray(facecolor_objs) - min_obj) / (max_obj - min_obj), 0.0,
-            1.0)
+            (np.asarray(facecolor_objs) - min_obj) / (max_obj - min_obj), 0.0, 1.0
+        )
         facecolors = np.asarray(facecolors)
         facecolors[facecolor_cmap_mask] = cmap(normalized_objs)
 
@@ -394,7 +416,8 @@ def cvt_archive_heatmap(archive,
                 facecolors=facecolors,
                 linewidths=lw,
                 rasterized=rasterized,
-            ))
+            )
+        )
 
         # Create a colorbar.
         mappable = ScalarMappable(cmap=cmap)

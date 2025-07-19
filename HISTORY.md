@@ -17,7 +17,7 @@ This release makes some minor updates to 0.8.0.
 
 #### Improvements
 
-- Migrate from yapf to ruff for formatting ({pr}`581`)
+- Migrate from yapf to ruff for formatting ({pr}`581`, {pr}`582`)
 
 ## 0.8.0
 

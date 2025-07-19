@@ -2,6 +2,7 @@
 
 See here for more info: https://arxiv.org/abs/1703.03864
 """
+
 import warnings
 
 import numpy as np
@@ -9,7 +10,10 @@ import numpy as np
 from ribs._utils import readonly
 from ribs.emitters.opt._adam_opt import AdamOpt
 from ribs.emitters.opt._evolution_strategy_base import (
-    BOUNDS_SAMPLING_THRESHOLD, BOUNDS_WARNING, EvolutionStrategyBase)
+    BOUNDS_SAMPLING_THRESHOLD,
+    BOUNDS_WARNING,
+    EvolutionStrategyBase,
+)
 
 
 class OpenAIEvolutionStrategy(EvolutionStrategyBase):
@@ -37,18 +41,20 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
     """
 
     def __init__(  # pylint: disable = super-init-not-called
-            self,
-            sigma0,
-            solution_dim,
-            batch_size=None,
-            seed=None,
-            dtype=np.float64,
-            lower_bounds=-np.inf,
-            upper_bounds=np.inf,
-            mirror_sampling=True,
-            **adam_kwargs):
-        self.batch_size = (4 + int(3 * np.log(solution_dim))
-                           if batch_size is None else batch_size)
+        self,
+        sigma0,
+        solution_dim,
+        batch_size=None,
+        seed=None,
+        dtype=np.float64,
+        lower_bounds=-np.inf,
+        upper_bounds=np.inf,
+        mirror_sampling=True,
+        **adam_kwargs,
+    ):
+        self.batch_size = (
+            4 + int(3 * np.log(solution_dim)) if batch_size is None else batch_size
+        )
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
@@ -61,11 +67,14 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self._rng = np.random.default_rng(seed)
         self._solutions = None
 
-        if mirror_sampling and not (np.all(lower_bounds == -np.inf) and
-                                    np.all(upper_bounds == np.inf)):
-            raise ValueError("Bounds are currently not supported when using "
-                             "mirror_sampling in OpenAI-ES; see "
-                             "OpenAIEvolutionStrategy.ask() for more info.")
+        if mirror_sampling and not (
+            np.all(lower_bounds == -np.inf) and np.all(upper_bounds == np.inf)
+        ):
+            raise ValueError(
+                "Bounds are currently not supported when using "
+                "mirror_sampling in OpenAI-ES; see "
+                "OpenAIEvolutionStrategy.ask() for more info."
+            )
 
         self.mirror_sampling = mirror_sampling
 
@@ -74,13 +83,16 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             self.batch_size += 1
 
         if self.batch_size <= 1:
-            raise ValueError("Batch size of 1 is not supported because rank"
-                             " normalization does not work with batch size of"
-                             " 1.")
+            raise ValueError(
+                "Batch size of 1 is not supported because rank"
+                " normalization does not work with batch size of"
+                " 1."
+            )
 
         if self.mirror_sampling and self.batch_size % 2 != 0:
-            raise ValueError("If using mirror sampling, batch_size must be an"
-                             " even number.")
+            raise ValueError(
+                "If using mirror sampling, batch_size must be an even number."
+            )
 
         # Strategy-specific params -> initialized in reset().
         self.adam_opt = AdamOpt(self.solution_dim, **adam_kwargs)
@@ -98,8 +110,10 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         # Fitness is too flat (only applies if there are at least 2 parents).
         # NOTE: We use norm here because we may have multiple ranking values.
-        if (len(ranking_values) >= 2 and
-                np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12):
+        if (
+            len(ranking_values) >= 2
+            and np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12
+        ):
             return True
 
         return False
@@ -108,8 +122,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         if batch_size is None:
             batch_size = self.batch_size
 
-        self._solutions = np.empty((batch_size, self.solution_dim),
-                                   dtype=self.dtype)
+        self._solutions = np.empty((batch_size, self.solution_dim), dtype=self.dtype)
 
         # Resampling method for bound constraints -> sample new solutions until
         # all solutions are within bounds.
@@ -125,15 +138,15 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
                 # mirrored. For instance, should we throw out both solutions if
                 # one is out of bounds?
                 noise_half = self._rng.standard_normal(
-                    (batch_size // 2, self.solution_dim), dtype=self.dtype)
+                    (batch_size // 2, self.solution_dim), dtype=self.dtype
+                )
                 self.noise = np.concatenate((noise_half, -noise_half))
             else:
                 self.noise = self._rng.standard_normal(
-                    (len(remaining_indices), self.solution_dim),
-                    dtype=self.dtype)
+                    (len(remaining_indices), self.solution_dim), dtype=self.dtype
+                )
 
-            new_solutions = (self.adam_opt.theta[None] +
-                             self.sigma0 * self.noise)
+            new_solutions = self.adam_opt.theta[None] + self.sigma0 * self.noise
             out_of_bounds = np.logical_or(
                 new_solutions < np.expand_dims(self.lower_bounds, axis=0),
                 new_solutions > np.expand_dims(self.upper_bounds, axis=0),
@@ -168,9 +181,10 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         if self.mirror_sampling:
             half_batch = self.batch_size // 2
             gradient = np.sum(
-                self.noise[:half_batch] *
-                (ranks[:half_batch] - ranks[half_batch:])[:, None],
-                axis=0)
+                self.noise[:half_batch]
+                * (ranks[:half_batch] - ranks[half_batch:])[:, None],
+                axis=0,
+            )
             gradient /= half_batch * self.sigma0
         else:
             gradient = np.sum(self.noise * ranks[:, None], axis=0)
@@ -181,6 +195,6 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         self.adam_opt.step(gradient)
 
-        self.last_update_ratio = (
-            np.linalg.norm(self.adam_opt.theta - theta_prev) /
-            np.linalg.norm(self.adam_opt.theta))
+        self.last_update_ratio = np.linalg.norm(
+            self.adam_opt.theta - theta_prev
+        ) / np.linalg.norm(self.adam_opt.theta)
