@@ -10,6 +10,7 @@ from ribs._utils import (
     check_shape,
     validate_batch,
     validate_single,
+    xp_namespace,
 )
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
@@ -112,11 +113,13 @@ class GridArchive(ArchiveBase):
         dtype=np.float64,
         extra_fields=None,
         xp=None,
+        device=None,
     ):
         self._xp = xp_namespace(xp)
+        self._device = device
 
         self._rng = np.random.default_rng(seed)
-        self._dims = self._xp.asarray(dims, dtype=self._xp.int32)
+        self._dims = self._xp.asarray(dims, dtype=self._xp.int32)  # TODO: device?
 
         ArchiveBase.__init__(
             self,
@@ -156,10 +159,8 @@ class GridArchive(ArchiveBase):
                 f"(length {len(ranges)}) must be the same length"
             )
         ranges = list(zip(*ranges))  # Rearrange into lower and upper bounds.
-        self._lower_bounds = self._xp.asarray(ranges[0],
-                                              dtype=self.dtypes["measures"])
-        self._upper_bounds = self._xp.asarray(ranges[1],
-                                              dtype=self.dtypes["measures"])
+        self._lower_bounds = self._xp.asarray(ranges[0], dtype=self.dtypes["measures"])
+        self._upper_bounds = self._xp.asarray(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._boundaries = self._compute_boundaries(
             self._dims, self._lower_bounds, self._upper_bounds
