@@ -44,17 +44,16 @@ def main(itrs=1000):
         if itr % 100 == 0 or itr == itrs:
             cqd_iterations = 5
 
-            # Here, 200 target points are sampled in measure space within the
-            # bounds of the archive. Note that not all archives have lower and
-            # upper bounds. For example, ProximityArchive is unstructured, so
-            # its lower and upper bounds adjust over time to match the solutions
-            # it contains. This differs from GridArchive, where the bounds are
-            # set in advance. Thus, for ProximityArchive, it does not make sense
-            # to sample target points within its lower and upper bounds.
-            # Instead, if using ProximityArchive, there should be a predefined
-            # lower and upper bound within which to sample target points. Note
-            # that target points can also be generated in other ways, i.e., they
-            # do not have to be sampled uniformly within a hyperrectangle as is
+            # Here, 200 target points are sampled in measure space within the bounds of
+            # the archive. Note that not all archives have lower and upper bounds. For
+            # example, ProximityArchive is unstructured, so its lower and upper bounds
+            # adjust over time to match the solutions it contains. This differs from
+            # GridArchive, where the bounds are set in advance. Thus, for
+            # ProximityArchive, it does not make sense to sample target points within
+            # its lower and upper bounds. Instead, if using ProximityArchive, there
+            # should be a predefined lower and upper bound within which to sample target
+            # points. Note that target points can also be generated in other ways, i.e.,
+            # they do not have to be sampled uniformly within a hyperrectangle as is
             # done here.
             target_points = rng.uniform(
                 low=archive.lower_bounds,
@@ -72,9 +71,9 @@ def main(itrs=1000):
                 dist_max=np.linalg.norm(archive.upper_bounds - archive.lower_bounds),
             )
 
-            # The `result` is an instance of CQDScoreResult that contains a
-            # number of attributes. The most relevant will be the mean CQD score
-            # and the scores computed across the individual iterations.
+            # The `result` is an instance of CQDScoreResult that contains a number of
+            # attributes. The most relevant will be the mean CQD score and the scores
+            # computed across the individual iterations.
             print(f"----- Iteration {itr} -----")
             print("CQD score:", result.mean)
             print("Scores on each iteration:", result.scores)
