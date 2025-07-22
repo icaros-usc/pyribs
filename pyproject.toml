@@ -108,9 +108,12 @@ include = ["ribs", "ribs.*"]
 version = {attr = "ribs.__version__"}
 readme = {file = ["README.md", "HISTORY.md"], content-type = "text/markdown"}
 
+[tool.ruff]
+line-length = 80
+
 [tool.isort]
 known_first_party = "ribs"
-line_length = 88
+line_length = 80
 multi_line_output = 3  # Matches ruff.
 include_trailing_comma = true  # Matches ruff.
 
