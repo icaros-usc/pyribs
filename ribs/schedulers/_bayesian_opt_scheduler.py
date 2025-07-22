@@ -16,20 +16,20 @@ class BayesianOptimizationScheduler(Scheduler):
 
     Args:
         archive (ribs.archives.GridArchive): An archive object.
-        emitters (list of ribs.emitters.BayesianOptimizationEmitter): A list of
-            emitter objects.
-        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
-            CMA-MAE, the archive does not store all the best-performing
-            solutions. The ``result_archive`` is a secondary archive where we
-            can store all the best-performing solutions.
-        add_mode (str): Indicates how solutions should be added to the archive.
-            The default is "batch", which adds all solutions with one call to
-            :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single"
-            to add the solutions one at a time with
-            :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is
-            included for legacy reasons, as it was the only mode of operation in
-            pyribs 0.4.0 and before. We highly recommend using "batch" mode
-            since it is significantly faster.
+        emitters (list of ribs.emitters.BayesianOptimizationEmitter): A list of emitter
+            objects.
+        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as CMA-MAE,
+            the archive does not store all the best-performing solutions. The
+            ``result_archive`` is a secondary archive where we can store all the
+            best-performing solutions.
+        add_mode (str): Indicates how solutions should be added to the archive. The
+            default is "batch", which adds all solutions with one call to
+            :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single" to add
+            the solutions one at a time with
+            :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is included
+            for legacy reasons, as it was the only mode of operation in pyribs 0.4.0 and
+            before. We highly recommend using "batch" mode since it is significantly
+            faster.
 
     Raises:
         TypeError: Some emitters are not BayesianOptimizationEmitter.
@@ -39,8 +39,8 @@ class BayesianOptimizationScheduler(Scheduler):
     def __init__(self, archive, emitters, result_archive=None, *, add_mode="batch"):
         super().__init__(archive, emitters, result_archive, add_mode=add_mode)
 
-        # Checks that all emitters are BayesianOptimizationEmitter and have the
-        # same upscale schedule
+        # Checks that all emitters are BayesianOptimizationEmitter and have the same
+        # upscale schedule.
         this_upscale_schedule = None
         for i, e in enumerate(emitters):
             if not isinstance(e, BayesianOptimizationEmitter):
@@ -80,8 +80,8 @@ class BayesianOptimizationScheduler(Scheduler):
 
     @property
     def upscale_schedule(self):
-        """The upscale schedules for all its bayesian optimization emitters.
-        None if emitters do not undergo archive upscaling."""
+        """The upscale schedules for all the Bayesian optimization emitters.  None if
+        emitters do not undergo archive upscaling."""
         return self._upscale_schedule
 
     @Scheduler.archive.setter
@@ -141,8 +141,8 @@ class BayesianOptimizationScheduler(Scheduler):
                             f"emitter{i} returned resolution {upscale_res}"
                         )
 
-        # If the upscale resolution is not None, upscales :attr:`archive` and
-        # all emitter archives.
+        # If the upscale resolution is not None, upscales :attr:`archive` and all
+        # emitter archives.
         if this_upscale_res is not None:
             for e in self._emitters:
                 e.archive.retessellate(this_upscale_res)

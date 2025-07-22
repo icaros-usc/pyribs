@@ -38,17 +38,16 @@ def cvt_archive_3d_plot(
     """Plots a :class:`~ribs.archives.CVTArchive` with 3D measure space.
 
     This function relies on Matplotlib's `mplot3d
-    <https://matplotlib.org/stable/tutorials/toolkits/mplot3d.html>`_ toolkit.
-    By default, this function plots a 3D Voronoi diagram of the cells in the
-    archive and shades each cell based on its objective value. It is also
-    possible to plot a "wireframe" with only the cells' boundaries, along with a
-    dot inside each cell indicating its objective value.
+    <https://matplotlib.org/stable/tutorials/toolkits/mplot3d.html>`_ toolkit. By
+    default, this function plots a 3D Voronoi diagram of the cells in the archive and
+    shades each cell based on its objective value. It is also possible to plot a
+    "wireframe" with only the cells' boundaries, along with a dot inside each cell
+    indicating its objective value.
 
-    Depending on how many cells are in the archive, ``ms`` and ``lw`` may need
-    to be tuned. If there are too many cells, the Voronoi diagram and centroid
-    markers will make the entire image appear black. In that case, try turning
-    off the centroids with ``plot_centroids=False`` or even removing the lines
-    completely with ``lw=0``.
+    Depending on how many cells are in the archive, ``ms`` and ``lw`` may need to be
+    tuned. If there are too many cells, the Voronoi diagram and centroid markers will
+    make the entire image appear black. In that case, try turning off the centroids with
+    ``plot_centroids=False`` or even removing the lines completely with ``lw=0``.
 
     Examples:
 
@@ -154,61 +153,57 @@ def cvt_archive_3d_plot(
 
     Args:
         archive (CVTArchive): A 3D :class:`~ribs.archives.CVTArchive`.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.
-            If ``None``, we will create a new 3D axis.
-        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
-            this argument instead of the data currently in the archive. This
-            data can be obtained by, for instance, calling
-            :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
-            and modifying the resulting
-            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum,
-            the data must contain columns for index, objective, and measures. To
-            display a custom metric, replace the "objective" column.
-        measure_order (array-like of int): Specifies the axes order for plotting
-            the measures. By default, the first measure (measure 0) in the
-            archive appears on the x-axis, the second (measure 1) on y-axis, and
-            third (measure 2) on z-axis. This argument is an array of length 3
-            that specifies which measure should appear on the x, y, and z axes.
-            For instance, [2, 1, 0] will put measure 2 on the x-axis, measure 1
-            on the y-axis, and measure 0 on the z-axis.
-        cmap (str, list, matplotlib.colors.Colormap): The colormap to use when
-            plotting intensity. Either the name of a
-            :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
-            (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
-            :class:`~matplotlib.colors.Colormap` object.
+        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If ``None``, we
+            will create a new 3D axis.
+        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from this
+            argument instead of the data currently in the archive. This data can be
+            obtained by, for instance, calling :meth:`ribs.archives.ArchiveBase.data`
+            with ``return_type="pandas"`` and modifying the resulting
+            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum, the data
+            must contain columns for index, objective, and measures. To display a custom
+            metric, replace the "objective" column.
+        measure_order (array-like of int): Specifies the axes order for plotting the
+            measures. By default, the first measure (measure 0) in the archive appears
+            on the x-axis, the second (measure 1) on y-axis, and third (measure 2) on
+            z-axis. This argument is an array of length 3 that specifies which measure
+            should appear on the x, y, and z axes. For instance, [2, 1, 0] will put
+            measure 2 on the x-axis, measure 1 on the y-axis, and measure 0 on the
+            z-axis.
+        cmap (str, list, matplotlib.colors.Colormap): The colormap to use when plotting
+            intensity. Either the name of a :class:`~matplotlib.colors.Colormap`, a list
+            of RGB or RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4`
+            array), or a :class:`~matplotlib.colors.Colormap` object.
         lw (float): Line width when plotting the Voronoi diagram.
-        ec (matplotlib color): Edge color of the cells in the Voronoi diagram.
-            See `here
-            <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ for
+        ec (matplotlib color): Edge color of the cells in the Voronoi diagram. See
+            `here <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ for
             more info on specifying colors in Matplotlib.
-        cell_alpha: Alpha value for the cell colors. Set to 1.0 for opaque
-            cells; set to 0.0 for fully transparent cells.
-        vmin (float): Minimum objective value to use in the plot. If ``None``,
-            the minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If ``None``,
-            the maximum objective value in the archive is used.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to
-            ``'auto'`` which displays the colorbar on the archive's current
-            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not
-            displayed. If this is an :class:`~matplotlib.axes.Axes`, displays
-            the colorbar on the specified Axes.
+        cell_alpha: Alpha value for the cell colors. Set to 1.0 for opaque cells; set to
+            0.0 for fully transparent cells.
+        vmin (float): Minimum objective value to use in the plot. If ``None``, the
+            minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If ``None``, the
+            maximum objective value in the archive is used.
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to ``'auto'``
+            which displays the colorbar on the archive's current
+            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not displayed.
+            If this is an :class:`~matplotlib.axes.Axes`, displays the colorbar on the
+            specified Axes.
         cbar_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.colorbar`.
-        plot_elites (bool): If True, we will plot a scatter plot of the elites
-            in the archive. The elites will be colored according to their
-            objective value.
+        plot_elites (bool): If True, we will plot a scatter plot of the elites in the
+            archive. The elites will be colored according to their objective value.
         elite_ms (float): Marker size for plotting elites.
         elite_alpha (float): Alpha value for plotting elites.
         plot_centroids (bool): Whether to plot the cluster centroids.
-        plot_samples (bool): Whether to plot the samples used when generating
-            the clusters.
+        plot_samples (bool): Whether to plot the samples used when generating the
+            clusters.
         ms (float): Marker size for both centroids and samples.
 
     Raises:
         ValueError: The archive's measure dimension must be 1D or 2D.
         ValueError: ``measure_order`` is not a permutation of ``[0, 1, 2]``.
-        ValueError: ``plot_samples`` is passed in but the archive does not have
-            samples (e.g., due to using custom centroids during construction).
+        ValueError: ``plot_samples`` is passed in but the archive does not have samples
+            (e.g., due to using custom centroids during construction).
     """
     # We don't have an aspect arg here so we just pass None.
     validate_heatmap_visual_args(
@@ -257,8 +252,8 @@ def cvt_archive_3d_plot(
 
     # Compute objective value range.
     if vmin is None:
-        # Defaulting to -inf (and inf for max_obj) allows the computations after
-        # this to proceed smoothly.
+        # Defaulting to -inf (and inf for max_obj) allows the computations after this to
+        # proceed smoothly.
         min_obj = np.min(objective_batch) if len(objective_batch) > 0 else -np.inf
     else:
         min_obj = vmin
@@ -280,22 +275,21 @@ def cvt_archive_3d_plot(
     ax.set_ylim(lower_bounds[1], upper_bounds[1])
     ax.set_zlim(lower_bounds[2], upper_bounds[2])
 
-    # Create reflections of the points so that we can easily find the polygons
-    # at the edge of the Voronoi diagram. See here for the basic idea in 2D:
+    # Create reflections of the points so that we can easily find the polygons at the
+    # edge of the Voronoi diagram. See here for the basic idea in 2D:
     # https://stackoverflow.com/questions/28665491/getting-a-bounded-polygon-coordinates-from-voronoi-cells
     #
-    # Note that this indeed results in us creating a Voronoi diagram with 7
-    # times the cells we need. However, the Voronoi creation is still pretty
-    # fast.
+    # Note that this indeed results in us creating a Voronoi diagram with 7 times the
+    # cells we need. However, the Voronoi creation is still pretty fast.
     #
-    # Note that the above StackOverflow approach proposes filtering the points
-    # after creating the Voronoi diagram by checking if they are outside the
-    # upper or lower bounds. We found that this approach works fine, but it
-    # requires subtracting an epsilon from the lower bounds and adding an
-    # epsilon to the upper bounds, to allow for some margin of error due to
-    # numerical stability. Otherwise, some of the edge polygons will be clipped.
-    # Below, we do not filter with this method; instead, we just check whether
-    # the point on each side of the ridge is one of the original centroids.
+    # Note that the above StackOverflow approach proposes filtering the points after
+    # creating the Voronoi diagram by checking if they are outside the upper or lower
+    # bounds. We found that this approach works fine, but it requires subtracting an
+    # epsilon from the lower bounds and adding an epsilon to the upper bounds, to allow
+    # for some margin of error due to numerical stability. Otherwise, some of the edge
+    # polygons will be clipped. Below, we do not filter with this method; instead, we
+    # just check whether the point on each side of the ridge is one of the original
+    # centroids.
     xmin, ymin, zmin = lower_bounds
     xmax, ymax, zmax = upper_bounds
     (
@@ -328,28 +322,28 @@ def cvt_archive_3d_plot(
         )
     )
 
-    # Collect the vertices of the ridges of each cell -- the boundary between
-    # two points in a Voronoi diagram is referred to as a ridge; in 3D, the
-    # ridge is a planar polygon; in 2D, the ridge is a line.
+    # Collect the vertices of the ridges of each cell -- the boundary between two points
+    # in a Voronoi diagram is referred to as a ridge; in 3D, the ridge is a planar
+    # polygon; in 2D, the ridge is a line.
     vertices = []
     objs = []  # Also record objective for each ridge so we can color it.
 
     # Map from centroid index to objective.
     pt_to_obj = dict(zip(index_batch, objective_batch))
 
-    # The points in the Voronoi diagram are indexed by their placement in the
-    # input list. Above, when we called Voronoi, `centroids` were placed first,
-    # so the centroid points all have indices less than len(centroids).
+    # The points in the Voronoi diagram are indexed by their placement in the input
+    # list. Above, when we called Voronoi, `centroids` were placed first, so the
+    # centroid points all have indices less than len(centroids).
     max_centroid_idx = len(centroids)
 
     for ridge_points, ridge_vertices in zip(vor.ridge_points, vor.ridge_vertices):
         a, b = ridge_points
-        # Record the ridge. We are only interested in a ridge if it involves one
-        # of our centroid points, hence the check for max_idx.
+        # Record the ridge. We are only interested in a ridge if it involves one of our
+        # centroid points, hence the check for max_idx.
         #
-        # Note that we record the ridge twice if a and b are both valid points,
-        # so we end up plotting the same polygon twice. Unclear how to resolve
-        # this, but it seems to show up fine as is.
+        # Note that we record the ridge twice if a and b are both valid points, so we
+        # end up plotting the same polygon twice. Unclear how to resolve this, but it
+        # seems to show up fine as is.
         if a < max_centroid_idx:
             vertices.append(vor.vertices[ridge_vertices])
             # NaN indicates the cell was not filled and thus had no objective.
@@ -366,12 +360,11 @@ def cvt_archive_3d_plot(
         (np.asarray(cmap_objs) - min_obj) / (max_obj - min_obj), 0.0, 1.0
     )
 
-    # Create an array of facecolors in RGBA format that defaults to transparent
-    # white.
+    # Create an array of facecolors in RGBA format that defaults to transparent white.
     facecolors = np.full((len(objs), 4), [1.0, 1.0, 1.0, 0.0])
 
-    # Set colors based on objectives. Also set alpha, which is located in index
-    # 3 since this is RGBA format.
+    # Set colors based on objectives. Also set alpha, which is located in index 3 since
+    # this is RGBA format.
     facecolors[cmap_idx] = cmap(normalized_objs)
     facecolors[cmap_idx, 3] = cell_alpha
 

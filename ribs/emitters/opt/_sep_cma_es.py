@@ -22,8 +22,8 @@ class DiagonalMatrix:
 
     Args:
         dimension (int): Size of the (square) covariance matrix.
-        dtype (str or data-type): Data type of the matrix, typically np.float32
-            or np.float64.
+        dtype (str or data-type): Data type of the matrix, typically np.float32 or
+            np.float64.
     """
 
     def __init__(self, dimension, dtype):
@@ -61,13 +61,12 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
-        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-            indicating lower bounds of the solution space. Scalars specify
-            the same bound for the entire space, while arrays specify a
-            bound for each dimension. Pass -np.inf in the array or scalar to
-            indicated unbounded space.
-        upper_bounds (float or np.ndarray): Same as above, but for upper
-            bounds (and pass np.inf instead of -np.inf).
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array indicating
+            lower bounds of the solution space. Scalars specify the same bound for the
+            entire space, while arrays specify a bound for each dimension. Pass -np.inf
+            in the array or scalar to indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper bounds (and
+            pass np.inf instead of -np.inf).
     """
 
     def __init__(  # pylint: disable = super-init-not-called
@@ -212,10 +211,6 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
         mueff = np.sum(weights) ** 2 / np.sum(weights**2)
 
         # Dynamically update these strategy-specific parameters.
-        cc = (
-            (4 + mueff / solution_dim)  # pylint: disable = unused-variable
-            / (solution_dim + 4 + 2 * mueff / solution_dim)
-        )
         cc_sep = (1 + 1 / solution_dim + mueff / solution_dim) / (
             solution_dim**0.5 + 1 / solution_dim + 2 * mueff / solution_dim
         )
@@ -225,10 +220,6 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
         c1 = 2 / ((solution_dim + 1.3) ** 2 + mueff)
         c1_sep = c1 * self._conedf(solution_dim, mueff, solution_dim)
 
-        cmu = min(  # pylint: disable = unused-variable
-            1 - c1,
-            2 * (mueff - 2 + 1 / mueff) / ((solution_dim + 2) ** 2 + mueff),
-        )
         # Instead of 0, pycma uses "rankmu_offset" here but also mentions it
         # barely affects performance. The rest of this code also doesn't use
         # rankmu_offset.

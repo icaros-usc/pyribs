@@ -630,6 +630,7 @@ CONFIG = {
                     "selection_rule": "mu",
                     "restart_rule": "basic",
                     "batch_size": 36,
+                    "es": "sep_cma_es",
                 },
                 "num_emitters": 15,
             }

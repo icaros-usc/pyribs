@@ -26,69 +26,62 @@ class GridArchive(ArchiveBase):
     """An archive that divides each dimension into uniformly-sized cells.
 
     This archive is the container described in `Mouret 2015
-    <https://arxiv.org/pdf/1504.04909.pdf>`_. It can be visualized as an
-    n-dimensional grid in the measure space that is divided into a certain
-    number of cells in each dimension. Each cell contains an elite, i.e., a
-    solution that *maximizes* the objective function and has measures that lie
-    within that cell.
+    <https://arxiv.org/pdf/1504.04909.pdf>`_. It can be visualized as an n-dimensional
+    grid in the measure space that is divided into a certain number of cells in each
+    dimension. Each cell contains an elite, i.e., a solution that *maximizes* the
+    objective function and has measures that lie within that cell.
 
-    This archive also implements the idea of *soft archives* that have
-    *thresholds*, as introduced in `Fontaine 2023
-    <https://arxiv.org/abs/2205.10752>`_. To learn more about thresholds,
-    including the ``learning_rate`` and ``threshold_min`` parameters, please
-    refer to the tutorial :doc:`/tutorials/cma_mae`.
+    This archive also implements the idea of *soft archives* that have *thresholds*, as
+    introduced in `Fontaine 2023 <https://arxiv.org/abs/2205.10752>`_. To learn more
+    about thresholds, including the ``learning_rate`` and ``threshold_min`` parameters,
+    please refer to the tutorial :doc:`/tutorials/cma_mae`.
 
     By default, this archive stores the following data fields: ``solution``,
-    ``objective``, ``measures``, ``threshold``, and ``index``. The ``threshold``
-    is the value that a solution's objective value must exceed to be inserted
-    into a cell, while the integer ``index`` uniquely identifies each cell.
+    ``objective``, ``measures``, ``threshold``, and ``index``. The ``threshold`` is the
+    value that a solution's objective value must exceed to be inserted into a cell,
+    while the integer ``index`` uniquely identifies each cell.
 
     Args:
-        solution_dim (int or tuple of int): Dimensionality of the solution
-            space. Scalar or multi-dimensional solution shapes are allowed by
-            passing an empty tuple or tuple of integers, respectively.
-        dims (array-like of int): Number of cells in each dimension of the
-            measure space, e.g. ``[20, 30, 40]`` indicates there should be 3
-            dimensions with 20, 30, and 40 cells. (The number of dimensions is
-            implicitly defined in the length of this argument).
-        ranges (array-like of (float, float)): Upper and lower bound of each
-            dimension of the measure space, e.g. ``[(-1, 1), (-2, 2)]``
-            indicates the first dimension should have bounds :math:`[-1,1]`
-            (inclusive), and the second dimension should have bounds
-            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
-            ``dims``.
-        epsilon (float): Due to floating point precision errors, a small epsilon
-            is added when computing the archive indices in the :meth:`index_of`
-            method -- refer to the implementation `here
-            <../_modules/ribs/archives/_grid_archive.html#GridArchive.index_of>`_.
-            Pass this parameter to configure that epsilon.
-        learning_rate (float): The learning rate for threshold updates. Defaults
-            to 1.0.
+        solution_dim (int or tuple of int): Dimensionality of the solution space. Scalar
+            or multi-dimensional solution shapes are allowed by passing an empty tuple
+            or tuple of integers, respectively.
+        dims (array-like of int): Number of cells in each dimension of the measure
+            space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions with 20,
+            30, and 40 cells. (The number of dimensions is implicitly defined in the
+            length of this argument).
+        ranges (array-like of (float, float)): Upper and lower bound of each dimension
+            of the measure space, e.g. ``[(-1, 1), (-2, 2)]`` indicates the first
+            dimension should have bounds :math:`[-1,1]` (inclusive), and the second
+            dimension should have bounds :math:`[-2,2]` (inclusive). ``ranges`` should
+            be the same length as ``dims``.
+        epsilon (float): Due to floating point precision errors, a small epsilon is
+            added when computing the archive indices in the :meth:`index_of` method --
+            refer to the implementation `here
+            <../_modules/ribs/archives/_grid_archive.html#GridArchive.index_of>`_. Pass
+            this parameter to configure that epsilon.
+        learning_rate (float): The learning rate for threshold updates. Defaults to 1.0.
         threshold_min (float): The initial threshold value for all the cells.
-        qd_score_offset (float): Archives often contain negative objective
-            values, and if the QD score were to be computed with these negative
-            objectives, the algorithm would be penalized for adding new cells
-            with negative objectives. Thus, a standard practice is to normalize
-            all the objectives so that they are non-negative by introducing an
-            offset. This QD score offset will be *subtracted* from all
-            objectives in the archive, e.g., if your objectives go as low as
-            -300, pass in -300 so that each objective will be transformed as
+        qd_score_offset (float): Archives often contain negative objective values, and
+            if the QD score were to be computed with these negative objectives, the
+            algorithm would be penalized for adding new cells with negative objectives.
+            Thus, a standard practice is to normalize all the objectives so that they
+            are non-negative by introducing an offset. This QD score offset will be
+            *subtracted* from all objectives in the archive, e.g., if your objectives go
+            as low as -300, pass in -300 so that each objective will be transformed as
             ``objective - (-300)``.
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
-        dtype (str or data-type or dict): Data type of the solutions,
-            objectives, and measures. This can be ``"f"`` / ``np.float32``,
-            ``"d"`` / ``np.float64``, or a dict specifying separate dtypes, of
-            the form ``{"solution": <dtype>, "objective": <dtype>, "measures":
-            <dtype>}``.
-        extra_fields (dict): Description of extra fields of data that is stored
-            next to elite data like solutions and objectives. The description is
-            a dict mapping from a field name (str) to a tuple of ``(shape,
-            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
-            np.float32)}`` will create a "foo" field that contains scalar values
-            and a "bar" field that contains 10D values. Note that field names
-            must be valid Python identifiers, and names already used in the
-            archive are not allowed.
+        seed (int): Value to seed the random number generator. Set to None to avoid a
+            fixed seed.
+        dtype (str or data-type or dict): Data type of the solutions, objectives, and
+            measures. This can be ``"f"`` / ``np.float32``, ``"d"`` / ``np.float64``, or
+            a dict specifying separate dtypes, of the form ``{"solution": <dtype>,
+            "objective": <dtype>, "measures": <dtype>}``.
+        extra_fields (dict): Description of extra fields of data that is stored next to
+            elite data like solutions and objectives. The description is a dict mapping
+            from a field name (str) to a tuple of ``(shape, dtype)``. For instance,
+            ``{"foo": ((), np.float32), "bar": ((10,), np.float32)}`` will create a
+            "foo" field that contains scalar values and a "bar" field that contains 10D
+            values. Note that field names must be valid Python identifiers, and names
+            already used in the archive are not allowed.
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
@@ -119,8 +112,8 @@ class GridArchive(ArchiveBase):
             measure_dim=len(self._dims),
         )
 
-        # Set up the ArrayStore, which is a data structure that stores all the
-        # elites' data in arrays sharing a common index.
+        # Set up the ArrayStore, which is a data structure that stores all the elites'
+        # data in arrays sharing a common index.
         extra_fields = extra_fields or {}
         reserved_fields = {"solution", "objective", "measures", "threshold", "index"}
         if reserved_fields & extra_fields.keys():
@@ -134,8 +127,7 @@ class GridArchive(ArchiveBase):
                 "solution": (self.solution_dim, dtype["solution"]),
                 "objective": ((), dtype["objective"]),
                 "measures": (self.measure_dim, dtype["measures"]),
-                # Must be same dtype as the objective since they share
-                # calculations.
+                # Must be same dtype as the objective since they share calculations.
                 "threshold": ((), dtype["objective"]),
                 **extra_fields,
             },
@@ -161,8 +153,8 @@ class GridArchive(ArchiveBase):
         )
         self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
 
-        # Set up statistics -- objective_sum is the sum of all objective values
-        # in the archive; it is useful for computing qd_score and obj_mean.
+        # Set up statistics -- objective_sum is the sum of all objective values in the
+        # archive; it is useful for computing qd_score and obj_mean.
         self._best_elite = None
         self._objective_sum = None
         self._stats = None
@@ -204,19 +196,18 @@ class GridArchive(ArchiveBase):
         None if there are no elites in the archive.
 
         .. note::
-            If the archive is non-elitist (this occurs when using the archive
-            with a learning rate which is not 1.0, as in CMA-MAE), then this
-            best elite may no longer exist in the archive because it was
-            replaced with an elite with a lower objective value. This can happen
-            because in non-elitist archives, new solutions only need to exceed
-            the *threshold* of the cell they are being inserted into, not the
-            *objective* of the elite currently in the cell. See :pr:`314` for
-            more info.
+            If the archive is non-elitist (this occurs when using the archive with a
+            learning rate which is not 1.0, as in CMA-MAE), then this best elite may no
+            longer exist in the archive because it was replaced with an elite with a
+            lower objective value. This can happen because in non-elitist archives, new
+            solutions only need to exceed the *threshold* of the cell they are being
+            inserted into, not the *objective* of the elite currently in the cell. See
+            :pr:`314` for more info.
 
         .. note::
             The best elite will contain a "threshold" key. This threshold is the
-            threshold of the best elite's cell after the best elite was inserted
-            into the archive.
+            threshold of the best elite's cell after the best elite was inserted into
+            the archive.
         """
         return self._best_elite
 
@@ -250,24 +241,24 @@ class GridArchive(ArchiveBase):
     def boundaries(self):
         """list of numpy.ndarray: The boundaries of the cells in each dimension.
 
-        Entry ``i`` in this list is an array that contains the boundaries of the
-        cells in dimension ``i``. The array contains ``self.dims[i] + 1``
-        entries laid out like this::
+        Entry ``i`` in this list is an array that contains the boundaries of the cells
+        in dimension ``i``. The array contains ``self.dims[i] + 1`` entries laid out
+        like this::
 
             Archive cells:  | 0 | 1 |   ...   |    self.dims[i]    |
             boundaries[i]:  0   1   2   self.dims[i] - 1     self.dims[i]
 
-        Thus, ``boundaries[i][j]`` and ``boundaries[i][j + 1]`` are the lower
-        and upper bounds of cell ``j`` in dimension ``i``. To access the lower
-        bounds of all the cells in dimension ``i``, use ``boundaries[i][:-1]``,
-        and to access all the upper bounds, use ``boundaries[i][1:]``.
+        Thus, ``boundaries[i][j]`` and ``boundaries[i][j + 1]`` are the lower and upper
+        bounds of cell ``j`` in dimension ``i``. To access the lower bounds of all the
+        cells in dimension ``i``, use ``boundaries[i][:-1]``, and to access all the
+        upper bounds, use ``boundaries[i][1:]``.
         """
         return self._boundaries
 
     @property
     def epsilon(self):
-        """dtypes["measures"]: Epsilon for computing archive indices. Refer to
-        the documentation for this class."""
+        """dtypes["measures"]: Epsilon for computing archive indices. Refer to the
+        documentation for this class."""
         return self._epsilon
 
     @property
@@ -282,8 +273,8 @@ class GridArchive(ArchiveBase):
 
     @property
     def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when
-        computing the QD score."""
+        """float: The offset which is subtracted from objective values when computing
+        the QD score."""
         return self._qd_score_offset
 
     ## dunder methods ##
@@ -310,9 +301,8 @@ class GridArchive(ArchiveBase):
         )
 
     def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values
-        (new_objective_sum) and the index of a potential new best elite
-        (new_best_index)."""
+        """Updates statistics based on a new sum of objective values (new_objective_sum)
+        and the index of a potential new best elite (new_best_index)."""
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
@@ -342,17 +332,17 @@ class GridArchive(ArchiveBase):
     def index_of(self, measures):
         """Returns archive indices for the given batch of measures.
 
-        First, values are clipped to the bounds of the measure space. Then, the
-        values are mapped to indices in the grid, e.g., cell 5 along dimension 0
-        and cell 3 along dimension 1. We convert these grid indices to integer
-        indices with :func:`numpy.ravel_multi_index` and return the result.
+        First, values are clipped to the bounds of the measure space. Then, the values
+        are mapped to indices in the grid, e.g., cell 5 along dimension 0 and cell 3
+        along dimension 1. We convert these grid indices to integer indices with
+        :func:`numpy.ravel_multi_index` and return the result.
 
-        To convert between integer and grid indices, we also provide utility
-        methods :meth:`grid_to_int_index` and :meth:`int_to_grid_index`.
+        To convert between integer and grid indices, we also provide utility methods
+        :meth:`grid_to_int_index` and :meth:`int_to_grid_index`.
 
-        As an example, grid indices can be used to access :attr:`boundaries` of
-        a measure value's cell. For example, the following retrieves the lower
-        and upper bounds of the cell along dimension 0::
+        As an example, grid indices can be used to access :attr:`boundaries` of a
+        measure value's cell. For example, the following retrieves the lower and upper
+        bounds of the cell along dimension 0::
 
             # Access only element 0 since this method operates in batch.
             idx = archive.int_to_grid_index(archive.index_of(...))[0]
@@ -364,27 +354,25 @@ class GridArchive(ArchiveBase):
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
         Returns:
-            numpy.ndarray: (batch_size,) array of integer indices representing
-            the flattened grid coordinates.
+            numpy.ndarray: (batch_size,) array of integer indices representing the
+            flattened grid coordinates.
         Raises:
-            ValueError: ``measures`` is not of shape (batch_size,
-                :attr:`measure_dim`).
+            ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
-        # Adding epsilon accounts for floating point precision errors from
-        # transforming measures. We then cast to int32 to obtain integer
-        # indices.
+        # Adding epsilon accounts for floating point precision errors from transforming
+        # measures. We then cast to int32 to obtain integer indices.
         grid_indices = (
             (self._dims * (measures - self._lower_bounds) + self._epsilon)
             / self._interval_size
         ).astype(np.int32)
 
-        # Clip indices to the archive dimensions (for example, for 20 cells, we
-        # want indices to run from 0 to 19).
+        # Clip indices to the archive dimensions (for example, for 20 cells, we want
+        # indices to run from 0 to 19).
         grid_indices = np.clip(grid_indices, 0, self._dims - 1)
 
         return self.grid_to_int_index(grid_indices)
@@ -395,11 +383,11 @@ class GridArchive(ArchiveBase):
         See :meth:`index_of`.
 
         Args:
-            measures (array-like): (:attr:`measure_dim`,) array of measures for
-                a single solution.
+            measures (array-like): (:attr:`measure_dim`,) array of measures for a single
+                solution.
         Returns:
-            int or numpy.integer: Integer index of the measures in the archive's
-            storage arrays.
+            int or numpy.integer: Integer index of the measures in the archive's storage
+            arrays.
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -415,13 +403,13 @@ class GridArchive(ArchiveBase):
         Refer to :meth:`index_of` for more info.
 
         Args:
-            grid_indices (array-like): (batch_size, :attr:`measure_dim`)
-                array of indices in the archive grid.
+            grid_indices (array-like): (batch_size, :attr:`measure_dim`) array of
+                indices in the archive grid.
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices.
         Raises:
             ValueError: ``grid_indices`` is not of shape (batch_size,
-                :attr:`measure_dim`)
+                :attr:`measure_dim`).
         """
         grid_indices = np.asarray(grid_indices)
         check_batch_shape(grid_indices, "grid_indices", self.measure_dim, "measure_dim")
@@ -434,11 +422,11 @@ class GridArchive(ArchiveBase):
         Refer to :meth:`index_of` for more info.
 
         Args:
-            int_indices (array-like): (batch_size,) array of integer
-                indices such as those output by :meth:`index_of`.
+            int_indices (array-like): (batch_size,) array of integer indices such as
+                those output by :meth:`index_of`.
         Returns:
-            numpy.ndarray: (batch_size, :attr:`measure_dim`) array of indices
-            in the archive grid.
+            numpy.ndarray: (batch_size, :attr:`measure_dim`) array of indices in the
+            archive grid.
         Raises:
             ValueError: ``int_indices`` is not of shape (batch_size,).
         """
@@ -463,17 +451,17 @@ class GridArchive(ArchiveBase):
         if len(indices) == 0:
             return np.array([], dtype=dtype)
 
-        # Compute the number of objectives inserted into each cell. Note that we
-        # index with `indices` to place the counts at all relevant indices. For
-        # instance, if we had an array [1,2,3,1,5], we would end up with
-        # [2,1,1,2,1] (there are 2 1's, 1 2, 1 3, 2 1's, and 1 5).
+        # Compute the number of objectives inserted into each cell. Note that we index
+        # with `indices` to place the counts at all relevant indices. For instance, if
+        # we had an array [1,2,3,1,5], we would end up with [2,1,1,2,1] (there are 2
+        # 1's, 1 2, 1 3, 2 1's, and 1 5).
         #
-        # All objective_sizes should be > 0 since we only retrieve counts for
-        # indices in `indices`.
+        # All objective_sizes should be > 0 since we only retrieve counts for indices in
+        # `indices`.
         objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]
 
-        # Compute the sum of the objectives inserted into each cell -- again, we
-        # index with `indices`.
+        # Compute the sum of the objectives inserted into each cell -- again, we index
+        # with `indices`.
         objective_sums = aggregate(indices, objective, func="sum", fill_value=np.nan)[
             indices
         ]
@@ -482,10 +470,10 @@ class GridArchive(ArchiveBase):
         # (https://arxiv.org/abs/2205.10752).
         #
         # Unlike in single_entry_with_threshold, we do not need to worry about
-        # cur_threshold having -np.inf here as a result of threshold_min being
-        # -np.inf. This is because the case with threshold_min = -np.inf is
-        # handled separately since we compute the new threshold based on the max
-        # objective in each cell in that case.
+        # cur_threshold having -np.inf here as a result of threshold_min being -np.inf.
+        # This is because the case with threshold_min = -np.inf is handled separately
+        # since we compute the new threshold based on the max objective in each cell in
+        # that case.
         ratio = dtype(1.0 - learning_rate) ** objective_sizes
         new_threshold = ratio * cur_threshold + (objective_sums / objective_sizes) * (
             1 - ratio
@@ -497,93 +485,84 @@ class GridArchive(ArchiveBase):
         """Inserts a batch of solutions into the archive.
 
         Each solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  If multiple
-        solutions in the batch end up in the same cell, we only insert the
-        solution with the highest objective. If multiple solutions end up in the
-        same cell and tie for the highest objective, we insert the solution that
-        appears first in the batch.
+        threshold of the corresponding cell. For the default values of ``learning_rate``
+        and ``threshold_min``, this threshold is simply the objective value of the elite
+        previously in the cell. If multiple solutions in the batch end up in the same
+        cell, we only insert the solution with the highest objective. If multiple
+        solutions end up in the same cell and tie for the highest objective, we insert
+        the solution that appears first in the batch.
 
-        For the default values of ``learning_rate`` and ``threshold_min``, the
-        threshold for each cell is updated by taking the maximum objective value
-        among all the solutions that landed in the cell, resulting in the same
-        behavior as in the vanilla MAP-Elites archive. However, for other
-        settings, the threshold is updated with the batch update rule described
-        in the appendix of `Fontaine 2023 <https://arxiv.org/abs/2205.10752>`_.
+        For the default values of ``learning_rate`` and ``threshold_min``, the threshold
+        for each cell is updated by taking the maximum objective value among all the
+        solutions that landed in the cell, resulting in the same behavior as in the
+        vanilla MAP-Elites archive. However, for other settings, the threshold is
+        updated with the batch update rule described in the appendix of `Fontaine 2023
+        <https://arxiv.org/abs/2205.10752>`_.
 
-        .. note:: The indices of all arguments should "correspond" to each
-            other, i.e., ``solution[i]``, ``objective[i]``, and ``measures[i]``
-            should be the solution parameters, objective, and measures for
-            solution ``i``.
+        .. note:: The indices of all arguments should "correspond" to each other, i.e.,
+            ``solution[i]``, ``objective[i]``, and ``measures[i]`` should be the
+            solution parameters, objective, and measures for solution ``i``.
 
         Args:
-            solution (array-like): (batch_size, :attr:`solution_dim`) array of
-                solution parameters.
+            solution (array-like): (batch_size, :attr:`solution_dim`) array of solution
+                parameters.
             objective (array-like): (batch_size,) array with objective function
                 evaluations of the solutions.
-            measures (array-like): (batch_size, :attr:`measure_dim`) array with
-                measure space coordinates of all the solutions.
-            fields (keyword arguments): Additional data for each solution. Each
-                argument should be an array with batch_size as the first
-                dimension.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array with measure
+                space coordinates of all the solutions.
+            fields (keyword arguments): Additional data for each solution. Each argument
+                should be an array with batch_size as the first dimension.
 
         Returns:
-            dict: Information describing the result of the add operation. The
-            dict contains the following keys:
+            dict: Information describing the result of the add operation. The dict
+            contains the following keys:
 
-            - ``"status"`` (:class:`numpy.ndarray` of :class:`numpy.int32`): An
-              array of integers that represent the "status" obtained when
-              attempting to insert each solution in the batch. Each item has the
-              following possible values:
+            - ``"status"`` (:class:`numpy.ndarray` of :class:`numpy.int32`): An array of
+              integers that represent the "status" obtained when attempting to insert
+              each solution in the batch. Each item has the following possible values:
 
               - ``0``: The solution was not added to the archive.
-              - ``1``: The solution improved the objective value of a cell
-                which was already in the archive.
+              - ``1``: The solution improved the objective value of a cell which was
+                already in the archive.
               - ``2``: The solution discovered a new cell in the archive.
 
               All statuses (and values, below) are computed with respect to the
-              *current* archive. For example, if two solutions both introduce
-              the same new archive cell, then both will be marked with ``2``.
+              *current* archive. For example, if two solutions both introduce the same
+              new archive cell, then both will be marked with ``2``.
 
-              The alternative is to depend on the order of the solutions in the
-              batch -- for example, if we have two solutions ``a`` and ``b``
-              that introduce the same new cell in the archive, ``a`` could be
-              inserted first with status ``2``, and ``b`` could be inserted
-              second with status ``1`` because it improves upon ``a``. However,
-              our implementation does **not** do this.
+              The alternative is to depend on the order of the solutions in the batch --
+              for example, if we have two solutions ``a`` and ``b`` that introduce the
+              same new cell in the archive, ``a`` could be inserted first with status
+              ``2``, and ``b`` could be inserted second with status ``1`` because it
+              improves upon ``a``. However, our implementation does **not** do this.
 
-              To convert statuses to a more semantic format, cast all statuses
-              to :class:`AddStatus`, e.g., with ``[AddStatus(s) for s in
+              To convert statuses to a more semantic format, cast all statuses to
+              :class:`AddStatus`, e.g., with ``[AddStatus(s) for s in
               add_info["status"]]``.
 
-            - ``"value"`` (:class:`numpy.ndarray` of
-              :attr:`dtypes` ["objective"]): An array with values for each
-              solution in the batch. With the default values of ``learning_rate
-              = 1.0`` and ``threshold_min = -np.inf``, the meaning of each value
-              depends on the corresponding ``status`` and is identical to that
-              in CMA-ME (`Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_):
+            - ``"value"`` (:class:`numpy.ndarray` of :attr:`dtypes` ["objective"]): An
+              array with values for each solution in the batch. With the default values
+              of ``learning_rate = 1.0`` and ``threshold_min = -np.inf``, the meaning of
+              each value depends on the corresponding ``status`` and is identical to
+              that in CMA-ME (`Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_):
 
-              - ``0`` (not added): The value is the "negative improvement,"
-                i.e., the objective of the solution passed in minus the
-                objective of the elite still in the archive (this value is
-                negative because the solution did not have a high enough
-                objective to be added to the archive).
-              - ``1`` (improve existing cell): The value is the "improvement,"
-                i.e., the objective of the solution passed in minus the
-                objective of the elite previously in the archive.
-              - ``2`` (new cell): The value is just the objective of the
-                solution.
+              - ``0`` (not added): The value is the "negative improvement," i.e., the
+                objective of the solution passed in minus the objective of the elite
+                still in the archive (this value is negative because the solution did
+                not have a high enough objective to be added to the archive).
+              - ``1`` (improve existing cell): The value is the "improvement," i.e., the
+                objective of the solution passed in minus the objective of the elite
+                previously in the archive.
+              - ``2`` (new cell): The value is just the objective of the solution.
 
-              In contrast, for other values of ``learning_rate`` and
-              ``threshold_min``, each value is equivalent to the objective value
-              of the solution minus the threshold of its corresponding cell in
-              the archive.
+              In contrast, for other values of ``learning_rate`` and ``threshold_min``,
+              each value is equivalent to the objective value of the solution minus the
+              threshold of its corresponding cell in the archive.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective`` or ``measures`` has non-finite values (inf
-                or NaN).
+            ValueError: ``objective`` or ``measures`` has non-finite values (inf or
+                NaN).
         """
         data = validate_batch(
             self,
@@ -611,11 +590,10 @@ class GridArchive(ArchiveBase):
         cur_threshold = cur_data["threshold"]
         cur_threshold[~cur_occupied] = self.threshold_min
 
-        # Compute status -- arrays below are all boolean arrays of length
-        # batch_size.
+        # Compute status -- arrays below are all boolean arrays of length batch_size.
         #
-        # When we want CMA-ME behavior, the threshold defaults to -inf for new
-        # cells, which satisfies the condition for can_insert.
+        # When we want CMA-ME behavior, the threshold defaults to -inf for new cells,
+        # which satisfies the condition for can_insert.
         can_insert = data["objective"] > cur_threshold
         is_new = can_insert & ~cur_occupied
         improve_existing = can_insert & cur_occupied
@@ -623,9 +601,9 @@ class GridArchive(ArchiveBase):
         add_info["status"][is_new] = 2
         add_info["status"][improve_existing] = 1
 
-        # If threshold_min is -inf, then we want CMA-ME behavior, which computes
-        # the improvement value of new solutions w.r.t zero. Otherwise, we
-        # compute improvement with respect to threshold_min.
+        # If threshold_min is -inf, then we want CMA-ME behavior, which computes the
+        # improvement value of new solutions w.r.t zero. Otherwise, we compute
+        # improvement with respect to threshold_min.
         cur_threshold[is_new] = (
             self.dtypes["threshold"](0.0)
             if self.threshold_min == -np.inf
@@ -633,14 +611,13 @@ class GridArchive(ArchiveBase):
         )
         add_info["value"] = data["objective"] - cur_threshold
 
-        # Return early if we cannot insert anything -- continuing throws a
-        # ValueError in aggregate() since index[can_insert] would be empty.
+        # Return early if we cannot insert anything -- continuing throws a ValueError in
+        # aggregate() since index[can_insert] would be empty.
         if not np.any(can_insert):
             return add_info
 
-        # Select all solutions that _can_ be inserted -- at this point, there
-        # are still conflicts in the insertions, e.g., multiple solutions can
-        # map to index 0.
+        # Select all solutions that _can_ be inserted -- at this point, there are still
+        # conflicts in the insertions, e.g., multiple solutions can map to index 0.
         indices = indices[can_insert]
         data = {name: arr[can_insert] for name, arr in data.items()}
         cur_threshold = cur_threshold[can_insert]
@@ -651,9 +628,9 @@ class GridArchive(ArchiveBase):
             new_threshold = data["objective"]
         else:
             # Batch threshold update described in Fontaine 2023
-            # (https://arxiv.org/abs/2205.10752). This computation is based on
-            # the mean objective of all solutions in the batch that could have
-            # been inserted into each cell.
+            # (https://arxiv.org/abs/2205.10752). This computation is based on the mean
+            # objective of all solutions in the batch that could have been inserted into
+            # each cell.
             new_threshold = self._compute_thresholds(
                 indices,
                 data["objective"],
@@ -662,20 +639,19 @@ class GridArchive(ArchiveBase):
                 self.dtypes["threshold"],
             )
 
-        # Retrieve indices of solutions that _should_ be inserted into the
-        # archive. Currently, multiple solutions may be inserted at each archive
-        # index, but we only want to insert the maximum among these solutions.
-        # Thus, we obtain the argmax for each archive index.
+        # Retrieve indices of solutions that _should_ be inserted into the archive.
+        # Currently, multiple solutions may be inserted at each archive index, but we
+        # only want to insert the maximum among these solutions. Thus, we obtain the
+        # argmax for each archive index.
         #
-        # We use a fill_value of -1 to indicate archive indices that were not
-        # covered in the batch. Note that the length of archive_argmax is only
-        # max(indices), rather than the total number of grid cells. However,
-        # this is okay because we only need the indices of the solutions, which
-        # we store in should_insert.
+        # We use a fill_value of -1 to indicate archive indices that were not covered in
+        # the batch. Note that the length of archive_argmax is only max(indices), rather
+        # than the total number of grid cells. However, this is okay because we only
+        # need the indices of the solutions, which we store in should_insert.
         #
-        # aggregate() always chooses the first item if there are ties, so the
-        # first elite will be inserted if there is a tie. See their default
-        # numpy implementation for more info:
+        # aggregate() always chooses the first item if there are ties, so the first
+        # elite will be inserted if there is a tie. See their default numpy
+        # implementation for more info:
         # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
         archive_argmax = aggregate(
             indices, data["objective"], func="argmax", fill_value=-1
@@ -704,10 +680,10 @@ class GridArchive(ArchiveBase):
         """Inserts a single solution into the archive.
 
         The solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  The threshold is
-        also updated if the solution was inserted.
+        threshold of the corresponding cell. For the default values of ``learning_rate``
+        and ``threshold_min``, this threshold is simply the objective value of the elite
+        previously in the cell. The threshold is also updated if the solution was
+        inserted.
 
         .. note::
             This method is provided as an easier-to-understand implementation
@@ -754,16 +730,16 @@ class GridArchive(ArchiveBase):
         cur_occupied = cur_occupied[0]
 
         if cur_occupied:
-            # If the cell is currently occupied, the threshold comes from the
-            # current data of the elite in the cell.
+            # If the cell is currently occupied, the threshold comes from the current
+            # data of the elite in the cell.
             cur_threshold = cur_data["threshold"][0]
         else:
             # If the cell is not currently occupied, the threshold needs special
             # settings.
             #
-            # If threshold_min is -inf, then we want CMA-ME behavior, which
-            # computes the improvement value with a threshold of zero for new
-            # solutions. Otherwise, we will set cur_threshold to threshold_min.
+            # If threshold_min is -inf, then we want CMA-ME behavior, which computes the
+            # improvement value with a threshold of zero for new solutions. Otherwise,
+            # we will set cur_threshold to threshold_min.
             cur_threshold = (
                 self.dtypes["threshold"](0.0)
                 if self.threshold_min == -np.inf
@@ -776,25 +752,24 @@ class GridArchive(ArchiveBase):
         # Compute status and threshold.
         add_info["status"] = np.int32(0)  # NOT_ADDED
 
-        # Now we check whether a solution should be added to the archive. We use
-        # the addition rule from MAP-Elites (Fig. 2 of Mouret 2015
+        # Now we check whether a solution should be added to the archive. We use the
+        # addition rule from MAP-Elites (Fig. 2 of Mouret 2015
         # https://arxiv.org/pdf/1504.04909.pdf), with modifications for CMA-MAE.
 
-        # This checks if a new solution is discovered in the archive. Note that
-        # regular MAP-Elites only checks `not cur_occupied`. CMA-MAE has an
-        # additional `threshold_min` that the objective must exceed for new
-        # cells. If CMA-MAE is not being used, then `threshold_min` is -np.inf,
-        # making this check identical to that of MAP-Elites.
+        # This checks if a new solution is discovered in the archive. Note that regular
+        # MAP-Elites only checks `not cur_occupied`. CMA-MAE has an additional
+        # `threshold_min` that the objective must exceed for new cells. If CMA-MAE is
+        # not being used, then `threshold_min` is -np.inf, making this check identical
+        # to that of MAP-Elites.
         is_new = not cur_occupied and self.threshold_min < objective
 
-        # This checks whether the solution improves an existing cell in the
-        # archive, i.e., whether it performs better than the current elite in
-        # this cell. Vanilla MAP-Elites compares to the objective of the cell's
-        # current elite. CMA-MAE compares to a threshold value that updates
-        # over time (i.e., cur_threshold). When learning_rate is set to 1.0 (the
-        # default value), we recover the same rule as in MAP-Elites because
-        # cur_threshold is equivalent to the objective of the solution in the
-        # cell.
+        # This checks whether the solution improves an existing cell in the archive,
+        # i.e., whether it performs better than the current elite in this cell. Vanilla
+        # MAP-Elites compares to the objective of the cell's current elite. CMA-MAE
+        # compares to a threshold value that updates over time (i.e., cur_threshold).
+        # When learning_rate is set to 1.0 (the default value), we recover the same rule
+        # as in MAP-Elites because cur_threshold is equivalent to the objective of the
+        # solution in the cell.
         improve_existing = cur_occupied and cur_threshold < objective
 
         if is_new or improve_existing:
@@ -803,8 +778,8 @@ class GridArchive(ArchiveBase):
             else:
                 add_info["status"] = np.int32(2)  # NEW
 
-            # This calculation works in the case where threshold_min is -inf
-            # because cur_threshold will be set to 0.0 instead.
+            # This calculation works in the case where threshold_min is -inf because
+            # cur_threshold will be set to 0.0 instead.
             data["threshold"] = (
                 cur_threshold * (1.0 - self.learning_rate)
                 + objective * self.learning_rate
@@ -874,30 +849,29 @@ class GridArchive(ArchiveBase):
         """Updates the resolution of this archive to the given dimensions.
 
         Upon resizing the archive, this method re-inserts the solutions that are
-        currently contained in the archive. Note that if the new grid resolution
-        is smaller than the old grid resolution, some solutions may be dropped,
-        as solutions originally from different cells may now land in the same
-        cell, and only the highest-objective elite in each cell is retained.
+        currently contained in the archive. Note that if the new grid resolution is
+        smaller than the old grid resolution, some solutions may be dropped, as
+        solutions originally from different cells may now land in the same cell, and
+        only the highest-objective elite in each cell is retained.
 
-        Also note that the current implementation does not support archive
-        thresholds from CMA-MAE, i.e., the learning rate must be 1. The
-        thresholds within each cell should correspond to how well the measure
-        space within that cell has been explored, and thereby should correspond
-        to the measure space volume within that cell. It is an open research
-        problem as to how the new thresholds should be determined after
-        retessellating.
+        Also note that the current implementation does not support archive thresholds
+        from CMA-MAE, i.e., the learning rate must be 1. The thresholds within each cell
+        should correspond to how well the measure space within that cell has been
+        explored, and thereby should correspond to the measure space volume within that
+        cell. It is an open research problem as to how the new thresholds should be
+        determined after retessellating.
 
         Args:
-            new_dims (array-like of int):  Number of cells in each dimension of
-                the measure space, e.g., ``[20, 30, 40]`` indicates there should
-                be 3 dimensions with 20, 30, and 40 cells. The format is
-                identical to the ``dims`` argument in ``__init__``.
+            new_dims (array-like of int):  Number of cells in each dimension of the
+                measure space, e.g., ``[20, 30, 40]`` indicates there should be 3
+                dimensions with 20, 30, and 40 cells. The format is identical to the
+                ``dims`` argument in ``__init__``.
 
         Raises:
-            ValueError: Attempted to retessellate an archive with learning rate
-                not equal to 1.
-            ValueError: The measure space dimensionality in ``new_dims`` does
-                not match the current measure space dimensionality.
+            ValueError: Attempted to retessellate an archive with learning rate not
+                equal to 1.
+            ValueError: The measure space dimensionality in ``new_dims`` does not match
+                the current measure space dimensionality.
         """
         if not np.isclose(self.learning_rate, 1):
             raise ValueError(

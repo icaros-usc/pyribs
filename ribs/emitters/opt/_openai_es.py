@@ -28,15 +28,14 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
-        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-            indicating lower bounds of the solution space. Scalars specify
-            the same bound for the entire space, while arrays specify a
-            bound for each dimension. Pass -np.inf in the array or scalar to
-            indicated unbounded space.
-        upper_bounds (float or np.ndarray): Same as above, but for upper
-            bounds (and pass np.inf instead of -np.inf).
-        mirror_sampling (bool): Whether to use mirror sampling when gathering
-            solutions. Defaults to True.
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array indicating
+            lower bounds of the solution space. Scalars specify the same bound for the
+            entire space, while arrays specify a bound for each dimension. Pass -np.inf
+            in the array or scalar to indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper bounds (and
+            pass np.inf instead of -np.inf).
+        mirror_sampling (bool): Whether to use mirror sampling when gathering solutions.
+            Defaults to True.
         adam_kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
     """
 

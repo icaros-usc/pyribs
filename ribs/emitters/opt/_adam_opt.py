@@ -15,8 +15,8 @@ from ribs.emitters.opt._gradient_opt_base import GradientOptBase
 class AdamOpt(GradientOptBase):
     """Adam optimizer.
 
-    Refer to `Kingma and Ba 2014 <https://arxiv.org/pdf/1412.6980.pdf>`_ for
-    more information on hyperparameters.
+    Refer to `Kingma and Ba 2014 <https://arxiv.org/pdf/1412.6980.pdf>`_ for more
+    information on hyperparameters.
 
     Args:
         theta0 (array-like): Initial solution. 1D array.
@@ -24,11 +24,11 @@ class AdamOpt(GradientOptBase):
         beta1 (float): Exponential decay rate for the moment estimates.
         beta2 (float): Another exponential decay rate for the moment estimates.
         epsilon (float): Hyperparameter for numerical stability.
-        l2_coeff (float): Coefficient for L2 regularization. Note this is
-            **not** the same as "weight decay" -- see `this blog post
+        l2_coeff (float): Coefficient for L2 regularization. Note this is **not** the
+            same as "weight decay" -- see `this blog post
             <https://www.fast.ai/posts/2018-07-02-adam-weight-decay.html>_` and
-            `Loshchilov and Hutler 2019 <https://arxiv.org/abs/1711.05101>_` for
-            more info.
+            `Loshchilov and Hutler 2019 <https://arxiv.org/abs/1711.05101>_` for more
+            info.
     """
 
     def __init__(  # pylint: disable = super-init-not-called

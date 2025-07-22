@@ -19,14 +19,14 @@ def retrieve_cmap(cmap):
 def validate_heatmap_visual_args(
     aspect, cbar, measure_dim, valid_dims, error_msg_measure_dim
 ):
-    """Helper function to validate arguments passed to `*_archive_heatmap`
-    plotting functions.
+    """Helper function to validate arguments passed to `*_archive_heatmap` plotting
+    functions.
 
     Args:
-        valid_dims (list[int]): All specified valid archive dimensions that may
-            be plotted into heatmaps.
-        error_msg_measure_dim (str): Error message in ValueError if archive
-            dimension plotting is not supported.
+        valid_dims (list[int]): All specified valid archive dimensions that may be
+            plotted into heatmaps.
+        error_msg_measure_dim (str): Error message in ValueError if archive dimension
+            plotting is not supported.
 
     Raises:
         ValueError: if validity checks for heatmap args fail
@@ -88,18 +88,17 @@ def archive_heatmap_1d(
 
     Args:
         archive (ribs.archives.ArchiveBase): A 1D archive to plot.
-        cell_boundaries (np.ndarray): 1D array with the boundaries of the cells.
-            Length should be archive.cells + 1.
-        cell_objectives (np.ndarray): Objectives of all cells in the archive,
-            with the cells going from left to right. Length should be
-            archive.cells. Empty cells should have objective of NaN.
-        ax (matplotlib.axes.Axes): See heatmap methods, e.g.,
-            grid_archive_heatmap.
-        cmap (matplotlib.colors.Colormap): The colormap to use when
-            plotting intensity. Unlike in user-facing functions, we expect that
-            this arg was already through retrieve_cmap to get a colormap object.
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap. No
-            default value for this function, unlike in user-facing functions.
+        cell_boundaries (np.ndarray): 1D array with the boundaries of the cells. Length
+            should be archive.cells + 1.
+        cell_objectives (np.ndarray): Objectives of all cells in the archive, with the
+            cells going from left to right. Length should be archive.cells. Empty cells
+            should have objective of NaN.
+        ax (matplotlib.axes.Axes): See heatmap methods, e.g., grid_archive_heatmap.
+        cmap (matplotlib.colors.Colormap): The colormap to use when plotting intensity.
+            Unlike in user-facing functions, we expect that this arg was already through
+            retrieve_cmap to get a colormap object.
+        aspect ('auto', 'equal', float): The aspect ratio of the heatmap. No default
+            value for this function, unlike in user-facing functions.
         vmin (float): See heatmap methods, e.g., grid_archive_heatmap.
         vmax (float): See heatmap methods, e.g., grid_archive_heatmap.
         cbar ('auto', None, matplotlib.axes.Axes): See heatmap methods, e.g.,
@@ -109,8 +108,8 @@ def archive_heatmap_1d(
         pcm_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
     Returns:
-        The Axes where the heatmap was plotted. This may be used to further
-        modify the plot.
+        The Axes where the heatmap was plotted. This may be used to further modify the
+        plot.
     """
     # Initialize the axis.
     ax = plt.gca() if ax is None else ax
