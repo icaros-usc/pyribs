@@ -1,4 +1,5 @@
 """Utilities shared by the visualize module."""
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,8 +16,9 @@ def retrieve_cmap(cmap):
     return cmap
 
 
-def validate_heatmap_visual_args(aspect, cbar, measure_dim, valid_dims,
-                                 error_msg_measure_dim):
+def validate_heatmap_visual_args(
+    aspect, cbar, measure_dim, valid_dims, error_msg_measure_dim
+):
     """Helper function to validate arguments passed to `*_archive_heatmap`
     plotting functions.
 
@@ -29,16 +31,18 @@ def validate_heatmap_visual_args(aspect, cbar, measure_dim, valid_dims,
     Raises:
         ValueError: if validity checks for heatmap args fail
     """
-    if aspect is not None and not (isinstance(aspect, float) or
-                                   aspect in ["equal", "auto"]):
+    if aspect is not None and not (
+        isinstance(aspect, float) or aspect in ["equal", "auto"]
+    ):
         raise ValueError(
-            f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float")
+            f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float"
+        )
     if measure_dim not in valid_dims:
         raise ValueError(error_msg_measure_dim)
-    if not (cbar == "auto" or isinstance(cbar, matplotlib.axes.Axes) or
-            cbar is None):
-        raise ValueError(f"Invalid arg cbar={cbar}; must be 'auto', None, "
-                         "or matplotlib.axes.Axes")
+    if not (cbar == "auto" or isinstance(cbar, matplotlib.axes.Axes) or cbar is None):
+        raise ValueError(
+            f"Invalid arg cbar={cbar}; must be 'auto', None, or matplotlib.axes.Axes"
+        )
 
 
 def validate_df(df):
@@ -118,10 +122,8 @@ def archive_heatmap_1d(
 
     # Create the plot.
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-    vmin = (np.nanmin(cell_objectives)
-            if vmin is None and not archive.empty else vmin)
-    vmax = (np.nanmax(cell_objectives)
-            if vmax is None and not archive.empty else vmax)
+    vmin = np.nanmin(cell_objectives) if vmin is None and not archive.empty else vmin
+    vmax = np.nanmax(cell_objectives) if vmax is None and not archive.empty else vmax
     t = ax.pcolormesh(
         cell_boundaries,
         # y-bounds; needs a sensible default so that aspect ratio is consistent.
@@ -131,7 +133,8 @@ def archive_heatmap_1d(
         vmin=vmin,
         vmax=vmax,
         rasterized=rasterized,
-        **pcm_kwargs)
+        **pcm_kwargs,
+    )
 
     # Create color bar.
     set_cbar(t, ax, cbar, cbar_kwargs)

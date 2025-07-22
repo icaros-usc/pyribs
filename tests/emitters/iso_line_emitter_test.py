@@ -1,4 +1,5 @@
 """Tests for the IsoLineEmitter."""
+
 import numpy as np
 import pytest
 
@@ -10,11 +11,13 @@ def test_properties_are_correct(archive_fixture):
     iso_sigma = 1
     line_sigma = 2
     batch_size = 2
-    emitter = IsoLineEmitter(archive,
-                             iso_sigma=iso_sigma,
-                             line_sigma=line_sigma,
-                             x0=x0,
-                             batch_size=batch_size)
+    emitter = IsoLineEmitter(
+        archive,
+        iso_sigma=iso_sigma,
+        line_sigma=line_sigma,
+        x0=x0,
+        batch_size=batch_size,
+    )
 
     assert np.all(emitter.x0 == x0)
     assert emitter.iso_sigma == iso_sigma

@@ -15,6 +15,7 @@ Usage:
     # Evaluates an existing network.
     python train_mnist_classifier.py FILE.pth
 """
+
 import sys
 
 import torch
@@ -71,10 +72,14 @@ def evaluate(net, loader):
                 total_per_num[label] += 1
 
     for i in range(10):
-        print(f"Class {i}: {correct_per_num[i] / total_per_num[i]:5.3f}"
-              f" ({correct_per_num[i]} / {total_per_num[i]})")
-    print(f"TOTAL  : {sum(correct_per_num) / sum(total_per_num):5.3f}"
-          f" ({sum(correct_per_num)} / {sum(total_per_num)})")
+        print(
+            f"Class {i}: {correct_per_num[i] / total_per_num[i]:5.3f}"
+            f" ({correct_per_num[i]} / {total_per_num[i]})"
+        )
+    print(
+        f"TOTAL  : {sum(correct_per_num) / sum(total_per_num):5.3f}"
+        f" ({sum(correct_per_num)} / {sum(total_per_num)})"
+    )
 
 
 def main():
@@ -83,19 +88,24 @@ def main():
 
     # Transform each image by turning it into a tensor and then
     # normalizing the values.
-    mnist_transforms = torchvision.transforms.Compose([
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize((MEAN_TRANSFORM,),
-                                         (STD_DEV_TRANSFORM,))
-    ])
-    trainloader = torch.utils.data.DataLoader(torchvision.datasets.MNIST(
-        './data', train=True, download=True, transform=mnist_transforms),
-                                              batch_size=TRAIN_BATCH_SIZE,
-                                              shuffle=True)
-    testloader = torch.utils.data.DataLoader(torchvision.datasets.MNIST(
-        './data', train=False, transform=mnist_transforms),
-                                             batch_size=TEST_BATCH_SIZE,
-                                             shuffle=False)
+    mnist_transforms = torchvision.transforms.Compose(
+        [
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize((MEAN_TRANSFORM,), (STD_DEV_TRANSFORM,)),
+        ]
+    )
+    trainloader = torch.utils.data.DataLoader(
+        torchvision.datasets.MNIST(
+            "./data", train=True, download=True, transform=mnist_transforms
+        ),
+        batch_size=TRAIN_BATCH_SIZE,
+        shuffle=True,
+    )
+    testloader = torch.utils.data.DataLoader(
+        torchvision.datasets.MNIST("./data", train=False, transform=mnist_transforms),
+        batch_size=TEST_BATCH_SIZE,
+        shuffle=False,
+    )
 
     lenet5 = nn.Sequential(
         nn.Conv2d(1, 6, (5, 5), stride=1, padding=0),  # (1,28,28) -> (6,24,24)

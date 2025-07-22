@@ -1,4 +1,5 @@
 """Tests for EvolutionStrategyEmitter."""
+
 import numpy as np
 
 from ribs.archives import GridArchive
@@ -21,13 +22,10 @@ def test_randomness():
 
 
 def test_sphere():
-    archive = GridArchive(solution_dim=10,
-                          dims=[20, 20],
-                          ranges=[(-1.0, 1.0)] * 2)
-    emitter = EvolutionStrategyEmitter(archive,
-                                       x0=np.zeros(10),
-                                       sigma0=1.0,
-                                       es="pycma_es")
+    archive = GridArchive(solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2)
+    emitter = EvolutionStrategyEmitter(
+        archive, x0=np.zeros(10), sigma0=1.0, es="pycma_es"
+    )
 
     # Try running with the negative sphere function for a few iterations.
     for _ in range(5):

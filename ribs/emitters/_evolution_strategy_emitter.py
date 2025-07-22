@@ -1,4 +1,5 @@
 """Provides the EvolutionStrategyEmitter."""
+
 import numbers
 
 import numpy as np
@@ -98,13 +99,15 @@ class EvolutionStrategyEmitter(EmitterBase):
             bounds=bounds,
         )
 
-        seed_sequence = (seed if isinstance(seed, np.random.SeedSequence) else
-                         np.random.SeedSequence(seed))
+        seed_sequence = (
+            seed
+            if isinstance(seed, np.random.SeedSequence)
+            else np.random.SeedSequence(seed)
+        )
         opt_seed, ranker_seed = seed_sequence.spawn(2)
 
         self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
-        check_shape(self._x0, "x0", archive.solution_dim,
-                    "archive.solution_dim")
+        check_shape(self._x0, "x0", archive.solution_dim, "archive.solution_dim")
         self._sigma0 = sigma0
 
         if selection_rule not in ["mu", "filter"]:
@@ -230,19 +233,20 @@ class EvolutionStrategyEmitter(EmitterBase):
         new_sols = add_info["status"].astype(bool).sum()
 
         # Sort the solutions using ranker.
-        indices, ranking_values = self._ranker.rank(self, self.archive, data,
-                                                    add_info)
+        indices, ranking_values = self._ranker.rank(self, self.archive, data, add_info)
 
         # Select the number of parents.
-        num_parents = (new_sols if self._selection_rule == "filter" else
-                       self._batch_size // 2)
+        num_parents = (
+            new_sols if self._selection_rule == "filter" else self._batch_size // 2
+        )
 
         # Update Evolution Strategy.
         self._opt.tell(indices, ranking_values, num_parents)
 
         # Check for reset.
-        if (self._opt.check_stop(ranking_values[indices]) or
-                self._check_restart(new_sols)):
+        if self._opt.check_stop(ranking_values[indices]) or self._check_restart(
+            new_sols
+        ):
             new_x0 = self.archive.sample_elites(1)["solution"][0]
             self._opt.reset(new_x0)
             self._ranker.reset(self, self.archive)

@@ -55,9 +55,10 @@ all = [
   "pymoo",
 ]
 dev = [
-  "pip>=20.3",
+  # Tools
+  "isort",
+  "ruff",
   "pylint",
-  "yapf",
   "pre-commit",
 
   # Testing
@@ -109,12 +110,9 @@ readme = {file = ["README.md", "HISTORY.md"], content-type = "text/markdown"}
 
 [tool.isort]
 known_first_party = "ribs"
-line_length = 80
-
-[tool.yapf]
-based_on_style = "google"
-column_limit = 80
-indent_width = 4
+line_length = 88
+multi_line_output = 3  # Matches ruff.
+include_trailing_comma = true  # Matches ruff.
 
 [tool.pytest.ini_options]
 python_files = "*_test.py"

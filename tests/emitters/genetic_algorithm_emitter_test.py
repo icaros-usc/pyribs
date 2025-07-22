@@ -1,4 +1,5 @@
 """Tests for EvolutionStrategyEmitter."""
+
 import numpy as np
 import pytest
 
@@ -10,7 +11,7 @@ def test_properties_are_correct(archive_fixture):
     iso_sigma = 1
     line_sigma = 2
     batch_size = 2
-    operator_kwargs = {'iso_sigma': iso_sigma, 'line_sigma': line_sigma}
+    operator_kwargs = {"iso_sigma": iso_sigma, "line_sigma": line_sigma}
 
     emitter = GeneticAlgorithmEmitter(
         archive,
@@ -32,8 +33,8 @@ def test_initial_solutions_is_correct(archive_fixture):
         batch_size=36,
         operator="isoline",
         operator_kwargs={
-            'iso_sigma': 0.1,
-            'line_sigma': 0.2,
+            "iso_sigma": 0.1,
+            "line_sigma": 0.2,
         },
         initial_solutions=initial_solutions,
     )
@@ -53,8 +54,8 @@ def test_initial_solutions_shape(archive_fixture):
             initial_solutions=[[0, 0, 0], [1, 1, 1]],
             operator="isoline",
             operator_kwargs={
-                'iso_sigma': 0.1,
-                'line_sigma': 0.2,
+                "iso_sigma": 0.1,
+                "line_sigma": 0.2,
             },
         )
 
@@ -75,8 +76,8 @@ def test_both_x0_and_initial_solutions_provided(archive_fixture):
             initial_solutions=[[0, 1, 2, 3], [-1, -2, -3, -4]],
             operator="isoline",
             operator_kwargs={
-                'iso_sigma': 0.1,
-                'line_sigma': 0.2,
+                "iso_sigma": 0.1,
+                "line_sigma": 0.2,
             },
         )
 
@@ -90,8 +91,8 @@ def test_upper_bounds_enforced(archive_fixture):
         bounds=[(-1, 1)] * 4,
         operator="isoline",
         operator_kwargs={
-            'iso_sigma': 0.1,
-            'line_sigma': 0.2,
+            "iso_sigma": 0.1,
+            "line_sigma": 0.2,
         },
     )
     sols = emitter.ask()
@@ -107,8 +108,8 @@ def test_lower_bounds_enforced(archive_fixture):
         bounds=[(-1, 1)] * 4,
         operator="isoline",
         operator_kwargs={
-            'iso_sigma': 0.1,
-            'line_sigma': 0.2,
+            "iso_sigma": 0.1,
+            "line_sigma": 0.2,
         },
     )
     sols = emitter.ask()
@@ -124,8 +125,8 @@ def test_degenerate_iso_gauss_emits_x0(archive_fixture):
         operator="isoline",
         operator_kwargs={
             # Degenerate.
-            'iso_sigma': 0.0,
-            'line_sigma': 0.2,
+            "iso_sigma": 0.0,
+            "line_sigma": 0.2,
         },
     )
     solutions = emitter.ask()
@@ -141,8 +142,8 @@ def test_degenerate_iso_gauss_emits_parent(archive_fixture):
         operator="isoline",
         operator_kwargs={
             # Degenerate.
-            'iso_sigma': 0.0,
-            'line_sigma': 0.2,
+            "iso_sigma": 0.0,
+            "line_sigma": 0.2,
         },
     )
     archive.add_single(x0, 1, np.array([0, 0]))
@@ -160,8 +161,8 @@ def test_degenerate_iso_gauss_emits_along_line(archive_fixture):
         x0=x0,
         operator="isoline",
         operator_kwargs={
-            'iso_sigma': 0.0,
-            'line_sigma': 0.2,
+            "iso_sigma": 0.0,
+            "line_sigma": 0.2,
         },
     )
     archive.add_single(np.array([0, 0, 0, 0]), 1, np.array([0, 0]))

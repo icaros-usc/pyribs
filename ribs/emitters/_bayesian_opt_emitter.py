@@ -1,4 +1,5 @@
 """Provides the BayesianOptimizationEmitter."""
+
 import warnings
 
 import numpy as np
@@ -84,21 +85,17 @@ class BayesianOptimizationEmitter(EmitterBase):
             from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
             from pymoo.optimize import minimize
             from pymoo.problems.functional import FunctionalProblem
-            from pymoo.termination.default import \
-                DefaultSingleObjectiveTermination
+            from pymoo.termination.default import DefaultSingleObjectiveTermination
         except ImportError as e:
             raise ImportError(
                 "pymoo must be installed -- please run `pip install pymoo` "
-                "or `conda install pymoo`") from e
+                "or `conda install pymoo`"
+            ) from e
         self._pymoo_mods = {
-            'PatternSearch':
-                PatternSearch,
-            'minimize':
-                minimize,
-            'FunctionalProblem':
-                FunctionalProblem,
-            'DefaultSingleObjectiveTermination':
-                DefaultSingleObjectiveTermination
+            "PatternSearch": PatternSearch,
+            "minimize": minimize,
+            "FunctionalProblem": FunctionalProblem,
+            "DefaultSingleObjectiveTermination": DefaultSingleObjectiveTermination,
         }
 
         check_finite(bounds, "bounds")
@@ -112,15 +109,18 @@ class BayesianOptimizationEmitter(EmitterBase):
         if not isinstance(archive, GridArchive):
             raise NotImplementedError(
                 f"archive type {archive.__class__.__name__} not implemented for"
-                " BayesianOptimizationEmitter. Expected GridArchive.")
+                " BayesianOptimizationEmitter. Expected GridArchive."
+            )
 
-        if (not upscale_schedule is None) and (not np.isclose(
-                archive.learning_rate, 1)):
+        if (not upscale_schedule is None) and (
+            not np.isclose(archive.learning_rate, 1)
+        ):
             raise NotImplementedError(
                 "Archive upscaling is currently incompatible with archive "
                 "learning rate. Since you have specified an upscale schedule "
                 f"{upscale_schedule}, the learning rate of the input archive "
-                f"must be 1 (currently {archive.learning_rate}).")
+                f"must be 1 (currently {archive.learning_rate})."
+            )
 
         self._seed = seed
         self._sobol = Sobol(d=self.solution_dim, scramble=True, seed=self._seed)
@@ -128,25 +128,25 @@ class BayesianOptimizationEmitter(EmitterBase):
         # Initializes a multi-output GP. 1 output for objective function, plus 1
         # output for each measure function
         # NOTE: Using Matern kernal with default parameters
-        self._gp = GaussianProcessRegressor(kernel=Matern(),
-                                            normalize_y=True,
-                                            n_targets=1 + self.measure_dim)
+        self._gp = GaussianProcessRegressor(
+            kernel=Matern(), normalize_y=True, n_targets=1 + self.measure_dim
+        )
 
         if num_initial_samples is None and initial_solutions is None:
             raise ValueError(
-                "Either num_initial_samples or initial_solutions must be "
-                "provided.")
+                "Either num_initial_samples or initial_solutions must be provided."
+            )
         if num_initial_samples is not None and initial_solutions is not None:
             raise ValueError(
-                "num_initial_samples and initial_solutions cannot both be "
-                "provided.")
+                "num_initial_samples and initial_solutions cannot both be provided."
+            )
 
         if initial_solutions is not None:
             self._initial_solutions = np.asarray(
-                initial_solutions, dtype=archive.dtypes["solution"])
+                initial_solutions, dtype=archive.dtypes["solution"]
+            )
         else:
-            self._initial_solutions = self._sample_n_rescale(
-                num_initial_samples)
+            self._initial_solutions = self._sample_n_rescale(num_initial_samples)
 
         check_batch_shape(
             self._initial_solutions,
@@ -176,9 +176,11 @@ class BayesianOptimizationEmitter(EmitterBase):
         self._prev_numcells = len(self.archive)
         self._numitrs_noprogress = 0
 
-        self._entropy_norm = (entropy(
-            np.ones(self.archive.cells) /
-            self.archive.cells) if entropy_ejie else None)
+        self._entropy_norm = (
+            entropy(np.ones(self.archive.cells) / self.archive.cells)
+            if entropy_ejie
+            else None
+        )
 
         self._min_obj = min_obj
 
@@ -198,10 +200,15 @@ class BayesianOptimizationEmitter(EmitterBase):
         a lower precision than cell_probs to ensure the same sample
         consistently passes/fails the threshold check."""
         return round(
-            0.5 * (2 / self.archive.cells)**
-            ((10 * self.solution_dim) /
-             (self._misspec - 2 * self._overspec + self.num_evals + 1e-6))**0.5,
-            4)
+            0.5
+            * (2 / self.archive.cells)
+            ** (
+                (10 * self.solution_dim)
+                / (self._misspec - 2 * self._overspec + self.num_evals + 1e-6)
+            )
+            ** 0.5,
+            4,
+        )
 
     @property
     def num_evals(self):
@@ -277,7 +284,8 @@ class BayesianOptimizationEmitter(EmitterBase):
         """
         if self._entropy_norm is not None:
             self._entropy_norm = entropy(
-                np.ones(self.archive.cells) / self.archive.cells)
+                np.ones(self.archive.cells) / self.archive.cells
+            )
 
         self._numitrs_noprogress = 0
 
@@ -326,18 +334,21 @@ class BayesianOptimizationEmitter(EmitterBase):
         if upscale_schedule.shape[1] != self.measure_dim:
             raise ValueError(
                 f"Expected upscale_schedule of shape (any,{self.measure_dim}), "
-                f"actually got {upscale_schedule.shape}.")
+                f"actually got {upscale_schedule.shape}."
+            )
 
         if not np.all(np.diff(upscale_schedule, axis=0) >= 0):
             raise ValueError(
                 "The resolutions corresponding to each measure must be "
-                "non-decreasing along axis 0.")
+                "non-decreasing along axis 0."
+            )
 
         if not np.all(self.archive.dims == upscale_schedule[0]):
             raise ValueError(
                 "Expected the first resolution within upscale_schedule to be "
                 f"{self.archive.dims} (the resolution of this emitter's "
-                f"archive), actually got {upscale_schedule[0]}.")
+                f"archive), actually got {upscale_schedule[0]}."
+            )
 
     def _sample_n_rescale(self, num_samples):
         """Samples `num_samples` solutions from the SOBOL sequence and rescales
@@ -354,7 +365,8 @@ class BayesianOptimizationEmitter(EmitterBase):
         # SOBOL samples are in range [0, 1]. Need to rescale to bounds
         sobol_samples = self._sobol.random(n=num_samples)
         rescaled_samples = self.lower_bounds + sobol_samples * (
-            self.upper_bounds - self.lower_bounds)
+            self.upper_bounds - self.lower_bounds
+        )
 
         return rescaled_samples
 
@@ -379,8 +391,9 @@ class BayesianOptimizationEmitter(EmitterBase):
         """
         num_samples = obj_mus.shape[0]
         all_obj = np.full((self.archive.cells,), self.min_obj)
-        elite_idx, elite_obj = self.archive.data(["index", "objective"],
-                                                 return_type="tuple")
+        elite_idx, elite_obj = self.archive.data(
+            ["index", "objective"], return_type="tuple"
+        )
         all_obj[elite_idx] = elite_obj
 
         distribution = norm(
@@ -389,8 +402,8 @@ class BayesianOptimizationEmitter(EmitterBase):
         )
 
         return (obj_mus[:, None] - all_obj) * distribution.cdf(
-            obj_mus[:, None]) + obj_stds[:, None] * distribution.pdf(
-                obj_mus[:, None])
+            obj_mus[:, None]
+        ) + obj_stds[:, None] * distribution.pdf(obj_mus[:, None])
 
     def _get_cell_probs(self, meas_mus, meas_stds, normalize=True, cutoff=True):
         """Computes archive cell membership probabilities predicted by
@@ -423,8 +436,7 @@ class BayesianOptimizationEmitter(EmitterBase):
 
             # computes the cdf values at each cell boundary, this has shape
             # (num_solutions, num_boundaries).
-            cdf_vals = distribution.cdf(
-                self.archive.boundaries[measure_idx][:, None]).T
+            cdf_vals = distribution.cdf(self.archive.boundaries[measure_idx][:, None]).T
 
             # takes the difference between each pair of adjacent boundaries,
             # this has shape (num_solutions, num_boundaries-1) = (num_solutions,
@@ -475,24 +487,27 @@ class BayesianOptimizationEmitter(EmitterBase):
                 shape (num_solutions, :attr:`archive.cells`) containing the
                 predicted cell membership probabilities for each solution.
         """
-        mus, stds = self._gp.predict(samples.reshape(-1, self.solution_dim),
-                                     return_std=True)
+        mus, stds = self._gp.predict(
+            samples.reshape(-1, self.solution_dim), return_std=True
+        )
 
-        expected_improvements = self._get_expected_improvements(
-            mus[:, 0], stds[:, 0])
+        expected_improvements = self._get_expected_improvements(mus[:, 0], stds[:, 0])
 
-        cell_probs = self._get_cell_probs(mus[:, 1:],
-                                          stds[:, 1:],
-                                          normalize=True,
-                                          cutoff=True)
+        cell_probs = self._get_cell_probs(
+            mus[:, 1:], stds[:, 1:], normalize=True, cutoff=True
+        )
 
         if self._entropy_norm is not None:
             all_zero_filter = np.all(np.isclose(cell_probs, 0), axis=1)
             entropies = np.zeros((mus.shape[0], 1))
-            entropies[~all_zero_filter] = entropy(cell_probs[~all_zero_filter],
-                                                  axis=1)[:, None]
-            ejie_by_cell = (expected_improvements * cell_probs *
-                            (1 + entropies / self._entropy_norm))
+            entropies[~all_zero_filter] = entropy(cell_probs[~all_zero_filter], axis=1)[
+                :, None
+            ]
+            ejie_by_cell = (
+                expected_improvements
+                * cell_probs
+                * (1 + entropies / self._entropy_norm)
+            )
         else:
             ejie_by_cell = expected_improvements * cell_probs
 
@@ -549,40 +564,41 @@ class BayesianOptimizationEmitter(EmitterBase):
             EJIE values in descending EJIE order.
         """
         if self.num_evals == 0:
-            return np.clip(self.initial_solutions, self.lower_bounds,
-                           self.upper_bounds)
+            return np.clip(self.initial_solutions, self.lower_bounds, self.upper_bounds)
 
         # pymoo minimizes so need to negate
-        pymoo_problem = self._pymoo_mods['FunctionalProblem'](
+        pymoo_problem = self._pymoo_mods["FunctionalProblem"](
             n_var=self.solution_dim,
             objs=lambda x: -np.sum(self._get_ejie_values(x)[0], axis=1),
             xl=self.lower_bounds,
             xu=self.upper_bounds,
         )
 
-        termination = self._pymoo_mods['DefaultSingleObjectiveTermination']()
+        termination = self._pymoo_mods["DefaultSingleObjectiveTermination"]()
 
         optimization_outcomes = {
-            'optimized_samples': [],
-            'optimized_ejie_by_cell': [],
-            'optimized_cell_probs': []
+            "optimized_samples": [],
+            "optimized_ejie_by_cell": [],
+            "optimized_cell_probs": [],
         }
-        while len(optimization_outcomes['optimized_samples']) < self.batch_size:
+        while len(optimization_outcomes["optimized_samples"]) < self.batch_size:
             samples = self._sample_n_rescale(self.num_sobol_samples)
             starting_ejie_by_cell, _ = self._get_ejie_values(samples)
 
-            search_starting_points = samples[np.argsort(
-                np.sum(starting_ejie_by_cell,
-                       axis=1))[-self._search_nrestarts:]]
+            search_starting_points = samples[
+                np.argsort(np.sum(starting_ejie_by_cell, axis=1))[
+                    -self._search_nrestarts :
+                ]
+            ]
 
             # optimizes ejie values of starting points
             found_positive_ejie = False
             for x0 in search_starting_points:
-                optimizer = self._pymoo_mods['PatternSearch'](x0=x0)
+                optimizer = self._pymoo_mods["PatternSearch"](x0=x0)
 
                 # Note: Using default pymoo minimize, PatternSearch, and
                 # termination.
-                result = self._pymoo_mods['minimize'](
+                result = self._pymoo_mods["minimize"](
                     problem=pymoo_problem,
                     algorithm=optimizer,
                     termination=termination,
@@ -591,15 +607,16 @@ class BayesianOptimizationEmitter(EmitterBase):
                 )
 
                 if -result.F > 0:
-                    optimization_outcomes['optimized_samples'].append(result.X)
+                    optimization_outcomes["optimized_samples"].append(result.X)
                     # retrieve the cell-wise EJIE and probs for optimized
                     # solution
-                    opt_ejie_by_cell, opt_cell_probs = self._get_ejie_values(
-                        result.X)
-                    optimization_outcomes['optimized_ejie_by_cell'].append(
-                        opt_ejie_by_cell.squeeze())
-                    optimization_outcomes['optimized_cell_probs'].append(
-                        opt_cell_probs.squeeze())
+                    opt_ejie_by_cell, opt_cell_probs = self._get_ejie_values(result.X)
+                    optimization_outcomes["optimized_ejie_by_cell"].append(
+                        opt_ejie_by_cell.squeeze()
+                    )
+                    optimization_outcomes["optimized_cell_probs"].append(
+                        opt_cell_probs.squeeze()
+                    )
                     found_positive_ejie = True
 
             # if didn't find any positive ejie after optimization, increments
@@ -609,9 +626,9 @@ class BayesianOptimizationEmitter(EmitterBase):
             if not found_positive_ejie:
                 self._overspec += 1
 
-        optimized_samples = np.array(optimization_outcomes['optimized_samples'])
-        ejie_by_cell = np.array(optimization_outcomes['optimized_ejie_by_cell'])
-        cell_probs = np.array(optimization_outcomes['optimized_cell_probs'])
+        optimized_samples = np.array(optimization_outcomes["optimized_samples"])
+        ejie_by_cell = np.array(optimization_outcomes["optimized_ejie_by_cell"])
+        cell_probs = np.array(optimization_outcomes["optimized_cell_probs"])
 
         total_ejies = np.sum(ejie_by_cell, axis=1)
         # Most likely cell for each optimized solution
@@ -620,11 +637,11 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         # Computes EJIE attributions of the most likely cell for each solution
         ejie_attributions = (
-            ejie_by_cell[range(ejie_by_cell.shape[0]), best_cell_idx] /
-            total_ejies)
+            ejie_by_cell[range(ejie_by_cell.shape[0]), best_cell_idx] / total_ejies
+        )
 
         # Sort by EJIE, take the top :attr:`batch_size` samples
-        sorted_idx = np.argsort(total_ejies)[::-1][:self.batch_size]
+        sorted_idx = np.argsort(total_ejies)[::-1][: self.batch_size]
 
         # NOTE: BOP-Elites Algorithm 1 implements a different mis-specification
         # check, in which a mis-specification occurs if a sample is predicted
@@ -635,8 +652,9 @@ class BayesianOptimizationEmitter(EmitterBase):
         # is attributed to a single cell, which has low predicted cell
         # probability. This corresponds to the (undesirable) scenario in which
         # a cell that is likely unreachable dominates EJIE.
-        for best_prob, attr_val in zip(best_cell_probs[sorted_idx],
-                                       ejie_attributions[sorted_idx]):
+        for best_prob, attr_val in zip(
+            best_cell_probs[sorted_idx], ejie_attributions[sorted_idx]
+        ):
             if best_prob < 0.5 < attr_val:
                 self._misspec += 1
 
@@ -691,11 +709,14 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         # Adds new data to dataset.
         self._dataset["solution"] = np.vstack(
-            (self._dataset["solution"], data["solution"]))
+            (self._dataset["solution"], data["solution"])
+        )
         self._dataset["objective"] = np.vstack(
-            (self._dataset["objective"], data["objective"].reshape(-1, 1)))
+            (self._dataset["objective"], data["objective"].reshape(-1, 1))
+        )
         self._dataset["measures"] = np.vstack(
-            (self._dataset["measures"], data["measures"]))
+            (self._dataset["measures"], data["measures"])
+        )
 
         # Updates (actually re-trains) GP with updated dataset.
         # sklearn occasionally raises LBFGS ConvergenceWarning, but this does
@@ -704,8 +725,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             warnings.filterwarnings("ignore", category=ConvergenceWarning)
             self._gp.fit(
                 X=self._dataset["solution"],
-                y=np.hstack(
-                    (self._dataset["objective"], self._dataset["measures"])),
+                y=np.hstack((self._dataset["objective"], self._dataset["measures"])),
             )
 
         # Checks upscale conditions and upscales if needed
@@ -718,13 +738,14 @@ class BayesianOptimizationEmitter(EmitterBase):
         # new cell has been found for multiple iterations.
         self._update_no_coverage_progress()
         if (not self.upscale_schedule is None) and np.any(
-                np.all(self.upscale_schedule > self.archive.dims, axis=1)):
+            np.all(self.upscale_schedule > self.archive.dims, axis=1)
+        ):
             if self._numitrs_noprogress > self.upscale_trigger_threshold:
                 # The next resolution on the schedule that is higher than the
                 # current resolution along all measure dims
-                next_res = self.upscale_schedule[np.all(self.upscale_schedule
-                                                        > self.archive.dims,
-                                                        axis=1)][0]
+                next_res = self.upscale_schedule[
+                    np.all(self.upscale_schedule > self.archive.dims, axis=1)
+                ][0]
 
                 return next_res
 

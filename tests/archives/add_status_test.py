@@ -3,6 +3,7 @@
 Though AddStatus is an enum, we make sure that we uphold several properties that
 we use throughout our algorithms.
 """
+
 from ribs.archives import AddStatus
 
 

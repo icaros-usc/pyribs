@@ -1,9 +1,14 @@
 """Tests for the Optimizers."""
+
 import numpy as np
 import pytest
 
-from ribs.emitters.opt import (_NAME_TO_ES_MAP, _NAME_TO_GRAD_OPT_MAP, _get_es,
-                               _get_grad_opt)
+from ribs.emitters.opt import (
+    _NAME_TO_ES_MAP,
+    _NAME_TO_GRAD_OPT_MAP,
+    _get_es,
+    _get_grad_opt,
+)
 
 # Evolution Strategy Tests
 
@@ -46,10 +51,7 @@ def test_init_with_get_grad_opt(grad_opt_name):
     else:
         grad_opt_kwargs = {}
 
-    grad_opt = _get_grad_opt(grad_opt_name,
-                             theta0=theta0,
-                             lr=lr,
-                             **grad_opt_kwargs)
+    grad_opt = _get_grad_opt(grad_opt_name, theta0=theta0, lr=lr, **grad_opt_kwargs)
 
     assert grad_opt.theta == theta0
 

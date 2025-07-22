@@ -1,4 +1,5 @@
 """Provides the IsoLineEmitter."""
+
 import numpy as np
 
 from ribs._utils import check_batch_shape, check_shape
@@ -51,16 +52,18 @@ class IsoLineEmitter(EmitterBase):
         ValueError: There is an error in the bounds configuration.
     """
 
-    def __init__(self,
-                 archive,
-                 *,
-                 iso_sigma=0.01,
-                 line_sigma=0.2,
-                 x0=None,
-                 initial_solutions=None,
-                 bounds=None,
-                 batch_size=64,
-                 seed=None):
+    def __init__(
+        self,
+        archive,
+        *,
+        iso_sigma=0.01,
+        line_sigma=0.2,
+        x0=None,
+        initial_solutions=None,
+        bounds=None,
+        batch_size=64,
+        seed=None,
+    ):
         EmitterBase.__init__(
             self,
             archive,
@@ -78,18 +81,21 @@ class IsoLineEmitter(EmitterBase):
         if x0 is None and initial_solutions is None:
             raise ValueError("Either x0 or initial_solutions must be provided.")
         if x0 is not None and initial_solutions is not None:
-            raise ValueError(
-                "x0 and initial_solutions cannot both be provided.")
+            raise ValueError("x0 and initial_solutions cannot both be provided.")
 
         if x0 is not None:
             self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
-            check_shape(self._x0, "x0", archive.solution_dim,
-                        "archive.solution_dim")
+            check_shape(self._x0, "x0", archive.solution_dim, "archive.solution_dim")
         elif initial_solutions is not None:
             self._initial_solutions = np.asarray(
-                initial_solutions, dtype=archive.dtypes["solution"])
-            check_batch_shape(self._initial_solutions, "initial_solutions",
-                              archive.solution_dim, "archive.solution_dim")
+                initial_solutions, dtype=archive.dtypes["solution"]
+            )
+            check_batch_shape(
+                self._initial_solutions,
+                "initial_solutions",
+                archive.solution_dim,
+                "archive.solution_dim",
+            )
 
     @property
     def x0(self):
@@ -152,12 +158,9 @@ class IsoLineEmitter(EmitterBase):
         if self.archive.empty:
             # Note: Since the parents are all `x0`, the `directions` below will
             # all be 0.
-            parents = np.repeat(self.x0[None],
-                                repeats=2 * self.batch_size,
-                                axis=0)
+            parents = np.repeat(self.x0[None], repeats=2 * self.batch_size, axis=0)
         else:
-            parents = self.archive.sample_elites(2 *
-                                                 self.batch_size)["solution"]
+            parents = self.archive.sample_elites(2 * self.batch_size)["solution"]
 
         parents = parents.reshape(2, self.batch_size, self.solution_dim)
         elites = parents[0]

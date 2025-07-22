@@ -1,4 +1,5 @@
 """Provides the GradientArborescenceEmitter."""
+
 import numbers
 
 import numpy as np
@@ -126,31 +127,33 @@ class GradientArborescenceEmitter(EmitterBase):
             invalid.
     """
 
-    def __init__(self,
-                 archive,
-                 *,
-                 x0,
-                 sigma0,
-                 lr,
-                 ranker="2imp",
-                 selection_rule="filter",
-                 restart_rule="no_improvement",
-                 grad_opt="adam",
-                 grad_opt_kwargs=None,
-                 es="cma_es",
-                 es_kwargs=None,
-                 normalize_grad=True,
-                 bounds=None,
-                 batch_size=None,
-                 epsilon=1e-8,
-                 seed=None):
-
+    def __init__(
+        self,
+        archive,
+        *,
+        x0,
+        sigma0,
+        lr,
+        ranker="2imp",
+        selection_rule="filter",
+        restart_rule="no_improvement",
+        grad_opt="adam",
+        grad_opt_kwargs=None,
+        es="cma_es",
+        es_kwargs=None,
+        normalize_grad=True,
+        bounds=None,
+        batch_size=None,
+        epsilon=1e-8,
+        seed=None,
+    ):
         if bounds is not None:
             raise ValueError(
                 "`bounds` must be set to None. The GradientArborescenceEmitter "
                 "does not currently support solution space bounds, as bounding "
                 "solutions for DQD algorithms such as CMA-MEGA is an open "
-                "problem.")
+                "problem."
+            )
 
         EmitterBase.__init__(
             self,
@@ -159,14 +162,16 @@ class GradientArborescenceEmitter(EmitterBase):
             bounds=bounds,
         )
 
-        seed_sequence = (seed if isinstance(seed, np.random.SeedSequence) else
-                         np.random.SeedSequence(seed))
+        seed_sequence = (
+            seed
+            if isinstance(seed, np.random.SeedSequence)
+            else np.random.SeedSequence(seed)
+        )
         opt_seed, ranker_seed = seed_sequence.spawn(2)
 
         self._epsilon = epsilon
         self._x0 = np.array(x0, dtype=archive.dtypes["solution"])
-        check_shape(self._x0, "x0", archive.solution_dim,
-                    "archive.solution_dim")
+        check_shape(self._x0, "x0", archive.solution_dim, "archive.solution_dim")
         self._sigma0 = sigma0
         self._normalize_grads = normalize_grad
         self._jacobian_batch = None
@@ -194,7 +199,8 @@ class GradientArborescenceEmitter(EmitterBase):
             grad_opt,
             theta0=self._x0,
             lr=lr,
-            **(grad_opt_kwargs if grad_opt_kwargs is not None else {}))
+            **(grad_opt_kwargs if grad_opt_kwargs is not None else {}),
+        )
 
         self._opt = _get_es(
             es,
@@ -277,12 +283,12 @@ class GradientArborescenceEmitter(EmitterBase):
                 with calls to ask_dqd() and tell_dqd().
         """
         if self._jacobian_batch is None:
-            raise RuntimeError("Please call ask_dqd() and tell_dqd() "
-                               "before calling ask().")
+            raise RuntimeError(
+                "Please call ask_dqd() and tell_dqd() before calling ask()."
+            )
 
         grad_coeffs = self._opt.ask()[:, :, None]
-        return (self._grad_opt.theta +
-                np.sum(self._jacobian_batch * grad_coeffs, axis=1))
+        return self._grad_opt.theta + np.sum(self._jacobian_batch * grad_coeffs, axis=1)
 
     def _check_restart(self, num_parents):
         """Emitter-side checks for restarting the optimizer.
@@ -303,8 +309,7 @@ class GradientArborescenceEmitter(EmitterBase):
             return False
         raise ValueError(f"Invalid restart_rule {self._restart_rule}")
 
-    def tell_dqd(self, solution, objective, measures, jacobian, add_info,
-                 **fields):
+    def tell_dqd(self, solution, objective, measures, jacobian, add_info, **fields):
         """Gives the emitter results from evaluating the gradient of the
         solutions.
 
@@ -339,8 +344,7 @@ class GradientArborescenceEmitter(EmitterBase):
         )
 
         if self._normalize_grads:
-            norms = (np.linalg.norm(jacobian, axis=2, keepdims=True) +
-                     self._epsilon)
+            norms = np.linalg.norm(jacobian, axis=2, keepdims=True) + self._epsilon
             jacobian /= norms
         self._jacobian_batch = jacobian
 
@@ -378,8 +382,9 @@ class GradientArborescenceEmitter(EmitterBase):
         )
 
         if self._jacobian_batch is None:
-            raise RuntimeError("Please call ask_dqd(), tell_dqd(), and ask() "
-                               "before calling tell().")
+            raise RuntimeError(
+                "Please call ask_dqd(), tell_dqd(), and ask() before calling tell()."
+            )
 
         # Increase iteration counter.
         self._itrs += 1
@@ -388,12 +393,12 @@ class GradientArborescenceEmitter(EmitterBase):
         new_sols = add_info["status"].astype(bool).sum()
 
         # Sort the solutions using ranker.
-        indices, ranking_values = self._ranker.rank(self, self.archive, data,
-                                                    add_info)
+        indices, ranking_values = self._ranker.rank(self, self.archive, data, add_info)
 
         # Select the number of parents.
-        num_parents = (new_sols if self._selection_rule == "filter" else
-                       self._batch_size // 2)
+        num_parents = (
+            new_sols if self._selection_rule == "filter" else self._batch_size // 2
+        )
 
         # Update Evolution Strategy.
         self._opt.tell(indices, ranking_values, num_parents)
@@ -401,8 +406,7 @@ class GradientArborescenceEmitter(EmitterBase):
         # Calculate a new mean in solution space. These weights are from CMA-ES.
         parents = data["solution"][indices]
         parents = parents[:num_parents]
-        weights = (np.log(num_parents + 0.5) -
-                   np.log(np.arange(1, num_parents + 1)))
+        weights = np.log(num_parents + 0.5) - np.log(np.arange(1, num_parents + 1))
         weights = weights / np.sum(weights)  # Normalize weights
         new_mean = np.sum(parents * np.expand_dims(weights, axis=1), axis=0)
 
@@ -411,8 +415,9 @@ class GradientArborescenceEmitter(EmitterBase):
         self._grad_opt.step(gradient_step)
 
         # Check for reset.
-        if (self._opt.check_stop(ranking_values[indices]) or
-                self._check_restart(new_sols)):
+        if self._opt.check_stop(ranking_values[indices]) or self._check_restart(
+            new_sols
+        ):
             new_coeff = self.archive.sample_elites(1)["solution"][0]
             self._grad_opt.reset(new_coeff)
             self._opt.reset(np.zeros(self._num_coefficients))

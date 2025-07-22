@@ -43,6 +43,7 @@ These gradient-based optimizers inherit from :class:`GradientOptBase`:
     ribs.emitters.opt.GradientAscentOpt
     ribs.emitters.opt.GradientOptBase
 """
+
 from ribs.emitters.opt._adam_opt import AdamOpt
 from ribs.emitters.opt._cma_es import CMAEvolutionStrategy
 from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
@@ -87,14 +88,17 @@ def _get_grad_opt(klass, **grad_opt_kwargs):
         if klass in _NAME_TO_GRAD_OPT_MAP:
             klass = _NAME_TO_GRAD_OPT_MAP[klass]
         else:
-            raise ValueError(f"`{klass}` is not the full or abbreviated "
-                             "name of a valid gradient optimizer")
+            raise ValueError(
+                f"`{klass}` is not the full or abbreviated "
+                "name of a valid gradient optimizer"
+            )
     if callable(klass):
         grad_opt = klass(**grad_opt_kwargs)
         if isinstance(grad_opt, GradientOptBase):
             return grad_opt
-        raise ValueError(f"Callable `{klass}` did not return an instance "
-                         "of GradientOptBase.")
+        raise ValueError(
+            f"Callable `{klass}` did not return an instance of GradientOptBase."
+        )
     raise ValueError(f"`{klass}` is neither a callable nor a string")
 
 
@@ -126,12 +130,15 @@ def _get_es(klass, **es_kwargs):
         if klass in _NAME_TO_ES_MAP:
             klass = _NAME_TO_ES_MAP[klass]
         else:
-            raise ValueError(f"`{klass}` is not the full or abbreviated "
-                             "name of a valid evolution strategy")
+            raise ValueError(
+                f"`{klass}` is not the full or abbreviated "
+                "name of a valid evolution strategy"
+            )
     if callable(klass):
         es = klass(**es_kwargs)
         if isinstance(es, EvolutionStrategyBase):
             return es
-        raise ValueError(f"Callable `{klass}` did not return an instance "
-                         "of EvolutionStrategyBase.")
+        raise ValueError(
+            f"Callable `{klass}` did not return an instance of EvolutionStrategyBase."
+        )
     raise ValueError(f"`{klass}` is neither a callable nor a string")

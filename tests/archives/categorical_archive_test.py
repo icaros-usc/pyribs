@@ -1,4 +1,5 @@
 """Tests for the CategoricalArchive."""
+
 import numpy as np
 
 from ribs.archives import CategoricalArchive

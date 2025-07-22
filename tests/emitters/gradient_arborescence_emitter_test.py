@@ -1,4 +1,5 @@
 """Tests for GradientArborescenceEmitter."""
+
 import numpy as np
 import pytest
 
@@ -9,42 +10,27 @@ from .evolution_strategy_emitter_test import ES_LIST
 
 
 def test_auto_batch_size():
-    archive = GridArchive(solution_dim=10,
-                          dims=[20, 20],
-                          ranges=[(-1.0, 1.0)] * 2)
-    emitter = GradientArborescenceEmitter(archive,
-                                          x0=np.zeros(10),
-                                          sigma0=1.0,
-                                          lr=1.0)
+    archive = GridArchive(solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2)
+    emitter = GradientArborescenceEmitter(archive, x0=np.zeros(10), sigma0=1.0, lr=1.0)
     assert emitter.batch_size is not None
     assert isinstance(emitter.batch_size, int)
 
 
 def test_list_as_initial_solution():
-    archive = GridArchive(solution_dim=10,
-                          dims=[20, 20],
-                          ranges=[(-1.0, 1.0)] * 2)
-    emitter = GradientArborescenceEmitter(archive,
-                                          x0=[0.0] * 10,
-                                          sigma0=1.0,
-                                          lr=1.0)
+    archive = GridArchive(solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2)
+    emitter = GradientArborescenceEmitter(archive, x0=[0.0] * 10, sigma0=1.0, lr=1.0)
 
     # The list was passed in but should be converted to a numpy array.
     assert isinstance(emitter.x0, np.ndarray)
     assert (emitter.x0 == np.zeros(10)).all()
 
 
-@pytest.mark.parametrize("dtype", [np.float64, np.float32],
-                         ids=["float64", "float32"])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
 def test_dtypes(dtype):
-    archive = GridArchive(solution_dim=10,
-                          dims=[20, 20],
-                          ranges=[(-1.0, 1.0)] * 2,
-                          dtype=dtype)
-    emitter = GradientArborescenceEmitter(archive,
-                                          x0=np.zeros(10),
-                                          sigma0=1.0,
-                                          lr=1.0)
+    archive = GridArchive(
+        solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2, dtype=dtype
+    )
+    emitter = GradientArborescenceEmitter(archive, x0=np.zeros(10), sigma0=1.0, lr=1.0)
     assert emitter.x0.dtype == dtype
 
 
@@ -54,22 +40,23 @@ def test_bounds_must_be_none():
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
 
     with pytest.raises(ValueError):
-        GradientArborescenceEmitter(archive,
-                                    x0=np.array([0]),
-                                    sigma0=1.0,
-                                    lr=1.0,
-                                    normalize_grad=False,
-                                    bounds=bound,
-                                    batch_size=batch_size)
+        GradientArborescenceEmitter(
+            archive,
+            x0=np.array([0]),
+            sigma0=1.0,
+            lr=1.0,
+            normalize_grad=False,
+            bounds=bound,
+            batch_size=batch_size,
+        )
 
 
 def test_ask_dqd_must_be_called_before_ask():
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
     with pytest.raises(RuntimeError):
-        emitter = GradientArborescenceEmitter(archive,
-                                              x0=np.array([0]),
-                                              sigma0=1.0,
-                                              lr=1.0)
+        emitter = GradientArborescenceEmitter(
+            archive, x0=np.array([0]), sigma0=1.0, lr=1.0
+        )
         # Must call ask_dqd() before calling ask() to set the jacobian.
         emitter.ask()
 
@@ -77,10 +64,9 @@ def test_ask_dqd_must_be_called_before_ask():
 def test_tell_dqd_must_be_called_before_tell():
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
     with pytest.raises(RuntimeError):
-        emitter = GradientArborescenceEmitter(archive,
-                                              x0=np.array([0]),
-                                              sigma0=1.0,
-                                              lr=1.0)
+        emitter = GradientArborescenceEmitter(
+            archive, x0=np.array([0]), sigma0=1.0, lr=1.0
+        )
         # Must call ask_dqd() before calling ask() to set the jacobian.
         emitter.tell([[0]], [0], [[0]], {"status": [0], "value": [0]})
 
@@ -103,9 +89,7 @@ def test_seed_sequence():
 
 @pytest.mark.parametrize("es", ES_LIST)
 def test_sphere(es):
-    archive = GridArchive(solution_dim=10,
-                          dims=[20, 20],
-                          ranges=[(-1.0, 1.0)] * 2)
+    archive = GridArchive(solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2)
     emitter = GradientArborescenceEmitter(
         archive,
         x0=np.zeros(10),

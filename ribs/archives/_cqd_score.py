@@ -1,4 +1,5 @@
 """Utilities for computing CQD score."""
+
 import dataclasses
 import typing
 
@@ -88,12 +89,17 @@ def cqd_score(
             shape.
     """
     target_points = np.copy(target_points)  # Copy since this is returned.
-    if (target_points.ndim != 3 or target_points.shape[0] != iterations or
-            target_points.shape[2] != archive.measure_dim):
-        raise ValueError("Expected target_points to be a 3D array with "
-                         f"shape ({iterations}, n, {archive.measure_dim}) "
-                         "(i.e. shape (iterations, n, measure_dim)) but it had "
-                         f"shape {target_points.shape}")
+    if (
+        target_points.ndim != 3
+        or target_points.shape[0] != iterations
+        or target_points.shape[2] != archive.measure_dim
+    ):
+        raise ValueError(
+            "Expected target_points to be a 3D array with "
+            f"shape ({iterations}, n, {archive.measure_dim}) "
+            "(i.e. shape (iterations, n, measure_dim)) but it had "
+            f"shape {target_points.shape}"
+        )
 
     if np.isscalar(penalties):
         penalties = np.linspace(0, 1, penalties)

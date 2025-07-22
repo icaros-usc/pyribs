@@ -1,4 +1,5 @@
 """Provides visualization functions for QDax repertoires."""
+
 import numpy as np
 
 from ribs.archives import CVTArchive
@@ -25,7 +26,8 @@ def _as_cvt_archive(repertoire, ranges):
     else:
         raise ValueError(
             "This method only supports visualizing single-objective "
-            "archives (i.e., there can only be one fitness).")
+            "archives (i.e., there can only be one fitness)."
+        )
 
     # Add everything to the CVTArchive.
     occupied = fitnesses != -np.inf

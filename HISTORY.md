@@ -25,6 +25,10 @@ This release makes some minor updates to 0.8.0.
 
 - Update Discord and X links in README ({pr}`566`)
 
+#### Improvements
+
+- Migrate from yapf to ruff for formatting ({pr}`581`, {pr}`582`)
+
 ## 0.8.0
 
 To learn about this release, see our page on What's New in v0.8.0:
