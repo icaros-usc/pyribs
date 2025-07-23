@@ -10,7 +10,7 @@ class ArchiveStats:
     """Holds statistics about an archive."""
 
     #: Number of elites in the archive.
-    num_elites: int
+    num_elites: np.int32
 
     #: Proportion of cells in the archive that have an elite - always in the
     #: range :math:`[0,1]`.
