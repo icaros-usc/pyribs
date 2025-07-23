@@ -324,7 +324,7 @@ class GridArchive(ArchiveBase):
             * self._qd_score_offset
         )
         self._stats = ArchiveStats(
-            num_elites=np.asarray(len(self), dtype=np.int32),
+            num_elites=len(self),
             coverage=np.asarray(len(self) / self.cells, dtype=self.dtypes["objective"]),
             qd_score=new_qd_score,
             norm_qd_score=np.asarray(

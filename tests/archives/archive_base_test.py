@@ -148,7 +148,7 @@ def test_clear_and_add_during_iteration(add_mode):
 @pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
 def test_stats_dtype(dtype):
     data = get_archive_data("GridArchive", dtype=dtype)
-    assert data.archive_with_elite.stats.num_elites.dtype == np.int32
+    assert isinstance(data.archive_with_elite.stats.num_elites, int)
     assert data.archive_with_elite.stats.coverage.dtype == dtype
     assert data.archive_with_elite.stats.qd_score.dtype == dtype
     assert data.archive_with_elite.stats.norm_qd_score.dtype == dtype
