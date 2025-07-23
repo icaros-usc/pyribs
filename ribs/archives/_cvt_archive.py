@@ -195,7 +195,9 @@ class CVTArchive(ArchiveBase):
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
             learning_rate, threshold_min, self.dtypes["threshold"]
         )
-        self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
+        self._qd_score_offset = np.asarray(
+            qd_score_offset, dtype=self.dtypes["objective"]
+        )
 
         # Set up statistics -- objective_sum is the sum of all objective values in the
         # archive; it is useful for computing qd_score and obj_mean.
@@ -410,12 +412,12 @@ class CVTArchive(ArchiveBase):
     def _stats_reset(self):
         """Resets the archive stats."""
         self._best_elite = None
-        self._objective_sum = self.dtypes["objective"](0.0)
+        self._objective_sum = np.asarray(0.0, dtype=self.dtypes["objective"])
         self._stats = ArchiveStats(
             num_elites=0,
-            coverage=self.dtypes["objective"](0.0),
-            qd_score=self.dtypes["objective"](0.0),
-            norm_qd_score=self.dtypes["objective"](0.0),
+            coverage=np.asarray(0.0, dtype=self.dtypes["objective"]),
+            qd_score=np.asarray(0.0, dtype=self.dtypes["objective"]),
+            norm_qd_score=np.asarray(0.0, dtype=self.dtypes["objective"]),
             obj_max=None,
             obj_mean=None,
         )
@@ -438,15 +440,20 @@ class CVTArchive(ArchiveBase):
         self._objective_sum = new_objective_sum
         new_qd_score = (
             self._objective_sum
-            - self.dtypes["objective"](len(self)) * self._qd_score_offset
+            - np.asarray(len(self), dtype=self.dtypes["objective"])
+            * self._qd_score_offset
         )
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=self.dtypes["objective"](len(self) / self.cells),
+            coverage=np.asarray(len(self) / self.cells, dtype=self.dtypes["objective"]),
             qd_score=new_qd_score,
-            norm_qd_score=self.dtypes["objective"](new_qd_score / self.cells),
+            norm_qd_score=np.asarray(
+                new_qd_score / self.cells, dtype=self.dtypes["objective"]
+            ),
             obj_max=new_obj_max,
-            obj_mean=self.dtypes["objective"](self._objective_sum / len(self)),
+            obj_mean=np.asarray(
+                self._objective_sum / len(self), dtype=self.dtypes["objective"]
+            ),
         )
 
     def index_of(self, measures):
@@ -530,7 +537,7 @@ class CVTArchive(ArchiveBase):
         If entries in `indices` are duplicated, they receive the same threshold.
         """
         if len(indices) == 0:
-            return np.array([], dtype=dtype)
+            return np.empty(0, dtype=dtype)
 
         # Compute the number of objectives inserted into each cell. Note that we index
         # with `indices` to place the counts at all relevant indices. For instance, if
@@ -555,7 +562,7 @@ class CVTArchive(ArchiveBase):
         # This is because the case with threshold_min = -np.inf is handled separately
         # since we compute the new threshold based on the max objective in each cell in
         # that case.
-        ratio = dtype(1.0 - learning_rate) ** objective_sizes
+        ratio = np.asarray(1.0 - learning_rate, dtype=dtype) ** objective_sizes
         new_threshold = ratio * cur_threshold + (objective_sums / objective_sizes) * (
             1 - ratio
         )
@@ -686,9 +693,7 @@ class CVTArchive(ArchiveBase):
         # improvement value of new solutions w.r.t zero. Otherwise, we compute
         # improvement with respect to threshold_min.
         cur_threshold[is_new] = (
-            self.dtypes["threshold"](0.0)
-            if self.threshold_min == -np.inf
-            else self.threshold_min
+            0.0 if self.threshold_min == -np.inf else self.threshold_min
         )
         add_info["value"] = data["objective"] - cur_threshold
 
@@ -822,7 +827,7 @@ class CVTArchive(ArchiveBase):
             # improvement value with a threshold of zero for new solutions. Otherwise,
             # we will set cur_threshold to threshold_min.
             cur_threshold = (
-                self.dtypes["threshold"](0.0)
+                np.asarray(0.0, self.dtypes["threshold"])
                 if self.threshold_min == -np.inf
                 else self.threshold_min
             )
@@ -876,7 +881,7 @@ class CVTArchive(ArchiveBase):
             cur_objective = (
                 cur_data["objective"][0]
                 if cur_occupied
-                else self.dtypes["objective"](0.0)
+                else np.asarray(0.0, dtype=self.dtypes["objective"])
             )
             self._stats_update(self._objective_sum + objective - cur_objective, index)
 
