@@ -1,6 +1,5 @@
 """Contains the GridArchive."""
 
-import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (
@@ -108,8 +107,9 @@ class GridArchive(ArchiveBase):
         self._xp = xp_namespace(xp)
         self._device = device
 
+        # TODO: Get rid of rng?
         self._rng = np.random.default_rng(seed)
-        self._dims = self._xp.asarray(dims, dtype=self._xp.int32)  # TODO: device?
+        self._dims = self._xp.asarray(dims, dtype=self._xp.int32, device=self._device)
 
         ArchiveBase.__init__(
             self,
@@ -139,6 +139,7 @@ class GridArchive(ArchiveBase):
             },
             capacity=self._xp.prod(self._dims),
             xp=self._xp,
+            device=self._device,
         )
 
         # Set up constant properties.
@@ -148,13 +149,18 @@ class GridArchive(ArchiveBase):
                 f"(length {len(ranges)}) must be the same length"
             )
         ranges = list(zip(*ranges))  # Rearrange into lower and upper bounds.
-        self._lower_bounds = self._xp.asarray(ranges[0], dtype=self.dtypes["measures"])
-        self._upper_bounds = self._xp.asarray(ranges[1], dtype=self.dtypes["measures"])
+        self._lower_bounds = self._xp.asarray(
+            ranges[0], dtype=self.dtypes["measures"], device=self._device
+        )
+        self._upper_bounds = self._xp.asarray(
+            ranges[1], dtype=self.dtypes["measures"], device=self._device
+        )
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._boundaries = self._compute_boundaries(
             self._dims, self._lower_bounds, self._upper_bounds
         )
         self._epsilon = self.dtypes["measures"](epsilon)
+        # TODO: Fix call to dtype
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
             learning_rate, threshold_min, self.dtypes["threshold"]
         )
@@ -171,7 +177,11 @@ class GridArchive(ArchiveBase):
         """Computes grid cell boundaries of the archive."""
         boundaries = []
         for dim, lower_bound, upper_bound in zip(dims, lower_bounds, upper_bounds):
-            boundaries.append(np.linspace(lower_bound, upper_bound, dim + 1))
+            boundaries.append(
+                self._xp.linspace(
+                    lower_bound, upper_bound, dim + 1, device=self._device
+                )
+            )
         return boundaries
 
     ## Properties inherited from ArchiveBase ##
