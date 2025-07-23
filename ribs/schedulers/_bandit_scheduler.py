@@ -45,14 +45,14 @@ class BanditScheduler:
             best-performing solutions.
         num_active (int): The number of active emitters at a time. Active emitters are
             used when calling ask-tell.
-        zeta (float): Hyperparamter of UCB1 that balances the trade-off between the
-            accuracy and the uncertainty of the emitters. Increasing this parameter will
-            emphasize the uncertainty of the emitters. Refer to the original paper for
-            more information.
         reselect (str): Indicates how emitters are reselected from the pool. The default
             is "terminated", where only terminated/restarted emitters are deactivated
             and reselected (but they might be selected again). Alternatively, use "all"
             to reselect all active emitters every iteration.
+        zeta (float): Hyperparamter of UCB1 that balances the trade-off between the
+            accuracy and the uncertainty of the emitters. Increasing this parameter will
+            emphasize the uncertainty of the emitters. Refer to the original paper for
+            more information.
         add_mode (str): Indicates how solutions should be added to the archive. The
             default is "batch", which adds all solutions with one call to
             :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single" to add
