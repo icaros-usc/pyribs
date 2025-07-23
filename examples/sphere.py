@@ -1120,8 +1120,8 @@ def sphere_main(
         plt.savefig(str(outdir / f"{name}_{metric.lower().replace(' ', '_')}.png"))
         plt.clf()
 
-    # Convert metrics to Python scalars by calling .item(), since each stats value
-    # is a 0-D array by default, and JSON cannot serialize 0-D arrays.
+    # Convert metrics to Python scalars by calling .item(), since each stats value is a
+    # 0-D array by default, and JSON cannot serialize 0-D arrays.
     for metric in metrics:
         metrics[metric]["y"] = [
             m if isinstance(m, (int, float)) else m.item() for m in metrics[metric]["y"]
