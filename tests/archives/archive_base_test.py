@@ -149,11 +149,11 @@ def test_clear_and_add_during_iteration(add_mode):
 def test_stats_dtype(dtype):
     data = get_archive_data("GridArchive", dtype=dtype)
     assert isinstance(data.archive_with_elite.stats.num_elites, int)
-    assert isinstance(data.archive_with_elite.stats.coverage, dtype)
-    assert isinstance(data.archive_with_elite.stats.qd_score, dtype)
-    assert isinstance(data.archive_with_elite.stats.norm_qd_score, dtype)
-    assert isinstance(data.archive_with_elite.stats.obj_max, dtype)
-    assert isinstance(data.archive_with_elite.stats.obj_mean, dtype)
+    assert data.archive_with_elite.stats.coverage.dtype == dtype
+    assert data.archive_with_elite.stats.qd_score.dtype == dtype
+    assert data.archive_with_elite.stats.norm_qd_score.dtype == dtype
+    assert data.archive_with_elite.stats.obj_max.dtype == dtype
+    assert data.archive_with_elite.stats.obj_mean.dtype == dtype
 
 
 @pytest.mark.parametrize("qd_score_offset", [0.0, -1.0])
