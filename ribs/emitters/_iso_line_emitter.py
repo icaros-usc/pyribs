@@ -9,44 +9,43 @@ from ribs.emitters._emitter_base import EmitterBase
 class IsoLineEmitter(EmitterBase):
     """Emits solutions by leveraging correlations between existing elites.
 
-    If the archive is empty and ``initial_solutions`` is set, a call to
-    :meth:`ask` will return ``initial_solutions``. If ``initial_solutions`` is
-    not set, we draw solutions from an isotropic Gaussian distribution centered
-    at ``x0`` with standard deviation ``iso_sigma``. Otherwise, to generate each
-    new solution, the emitter selects a pair of elites :math:`x_i` and
-    :math:`x_j` and samples from
+    If the archive is empty and ``initial_solutions`` is set, a call to :meth:`ask` will
+    return ``initial_solutions``. If ``initial_solutions`` is not set, we draw solutions
+    from an isotropic Gaussian distribution centered at ``x0`` with standard deviation
+    ``iso_sigma``. Otherwise, to generate each new solution, the emitter selects a pair
+    of elites :math:`x_i` and :math:`x_j` and samples from
 
     .. math::
 
         x_i + \\sigma_{iso} \\mathcal{N}(0,\\mathcal{I}) +
             \\sigma_{line}(x_j - x_i)\\mathcal{N}(0,1)
 
-    This emitter is based on the Iso+LineDD operator presented in `Vassiliades
-    2018 <https://arxiv.org/abs/1804.03906>`_.
+    This emitter is based on the Iso+LineDD operator presented in `Vassiliades 2018
+    <https://arxiv.org/abs/1804.03906>`_.
 
     Args:
         archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
-        iso_sigma (float): Scale factor for the isotropic distribution used to
-            generate solutions.
-        line_sigma (float): Scale factor for the line distribution used when
-            generating solutions.
-        x0 (array-like): Center of the Gaussian distribution from which to
-            sample solutions when the archive is empty. Must be 1-dimensional.
-            This argument is ignored if ``initial_solutions`` is set.
-        initial_solutions (array-like): An (n, solution_dim) array of solutions
-            to be used when the archive is empty. If this argument is None, then
-            solutions will be sampled from a Gaussian distribution centered at
-            ``x0`` with standard deviation ``iso_sigma``.
-        bounds (None or array-like): Bounds of the solution space. Solutions are
-            clipped to these bounds. Pass None to indicate there are no bounds.
-            Alternatively, pass an array-like to specify the bounds for each
-            dim. Each element in this array-like can be None to indicate no
-            bound, or a tuple of ``(lower_bound, upper_bound)``, where
-            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
+        iso_sigma (float): Scale factor for the isotropic distribution used to generate
+            solutions.
+        line_sigma (float): Scale factor for the line distribution used when generating
+            solutions.
+        x0 (array-like): Center of the Gaussian distribution from which to sample
+            solutions when the archive is empty. Must be 1-dimensional. This argument is
+            ignored if ``initial_solutions`` is set.
+        initial_solutions (array-like): An (n, solution_dim) array of solutions to be
+            used when the archive is empty. If this argument is None, then solutions
+            will be sampled from a Gaussian distribution centered at ``x0`` with
+            standard deviation ``iso_sigma``.
+        bounds (None or array-like): Bounds of the solution space. Solutions are clipped
+            to these bounds. Pass None to indicate there are no bounds. Alternatively,
+            pass an array-like to specify the bounds for each dim. Each element in this
+            array-like can be None to indicate no bound, or a tuple of ``(lower_bound,
+            upper_bound)``, where ``lower_bound`` or ``upper_bound`` may be None to
+            indicate no bound.
         batch_size (int): Number of solutions to return in :meth:`ask`.
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
+        seed (int): Value to seed the random number generator. Set to None to avoid a
+            fixed seed.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
@@ -99,21 +98,20 @@ class IsoLineEmitter(EmitterBase):
 
     @property
     def x0(self):
-        """numpy.ndarray: Center of the Gaussian distribution from which to
-        sample solutions when the archive is empty (if initial_solutions is not
-        set)."""
+        """numpy.ndarray: Center of the Gaussian distribution from which to sample
+        solutions when the archive is empty (if initial_solutions is not set)."""
         return self._x0
 
     @property
     def initial_solutions(self):
-        """numpy.ndarray: The initial solutions which are returned when the
-        archive is empty (if x0 is not set)."""
+        """numpy.ndarray: The initial solutions which are returned when the archive is
+        empty (if x0 is not set)."""
         return self._initial_solutions
 
     @property
     def iso_sigma(self):
-        """float: Scale factor for the isotropic distribution used to
-        generate solutions when the archive is not empty."""
+        """float: Scale factor for the isotropic distribution used to generate solutions
+        when the archive is not empty."""
         return self._iso_sigma
 
     @property
@@ -134,12 +132,11 @@ class IsoLineEmitter(EmitterBase):
     def ask(self):
         """Generates ``batch_size`` solutions.
 
-        If the archive is empty and ``initial_solutions`` is set, a call to
-        :meth:`ask` will return ``initial_solutions``. If ``initial_solutions``
-        is not set, we draw solutions from an isotropic Gaussian distribution
-        centered at ``x0`` with standard deviation ``iso_sigma``. Otherwise, to
-        generate each new solution, the emitter selects a pair of elites
-        :math:`x_i` and :math:`x_j` and samples from
+        If the archive is empty and ``initial_solutions`` is set, a call to :meth:`ask`
+        will return ``initial_solutions``. If ``initial_solutions`` is not set, we draw
+        solutions from an isotropic Gaussian distribution centered at ``x0`` with
+        standard deviation ``iso_sigma``. Otherwise, to generate each new solution, the
+        emitter selects a pair of elites :math:`x_i` and :math:`x_j` and samples from
 
         .. math::
 
@@ -148,9 +145,9 @@ class IsoLineEmitter(EmitterBase):
 
         Returns:
             If the archive is not empty, ``(batch_size, solution_dim)`` array --
-            contains ``batch_size`` new solutions to evaluate. If the archive is
-            empty, we return ``initial_solutions``, which might not have
-            ``batch_size`` solutions.
+            contains ``batch_size`` new solutions to evaluate. If the archive is empty,
+            we return ``initial_solutions``, which might not have ``batch_size``
+            solutions.
         """
         if self.archive.empty and self._initial_solutions is not None:
             return self._clip(self.initial_solutions)

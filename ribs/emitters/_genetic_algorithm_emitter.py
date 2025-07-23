@@ -10,30 +10,29 @@ from ribs.emitters.operators import _get_op
 class GeneticAlgorithmEmitter(EmitterBase):
     """Creates solutions with a genetic algorithm.
 
-    If the archive is empty and ``initial_solutions`` is set, a call to
-    :meth:`ask` will return ``initial_solutions``. If ``initial_solutions`` is
-    not set, we pass ``x0`` through the operator.
+    If the archive is empty and ``initial_solutions`` is set, a call to :meth:`ask` will
+    return ``initial_solutions``. If ``initial_solutions`` is not set, we pass ``x0``
+    through the operator.
 
     Args:
         archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
         operator (str): Internal operator for mutating solutions. See
             :mod:`ribs.emitters.operators` for the list of allowed names.
-        operator_kwargs (dict): Additional arguments to pass to the operator.
-            See :mod:`ribs.emitters.operators` for the arguments allowed by each
-            operator.
+        operator_kwargs (dict): Additional arguments to pass to the operator. See
+            :mod:`ribs.emitters.operators` for the arguments allowed by each operator.
         x0 (numpy.ndarray): Initial solution.
-        initial_solutions (array-like): An (n, solution_dim) array of solutions
-            to be used when the archive is empty, in lieu of ``x0``.
-        bounds (None or array-like): Bounds of the solution space. Solutions are
-            clipped to these bounds. Pass None to indicate there are no bounds.
-            Alternatively, pass an array-like to specify the bounds for each
-            dim. Each element in this array-like can be None to indicate no
-            bound, or a tuple of ``(lower_bound, upper_bound)``, where
-            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
+        initial_solutions (array-like): An (n, solution_dim) array of solutions to be
+            used when the archive is empty, in lieu of ``x0``.
+        bounds (None or array-like): Bounds of the solution space. Solutions are clipped
+            to these bounds. Pass None to indicate there are no bounds. Alternatively,
+            pass an array-like to specify the bounds for each dim. Each element in this
+            array-like can be None to indicate no bound, or a tuple of ``(lower_bound,
+            upper_bound)``, where ``lower_bound`` or ``upper_bound`` may be None to
+            indicate no bound.
         batch_size (int): Number of solutions to return in :meth:`ask`.
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
+        seed (int): Value to seed the random number generator. Set to None to avoid a
+            fixed seed.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
@@ -111,16 +110,16 @@ class GeneticAlgorithmEmitter(EmitterBase):
     def ask(self):
         """Creates solutions with the provided operator.
 
-        If the archive is empty and ``initial_solutions`` is set, a call to
-        :meth:`ask` will return ``initial_solutions``. If ``initial_solutions``
-        is not set, we pass ``x0`` through the operator. Otherwise, we sample
-        parents from the archive to be passed to the operator.
+        If the archive is empty and ``initial_solutions`` is set, a call to :meth:`ask`
+        will return ``initial_solutions``. If ``initial_solutions`` is not set, we pass
+        ``x0`` through the operator. Otherwise, we sample parents from the archive to be
+        passed to the operator.
 
         Returns:
-            numpy.ndarray: If the archive is not empty, ``(batch_size,
-            solution_dim)`` array -- contains ``batch_size`` new solutions to
-            evaluate. If the archive is empty, we return ``initial_solutions``,
-            which might not have ``batch_size`` solutions.
+            numpy.ndarray: If the archive is not empty, ``(batch_size, solution_dim)``
+            array -- contains ``batch_size`` new solutions to evaluate. If the archive
+            is empty, we return ``initial_solutions``, which might not have
+            ``batch_size`` solutions.
         Raises:
             ValueError: The ``parent_type`` of the operator is unknown.
         """

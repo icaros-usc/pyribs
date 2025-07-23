@@ -1,16 +1,15 @@
 """Emitters generate new candidate solutions in QD algorithms.
 
-More formally, emitters are algorithms that generate solutions and adapt to
-objective, measure, and archive insertion feedback.
+More formally, emitters are algorithms that generate solutions and adapt to objective,
+measure, and archive insertion feedback.
 
-The emitters in this module follow a one-layer hierarchy, with all emitters
-inheriting from :class:`~ribs.emitters.EmitterBase`.
+The emitters in this module follow a one-layer hierarchy, with all emitters inheriting
+from :class:`~ribs.emitters.EmitterBase`.
 
 .. note::
     Emitters provided here take on the data type of the archive passed to their
-    constructor. For instance, if an archive has dtype ``np.float64``, then an
-    emitter created with that archive will emit solutions with dtype
-    ``np.float64``.
+    constructor. For instance, if an archive has dtype ``np.float64``, then an emitter
+    created with that archive will emit solutions with dtype ``np.float64``.
 
 .. autosummary::
     :toctree:

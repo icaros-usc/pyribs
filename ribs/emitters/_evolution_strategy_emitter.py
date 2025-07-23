@@ -13,68 +13,61 @@ from ribs.emitters.rankers import _get_ranker
 class EvolutionStrategyEmitter(EmitterBase):
     """Adapts a distribution of solutions with an ES.
 
-    This emitter originates in `Fontaine 2020
-    <https://arxiv.org/abs/1912.02400>`_. The multivariate Gaussian solution
-    distribution begins at ``x0`` with standard deviation ``sigma0``. Based on
-    how the generated solutions are ranked (see ``ranker``), the ES then adapts
-    the mean and covariance of the distribution.
+    This emitter originates in `Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_. The
+    multivariate Gaussian solution distribution begins at ``x0`` with standard deviation
+    ``sigma0``. Based on how the generated solutions are ranked (see ``ranker``), the ES
+    then adapts the mean and covariance of the distribution.
 
     Args:
         archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution. Must be 1-dimensional.
-        sigma0 (float): Initial step size / standard deviation of the
-            distribution from which solutions are sampled.
+        sigma0 (float): Initial step size / standard deviation of the distribution from
+            which solutions are sampled.
         ranker (Callable or str): The ranker is a
-            :class:`~ribs.emitters.rankers.RankerBase` object that orders the
-            solutions after they have been evaluated in the environment. This
-            parameter may be a callable (e.g. a class or a lambda function) that
-            takes in no parameters and returns an instance of
-            :class:`~ribs.emitters.rankers.RankerBase`, or it may be a full or
-            abbreviated ranker name as described in
+            :class:`~ribs.emitters.rankers.RankerBase` object that orders the solutions
+            after they have been evaluated in the environment. This parameter may be a
+            callable (e.g. a class or a lambda function) that takes in no parameters and
+            returns an instance of :class:`~ribs.emitters.rankers.RankerBase`, or it may
+            be a full or abbreviated ranker name as described in
             :mod:`ribs.emitters.rankers`.
         es (Callable or str): The evolution strategy is an
-            :class:`~ribs.emitters.opt.EvolutionStrategyBase` object that is
-            used to adapt the distribution from which new solutions are sampled.
-            This parameter may be a callable (e.g. a class or a lambda function)
-            that takes in the parameters of
-            :class:`~ribs.emitters.opt.EvolutionStrategyBase` along with kwargs
-            provided by the ``es_kwargs`` argument, or it may be a full or
+            :class:`~ribs.emitters.opt.EvolutionStrategyBase` object that is used to
+            adapt the distribution from which new solutions are sampled. This parameter
+            may be a callable (e.g. a class or a lambda function) that takes in the
+            parameters of :class:`~ribs.emitters.opt.EvolutionStrategyBase` along with
+            kwargs provided by the ``es_kwargs`` argument, or it may be a full or
             abbreviated optimizer name as described in :mod:`ribs.emitters.opt`.
-        es_kwargs (dict): Additional arguments to pass to the evolution
-            strategy optimizer. See the evolution-strategy-based optimizers in
-            :mod:`ribs.emitters.opt` for the arguments allowed by each
-            optimizer.
+        es_kwargs (dict): Additional arguments to pass to the evolution strategy
+            optimizer. See the evolution-strategy-based optimizers in
+            :mod:`ribs.emitters.opt` for the arguments allowed by each optimizer.
         selection_rule ("mu" or "filter"): Method for selecting parents for the
-            evolution strategy. With "mu" selection, the first half of the
-            solutions will be selected as parents, while in "filter", any
-            solutions that were added to the archive will be selected.
-        restart_rule (int, "no_improvement", and "basic"): Method to use when
-            checking for restarts. If given an integer, then the emitter will
-            restart after this many iterations, where each iteration is a call
-            to :meth:`tell`. With "basic", only the default CMA-ES convergence
-            rules will be used, while with "no_improvement", the emitter will
-            restart when none of the proposed solutions were added to the
-            archive.
-        bounds (None or array-like): Bounds of the solution space. As suggested
-            in `Biedrzycki 2020
+            evolution strategy. With "mu" selection, the first half of the solutions
+            will be selected as parents, while in "filter", any solutions that were
+            added to the archive will be selected.
+        restart_rule (int, "no_improvement", and "basic"): Method to use when checking
+            for restarts. If given an integer, then the emitter will restart after this
+            many iterations, where each iteration is a call to :meth:`tell`. With
+            "basic", only the default CMA-ES convergence rules will be used, while with
+            "no_improvement", the emitter will restart when none of the proposed
+            solutions were added to the archive.
+        bounds (None or array-like): Bounds of the solution space. As suggested in
+            `Biedrzycki 2020
             <https://www.sciencedirect.com/science/article/abs/pii/S2210650219301622>`_,
-            solutions are resampled until they fall within these bounds.  Pass
-            None to indicate there are no bounds. Alternatively, pass an
-            array-like to specify the bounds for each dim. Each element in this
-            array-like can be None to indicate no bound, or a tuple of
-            ``(lower_bound, upper_bound)``, where ``lower_bound`` or
-            ``upper_bound`` may be None to indicate no bound.
-        batch_size (int): Number of solutions to return in :meth:`ask`. If not
-            passed in, a batch size will be automatically calculated using the
-            default CMA-ES rules.
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
+            solutions are resampled until they fall within these bounds. Pass None to
+            indicate there are no bounds. Alternatively, pass an array-like to specify
+            the bounds for each dim. Each element in this array-like can be None to
+            indicate no bound, or a tuple of ``(lower_bound, upper_bound)``, where
+            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
+        batch_size (int): Number of solutions to return in :meth:`ask`. If not passed
+            in, a batch size will be automatically calculated using the default CMA-ES
+            rules.
+        seed (int): Value to seed the random number generator. Set to None to avoid a
+            fixed seed.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
-        ValueError: If ``restart_rule``, ``selection_rule``, or ``ranker`` is
-            invalid.
+        ValueError: If ``restart_rule``, ``selection_rule``, or ``ranker`` is invalid.
     """
 
     def __init__(
@@ -156,19 +149,19 @@ class EvolutionStrategyEmitter(EmitterBase):
 
     @property
     def itrs(self):
-        """int: The number of iterations for this emitter, where each iteration
-        is a call to :meth:`tell`."""
+        """int: The number of iterations for this emitter, where each iteration is a
+        call to :meth:`tell`."""
         return self._itrs
 
     def ask(self):
         """Samples new solutions from a multivariate Gaussian.
 
-        The multivariate Gaussian is parameterized by the evolution strategy
-        optimizer ``self._opt``.
+        The multivariate Gaussian is parameterized by the evolution strategy optimizer
+        ``self._opt``.
 
         Returns:
-            (batch_size, :attr:`solution_dim`) array -- a batch of new solutions
-            to evaluate.
+            (batch_size, :attr:`solution_dim`) array -- a batch of new solutions to
+            evaluate.
         """
         return self._opt.ask()
 
@@ -182,7 +175,7 @@ class EvolutionStrategyEmitter(EmitterBase):
                 generation from the solutions generated by CMA-ES.
 
         Raises:
-          ValueError: If :attr:`restart_rule` is invalid.
+            ValueError: If :attr:`restart_rule` is invalid.
         """
         if isinstance(self._restart_rule, numbers.Integral):
             return self._itrs % self._restart_rule == 0
@@ -196,24 +189,21 @@ class EvolutionStrategyEmitter(EmitterBase):
         """Gives the emitter results from evaluating solutions.
 
         The solutions are ranked based on the `rank()` function defined by
-        `self._ranker`. Then, the ranked solutions are passed to CMA-ES for
-        adaptation.
+        `self._ranker`. Then, the ranked solutions are passed to CMA-ES for adaptation.
 
-        This function also checks for restart condition and restarts CMA-ES
-        when needed.
+        This function also checks for restart condition and restarts CMA-ES when needed.
 
         Args:
-            solution (array-like): (batch_size, :attr:`solution_dim`) array of
-                solutions generated by this emitter's :meth:`ask()` method.
-            objective (array-like): 1D array containing the objective function
-                value of each solution.
-            measures (array-like): (batch_size, measure space dimension) array
-                with the measure space coordinates of each solution.
+            solution (array-like): (batch_size, :attr:`solution_dim`) array of solutions
+                generated by this emitter's :meth:`ask()` method.
+            objective (array-like): 1D array containing the objective function value of
+                each solution.
+            measures (array-like): (batch_size, measure space dimension) array with the
+                measure space coordinates of each solution.
             add_info (dict): Data returned from the archive
                 :meth:`~ribs.archives.ArchiveBase.add` method.
-            fields (keyword arguments): Additional data for each solution. Each
-                argument should be an array with batch_size as the first
-                dimension.
+            fields (keyword arguments): Additional data for each solution. Each argument
+                should be an array with batch_size as the first dimension.
         """
         data, add_info = validate_batch(
             self.archive,

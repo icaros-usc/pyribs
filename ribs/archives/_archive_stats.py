@@ -7,11 +7,7 @@ import numpy as np
 
 @dataclasses.dataclass
 class ArchiveStats:
-    """Holds statistics about an archive.
-
-    Attributes of type :class:`~numpy.floating` will match the
-    :attr:`~ArchiveBase.dtype` of their archive.
-    """
+    """Holds statistics about an archive."""
 
     #: Number of elites in the archive.
     num_elites: int
