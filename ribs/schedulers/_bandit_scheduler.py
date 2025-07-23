@@ -36,8 +36,9 @@ class BanditScheduler:
     Args:
         archive (ribs.archives.ArchiveBase): An archive object, e.g.,
             :class:`~ribs.archives.GridArchive`.
-        emitters (list of ribs.emitters.EmitterBase): A list of emitter objects,
-            e.g., :class:`~ribs.emitters.EvolutionStrategyEmitter`.
+        emitter_pool (list of ribs.archives.EmitterBase): A pool of emitters to select
+            from, e.g. :class:`ribs.emitters.GaussianEmitter`. On the first iteration,
+            the first `num_active` emitters from the emitter_pool will be activated.
         result_archive (ribs.archives.ArchiveBase): An additional archive where all
             solutions are added. For example, in CMA-MAE, this archive stores all the
             best-performing solutions, since the main archive does not store all the
