@@ -1,28 +1,26 @@
 """Compare performance of adding to the CVTArchive with and without k-D tree.
 
-In CVTArchive, we use a k-D tree to identify the cell by finding the nearest
-centroid to a solution in measure space. Though a k-D tree is theoretically
-more efficient than brute force, constant factors mean that brute force can be
-faster than k-D tree for smaller numbers of centroids / cells. In this script,
-we increase the number of cells in the archive and see when the k-D tree becomes
-faster than brute force.
+In CVTArchive, we use a k-D tree to identify the cell by finding the nearest centroid to
+a solution in measure space. Though a k-D tree is theoretically more efficient than
+brute force, constant factors mean that brute force can be faster than k-D tree for
+smaller numbers of centroids / cells. In this script, we increase the number of cells in
+the archive and see when the k-D tree becomes faster than brute force.
 
-In this experiment, we construct archives with 10, 50, 100, 500, 1k cells in
-the measure space of [(-1, 1), (-1, 1)] and 100k samples.  In each archive, we
-then time how long it takes to add 1k batches of 100 random solutions sampled
-uniformly at random. from the measure space. We run each experiment with brute
-force and with the k-D tree, 5 times each, and take the minimum runtime (see
+In this experiment, we construct archives with 10, 50, 100, 500, 1k cells in the measure
+space of [(-1, 1), (-1, 1)] and 100k samples. In each archive, we then time how long it
+takes to add 1k batches of 100 random solutions sampled uniformly at random. from the
+measure space. We run each experiment with brute force and with the k-D tree, 5 times
+each, and take the minimum runtime (see
 https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
 
 Usage:
     python cvt_add.py
 
 This script will run for a few minutes and produce two outputs. The first is
-cvt_add_times.json, which holds the raw times. The second is cvt_add_plot.png,
-which is a plot of the times with respect to number of cells.
+cvt_add_times.json, which holds the raw times. The second is cvt_add_plot.png, which is
+a plot of the times with respect to number of cells.
 
-To re-plot the results without re-running the benchmarks, modify plot_times and
-run:
+To re-plot the results without re-running the benchmarks, modify plot_times and run:
 
     import cvt_add  # The name of this file.
     cvt_add.plot_times(*cvt_add.load_times())
@@ -85,15 +83,15 @@ def main():
     all_objective_batch = np.random.standard_normal((n_batches, batch_size))
     all_measures_batch = np.random.uniform(-1, 1, (n_batches, batch_size, 2))
 
-    # Set up these archives so we can use the same centroids across all
-    # experiments for a certain number of cells (and also save time).
+    # Set up these archives so we can use the same centroids across all experiments for
+    # a certain number of cells (and also save time).
     ref_archives = {
         cells: CVTArchive(
             solution_dim=all_solution_batch.shape[2],
             cells=cells,
             ranges=[(-1, 1), (-1, 1)],
-            # Use 200k cells to avoid dropping clusters. However, note that we
-            # no longer test with 10k cells.
+            # Use 200k cells to avoid dropping clusters. However, note that we no longer
+            # test with 10k cells.
             samples=100_000 if cells != 10_000 else 200_000,
             use_kd_tree=False,
         )
