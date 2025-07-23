@@ -1,40 +1,37 @@
 """Uses CMA-ME to train agents with linear policies in Lunar Lander.
 
-Install the following dependencies before running this example -- swig must be
-installed before box2d can be installed, hence it is a separate command:
+Install the following dependencies before running this example -- swig must be installed
+before box2d can be installed, hence it is a separate command:
     pip install swig
     pip install ribs[visualize] tqdm fire gymnasium[box2d]==1.0.0 moviepy>=1.0.0 dask>=2.0.0 distributed>=2.0.0 bokeh>=2.0.0
 
-This script uses the same setup as the tutorial, but it also uses Dask instead
-of Python's multiprocessing to parallelize evaluations on a single machine and
-adds in a CLI. Refer to the tutorial here:
+This script uses the same setup as the tutorial, but it also uses Dask instead of
+Python's multiprocessing to parallelize evaluations on a single machine and adds in a
+CLI. Refer to the tutorial here:
 https://docs.pyribs.org/en/stable/tutorials/lunar_lander.html for more info.
 
-You should not need much familiarity with Dask to read this example. However, if
-you would like to know more about Dask, we recommend referring to the quickstart
-for Dask distributed: https://distributed.dask.org/en/latest/quickstart.html.
+You should not need much familiarity with Dask to read this example. However, if you
+would like to know more about Dask, we recommend referring to the quickstart for Dask
+distributed: https://distributed.dask.org/en/latest/quickstart.html.
 
-This script creates an output directory (defaults to `lunar_lander_output/`, see
-the --outdir flag) with the following files:
+This script creates an output directory (defaults to `lunar_lander_output/`, see the
+--outdir flag) with the following files:
 
-    - archive.csv: The CSV representation of the final archive, obtained with
-      data().
-    - archive_ccdf.png: A plot showing the (unnormalized) complementary
-      cumulative distribution function of objectives in the archive. For
-      each objective p on the x-axis, this plot shows the number of
-      solutions that had an objective of at least p.
-    - heatmap.png: A heatmap showing the performance of solutions in the
-      archive.
-    - metrics.json: Metrics about the run, saved as a mapping from the metric
-      name to a list of x values (iteration number) and a list of y values
-      (metric value) for that metric.
+    - archive.csv: The CSV representation of the final archive, obtained with data().
+    - archive_ccdf.png: A plot showing the (unnormalized) complementary cumulative
+      distribution function of objectives in the archive. For each objective p on the
+      x-axis, this plot shows the number of solutions that had an objective of at least
+      p.
+    - heatmap.png: A heatmap showing the performance of solutions in the archive.
+    - metrics.json: Metrics about the run, saved as a mapping from the metric name to a
+      list of x values (iteration number) and a list of y values (metric value) for that
+      metric.
     - {metric_name}.png: Plots of the metrics, currently just `archive_size` and
       `max_score`.
 
-In evaluation mode (--run-eval flag), the script will read in the archive from
-the output directory and simulate 10 random solutions from the archive. It will
-write videos of these simulations to a `videos/` subdirectory in the output
-directory.
+In evaluation mode (--run-eval flag), the script will read in the archive from the
+output directory and simulate 10 random solutions from the archive. It will write videos
+of these simulations to a `videos/` subdirectory in the output directory.
 
 Usage:
     # Basic usage - should take ~1 hour with 4 cores.
@@ -74,22 +71,21 @@ def simulate(model, seed=None, video_env=None):
     Args:
         model (np.ndarray): The array of weights for the linear policy.
         seed (int): The seed for the environment.
-        video_env (gym.Env): If passed in, this will be used instead of creating
-            a new env. This is used primarily for recording video during
-            evaluation.
+        video_env (gym.Env): If passed in, this will be used instead of creating a new
+            env. This is used primarily for recording video during evaluation.
     Returns:
         total_reward (float): The reward accrued by the lander throughout its
             trajectory.
-        impact_x_pos (float): The x position of the lander when it touches the
-            ground for the first time.
-        impact_y_vel (float): The y velocity of the lander when it touches the
-            ground for the first time.
+        impact_x_pos (float): The x position of the lander when it touches the ground
+            for the first time.
+        impact_y_vel (float): The y velocity of the lander when it touches the ground
+            for the first time.
     """
     if video_env is None:
-        # Since we are using multiple processes, it is simpler if each worker
-        # just creates their own copy of the environment instead of trying to
-        # share the environment. This also makes the function "pure." However,
-        # we should use the video_env if it is passed in.
+        # Since we are using multiple processes, it is simpler if each worker just
+        # creates their own copy of the environment instead of trying to share the
+        # environment. This also makes the function "pure." However, we should use the
+        # video_env if it is passed in.
         env = gym.make("LunarLander-v3")
     else:
         env = video_env
@@ -125,8 +121,8 @@ def simulate(model, seed=None, video_env=None):
             impact_y_vel = y_vel
 
     # If the lunar lander did not land, set the x-pos to the one from the final
-    # timestep, and set the y-vel to the max y-vel (we use min since the lander
-    # goes down).
+    # timestep, and set the y-vel to the max y-vel (we use min since the lander goes
+    # down).
     if impact_x_pos is None:
         impact_x_pos = x_pos
         impact_y_vel = min(all_y_vels)
@@ -144,8 +140,8 @@ def create_scheduler(seed, n_emitters, sigma0, batch_size):
     See lunar_lander_main() for description of args.
 
     Returns:
-        A pyribs scheduler set up for CMA-ME (i.e. it has
-        EvolutionStrategyEmitter's and a GridArchive).
+        A pyribs scheduler set up for CMA-ME (i.e. it has EvolutionStrategyEmitter's and
+        a GridArchive).
     """
     env = gym.make("LunarLander-v3")
     action_dim = env.action_space.n
@@ -160,11 +156,11 @@ def create_scheduler(seed, n_emitters, sigma0, batch_size):
         qd_score_offset=-600,
     )
 
-    # If we create the emitters with identical seeds, they will all output the
-    # same initial solutions. The algorithm should still work -- eventually, the
-    # emitters will produce different solutions because they get different
-    # responses when inserting into the archive. However, using different seeds
-    # avoids this problem altogether.
+    # If we create the emitters with identical seeds, they will all output the same
+    # initial solutions. The algorithm should still work -- eventually, the emitters
+    # will produce different solutions because they get different responses when
+    # inserting into the archive. However, using different seeds avoids this problem
+    # altogether.
     seeds = (
         [None] * n_emitters if seed is None else [seed + i for i in range(n_emitters)]
     )
@@ -196,9 +192,9 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
         iterations (int): Iterations to run.
         log_freq (int): Number of iterations to wait before recording metrics.
     Returns:
-        dict: A mapping from various metric names to a list of "x" and "y"
-        values where x is the iteration and y is the value of the metric. Think
-        of each entry as the x's and y's for a matplotlib plot.
+        dict: A mapping from various metric names to a list of "x" and "y" values where
+        x is the iteration and y is the value of the metric. Think of each entry as the
+        x's and y's for a matplotlib plot.
     """
     print(
         "> Starting search.\n"
@@ -228,8 +224,8 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
         # Evaluate the models and record the objectives and measures.
         objs, meas = [], []
 
-        # Ask the Dask client to distribute the simulations among the Dask
-        # workers, then gather the results of the simulations.
+        # Ask the Dask client to distribute the simulations among the Dask workers, then
+        # gather the results of the simulations.
         futures = client.map(lambda model: simulate(model, env_seed), sols)
         results = client.gather(futures)
 
@@ -300,9 +296,9 @@ def save_ccdf(archive, filename):
 
     CCDF = Complementary Cumulative Distribution Function (see
     https://en.wikipedia.org/wiki/Cumulative_distribution_function#Complementary_cumulative_distribution_function_(tail_distribution)).
-    The CCDF plotted here is not normalized to the range (0,1). This may help
-    when comparing CCDF's among archives with different amounts of coverage
-    (i.e. when one archive has more cells filled).
+    The CCDF plotted here is not normalized to the range (0,1). This may help when
+    comparing CCDF's among archives with different amounts of coverage (i.e. when one
+    archive has more cells filled).
 
     Args:
         archive (GridArchive): Archive with results from an experiment.
@@ -328,8 +324,8 @@ def run_evaluation(outdir, env_seed):
     Videos are saved to outdir / videos.
 
     Args:
-        outdir (Path): Path object for the output directory from which to
-            retrieve the archive and save videos.
+        outdir (Path): Path object for the output directory from which to retrieve the
+            archive and save videos.
         env_seed (int): Seed for the environment.
     """
     df = ArchiveDataFrame(pd.read_csv(outdir / "archive.csv"))
@@ -375,18 +371,18 @@ def lunar_lander_main(
 
     Args:
         workers (int): Number of workers to use for simulations.
-        env_seed (int): Environment seed. The default gives the flat terrain
-            from the tutorial.
+        env_seed (int): Environment seed. The default gives the flat terrain from the
+            tutorial.
         iterations (int): Number of iterations to run the algorithm.
-        log_freq (int): Number of iterations to wait before recording metrics
-            and saving heatmap.
+        log_freq (int): Number of iterations to wait before recording metrics and saving
+            heatmap.
         n_emitters (int): Number of emitters.
         batch_size (int): Batch size of each emitter.
         sigma0 (float): Initial step size of each emitter.
         seed (seed): Random seed for the pyribs components.
         outdir (str): Directory for Lunar Lander output.
-        run_eval (bool): Pass this flag to run an evaluation of 10 random
-            solutions selected from the archive in the `outdir`.
+        run_eval (bool): Pass this flag to run an evaluation of 10 random solutions
+            selected from the archive in the `outdir`.
     """
     outdir = Path(outdir)
 
@@ -397,10 +393,9 @@ def lunar_lander_main(
     # Make the directory here so that it is not made when running eval.
     outdir.mkdir(exist_ok=True)
 
-    # Setup Dask. The client connects to a "cluster" running on this machine.
-    # The cluster simply manages several concurrent worker processes. If using
-    # Dask across many workers, we would set up a more complicated cluster and
-    # connect the client to it.
+    # Setup Dask. The client connects to a "cluster" running on this machine. The
+    # cluster manages concurrent worker processes. If using Dask across many workers, we
+    # would set up a more complicated cluster and connect the client to it.
     cluster = LocalCluster(
         processes=True,  # Each worker is a process.
         n_workers=workers,  # Create this many worker processes.

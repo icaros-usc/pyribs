@@ -2,9 +2,9 @@
 
 This subpackage contains evolution strategies that inherit from
 :class:`EvolutionStrategyBase` and gradient-based optimizers that inherit from
-:class:`GradientOptBase`. When specifying optimizers for an emitter, one can
-pass in the optimizer class itself, or the string name of the optimizer, or an
-abbreviated name. The abbreviations are listed below.
+:class:`GradientOptBase`. When specifying optimizers for an emitter, one can pass in the
+optimizer class itself, or the string name of the optimizer, or an abbreviated name. The
+abbreviations are listed below.
 
 Evolution Strategies
 --------------------

@@ -1,8 +1,8 @@
 """Quantifies the performance of different centroid generation techniques
 
-To measure how well a generation technique, i.e., random centroids, CVT, etc,
-performs, we measure the probability of generating a random point within a
-certain region defined by the centroid of that region.
+To measure how well a generation technique, i.e., random centroids, CVT, etc, performs,
+we measure the probability of generating a random point within a certain region defined
+by the centroid of that region.
 
 The equations for this benchmark can be found in Mouret 2023:
 https://dl.acm.org/doi/pdf/10.1145/3583133.3590726.
@@ -10,9 +10,9 @@ https://dl.acm.org/doi/pdf/10.1145/3583133.3590726.
 Usage:
     python benchmarks.py
 
-This script will generate centroids using 2 techniques, CVT and random
-generation. These centroids will then be evaluated by the get_score()
-function which will output a probability score between [0, 1].
+This script will generate centroids using 2 techniques, CVT and random generation. These
+centroids will then be evaluated by the get_score() function which will output a
+probability score between [0, 1].
 """
 
 import numpy as np
@@ -46,9 +46,9 @@ def get_score(centroids, num_samples, seed):
 
     for idx in closest_idx:
         num_closest_pts[idx] += 1
-    # Note: The method in the paper detailed the additional division of
-    # centroid_vol by num_samples. We did not include that here, however
-    # results remain similar to the paper's.
+    # Note: The method in the paper detailed the additional division of centroid_vol by
+    # num_samples. We did not include that here, however results remain similar to the
+    # paper's.
 
     centroid_vol = num_closest_pts / num_samples
 
@@ -58,9 +58,8 @@ def get_score(centroids, num_samples, seed):
 
 
 def main():
-    """main() function that benchmarks 6 different centroid generation
-    techniques used in the aforementioned paper.
-    """
+    """Benchmarks 6 different centroid generation techniques used in the aforementioned
+    paper."""
 
     # Default settings to benchmark different centroid generation techniques.
     score_seed = 1823170571

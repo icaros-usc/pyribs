@@ -26,10 +26,10 @@ class EvolutionStrategyBase(ABC):
     - Repeatedly:
 
         - Request new solutions with ``ask()``
-        - Rank the solutions in the emitter (better solutions come first) and
-          pass the indices and values back with ``tell()``.
-        - Use ``check_stop()`` to see if the optimizer has reached a stopping
-          condition, and if so, call ``reset()``.
+        - Rank the solutions in the emitter (better solutions come first) and pass the
+          indices and values back with ``tell()``.
+        - Use ``check_stop()`` to see if the optimizer has reached a stopping condition,
+          and if so, call ``reset()``.
 
     Args:
         sigma0 (float): Initial step size.
@@ -38,12 +38,11 @@ class EvolutionStrategyBase(ABC):
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
         lower_bounds (float or numpy.ndarray): scalar or (solution_dim,) array
-            indicating lower bounds of the solution space. Scalars specify
-            the same bound for the entire space, while arrays specify a
-            bound for each dimension. Pass -np.inf in the array or scalar to
-            indicated unbounded space.
-        upper_bounds (float or numpy.ndarray): Same as above, but for upper
-            bounds (and pass np.inf instead of -np.inf).
+            indicating lower bounds of the solution space. Scalars specify the same
+            bound for the entire space, while arrays specify a bound for each dimension.
+            Pass -np.inf in the array or scalar to indicated unbounded space.
+        upper_bounds (float or numpy.ndarray): Same as above, but for upper bounds (and
+            pass np.inf instead of -np.inf).
     """
 
     def __init__(
@@ -71,13 +70,12 @@ class EvolutionStrategyBase(ABC):
         """Checks if the ES should stop and be reset.
 
         Args:
-            ranking_values (numpy.ndarray): Array of values that were used to
-                rank the solutions. Shape can be either ``(batch_size,)`` or
-                (batch_size, n_values)``, where ``batch_size`` is the number of
-                solutions and ``n_values`` is the number of values that the
-                ranker used. Note that unlike in :meth:`tell`, these values must
-                be sorted according to the ``ranking_indices`` passed to
-                :meth:`tell`.
+            ranking_values (numpy.ndarray): Array of values that were used to rank the
+                solutions. Shape can be either ``(batch_size,)`` or (batch_size,
+                n_values)``, where ``batch_size`` is the number of solutions and
+                ``n_values`` is the number of values that the ranker used. Note that
+                unlike in :meth:`tell`, these values must be sorted according to the
+                ``ranking_indices`` passed to :meth:`tell`.
         Returns:
             True if any of the stopping conditions are satisfied.
         """
@@ -87,8 +85,7 @@ class EvolutionStrategyBase(ABC):
         """Samples new solutions.
 
         Args:
-            batch_size (int): batch size of the sample. Defaults to
-                ``self.batch_size``.
+            batch_size (int): batch size of the sample. Defaults to ``self.batch_size``.
         """
 
     @abstractmethod
@@ -96,17 +93,16 @@ class EvolutionStrategyBase(ABC):
         """Passes the solutions back to the ES.
 
         Args:
-            ranking_indices (numpy.ndarray): Integer indices that are used to
-                rank the solutions returned in :meth:`ask`. Note that these are
-                NOT the ranks of the solutions. Rather, they are indices such
-                that ``solutions[ranking_indices]`` will correctly rank the
-                solutions (think of an argsort).
-            ranking_values (numpy.ndarray): Array of values that were used to
-                rank the solutions. Shape can be either ``(batch_size,)`` or
-                (batch_size, n_values)``, where ``batch_size`` is the number of
-                solutions and ``n_values`` is the number of values that the
-                ranker used. Note that we assume a descending sort, i.e., higher
-                values should come first.
-            num_parents (int): Number of top solutions to select from the
-                ranked solutions.
+            ranking_indices (numpy.ndarray): Integer indices that are used to rank the
+                solutions returned in :meth:`ask`. Note that these are NOT the ranks of
+                the solutions. Rather, they are indices such that
+                ``solutions[ranking_indices]`` will correctly rank the solutions (think
+                of an argsort).
+            ranking_values (numpy.ndarray): Array of values that were used to rank the
+                solutions. Shape can be either ``(batch_size,)`` or (batch_size,
+                n_values)``, where ``batch_size`` is the number of solutions and
+                ``n_values`` is the number of values that the ranker used. Note that we
+                assume a descending sort, i.e., higher values should come first.
+            num_parents (int): Number of top solutions to select from the ranked
+                solutions.
         """

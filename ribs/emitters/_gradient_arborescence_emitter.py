@@ -11,18 +11,17 @@ from ribs.emitters.rankers import _get_ranker
 
 
 class GradientArborescenceEmitter(EmitterBase):
-    """Generates solutions with a gradient arborescence, with coefficients
-    parameterized by an evolution strategy.
+    """Generates solutions with a gradient arborescence, with coefficients parameterized
+    by an evolution strategy.
 
-    This emitter originates in `Fontaine 2021
-    <https://arxiv.org/abs/2106.03894>`_. It leverages the gradient information
-    of the objective and measure functions, generating new solutions around a
-    *solution point* :math:`\\boldsymbol{\\theta}` using *gradient
-    arborescence*, with coefficients drawn from a Gaussian distribution.
+    This emitter originates in `Fontaine 2021 <https://arxiv.org/abs/2106.03894>`_. It
+    leverages the gradient information of the objective and measure functions,
+    generating new solutions around a *solution point* :math:`\\boldsymbol{\\theta}`
+    using *gradient arborescence*, with coefficients drawn from a Gaussian distribution.
     Essentially, this means that the emitter samples coefficients
-    :math:`\\boldsymbol{c_i} \\sim
-    \\mathcal{N}(\\boldsymbol{\\mu}, \\boldsymbol{\\Sigma})`
-    and creates new solutions :math:`\\boldsymbol{\\theta'_i}` according to
+    :math:`\\boldsymbol{c_i} \\sim \\mathcal{N}(\\boldsymbol{\\mu},
+    \\boldsymbol{\\Sigma})` and creates new solutions :math:`\\boldsymbol{\\theta'_i}`
+    according to
 
     .. math::
 
@@ -32,22 +31,20 @@ class GradientArborescenceEmitter(EmitterBase):
 
     Where :math:`k` is the number of measures, and
     :math:`\\boldsymbol{\\nabla} f(\\boldsymbol{\\theta})` and
-    :math:`\\boldsymbol{\\nabla} m_j(\\boldsymbol{\\theta})` are the objective
-    and measure gradients of the solution point :math:`\\boldsymbol{\\theta}`,
-    respectively.
+    :math:`\\boldsymbol{\\nabla} m_j(\\boldsymbol{\\theta})` are the objective and
+    measure gradients of the solution point :math:`\\boldsymbol{\\theta}`, respectively.
 
-    Based on how the solutions are ranked after being inserted into the archive
-    (see ``ranker``), the solution point :math:`\\boldsymbol{\\theta}` is
-    updated with gradient ascent, and the coefficient distribution parameters
-    :math:`\\boldsymbol{\\mu}` and :math:`\\boldsymbol{\\Sigma}` are updated
-    with an ES (the default ES is CMA-ES).
+    Based on how the solutions are ranked after being inserted into the archive (see
+    ``ranker``), the solution point :math:`\\boldsymbol{\\theta}` is updated with
+    gradient ascent, and the coefficient distribution parameters
+    :math:`\\boldsymbol{\\mu}` and :math:`\\boldsymbol{\\Sigma}` are updated with an ES
+    (the default ES is CMA-ES).
 
     .. note::
 
-        Unlike non-gradient emitters, GradientArborescenceEmitter requires
-        calling :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
-        calling :meth:`ask` and :meth:`tell` to communicate the gradient
-        information to the emitter.
+        Unlike non-gradient emitters, GradientArborescenceEmitter requires calling
+        :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before calling :meth:`ask`
+        and :meth:`tell` to communicate the gradient information to the emitter.
 
     See Also:
 
@@ -58,73 +55,68 @@ class GradientArborescenceEmitter(EmitterBase):
         archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
         x0 (np.ndarray): Initial solution.
-        sigma0 (float): Initial step size / standard deviation of the
-            distribution of gradient coefficients.
+        sigma0 (float): Initial step size / standard deviation of the distribution of
+            gradient coefficients.
         lr (float): Learning rate for the gradient optimizer.
         ranker (Callable or str): The ranker is a
-            :class:`~ribs.emitters.rankers.RankerBase` object that orders the
-            solutions after they have been evaluated in the environment. This
-            parameter may be a callable (e.g. a class or a lambda function) that
-            takes in no parameters and returns an instance of
-            :class:`~ribs.emitters.rankers.RankerBase`, or it may be a full or
-            abbreviated ranker name as described in
+            :class:`~ribs.emitters.rankers.RankerBase` object that orders the solutions
+            after they have been evaluated in the environment. This parameter may be a
+            callable (e.g. a class or a lambda function) that takes in no parameters and
+            returns an instance of :class:`~ribs.emitters.rankers.RankerBase`, or it may
+            be a full or abbreviated ranker name as described in
             :mod:`ribs.emitters.rankers`.
-        selection_rule ("mu" or "filter"): Method for selecting parents in
-            CMA-ES. With "mu" selection, the first half of the solutions will be
-            selected as parents, while in "filter", any solutions that were
-            added to the archive will be selected.
-        restart_rule (int, "no_improvement", and "basic"): Method to use when
-            checking for restarts. If given an integer, then the emitter will
-            restart after this many iterations, where each iteration is a call
-            to :meth:`tell`. With "basic", only the default CMA-ES convergence
-            rules will be used, while with "no_improvement", the emitter will
-            restart when none of the proposed solutions were added to the
-            archive.
-        grad_opt (Callable or str): Gradient optimizer to use for the gradient
-            ascent step of the algorithm. The optimizer is a
-            :class:`~ribs.emitters.opt.GradientOptBase` object. This parameter
-            may be a callable (e.g. a class or a lambda function) which takes in
-            the ``theta0`` and ``lr`` arguments, or it may be a full or
-            abbreviated name as described in :mod:`ribs.emitters.opt`.
-        grad_opt_kwargs (dict): Additional arguments to pass to the gradient
-            optimizer. See the gradient-based optimizers in
-            :mod:`ribs.emitters.opt` for the arguments allowed by each
-            optimizer. Note that we already pass in ``theta0`` and ``lr``.
+        selection_rule ("mu" or "filter"): Method for selecting parents in CMA-ES. With
+            "mu" selection, the first half of the solutions will be selected as parents,
+            while in "filter", any solutions that were added to the archive will be
+            selected.
+        restart_rule (int, "no_improvement", and "basic"): Method to use when checking
+            for restarts. If given an integer, then the emitter will restart after this
+            many iterations, where each iteration is a call to :meth:`tell`. With
+            "basic", only the default CMA-ES convergence rules will be used, while with
+            "no_improvement", the emitter will restart when none of the proposed
+            solutions were added to the archive.
+        grad_opt (Callable or str): Gradient optimizer to use for the gradient ascent
+            step of the algorithm. The optimizer is a
+            :class:`~ribs.emitters.opt.GradientOptBase` object. This parameter may be a
+            callable (e.g. a class or a lambda function) which takes in the ``theta0``
+            and ``lr`` arguments, or it may be a full or abbreviated name as described
+            in :mod:`ribs.emitters.opt`.
+        grad_opt_kwargs (dict): Additional arguments to pass to the gradient optimizer.
+            See the gradient-based optimizers in :mod:`ribs.emitters.opt` for the
+            arguments allowed by each optimizer. Note that we already pass in ``theta0``
+            and ``lr``.
         es (Callable or str): The evolution strategy is an
-            :class:`~ribs.emitters.opt.EvolutionStrategyBase` object that is
-            used to adapt the distribution from which new solutions are sampled.
-            This parameter may be a callable (e.g. a class or a lambda function)
-            that takes in the parameters of
-            :class:`~ribs.emitters.opt.EvolutionStrategyBase` along with kwargs
-            provided by the ``es_kwargs`` argument, or it may be a full or
+            :class:`~ribs.emitters.opt.EvolutionStrategyBase` object that is used to
+            adapt the distribution from which new solutions are sampled. This parameter
+            may be a callable (e.g. a class or a lambda function) that takes in the
+            parameters of :class:`~ribs.emitters.opt.EvolutionStrategyBase` along with
+            kwargs provided by the ``es_kwargs`` argument, or it may be a full or
             abbreviated optimizer name as described in :mod:`ribs.emitters.opt`.
-        es_kwargs (dict): Additional arguments to pass to the evolution
-            strategy optimizer. See the evolution-strategy-based optimizers in
-            :mod:`ribs.emitters.opt` for the arguments allowed by each
+        es_kwargs (dict): Additional arguments to pass to the evolution strategy
+            optimizer. See the evolution-strategy-based optimizers in
+            :mod:`ribs.emitters.opt` for the arguments allowed by each optimizer.
+        normalize_grad (bool): If true (default), then gradient infomation will be
+            normalized. Otherwise, it will not be normalized.
+        bounds: This argument may be used for providing solution space bounds in the
+            future. This emitter does not currently support solution space bounds, as
+            bounding solutions for DQD algorithms such as CMA-MEGA is an open problem.
+            Hence, this argument must be set to None.
+        batch_size (int): Number of solutions to return in :meth:`ask`. If not passed
+            in, a batch size will be automatically calculated using the default CMA-ES
+            rules. This **does not** account for the **one** solution returned by
+            :meth:`ask_dqd`, which is the solution point maintained by the gradient
             optimizer.
-        normalize_grad (bool): If true (default), then gradient infomation will
-            be normalized. Otherwise, it will not be normalized.
-        bounds: This argument may be used for providing solution space bounds in
-            the future. This emitter does not currently support solution space
-            bounds, as bounding solutions for DQD algorithms such as CMA-MEGA is
-            an open problem. Hence, this argument must be set to None.
-        batch_size (int): Number of solutions to return in :meth:`ask`. If not
-            passed in, a batch size will be automatically calculated using the
-            default CMA-ES rules. This **does not** account for the **one**
-            solution returned by :meth:`ask_dqd`, which is the solution point
-            maintained by the gradient optimizer.
         epsilon (float): For numerical stability, we add a small epsilon when
-            normalizing gradients in :meth:`tell_dqd` -- refer to the
-            implementation `here
+            normalizing gradients in :meth:`tell_dqd` -- refer to the implementation
+            `here
             <../_modules/ribs/emitters/_gradient_arborescence_emitter.html#GradientArborescenceEmitter.tell_dqd>`_.
             Pass this parameter to configure that epsilon.
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
+        seed (int): Value to seed the random number generator. Set to None to avoid a
+            fixed seed.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: ``bounds`` is set even though it is not currently supported.
-        ValueError: If ``restart_rule``, ``selection_rule``, or ``ranker`` is
-            invalid.
+        ValueError: If ``restart_rule``, ``selection_rule``, or ``ranker`` is invalid.
     """
 
     def __init__(
@@ -255,13 +247,13 @@ class GradientArborescenceEmitter(EmitterBase):
         return self._epsilon
 
     def ask_dqd(self):
-        """Samples a new solution from the gradient optimizer.
+        """Returns a new solution from the gradient optimizer.
 
-        **Call :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before
-        calling :meth:`ask` and :meth:`tell`.**
+        **Call :meth:`ask_dqd` and :meth:`tell_dqd` (in this order) before calling
+        :meth:`ask` and :meth:`tell`.**
 
         Returns:
-            a new solution to evaluate.
+            A new solution to evaluate.
         """
         return self._grad_opt.theta[None]
 
@@ -269,18 +261,18 @@ class GradientArborescenceEmitter(EmitterBase):
         """Samples new solutions from a gradient arborescence parameterized by a
         multivariate Gaussian distribution.
 
-        The multivariate Gaussian is parameterized by the evolution strategy
-        optimizer ``self._opt``.
+        The multivariate Gaussian is parameterized by the evolution strategy optimizer
+        ``self._opt``.
 
-        This method returns ``batch_size`` solutions, even though one solution
-        is returned via ``ask_dqd``.
+        This method returns ``batch_size`` solutions, even though one solution is
+        returned via ``ask_dqd``.
 
         Returns:
-            (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new
-            solutions to evaluate.
+            (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new solutions
+            to evaluate.
         Raises:
-            RuntimeError: This method was called without first passing gradients
-                with calls to ask_dqd() and tell_dqd().
+            RuntimeError: This method was called without first passing gradients with
+                calls to ask_dqd() and tell_dqd().
         """
         if self._jacobian_batch is None:
             raise RuntimeError(
@@ -299,7 +291,7 @@ class GradientArborescenceEmitter(EmitterBase):
             num_parents (int): The number of solution to propagate to the next
                 generation from the solutions generated by CMA-ES.
         Raises:
-          ValueError: If :attr:`restart_rule` is invalid.
+            ValueError: If :attr:`restart_rule` is invalid.
         """
         if isinstance(self._restart_rule, numbers.Integral):
             return self._itrs % self._restart_rule == 0
@@ -310,26 +302,23 @@ class GradientArborescenceEmitter(EmitterBase):
         raise ValueError(f"Invalid restart_rule {self._restart_rule}")
 
     def tell_dqd(self, solution, objective, measures, jacobian, add_info, **fields):
-        """Gives the emitter results from evaluating the gradient of the
-        solutions.
+        """Gives the emitter results from evaluating the gradient of the solutions.
 
         Args:
-            solution (array-like): (batch_size, :attr:`solution_dim`) array of
-                solutions generated by this emitter's :meth:`ask()` method.
-            objective (array-like): 1D array containing the objective function
-                value of each solution.
-            measures (array-like): (batch_size, measure space dimension) array
-                with the measure space coordinates of each solution.
-            jacobian (array-like): (batch_size, 1 + measure_dim, solution_dim)
-                array consisting of Jacobian matrices of the solutions obtained
-                from :meth:`ask_dqd`. Each matrix should consist of the
-                objective gradient of the solution followed by the measure
-                gradients.
+            solution (array-like): (batch_size, :attr:`solution_dim`) array of solutions
+                generated by this emitter's :meth:`ask()` method.
+            objective (array-like): 1D array containing the objective function value of
+                each solution.
+            measures (array-like): (batch_size, measure space dimension) array with the
+                measure space coordinates of each solution.
+            jacobian (array-like): (batch_size, 1 + measure_dim, solution_dim) array
+                consisting of Jacobian matrices of the solutions obtained from
+                :meth:`ask_dqd`. Each matrix should consist of the objective gradient of
+                the solution followed by the measure gradients.
             add_info (dict): Data returned from the archive
                 :meth:`~ribs.archives.ArchiveBase.add` method.
-            fields (keyword arguments): Additional data for each solution. Each
-                argument should be an array with batch_size as the first
-                dimension.
+            fields (keyword arguments): Additional data for each solution. Each argument
+                should be an array with batch_size as the first dimension.
         """
         data, add_info, jacobian = validate_batch(  # pylint: disable = unused-variable
             self.archive,
@@ -355,20 +344,19 @@ class GradientArborescenceEmitter(EmitterBase):
         `self._ranker`.
 
         Args:
-            solution (array-like): (batch_size, :attr:`solution_dim`) array of
-                solutions generated by this emitter's :meth:`ask()` method.
-            objective (array-like): 1D array containing the objective function
-                value of each solution.
-            measures (array-like): (batch_size, measure space dimension) array
-                with the measure space coordinates of each solution.
+            solution (array-like): (batch_size, :attr:`solution_dim`) array of solutions
+                generated by this emitter's :meth:`ask()` method.
+            objective (array-like): 1D array containing the objective function value of
+                each solution.
+            measures (array-like): (batch_size, measure space dimension) array with the
+                measure space coordinates of each solution.
             add_info (dict): Data returned from the archive
                 :meth:`~ribs.archives.ArchiveBase.add` method.
-            fields (keyword arguments): Additional data for each solution. Each
-                argument should be an array with batch_size as the first
-                dimension.
+            fields (keyword arguments): Additional data for each solution. Each argument
+                should be an array with batch_size as the first dimension.
         Raises:
-            RuntimeError: This method was called without first passing gradients
-                with calls to ask_dqd() and tell_dqd().
+            RuntimeError: This method was called without first passing gradients with
+                calls to ask_dqd() and tell_dqd().
         """
         data, add_info = validate_batch(
             self.archive,

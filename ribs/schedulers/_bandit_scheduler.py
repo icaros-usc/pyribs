@@ -12,68 +12,65 @@ from ribs.schedulers._scheduler import Scheduler
 class BanditScheduler:
     """Schedules emitters with a bandit algorithm.
 
-    This implementation is based on `Cully 2021
-    <https://arxiv.org/abs/2007.05352>`_.
+    This implementation is based on `Cully 2021 <https://arxiv.org/abs/2007.05352>`_.
 
-    .. note::
-        This class follows the similar ask-tell framework as
-        :class:`Scheduler`, and enforces similar constraints in the arguments
-        and methods. Please refer to the documentation of :class:`Scheduler`
-        for more details.
+    .. note:: This class follows the similar ask-tell framework as :class:`Scheduler`,
+        and enforces similar constraints in the arguments and methods. Please refer to
+        the documentation of :class:`Scheduler` for more details.
 
-    .. note::
-        The main difference between :class:`BanditScheduler` and
-        :class:`Scheduler` is that, unlike :class:`Scheduler`, DQD emitters are
-        not supported by :class:`BanditScheduler`.
+    .. note:: The main difference between :class:`BanditScheduler` and
+        :class:`Scheduler` is that, unlike :class:`Scheduler`, DQD emitters are not
+        supported by :class:`BanditScheduler`.
 
-    To initialize this class, first create an archive and a list of emitters
-    for the QD algorithm. The BanditScheduler will schedule the emitters using
-    the Upper Confidence Bound - 1 algorithm (UCB1). Everytime :meth:`ask` is
-    called, the emitters are sorted based on the potential reward function from
-    UCB1. Then, the top `num_active` emitters are used for ask-tell.
+    To initialize this class, first create an archive and a list of emitters for the QD
+    algorithm. The BanditScheduler will schedule the emitters using the Upper Confidence
+    Bound - 1 algorithm (UCB1). Everytime :meth:`ask` is called, the emitters are sorted
+    based on the potential reward function from UCB1. Then, the top `num_active`
+    emitters are used for ask-tell.
+
+    .. warning:: If constructing many emitters at once, do not pass something like
+        ``[EmitterClass(...)] * 5``, as this creates a list with the same instance of
+        ``EmitterClass`` in each position. Instead, use ``[EmitterClass(...) for _ in
+        range 5]``, which creates 5 unique instances of ``EmitterClass``.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive object, e.g. one
-            selected from :mod:`ribs.archives`.
-        emitter_pool (list of ribs.archives.EmitterBase): A pool of emitters to
-            select from, e.g. :class:`ribs.emitters.GaussianEmitter`. On the
-            first iteration, the first `num_active` emitters from the
-            emitter_pool will be activated.
-        result_archive (ribs.archives.ArchiveBase): In some algorithms, such as
-            CMA-MAE, the archive does not store all the best-performing
-            solutions. The ``result_archive`` is a secondary archive where we
-            can store all the best-performing solutions.
-        num_active (int): The number of active emitters at a time. Active
-            emitters are used when calling ask-tell.
-        zeta (float): Hyperparamter of UCB1 that balances the trade-off between
-            the accuracy and the uncertainty of the emitters. Increasing this
-            parameter will emphasize the uncertainty of the emitters. Refer to
-            the original paper for more information.
-        reselect (str): Indicates how emitters are reselected from the pool.
-            The default is "terminated", where only terminated/restarted
-            emitters are deactivated and reselected (but they might be selected
-            again). Alternatively, use "all" to reselect all active emitters
-            every iteration.
-        add_mode (str): Indicates how solutions should be added to the archive.
-            The default is "batch", which adds all solutions with one call to
-            :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single"
-            to add the solutions one at a time with
-            :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is
-            included for legacy reasons, as it was the only mode of operation
-            in pyribs 0.4.0 and before. We highly recommend using "batch" mode
-            since it is significantly faster.
+        archive (ribs.archives.ArchiveBase): An archive object, e.g.,
+            :class:`~ribs.archives.GridArchive`.
+        emitter_pool (list of ribs.archives.EmitterBase): A pool of emitters to select
+            from, e.g. :class:`ribs.emitters.GaussianEmitter`. On the first iteration,
+            the first `num_active` emitters from the emitter_pool will be activated.
+        result_archive (ribs.archives.ArchiveBase): An additional archive where all
+            solutions are added. For example, in CMA-MAE, this archive stores all the
+            best-performing solutions, since the main archive does not store all the
+            best-performing solutions.
+        num_active (int): The number of active emitters at a time. Active emitters are
+            used when calling ask-tell.
+        reselect (str): Indicates how emitters are reselected from the pool. The default
+            is "terminated", where only terminated/restarted emitters are deactivated
+            and reselected (but they might be selected again). Alternatively, use "all"
+            to reselect all active emitters every iteration.
+        zeta (float): Hyperparamter of UCB1 that balances the trade-off between the
+            accuracy and the uncertainty of the emitters. Increasing this parameter will
+            emphasize the uncertainty of the emitters. Refer to the original paper for
+            more information.
+        add_mode (str): Indicates how solutions should be added to the archive. The
+            default is "batch", which adds all solutions with one call to
+            :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single" to add
+            the solutions one at a time with
+            :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is included for
+            legacy reasons, as it was the only mode of operation in pyribs 0.4.0 and
+            before. We highly recommend using "batch" mode since it is significantly
+            faster.
     Raises:
         TypeError: The ``emitter_pool`` argument was not a list of emitters.
         ValueError: Number of active emitters is less than one.
-        ValueError: Less emitters in the pool than the number of active
-            emitters.
-        ValueError: The emitters passed in do not have the same solution
-            dimensions.
-        ValueError: The same emitter instance was passed in multiple times.
-            Each emitter should be a unique instance (see the warning above).
+        ValueError: Fewer emitters in the pool than the number of active emitters.
+        ValueError: The emitters passed in do not have the same solution dimensions.
+        ValueError: The same emitter instance was passed in multiple times. Each
+            emitter should be a unique instance (see the warning above).
         ValueError: Invalid value for ``add_mode``.
         ValueError: The ``result_archive`` and ``archive`` are the same object
-            (``result_archive`` should not be passed in in this case).
+            (``result_archive`` should not be passed in this case).
     """
 
     def __init__(
@@ -99,8 +96,8 @@ class BanditScheduler:
                 )
         except TypeError as exception:
             # TypeError will be raised by len(). We avoid directly checking if
-            # `emitter_pool` is an instance of list since we do not want to be
-            # too restrictive.
+            # `emitter_pool` is an instance of list since we do not want to be too
+            # restrictive.
             raise TypeError(
                 "`emitter_pool` must be a list of emitter objects."
             ) from exception
@@ -150,8 +147,8 @@ class BanditScheduler:
         self._result_archive = result_archive
         self._reselect = reselect
 
-        # Boolean mask of the active emitters. Initializes to the first
-        # num_active emitters in the emitter pool.
+        # Boolean mask of the active emitters. Initializes to the first num_active
+        # emitters in the emitter pool.
         self._active_arr = np.zeros_like(self._emitter_pool, dtype=bool)
 
         # Used by UCB1 to select emitters.
@@ -160,8 +157,7 @@ class BanditScheduler:
         self._restarts = np.zeros_like(self._emitter_pool, dtype=int)
         self._zeta = zeta
 
-        # Keeps track of whether the scheduler should be receiving a call to
-        # ask() or tell().
+        # Helps track which scheduler method should be called next.
         self._last_called = None
         # The last set of solutions returned by ask().
         self._cur_solutions = []
@@ -170,14 +166,14 @@ class BanditScheduler:
 
     @property
     def archive(self):
-        """ribs.archives.ArchiveBase: Archive for storing solutions found in
-        this scheduler."""
+        """ribs.archives.ArchiveBase: Archive for storing solutions found in this
+        scheduler."""
         return self._archive
 
     @property
     def emitter_pool(self):
-        """list of ribs.archives.EmitterBase: The pool of emitters available in
-        the scheduler."""
+        """list of ribs.archives.EmitterBase: The pool of emitters available in the
+        scheduler."""
         return self._emitter_pool
 
     @property
@@ -188,44 +184,38 @@ class BanditScheduler:
 
     @property
     def result_archive(self):
-        """ribs.archives.ArchiveBase: Another archive for storing solutions
-        found in this optimizer.
+        """ribs.archives.ArchiveBase: An additional archive for storing solutions found
+        in this scheduler.
+
         If `result_archive` was not passed to the constructor, this property is
         the same as :attr:`archive`.
         """
         return self._archive if self._result_archive is None else self._result_archive
 
     def ask_dqd(self):
-        """Generates a batch of solutions by calling ask_dqd() on all DQD
-        emitters.
-
-        This method is not supported for this scheduler and throws an error if
-        called.
+        """This method is not supported for this scheduler and throws an error.
 
         Raises:
-            NotImplementedError: This method is not supported by this
-                scheduler.
+            NotImplementedError: This method is not supported by this scheduler.
         """
-        raise NotImplementedError("ask_dqd() is not supported byBanditScheduler.")
+        raise NotImplementedError("ask_dqd() is not supported by BanditScheduler.")
 
     def ask(self):
-        """Generates a batch of solutions by calling ask() on all active
-        emitters.
+        """Generates a batch of solutions by calling ask() on all active emitters.
 
-        The emitters used by ask are determined by the UCB1 algorithm. Briefly,
-        emitters that have never been selected before are prioritized, then
-        emitters are sorted in descending order based on the accurary of their
-        past prediction.
+        The emitters used by ask are determined by the UCB1 algorithm. Briefly, emitters
+        that have never been selected before are prioritized, then emitters are sorted
+        in descending order based on the accurary of their past prediction.
 
-        .. note:: The order of the solutions returned from this method is
-            important, so do not rearrange them.
+        .. note:: The order of the solutions returned from this method is important, so
+            do not rearrange them.
 
         Returns:
-            (batch_size, dim) array: An array of n solutions to evaluate. Each
-            row contains a single solution.
+            (batch_size, dim) array: An array of n solutions to evaluate. Each row
+            contains a single solution.
         Raises:
-            RuntimeError: This method was called immediately after calling an
-                ask method.
+            RuntimeError: This method was called immediately after calling an ask
+                method.
         """
         if self._last_called == "ask":
             raise RuntimeError(
@@ -234,8 +224,8 @@ class BanditScheduler:
         self._last_called = "ask"
 
         if self._reselect == "terminated":
-            # Reselect terminated emitters. Emitters are terminated if their
-            # restarts attribute have incremented.
+            # Reselect terminated emitters. Emitters are terminated if their restarts
+            # attributes have incremented.
             emitter_restarts = np.array(
                 [
                     emitter.restarts if hasattr(emitter, "restarts") else -1
@@ -244,8 +234,8 @@ class BanditScheduler:
             )
             reselect = emitter_restarts > self._restarts
 
-            # If the emitter does not have "restarts" attribute, assume it
-            # restarts every iteration.
+            # If the emitter does not have "restarts" attribute, assume it restarts
+            # every iteration.
             reselect[emitter_restarts < 0] = True
 
             self._restarts = emitter_restarts
@@ -253,8 +243,8 @@ class BanditScheduler:
             # Reselect all emitters.
             reselect = self._active_arr.copy()
 
-        # If not enough emitters are active, activate the first num_active.
-        # This always happens on the first iteration(s).
+        # If not enough emitters are active, activate the first num_active. This always
+        # happens on the first iteration(s).
         num_needed = self._num_active - self._active_arr.sum()
         i = 0
         while num_needed > 0:
@@ -271,8 +261,8 @@ class BanditScheduler:
         # The ranking of emitters also follows these rules:
         # - Emitters that have never been selected are prioritized.
         # - If reselect is "terminated", then only active emitters that have
-        #   terminated/restarted will be reselected. Otherwise, if reselect is
-        #   "all", then all emitters are reselected.
+        #   terminated/restarted will be reselected. Otherwise, if reselect is "all",
+        #   then all emitters are reselected.
         if reselect.any():
             ucb1 = np.full_like(
                 self._emitter_pool, np.inf
@@ -284,8 +274,8 @@ class BanditScheduler:
                 ] + self._zeta * np.sqrt(
                     np.log(self._success.sum()) / self._selection[update_ucb]
                 )
-            # Activate top emitters based on UCB1, until there are num_active
-            # active emitters. Activate only inactive emitters.
+            # Activate top emitters based on UCB1, until there are num_active active
+            # emitters. Activate only inactive emitters.
             activate = np.argsort(ucb1)[::-1]
             cur_active = self._active_arr.sum()
             for i in activate:
@@ -325,41 +315,33 @@ class BanditScheduler:
     _validate_tell_data = Scheduler._validate_tell_data
 
     def tell_dqd(self, objective, measures, jacobian):
-        """Returns info for solutions from :meth:`ask_dqd`.
-
-        This method is not supported for this scheduler and throws an error if
-        called.
+        """This method is not supported for this scheduler and throws an error.
 
         Raises:
-            NotImplementedError: This method is not supported by this
-                scheduler.
+            NotImplementedError: This method is not supported by this scheduler.
         """
-        raise NotImplementedError("tell_dqd() is not supported byBanditScheduler.")
+        raise NotImplementedError("tell_dqd() is not supported by BanditScheduler.")
 
     def tell(self, objective, measures, **fields):
         """Returns info for solutions from :meth:`ask`.
 
-        The emitters are the same with those used in the last call to
-        :meth:`ask`.
+        The emitters are the same with those used in the last call to :meth:`ask`.
 
-        .. note:: The objective and measures arrays must be in the same order as
-            the solutions created by :meth:`ask_dqd`; i.e. ``objective[i]`` and
-            ``measures[i]`` should be the objective and measures for
-            ``solution[i]``.
+        .. note:: The objective and measures arrays must be in the same order as the
+            solutions created by :meth:`ask_dqd`; i.e. ``objective[i]`` and
+            ``measures[i]`` should be the objective and measures for ``solution[i]``.
 
         Args:
-            objective ((batch_size,) array or None): Each entry of this array
-                contains the objective function evaluation of a solution. This
-                can also be None to indicate there is no objective -- this would
-                be the case in diversity optimization problems.
-            measures ((batch_size, measures_dm) array): Each row of this array
-                contains a solution's coordinates in measure space.
-            fields (keyword arguments): Additional data for each solution. Each
-                argument should be an array with batch_size as the first
-                dimension.
+            objective ((batch_size,) array or None): Each entry of this array contains
+                the objective function evaluation of a solution. This can also be None
+                to indicate there is no objective -- this would be the case in diversity
+                optimization problems.
+            measures ((batch_size, measures_dm) array): Each row of this array contains
+                a solution's coordinates in measure space.
+            fields (keyword arguments): Additional data for each solution. Each argument
+                should be an array with batch_size as the first dimension.
         Raises:
-            RuntimeError: This method was called without first calling
-                :meth:`ask`.
+            RuntimeError: This method was called without first calling :meth:`ask`.
             ValueError: One of the inputs has the wrong shape.
         """
         if self._last_called != "ask":
@@ -376,8 +358,8 @@ class BanditScheduler:
 
         archive_empty_before = self.archive.empty
         if self._result_archive is not None:
-            # Check self._result_archive here since self.result_archive is a
-            # property that always provides a proper archive.
+            # Check self._result_archive here since self.result_archive is a property
+            # that always provides a proper archive.
             result_archive_empty_before = self.result_archive.empty
 
         # Add solutions to the archive.

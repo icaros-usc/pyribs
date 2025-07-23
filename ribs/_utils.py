@@ -84,14 +84,14 @@ def validate_batch(
 ):
     """Preprocesses and validates batch arguments.
 
-    ``data`` is a dict containing arrays with the data of each solution, e.g.,
-    objective and measures. The batch size of each argument in the data is
-    validated with respect to data["solution"].
+    ``data`` is a dict containing arrays with the data of each solution, e.g., objective
+    and measures. The batch size of each argument in the data is validated with respect
+    to data["solution"].
 
-    The arguments are assumed to come directly from users, so they may not be
-    arrays. Thus, we preprocess each argument by converting it into a numpy
-    array. We then perform checks on the array, including seeing if its batch
-    size matches the batch size of data["solution"].
+    The arguments are assumed to come directly from users, so they may not be arrays.
+    Thus, we preprocess each argument by converting it into a numpy array. We then
+    perform checks on the array, including seeing if its batch size matches the batch
+    size of data["solution"].
     """
     # Process and validate solutions.
     data["solution"] = np.asarray(data["solution"])
@@ -210,8 +210,8 @@ def readonly(arr):
 
 
 def arr_readonly(arr):
-    """Sets an array to be readonly if possible. Inteded to support arrays
-    across libraries; currently only supports numpy."""
+    """Sets an array to be readonly if possible. Inteded to support arrays across
+    libraries; currently only supports numpy."""
     if isinstance(arr, np_compat.ndarray):
         readonly_arr = arr.view()
         readonly_arr.flags.writeable = False

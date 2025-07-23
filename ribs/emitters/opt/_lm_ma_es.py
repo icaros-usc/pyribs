@@ -29,15 +29,14 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
-        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-            indicating lower bounds of the solution space. Scalars specify
-            the same bound for the entire space, while arrays specify a
-            bound for each dimension. Pass -np.inf in the array or scalar to
-            indicated unbounded space.
-        upper_bounds (float or np.ndarray): Same as above, but for upper
-            bounds (and pass np.inf instead of -np.inf).
-        n_vectors (int): Number of vectors to use in the approximation. If None,
-            this defaults to be equal to the batch size.
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array indicating
+            lower bounds of the solution space. Scalars specify the same bound for the
+            entire space, while arrays specify a bound for each dimension. Pass -np.inf
+            in the array or scalar to indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper bounds (and
+            pass np.inf instead of -np.inf).
+        n_vectors (int): Number of vectors to use in the approximation. If None, this
+            defaults to be equal to the batch size.
     """
 
     def __init__(  # pylint: disable = super-init-not-called
