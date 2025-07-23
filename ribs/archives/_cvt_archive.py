@@ -31,120 +31,109 @@ class CVTArchive(ArchiveBase):
 
     This archive originates in `Vassiliades 2018
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
-    Tessellation (CVT) to divide an n-dimensional measure space into k cells.
-    The CVT is created by sampling points uniformly from the n-dimensional
-    measure space and using k-means clustering to identify k centroids. When
-    items are inserted into the archive, we identify their cell by identifying
-    the closest centroid in measure space (using Euclidean distance). For
-    k-means clustering, we use :func:`sklearn.cluster.k_means`.
+    Tessellation (CVT) to divide an n-dimensional measure space into k cells. The CVT is
+    created by sampling points uniformly from the n-dimensional measure space and using
+    k-means clustering to identify k centroids. When items are inserted into the
+    archive, we identify their cell by identifying the closest centroid in measure space
+    (using Euclidean distance). For k-means clustering, we use
+    :func:`sklearn.cluster.k_means`.
 
-    By default, finding the closest centroid is done in roughly
-    O(log(number of cells)) time using :class:`scipy.spatial.cKDTree`. To switch
-    to brute force, which takes O(number of cells) time, pass
-    ``use_kd_tree=False``.
+    By default, finding the closest centroid is done in roughly O(log(number of cells))
+    time using :class:`scipy.spatial.cKDTree`. To switch to brute force, which takes
+    O(number of cells) time, pass ``use_kd_tree=False``.
 
-    To compare the performance of using the k-D tree vs brute force, we ran
-    benchmarks where we inserted 1k batches of 100 solutions into a 2D archive
-    with varying numbers of cells. We took the minimum over 5 runs for each data
-    point, as recommended in the docs for :meth:`timeit.Timer.repeat`.  Note the
-    logarithmic scales. This plot was generated on a reasonably modern laptop.
+    To compare the performance of using the k-D tree vs brute force, we ran benchmarks
+    where we inserted 1k batches of 100 solutions into a 2D archive with varying numbers
+    of cells. We took the minimum over 5 runs for each data point, as recommended in the
+    docs for :meth:`timeit.Timer.repeat`. Note the logarithmic scales. This plot was
+    generated on a reasonably modern laptop.
 
     .. image:: ../_static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
 
-    Across almost all numbers of cells, using the k-D tree is faster than using
-    brute force. Thus, **we recommend always using the k-D tree.** See
-    `benchmarks/cvt_add.py
-    <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_
-    in the project repo for more information about how this plot was generated.
+    Across almost all numbers of cells, using the k-D tree is faster than using brute
+    force. Thus, **we recommend always using the k-D tree.** See `benchmarks/cvt_add.py
+    <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_ in the
+    project repo for more information about how this plot was generated.
 
-    Finally, if running multiple experiments, it may be beneficial to use the
-    same centroids across each experiment. Doing so can keep experiments
-    consistent and reduce execution time. To do this, either (1) construct
-    custom centroids and pass them in via the ``custom_centroids`` argument, or
-    (2) access the centroids created in the first archive with :attr:`centroids`
-    and pass them into ``custom_centroids`` when constructing archives for
-    subsequent experiments.
+    Finally, if running multiple experiments, it may be beneficial to use the same
+    centroids across each experiment. Doing so can keep experiments consistent and
+    reduce execution time. To do this, either (1) construct custom centroids and pass
+    them in via the ``custom_centroids`` argument, or (2) access the centroids created
+    in the first archive with :attr:`centroids` and pass them into ``custom_centroids``
+    when constructing archives for subsequent experiments.
 
     .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
-        <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds,
-        including the ``learning_rate`` and ``threshold_min`` parameters, refer
-        to our tutorial :doc:`/tutorials/cma_mae`.
+        <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds, including the
+        ``learning_rate`` and ``threshold_min`` parameters, refer to our tutorial
+        :doc:`/tutorials/cma_mae`.
 
     .. note:: For more information on our choice of k-D tree implementation, see
         :pr:`38`.
 
     Args:
-        solution_dim (int or tuple of int): Dimensionality of the solution
-            space. Scalar or multi-dimensional solution shapes are allowed by
-            passing an empty tuple or tuple of integers, respectively.
-        cells (int): The number of cells to use in the archive, equivalent to
-            the number of centroids/areas in the CVT.
-        ranges (array-like of (float, float)): Upper and lower bound of each
-            dimension of the measure space, e.g. ``[(-1, 1), (-2, 2)]``
-            indicates the first dimension should have bounds :math:`[-1,1]`
-            (inclusive), and the second dimension should have bounds
-            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
-            ``dims``.
-        learning_rate (float): The learning rate for threshold updates. Defaults
-            to 1.0.
+        solution_dim (int or tuple of int): Dimensionality of the solution space. Scalar
+            or multi-dimensional solution shapes are allowed by passing an empty tuple
+            or tuple of integers, respectively.
+        cells (int): The number of cells to use in the archive, equivalent to the number
+            of centroids/areas in the CVT.
+        ranges (array-like of (float, float)): Upper and lower bound of each dimension
+            of the measure space, e.g. ``[(-1, 1), (-2, 2)]`` indicates the first
+            dimension should have bounds :math:`[-1,1]` (inclusive), and the second
+            dimension should have bounds :math:`[-2,2]` (inclusive). ``ranges`` should
+            be the same length as ``dims``.
+        learning_rate (float): The learning rate for threshold updates. Defaults to 1.0.
         threshold_min (float): The initial threshold value for all the cells.
-        qd_score_offset (float): Archives often contain negative objective
-            values, and if the QD score were to be computed with these negative
-            objectives, the algorithm would be penalized for adding new cells
-            with negative objectives. Thus, a standard practice is to normalize
-            all the objectives so that they are non-negative by introducing an
-            offset. This QD score offset will be *subtracted* from all
-            objectives in the archive, e.g., if your objectives go as low as
-            -300, pass in -300 so that each objective will be transformed as
+        qd_score_offset (float): Archives often contain negative objective values, and
+            if the QD score were to be computed with these negative objectives, the
+            algorithm would be penalized for adding new cells with negative objectives.
+            Thus, a standard practice is to normalize all the objectives so that they
+            are non-negative by introducing an offset. This QD score offset will be
+            *subtracted* from all objectives in the archive, e.g., if your objectives go
+            as low as -300, pass in -300 so that each objective will be transformed as
             ``objective - (-300)``.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
-        dtype (str or data-type or dict): Data type of the solutions,
-            objectives, and measures. This can be ``"f"`` / ``np.float32``,
-            ``"d"`` / ``np.float64``, or a dict specifying separate dtypes, of
-            the form ``{"solution": <dtype>, "objective": <dtype>, "measures":
-            <dtype>}``.
-        extra_fields (dict): Description of extra fields of data that is stored
-            next to elite data like solutions and objectives. The description is
-            a dict mapping from a field name (str) to a tuple of ``(shape,
-            dtype)``. For instance, ``{"foo": ((), np.float32), "bar": ((10,),
-            np.float32)}`` will create a "foo" field that contains scalar values
-            and a "bar" field that contains 10D values. Note that field names
-            must be valid Python identifiers, and names already used in the
-            archive are not allowed.
-        custom_centroids (array-like): If passed in, this (cells, measure_dim)
-            array will be used as the centroids of the CVT instead of generating
-            new ones. In this case, ``samples`` will be ignored, and
-            ``archive.samples`` will be None. This can be useful when one wishes
-            to use the same CVT across experiments for fair comparison.
-        centroid_method (str): Pass in the following methods for
-            generating centroids: "random", "sobol", "scrambled_sobol",
-            "halton". Default method is "kmeans". These methods are derived from
-            Mouret 2023: https://dl.acm.org/doi/pdf/10.1145/3583133.3590726.
-            Note: Samples are only used when method is "kmeans".
-        samples (int or array-like): If it is an int, this specifies the number
-            of samples to generate when creating the CVT. Otherwise, this must
-            be a (num_samples, measure_dim) array where samples[i] is a sample
-            to use when creating the CVT. It can be useful to pass in custom
-            samples when there are restrictions on what samples in the measure
-            space are (physically) possible.
-        k_means_kwargs (dict): kwargs for :func:`~sklearn.cluster.k_means`. By
-            default, we pass in `n_init=1`, `init="random"`,
-            `algorithm="lloyd"`, and `random_state=seed`.
-        use_kd_tree (bool): If True, use a k-D tree for finding the closest
-            centroid when inserting into the archive. If False, brute force will
-            be used instead.
-        ckdtree_kwargs (dict): kwargs for :class:`~scipy.spatial.cKDTree`. By
-            default, we do not pass in any kwargs.
-        chunk_size (int): If passed, brute forcing the closest centroid search
-            will chunk the distance calculations to compute chunk_size inputs at
-            a time.
+        dtype (str or data-type or dict): Data type of the solutions, objectives, and
+            measures. This can be ``"f"`` / ``np.float32``, ``"d"`` / ``np.float64``, or
+            a dict specifying separate dtypes, of the form ``{"solution": <dtype>,
+            "objective": <dtype>, "measures": <dtype>}``.
+        extra_fields (dict): Description of extra fields of data that is stored next to
+            elite data like solutions and objectives. The description is a dict mapping
+            from a field name (str) to a tuple of ``(shape, dtype)``. For instance,
+            ``{"foo": ((), np.float32), "bar": ((10,), np.float32)}`` will create a
+            "foo" field that contains scalar values and a "bar" field that contains 10D
+            values. Note that field names must be valid Python identifiers, and names
+            already used in the archive are not allowed.
+        custom_centroids (array-like): If passed in, this (cells, measure_dim) array
+            will be used as the centroids of the CVT instead of generating new ones. In
+            this case, ``samples`` will be ignored, and ``archive.samples`` will be
+            None. This can be useful when one wishes to use the same CVT across
+            experiments for fair comparison.
+        centroid_method (str): Pass in the following methods for generating centroids:
+            "random", "sobol", "scrambled_sobol", "halton". Default method is "kmeans".
+            These methods are derived from Mouret 2023:
+            https://dl.acm.org/doi/pdf/10.1145/3583133.3590726. Note: Samples are only
+            used when method is "kmeans".
+        samples (int or array-like): If it is an int, this specifies the number of
+            samples to generate when creating the CVT. Otherwise, this must be a
+            (num_samples, measure_dim) array where samples[i] is a sample to use when
+            creating the CVT. It can be useful to pass in custom samples when there are
+            restrictions on what samples in the measure space are (physically) possible.
+        k_means_kwargs (dict): kwargs for :func:`~sklearn.cluster.k_means`. By default,
+            we pass in `n_init=1`, `init="random"`, `algorithm="lloyd"`, and
+            `random_state=seed`.
+        use_kd_tree (bool): If True, use a k-D tree for finding the closest centroid
+            when inserting into the archive. If False, brute force will be used instead.
+        ckdtree_kwargs (dict): kwargs for :class:`~scipy.spatial.cKDTree`. By default,
+            we do not pass in any kwargs.
+        chunk_size (int): If passed, brute forcing the closest centroid search will
+            chunk the distance calculations to compute chunk_size inputs at a time.
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
-        ValueError: The ``samples`` array or the ``custom_centroids`` array has
-            the wrong shape.
+        ValueError: The ``samples`` array or the ``custom_centroids`` array has the
+            wrong shape.
     """
 
     def __init__(
@@ -176,8 +165,8 @@ class CVTArchive(ArchiveBase):
             measure_dim=len(ranges),
         )
 
-        # Set up the ArrayStore, which is a data structure that stores all the
-        # elites' data in arrays sharing a common index.
+        # Set up the ArrayStore, which is a data structure that stores all the elites'
+        # data in arrays sharing a common index.
         extra_fields = extra_fields or {}
         reserved_fields = {"solution", "objective", "measures", "threshold", "index"}
         if reserved_fields & extra_fields.keys():
@@ -191,8 +180,7 @@ class CVTArchive(ArchiveBase):
                 "solution": (self.solution_dim, dtype["solution"]),
                 "objective": ((), dtype["objective"]),
                 "measures": (self.measure_dim, dtype["measures"]),
-                # Must be same dtype as the objective since they share
-                # calculations.
+                # Must be same dtype as the objective since they share calculations.
                 "threshold": ((), dtype["objective"]),
                 **extra_fields,
             },
@@ -209,15 +197,15 @@ class CVTArchive(ArchiveBase):
         )
         self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
 
-        # Set up statistics -- objective_sum is the sum of all objective values
-        # in the archive; it is useful for computing qd_score and obj_mean.
+        # Set up statistics -- objective_sum is the sum of all objective values in the
+        # archive; it is useful for computing qd_score and obj_mean.
         self._best_elite = None
         self._objective_sum = None
         self._stats = None
         self._stats_reset()
 
-        # Apply default args for k-means. Users can easily override these,
-        # particularly if they want higher quality clusters.
+        # Apply default args for k-means. Users can easily override these, particularly
+        # if they want higher quality clusters.
         self._k_means_kwargs = {} if k_means_kwargs is None else k_means_kwargs.copy()
         self._k_means_kwargs.setdefault(
             # Only run one iter to be fast.
@@ -341,19 +329,18 @@ class CVTArchive(ArchiveBase):
         None if there are no elites in the archive.
 
         .. note::
-            If the archive is non-elitist (this occurs when using the archive
-            with a learning rate which is not 1.0, as in CMA-MAE), then this
-            best elite may no longer exist in the archive because it was
-            replaced with an elite with a lower objective value. This can happen
-            because in non-elitist archives, new solutions only need to exceed
-            the *threshold* of the cell they are being inserted into, not the
-            *objective* of the elite currently in the cell. See :pr:`314` for
-            more info.
+            If the archive is non-elitist (this occurs when using the archive with a
+            learning rate which is not 1.0, as in CMA-MAE), then this best elite may no
+            longer exist in the archive because it was replaced with an elite with a
+            lower objective value. This can happen because in non-elitist archives, new
+            solutions only need to exceed the *threshold* of the cell they are being
+            inserted into, not the *objective* of the elite currently in the cell. See
+            :pr:`314` for more info.
 
         .. note::
             The best elite will contain a "threshold" key. This threshold is the
-            threshold of the best elite's cell after the best elite was inserted
-            into the archive.
+            threshold of the best elite's cell after the best elite was inserted into
+            the archive.
         """
         return self._best_elite
 
@@ -390,8 +377,8 @@ class CVTArchive(ArchiveBase):
 
     @property
     def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when
-        computing the QD score."""
+        """float: The offset which is subtracted from objective values when computing
+        the QD score."""
         return self._qd_score_offset
 
     @property
@@ -403,8 +390,8 @@ class CVTArchive(ArchiveBase):
 
     @property
     def samples(self):
-        """(num_samples, measure_dim) numpy.ndarray: The samples used in
-        creating the CVT.
+        """(num_samples, measure_dim) numpy.ndarray: The samples used in creating the
+        CVT.
 
         Will be None if custom centroids were passed in to the archive.
         """
@@ -434,9 +421,8 @@ class CVTArchive(ArchiveBase):
         )
 
     def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values
-        (new_objective_sum) and the index of a potential new best elite
-        (new_best_index)."""
+        """Updates statistics based on a new sum of objective values (new_objective_sum)
+        and the index of a potential new best elite (new_best_index)."""
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
@@ -464,16 +450,15 @@ class CVTArchive(ArchiveBase):
         )
 
     def index_of(self, measures):
-        """Finds the indices of the centroid closest to the given coordinates in
-        measure space.
+        """Finds the indices of the centroid closest to the given coordinates in measure
+        space.
 
         If ``index_batch`` is the batch of indices returned by this method, then
-        ``archive.centroids[index_batch[i]]`` holds the coordinates of the
-        centroid closest to ``measures[i]``. See :attr:`centroids` for more
-        info.
+        ``archive.centroids[index_batch[i]]`` holds the coordinates of the centroid
+        closest to ``measures[i]``. See :attr:`centroids` for more info.
 
-        The centroid indices are located using either the k-D tree or brute
-        force, depending on the value of ``use_kd_tree`` in the constructor.
+        The centroid indices are located using either the k-D tree or brute force,
+        depending on the value of ``use_kd_tree`` in the constructor.
 
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
@@ -482,8 +467,7 @@ class CVTArchive(ArchiveBase):
             numpy.ndarray: (batch_size,) array of centroid indices
             corresponding to each measure space coordinate.
         Raises:
-            ValueError: ``measures`` is not of shape (batch_size,
-                :attr:`measure_dim`).
+            ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         measures = np.asarray(measures)
@@ -509,11 +493,11 @@ class CVTArchive(ArchiveBase):
                     indices.append(current_res)
                 return np.concatenate(tuple(indices))
             else:
-                # Brute force distance calculation -- start by taking the
-                # difference between each measure i and all the centroids.
+                # Brute force distance calculation -- start by taking the difference
+                # between each measure i and all the centroids.
                 distances = expanded_measures - self.centroids
-                # Compute the total squared distance -- no need to compute
-                # actual distance with a sqrt.
+                # Compute the total squared distance -- no need to compute actual
+                # distance with a sqrt.
                 distances = np.sum(np.square(distances), axis=2)
                 return np.argmin(distances, axis=1).astype(np.int32)
 
@@ -523,11 +507,11 @@ class CVTArchive(ArchiveBase):
         See :meth:`index_of`.
 
         Args:
-            measures (array-like): (:attr:`measure_dim`,) array of measures for
-                a single solution.
+            measures (array-like): (:attr:`measure_dim`,) array of measures for a single
+                solution.
         Returns:
-            int or numpy.integer: Integer index of the measures in the archive's
-            storage arrays.
+            int or numpy.integer: Integer index of the measures in the archive's storage
+            arrays.
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -548,17 +532,17 @@ class CVTArchive(ArchiveBase):
         if len(indices) == 0:
             return np.array([], dtype=dtype)
 
-        # Compute the number of objectives inserted into each cell. Note that we
-        # index with `indices` to place the counts at all relevant indices. For
-        # instance, if we had an array [1,2,3,1,5], we would end up with
-        # [2,1,1,2,1] (there are 2 1's, 1 2, 1 3, 2 1's, and 1 5).
+        # Compute the number of objectives inserted into each cell. Note that we index
+        # with `indices` to place the counts at all relevant indices. For instance, if
+        # we had an array [1,2,3,1,5], we would end up with [2,1,1,2,1] (there are 2
+        # 1's, 1 2, 1 3, 2 1's, and 1 5).
         #
-        # All objective_sizes should be > 0 since we only retrieve counts for
-        # indices in `indices`.
+        # All objective_sizes should be > 0 since we only retrieve counts for indices in
+        # `indices`.
         objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]
 
-        # Compute the sum of the objectives inserted into each cell -- again, we
-        # index with `indices`.
+        # Compute the sum of the objectives inserted into each cell -- again, we index
+        # with `indices`.
         objective_sums = aggregate(indices, objective, func="sum", fill_value=np.nan)[
             indices
         ]
@@ -567,10 +551,10 @@ class CVTArchive(ArchiveBase):
         # (https://arxiv.org/abs/2205.10752).
         #
         # Unlike in single_entry_with_threshold, we do not need to worry about
-        # cur_threshold having -np.inf here as a result of threshold_min being
-        # -np.inf. This is because the case with threshold_min = -np.inf is
-        # handled separately since we compute the new threshold based on the max
-        # objective in each cell in that case.
+        # cur_threshold having -np.inf here as a result of threshold_min being -np.inf.
+        # This is because the case with threshold_min = -np.inf is handled separately
+        # since we compute the new threshold based on the max objective in each cell in
+        # that case.
         ratio = dtype(1.0 - learning_rate) ** objective_sizes
         new_threshold = ratio * cur_threshold + (objective_sums / objective_sizes) * (
             1 - ratio
@@ -582,93 +566,84 @@ class CVTArchive(ArchiveBase):
         """Inserts a batch of solutions into the archive.
 
         Each solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  If multiple
-        solutions in the batch end up in the same cell, we only insert the
-        solution with the highest objective. If multiple solutions end up in the
-        same cell and tie for the highest objective, we insert the solution that
-        appears first in the batch.
+        threshold of the corresponding cell. For the default values of ``learning_rate``
+        and ``threshold_min``, this threshold is simply the objective value of the elite
+        previously in the cell. If multiple solutions in the batch end up in the same
+        cell, we only insert the solution with the highest objective. If multiple
+        solutions end up in the same cell and tie for the highest objective, we insert
+        the solution that appears first in the batch.
 
-        For the default values of ``learning_rate`` and ``threshold_min``, the
-        threshold for each cell is updated by taking the maximum objective value
-        among all the solutions that landed in the cell, resulting in the same
-        behavior as in the vanilla MAP-Elites archive. However, for other
-        settings, the threshold is updated with the batch update rule described
-        in the appendix of `Fontaine 2023 <https://arxiv.org/abs/2205.10752>`_.
+        For the default values of ``learning_rate`` and ``threshold_min``, the threshold
+        for each cell is updated by taking the maximum objective value among all the
+        solutions that landed in the cell, resulting in the same behavior as in the
+        vanilla MAP-Elites archive. However, for other settings, the threshold is
+        updated with the batch update rule described in the appendix of `Fontaine 2023
+        <https://arxiv.org/abs/2205.10752>`_.
 
-        .. note:: The indices of all arguments should "correspond" to each
-            other, i.e., ``solution[i]``, ``objective[i]``, and ``measures[i]``
-            should be the solution parameters, objective, and measures for
-            solution ``i``.
+        .. note:: The indices of all arguments should "correspond" to each other, i.e.,
+            ``solution[i]``, ``objective[i]``, and ``measures[i]`` should be the
+            solution parameters, objective, and measures for solution ``i``.
 
         Args:
-            solution (array-like): (batch_size, :attr:`solution_dim`) array of
-                solution parameters.
+            solution (array-like): (batch_size, :attr:`solution_dim`) array of solution
+                parameters.
             objective (array-like): (batch_size,) array with objective function
                 evaluations of the solutions.
-            measures (array-like): (batch_size, :attr:`measure_dim`) array with
-                measure space coordinates of all the solutions.
-            fields (keyword arguments): Additional data for each solution. Each
-                argument should be an array with batch_size as the first
-                dimension.
+            measures (array-like): (batch_size, :attr:`measure_dim`) array with measure
+                space coordinates of all the solutions.
+            fields (keyword arguments): Additional data for each solution. Each argument
+                should be an array with batch_size as the first dimension.
 
         Returns:
-            dict: Information describing the result of the add operation. The
-            dict contains the following keys:
+            dict: Information describing the result of the add operation. The dict
+            contains the following keys:
 
-            - ``"status"`` (:class:`numpy.ndarray` of :class:`numpy.int32`): An
-              array of integers that represent the "status" obtained when
-              attempting to insert each solution in the batch. Each item has the
-              following possible values:
+            - ``"status"`` (:class:`numpy.ndarray` of :class:`numpy.int32`): An array of
+              integers that represent the "status" obtained when attempting to insert
+              each solution in the batch. Each item has the following possible values:
 
               - ``0``: The solution was not added to the archive.
-              - ``1``: The solution improved the objective value of a cell
-                which was already in the archive.
+              - ``1``: The solution improved the objective value of a cell which was
+                already in the archive.
               - ``2``: The solution discovered a new cell in the archive.
 
               All statuses (and values, below) are computed with respect to the
-              *current* archive. For example, if two solutions both introduce
-              the same new archive cell, then both will be marked with ``2``.
+              *current* archive. For example, if two solutions both introduce the same
+              new archive cell, then both will be marked with ``2``.
 
-              The alternative is to depend on the order of the solutions in the
-              batch -- for example, if we have two solutions ``a`` and ``b``
-              that introduce the same new cell in the archive, ``a`` could be
-              inserted first with status ``2``, and ``b`` could be inserted
-              second with status ``1`` because it improves upon ``a``. However,
-              our implementation does **not** do this.
+              The alternative is to depend on the order of the solutions in the batch --
+              for example, if we have two solutions ``a`` and ``b`` that introduce the
+              same new cell in the archive, ``a`` could be inserted first with status
+              ``2``, and ``b`` could be inserted second with status ``1`` because it
+              improves upon ``a``. However, our implementation does **not** do this.
 
-              To convert statuses to a more semantic format, cast all statuses
-              to :class:`AddStatus`, e.g., with ``[AddStatus(s) for s in
+              To convert statuses to a more semantic format, cast all statuses to
+              :class:`AddStatus`, e.g., with ``[AddStatus(s) for s in
               add_info["status"]]``.
 
-            - ``"value"`` (:class:`numpy.ndarray` of
-              :attr:`dtypes` ["objective"]): An array with values for each
-              solution in the batch. With the default values of ``learning_rate
-              = 1.0`` and ``threshold_min = -np.inf``, the meaning of each value
-              depends on the corresponding ``status`` and is identical to that
-              in CMA-ME (`Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_):
+            - ``"value"`` (:class:`numpy.ndarray` of :attr:`dtypes` ["objective"]): An
+              array with values for each solution in the batch. With the default values
+              of ``learning_rate = 1.0`` and ``threshold_min = -np.inf``, the meaning of
+              each value depends on the corresponding ``status`` and is identical to
+              that in CMA-ME (`Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_):
 
-              - ``0`` (not added): The value is the "negative improvement,"
-                i.e., the objective of the solution passed in minus the
-                objective of the elite still in the archive (this value is
-                negative because the solution did not have a high enough
-                objective to be added to the archive).
-              - ``1`` (improve existing cell): The value is the "improvement,"
-                i.e., the objective of the solution passed in minus the
-                objective of the elite previously in the archive.
-              - ``2`` (new cell): The value is just the objective of the
-                solution.
+              - ``0`` (not added): The value is the "negative improvement," i.e., the
+                objective of the solution passed in minus the objective of the elite
+                still in the archive (this value is negative because the solution did
+                not have a high enough objective to be added to the archive).
+              - ``1`` (improve existing cell): The value is the "improvement," i.e., the
+                objective of the solution passed in minus the objective of the elite
+                previously in the archive.
+              - ``2`` (new cell): The value is just the objective of the solution.
 
-              In contrast, for other values of ``learning_rate`` and
-              ``threshold_min``, each value is equivalent to the objective value
-              of the solution minus the threshold of its corresponding cell in
-              the archive.
+              In contrast, for other values of ``learning_rate`` and ``threshold_min``,
+              each value is equivalent to the objective value of the solution minus the
+              threshold of its corresponding cell in the archive.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
-            ValueError: ``objective`` or ``measures`` has non-finite values (inf
-                or NaN).
+            ValueError: ``objective`` or ``measures`` has non-finite values (inf or
+                NaN).
         """
         data = validate_batch(
             self,
@@ -696,11 +671,10 @@ class CVTArchive(ArchiveBase):
         cur_threshold = cur_data["threshold"]
         cur_threshold[~cur_occupied] = self.threshold_min
 
-        # Compute status -- arrays below are all boolean arrays of length
-        # batch_size.
+        # Compute status -- arrays below are all boolean arrays of length batch_size.
         #
-        # When we want CMA-ME behavior, the threshold defaults to -inf for new
-        # cells, which satisfies the condition for can_insert.
+        # When we want CMA-ME behavior, the threshold defaults to -inf for new cells,
+        # which satisfies the condition for can_insert.
         can_insert = data["objective"] > cur_threshold
         is_new = can_insert & ~cur_occupied
         improve_existing = can_insert & cur_occupied
@@ -708,9 +682,9 @@ class CVTArchive(ArchiveBase):
         add_info["status"][is_new] = 2
         add_info["status"][improve_existing] = 1
 
-        # If threshold_min is -inf, then we want CMA-ME behavior, which computes
-        # the improvement value of new solutions w.r.t zero. Otherwise, we
-        # compute improvement with respect to threshold_min.
+        # If threshold_min is -inf, then we want CMA-ME behavior, which computes the
+        # improvement value of new solutions w.r.t zero. Otherwise, we compute
+        # improvement with respect to threshold_min.
         cur_threshold[is_new] = (
             self.dtypes["threshold"](0.0)
             if self.threshold_min == -np.inf
@@ -718,14 +692,13 @@ class CVTArchive(ArchiveBase):
         )
         add_info["value"] = data["objective"] - cur_threshold
 
-        # Return early if we cannot insert anything -- continuing throws a
-        # ValueError in aggregate() since index[can_insert] would be empty.
+        # Return early if we cannot insert anything -- continuing throws a ValueError in
+        # aggregate() since index[can_insert] would be empty.
         if not np.any(can_insert):
             return add_info
 
-        # Select all solutions that _can_ be inserted -- at this point, there
-        # are still conflicts in the insertions, e.g., multiple solutions can
-        # map to index 0.
+        # Select all solutions that _can_ be inserted -- at this point, there are still
+        # conflicts in the insertions, e.g., multiple solutions can map to index 0.
         indices = indices[can_insert]
         data = {name: arr[can_insert] for name, arr in data.items()}
         cur_threshold = cur_threshold[can_insert]
@@ -736,9 +709,9 @@ class CVTArchive(ArchiveBase):
             new_threshold = data["objective"]
         else:
             # Batch threshold update described in Fontaine 2023
-            # (https://arxiv.org/abs/2205.10752). This computation is based on
-            # the mean objective of all solutions in the batch that could have
-            # been inserted into each cell.
+            # (https://arxiv.org/abs/2205.10752). This computation is based on the mean
+            # objective of all solutions in the batch that could have been inserted into
+            # each cell.
             new_threshold = self._compute_thresholds(
                 indices,
                 data["objective"],
@@ -747,20 +720,19 @@ class CVTArchive(ArchiveBase):
                 self.dtypes["threshold"],
             )
 
-        # Retrieve indices of solutions that _should_ be inserted into the
-        # archive. Currently, multiple solutions may be inserted at each archive
-        # index, but we only want to insert the maximum among these solutions.
-        # Thus, we obtain the argmax for each archive index.
+        # Retrieve indices of solutions that _should_ be inserted into the archive.
+        # Currently, multiple solutions may be inserted at each archive index, but we
+        # only want to insert the maximum among these solutions. Thus, we obtain the
+        # argmax for each archive index.
         #
-        # We use a fill_value of -1 to indicate archive indices that were not
-        # covered in the batch. Note that the length of archive_argmax is only
-        # max(indices), rather than the total number of grid cells. However,
-        # this is okay because we only need the indices of the solutions, which
-        # we store in should_insert.
+        # We use a fill_value of -1 to indicate archive indices that were not covered in
+        # the batch. Note that the length of archive_argmax is only max(indices), rather
+        # than the total number of grid cells. However, this is okay because we only
+        # need the indices of the solutions, which we store in should_insert.
         #
-        # aggregate() always chooses the first item if there are ties, so the
-        # first elite will be inserted if there is a tie. See their default
-        # numpy implementation for more info:
+        # aggregate() always chooses the first item if there are ties, so the first
+        # elite will be inserted if there is a tie. See their default numpy
+        # implementation for more info:
         # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
         archive_argmax = aggregate(
             indices, data["objective"], func="argmax", fill_value=-1
@@ -789,10 +761,10 @@ class CVTArchive(ArchiveBase):
         """Inserts a single solution into the archive.
 
         The solution is only inserted if it has a higher ``objective`` than the
-        threshold of the corresponding cell. For the default values of
-        ``learning_rate`` and ``threshold_min``, this threshold is simply the
-        objective value of the elite previously in the cell.  The threshold is
-        also updated if the solution was inserted.
+        threshold of the corresponding cell. For the default values of ``learning_rate``
+        and ``threshold_min``, this threshold is simply the objective value of the elite
+        previously in the cell. The threshold is also updated if the solution was
+        inserted.
 
         .. note::
             This method is provided as an easier-to-understand implementation
@@ -839,16 +811,16 @@ class CVTArchive(ArchiveBase):
         cur_occupied = cur_occupied[0]
 
         if cur_occupied:
-            # If the cell is currently occupied, the threshold comes from the
-            # current data of the elite in the cell.
+            # If the cell is currently occupied, the threshold comes from the current
+            # data of the elite in the cell.
             cur_threshold = cur_data["threshold"][0]
         else:
             # If the cell is not currently occupied, the threshold needs special
             # settings.
             #
-            # If threshold_min is -inf, then we want CMA-ME behavior, which
-            # computes the improvement value with a threshold of zero for new
-            # solutions. Otherwise, we will set cur_threshold to threshold_min.
+            # If threshold_min is -inf, then we want CMA-ME behavior, which computes the
+            # improvement value with a threshold of zero for new solutions. Otherwise,
+            # we will set cur_threshold to threshold_min.
             cur_threshold = (
                 self.dtypes["threshold"](0.0)
                 if self.threshold_min == -np.inf
@@ -861,25 +833,24 @@ class CVTArchive(ArchiveBase):
         # Compute status and threshold.
         add_info["status"] = np.int32(0)  # NOT_ADDED
 
-        # Now we check whether a solution should be added to the archive. We use
-        # the addition rule from MAP-Elites (Fig. 2 of Mouret 2015
+        # Now we check whether a solution should be added to the archive. We use the
+        # addition rule from MAP-Elites (Fig. 2 of Mouret 2015
         # https://arxiv.org/pdf/1504.04909.pdf), with modifications for CMA-MAE.
 
-        # This checks if a new solution is discovered in the archive. Note that
-        # regular MAP-Elites only checks `not cur_occupied`. CMA-MAE has an
-        # additional `threshold_min` that the objective must exceed for new
-        # cells. If CMA-MAE is not being used, then `threshold_min` is -np.inf,
-        # making this check identical to that of MAP-Elites.
+        # This checks if a new solution is discovered in the archive. Note that regular
+        # MAP-Elites only checks `not cur_occupied`. CMA-MAE has an additional
+        # `threshold_min` that the objective must exceed for new cells. If CMA-MAE is
+        # not being used, then `threshold_min` is -np.inf, making this check identical
+        # to that of MAP-Elites.
         is_new = not cur_occupied and self.threshold_min < objective
 
-        # This checks whether the solution improves an existing cell in the
-        # archive, i.e., whether it performs better than the current elite in
-        # this cell. Vanilla MAP-Elites compares to the objective of the cell's
-        # current elite. CMA-MAE compares to a threshold value that updates
-        # over time (i.e., cur_threshold). When learning_rate is set to 1.0 (the
-        # default value), we recover the same rule as in MAP-Elites because
-        # cur_threshold is equivalent to the objective of the solution in the
-        # cell.
+        # This checks whether the solution improves an existing cell in the archive,
+        # i.e., whether it performs better than the current elite in this cell. Vanilla
+        # MAP-Elites compares to the objective of the cell's current elite. CMA-MAE
+        # compares to a threshold value that updates over time (i.e., cur_threshold).
+        # When learning_rate is set to 1.0 (the default value), we recover the same rule
+        # as in MAP-Elites because cur_threshold is equivalent to the objective of the
+        # solution in the cell.
         improve_existing = cur_occupied and cur_threshold < objective
 
         if is_new or improve_existing:
@@ -888,8 +859,8 @@ class CVTArchive(ArchiveBase):
             else:
                 add_info["status"] = np.int32(2)  # NEW
 
-            # This calculation works in the case where threshold_min is -inf
-            # because cur_threshold will be set to 0.0 instead.
+            # This calculation works in the case where threshold_min is -inf because
+            # cur_threshold will be set to 0.0 instead.
             data["threshold"] = (
                 cur_threshold * (1.0 - self.learning_rate)
                 + objective * self.learning_rate

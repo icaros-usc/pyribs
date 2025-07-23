@@ -8,33 +8,30 @@ from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
 
 
 class PyCMAEvolutionStrategy(EvolutionStrategyBase):
-    """Wrapper around the pycma
-    :class:`~cma.evolution_strategy.CMAEvolutionStrategy`.
+    """Wrapper around the pycma :class:`~cma.evolution_strategy.CMAEvolutionStrategy`.
 
     .. note::
 
-        This optimizer requires the `pycma <https://github.com/CMA-ES/pycma>`_
-        package, which can be installed with ``pip install cma`` or ``conda
-        install cma``.
+        This optimizer requires the `pycma <https://github.com/CMA-ES/pycma>`_ package,
+        which can be installed with ``pip install cma`` or ``conda install cma``.
 
     Args:
         sigma0 (float): Initial step size.
-        batch_size (int or str): Number of solutions to evaluate at a time. This
-            is passed directly as ``popsize`` in ``opts``.
+        batch_size (int or str): Number of solutions to evaluate at a time. This is
+            passed directly as ``popsize`` in ``opts``.
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
-        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-            indicating lower bounds of the solution space. Scalars specify
-            the same bound for the entire space, while arrays specify a
-            bound for each dimension. Pass -np.inf in the array or scalar to
-            indicated unbounded space.
-        upper_bounds (float or np.ndarray): Same as above, but for upper
-            bounds (and pass np.inf instead of -np.inf).
-        opts (dict): Additional options for pycma. Note that ``popsize``,
-            ``bounds``, ``randn``, and ``seed`` are overwritten by us and thus
-            should not be provided in this dict. We also make ``verbose``
-            default to -9, but you can also pass in a custom value here.
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array indicating
+            lower bounds of the solution space. Scalars specify the same bound for the
+            entire space, while arrays specify a bound for each dimension. Pass -np.inf
+            in the array or scalar to indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper bounds (and
+            pass np.inf instead of -np.inf).
+        opts (dict): Additional options for pycma. Note that ``popsize``, ``bounds``,
+            ``randn``, and ``seed`` are overwritten by us and thus should not be
+            provided in this dict. We also make ``verbose`` default to -9, but you can
+            also pass in a custom value here.
     """
 
     def __init__(  # pylint: disable = super-init-not-called
@@ -146,8 +143,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         """Samples new solutions from the Gaussian distribution.
 
         Args:
-            batch_size (int): batch size of the sample. Defaults to
-                ``self.batch_size``.
+            batch_size (int): batch size of the sample. Defaults to ``self.batch_size``.
         """
         # batch_size defaults to popsize in CMA-ES.
         self._solutions = np.asarray(self._es.ask(batch_size))

@@ -6,9 +6,9 @@ import numpy as np
 def parse_dtype(dtype):
     """Parses dtypes for the archive.
 
-    At the end, all dtypes will be scalar types like np.float32 or np.float64 --
-    note that this is different from the numpy.dtype like np.dtype("f"). See
-    here: https://numpy.org/doc/stable/reference/arrays.dtypes.html
+    At the end, all dtypes will be scalar types like np.float32 or np.float64 -- note
+    that this is different from the numpy.dtype like np.dtype("f"). See here:
+    https://numpy.org/doc/stable/reference/arrays.dtypes.html
     """
     if isinstance(dtype, dict):
         if (
@@ -42,8 +42,7 @@ def parse_dtype(dtype):
 
 
 def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
-    """Checks variables related to CMA-MAE, i.e., learning_rate and
-    threshold_min."""
+    """Checks variables related to CMA-MAE, i.e., learning_rate and threshold_min."""
     if threshold_min != -np.inf and learning_rate is None:
         raise ValueError(
             "threshold_min was set without setting learning_rate. "

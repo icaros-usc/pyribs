@@ -9,11 +9,11 @@ class GaussianOperator(OperatorBase):
     """Adds Gaussian noise to solutions.
 
     Args:
-        sigma (float or array-like): Standard deviation of the Gaussian
-            distribution. Note we assume the Gaussian is diagonal, so if this
-            argument is an array, it must be 1D.
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
+        sigma (float or array-like): Standard deviation of the Gaussian distribution.
+            Note we assume the Gaussian is diagonal, so if this argument is an array, it
+            must be 1D.
+        seed (int): Value to seed the random number generator. Set to None to avoid a
+            fixed seed.
     """
 
     def __init__(self, sigma, seed=None):
@@ -29,8 +29,8 @@ class GaussianOperator(OperatorBase):
         """Adds Gaussian noise to parents.
 
         Args:
-            parents (array-like): (batch_size, solution_dim) array of
-                solutions to be mutated.
+            parents (array-like): (batch_size, solution_dim) array of solutions to be
+                mutated.
 
         Returns:
             numpy.ndarray: ``(batch_size, solution_dim)`` array that contains

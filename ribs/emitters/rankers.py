@@ -1,14 +1,14 @@
 """Rankers for use across emitters.
 
 The rankers implemented in this file are intended to be used with emitters.
-Specifically, a ranker object should be initialized or passed in the emitters.
-The ``Ranker`` object will define the :meth:`~RankerBase.rank` method that
-returns the result of a descending argsort of the solutions. It will also define
-a :meth:`~RankerBase.reset` method that resets the internal state of the object.
+Specifically, a ranker object should be initialized or passed in the emitters. The
+``Ranker`` object will define the :meth:`~RankerBase.rank` method that returns the
+result of a descending argsort of the solutions. It will also define a
+:meth:`~RankerBase.reset` method that resets the internal state of the object.
 
-When specifying which ranker to use for each emitter, one could either pass in
-the full name of a ranker, e.g., "ImprovementRanker", or the abbreviated name of
-a ranker, e.g., "imp". The supported abbreviations are:
+When specifying which ranker to use for each emitter, one could either pass in the full
+name of a ranker, e.g., "ImprovementRanker", or the abbreviated name of a ranker, e.g.,
+"imp". The supported abbreviations are:
 
 * ``density``: :class:`DensityRanker`
 * ``imp``: :class:`ImprovementRanker`
@@ -51,40 +51,37 @@ __all__ = [
 
 _RANK_ARGS = """
 Args:
-    emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker``
-        object belongs to.
-    archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
-        when creating and inserting solutions.
-    data (dict): Dict mapping from field names like ``solution`` and
-        ``objective`` to arrays with data for the solutions. Rankers at least
-        assume the presence of the ``solution`` key.
+    emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker`` object belongs to.
+    archive (ribs.archives.ArchiveBase): Archive used by ``emitter`` when creating and
+        inserting solutions.
+    data (dict): Dict mapping from field names like ``solution`` and ``objective`` to
+        arrays with data for the solutions. Rankers at least assume the presence of the
+        ``solution`` key.
     add_info (dict): Information returned by an archive's add() method.
 
 Returns:
-    tuple(numpy.ndarray, numpy.ndarray): the first array (shape
-    ``(batch_size,)``) is an array of indices representing a ranking of the
-    solutions and the second array (shape ``(batch_size,)`` or (batch_size,
-    n_values)``) is an array of values that this ranker used to rank the
-    solutions. ``batch_size`` is the number of solutions and ``n_values`` is
-    the number of values that the rank function used.
+    tuple of (numpy.ndarray, numpy.ndarray): The first array (shape ``(batch_size,)``)
+    is an array of indices representing a ranking of the solutions and the second array
+    (shape ``(batch_size,)`` or (batch_size, n_values)``) is an array of values that
+    this ranker used to rank the solutions. ``batch_size`` is the number of solutions
+    and ``n_values`` is the number of values that the rank function used.
 """
 
 _RESET_ARGS = """
 Args:
-    emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker``
-        object belongs to.
-    archive (ribs.archives.ArchiveBase): Archive used by ``emitter``
-        when creating and inserting solutions.
+    emitter (ribs.emitters.EmitterBase): Emitter that this ``ranker`` object belongs to.
+    archive (ribs.archives.ArchiveBase): Archive used by ``emitter`` when creating and
+        inserting solutions.
 """
 
 
 class RankerBase(ABC):
     """Base class for rankers.
 
-    Every ranker has a :meth:`rank` method that returns a list of indices
-    that indicate how the solutions should be ranked and a :meth:`reset` method
-    that resets the internal state of the ranker
-    (e.g. in :class:`~ribs.emitters.rankers.RandomDirectionRanker`).
+    Every ranker has a :meth:`rank` method that returns a list of indices that indicate
+    how the solutions should be ranked and a :meth:`reset` method that resets the
+    internal state of the ranker (e.g. in
+    :class:`~ribs.emitters.rankers.RandomDirectionRanker`).
 
     Child classes are only required to override :meth:`rank`.
     """
@@ -118,15 +115,15 @@ Resets the internal state of the ranker.
 class ImprovementRanker(RankerBase):
     """Ranks the solutions based on the improvement in the objective.
 
-    This ranker ranks solutions in a single stage. The solutions are ranked by
-    the improvement "value" described in :meth:`ribs.archives.ArchiveBase.add`.
+    This ranker ranks solutions in a single stage. The solutions are ranked by the
+    improvement "value" described in :meth:`ribs.archives.ArchiveBase.add`.
 
-    This ranker should not be used with CMA-ME. The improvement values for new
-    solutions in CMA-ME are on a different scale from the improvement values for
-    the other solutions, in that new solutions have an improvement value which
-    is simply their objective, while other solutions have an improvement value
-    which is the difference between their objective and the objective of their
-    corresponding cell in the archive.
+    This ranker should not be used with CMA-ME. The improvement values for new solutions
+    in CMA-ME are on a different scale from the improvement values for the other
+    solutions, in that new solutions have an improvement value which is simply their
+    objective, while other solutions have an improvement value which is the difference
+    between their objective and the objective of their corresponding cell in the
+    archive.
     """
 
     def rank(self, emitter, archive, data, add_info):
@@ -144,14 +141,13 @@ Generates a list of indices that represents an ordering of solutions.
 class TwoStageImprovementRanker(RankerBase):
     """Ranks the solutions based on the improvement in the objective.
 
-    This ranker originates in `Fontaine 2020
-    <https://arxiv.org/abs/1912.02400>`_ in which it was referred to as
-    "Improvement Emitter".
-    This ranker ranks solutions in two stages. First, solutions are ranked by
-    "status" -- those that found a new cell in the archive rank above those that
-    improved an existing cell, which rank above those that were not added to the
-    archive. Second, solutions are ranked by the "value" described in
-    :meth:`ribs.archives.ArchiveBase.add`
+    This ranker originates in `Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_ in
+    which it was referred to as "Improvement Emitter". This ranker ranks solutions in
+    two stages. First, solutions are ranked by "status" -- those that found a new cell
+    in the archive rank above those that improved an existing cell, which rank above
+    those that were not added to the archive. Second, solutions are ranked by the
+    "value" returned by archive ``add`` methods, such as
+    :meth:`ribs.archives.GridArchive.add`.
     """
 
     def rank(self, emitter, archive, data, add_info):
@@ -181,17 +177,14 @@ Generates a list of indices that represents an ordering of solutions.
 
 
 class RandomDirectionRanker(RankerBase):
-    """Ranks the solutions based on projection onto a direction in measure
-    space.
+    """Ranks the solutions based on projection onto a direction in measure space.
 
-    This ranker originates in `Fontaine 2020
-    <https://arxiv.org/abs/1912.02400>`_ as random direction emitter.
-    The solutions are ranked solely based on their projection onto a random
-    direction in the archive.
+    This ranker originates from the random direction emitter in `Fontaine 2020
+    <https://arxiv.org/abs/1912.02400>`_. The solutions are ranked solely based on their
+    projection onto a random direction in the archive.
 
-    To rank the solutions first by whether they were added, and then by
-    the projection, refer to
-    :class:`ribs.emitters.rankers.TwoStageRandomDirectionRanker`.
+    To rank the solutions first by whether they were added, and then by the projection,
+    refer to :class:`ribs.emitters.rankers.TwoStageRandomDirectionRanker`.
     """
 
     def __init__(self, seed=None):
@@ -200,8 +193,8 @@ class RandomDirectionRanker(RankerBase):
 
     @property
     def target_measure_dir(self):
-        """numpy.ndarray: ``(measure_dim,)`` array with the target measure
-        direction vector."""
+        """numpy.ndarray: ``(measure_dim,)`` array with the target measure direction
+        vector."""
         return self._target_measure_dir
 
     @target_measure_dir.setter
@@ -231,10 +224,9 @@ Ranks the solutions based on projection onto a direction in the archive.
     reset.__doc__ = f"""
 Generates a random direction in the archive's measure space.
 
-A random direction is sampled from a standard Gaussian -- since the standard
-Gaussian is isotropic, there is equal probability for any direction. The
-direction is then scaled to the archive bounds so that it is a random archive
-direction.
+A random direction is sampled from a standard Gaussian -- since the standard Gaussian is
+isotropic, there is equal probability for any direction. The direction is then scaled to
+the archive bounds so that it is a random archive direction.
 
 {_RESET_ARGS}
    """
@@ -242,11 +234,11 @@ direction.
 
 class TwoStageRandomDirectionRanker(RankerBase):
     """Similar to :class:`ribs.emitters.rankers.RandomDirectionRanker`, but the
-    solutions are first ranked by whether they are added, then by their
-    projection onto a random direction in the archive space.
+    solutions are first ranked by whether they are added, then by their projection onto
+    a random direction in the archive space.
 
-    This ranker originates from `Fontaine 2020
-    <https://arxiv.org/abs/1912.02400>`_ as RandomDirectionEmitter.
+    This ranker originates from the random direction emitter in `Fontaine 2020
+    <https://arxiv.org/abs/1912.02400>`_.
     """
 
     def __init__(self, seed=None):
@@ -280,8 +272,8 @@ class TwoStageRandomDirectionRanker(RankerBase):
         )
 
     rank.__doc__ = f"""
-Ranks the solutions first by whether they are added, then by their projection
-onto a random direction in the archive.
+Ranks the solutions first by whether they are added, then by their projection onto a
+random direction in the archive.
 
 {_RANK_ARGS}
     """
@@ -296,11 +288,10 @@ onto a random direction in the archive.
 
 
 class ObjectiveRanker(RankerBase):
-    """Ranks the solutions solely based on the objective values.
+    """Ranks the solutions solely based on their objective values.
 
-    This ranker originates in `Fontaine 2020
-    <https://arxiv.org/abs/1912.02400>`_ in which it was part of the optimizing
-    emitter.
+    This ranker originates in the optimizing emitter in `Fontaine 2020
+    <https://arxiv.org/abs/1912.02400>`_.
     """
 
     def rank(self, emitter, archive, data, add_info):
@@ -315,11 +306,11 @@ Ranks the solutions based on their objective values.
 
 
 class TwoStageObjectiveRanker(RankerBase):
-    """Similar to :class:`ribs.emitters.rankers.ObjectiveRanker`, but ranks
-    newly added solutions before improved solutions.
+    """Similar to :class:`ribs.emitters.rankers.ObjectiveRanker`, but ranks newly added
+    solutions before improved solutions.
 
-    This ranker originates in `Fontaine 2020
-    <https://arxiv.org/abs/1912.02400>`_ as OptimizingEmitter.
+    This ranker originates in the optimizing emitter in `Fontaine 2020
+    <https://arxiv.org/abs/1912.02400>`_.
     """
 
     def rank(self, emitter, archive, data, add_info):
@@ -335,8 +326,8 @@ class TwoStageObjectiveRanker(RankerBase):
         )
 
     rank.__doc__ = f"""
-Ranks the solutions based on their objective values, while prioritizing newly
-added solutions.
+Ranks the solutions based on their objective values, while prioritizing newly added
+solutions.
 
 {_RANK_ARGS}
     """
@@ -345,9 +336,8 @@ added solutions.
 class NoveltyRanker(RankerBase):
     """Ranks solutions based on novelty scores.
 
-    This ranker can only be used with archives that return the ``novelty`` field
-    from their ``add`` method, such as
-    :meth:`ribs.archives.ProximityArchive.add`.
+    This ranker can only be used with archives that return the ``novelty`` field from
+    their ``add`` method, such as :meth:`ribs.archives.ProximityArchive.add`.
     """
 
     def rank(self, emitter, archive, data, add_info):
@@ -363,9 +353,8 @@ Ranks solutions based on novelty scores.
 class DensityRanker(RankerBase):
     """Ranks solutions based on density in measure space.
 
-    This ranker can only be used with archives that return the ``density`` field
-    from their ``add`` method, such as
-    :meth:`ribs.archives.DensityArchive.add`.
+    This ranker can only be used with archives that return the ``density`` field from
+    their ``add`` method, such as :meth:`ribs.archives.DensityArchive.add`.
     """
 
     def rank(self, emitter, archive, data, add_info):
@@ -402,15 +391,13 @@ _NAME_TO_RANKER_MAP = {
 def _get_ranker(klass, seed):
     """Returns a ranker class based on its name.
 
-    ``klass`` can be a reference to the class of the ranker, the full name of
-    a ranker, e.g. "ImprovementRanker", or the abbreviated name for a ranker
-    such as "imp".
+    ``klass`` can be a reference to the class of the ranker, the full name of a ranker,
+    e.g. "ImprovementRanker", or the abbreviated name for a ranker such as "imp".
 
     Args:
-        klass (callable or str): This parameter may either be a callable (e.g.
-            a class or a lambda function) that takes in no parameters and
-            returns an instance of :class:`RankerBase`, or it may be a full or
-            abbreviated ranker name.
+        klass (callable or str): This parameter may either be a callable (e.g. a class
+            or a lambda function) that takes in no parameters and returns an instance of
+            :class:`RankerBase`, or it may be a full or abbreviated ranker name.
 
     Returns:
         The corresponding ranker class instance.

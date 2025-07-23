@@ -39,9 +39,9 @@ class ArrayStoreIterator:
         Raises RuntimeError if the store was modified.
         """
         if not np.all(self.state == self.store._props["updates"]):
-            # This check should go before the StopIteration check because a call
-            # to clear() would cause the len(self.store) to be 0 and thus
-            # trigger StopIteration.
+            # This check should go before the StopIteration check because a call to
+            # clear() would cause the len(self.store) to be 0 and thus trigger
+            # StopIteration.
             raise RuntimeError(
                 "ArrayStore was modified with add() or clear() during iteration."
             )
@@ -63,52 +63,50 @@ class ArrayStore:
     """Maintains a set of arrays that share a common dimension.
 
     The ArrayStore consists of several *fields* of data that are manipulated
-    simultaneously via batch operations. Each field is a NumPy array with a
-    dimension of ``(capacity, ...)`` and can be of any type.
+    simultaneously via batch operations. Each field is a NumPy array with a dimension of
+    ``(capacity, ...)`` and can be of any type.
 
-    Since the arrays all share a common first dimension, they also share a
-    common index. For instance, if we :meth:`retrieve` the data at indices ``[0,
-    2, 1]``, we would get a dict that contains the objective and measures at
-    indices 0, 2, and 1, e.g.::
+    Since the arrays all share a common first dimension, they also share a common index.
+    For instance, if we :meth:`retrieve` the data at indices ``[0, 2, 1]``, we would get
+    a dict that contains the objective and measures at indices 0, 2, and 1, e.g.::
 
         {
             "objective": [-1, 3, -5],
             "measures": [[0, 0], [2, 1], [3, 5]],
         }
 
-    The ArrayStore supports several further operations, such as an :meth:`add`
-    method that inserts data into the ArrayStore.
+    The ArrayStore supports several further operations, such as an :meth:`add` method
+    that inserts data into the ArrayStore.
 
     Args:
-        field_desc (dict): Description of fields in the array store. The
-            description is a dict mapping from a str to a tuple of ``(shape,
-            dtype)``. For instance, ``{"objective": ((), np.float32),
-            "measures": ((10,), np.float32)}`` will create an "objective" field
-            with shape ``(capacity,)`` and a "measures" field with shape
-            ``(capacity, 10)``. Note that field names must be valid Python
-            identifiers.
+        field_desc (dict): Description of fields in the array store. The description is
+            a dict mapping from a str to a tuple of ``(shape, dtype)``. For instance,
+            ``{"objective": ((), np.float32), "measures": ((10,), np.float32)}`` will
+            create an "objective" field with shape ``(capacity,)`` and a "measures"
+            field with shape ``(capacity, 10)``. Note that field names must be valid
+            Python identifiers.
         capacity (int): Total possible entries in the store.
 
     Attributes:
         _props (dict): Properties that are common to every ArrayStore.
 
-            * "capacity": Maximum number of data entries in the store.
-            * "occupied": Boolean array of size ``(capacity,)`` indicating
-              whether each index has data associated with it.
-            * "n_occupied": Number of data entries currently in the store.
-            * "occupied_list": Array of size ``(capacity,)`` listing all
-              occupied indices in the store. Only the first ``n_occupied``
-              elements will be valid.
-            * "updates": Int array recording number of calls to functions that
-              modified the store.
+            - "capacity": Maximum number of data entries in the store.
+            - "occupied": Boolean array of size ``(capacity,)`` indicating whether each
+              index has data associated with it.
+            - "n_occupied": Number of data entries currently in the store.
+            - "occupied_list": Array of size ``(capacity,)`` listing all occupied
+              indices in the store. Only the first ``n_occupied`` elements will be
+              valid.
+            - "updates": Int array recording number of calls to functions that modified
+              the store.
 
         _fields (dict): Holds all the arrays with their data.
 
     Raises:
-        ValueError: One of the fields in ``field_desc`` has a reserved name
-            (currently, "index" is the only reserved name).
-        ValueError: One of the fields in ``field_desc`` has a name that is not a
-            valid Python identifier.
+        ValueError: One of the fields in ``field_desc`` has a reserved name (currently,
+            "index" is the only reserved name).
+        ValueError: One of the fields in ``field_desc`` has a name that is not a valid
+            Python identifier.
     """
 
     def __init__(self, field_desc, capacity):
@@ -134,17 +132,17 @@ class ArrayStore:
             self._fields[name] = np.empty(array_shape, dtype)
 
     def __len__(self):
-        """Number of occupied indices in the store, i.e., number of indices that
-        have a corresponding data entry."""
+        """Number of occupied indices in the store, i.e., number of indices that have a
+        corresponding data entry."""
         return self._props["n_occupied"]
 
     def __iter__(self):
         """Iterates over entries in the store.
 
-        When iterated over, this iterator yields dicts mapping from the fields
-        to the individual entries. For instance, if we had an "objective" field,
-        one entry might look like ``{"index": 1, "objective": 6.0}`` (similar to
-        :meth:`retrieve`, the index is included in the output).
+        When iterated over, this iterator yields dicts mapping from the fields to the
+        individual entries. For instance, if we had an "objective" field, one entry
+        might look like ``{"index": 1, "objective": 6.0}`` (similar to :meth:`retrieve`,
+        the index is included in the output).
 
         Example:
 
@@ -164,14 +162,13 @@ class ArrayStore:
 
     @property
     def occupied(self):
-        """numpy.ndarray: Boolean array of size ``(capacity,)`` indicating
-        whether each index has a data entry."""
+        """numpy.ndarray: Boolean array of size ``(capacity,)`` indicating whether each
+        index has a data entry."""
         return readonly(self._props["occupied"].view())
 
     @property
     def occupied_list(self):
-        """numpy.ndarray: int32 array listing all occupied indices in the
-        store."""
+        """numpy.ndarray: int32 array listing all occupied indices in the store."""
         return readonly(self._props["occupied_list"][: self._props["n_occupied"]])
 
     @cached_property
@@ -187,11 +184,11 @@ class ArrayStore:
                     "measures": ((10,), np.float32),
                 }
 
-        See the constructor ``field_desc`` parameter for more info. Unlike in
-        the field_desc in the constructor, which accepts ints for 1D field
-        shapes (e.g., ``5``), this field_desc shows 1D field shapes as tuples of
-        1 entry (e.g., ``(5,)``). Since dicts in Python are ordered, note that
-        this dict will have the same order as in the constructor.
+        See the constructor ``field_desc`` parameter for more info. Unlike in the
+        field_desc in the constructor, which accepts ints for 1D field shapes (e.g.,
+        ``5``), this field_desc shows 1D field shapes as tuples of 1 entry (e.g.,
+        ``(5,)``). Since dicts in Python are ordered, note that this dict will have the
+        same order as in the constructor.
         """
         return {name: (arr.shape[1:], arr.dtype) for name, arr in self._fields.items()}
 
@@ -263,74 +260,68 @@ class ArrayStore:
 
         Args:
             indices (array-like): List of indices at which to collect data.
-            fields (str or array-like of str): List of fields to include. By
-                default, all fields will be included, with an additional "index"
-                as the last field ("index" can also be placed anywhere in this
-                list). This can also be a single str indicating a field name.
-            return_type (str): Type of data to return. See the ``data`` returned
-                below. Ignored if ``fields`` is a str.
+            fields (str or array-like of str): List of fields to include. By default,
+                all fields will be included, with an additional "index" as the last
+                field. The "index" field can also be added anywhere in this list of
+                fields. This argument can also be a single str indicating a field name.
+            return_type (str): Type of data to return. See the ``data`` returned below.
+                Ignored if ``fields`` is a str.
 
         Returns:
             tuple: 2-element tuple consisting of:
 
-            - **occupied**: Array indicating which indices, among those passed
-              in, have an associated data entry. For instance, if ``indices`` is
-              ``[0, 1, 2]`` and only index 2 has data, then ``occupied`` will be
-              ``[False, False, True]``.
+            - **occupied**: Array indicating which indices, among those passed in, have
+              an associated data entry. For instance, if ``indices`` is ``[0, 1, 2]``
+              and only index 2 has data, then ``occupied`` will be ``[False, False,
+              True]``.
 
-              Note that if a given index is not marked as occupied, it can have
-              any data value associated with it. For instance, if index 1 was
-              not occupied, then the 6.0 returned in the ``dict`` example below
-              should be ignored.
+              Note that if a given index is not marked as occupied, it can have any data
+              value associated with it. For instance, if index 1 was not occupied, then
+              the 6.0 returned in the ``dict`` example below should be ignored.
 
-            - **data**: The data at the given indices. If ``fields`` was a
-              single str, this will just be an array holding data for the given
-              field. Otherwise, this data can take the following forms,
-              depending on the ``return_type`` argument:
+            - **data**: The data at the given indices. If ``fields`` was a single str,
+              this will just be an array holding data for the given field. Otherwise,
+              this data can take the following forms, depending on the ``return_type``
+              argument:
 
-              - ``return_type="dict"``: Dict mapping from the field name to the
-                field data at the given indices. For instance, if we have an
-                ``objective`` field and request data at indices ``[4, 1, 0]``,
-                we would get ``data`` that looks like ``{"objective": [1.5, 6.0,
-                2.3], "index": [4, 1, 0]}``. Observe that we also return the
-                indices as an ``index`` entry in the dict. The keys in this dict
-                can be modified using the ``fields`` arg; duplicate keys will be
-                ignored since the dict stores unique keys.
+              - ``return_type="dict"``: Dict mapping from the field name to the field
+                data at the given indices. For instance, if we have an ``objective``
+                field and request data at indices ``[4, 1, 0]``, we would get ``data``
+                that looks like ``{"objective": [1.5, 6.0, 2.3], "index": [4, 1, 0]}``.
+                Observe that we also return the indices as an ``index`` entry in the
+                dict. The keys in this dict can be modified using the ``fields`` arg;
+                duplicate keys will be ignored since the dict stores unique keys.
 
-              - ``return_type="tuple"``: Tuple of arrays matching the order
-                given in ``fields``. For instance, if ``fields`` was
-                ``["objective", "measures"]``, we would receive a tuple of
-                ``(objective_arr, measures_arr)``. In this case, the results
-                from ``retrieve`` could be unpacked as::
+              - ``return_type="tuple"``: Tuple of arrays matching the order given in
+                ``fields``. For instance, if ``fields`` was ``["objective",
+                "measures"]``, we would receive a tuple of ``(objective_arr,
+                measures_arr)``. In this case, the results from ``retrieve`` could be
+                unpacked as::
 
                     occupied, (objective, measures) = store.retrieve(
                         ...,
                         return_type="tuple",
                     )
 
-                Unlike with the ``dict`` return type, duplicate fields will show
-                up as duplicate entries in the tuple, e.g.,
-                ``fields=["objective", "objective"]`` will result in two
-                objective arrays being returned.
+                Unlike with the ``dict`` return type, duplicate fields will show up as
+                duplicate entries in the tuple, e.g., ``fields=["objective",
+                "objective"]`` will result in two objective arrays being returned.
 
-                By default, (i.e., when ``fields=None``), the fields in the
-                tuple will be ordered according to the ``field_desc`` argument
-                in the constructor, along with ``index`` as the last field.
+                By default, (i.e., when ``fields=None``), the fields in the tuple will
+                be ordered according to the ``field_desc`` argument in the constructor,
+                along with ``index`` as the last field.
 
-              - ``return_type="pandas"``: An
-                :class:`~ribs.archives.ArchiveDataFrame` with the following
-                columns (by default):
+              - ``return_type="pandas"``: An :class:`~ribs.archives.ArchiveDataFrame`
+                with the following columns (by default):
 
-                - For fields that are scalars, a single column with the field
-                  name. For example, ``objective`` would have a single column
-                  called ``objective``.
-                - For fields that are 1D arrays, multiple columns with the name
-                  suffixed by its index. For instance, if we have a ``measures``
-                  field of length 10, we create 10 columns with names
-                  ``measures_0``, ``measures_1``, ..., ``measures_9``. We do not
-                  currently support fields with >1D data.
-                - 1 column of integers (``np.int32``) for the index, named
-                  ``index``.
+                - For fields that are scalars, a single column with the field name. For
+                  example, ``objective`` would have a single column called
+                  ``objective``.
+                - For fields that are 1D arrays, multiple columns with the name suffixed
+                  by its index. For instance, if we have a ``measures`` field of length
+                  10, we create 10 columns with names ``measures_0``, ``measures_1``,
+                  ..., ``measures_9``. We do not currently support fields with >1D data.
+                - 1 column of integers (``np.int32``) for the index, named ``index``.
 
                 In short, the dataframe might look like this:
 
@@ -340,11 +331,14 @@ class ArrayStore:
                 |           |            | ...  |       |
                 +-----------+------------+------+-------+
 
-                Like the other return types, the columns can be adjusted with
-                the ``fields`` parameter.
+                Like the other return types, the columns can be adjusted with the
+                ``fields`` parameter.
 
-            All data returned by this method will be a copy, i.e., the data will
-            not update as the store changes.
+                .. note:: This return type will require copying all fields in the
+                    ArrayStore into NumPy arrays, if they are not already NumPy arrays.
+
+            All data returned by this method will be a copy, i.e., the data will not
+            update as the store changes.
 
         Raises:
             ValueError: Invalid field name provided.
@@ -371,8 +365,8 @@ class ArrayStore:
         for name in fields:
             # Collect array data.
             #
-            # Note that fancy indexing with indices already creates a copy, so
-            # only `indices` needs to be copied explicitly.
+            # Note that fancy indexing with indices already creates a copy, so only
+            # `indices` needs to be copied explicitly.
             if name == "index":
                 arr = np.copy(indices)
             elif name in self._fields:
@@ -439,12 +433,12 @@ class ArrayStore:
 
         Args:
             indices (array-like): List of indices for addition.
-            data (dict): Dict with data to add at each index. The dict maps from
-                field names to arrays of data for each field.
+            data (dict): Dict with data to add at each index. The dict maps from field
+                names to arrays of data for each field.
 
         Raise:
-            ValueError: ``data`` does not have the same keys as the fields of
-                this store.
+            ValueError: ``data`` does not have the same keys as the fields of this
+                store.
             ValueError: ``data`` has fields that have a different length than
                 ``indices``.
         """
@@ -501,8 +495,7 @@ class ArrayStore:
         Args:
             capacity (int): New capacity.
         Raises:
-            ValueError: The new capacity is less than or equal to the current
-                capacity.
+            ValueError: The new capacity is less than or equal to the current capacity.
         """
         if capacity <= self._props["capacity"]:
             raise ValueError(
@@ -529,8 +522,8 @@ class ArrayStore:
     def as_raw_dict(self):
         """Returns the raw data in the ArrayStore as a one-level dictionary.
 
-        To collapse the dict, we prefix each key with ``props.`` or ``fields.``,
-        so the result looks as follows::
+        To collapse the dict, we prefix each key with ``props.`` or ``fields.``, so the
+        result looks as follows::
 
             {
               "props.capacity": ...,

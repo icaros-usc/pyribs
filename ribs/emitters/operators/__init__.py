@@ -1,9 +1,9 @@
 """Various operators that are employed across emitters.
 
-Operators take in one or more parent solutions and output new solutions via
-operations such as mutation and crossover. When specifying operators for an
-emitter, one can pass in the operator class itself, or the string name of the
-operator, or an abbreviated name. The supported abbreviations are:
+Operators take in one or more parent solutions and output new solutions via operations
+such as mutation and crossover. When specifying operators for an emitter, one can pass
+in the operator class itself, or the string name of the operator, or an abbreviated
+name. The supported abbreviations are:
 
 * ``gaussian``: :class:`GaussianOperator`
 * ``isoline``: :class:`IsoLineOperator`
@@ -33,7 +33,7 @@ _NAME_TO_OP_MAP = {
 
 
 def _get_op(operator):
-    """Retrieves Matching Operator"""
+    """Retrieves Matching Operator."""
     if isinstance(operator, str):
         if operator in _NAME_TO_OP_MAP:
             operator = _NAME_TO_OP_MAP[operator]

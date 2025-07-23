@@ -21,18 +21,17 @@ from ribs.emitters.opt._evolution_strategy_base import (
 class DecompMatrix:
     """Maintains a covariance matrix and its eigendecomposition.
 
-    CMA-ES requires the inverse square root of the covariance matrix in order to
-    sample new solutions from a multivariate normal distribution. However,
-    calculating the inverse square root is an O(n^3) operation because an
-    eigendecomposition is involved. (n is the dimensionality of the search
-    space). To amortize the operation to O(n^2) and avoid recomputing, this
-    class maintains the inverse square root and waits several evals before
-    recomputing the inverse square root.
+    CMA-ES requires the inverse square root of the covariance matrix in order to sample
+    new solutions from a multivariate normal distribution. However, calculating the
+    inverse square root is an O(n^3) operation because an eigendecomposition is
+    involved. (n is the dimensionality of the search space). To amortize the operation
+    to O(n^2) and avoid recomputing, this class maintains the inverse square root and
+    waits several evals before recomputing the inverse square root.
 
     Args:
         dimension (int): Size of the (square) covariance matrix.
-        dtype (str or data-type): Data type of the matrix, typically np.float32
-            or np.float64.
+        dtype (str or data-type): Data type of the matrix, typically np.float32 or
+            np.float64.
     """
 
     def __init__(self, dimension, dtype):
@@ -49,15 +48,15 @@ class DecompMatrix:
     def update_eigensystem(self, current_eval, lazy_gap_evals):
         """Updates the covariance matrix if lazy_gap_evals have passed.
 
-        We have attempted to use numba in this method, but since np.linalg.eigh
-        is the bottleneck, and it is already implemented in BLAS or LAPACK,
-        numba does not help much (and actually slows things down a bit).
+        We have attempted to use numba in this method, but since np.linalg.eigh is the
+        bottleneck, and it is already implemented in BLAS or LAPACK, numba does not help
+        much (and actually slows things down a bit).
 
         Args:
-            current_eval (int): The number of solutions the optimizer has
-                evaluated so far.
-            lazy_gap_evals (int): The number of evaluations to wait between
-                covariance matrix updates.
+            current_eval (int): The number of solutions the optimizer has evaluated so
+                far.
+            lazy_gap_evals (int): The number of evaluations to wait between covariance
+                matrix updates.
         """
         if current_eval <= self.updated_eval + lazy_gap_evals:
             return
@@ -93,13 +92,12 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         solution_dim (int): Size of the solution space.
         seed (int): Seed for the random number generator.
         dtype (str or data-type): Data type of solutions.
-        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array
-            indicating lower bounds of the solution space. Scalars specify
-            the same bound for the entire space, while arrays specify a
-            bound for each dimension. Pass -np.inf in the array or scalar to
-            indicated unbounded space.
-        upper_bounds (float or np.ndarray): Same as above, but for upper
-            bounds (and pass np.inf instead of -np.inf).
+        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array indicating
+            lower bounds of the solution space. Scalars specify the same bound for the
+            entire space, while arrays specify a bound for each dimension. Pass -np.inf
+            in the array or scalar to indicated unbounded space.
+        upper_bounds (float or np.ndarray): Same as above, but for upper bounds (and
+            pass np.inf instead of -np.inf).
     """
 
     def __init__(  # pylint: disable = super-init-not-called

@@ -31,11 +31,11 @@ def proximity_archive_plot(
     cbar_kwargs=None,
     rasterized=False,
 ):
-    """Plots scatterplot of a :class:`~ribs.archives.ProximityArchive` with
-    2D measure space.
+    """Plots scatterplot of a :class:`~ribs.archives.ProximityArchive` with 2D measure
+    space.
 
-    Each marker in the scatterplot is an elite, and its color represents the
-    objective value (objective values default to 0 in the ``ProximityArchive``).
+    Each marker in the scatterplot is an elite, and its color represents the objective
+    value (objective values default to 0 in the ``ProximityArchive``).
 
     Examples:
         .. plot::
@@ -98,55 +98,49 @@ def proximity_archive_plot(
             >>> plt.show()
 
     Args:
-        archive (SlidingBoundariesArchive): A 2D
-            :class:`~ribs.archives.SlidingBoundariesArchive`.
-        ax (matplotlib.axes.Axes): Axes on which to make the plot. If ``None``,
-            the current axis will be used.
-        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from
-            this argument instead of the data currently in the archive. This
-            data can be obtained by, for instance, calling
-            :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
-            and modifying the resulting
-            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum,
-            the data must contain columns for index, objective, and measures. To
-            display a custom metric, replace the "objective" column.
-        transpose_measures (bool): By default, the first measure in the archive
-            will appear along the x-axis, and the second will be along the
-            y-axis. To switch this behavior (i.e. to transpose the axes), set
-            this to ``True``.
-        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when
-            plotting intensity. Either the name of a
-            :class:`~matplotlib.colors.Colormap`, a list of RGB or RGBA colors
-            (i.e. an :math:`N \\times 3` or :math:`N \\times 4` array), or a
-            :class:`~matplotlib.colors.Colormap` object.
+        archive (ProximityArchive): A 2D :class:`~ribs.archives.ProximityArchive`.
+        ax (matplotlib.axes.Axes): Axes on which to make the plot. If ``None``, the
+            current axis will be used.
+        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from this
+            argument instead of the data currently in the archive. This data can be
+            obtained by, for instance, calling :meth:`ribs.archives.ArchiveBase.data`
+            with ``return_type="pandas"`` and modifying the resulting
+            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum, the data
+            must contain columns for index, objective, and measures. To display a custom
+            metric, replace the "objective" column.
+        transpose_measures (bool): By default, the first measure in the archive will
+            appear along the x-axis, and the second will be along the y-axis. To switch
+            this behavior (i.e. to transpose the axes), set this to ``True``.
+        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when plotting
+            intensity. Either the name of a :class:`~matplotlib.colors.Colormap`, a list
+            of RGB or RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4`
+            array), or a :class:`~matplotlib.colors.Colormap` object.
         aspect ('auto', 'equal', float): The aspect ratio of the plot (i.e.
             height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
-            ``aspect=1``. See :meth:`matplotlib.axes.Axes.set_aspect` for more
-            info.
+            ``aspect=1``. See :meth:`matplotlib.axes.Axes.set_aspect` for more info.
         ms (float): Marker size for the solutions.
-        lower_bounds (array-like of float): Lower bounds of the measure space
-            for the plot. Defaults to the minimum measure value along each
-            dimension of the archive, minus 0.01.
-        upper_bounds (array-like of float): Upper bounds of the measure space
-            for the plot. Defaults to the maximum measure value along each
-            dimension of the archive, plus 0.01.
-        vmin (float): Minimum objective value to use in the plot. If ``None``,
-            the minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If ``None``,
-            the maximum objective value in the archive is used.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to
-            ``'auto'`` which displays the colorbar on the archive's current
-            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not
-            displayed. If this is an :class:`~matplotlib.axes.Axes`, displays
-            the colorbar on the specified Axes.
+        lower_bounds (array-like of float): Lower bounds of the measure space for the
+            plot. Defaults to the minimum measure value along each dimension of the
+            archive, minus 0.01.
+        upper_bounds (array-like of float): Upper bounds of the measure space for the
+            plot. Defaults to the maximum measure value along each dimension of the
+            archive, plus 0.01.
+        vmin (float): Minimum objective value to use in the plot. If ``None``, the
+            minimum objective value in the archive is used.
+        vmax (float): Maximum objective value to use in the plot. If ``None``, the
+            maximum objective value in the archive is used.
+        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to ``'auto'``
+            which displays the colorbar on the archive's current
+            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not displayed.
+            If this is an :class:`~matplotlib.axes.Axes`, displays the colorbar on the
+            specified Axes.
         cbar_kwargs (dict): Additional kwargs to pass to
             :func:`~matplotlib.pyplot.colorbar`.
-        rasterized (bool): Whether to rasterize the plot. This can be useful for
-            saving to a vector format like PDF. Essentially, only the scatter
-            plot will be converted to a raster graphic so that the archive cells
-            will not have to be individually rendered. Meanwhile, the
-            surrounding axes, particularly text labels, will remain in vector
-            format.
+        rasterized (bool): Whether to rasterize the plot. This can be useful for saving
+            to a vector format like PDF. Essentially, only the scatter plot will be
+            converted to a raster graphic so that the archive cells will not have to be
+            individually rendered. Meanwhile, the surrounding axes, particularly text
+            labels, will remain in vector format.
     Raises:
         ValueError: The archive is not 2D.
     """
@@ -188,9 +182,8 @@ def proximity_archive_plot(
             upper_bounds = np.full(archive.measure_dim, 0.01)
 
     if transpose_measures:
-        # Since the archive is 2D, transpose by swapping the x and y measures
-        # and boundaries and by flipping the bounds (the bounds are arrays of
-        # length 2).
+        # Since the archive is 2D, transpose by swapping the x and y measures and
+        # boundaries and by flipping the bounds (the bounds are arrays of length 2).
         x, y = y, x
         lower_bounds = np.flip(lower_bounds)
         upper_bounds = np.flip(upper_bounds)

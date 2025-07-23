@@ -30,11 +30,11 @@ def sphere(solutions):
         solutions (np.ndarray): (batch_size, dim) batch of solutions.
     Returns:
         objectives (np.ndarray): (batch_size,) batch of objectives.
-        objective_grads (np.ndarray): (batch_size, solution_dim) batch of
-            objective gradients.
+        objective_grads (np.ndarray): (batch_size, solution_dim) batch of objective
+            gradients.
         measures (np.ndarray): (batch_size, 2) batch of measures.
-        measure_grads (np.ndarray): (batch_size, 2, solution_dim) batch of
-            measure gradients.
+        measure_grads (np.ndarray): (batch_size, 2, solution_dim) batch of measure
+            gradients.
     """
     dim = solutions.shape[1]
 
@@ -116,8 +116,8 @@ def main(
     logdir = Path(outdir)
     logdir.mkdir(exist_ok=True)
 
-    # The main grid archive that interacts with BOP-Elites. We start at the
-    # lowest resolution from ``upscale_schedule``.
+    # The main grid archive that interacts with BOP-Elites. We start at the lowest
+    # resolution from ``upscale_schedule``.
     max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     main_archive = GridArchive(
@@ -126,9 +126,9 @@ def main(
         ranges=bounds,
         seed=seed,
     )
-    # The passive archive that does NOT interact with BOP-Elites other than
-    # storing all evaluated data seen so far. We do not scale the passive
-    # archive, and it always stays at the final resolution.
+    # The passive archive that does NOT interact with BOP-Elites other than storing all
+    # evaluated data seen so far. We do not scale the passive archive, and it always
+    # stays at the final resolution.
     passive_archive = GridArchive(
         solution_dim=solution_dim,
         dims=upscale_schedule[-1],
@@ -140,8 +140,8 @@ def main(
     emitters = [
         BayesianOptimizationEmitter(
             archive=main_archive,
-            # BayesianOptimizationEmitter requires solution space bounds due to
-            # Sobol sampling. i.e., bounds cannot be None.
+            # BayesianOptimizationEmitter requires solution space bounds due to Sobol
+            # sampling. i.e., bounds cannot be None.
             bounds=[(-10.24, 10.24)] * solution_dim,
             search_nrestarts=search_nrestarts,
             entropy_ejie=entropy_ejie,
@@ -154,8 +154,8 @@ def main(
         for i in range(num_emitters)
     ]
 
-    # Scheduler for managing multiple emitters (in what order we ask them for
-    # solutions etc.).
+    # Scheduler for managing multiple emitters (in what order we ask them for solutions
+    # etc.).
     scheduler = BayesianOptimizationScheduler(
         main_archive, emitters, result_archive=passive_archive
     )

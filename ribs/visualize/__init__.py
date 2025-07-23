@@ -1,16 +1,15 @@
 """Visualization tools for pyribs.
 
 These functions are similar to Matplotlib functions like
-:func:`~matplotlib.pyplot.scatter` and :func:`~matplotlib.pyplot.pcolormesh`.
-When called, these functions default to creating plots on the current axis.
-After plotting, functions like :func:`~matplotlib.pyplot.xlabel` and
-:func:`~matplotlib.pyplot.title` may be used to further modify the axis.
-Alternatively, if using Matplotlib's object-oriented API, pass the `ax`
-parameter to these functions.
+:func:`~matplotlib.pyplot.scatter` and :func:`~matplotlib.pyplot.pcolormesh`. When
+called, these functions default to creating plots on the current axis. After plotting,
+functions like :func:`~matplotlib.pyplot.xlabel` and :func:`~matplotlib.pyplot.title`
+may be used to further modify the axis. Alternatively, if using Matplotlib's
+object-oriented API, pass the `ax` parameter to these functions.
 
-.. note:: This module only works with ``ribs[visualize]`` installed. As such, it
-    is not imported with ``import ribs``, and it must be explicitly imported
-    with ``import ribs.visualize``.
+.. note:: This module only works with ``ribs[visualize]`` installed. As such, it is not
+    imported with ``import ribs``, and it must be explicitly imported with ``import
+    ribs.visualize``.
 
 .. autosummary::
     :toctree:

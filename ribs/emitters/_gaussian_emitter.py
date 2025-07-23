@@ -9,35 +9,34 @@ from ribs.emitters._emitter_base import EmitterBase
 class GaussianEmitter(EmitterBase):
     """Emits solutions by adding Gaussian noise to existing elites.
 
-    If the archive is empty and ``initial_solutions`` is set, a call to
-    :meth:`ask` will return ``initial_solutions``. If ``initial_solutions`` is
-    not set, we draw solutions from a Gaussian distribution centered at ``x0``
-    with standard deviation ``sigma``. Otherwise, each solution is drawn from a
-    distribution centered at a randomly chosen elite with standard deviation
-    ``sigma``.
+    If the archive is empty and ``initial_solutions`` is set, a call to :meth:`ask` will
+    return ``initial_solutions``. If ``initial_solutions`` is not set, we draw solutions
+    from a Gaussian distribution centered at ``x0`` with standard deviation ``sigma``.
+    Otherwise, each solution is drawn from a distribution centered at a randomly chosen
+    elite with standard deviation ``sigma``.
 
     Args:
         archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
             :class:`ribs.archives.GridArchive`.
-        sigma (float or array-like): Standard deviation of the Gaussian
-            distribution. Note we assume the Gaussian is diagonal, so if this
-            argument is an array, it must be 1D.
-        x0 (array-like): Center of the Gaussian distribution from which to
-            sample solutions when the archive is empty. Must be 1-dimensional.
-            This argument is ignored if ``initial_solutions`` is set.
-        initial_solutions (array-like): An (n, solution_dim) array of solutions
-            to be used when the archive is empty. If this argument is None, then
-            solutions will be sampled from a Gaussian distribution centered at
-            ``x0`` with standard deviation ``sigma``.
-        bounds (None or array-like): Bounds of the solution space. Solutions are
-            clipped to these bounds. Pass None to indicate there are no bounds.
-            Alternatively, pass an array-like to specify the bounds for each
-            dim. Each element in this array-like can be None to indicate no
-            bound, or a tuple of ``(lower_bound, upper_bound)``, where
-            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
+        sigma (float or array-like): Standard deviation of the Gaussian distribution.
+            Note we assume the Gaussian is diagonal, so if this argument is an array, it
+            must be 1D.
+        x0 (array-like): Center of the Gaussian distribution from which to sample
+            solutions when the archive is empty. Must be 1-dimensional. This argument is
+            ignored if ``initial_solutions`` is set.
+        initial_solutions (array-like): An (n, solution_dim) array of solutions to be
+            used when the archive is empty. If this argument is None, then solutions
+            will be sampled from a Gaussian distribution centered at ``x0`` with
+            standard deviation ``sigma``.
+        bounds (None or array-like): Bounds of the solution space. Solutions are clipped
+            to these bounds. Pass None to indicate there are no bounds. Alternatively,
+            pass an array-like to specify the bounds for each dim. Each element in this
+            array-like can be None to indicate no bound, or a tuple of ``(lower_bound,
+            upper_bound)``, where ``lower_bound`` or ``upper_bound`` may be None to
+            indicate no bound.
         batch_size (int): Number of solutions to return in :meth:`ask`.
-        seed (int): Value to seed the random number generator. Set to None to
-            avoid a fixed seed.
+        seed (int): Value to seed the random number generator. Set to None to avoid a
+            fixed seed.
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
@@ -88,15 +87,14 @@ class GaussianEmitter(EmitterBase):
 
     @property
     def x0(self):
-        """numpy.ndarray: Center of the Gaussian distribution from which to
-        sample solutions when the archive is empty (if initial_solutions is not
-        set)."""
+        """numpy.ndarray: Center of the Gaussian distribution from which to sample
+        solutions when the archive is empty (if initial_solutions is not set)."""
         return self._x0
 
     @property
     def initial_solutions(self):
-        """numpy.ndarray: The initial solutions which are returned when the
-        archive is empty (if x0 is not set)."""
+        """numpy.ndarray: The initial solutions which are returned when the archive is
+        empty (if x0 is not set)."""
         return self._initial_solutions
 
     @property
@@ -117,18 +115,17 @@ class GaussianEmitter(EmitterBase):
     def ask(self):
         """Creates solutions by adding Gaussian noise to elites in the archive.
 
-        If the archive is empty and ``initial_solutions`` is set, a call to
-        :meth:`ask` will return ``initial_solutions``. If ``initial_solutions``
-        is not set, we draw solutions from a Gaussian distribution centered at
-        ``x0`` with standard deviation ``sigma``. Otherwise, each solution is
-        drawn from a distribution centered at a randomly chosen elite with
-        standard deviation ``sigma``.
+        If the archive is empty and ``initial_solutions`` is set, a call to :meth:`ask`
+        will return ``initial_solutions``. If ``initial_solutions`` is not set, we draw
+        solutions from a Gaussian distribution centered at ``x0`` with standard
+        deviation ``sigma``. Otherwise, each solution is drawn from a distribution
+        centered at a randomly chosen elite with standard deviation ``sigma``.
 
         Returns:
             If the archive is not empty, ``(batch_size, solution_dim)`` array --
-            contains ``batch_size`` new solutions to evaluate. If the archive is
-            empty, we return ``initial_solutions``, which might not have
-            ``batch_size`` solutions.
+            contains ``batch_size`` new solutions to evaluate. If the archive is empty,
+            we return ``initial_solutions``, which might not have ``batch_size``
+            solutions.
         """
         if self.archive.empty and self.initial_solutions is not None:
             return self._clip(self.initial_solutions)
