@@ -10,6 +10,7 @@
 
 #### Documentation
 
+- Make all metrics start from values in archive stats ({pr}`586`)
 - Update dependencies for lunar lander ({pr}`585`)
 
 ## 0.8.1
