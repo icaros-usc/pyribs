@@ -54,8 +54,8 @@ def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
         learning_rate = 1.0  # Default value.
     if threshold_min == -np.inf and learning_rate != 1.0:
         raise ValueError("threshold_min can only be -np.inf if learning_rate is 1.0")
-    learning_rate = dtype(learning_rate)
-    threshold_min = dtype(threshold_min)
+    learning_rate = np.asarray(learning_rate, dtype=dtype)
+    threshold_min = np.asarray(threshold_min, dtype=dtype)
     return learning_rate, threshold_min
 
 

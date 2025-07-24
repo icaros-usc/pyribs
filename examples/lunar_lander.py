@@ -3,7 +3,7 @@
 Install the following dependencies before running this example -- swig must be installed
 before box2d can be installed, hence it is a separate command:
     pip install swig
-    pip install ribs[visualize] tqdm fire gymnasium[box2d]==1.0.0 moviepy>=1.0.0 dask>=2.0.0 distributed>=2.0.0 bokeh>=2.0.0
+    pip install ribs[visualize] tqdm "gymnasium[box2d]>=1.0.0" "moviepy>=1.0.0" dask distributed bokeh fire
 
 This script uses the same setup as the tutorial, but it also uses Dask instead of
 Python's multiprocessing to parallelize evaluations on a single machine and adds in a
@@ -208,11 +208,11 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
         },
         "Archive Size": {
             "x": [0],
-            "y": [0],
+            "y": [len(scheduler.archive)],
         },
         "QD Score": {
             "x": [0],
-            "y": [0],
+            "y": [scheduler.archive.stats.qd_score],
         },
     }
 
@@ -278,7 +278,7 @@ def save_metrics(outdir, metrics):
         outdir (Path): output directory for saving files.
         metrics (dict): Metrics as output by run_search.
     """
-    # Plots.
+    # Plot metrics.
     for metric in metrics:
         fig, ax = plt.subplots()
         ax.plot(metrics[metric]["x"], metrics[metric]["y"])
@@ -286,7 +286,14 @@ def save_metrics(outdir, metrics):
         ax.set_xlabel("Iteration")
         fig.savefig(str(outdir / f"{metric.lower().replace(' ', '_')}.png"))
 
-    # JSON file.
+    # Convert metrics to Python scalars by calling .item(), since each stats value is a
+    # 0-D array by default, and JSON cannot serialize 0-D arrays.
+    for metric in metrics:
+        metrics[metric]["y"] = [
+            m if isinstance(m, (int, float)) else m.item() for m in metrics[metric]["y"]
+        ]
+
+    # Save metrics to JSON.
     with (outdir / "metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
 

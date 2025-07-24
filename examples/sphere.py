@@ -1064,11 +1064,11 @@ def sphere_main(
     metrics = {
         "QD Score": {
             "x": [0],
-            "y": [0.0],
+            "y": [result_archive.stats.qd_score],
         },
         "Archive Coverage": {
             "x": [0],
-            "y": [0.0],
+            "y": [result_archive.stats.coverage],
         },
     }
 
@@ -1119,6 +1119,15 @@ def sphere_main(
         plt.xlabel("Iteration")
         plt.savefig(str(outdir / f"{name}_{metric.lower().replace(' ', '_')}.png"))
         plt.clf()
+
+    # Convert metrics to Python scalars by calling .item(), since each stats value is a
+    # 0-D array by default, and JSON cannot serialize 0-D arrays.
+    for metric in metrics:
+        metrics[metric]["y"] = [
+            m if isinstance(m, (int, float)) else m.item() for m in metrics[metric]["y"]
+        ]
+
+    # Save metrics to JSON.
     with (outdir / f"{name}_metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
 
