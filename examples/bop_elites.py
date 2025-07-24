@@ -163,15 +163,15 @@ def main(
     metrics = {
         "QD Score": {
             "x": [0],
-            "y": [0.0],
+            "y": [scheduler.result_archive.stats.qd_score],
         },
         "Archive Coverage": {
             "x": [0],
-            "y": [0.0],
+            "y": [scheduler.result_archive.stats.coverage],
         },
         "Itr. Time": {
-            "x": [0],
-            "y": [0.0],
+            "x": [],
+            "y": [],  # Does not start at 0.
         },
     }
 

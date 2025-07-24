@@ -1064,11 +1064,11 @@ def sphere_main(
     metrics = {
         "QD Score": {
             "x": [0],
-            "y": [0.0],
+            "y": [result_archive.stats.qd_score],
         },
         "Archive Coverage": {
             "x": [0],
-            "y": [0.0],
+            "y": [result_archive.stats.coverage],
         },
     }
 
