@@ -191,7 +191,9 @@ def validate_single(archive, data, none_objective_ok=False):
         if not none_objective_ok:
             raise ValueError("objective cannot be None")
     else:
-        data["objective"] = archive.dtypes["objective"](data["objective"])
+        data["objective"] = np.asarray(
+            data["objective"], dtype=archive.dtypes["objective"]
+        )
         check_finite(data["objective"], "objective")
 
     data["measures"] = np.asarray(data["measures"])

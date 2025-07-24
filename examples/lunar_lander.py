@@ -278,7 +278,7 @@ def save_metrics(outdir, metrics):
         outdir (Path): output directory for saving files.
         metrics (dict): Metrics as output by run_search.
     """
-    # Plots.
+    # Plot metrics.
     for metric in metrics:
         fig, ax = plt.subplots()
         ax.plot(metrics[metric]["x"], metrics[metric]["y"])
@@ -286,7 +286,14 @@ def save_metrics(outdir, metrics):
         ax.set_xlabel("Iteration")
         fig.savefig(str(outdir / f"{metric.lower().replace(' ', '_')}.png"))
 
-    # JSON file.
+    # Convert metrics to Python scalars by calling .item(), since each stats value is a
+    # 0-D array by default, and JSON cannot serialize 0-D arrays.
+    for metric in metrics:
+        metrics[metric]["y"] = [
+            m if isinstance(m, (int, float)) else m.item() for m in metrics[metric]["y"]
+        ]
+
+    # Save metrics to JSON.
     with (outdir / "metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
 

@@ -72,8 +72,8 @@ class IsoLineEmitter(EmitterBase):
 
         self._rng = np.random.default_rng(seed)
         self._batch_size = batch_size
-        self._iso_sigma = archive.dtypes["solution"](iso_sigma)
-        self._line_sigma = archive.dtypes["solution"](line_sigma)
+        self._iso_sigma = np.asarray(iso_sigma, dtype=archive.dtypes["solution"])
+        self._line_sigma = np.asarray(line_sigma, dtype=archive.dtypes["solution"])
         self._x0 = None
         self._initial_solutions = None
 
