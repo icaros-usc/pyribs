@@ -1,6 +1,5 @@
 """Contains the GridArchive."""
 
-import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (
@@ -10,6 +9,7 @@ from ribs._utils import (
     check_shape,
     validate_batch,
     validate_single,
+    xp_namespace,
 )
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
@@ -101,9 +101,15 @@ class GridArchive(ArchiveBase):
         seed=None,
         dtype=np.float64,
         extra_fields=None,
+        xp=None,
+        device=None,
     ):
+        self._xp = xp_namespace(xp)
+        self._device = device
+
+        # TODO: Get rid of rng?
         self._rng = np.random.default_rng(seed)
-        self._dims = np.array(dims, dtype=np.int32)
+        self._dims = self._xp.asarray(dims, dtype=self._xp.int32, device=self._device)
 
         ArchiveBase.__init__(
             self,
@@ -131,7 +137,9 @@ class GridArchive(ArchiveBase):
                 "threshold": ((), dtype["objective"]),
                 **extra_fields,
             },
-            capacity=np.prod(self._dims),
+            capacity=self._xp.prod(self._dims),
+            xp=self._xp,
+            device=self._device,
         )
 
         # Set up constant properties.
@@ -141,8 +149,12 @@ class GridArchive(ArchiveBase):
                 f"(length {len(ranges)}) must be the same length"
             )
         ranges = list(zip(*ranges))  # Rearrange into lower and upper bounds.
-        self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
-        self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
+        self._lower_bounds = self._xp.asarray(
+            ranges[0], dtype=self.dtypes["measures"], device=self._device
+        )
+        self._upper_bounds = self._xp.asarray(
+            ranges[1], dtype=self.dtypes["measures"], device=self._device
+        )
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._boundaries = self._compute_boundaries(
             self._dims, self._lower_bounds, self._upper_bounds
@@ -162,12 +174,15 @@ class GridArchive(ArchiveBase):
         self._stats = None
         self._stats_reset()
 
-    @staticmethod
-    def _compute_boundaries(dims, lower_bounds, upper_bounds):
+    def _compute_boundaries(self, dims, lower_bounds, upper_bounds):
         """Computes grid cell boundaries of the archive."""
         boundaries = []
         for dim, lower_bound, upper_bound in zip(dims, lower_bounds, upper_bounds):
-            boundaries.append(np.linspace(lower_bound, upper_bound, dim + 1))
+            boundaries.append(
+                self._xp.linspace(
+                    lower_bound, upper_bound, dim + 1, device=self._device
+                )
+            )
         return boundaries
 
     ## Properties inherited from ArchiveBase ##
@@ -367,7 +382,7 @@ class GridArchive(ArchiveBase):
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = self._xp.asarray(measures)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
@@ -399,7 +414,7 @@ class GridArchive(ArchiveBase):
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = self._xp.asarray(measures)
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
