@@ -5,12 +5,7 @@ import numbers
 from enum import IntEnum
 from functools import cached_property
 
-from array_api_compat import (
-    is_cupy_array,
-    is_numpy_array,
-    is_numpy_namespace,
-    is_torch_array,
-)
+from array_api_compat import is_cupy_array, is_numpy_array, is_torch_array
 
 try:
     from array_api_compat import cupy as cp
@@ -230,14 +225,7 @@ class ArrayStore:
                     "measures": np.float32,
                 }
         """
-        if is_numpy_namespace(self._xp):
-            # TODO (#577): In NumPy, we currently want the scalar type (i.e.,
-            # arr.dtype.type rather than arr.dtype), which is callable.
-            # Ultimately, this should be switched to just be the dtype to be
-            # compatible across array libraries.
-            return {name: arr.dtype.type for name, arr in self._fields.items()}
-        else:
-            return {name: arr.dtype for name, arr in self._fields.items()}
+        return {name: arr.dtype for name, arr in self._fields.items()}
 
     @cached_property
     def dtypes_with_index(self):

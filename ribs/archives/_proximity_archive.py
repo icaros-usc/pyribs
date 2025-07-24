@@ -165,10 +165,14 @@ class ProximityArchive(ArchiveBase):
 
         # Set up constant properties.
         self._k_neighbors = int(k_neighbors)
-        self._novelty_threshold = self.dtypes["measures"](novelty_threshold)
+        self._novelty_threshold = np.asarray(
+            novelty_threshold, dtype=self.dtypes["measures"]
+        )
         self._local_competition = local_competition
         self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
-        self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
+        self._qd_score_offset = np.asarray(
+            qd_score_offset, dtype=self.dtypes["objective"]
+        )
 
         # Set up k-D tree with current measures in the archive. Updated on add().
         self._cur_kd_tree = cKDTree(
@@ -260,20 +264,19 @@ class ProximityArchive(ArchiveBase):
     def _stats_reset(self):
         """Resets the archive stats."""
         self._best_elite = None
-        self._objective_sum = self.dtypes["objective"](0.0)
+        self._objective_sum = np.asarray(0.0, dtype=self.dtypes["objective"])
         self._stats = ArchiveStats(
             num_elites=0,
-            coverage=self.dtypes["objective"](0.0),
-            qd_score=self.dtypes["objective"](0.0),
-            norm_qd_score=self.dtypes["objective"](0.0),
+            coverage=np.asarray(0.0, dtype=self.dtypes["objective"]),
+            qd_score=np.asarray(0.0, dtype=self.dtypes["objective"]),
+            norm_qd_score=np.asarray(0.0, dtype=self.dtypes["objective"]),
             obj_max=None,
             obj_mean=None,
         )
 
     def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values
-        (new_objective_sum) and the index of a potential new best elite
-        (new_best_index)."""
+        """Updates statistics based on a new sum of objective values (new_objective_sum)
+        and the index of a potential new best elite (new_best_index)."""
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
@@ -289,15 +292,20 @@ class ProximityArchive(ArchiveBase):
         self._objective_sum = new_objective_sum
         new_qd_score = (
             self._objective_sum
-            - self.dtypes["objective"](len(self)) * self._qd_score_offset
+            - np.asarray(len(self), dtype=self.dtypes["objective"])
+            * self._qd_score_offset
         )
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=self.dtypes["objective"](len(self) / self.cells),
+            coverage=np.asarray(len(self) / self.cells, dtype=self.dtypes["objective"]),
             qd_score=new_qd_score,
-            norm_qd_score=self.dtypes["objective"](new_qd_score / self.cells),
+            norm_qd_score=np.asarray(
+                new_qd_score / self.cells, dtype=self.dtypes["objective"]
+            ),
             obj_max=new_obj_max,
-            obj_mean=self.dtypes["objective"](self._objective_sum / len(self)),
+            obj_mean=np.asarray(
+                self._objective_sum / len(self), dtype=self.dtypes["objective"]
+            ),
         )
 
     def index_of(self, measures) -> np.ndarray:

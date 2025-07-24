@@ -1,7 +1,5 @@
 """Provides the GradientOperatorEmitter."""
 
-import numbers
-
 import numpy as np
 
 from ribs._utils import check_batch_shape, check_shape, validate_batch
@@ -141,12 +139,9 @@ class GradientOperatorEmitter(EmitterBase):
             )
 
         self._rng = np.random.default_rng(seed)
-        self._sigma = (
-            archive.dtypes["solution"](sigma)
-            if isinstance(sigma, numbers.Real)
-            else np.array(sigma)
-        )
-        self._sigma_g = archive.dtypes["solution"](sigma_g)
+        # `sigma` can either be a scalar or a 1D array.
+        self._sigma = np.asarray(sigma, dtype=archive.dtypes["solution"])
+        self._sigma_g = np.asarray(sigma_g, archive.dtypes["solution"])
         self._line_sigma = line_sigma
         self._use_isolinedd = operator_type != "isotropic"
         self._measure_gradients = measure_gradients
