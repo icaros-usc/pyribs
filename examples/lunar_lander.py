@@ -208,11 +208,11 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
         },
         "Archive Size": {
             "x": [0],
-            "y": [0],
+            "y": [len(scheduler.archive)],
         },
         "QD Score": {
             "x": [0],
-            "y": [0],
+            "y": [scheduler.archive.stats.qd_score],
         },
     }
 
