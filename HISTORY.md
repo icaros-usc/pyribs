@@ -14,6 +14,10 @@
 
 - Migrate from yapf to ruff for formatting ({pr}`581`, {pr}`582`, {pr}`583`)
 
+#### Documentation
+
+- Update dependencies for lunar lander ({pr}`585`)
+
 ## 0.8.1
 
 This release makes some minor updates to 0.8.0.
