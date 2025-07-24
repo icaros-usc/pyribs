@@ -10,6 +10,10 @@
 - **Backwards-incompatible:** Remove raw_dict methods from ArrayStore
   ({pr}`575`)
 
+#### Improvements
+
+- Migrate from yapf to ruff for formatting ({pr}`581`, {pr}`582`, {pr}`583`)
+
 ## 0.8.1
 
 This release makes some minor updates to 0.8.0.
@@ -24,10 +28,6 @@ This release makes some minor updates to 0.8.0.
 #### Documentation
 
 - Update Discord and X links in README ({pr}`566`)
-
-#### Improvements
-
-- Migrate from yapf to ruff for formatting ({pr}`581`, {pr}`582`, {pr}`583`)
 
 ## 0.8.0
 

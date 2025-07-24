@@ -210,8 +210,10 @@ class SlidingBoundariesArchive(ArchiveBase):
         self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
         self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
-        self._epsilon = self.dtypes["measures"](epsilon)
-        self._qd_score_offset = self.dtypes["objective"](qd_score_offset)
+        self._epsilon = np.asarray(epsilon, dtype=self.dtypes["measures"])
+        self._qd_score_offset = np.asarray(
+            qd_score_offset, dtype=self.dtypes["objective"]
+        )
         self._remap_frequency = remap_frequency
 
         # Initialize the boundaries -- allocate an extra entry in each row so we can put
@@ -347,12 +349,12 @@ class SlidingBoundariesArchive(ArchiveBase):
     def _stats_reset(self):
         """Resets the archive stats."""
         self._best_elite = None
-        self._objective_sum = self.dtypes["objective"](0.0)
+        self._objective_sum = np.asarray(0.0, dtype=self.dtypes["objective"])
         self._stats = ArchiveStats(
             num_elites=0,
-            coverage=self.dtypes["objective"](0.0),
-            qd_score=self.dtypes["objective"](0.0),
-            norm_qd_score=self.dtypes["objective"](0.0),
+            coverage=np.asarray(0.0, dtype=self.dtypes["objective"]),
+            qd_score=np.asarray(0.0, dtype=self.dtypes["objective"]),
+            norm_qd_score=np.asarray(0.0, dtype=self.dtypes["objective"]),
             obj_max=None,
             obj_mean=None,
         )
@@ -375,15 +377,20 @@ class SlidingBoundariesArchive(ArchiveBase):
         self._objective_sum = new_objective_sum
         new_qd_score = (
             self._objective_sum
-            - self.dtypes["objective"](len(self)) * self._qd_score_offset
+            - np.asarray(len(self), dtype=self.dtypes["objective"])
+            * self._qd_score_offset
         )
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=self.dtypes["objective"](len(self) / self.cells),
+            coverage=np.asarray(len(self) / self.cells, dtype=self.dtypes["objective"]),
             qd_score=new_qd_score,
-            norm_qd_score=self.dtypes["objective"](new_qd_score / self.cells),
+            norm_qd_score=np.asarray(
+                new_qd_score / self.cells, dtype=self.dtypes["objective"]
+            ),
             obj_max=new_obj_max,
-            obj_mean=self.dtypes["objective"](self._objective_sum / len(self)),
+            obj_mean=np.asarray(
+                self._objective_sum / len(self), dtype=self.dtypes["objective"]
+            ),
         )
 
     def index_of(self, measures):
@@ -580,7 +587,9 @@ class SlidingBoundariesArchive(ArchiveBase):
         cur_occupied, cur_data = self._store.retrieve([index])
         cur_occupied = cur_occupied[0]
         cur_objective = (
-            cur_data["objective"][0] if cur_occupied else self.dtypes["objective"](0.0)
+            cur_data["objective"][0]
+            if cur_occupied
+            else np.asarray(0.0, dtype=self.dtypes["objective"])
         )
 
         # Retrieve candidate objective.
