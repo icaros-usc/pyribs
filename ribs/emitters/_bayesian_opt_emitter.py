@@ -520,7 +520,7 @@ class BayesianOptimizationEmitter(EmitterBase):
            been found. If not, increments :attr:`_overspec` and repeats the
            process until at least :attr:`batch_size` solutions with positive
            EJIE values have been found.
-        4. Returns the top :attr:`batch_size` solutions with the largest
+        5. Returns the top :attr:`batch_size` solutions with the largest
            EJIE values.
 
         NOTE: This process has been simplified from the original implementation. The
