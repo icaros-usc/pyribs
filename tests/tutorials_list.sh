@@ -15,6 +15,9 @@ for notebook in "${TUTORIALS[@]}"; do
     tutorials/qdhf.ipynb)
       continue
       ;;
+    tutorials/qdaif.ipynb)
+      continue
+      ;;
     *)
       JSON_LIST="$JSON_LIST\"$notebook\","
       ;;
