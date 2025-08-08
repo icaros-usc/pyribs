@@ -528,7 +528,7 @@ class ProximityArchive(ArchiveBase):
             ValueError: The array arguments do not match their specified shapes.
             ValueError: ``objective`` or ``measures`` has non-finite values (inf or
                 NaN).
-            ValueError: ``local_competition` is turned on but objective was not passed
+            ValueError: ``local_competition`` is turned on but objective was not passed
                 in.
         """
         if objective is None:
@@ -720,7 +720,7 @@ class ProximityArchive(ArchiveBase):
             ValueError: The array arguments do not match their specified shapes.
             ValueError: ``objective`` is non-finite (inf or NaN) or ``measures`` has
                 non-finite values.
-            ValueError: ``local_competition` is turned on but objective was not passed
+            ValueError: ``local_competition`` is turned on but objective was not passed
                 in.
         """
         if objective is None:
