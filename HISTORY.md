@@ -1,13 +1,5 @@
 # History
 
-## (Forthcoming)
-
-### Changelog
-
-#### Improvements
-
-- Migrate from yapf to ruff for formatting ({pr}`581`, {pr}`582`, {pr}`583`)
-
 ## 0.8.2
 
 This release focuses on improving documentation for pyribs, particularly by
@@ -22,6 +14,10 @@ adding the
 - Add QDAIF tutorial ({pr}`587`, {pr}`589`, {pr}`590`)
 - Make all metrics start from values in archive stats ({pr}`586`)
 - Update dependencies for lunar lander ({pr}`585`)
+
+#### Improvements
+
+- Migrate from yapf to ruff for formatting ({pr}`581`, {pr}`582`, {pr}`583`)
 
 ## 0.8.1
 
