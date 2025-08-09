@@ -25,7 +25,7 @@ adding the
 #### Documentation
 
 - Fix documentation warnings ({pr}`588`)
-- Add QDAIF tutorial ({pr}`587`, {pr}`589`)
+- Add QDAIF tutorial ({pr}`587`, {pr}`589`, {pr}`590`)
 - Make all metrics start from values in archive stats ({pr}`586`)
 - Update dependencies for lunar lander ({pr}`585`)
 
