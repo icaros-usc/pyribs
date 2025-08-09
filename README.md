@@ -258,6 +258,13 @@ USC. For information on contributing to the repo, see
 - [Robby Costales](https://robbycostales.com)
 - [Sam Sommerer](https://github.com/sam-sommerer)
 - [Vincent Vu](https://vuvincent.com/)
+- [Yutai Zhou](https://github.com/yutaizhou)
+- [Li Ding](https://liding.info)
+- [N. Piatte](https://github.com/Ennpeh)
+- [Tom Gresavage](https://github.com/gresavage)
+- [Shihan Zhao](https://szhaovas.github.io)
+- [Sid Srikanth](https://sidsrikanth.com)
+- [Saeed Hedayatian](https://conflictednerd.github.io)
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 
 We thank [Amy K. Hoover](http://amykhoover.com/) and
