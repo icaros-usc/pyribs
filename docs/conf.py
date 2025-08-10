@@ -194,11 +194,6 @@ html_css_files = [
     "custom.css",
 ]
 
-# -- Options for HTMLHelp output ---------------------------------------
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = "ribsdoc"
-
 # -- Options for LaTeX output ------------------------------------------
 
 latex_elements = {
