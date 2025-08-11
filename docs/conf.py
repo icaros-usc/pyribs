@@ -55,6 +55,7 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.more_autodoc.autonamedtuple",
     "sphinx_codeautolink",
+    "github_links",  # Custom extension for GitHub links; see docs/_ext/github_links.py
 ]
 
 # Napoleon
