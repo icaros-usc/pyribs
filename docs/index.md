@@ -1,10 +1,10 @@
+:hero: A bare-bones Python library for quality diversity optimization.
+
 ```{include} readme.md
 
 ```
 
 ```{toctree}
-:maxdepth: 2
-:caption: Usage
 :hidden:
 
 tutorials
