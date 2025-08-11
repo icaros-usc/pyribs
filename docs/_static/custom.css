@@ -1,7 +1,7 @@
 /* Larger max width than default theme. See:
  * https://github.com/squidfunk/mkdocs-material/discussions/6404 */
 .md-grid {
-  max-width: 73rem;
+  max-width: 69rem;
 }
 
 /* Grey highlight for selections. */
