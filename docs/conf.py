@@ -54,8 +54,7 @@ extensions = [
     "myst_nb",  # Covers both Markdown files and Jupyter notebooks.
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.more_autodoc.autonamedtuple",
-    # TODO: Do we need this?
-    #  "sphinx_autodoc_typehints",
+    "sphinx_autodoc_typehints",
     "sphinx_codeautolink",
 ]
 
