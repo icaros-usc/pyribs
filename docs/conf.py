@@ -54,7 +54,6 @@ extensions = [
     "myst_nb",  # Covers both Markdown files and Jupyter notebooks.
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.more_autodoc.autonamedtuple",
-    "sphinx_autodoc_typehints",
     "sphinx_codeautolink",
 ]
 
@@ -210,8 +209,8 @@ html_theme_options = {
         {
             "media": "(prefers-color-scheme: dark)",
             "scheme": "slate",
-            "primary": "deep-orange",
-            "accent": "lime",
+            "primary": "deep-purple",
+            "accent": "purple",
             "toggle": {
                 "icon": "material/lightbulb-outline",
                 "name": "Switch to system preference",
