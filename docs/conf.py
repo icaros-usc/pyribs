@@ -56,6 +56,7 @@ extensions = [
     "sphinx_toolbox.more_autodoc.autonamedtuple",
     "sphinx_codeautolink",
     "github_links",  # Custom extension for GitHub links; see docs/_ext/github_links.py
+    "minify",  # Custom extension for minifying; see docs/_ext/minify.py
 ]
 
 # Napoleon
@@ -253,6 +254,9 @@ html_theme_options = {
 }
 
 # -- Extension config -------------------------------------------------
+
+# If we are in production, use our `minify` extension to minify the content.
+minify_files = not DEV_MODE
 
 # Autodoc and autosummary
 autodoc_member_order = "groupwise"  # Can be overridden by :member-order:
