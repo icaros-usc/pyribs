@@ -11,14 +11,12 @@ from sphinx.util import logging
 logger = logging.getLogger(__name__)
 
 
-def minify_all_html(app, exception):
-    """Minify all HTML files after build is done."""
+def minify_html_files(app, exception):
+    """Minifies all HTML files after build is done."""
     if exception is not None:
-        return  # build failed, skip
+        return  # Build failed, skip.
 
-    minify_files = app.config["minify_files"]
-
-    if not minify_files:
+    if not app.config.minify_files:
         logger.info("Skipping minifying")
         return
 
@@ -36,5 +34,6 @@ def minify_all_html(app, exception):
 
 
 def setup(app):
+    """Installs the extension."""
     app.add_config_value("minify_files", False, "html")
-    app.connect("build-finished", minify_all_html)
+    app.connect("build-finished", minify_html_files)

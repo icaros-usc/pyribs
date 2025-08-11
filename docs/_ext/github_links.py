@@ -91,7 +91,7 @@ def github_link_role(
 
 
 def setup(app):
-    """Install the plugin."""
+    """Installs the extension."""
     app.add_role("issue", github_link_role)
     app.add_role("pr", github_link_role)
     app.add_config_value("github_repo_url", None, "env")
