@@ -39,7 +39,7 @@ READTHEDOCS_LANGUAGE = os.environ.get("READTHEDOCS_LANGUAGE", "en")
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-needs_sphinx = "4.5.0"
+needs_sphinx = "8.1.3"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named "sphinx.ext.*") or your custom ones.
@@ -58,7 +58,6 @@ extensions = [
     # TODO: Do we need this?
     #  "sphinx_autodoc_typehints",
     "sphinx_codeautolink",
-    "github_links",
 ]
 
 # Napoleon
@@ -79,6 +78,7 @@ myst_enable_extensions = [
     "deflist",
     "dollarmath",
     "html_image",
+    "fieldlist",
 ]
 # Auto-generate heading anchors.
 myst_heading_anchors = 3
@@ -128,72 +128,133 @@ github_repo_url = "https://github.com/icaros-usc/pyribs/"
 
 # -- Options for HTML output -------------------------------------------
 
-html_show_sourcelink = True
-html_sidebars = {"**": ["globaltoc.html", "localtoc.html", "searchbox.html"]}
+# Not used in sphinx-immaterial.
+#  html_show_sourcelink = True
+#  html_sidebars = {"**": ["globaltoc.html", "localtoc.html", "searchbox.html"]}
+#  html_theme_path = ...
+#  html_use_index = True
+#  html_domain_indices = True
 
-#  html_theme_path = sphinx_material.html_theme_path()
-#  html_context = sphinx_material.get_html_context()
-html_theme = "sphinx_immaterial"
-html_logo = "_static/imgs/icon.svg"
-html_favicon = "_static/imgs/favicon.ico"
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named 'default.css' will overwrite the builtin 'default.css'.
+html_static_path = ["_static"]
+html_css_files = ["custom.css"]
+html_last_updated_fmt = None
 html_title = (
     f"pyribs (stable - v{version})"
     if READTHEDOCS_VERSION == "stable"
     else f"pyribs ({READTHEDOCS_VERSION})"
 )
+html_favicon = "_static/imgs/favicon.ico"
+html_logo = "_static/imgs/icon.svg"
 
-# TODO: How to pass context? jinja_context?
-# Tell Jinja2 templates the build is running on Read the Docs
-#  if os.environ.get("READTHEDOCS", "") == "True":
-#      html_context["READTHEDOCS"] = True
+html_context = {}
+# Tell Jinja2 templates the build is running on Read the Docs.
+if os.environ.get("READTHEDOCS", "") == "True":
+    html_context["READTHEDOCS"] = True
 
-# material theme options (see theme.conf for more information)
+# -- HTML theme specific settings ------------------------------------------------
+
+html_theme = "sphinx_immaterial"
+
+# sphinx-immaterial theme options -- see theme.conf here for more info:
+# https://github.com/jbms/sphinx-immaterial/blob/main/sphinx_immaterial/theme.conf
 html_theme_options = {
     #  "nav_title": "pyribs",
-    #  "base_url": (
-    #      f"https://docs.pyribs.org/{READTHEDOCS_LANGUAGE}/{READTHEDOCS_VERSION}/"
-    #  ),
-    #  "repo_url": github_repo_url,
-    #  "repo_name": "pyribs",
-    #  "google_analytics_account": None,
-    #  "html_minify": not DEV_MODE,
-    #  "css_minify": not DEV_MODE,
-    #  #  "logo_icon": "&#xe869",
-    #  "repo_type": "github",
-    #  # Needs to be 3 so that tutorials show up in sidebar.
-    #  "globaltoc_depth": 3,
-    #  "color_primary": "deep-purple",
-    #  "color_accent": "purple",
-    #  "touch_icon": None,
-    #  "master_doc": False,
-    #  "nav_links": [
-    #      {"href": "index", "internal": True, "title": "Home"},
-    #  ],
-    #  "heroes": {
-    #      "index": "A bare-bones Python library for quality diversity optimization."
-    #  },
+    "site_url": (
+        f"https://docs.pyribs.org/{READTHEDOCS_LANGUAGE}/{READTHEDOCS_VERSION}/"
+    ),
+    "repo_url": github_repo_url,
+    "repo_name": "pyribs",
+    #  "edit_uri": "", # TODO
+    "globaltoc_collapse": False,
+    "features": [
+        #  "navigation.expand",
+        #  "navigation.tabs",
+        #  "navigation.tabs.sticky",
+        #  "toc.integrate",
+        #  "navigation.sections",
+        #  "navigation.instant",
+        #  "header.autohide",
+        #  "navigation.top",
+        #  "navigation.footer",
+        #  "navigation.tracking",
+        #  "search.highlight",
+        #  "search.share",
+        #  "search.suggest",
+        #  "toc.follow",
+        #  "toc.sticky",
+        #  "content.tabs.link",
+        #  "content.code.copy",
+        #  "content.action.edit",
+        #  "content.action.view",
+        #  "content.tooltips",
+        #  "announce.dismiss",
+    ],
+    "palette": [
+        # See https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/#automatic-light-dark-mode
+        {
+            "media": "(prefers-color-scheme)",
+            "toggle": {
+                "icon": "material/brightness-auto",
+                "name": "Switch to light mode",
+            },
+        },
+        {
+            "media": "(prefers-color-scheme: light)",
+            "scheme": "default",
+            "primary": "deep-purple",
+            "accent": "purple",
+            "toggle": {
+                "icon": "material/lightbulb",
+                "name": "Switch to dark mode",
+            },
+        },
+        {
+            "media": "(prefers-color-scheme: dark)",
+            "scheme": "slate",
+            "primary": "deep-orange",
+            "accent": "lime",
+            "toggle": {
+                "icon": "material/lightbulb-outline",
+                "name": "Switch to system preference",
+            },
+        },
+    ],
+    # Example version_dropdown -- we do not need one since ReadTheDocs provides one (but
+    # this could be added if, for instance, the ReadTheDocs one stops working).
     #  "version_dropdown": True,
-    #  "version_json": None,
-    #  "version_info": {
-    #      "Stable": "https://docs.pyribs.org/en/stable/",
-    #      "Latest": "https://docs.pyribs.org/en/latest/",
-    #  },
-    #  "table_classes": ["plain"],
+    #  "version_info": [
+    #      {
+    #          "version": "https://sphinx-immaterial.rtfd.io",
+    #          "title": "ReadTheDocs",
+    #          "aliases": [],
+    #      },
+    #      {
+    #          "version": "https://jbms.github.io/sphinx-immaterial",
+    #          "title": "Github Pages",
+    #          "aliases": [],
+    #      },
+    #  ],
+    "social": [
+        {
+            "icon": "fontawesome/brands/github",
+            "link": github_repo_url,
+            "name": "Source Code",
+        },
+        {
+            "icon": "fontawesome/brands/discord",
+            "link": "https://discord.gg/QxhcJSqZ8G",
+            "name": "Discord",
+        },
+        {
+            "icon": "fontawesome/brands/python",
+            "link": "https://pypi.org/project/ribs/",
+            "name": "PyPI",
+        },
+    ],
 }
-
-html_last_updated_fmt = None
-
-html_use_index = True
-html_domain_indices = True
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
-
-html_css_files = [
-    "custom.css",
-]
 
 # -- Extension config -------------------------------------------------
 
