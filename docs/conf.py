@@ -23,8 +23,6 @@ import datetime
 import os
 import sys
 
-import sphinx_material
-
 import ribs
 
 sys.path.insert(0, os.path.abspath(".."))  # Detect ribs.
@@ -52,12 +50,13 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.mathjax",
     "sphinx.ext.intersphinx",
-    "sphinx_material",
+    "sphinx_immaterial",
     "sphinx_copybutton",
     "myst_nb",  # Covers both Markdown files and Jupyter notebooks.
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.more_autodoc.autonamedtuple",
-    "sphinx_autodoc_typehints",
+    # TODO: Do we need this?
+    #  "sphinx_autodoc_typehints",
     "sphinx_codeautolink",
     "github_links",
 ]
@@ -132,9 +131,9 @@ github_repo_url = "https://github.com/icaros-usc/pyribs/"
 html_show_sourcelink = True
 html_sidebars = {"**": ["globaltoc.html", "localtoc.html", "searchbox.html"]}
 
-html_theme_path = sphinx_material.html_theme_path()
-html_context = sphinx_material.get_html_context()
-html_theme = "sphinx_material"
+#  html_theme_path = sphinx_material.html_theme_path()
+#  html_context = sphinx_material.get_html_context()
+html_theme = "sphinx_immaterial"
 html_logo = "_static/imgs/icon.svg"
 html_favicon = "_static/imgs/favicon.ico"
 html_title = (
@@ -143,42 +142,43 @@ html_title = (
     else f"pyribs ({READTHEDOCS_VERSION})"
 )
 
+# TODO: How to pass context? jinja_context?
 # Tell Jinja2 templates the build is running on Read the Docs
-if os.environ.get("READTHEDOCS", "") == "True":
-    html_context["READTHEDOCS"] = True
+#  if os.environ.get("READTHEDOCS", "") == "True":
+#      html_context["READTHEDOCS"] = True
 
 # material theme options (see theme.conf for more information)
 html_theme_options = {
-    "nav_title": "pyribs",
-    "base_url": (
-        f"https://docs.pyribs.org/{READTHEDOCS_LANGUAGE}/{READTHEDOCS_VERSION}/"
-    ),
-    "repo_url": github_repo_url,
-    "repo_name": "pyribs",
-    "google_analytics_account": None,
-    "html_minify": not DEV_MODE,
-    "css_minify": not DEV_MODE,
-    #  "logo_icon": "&#xe869",
-    "repo_type": "github",
-    # Needs to be 3 so that tutorials show up in sidebar.
-    "globaltoc_depth": 3,
-    "color_primary": "deep-purple",
-    "color_accent": "purple",
-    "touch_icon": None,
-    "master_doc": False,
-    "nav_links": [
-        {"href": "index", "internal": True, "title": "Home"},
-    ],
-    "heroes": {
-        "index": "A bare-bones Python library for quality diversity optimization."
-    },
-    "version_dropdown": True,
-    "version_json": None,
-    "version_info": {
-        "Stable": "https://docs.pyribs.org/en/stable/",
-        "Latest": "https://docs.pyribs.org/en/latest/",
-    },
-    "table_classes": ["plain"],
+    #  "nav_title": "pyribs",
+    #  "base_url": (
+    #      f"https://docs.pyribs.org/{READTHEDOCS_LANGUAGE}/{READTHEDOCS_VERSION}/"
+    #  ),
+    #  "repo_url": github_repo_url,
+    #  "repo_name": "pyribs",
+    #  "google_analytics_account": None,
+    #  "html_minify": not DEV_MODE,
+    #  "css_minify": not DEV_MODE,
+    #  #  "logo_icon": "&#xe869",
+    #  "repo_type": "github",
+    #  # Needs to be 3 so that tutorials show up in sidebar.
+    #  "globaltoc_depth": 3,
+    #  "color_primary": "deep-purple",
+    #  "color_accent": "purple",
+    #  "touch_icon": None,
+    #  "master_doc": False,
+    #  "nav_links": [
+    #      {"href": "index", "internal": True, "title": "Home"},
+    #  ],
+    #  "heroes": {
+    #      "index": "A bare-bones Python library for quality diversity optimization."
+    #  },
+    #  "version_dropdown": True,
+    #  "version_json": None,
+    #  "version_info": {
+    #      "Stable": "https://docs.pyribs.org/en/stable/",
+    #      "Latest": "https://docs.pyribs.org/en/latest/",
+    #  },
+    #  "table_classes": ["plain"],
 }
 
 html_last_updated_fmt = None
