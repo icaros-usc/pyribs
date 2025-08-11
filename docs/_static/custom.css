@@ -1,3 +1,9 @@
+/* Larger max width than default theme. See:
+ * https://github.com/squidfunk/mkdocs-material/discussions/6404 */
+.md-grid {
+  max-width: 69rem;
+}
+
 /* Grey highlight for selections. */
 ::selection {
   background-color: rgba(192, 192, 192, 0.5);
@@ -6,68 +12,19 @@
   background-color: rgba(192, 192, 192, 0.5);
 }
 
-/* Removes the weird title at the top of the global TOC when the page is
- * expanded. */
-@media only screen and (min-width: 77em) {
-  .md-nav__title.md-nav__title--site a {
-    font-weight: normal !important;
-    display: none;
-  }
-}
-
 /* Styles the left border of input cells in rendered Jupyter notebooks (they are
  * green by default, which does not match the theme). */
 div.cell div.cell_input {
   border-left-color: #7e57c2 !important;
 }
 
-/* Increases the visibility of classes, methods, etc. in API definitions. */
-dt {
-  font-weight: bold;
-}
-
-/* Adds a border so that it is easier to see where classes and subsections begin
- * and end. */
-dd {
-  border-left: 8px solid hsla(0, 0%, 92.5%, 0.5);
-  padding-left: 15px;
-}
-
-/* Excludes the border from ReadTheDocs version menu. */
-div.rst-versions dd {
-  border-left: 0px;
-  padding-left: 0px;
-}
-
-/* Hides ReadTheDocs "On GitHub" field. */
-div.rst-versions div.rst-other-versions dl:nth-child(3) {
-  display: none;
-}
-
-/* Makes the link icons show up next to items in the API reference. */
-a.headerlink {
-  opacity: 1 !important;
-}
-
-/* Adds a line above the API listings. */
-.longtable tr:first-child {
-  border-top: 1px solid !important;
-}
-
-/* Makes the GitHub stars and forks show up nicer in the side tab. */
-ul.md-source__facts > li.md-source__fact {
-  padding-left: 0px;
-  padding-right: 0px;
-}
-
 /* Color the notes purple to match the theme. */
-.admonition.note {
-  /* Left border. */
-  border-left: 0.2rem solid #7e57c2;
+.md-typeset .admonition.note {
+  border-color: #7e57c2 !important;
 }
 .admonition.note > p.admonition-title::before {
   /* Note symbol. */
-  color: #7e57c2;
+  background-color: #7e57c2 !important;
 }
 .admonition.note > p.admonition-title {
   /* Title background - light purple. */
