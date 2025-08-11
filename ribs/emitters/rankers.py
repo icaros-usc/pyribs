@@ -22,15 +22,15 @@ name of a ranker, e.g., "ImprovementRanker", or the abbreviated name of a ranker
 .. autosummary::
     :toctree:
 
-    ribs.emitters.rankers.DensityRanker
-    ribs.emitters.rankers.ImprovementRanker
-    ribs.emitters.rankers.NoveltyRanker
-    ribs.emitters.rankers.ObjectiveRanker
-    ribs.emitters.rankers.RandomDirectionRanker
-    ribs.emitters.rankers.TwoStageImprovementRanker
-    ribs.emitters.rankers.TwoStageObjectiveRanker
-    ribs.emitters.rankers.TwoStageRandomDirectionRanker
-    ribs.emitters.rankers.RankerBase
+    DensityRanker
+    ImprovementRanker
+    NoveltyRanker
+    ObjectiveRanker
+    RandomDirectionRanker
+    TwoStageImprovementRanker
+    TwoStageObjectiveRanker
+    TwoStageRandomDirectionRanker
+    RankerBase
 """
 
 from abc import ABC, abstractmethod

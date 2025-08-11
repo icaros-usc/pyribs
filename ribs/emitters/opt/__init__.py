@@ -39,9 +39,9 @@ These gradient-based optimizers inherit from :class:`GradientOptBase`:
 .. autosummary::
     :toctree:
 
-    ribs.emitters.opt.AdamOpt
-    ribs.emitters.opt.GradientAscentOpt
-    ribs.emitters.opt.GradientOptBase
+    AdamOpt
+    GradientAscentOpt
+    GradientOptBase
 """
 
 from ribs.emitters.opt._adam_opt import AdamOpt
