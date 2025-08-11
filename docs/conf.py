@@ -98,9 +98,9 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.more_autodoc.autonamedtuple",
     # Custom extensions; see docs/_ext.
-    "github_links",  # GitHub links
-    #  "minify",  # Minifying
-    "colab_link",  # Colab links in notebooks
+    "github_links",  # GitHub links.
+    "minify_html_files",  # Minify HTML files.
+    "colab_link",  # Colab links in notebooks.
 ]
 
 # -- Options for HTML output -------------------------------------------
@@ -255,9 +255,11 @@ myst_enable_extensions = [
 # Auto-generate heading anchors.
 myst_heading_anchors = 3
 
-# -- minify extension.
-# If we are in production, minify files (see docs/_ext/minify.py).
-minify_files = not DEV_MODE
+# -- minify_html_files extension -- see docs/_ext/minify.py
+# This has been turned off since minifying seems to prevent ReadTheDocs from injecting
+# the flyout menu.
+# Options: "minify", "prettify", None
+minify_mode = None if DEV_MODE else None
 
 # -- colab_link extension.
 # GitHub path where notebooks live (without "https://github.com/")
