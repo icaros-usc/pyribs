@@ -3,5 +3,4 @@
 ```{eval-rst}
 .. literalinclude:: ../../examples/sphere.py
     :language: python
-    :linenos:
 ```

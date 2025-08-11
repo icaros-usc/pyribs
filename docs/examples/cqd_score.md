@@ -10,5 +10,4 @@ discretization/tessellation of the archive.
 ```{eval-rst}
 .. literalinclude:: ../../examples/cqd_score.py
     :language: python
-    :linenos:
 ```
