@@ -97,7 +97,6 @@ extensions = [
     "myst_nb",  # Covers both Markdown files and Jupyter notebooks.
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.more_autodoc.autonamedtuple",
-    "sphinx_codeautolink",
     # Custom extensions; see docs/_ext.
     "github_links",  # GitHub links
     "minify",  # Minifying
