@@ -7,4 +7,5 @@ up. It also adds in more logging capabilities and a CLI.
 ```{eval-rst}
 .. literalinclude:: ../../examples/lunar_lander.py
     :language: python
+    :linenos:
 ```
