@@ -21,7 +21,7 @@ def make_link_node(rawtext, app, link_type, slug, options):
     Args:
         rawtext: Text being replaced with link node.
         app: Sphinx application context
-        link_type: Link type ("issue", "pull")
+        link_type: Link type ("issues", "pull")
         slug: ID of the thing to link to
         options: Options dictionary passed to role func.
     """
@@ -78,7 +78,14 @@ def github_link_role(
         return [prb], [msg]
 
     app = inliner.document.settings.env.app
-    link_type = {"issue": "issue", "pr": "pull"}[name]
+    link_type = {
+        # GitHub issue paths use "issues", like
+        # https://github.com/icaros-usc/pyribs/issues/570/
+        "issue": "issues",
+        # GitHub PR paths use "pull", like
+        # https://github.com/icaros-usc/pyribs/pull/575/
+        "pr": "pull",
+    }[name]
     node = make_link_node(rawtext, app, link_type, str(issue_num), options)
     return [node], []
 
