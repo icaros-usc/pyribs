@@ -19,6 +19,7 @@
 # directory, add these directories to sys.path here. If the directory is
 # relative to the documentation root, use os.path.abspath to make it
 # absolute, like shown here.
+import datetime
 import os
 import sys
 
@@ -94,7 +95,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "pyribs"
-copyright = "2021, ICAROS Lab"
+copyright = f"2021-{datetime.datetime.now().year}, ICAROS Lab"
 author = "ICAROS Lab pyribs Team"
 
 # The version info for the project you"re documenting, acts as replacement
@@ -192,58 +193,6 @@ html_static_path = ["_static"]
 
 html_css_files = [
     "custom.css",
-]
-
-# -- Options for HTMLHelp output ---------------------------------------
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = "ribsdoc"
-
-# -- Options for LaTeX output ------------------------------------------
-
-latex_elements = {
-    # The paper size ("letterpaper" or "a4paper").
-    #
-    # "papersize": "letterpaper",
-    # The font size ("10pt", "11pt" or "12pt").
-    #
-    # "pointsize": "10pt",
-    # Additional stuff for the LaTeX preamble.
-    #
-    # "preamble": "",
-    # Latex figure (float) alignment
-    #
-    # "figure_align": "htbp",
-}
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, documentclass
-# [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, "ribs.tex", "pyribs Documentation", "ICAROS Lab", "manual"),
-]
-
-# -- Options for manual page output ------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "ribs", "pyribs Documentation", [author], 1)]
-
-# -- Options for Texinfo output ----------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (
-        master_doc,
-        "ribs",
-        "pyribs Documentation",
-        author,
-        "ribs",
-        "One line description of project.",
-        "Miscellaneous",
-    ),
 ]
 
 # -- Extension config -------------------------------------------------
