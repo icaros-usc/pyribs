@@ -11,9 +11,9 @@ iterations.
 .. autosummary::
     :toctree:
 
-    ribs.schedulers.Scheduler
-    ribs.schedulers.BanditScheduler
-    ribs.schedulers.BayesianOptimizationScheduler
+    Scheduler
+    BanditScheduler
+    BayesianOptimizationScheduler
 """
 
 from ribs.schedulers._bandit_scheduler import BanditScheduler
