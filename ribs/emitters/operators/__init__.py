@@ -11,9 +11,9 @@ name. The supported abbreviations are:
 .. autosummary::
     :toctree:
 
-    GaussianOperator
-    IsoLineOperator
-    OperatorBase
+    ribs.emitters.operators.GaussianOperator
+    ribs.emitters.operators.IsoLineOperator
+    ribs.emitters.operators.OperatorBase
 """
 
 from ribs.emitters.operators._gaussian import GaussianOperator

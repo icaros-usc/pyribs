@@ -21,12 +21,12 @@ These evolution strategies inherit from :class:`EvolutionStrategyBase`:
 .. autosummary::
     :toctree:
 
-    CMAEvolutionStrategy
-    LMMAEvolutionStrategy
-    OpenAIEvolutionStrategy
-    PyCMAEvolutionStrategy
-    SeparableCMAEvolutionStrategy
-    EvolutionStrategyBase
+    ribs.emitters.opt.CMAEvolutionStrategy
+    ribs.emitters.opt.LMMAEvolutionStrategy
+    ribs.emitters.opt.OpenAIEvolutionStrategy
+    ribs.emitters.opt.PyCMAEvolutionStrategy
+    ribs.emitters.opt.SeparableCMAEvolutionStrategy
+    ribs.emitters.opt.EvolutionStrategyBase
 
 Gradient-Based Optimizers
 -------------------------
@@ -39,9 +39,9 @@ These gradient-based optimizers inherit from :class:`GradientOptBase`:
 .. autosummary::
     :toctree:
 
-    AdamOpt
-    GradientAscentOpt
-    GradientOptBase
+    ribs.emitters.opt.AdamOpt
+    ribs.emitters.opt.GradientAscentOpt
+    ribs.emitters.opt.GradientOptBase
 """
 
 from ribs.emitters.opt._adam_opt import AdamOpt

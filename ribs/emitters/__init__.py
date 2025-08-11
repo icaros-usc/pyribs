@@ -14,14 +14,14 @@ from :class:`~ribs.emitters.EmitterBase`.
 .. autosummary::
     :toctree:
 
-    BayesianOptimizationEmitter
-    EvolutionStrategyEmitter
-    GaussianEmitter
-    GeneticAlgorithmEmitter
-    GradientArborescenceEmitter
-    GradientOperatorEmitter
-    IsoLineEmitter
-    EmitterBase
+    ribs.emitters.BayesianOptimizationEmitter
+    ribs.emitters.EvolutionStrategyEmitter
+    ribs.emitters.GaussianEmitter
+    ribs.emitters.GeneticAlgorithmEmitter
+    ribs.emitters.GradientArborescenceEmitter
+    ribs.emitters.GradientOperatorEmitter
+    ribs.emitters.IsoLineEmitter
+    ribs.emitters.EmitterBase
 """
 
 from ribs.emitters._bayesian_opt_emitter import BayesianOptimizationEmitter
