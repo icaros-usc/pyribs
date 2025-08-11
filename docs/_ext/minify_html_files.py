@@ -48,5 +48,5 @@ def minify_html_files(app, exception):
 
 def setup(app):
     """Installs the extension."""
-    app.add_config_value("minify_mode", False, "html")
+    app.add_config_value("minify_mode", None, "html")
     app.connect("build-finished", minify_html_files)

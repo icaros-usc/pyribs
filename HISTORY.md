@@ -11,7 +11,7 @@ adding the
 #### Documentation
 
 - Migrate docs to sphinx-immaterial theme ({pr}`596`)
-- Misc documentation fixes ({pr}`588`, {pr}`595`)
+- Misc documentation fixes ({pr}`588`, {pr}`595`, {pr}`597`)
 - Add QDAIF tutorial ({pr}`587`, {pr}`589`, {pr}`590`, {pr}`594`)
 - Make all metrics start from values in archive stats ({pr}`586`)
 - Update dependencies for lunar lander ({pr}`585`)
