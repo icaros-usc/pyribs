@@ -7,15 +7,12 @@
 {# First call parent block #}
 {{ super() }}
 
-<link rel="canonical" href="{{ theme_base_url + pagename }}">
+<link rel="canonical" href="{{ theme_base_url }}{{ pagename }}.html">
 
 {# Open Graph #}
 <meta property="og:title" content="{{ title }}" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="{{
-  theme_base_url +
-  (pagename if pagename != 'index' else '')
-}}" />
+<meta property="og:url" content="{{ theme_base_url }}{{ pagename }}.html" />
 <meta property="og:image" content="{{ theme_base_url + '_static/imgs/open-graph-preview.png' }}" />
 
 {# Twitter #}
