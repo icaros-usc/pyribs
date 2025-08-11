@@ -28,8 +28,6 @@ api/ribs.visualize
 ```
 
 ```{toctree}
-:maxdepth: 2
-:caption: Reference
 :hidden:
 
 CONTRIBUTING
