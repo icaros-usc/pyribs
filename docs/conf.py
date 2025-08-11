@@ -55,8 +55,10 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.more_autodoc.autonamedtuple",
     "sphinx_codeautolink",
-    "github_links",  # Custom extension for GitHub links; see docs/_ext/github_links.py
-    "minify",  # Custom extension for minifying; see docs/_ext/minify.py
+    # Custom extensions; see docs/_ext.
+    "github_links",  # GitHub links
+    "minify",  # Minifying
+    "colab_link",  # Colab links in notebooks
 ]
 
 # Napoleon
@@ -257,6 +259,17 @@ html_theme_options = {
 
 # If we are in production, use our `minify` extension to minify the content.
 minify_files = not DEV_MODE
+
+# GitHub path where notebooks live (without "https://")
+# Example: "myusername/myrepo/blob/main/path/to/notebooks"
+colab_base_url = (
+    "icaros-usc/pyribs/blob/master"
+    if READTHEDOCS_VERSION == "latest"
+    else f"icaros-usc/pyribs/blob/v{version}"
+)
+
+# Whether to automatically insert a badge at top of notebook pages
+colab_auto_insert = True
 
 # Autodoc and autosummary
 autodoc_member_order = "groupwise"  # Can be overridden by :member-order:
