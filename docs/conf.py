@@ -51,7 +51,6 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.intersphinx",
     "sphinx_immaterial",
-    "sphinx_copybutton",
     "myst_nb",  # Covers both Markdown files and Jupyter notebooks.
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.more_autodoc.autonamedtuple",
@@ -167,30 +166,28 @@ html_theme_options = {
     ),
     "repo_url": github_repo_url,
     "repo_name": "pyribs",
-    #  "edit_uri": "", # TODO
+    #  "edit_uri": "",  # We don't have edit buttons at the moment.
     "globaltoc_collapse": False,
     "features": [
-        #  "navigation.expand",
-        #  "navigation.tabs",
-        #  "navigation.tabs.sticky",
-        #  "toc.integrate",
-        #  "navigation.sections",
-        #  "navigation.instant",
-        #  "header.autohide",
-        #  "navigation.top",
-        #  "navigation.footer",
+        # See:
+        # - https://squidfunk.github.io/mkdocs-material/setup/
+        # - https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/
+        "navigation.top",  # Back to top button.
+        "navigation.footer",  # Previous and next buttons in footer.
+        #  "navigation.expand",  # Expands TOC sections; too many pages.
+        #  "navigation.sections",  # Puts headers on TOC sections; also a bit busy.
         #  "navigation.tracking",
+        #  "navigation.instant",
+        "toc.follow",
+        "content.code.copy",  # Add copy button to code blocks.
+        "content.tooltips",  # Cool tooltips for links.
+        #  "content.tabs.link", # Enables making content tabs.
+        #  "content.action.edit",  # Edit button.
+        #  "content.action.view",  # View source button.
+        #  "announce.dismiss",
         #  "search.highlight",
         #  "search.share",
         #  "search.suggest",
-        #  "toc.follow",
-        #  "toc.sticky",
-        #  "content.tabs.link",
-        #  "content.code.copy",
-        #  "content.action.edit",
-        #  "content.action.view",
-        #  "content.tooltips",
-        #  "announce.dismiss",
     ],
     "palette": [
         # See https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/#automatic-light-dark-mode
