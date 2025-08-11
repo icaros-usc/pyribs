@@ -99,7 +99,7 @@ extensions = [
     "sphinx_toolbox.more_autodoc.autonamedtuple",
     # Custom extensions; see docs/_ext.
     "github_links",  # GitHub links
-    "minify",  # Minifying
+    #  "minify",  # Minifying
     "colab_link",  # Colab links in notebooks
 ]
 
