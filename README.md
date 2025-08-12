@@ -1,8 +1,8 @@
 # pyribs
 
-|                                                        Discord                                                        |                     Mailing List                     |                                                 X                                                  |
-| :-------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
-| [![](https://dcbadge.limes.pink/api/server/QxhcJSqZ8G?compact=true&style=flat-square)](https://discord.gg/QxhcJSqZ8G) | [Google Groups](https://groups.google.com/g/pyribs/) | [![X](https://img.shields.io/twitter/follow/pyribs?style=flat-square)](https://twitter.com/pyribs) |
+|                                                               Discord                                                               |                     Mailing List                     |                                                 X                                                  |
+| :---------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
+| [![Discord Invite](https://dcbadge.limes.pink/api/server/QxhcJSqZ8G?compact=true&style=flat-square)](https://discord.gg/QxhcJSqZ8G) | [Google Groups](https://groups.google.com/g/pyribs/) | [![X](https://img.shields.io/twitter/follow/pyribs?style=flat-square)](https://twitter.com/pyribs) |
 
 |             Website              |                     Source                     |                    Docs                    |                    Paper                     |
 | :------------------------------: | :--------------------------------------------: | :----------------------------------------: | :------------------------------------------: |
