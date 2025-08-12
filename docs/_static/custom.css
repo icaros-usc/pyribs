@@ -31,3 +31,15 @@ div.cell div.cell_input {
   background-color: #f1eafd;
   border-bottom: 0.05rem solid #f1eafd;
 }
+
+/* In dark mode, myst-nb's colors make tables like the one in the QDAIF tutorial
+ * have black on black text. This unsets the color so that the main
+ * mkdocs-material styles can take effect. */
+body[data-md-color-scheme=slate] div.cell_output table {
+  color: inherit;
+}
+/* Similarly, this unsets the myst-nb setting that forces the odd rows to have a
+ * certain background color. */
+body[data-md-color-scheme=slate] div.cell_output tbody tr:nth-child(odd) {
+  background: inherit;
+}
