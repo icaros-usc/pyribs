@@ -301,74 +301,71 @@ class ArrayStore:
                 Ignored if ``fields`` is a str.
 
         Returns:
-            tuple: 2-element tuple consisting of:
+            tuple: 2-element tuple.
 
-            - **occupied**: Array indicating which indices, among those passed in, have
-              an associated data entry. For instance, if ``indices`` is ``[0, 1, 2]``
-              and only index 2 has data, then ``occupied`` will be ``[False, False,
-              True]``.
+            The first element is **occupied**, an array indicating which indices, among
+            those passed in, have an associated data entry. For instance, if ``indices``
+            is ``[0, 1, 2]`` and only index 2 has data, then ``occupied`` will be
+            ``[False, False, True]``. Note that if a given index is not marked as
+            occupied, it can have any data value associated with it. For instance, if
+            index 1 was not occupied, then the 6.0 returned in the ``dict`` example
+            below should be ignored.
 
-              Note that if a given index is not marked as occupied, it can have any data
-              value associated with it. For instance, if index 1 was not occupied, then
-              the 6.0 returned in the ``dict`` example below should be ignored.
+            The second element is **data**, the data at the given indices. If ``fields``
+            was a single str, this will just be an array holding data for the given
+            field. Otherwise, this data can take the following forms, depending on the
+            ``return_type`` argument:
 
-            - **data**: The data at the given indices. If ``fields`` was a single str,
-              this will just be an array holding data for the given field. Otherwise,
-              this data can take the following forms, depending on the ``return_type``
-              argument:
+            - ``return_type="dict"``: Dict mapping from the field name to the field data
+              at the given indices. For instance, if we have an ``objective`` field and
+              request data at indices ``[4, 1, 0]``, we would get ``data`` that looks
+              like ``{"objective": [1.5, 6.0, 2.3], "index": [4, 1, 0]}``. Observe that
+              we also return the indices as an ``index`` entry in the dict. The keys in
+              this dict can be modified using the ``fields`` arg; duplicate keys will be
+              ignored since the dict stores unique keys.
 
-              - ``return_type="dict"``: Dict mapping from the field name to the field
-                data at the given indices. For instance, if we have an ``objective``
-                field and request data at indices ``[4, 1, 0]``, we would get ``data``
-                that looks like ``{"objective": [1.5, 6.0, 2.3], "index": [4, 1, 0]}``.
-                Observe that we also return the indices as an ``index`` entry in the
-                dict. The keys in this dict can be modified using the ``fields`` arg;
-                duplicate keys will be ignored since the dict stores unique keys.
+            - ``return_type="tuple"``: Tuple of arrays matching the order given in
+              ``fields``. For instance, if ``fields`` was ``["objective", "measures"]``,
+              we would receive a tuple of ``(objective_arr, measures_arr)``. In this
+              case, the results from ``retrieve`` could be unpacked as::
 
-              - ``return_type="tuple"``: Tuple of arrays matching the order given in
-                ``fields``. For instance, if ``fields`` was ``["objective",
-                "measures"]``, we would receive a tuple of ``(objective_arr,
-                measures_arr)``. In this case, the results from ``retrieve`` could be
-                unpacked as::
+                  occupied, (objective, measures) = store.retrieve(
+                      ...,
+                      return_type="tuple",
+                  )
 
-                    occupied, (objective, measures) = store.retrieve(
-                        ...,
-                        return_type="tuple",
-                    )
+              Unlike with the ``dict`` return type, duplicate fields will show up as
+              duplicate entries in the tuple, e.g., ``fields=["objective",
+              "objective"]`` will result in two objective arrays being returned.
 
-                Unlike with the ``dict`` return type, duplicate fields will show up as
-                duplicate entries in the tuple, e.g., ``fields=["objective",
-                "objective"]`` will result in two objective arrays being returned.
+              By default, (i.e., when ``fields=None``), the fields in the tuple will be
+              ordered according to the ``field_desc`` argument in the constructor, along
+              with ``index`` as the last field.
 
-                By default, (i.e., when ``fields=None``), the fields in the tuple will
-                be ordered according to the ``field_desc`` argument in the constructor,
-                along with ``index`` as the last field.
+            - ``return_type="pandas"``: An :class:`~ribs.archives.ArchiveDataFrame` with
+              the following columns (by default):
 
-              - ``return_type="pandas"``: An :class:`~ribs.archives.ArchiveDataFrame`
-                with the following columns (by default):
+              - For fields that are scalars, a single column with the field name. For
+                example, ``objective`` would have a single column called ``objective``.
+              - For fields that are 1D arrays, multiple columns with the name suffixed
+                by its index. For instance, if we have a ``measures`` field of length
+                10, we create 10 columns with names ``measures_0``, ``measures_1``, ...,
+                ``measures_9``. We do not currently support fields with >1D data.
+              - 1 column of integers (``np.int32``) for the index, named ``index``.
 
-                - For fields that are scalars, a single column with the field name. For
-                  example, ``objective`` would have a single column called
-                  ``objective``.
-                - For fields that are 1D arrays, multiple columns with the name suffixed
-                  by its index. For instance, if we have a ``measures`` field of length
-                  10, we create 10 columns with names ``measures_0``, ``measures_1``,
-                  ..., ``measures_9``. We do not currently support fields with >1D data.
-                - 1 column of integers (``np.int32``) for the index, named ``index``.
+              In short, the dataframe might look like this:
 
-                In short, the dataframe might look like this:
+              +-----------+------------+------+-------+
+              | objective | measures_0 | ...  | index |
+              +===========+============+======+=======+
+              |           |            | ...  |       |
+              +-----------+------------+------+-------+
 
-                +-----------+------------+------+-------+
-                | objective | measures_0 | ...  | index |
-                +===========+============+======+=======+
-                |           |            | ...  |       |
-                +-----------+------------+------+-------+
+              Like the other return types, the columns can be adjusted with the
+              ``fields`` parameter.
 
-                Like the other return types, the columns can be adjusted with the
-                ``fields`` parameter.
-
-                .. note:: This return type will require copying all fields in the
-                    ArrayStore into NumPy arrays, if they are not already NumPy arrays.
+              .. note:: This return type will require copying all fields in the
+              ArrayStore into NumPy arrays, if they are not already NumPy arrays.
 
             All data returned by this method will be a copy, i.e., the data will not
             update as the store changes.
