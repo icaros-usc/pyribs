@@ -106,6 +106,10 @@ extensions = [
     "colab_link",  # Colab links in notebooks.
 ]
 
+# -- Options for Latex output -------------------------------------------
+
+latex_engine = "xelatex"
+
 # -- Options for HTML output -------------------------------------------
 
 # Not used in sphinx-immaterial.
