@@ -97,11 +97,18 @@ extensions = [
     "myst_nb",  # Covers both Markdown files and Jupyter notebooks.
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.more_autodoc.autonamedtuple",
+    # Converts SVG to PDF for Latex documentation; see:
+    # https://pypi.org/project/sphinxcontrib-svg2pdfconverter/
+    "sphinxcontrib.inkscapeconverter",
     # Custom extensions; see docs/_ext.
     "github_links",  # GitHub links.
     "minify_html_files",  # Minify HTML files.
     "colab_link",  # Colab links in notebooks.
 ]
+
+# -- Options for Latex output -------------------------------------------
+
+latex_engine = "xelatex"
 
 # -- Options for HTML output -------------------------------------------
 

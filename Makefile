@@ -82,6 +82,13 @@ servedocs: ## compile the docs watching for changes
 		docs/_build/html
 .PHONY: servedocs
 
+latexdocs: ## generate Sphinx Latex documentation, including API docs
+	$(MAKE) -C docs clean
+	$(MAKE) -C docs latex
+	cd docs/_build/latex && LATEXMKOPTS="-output-directory=../pdf" $(MAKE)
+	echo "PDF available in docs/_build/pdf"
+.PHONY: docs
+
 release-test: dist ## package and upload a release to TestPyPI
 	twine upload --repository testpypi dist/*
 .PHONY: release-test
