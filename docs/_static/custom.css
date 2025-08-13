@@ -29,7 +29,10 @@ div.cell div.cell_input {
 .admonition.note > p.admonition-title {
   /* Title background - light purple. */
   background-color: #f1eafd;
-  border-bottom: 0.05rem solid #f1eafd;
+}
+body[data-md-color-scheme=slate] .admonition.note > p.admonition-title {
+  /* Title background - darker purple but translucent. */
+  background-color: rgba(126, 87, 194, 0.1);
 }
 
 /* In dark mode, myst-nb's colors make tables like the one in the QDAIF tutorial
