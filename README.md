@@ -286,6 +286,7 @@ pyribs users include:
 - [Chair of Statistical Learning and Data Science (LMU Munich)](https://www.slds.stat.uni-muenchen.de/)
 - [Game Innovation Lab (New York University)](https://game.engineering.nyu.edu)
 - [Giovanni Iacca (University of Trento)](https://sites.google.com/site/giovanniiacca/)
+- [Google DeepMind (Iris)](https://github.com/google-deepmind/iris)
 - [HUAWEI Noah's Ark Lab](https://github.com/huawei-noah)
 - [ICAROS Lab (University of Southern California)](http://icaros.usc.edu/)
 - [Jacob Schrum (Southwestern University)](https://github.com/schrum2/PyribsForGameGAN)
