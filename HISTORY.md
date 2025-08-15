@@ -10,6 +10,10 @@
 - **Backwards-incompatible:** Remove raw_dict methods from ArrayStore
   ({pr}`575`)
 
+#### Improvements
+
+- Replace isort with ruff import check ({pr}`603`)
+
 ## 0.8.2
 
 This release focuses on improving documentation for pyribs, particularly by

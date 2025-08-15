@@ -56,7 +56,6 @@ all = [
 ]
 dev = [
   # Tools
-  "isort",
   "ruff",
   "pylint",
   "pre-commit",
@@ -109,11 +108,8 @@ include = ["ribs", "ribs.*"]
 version = {attr = "ribs.__version__"}
 readme = {file = ["README.md", "HISTORY.md"], content-type = "text/markdown"}
 
-[tool.isort]
-known_first_party = "ribs"
-line_length = 88
-multi_line_output = 3  # Matches ruff.
-include_trailing_comma = true  # Matches ruff.
+[tool.ruff.lint.isort]
+known-first-party = ["ribs"]
 
 [tool.pytest.ini_options]
 python_files = "*_test.py"

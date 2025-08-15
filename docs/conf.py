@@ -11,7 +11,6 @@
 # the default.
 #
 # pylint: skip-file
-# isort: skip-file
 
 import datetime
 import os
