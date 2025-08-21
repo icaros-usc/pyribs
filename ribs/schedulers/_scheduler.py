@@ -267,12 +267,15 @@ class Scheduler:
             for name, arr in add_info.items():
                 add_info[name] = np.asarray(arr)
 
-        # Warn the user if nothing was inserted into the archives.
+        # Warn the user if nothing was inserted into the archives -- these warnings use
+        # stacklevel=3 so that it's clear the error comes from tell() or tell_dqd().
         if archive_empty_before and self.archive.empty:
-            warnings.warn(self.EMPTY_WARNING.format(name="archive"))
+            warnings.warn(self.EMPTY_WARNING.format(name="archive"), stacklevel=3)
         if self._result_archive is not None:
             if result_archive_empty_before and self.result_archive.empty:
-                warnings.warn(self.EMPTY_WARNING.format(name="result_archive"))
+                warnings.warn(
+                    self.EMPTY_WARNING.format(name="result_archive"), stacklevel=3
+                )
 
         return add_info
 
