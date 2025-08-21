@@ -63,7 +63,7 @@ class Scheduler:
                 "`emitters` must be a list of emitter objects."
             ) from exception
 
-        emitter_ids = set(id(e) for e in emitters)
+        emitter_ids = {id(e) for e in emitters}
         if len(emitter_ids) != len(emitters):
             raise ValueError(
                 "Not all emitters passed in were unique (i.e. some emitters "

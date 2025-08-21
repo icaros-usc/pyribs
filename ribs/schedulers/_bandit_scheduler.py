@@ -102,7 +102,7 @@ class BanditScheduler:
                 "`emitter_pool` must be a list of emitter objects."
             ) from exception
 
-        emitter_ids = set(id(e) for e in emitter_pool)
+        emitter_ids = {id(e) for e in emitter_pool}
         if len(emitter_ids) != len(emitter_pool):
             raise ValueError(
                 "Not all emitters passed in were unique (i.e. some emitters "

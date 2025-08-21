@@ -166,7 +166,7 @@ def test_simple_add_retrieve_clear(store, xp_and_device):
             device=device,
         )
     )
-    assert data.keys() == set(["objective", "measures", "solution", "index"])
+    assert data.keys() == {"objective", "measures", "solution", "index"}
     assert xp.all(
         data["objective"]
         == xp.asarray(
@@ -319,7 +319,7 @@ def test_retrieve_duplicate_indices(store, xp_and_device):
             device=device,
         )
     )
-    assert data.keys() == set(["objective", "measures", "solution", "index"])
+    assert data.keys() == {"objective", "measures", "solution", "index"}
     assert xp.all(
         data["objective"]
         == xp.asarray(
@@ -403,7 +403,7 @@ def test_retrieve(return_type, store, xp_and_device):
                 device=device,
             )
         )
-        assert data.keys() == set(["objective", "measures", "solution", "index"])
+        assert data.keys() == {"objective", "measures", "solution", "index"}
         assert xp.all(
             data["objective"]
             == xp.asarray(
@@ -536,7 +536,7 @@ def test_retrieve_custom_fields(store, return_type, xp_and_device):
                 device=device,
             )
         )
-        assert data.keys() == set(["index", "objective"])
+        assert data.keys() == {"index", "objective"}
         assert xp.all(
             data["index"]
             == xp.asarray(
@@ -688,7 +688,7 @@ def test_data(store, xp_and_device):
 
     d = store.data()
 
-    assert d.keys() == set(["objective", "measures", "solution", "index"])
+    assert d.keys() == {"objective", "measures", "solution", "index"}
     assert all(len(v) == 2 for v in d.values())
 
     row0 = xp.concat(
@@ -832,7 +832,7 @@ def test_iteration(store, xp_and_device):
     )
 
     for entry in store:
-        assert entry.keys() == set(["objective", "measures", "solution", "index"])
+        assert entry.keys() == {"objective", "measures", "solution", "index"}
         assert entry["objective"] == 1.0
         assert xp.all(
             entry["measures"]
