@@ -107,10 +107,7 @@ class ArchiveDataFrame(pd.DataFrame):
 
         n_elites = len(self)
 
-        return map(
-            lambda i: {name: arr[i] for name, arr in fields.items()},
-            range(n_elites),
-        )
+        return ({name: arr[i] for name, arr in fields.items()} for i in range(n_elites))
 
     def get_field(self, field):
         """Array holding the data for the given field.
