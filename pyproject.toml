@@ -129,8 +129,6 @@ select = [
   "N",  # pep8-naming
   "E",  # pycodestyle errors
   "W",  # pycodestyle warnings
-  # TODO
-  # "D",  # pydocstyle
   "F",  # pyflakes
   "UP",  # pyupgrade
   "RUF",  # ruff-specific rules
@@ -145,16 +143,6 @@ ignore = [
   "SIM108",  # if-else-block-instead-of-if-exp; rather opinionated
   "PT011",  # pytest-raises-too-broad
   "PT030",  # pytest-warns-too-broad
-
-  # Docstrings not required everywhere.
-  "D100",
-  "D101",
-  "D102",
-  "D103",
-  "D104",
-  "D105",
-  "D106",
-  "D107",
 ]
 
 [tool.ruff.lint.pep8-naming]
