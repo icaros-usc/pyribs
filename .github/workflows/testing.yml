@@ -20,16 +20,11 @@ defaults:
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
-    env:
-      # Skip pylint since not all of our code passes pylint.
-      SKIP: pylint
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: "3.12"
-      - name: Install all deps and pylint (to be available to pre-commit)
-        run: pip install .[all] pylint
       - uses: pre-commit/action@v3.0.0
   test:
     strategy:
