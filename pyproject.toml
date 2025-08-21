@@ -57,7 +57,6 @@ all = [
 dev = [
   # Tools
   "ruff",
-  "pylint",
   "pre-commit",
 
   # Testing
