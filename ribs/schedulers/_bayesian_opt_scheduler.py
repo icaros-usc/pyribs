@@ -53,9 +53,9 @@ class BayesianOptimizationScheduler(Scheduler):
                 this_upscale_schedule = e.upscale_schedule
             else:
                 other_upscale_schedule = e.upscale_schedule
-                # pylint: disable=unidiomatic-typecheck
                 if (
-                    type(this_upscale_schedule) != type(other_upscale_schedule)
+                    not isinstance(this_upscale_schedule, np.ndarray)
+                    or not isinstance(other_upscale_schedule, np.ndarray)
                     or this_upscale_schedule.shape != other_upscale_schedule.shape
                     or np.any(this_upscale_schedule != other_upscale_schedule)
                 ):
