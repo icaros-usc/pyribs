@@ -1,5 +1,6 @@
 """Provides ArrayStore."""
 
+import contextlib
 import itertools
 import numbers
 from enum import IntEnum
@@ -7,10 +8,8 @@ from functools import cached_property
 
 from array_api_compat import is_cupy_array, is_numpy_array, is_torch_array
 
-try:
+with contextlib.suppress(ImportError):
     from array_api_compat import cupy as cp
-except ImportError:
-    pass
 
 from ribs._utils import arr_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame

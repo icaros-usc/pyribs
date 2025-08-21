@@ -51,7 +51,7 @@ def save_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_times.json")
 
 def load_times(filename="cvt_add_times.json"):
     """Loads the results from the given file."""
-    with open(filename, "r") as file:
+    with open(filename) as file:
         data = json.load(file)
         return data["n_cells"], data["brute_force_t"], data["kd_tree_t"]
 
