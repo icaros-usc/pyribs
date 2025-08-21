@@ -41,8 +41,8 @@ Ready to contribute? Here's how to set up pyribs for local development.
 
 1. We roughly follow the
    [Google Style Guide](https://google.github.io/styleguide/pyguide.html) in our
-   codebase. We use ruff and pylint to enforce code format and style. To
-   automatically check for formatting and style every time you commit, we use
+   codebase. We use ruff to enforce code format and style. To automatically
+   check for formatting and style on every commit, we use
    [pre-commit](https://pre-commit.com). Pre-commit should have already been
    installed with `.[dev]` above. To set it up, run:
 
@@ -53,16 +53,18 @@ Ready to contribute? Here's how to set up pyribs for local development.
 1. Now make the appropriate changes locally. If relevant, make sure to write
    tests for your code in the `tests/` folder.
 
-1. Auto-format and lint your code using
-   [ruff](https://docs.astral.sh/ruff/formatter/) and
-   [pylint](https://www.pylint.org/). Note that pre-commit will automatically
-   run these whenever you commit your code; you can also run them with
-   `pre-commit run`. You can also run these commands on the command line:
+1. Lint and auto-format your code using [ruff](https://docs.astral.sh/ruff/).
+   Note that pre-commit will automatically run ruff whenever you commit your
+   code; you can also run it with `pre-commit run`. You can also run the
+   following commands on the command line:
 
    ```bash
+   # Lint (without fixing).
+   ruff check FILES
+   # Sort imports.
    ruff check --select I --fix FILES
+   # Run formatter.
    ruff format FILES
-   pylint FILES
    ```
 
 1. After making changes, check that the changes pass the tests:
