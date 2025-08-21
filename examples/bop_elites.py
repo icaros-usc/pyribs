@@ -96,7 +96,6 @@ def save_heatmap(archive, heatmap_path):
     plt.close(plt.gcf())
 
 
-# pylint:disable = too-many-positional-arguments
 def main(
     iterations: int = 1000,
     solution_dim: int = 4,
