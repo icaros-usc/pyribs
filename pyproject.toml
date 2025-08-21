@@ -137,10 +137,10 @@ ignore = [
   "B024",  # abstract-base-class-without-abstract-method; we have base classes where no methods are abstract.
   "B027",  # empty-method-without-abstract-decorator; we have base class methods that are empty.
   "E501",  # line-too-long; we already have the formatter.
-  "ARG002",  # unused-method-argument; we have many cases where arguments have to be included for API compatibility
-  "PD901",  # pandas-df-variable-name; this rule is actually deprecated in ruff
-  "RUF022",  # unsorted-dunder-all; we sort it ourselves
-  "SIM108",  # if-else-block-instead-of-if-exp; rather opinionated
+  "ARG002",  # unused-method-argument; we have many cases where arguments have to be included for API compatibility.
+  "PD901",  # pandas-df-variable-name; this rule is actually deprecated in ruff.
+  "RUF022",  # unsorted-dunder-all; we sort it ourselves.
+  "SIM108",  # if-else-block-instead-of-if-exp; rather opinionated.
   "PT011",  # pytest-raises-too-broad
   "PT030",  # pytest-warns-too-broad
 ]
