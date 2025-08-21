@@ -58,6 +58,7 @@ dev = [
   # Tools
   "ruff",
   "pylint",
+  "pyright",
   "pre-commit",
 
   # Testing
@@ -116,3 +117,6 @@ python_files = "*_test.py"
 python_functions = "test_*"
 addopts = "-v --cov-report term-missing --cov=ribs"
 markers = "style"
+
+[tool.pyright]
+include = ["ribs"]
