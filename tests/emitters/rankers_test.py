@@ -15,8 +15,6 @@ from ribs.emitters.rankers import (
     TwoStageRandomDirectionRanker,
 )
 
-# pylint: disable = redefined-outer-name
-
 
 @pytest.fixture
 def emitter():

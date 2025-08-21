@@ -9,8 +9,6 @@ from ribs.archives import AddStatus, CVTArchive
 
 from .conftest import get_archive_data
 
-# pylint: disable = redefined-outer-name
-
 
 @pytest.fixture
 def data(use_kd_tree):

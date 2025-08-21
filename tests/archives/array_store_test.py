@@ -5,11 +5,9 @@ from array_api_compat import numpy as np
 
 from ribs.archives import ArrayStore
 
-# pylint: disable = redefined-outer-name
-
 
 def test_init_reserved_field(xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     with pytest.raises(ValueError):
         ArrayStore(
@@ -23,7 +21,7 @@ def test_init_reserved_field(xp_and_device):
 
 
 def test_init_invalid_field(xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     with pytest.raises(ValueError):
         ArrayStore(
@@ -41,7 +39,7 @@ def test_init_invalid_field(xp_and_device):
     "shape", [((), (2,), (10,)), ((), 2, 10)], ids=["tuple", "int"]
 )
 def test_init(xp_and_device, shape):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     capacity = 10
     store = ArrayStore(
@@ -88,7 +86,7 @@ def test_init(xp_and_device, shape):
 @pytest.fixture
 def store(xp_and_device):
     """Simple ArrayStore for testing."""
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
     return ArrayStore(
         field_desc={
             "objective": ((), xp.float32),
@@ -114,7 +112,7 @@ def test_add_wrong_keys(store):
 
 
 def test_add_mismatch_indices(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     with pytest.raises(ValueError):
         store.add(
@@ -129,7 +127,7 @@ def test_add_mismatch_indices(store, xp_and_device):
 
 def test_simple_add_retrieve_clear(store, xp_and_device):
     """Add without transforms, retrieve the data, and clear the archive."""
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3, 5],
@@ -216,7 +214,7 @@ def test_simple_add_retrieve_clear(store, xp_and_device):
 
 
 def test_add_duplicate_indices(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3, 3],
@@ -247,7 +245,7 @@ def test_add_duplicate_indices(store, xp_and_device):
 
 
 def test_add_nothing(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [],
@@ -278,7 +276,7 @@ def test_add_nothing(store, xp_and_device):
 
 
 def test_dtypes(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3, 5],
@@ -300,7 +298,7 @@ def test_dtypes(store, xp_and_device):
 
 
 def test_retrieve_duplicate_indices(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3],
@@ -366,7 +364,7 @@ def test_retrieve_invalid_return_type(store):
 
 
 def test_retrieve_pandas_2d_fields(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store = ArrayStore(
         {
@@ -777,7 +775,7 @@ def test_data_with_tuple_return_type(store, xp_and_device):
 
 
 def test_data_with_pandas_return_type(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3, 5],
@@ -856,7 +854,7 @@ def test_iteration(store, xp_and_device):
 
 
 def test_add_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3],
@@ -882,7 +880,7 @@ def test_add_during_iteration(store, xp_and_device):
 
 
 def test_clear_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3],
@@ -899,7 +897,7 @@ def test_clear_during_iteration(store, xp_and_device):
 
 
 def test_clear_and_add_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3],

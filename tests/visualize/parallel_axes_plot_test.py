@@ -16,8 +16,6 @@ from .grid_archive_heatmap_test import (
     grid_archive_3d_empty,
 )
 
-# pylint: disable = redefined-outer-name
-
 
 @image_comparison(baseline_images=["2d"], remove_text=False, extensions=["png"])
 def test_2d(grid_archive_2d):

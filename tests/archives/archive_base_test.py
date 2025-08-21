@@ -19,7 +19,6 @@ MAE_ARCHIVES = (
     GridArchive,
 )
 
-# pylint: disable = redefined-outer-name
 
 #
 # Test the dtypes of all classes.
@@ -243,8 +242,6 @@ def test_best_elite(add_mode):
     assert archive.best_elite["objective"].shape == ()
     assert archive.best_elite["measures"].shape == (2,)
     assert archive.best_elite["threshold"].shape == ()
-    # Seem to be spurious pylint warnings.
-    # pylint: disable-next=use-implicit-booleaness-not-comparison,comparison-with-callable
     assert archive.stats.obj_max.shape == ()
 
     assert np.isclose(archive.best_elite["solution"], [1, 2, 3]).all()

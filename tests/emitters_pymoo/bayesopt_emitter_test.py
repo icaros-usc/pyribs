@@ -1,4 +1,3 @@
-# pylint: disable=redefined-outer-name
 """Tests for the BayesianOptimizationEmitter."""
 
 import numpy as np

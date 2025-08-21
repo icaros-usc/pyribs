@@ -10,14 +10,10 @@ from ribs.archives import CategoricalArchive, CVTArchive, GridArchive
 def _compute_thresholds(request):
     """Grabs the _compute_thresholds func from archives that use it."""
     return {
-        # pylint: disable = protected-access
         "grid": GridArchive._compute_thresholds,
         "cvt": CVTArchive._compute_thresholds,
         "categorical": CategoricalArchive._compute_thresholds,
     }[request.param]
-
-
-# pylint: disable = redefined-outer-name, missing-function-docstring
 
 
 def update_threshold(threshold, f_val, learning_rate):

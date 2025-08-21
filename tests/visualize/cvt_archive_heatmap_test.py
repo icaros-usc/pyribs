@@ -14,8 +14,6 @@ from ribs.visualize import cvt_archive_heatmap
 
 from .conftest import add_uniform_sphere_1d, add_uniform_sphere_2d
 
-# pylint: disable = redefined-outer-name
-
 # Tolerance for root mean square difference between the pixels of the images,
 # where 255 is the max value. We have tolerance for `cvt_archive_heatmap` since
 # it is a bit more finicky than the other plots.
