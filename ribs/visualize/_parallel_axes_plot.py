@@ -7,9 +7,6 @@ from matplotlib.cm import ScalarMappable
 
 from ribs.visualize._utils import retrieve_cmap, set_cbar, validate_df
 
-# Matplotlib functions tend to have a ton of args.
-# pylint: disable = too-many-arguments
-
 
 def parallel_axes_plot(
     archive,

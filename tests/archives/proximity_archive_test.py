@@ -7,8 +7,6 @@ from numpy.testing import assert_allclose, assert_equal
 from ribs.archives import AddStatus, ProximityArchive
 from tests.archives.conftest import get_archive_data
 
-# pylint: disable = redefined-outer-name
-
 
 @pytest.fixture
 def data():
@@ -19,7 +17,7 @@ def data():
 def assert_archive_elite(archive, solution, objective, measures):
     """Asserts that the archive has one specific elite."""
     assert len(archive) == 1
-    elite = list(archive)[0]
+    elite = next(iter(archive))
     assert np.isclose(elite["solution"], solution).all()
     assert np.isclose(elite["objective"], objective).all()
     assert np.isclose(elite["measures"], measures).all()

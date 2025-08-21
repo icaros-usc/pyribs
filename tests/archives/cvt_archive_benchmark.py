@@ -7,8 +7,7 @@ def benchmark_init(use_kd_tree, benchmark):
     """Construction includes k-means clustering and building a kd-tree."""
 
     def init():
-        # pylint: disable = unused-variable
-        archive = CVTArchive(
+        CVTArchive(
             solution_dim=2,
             cells=1000,
             ranges=[(-1, 1), (-1, 1)],

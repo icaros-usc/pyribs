@@ -55,7 +55,6 @@ def test_init_with_get_grad_opt(grad_opt_name):
 
     assert grad_opt.theta == theta0
 
-    # pylint: disable = protected-access
     assert grad_opt._lr == lr
     if grad_opt_name == "adam":
         assert grad_opt._beta1 == grad_opt_kwargs["beta1"]

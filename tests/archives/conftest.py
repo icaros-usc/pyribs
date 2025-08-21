@@ -69,7 +69,6 @@ def get_archive_data(name, dtype=np.float64):
     ARCHIVE_NAMES.
     """
     # All local variables are captured at the end.
-    # pylint: disable = possibly-unused-variable
 
     # Characteristics of a single solution to insert into archive_with_elite.
     solution = np.array([1.0, 2.0, 3.0])

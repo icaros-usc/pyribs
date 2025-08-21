@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import shapely
 from matplotlib.cm import ScalarMappable
-from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
+from scipy.spatial import Voronoi
 
 from ribs.visualize._utils import (
     archive_heatmap_1d,
@@ -14,9 +14,6 @@ from ribs.visualize._utils import (
     validate_df,
     validate_heatmap_visual_args,
 )
-
-# Matplotlib functions tend to have a ton of args and statements.
-# pylint: disable = too-many-arguments, too-many-statements
 
 
 def cvt_archive_heatmap(

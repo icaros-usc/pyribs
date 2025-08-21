@@ -9,8 +9,6 @@ from ribs.schedulers import BanditScheduler, Scheduler
 
 from ..archives.grid_archive_test import assert_archive_elites
 
-# pylint: disable = redefined-outer-name
-
 
 @pytest.fixture
 def scheduler_fixture():
@@ -94,8 +92,8 @@ def test_ask_returns_correct_solution_shape(scheduler_fixture):
 
 def test_ask_fails_when_called_twice(scheduler_fixture):
     scheduler, *_ = scheduler_fixture
+    scheduler.ask()
     with pytest.raises(RuntimeError):
-        scheduler.ask()
         scheduler.ask()
 
 
@@ -384,10 +382,11 @@ def test_tell_fails_with_wrong_shapes(scheduler_fixture, array):
 
     # Each condition makes a certain array have the wrong shape by excluding the
     # last element.
-    with pytest.raises(ValueError):
-        if array == "objective_batch":
+    if array == "objective_batch":
+        with pytest.raises(ValueError):
             scheduler.tell(objective_batch[:-1], measures_batch)
-        elif array == "measures_batch":
+    elif array == "measures_batch":
+        with pytest.raises(ValueError):
             scheduler.tell(objective_batch, measures_batch[:-1])
 
 

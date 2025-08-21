@@ -4,17 +4,14 @@ Requires minify-html (https://github.com/wilsonzlin/minify-html) or beautifulsou
 installed.
 """
 
+import contextlib
 from pathlib import Path
 
-try:
+with contextlib.suppress(ImportError):
     import minify_html
-except ImportError:
-    pass
 
-try:
+with contextlib.suppress(ImportError):
     from bs4 import BeautifulSoup
-except ImportError:
-    pass
 
 from sphinx.util import logging
 

@@ -76,7 +76,6 @@ class BayesianOptimizationEmitter(EmitterBase):
         seed=None,
     ):
         try:
-            # pylint: disable = import-outside-toplevel
             from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
             from pymoo.optimize import minimize
             from pymoo.problems.functional import FunctionalProblem
@@ -720,16 +719,17 @@ class BayesianOptimizationEmitter(EmitterBase):
         # the original author. The new condition triggers the upscale when no
         # new cell has been found for multiple iterations.
         self._update_no_coverage_progress()
-        if (self.upscale_schedule is not None) and np.any(
-            np.all(self.upscale_schedule > self.archive.dims, axis=1)
+        if (
+            (self.upscale_schedule is not None)
+            and np.any(np.all(self.upscale_schedule > self.archive.dims, axis=1))
+            and self._numitrs_noprogress > self.upscale_trigger_threshold
         ):
-            if self._numitrs_noprogress > self.upscale_trigger_threshold:
-                # The next resolution on the schedule that is higher than the
-                # current resolution along all measure dims
-                next_res = self.upscale_schedule[
-                    np.all(self.upscale_schedule > self.archive.dims, axis=1)
-                ][0]
+            # The next resolution on the schedule that is higher than the
+            # current resolution along all measure dims
+            next_res = self.upscale_schedule[
+                np.all(self.upscale_schedule > self.archive.dims, axis=1)
+            ][0]
 
-                return next_res
+            return next_res
 
         return None

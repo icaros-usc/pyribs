@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
+from scipy.spatial import Voronoi
 
 from ribs.visualize._utils import (
     retrieve_cmap,

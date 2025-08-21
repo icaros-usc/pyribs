@@ -10,7 +10,6 @@ Install the following dependencies before running this example:
 import json
 import time
 from pathlib import Path
-from typing import Tuple
 
 import fire
 import matplotlib.pyplot as plt
@@ -96,13 +95,12 @@ def save_heatmap(archive, heatmap_path):
     plt.close(plt.gcf())
 
 
-# pylint:disable = too-many-positional-arguments
 def main(
     iterations: int = 1000,
     solution_dim: int = 4,
     search_nrestarts: int = 5,
     entropy_ejie: bool = False,
-    upscale_schedule: Tuple[Tuple] = ((5, 5), (10, 10), (25, 25)),
+    upscale_schedule: tuple[tuple] = ((5, 5), (10, 10), (25, 25)),
     num_initial_samples: int = 20,
     initial_solutions: np.ndarray = None,
     batch_size: int = 8,

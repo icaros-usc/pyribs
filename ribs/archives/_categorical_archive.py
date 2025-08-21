@@ -16,7 +16,6 @@ from ribs.archives._utils import (
 
 
 class CategoricalArchive(ArchiveBase):
-    # pylint: disable = too-many-public-methods
     """An archive where each dimension is divided into categories.
 
     This archive is similar to a :class:`~ribs.archives.GridArchive`, except that each

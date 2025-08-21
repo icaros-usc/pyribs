@@ -31,7 +31,7 @@ requires-python = ">=3.9.0"
 dependencies = [
   "array_api_compat",
   "numba>=0.51.0",
-  "numpy>=1.22.0", # numpy>=1.22.0 is when Array API gains support.
+  "numpy>=1.22.0",  # numpy>=1.22.0 is when Array API gains support.
   "numpy_groupies>=0.9.16",  # Supports Python 3.7 and up.
   "pandas>=1.0.0",
   "scikit-learn>=1.1.0",
@@ -57,7 +57,6 @@ all = [
 dev = [
   # Tools
   "ruff",
-  "pylint",
   "pre-commit",
 
   # Testing
@@ -108,8 +107,55 @@ include = ["ribs", "ribs.*"]
 version = {attr = "ribs.__version__"}
 readme = {file = ["README.md", "HISTORY.md"], content-type = "text/markdown"}
 
+[tool.ruff.lint]
+# Reference: https://docs.astral.sh/ruff/rules/
+select = [
+  "B",  # flake8-bugbear
+  "A",  # flake8-builtins
+  "COM818",  # trailing-comma-on-bare-tuple
+  "C4",  # flake8-comprehensions
+  "EXE",  # flake8-executable
+  "FA",  # flake8-future-annotations
+  "PIE",  # flake8-pie
+  "RSE",  # flake8-raise
+  "SIM",  # flake8-simplify
+  "TD",  # flake8-todos
+  "ARG",  # flake8-unused-arguments
+  "FLY",  # flynt
+  "I",  # isort
+  "NPY",  # numpy
+  "PD",  # pandas-vet
+  "PT",  # pytest
+  "N",  # pep8-naming
+  "E",  # pycodestyle errors
+  "W",  # pycodestyle warnings
+  "F",  # pyflakes
+  "UP",  # pyupgrade
+  "RUF",  # ruff-specific rules
+]
+ignore = [
+  "B024",  # abstract-base-class-without-abstract-method; we have base classes where no methods are abstract.
+  "B027",  # empty-method-without-abstract-decorator; we have base class methods that are empty.
+  "E501",  # line-too-long; we already have the formatter.
+  "ARG002",  # unused-method-argument; we have many cases where arguments have to be included for API compatibility.
+  "PD901",  # pandas-df-variable-name; this rule is actually deprecated in ruff.
+  "RUF022",  # unsorted-dunder-all; we sort it ourselves.
+  "SIM108",  # if-else-block-instead-of-if-exp; rather opinionated.
+  "PT011",  # pytest-raises-too-broad
+  "PT030",  # pytest-warns-too-broad
+]
+
+[tool.ruff.lint.pep8-naming]
+ignore-names = [
+  "F",  # torch.nn.functional
+  "G",  # GAN generator
+]
+
 [tool.ruff.lint.isort]
 known-first-party = ["ribs"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.pytest.ini_options]
 python_files = "*_test.py"

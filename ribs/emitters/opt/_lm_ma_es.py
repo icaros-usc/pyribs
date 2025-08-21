@@ -39,7 +39,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
             defaults to be equal to the batch size.
     """
 
-    def __init__(  # pylint: disable = super-init-not-called
+    def __init__(
         self,
         sigma0,
         solution_dim,
@@ -111,7 +111,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
             return True
 
         # NOTE: We use norm here because we may have multiple ranking values.
-        if (
+        if (  # noqa: SIM103
             len(ranking_values) >= 2
             and np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12
         ):
@@ -185,7 +185,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
             # Warn if we have resampled too many times.
             sampling_itrs += 1
             if sampling_itrs > BOUNDS_SAMPLING_THRESHOLD:
-                warnings.warn(BOUNDS_WARNING)
+                warnings.warn(BOUNDS_WARNING, stacklevel=2)
 
         return readonly(self._solutions)
 

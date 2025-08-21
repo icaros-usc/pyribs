@@ -325,7 +325,7 @@ def save_ccdf(archive, filename):
     fig.savefig(filename)
 
 
-def run_evaluation(outdir, env_seed):
+def run_evaluation(outdir, env_seed, seed):
     """Simulates 10 random archive solutions and saves videos of them.
 
     Videos are saved to outdir / videos.
@@ -334,17 +334,20 @@ def run_evaluation(outdir, env_seed):
         outdir (Path): Path object for the output directory from which to retrieve the
             archive and save videos.
         env_seed (int): Seed for the environment.
+        seed (int): Seed for RNG.
     """
     df = ArchiveDataFrame(pd.read_csv(outdir / "archive.csv"))
     solutions = df.get_field("solution")
-    indices = np.random.permutation(len(df))[:10]
+
+    rng = np.random.default_rng(seed)
+    indices = rng.permutation(len(df))[:10]
 
     # Use a single env so that all the videos go to the same directory.
     video_env = gym.wrappers.RecordVideo(
         gym.make("LunarLander-v3", render_mode="rgb_array"),
         video_folder=str(outdir / "videos"),
         # This will ensure all episodes are recorded as videos.
-        episode_trigger=lambda idx: True,
+        episode_trigger=lambda idx: True,  # noqa: ARG005
     )
 
     for idx in indices:
@@ -394,7 +397,7 @@ def lunar_lander_main(
     outdir = Path(outdir)
 
     if run_eval:
-        run_evaluation(outdir, env_seed)
+        run_evaluation(outdir, env_seed, seed)
         return
 
     # Make the directory here so that it is not made when running eval.

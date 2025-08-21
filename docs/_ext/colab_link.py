@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 def add_colab_link(
     app,
     pagename,
-    templatename,  # pylint: disable = unused-argument
+    templatename,  # noqa: ARG001
     context,
-    doctree,  # pylint: disable = unused-argument
+    doctree,  # noqa: ARG001
 ):
     """Inserts a Colab button after the first h1 element in each Jupyter notebook."""
     src_path = Path(app.srcdir) / (pagename + ".ipynb")

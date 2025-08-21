@@ -13,8 +13,6 @@ from ribs.visualize import cvt_archive_3d_plot
 
 from .conftest import add_uniform_sphere_3d
 
-# pylint: disable = redefined-outer-name
-
 # Tolerance for root mean square difference between the pixels of the images,
 # where 255 is the max value. We have a pretty high tolerance for
 # `cvt_archive_3d_plot` since 3D rendering tends to vary a bit.
