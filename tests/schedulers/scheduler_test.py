@@ -382,10 +382,11 @@ def test_tell_fails_with_wrong_shapes(scheduler_fixture, array):
 
     # Each condition makes a certain array have the wrong shape by excluding the
     # last element.
-    with pytest.raises(ValueError):
-        if array == "objective_batch":
+    if array == "objective_batch":
+        with pytest.raises(ValueError):
             scheduler.tell(objective_batch[:-1], measures_batch)
-        elif array == "measures_batch":
+    elif array == "measures_batch":
+        with pytest.raises(ValueError):
             scheduler.tell(objective_batch, measures_batch[:-1])
 
 

@@ -126,8 +126,7 @@ select = [
   "I",  # isort
   "NPY",  # numpy
   "PD",  # pandas-vet
-  # TODO
-  # "PT",  # pytest
+  "PT",  # pytest
   "N",  # pep8-naming
   "E",  # pycodestyle errors
   "W",  # pycodestyle warnings
@@ -145,6 +144,8 @@ ignore = [
   "PD901",  # pandas-df-variable-name; this rule is actually deprecated in ruff
   "RUF022",  # unsorted-dunder-all; we sort it ourselves
   "SIM108",  # if-else-block-instead-of-if-exp; rather opinionated
+  "PT011",  # pytest-raises-too-broad
+  "PT030",  # pytest-warns-too-broad
 
   # Docstrings not required everywhere.
   "D100",

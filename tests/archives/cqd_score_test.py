@@ -26,12 +26,12 @@ def test_cqd_score_detects_wrong_shapes(data):
             dist_max=np.sqrt(2),
         )
 
+    rng = np.random.default_rng()
+
+    # (iterations, n, measure_dim)
+    target_points = rng.uniform(size=(1, 5, 2))
+
     with pytest.raises(ValueError):
-        rng = np.random.default_rng()
-
-        # (iterations, n, measure_dim)
-        target_points = rng.uniform(size=(1, 5, 2))
-
         cqd_score(
             data.archive,
             iterations=1,

@@ -92,7 +92,7 @@ def test_default_ask_dqd_has_correct_sol_shape(shape):
     ids=["GAEmitter", "ESEmitter"],
 )
 @pytest.mark.parametrize(
-    "wrong_array,offsets",
+    ("wrong_array", "offsets"),
     [
         ("solution_batch", [(0, 1), (1, 0)]),
         ("objective_batch", [(1,)]),
@@ -234,10 +234,12 @@ def test_emitters_fail_when_x0_not_1d(emitter_type, archive_fixture):
     archive, _ = archive_fixture
     x0 = [[1], [1]]
 
-    with pytest.raises(ValueError):
-        if emitter_type == "GaussianEmitter":
+    if emitter_type == "GaussianEmitter":
+        with pytest.raises(ValueError):
             _ = GaussianEmitter(archive, sigma=5, x0=x0)
-        elif emitter_type == "IsoLineEmitter":
+    elif emitter_type == "IsoLineEmitter":
+        with pytest.raises(ValueError):
             _ = IsoLineEmitter(archive, x0=x0)
-        elif emitter_type == "ImprovementEmitter":
+    elif emitter_type == "ImprovementEmitter":
+        with pytest.raises(ValueError):
             _ = EvolutionStrategyEmitter(archive, x0=x0, sigma0=5, ranker="2imp")

@@ -867,7 +867,7 @@ def test_add_during_iteration(store, xp_and_device):
 
     # Even with just one entry, adding during iteration should still raise an
     # error, just like it does in a set.
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in store:
             store.add(
                 [4],
@@ -891,7 +891,7 @@ def test_clear_during_iteration(store, xp_and_device):
         },
     )
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in store:
             store.clear()
 
@@ -908,7 +908,7 @@ def test_clear_and_add_during_iteration(store, xp_and_device):
         },
     )
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in store:
             store.clear()
             store.add(

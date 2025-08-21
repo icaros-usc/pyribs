@@ -48,8 +48,8 @@ def test_properties_are_correct(data):
     assert np.all(data.archive.interval_size == [2, 2])
 
     points = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
-    unittest.TestCase().assertCountEqual(data.archive.samples.tolist(), points)
-    unittest.TestCase().assertCountEqual(data.archive.centroids.tolist(), points)
+    unittest.TestCase().assertCountEqual(data.archive.samples.tolist(), points)  # noqa: PT009
+    unittest.TestCase().assertCountEqual(data.archive.centroids.tolist(), points)  # noqa: PT009
 
 
 def test_custom_centroids(use_kd_tree):
@@ -92,8 +92,10 @@ def test_alternative_centroids(method):
 
     # Centroids should have correct shape and be within bounds.
     assert archive.centroids.shape == (100, 2)
-    assert np.all(centroid_x >= 0.1) and np.all(centroid_x <= 0.5)
-    assert np.all(centroid_y >= -0.6) and np.all(centroid_y <= -0.2)
+    assert np.all(centroid_x >= 0.1)
+    assert np.all(centroid_x <= 0.5)
+    assert np.all(centroid_y >= -0.6)
+    assert np.all(centroid_y <= -0.2)
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])

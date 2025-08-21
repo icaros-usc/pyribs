@@ -105,7 +105,7 @@ def test_add_during_iteration(add_mode):
     # Even with just one entry, adding during iteration should still raise an
     # error, just like it does in set.
     data = get_archive_data("GridArchive")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in data.archive_with_elite:
             if add_mode == "single":
                 data.archive_with_elite.add_single(
@@ -119,14 +119,14 @@ def test_add_during_iteration(add_mode):
 
 def test_clear_during_iteration():
     data = get_archive_data("GridArchive")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in data.archive_with_elite:
             data.archive_with_elite.clear()
 
 
 def test_clear_and_add_during_iteration(add_mode):
     data = get_archive_data("GridArchive")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in data.archive_with_elite:
             data.archive_with_elite.clear()
             if add_mode == "single":

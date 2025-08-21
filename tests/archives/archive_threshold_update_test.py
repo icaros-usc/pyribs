@@ -5,15 +5,10 @@ import pytest
 
 from ribs.archives import CategoricalArchive, CVTArchive, GridArchive
 
-
-@pytest.fixture(params=["grid", "cvt", "categorical"])
-def _compute_thresholds(request):
-    """Grabs the _compute_thresholds func from archives that use it."""
-    return {
-        "grid": GridArchive._compute_thresholds,
-        "cvt": CVTArchive._compute_thresholds,
-        "categorical": CategoricalArchive._compute_thresholds,
-    }[request.param]
+LEARNING_RATES = pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
+ARCHIVES = pytest.mark.parametrize(
+    "archive", [GridArchive, CVTArchive, CategoricalArchive]
+)
 
 
 def update_threshold(threshold, f_val, learning_rate):
@@ -37,13 +32,14 @@ def calc_expected_threshold(additions, cell_value, learning_rate):
     return term1 + term2
 
 
-@pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
-def test_threshold_update_for_one_cell(learning_rate, _compute_thresholds):
+@LEARNING_RATES
+@ARCHIVES
+def test_threshold_update_for_one_cell(learning_rate, archive):
     cur_threshold = np.full(5, -3.1)
     objective = np.array([0.1, 0.3, 0.9, 400.0, 42.0])
     indices = np.zeros(5, dtype=np.int32)
 
-    result_test = _compute_thresholds(
+    result_test = archive._compute_thresholds(
         indices, objective, cur_threshold, learning_rate, np.float64
     )
     result_true = calc_expected_threshold(objective, cur_threshold[0], learning_rate)
@@ -53,8 +49,9 @@ def test_threshold_update_for_one_cell(learning_rate, _compute_thresholds):
     assert np.all(np.isclose(result_test, result_true))
 
 
-@pytest.mark.parametrize("learning_rate", [0, 0.001, 0.01, 0.1, 1])
-def test_threshold_update_for_multiple_cells(learning_rate, _compute_thresholds):
+@LEARNING_RATES
+@ARCHIVES
+def test_threshold_update_for_multiple_cells(learning_rate, archive):
     cur_threshold = np.repeat([-3.1, 0.4, 2.9], 5)
     objective = np.array(
         [
@@ -77,7 +74,7 @@ def test_threshold_update_for_multiple_cells(learning_rate, _compute_thresholds)
     )  # 15 values.
     indices = np.repeat([0, 1, 2], 5)
 
-    result_test = _compute_thresholds(
+    result_test = archive._compute_thresholds(
         indices, objective, cur_threshold, learning_rate, np.float64
     )
     result_true = np.repeat(
@@ -94,12 +91,13 @@ def test_threshold_update_for_multiple_cells(learning_rate, _compute_thresholds)
     assert np.all(np.isclose(result_test, result_true))
 
 
-def test_threshold_update_for_empty_objective_and_index(_compute_thresholds):
+@ARCHIVES
+def test_threshold_update_for_empty_objective_and_index(archive):
     cur_threshold = np.array([])
     objective = np.array([])  # Empty objective.
     indices = np.array([], dtype=np.int32)  # Empty index.
 
-    new_threshold = _compute_thresholds(
+    new_threshold = archive._compute_thresholds(
         indices, objective, cur_threshold, 0.1, np.float64
     )
 
