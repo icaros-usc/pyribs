@@ -185,7 +185,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
             # Warn if we have resampled too many times.
             sampling_itrs += 1
             if sampling_itrs > BOUNDS_SAMPLING_THRESHOLD:
-                warnings.warn(BOUNDS_WARNING)
+                warnings.warn(BOUNDS_WARNING, stacklevel=2)
 
         return readonly(self._solutions)
 
