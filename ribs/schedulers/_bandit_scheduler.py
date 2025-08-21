@@ -311,7 +311,6 @@ class BanditScheduler:
                 f"has length {len(arr)}"
             )
 
-    # pylint: disable-next = protected-access
     _validate_tell_data = Scheduler._validate_tell_data
 
     def tell_dqd(self, objective, measures, jacobian):

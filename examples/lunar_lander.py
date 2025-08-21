@@ -344,7 +344,7 @@ def run_evaluation(outdir, env_seed):
         gym.make("LunarLander-v3", render_mode="rgb_array"),
         video_folder=str(outdir / "videos"),
         # This will ensure all episodes are recorded as videos.
-        episode_trigger=lambda idx: True,
+        episode_trigger=lambda idx: True,  # noqa: ARG005
     )
 
     for idx in indices:

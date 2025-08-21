@@ -306,7 +306,7 @@ class GradientOperatorEmitter(EmitterBase):
             fields (keyword arguments): Additional data for each solution. Each argument
                 should be an array with batch_size as the first dimension.
         """
-        data, add_info, jacobian = validate_batch(  # pylint: disable = unused-variable
+        data, add_info, jacobian = validate_batch(
             self.archive,
             {
                 "solution": solution,

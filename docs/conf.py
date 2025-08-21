@@ -261,9 +261,9 @@ myst_heading_anchors = 3
 
 # -- minify_html_files extension -- see docs/_ext/minify.py
 # This has been turned off since minifying seems to prevent ReadTheDocs from injecting
-# the flyout menu.
+# the flyout menu; however, it can be toggled based on the DEV_MODE as shown below.
 # Options: "minify", "prettify", None
-minify_mode = None if DEV_MODE else None
+minify_mode = None if DEV_MODE else None  # noqa: RUF034
 
 # -- colab_link extension.
 # GitHub path where notebooks live (without "https://github.com/")

@@ -4,7 +4,7 @@ import numbers
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
-from scipy.spatial import cKDTree  # pylint: disable=no-name-in-module
+from scipy.spatial import cKDTree
 from scipy.stats.qmc import Halton, Sobol
 from sklearn.cluster import k_means
 
@@ -26,7 +26,6 @@ from ribs.archives._utils import (
 
 
 class CVTArchive(ArchiveBase):
-    # pylint: disable = too-many-public-methods
     """An archive that tessellates the measure space with centroids.
 
     This archive originates in `Vassiliades 2018

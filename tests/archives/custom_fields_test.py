@@ -55,6 +55,6 @@ def test_add_retrieve_extra_fields(data, field_archive, add_mode):
             square=[square],
         )
 
-    elite = list(field_archive)[0]
+    elite = next(iter(field_archive))
     assert elite["metadata"] == metadata
     assert np.all(elite["square"] == square)

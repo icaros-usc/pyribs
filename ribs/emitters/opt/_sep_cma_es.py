@@ -69,7 +69,7 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
             pass np.inf instead of -np.inf).
     """
 
-    def __init__(  # pylint: disable = super-init-not-called
+    def __init__(
         self,
         sigma0,
         solution_dim,

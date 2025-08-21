@@ -23,7 +23,7 @@ def data(use_kd_tree):
 def assert_archive_elite(archive, solution, objective, measures, centroid):
     """Asserts that the archive has one specific elite."""
     assert len(archive) == 1
-    elite = list(archive)[0]
+    elite = next(iter(archive))
     assert np.isclose(elite["solution"], solution).all()
     assert np.isclose(elite["objective"], objective).all()
     assert np.isclose(elite["measures"], measures).all()

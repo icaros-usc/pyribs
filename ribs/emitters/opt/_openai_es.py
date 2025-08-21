@@ -39,7 +39,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         adam_kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
     """
 
-    def __init__(  # pylint: disable = super-init-not-called
+    def __init__(
         self,
         sigma0,
         solution_dim,

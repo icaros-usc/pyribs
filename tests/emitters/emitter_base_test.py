@@ -76,7 +76,7 @@ def test_default_ask_dqd_has_correct_sol_shape(shape):
     archive = GridArchive(solution_dim=shape, dims=[10, 20], ranges=[(-1, 1), (-2, 2)])
     emitter = GaussianEmitter(archive, sigma=0.1, x0=np.ones(shape))
 
-    expected_shape = (0, 4) if shape == 4 else (0,) + shape
+    expected_shape = (0, 4) if shape == 4 else (0, *shape)
 
     assert emitter.ask_dqd().shape == expected_shape
 
@@ -122,7 +122,7 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
             archive, x0=np.array([0]), sigma0=1.0, ranker="imp", batch_size=batch_size
         )
     else:
-        raise RuntimeError()
+        raise RuntimeError
 
     solution_batch = np.ones((batch_size, archive.solution_dim))
     objective_batch = np.ones(batch_size)
@@ -201,9 +201,7 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
 
 def test_array_bound_correct(archive_fixture):
     archive, x0 = archive_fixture
-    bounds = []
-    for i in range(len(x0) - 1):
-        bounds.append((-i, i))
+    bounds = [(-i, i) for i in range(len(x0) - 1)]
     bounds.append(None)
     emitter = GaussianEmitter(archive, sigma=1, x0=x0, bounds=bounds)
 

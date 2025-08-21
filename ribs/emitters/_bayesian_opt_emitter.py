@@ -76,7 +76,6 @@ class BayesianOptimizationEmitter(EmitterBase):
         seed=None,
     ):
         try:
-            # pylint: disable = import-outside-toplevel
             from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
             from pymoo.optimize import minimize
             from pymoo.problems.functional import FunctionalProblem

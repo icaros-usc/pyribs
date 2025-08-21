@@ -34,7 +34,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             also pass in a custom value here.
     """
 
-    def __init__(  # pylint: disable = super-init-not-called
+    def __init__(
         self,
         sigma0,
         solution_dim,
@@ -82,10 +82,9 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             x0 (np.ndarray): Initial mean.
         """
         try:
-            # We do not want to import at the top because that would require cma
-            # to always be installed, as cma would be imported whenever this
-            # class is imported.
-            # pylint: disable = import-outside-toplevel
+            # We do not want to import at the top because that would require cma to
+            # always be installed, as cma would be imported whenever this class is
+            # imported.
             import cma
         except ImportError as e:
             raise ImportError(

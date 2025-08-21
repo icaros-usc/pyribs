@@ -92,8 +92,8 @@ def test_ask_returns_correct_solution_shape(scheduler_fixture):
 
 def test_ask_fails_when_called_twice(scheduler_fixture):
     scheduler, *_ = scheduler_fixture
+    scheduler.ask()
     with pytest.raises(RuntimeError):
-        scheduler.ask()
         scheduler.ask()
 
 

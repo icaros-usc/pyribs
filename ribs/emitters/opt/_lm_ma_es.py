@@ -39,7 +39,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
             defaults to be equal to the batch size.
     """
 
-    def __init__(  # pylint: disable = super-init-not-called
+    def __init__(
         self,
         sigma0,
         solution_dim,

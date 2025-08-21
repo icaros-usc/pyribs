@@ -26,8 +26,6 @@ class Update(IntEnum):
 class ArrayStoreIterator:
     """An iterator for an ArrayStore's entries."""
 
-    # pylint: disable = protected-access
-
     def __init__(self, store):
         self.store = store
         self.iter_idx = 0
@@ -146,7 +144,7 @@ class ArrayStore:
             if isinstance(field_shape, numbers.Integral):
                 field_shape = (field_shape,)
 
-            array_shape = (capacity,) + tuple(field_shape)
+            array_shape = (capacity, *field_shape)
             self._fields[name] = self._xp.empty(
                 array_shape, dtype=dtype, device=self._device
             )
@@ -270,7 +268,7 @@ class ArrayStore:
                 store.field_list_with_index == \
                         ["objective", "measures", "index"]
         """
-        return list(self._fields) + ["index"]
+        return [*self._fields, "index"]
 
     @staticmethod
     def _convert_to_numpy(arr):
@@ -564,7 +562,7 @@ class ArrayStore:
         self._props["occupied_list"][:cur_capacity] = cur_occupied_list
 
         for name, cur_arr in self._fields.items():
-            new_shape = (capacity,) + cur_arr.shape[1:]
+            new_shape = (capacity, *cur_arr.shape[1:])
             self._fields[name] = self._xp.empty(
                 new_shape, dtype=cur_arr.dtype, device=self._device
             )

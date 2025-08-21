@@ -103,7 +103,7 @@ class EmitterBase(ABC):
             if isinstance(self.solution_dim, numbers.Integral)
             else self.solution_dim
         )
-        return np.empty((0,) + solution_dim, dtype=self.archive.dtypes["solution"])
+        return np.empty((0, *solution_dim), dtype=self.archive.dtypes["solution"])
 
     def tell(self, solution, objective, measures, add_info, **fields):
         """Gives the emitter results from evaluating solutions.
@@ -136,7 +136,7 @@ class EmitterBase(ABC):
             if isinstance(self.solution_dim, numbers.Integral)
             else self.solution_dim
         )
-        return np.empty((0,) + solution_dim, dtype=self.archive.dtypes["solution"])
+        return np.empty((0, *solution_dim), dtype=self.archive.dtypes["solution"])
 
     def tell_dqd(self, solution, objective, measures, jacobian, add_info, **fields):
         """Gives the emitter results from evaluating the gradient of the solutions, only
