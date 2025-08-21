@@ -127,7 +127,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
 
         # Fitness is too flat (only applies if there are at least 2 parents).
         # NOTE: We use norm here because we may have multiple ranking values.
-        if (
+        if (  # noqa: SIM103
             len(ranking_values) >= 2
             and np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12
         ):

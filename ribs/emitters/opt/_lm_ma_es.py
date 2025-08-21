@@ -111,7 +111,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
             return True
 
         # NOTE: We use norm here because we may have multiple ranking values.
-        if (
+        if (  # noqa: SIM103
             len(ranking_values) >= 2
             and np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12
         ):
