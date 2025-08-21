@@ -115,8 +115,7 @@ select = [
   "COM818",  # trailing-comma-on-bare-tuple
   "C4",  # flake8-comprehensions
   "EXE",  # flake8-executable
-  # TODO
-  # "FA",  # flake8-future-annotations
+  "FA",  # flake8-future-annotations
   "PIE",  # flake8-pie
   "RSE",  # flake8-raise
   "SIM",  # flake8-simplify
