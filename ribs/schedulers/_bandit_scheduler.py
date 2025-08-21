@@ -390,11 +390,14 @@ class BanditScheduler:
         # stacklevel=2 so that it's clear the error comes from tell().
         if archive_empty_before and self.archive.empty:
             warnings.warn(Scheduler.EMPTY_WARNING.format(name="archive"), stacklevel=2)
-        if self._result_archive is not None:
-            if result_archive_empty_before and self.result_archive.empty:
-                warnings.warn(
-                    Scheduler.EMPTY_WARNING.format(name="result_archive"), stacklevel=2
-                )
+        if (
+            self._result_archive is not None
+            and result_archive_empty_before
+            and self.result_archive.empty
+        ):
+            warnings.warn(
+                Scheduler.EMPTY_WARNING.format(name="result_archive"), stacklevel=2
+            )
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
