@@ -119,7 +119,6 @@ select = [
   # "FA",  # flake8-future-annotations
   "PIE",  # flake8-pie
   "RSE",  # flake8-raise
-  # TODO
   "SIM",  # flake8-simplify
   "TD",  # flake8-todos
   "ARG",  # flake8-unused-arguments
@@ -136,7 +135,6 @@ select = [
   # TODO
   # "D",  # pydocstyle
   "F",  # pyflakes
-  # TODO
   "UP",  # pyupgrade
   "RUF",  # ruff-specific rules
 ]
