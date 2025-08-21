@@ -47,7 +47,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "pyribs"
-copyright = f"2021-{datetime.datetime.now().year}, ICAROS Lab"
+copyright = f"2021-{datetime.datetime.now().year}, ICAROS Lab"  # noqa: A001
 author = "ICAROS Lab pyribs Team"
 
 # The version info for the project you"re documenting, acts as replacement
