@@ -34,7 +34,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             also pass in a custom value here.
     """
 
-    def __init__(  # pylint: disable = super-init-not-called
+    def __init__(
         self,
         sigma0,
         solution_dim,
@@ -82,10 +82,9 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             x0 (np.ndarray): Initial mean.
         """
         try:
-            # We do not want to import at the top because that would require cma
-            # to always be installed, as cma would be imported whenever this
-            # class is imported.
-            # pylint: disable = import-outside-toplevel
+            # We do not want to import at the top because that would require cma to
+            # always be installed, as cma would be imported whenever this class is
+            # imported.
             import cma
         except ImportError as e:
             raise ImportError(
@@ -128,7 +127,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
 
         # Fitness is too flat (only applies if there are at least 2 parents).
         # NOTE: We use norm here because we may have multiple ranking values.
-        if (
+        if (  # noqa: SIM103
             len(ranking_values) >= 2
             and np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12
         ):

@@ -51,7 +51,7 @@ def save_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_times.json")
 
 def load_times(filename="cvt_add_times.json"):
     """Loads the results from the given file."""
-    with open(filename, "r") as file:
+    with open(filename) as file:
         data = json.load(file)
         return data["n_cells"], data["brute_force_t"], data["kd_tree_t"]
 
@@ -73,15 +73,17 @@ def plot_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_plot.png"):
 
 def main():
     """Creates archives, times insertion into them, and plots results."""
+    rng = np.random.default_rng()
+
     archive = None
     n_cells = [10, 50, 100, 500, 1_000]
 
     # Pre-made solutions to insert.
     n_batches = 1_000
     batch_size = 100
-    all_solution_batch = np.random.uniform(-1, 1, (n_batches, batch_size, 10))
-    all_objective_batch = np.random.standard_normal((n_batches, batch_size))
-    all_measures_batch = np.random.uniform(-1, 1, (n_batches, batch_size, 2))
+    all_solution_batch = rng.uniform(-1, 1, (n_batches, batch_size, 10))
+    all_objective_batch = rng.standard_normal((n_batches, batch_size))
+    all_measures_batch = rng.uniform(-1, 1, (n_batches, batch_size, 2))
 
     # Set up these archives so we can use the same centroids across all experiments for
     # a certain number of cells (and also save time).

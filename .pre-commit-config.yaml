@@ -14,24 +14,15 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.4
     hooks:
+      # Lint (without fixing).
+      - id: ruff-check
+      # Sort imports.
       - id: ruff-check
         args: [--select, I, --fix]
+      # Run formatter.
       - id: ruff-format
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.0.2
     hooks:
       - id: prettier
         types_or: [markdown, yaml]
-  # pylint runs locally due to importing modules. See
-  # https://pylint.pycqa.org/en/latest/user_guide/installation/pre-commit-integration.html
-  - repo: local
-    hooks:
-      - id: pylint
-        name: pylint
-        entry: pylint
-        language: system
-        types: [python]
-        args: [
-            "-rn", # Only display messages
-            "-sn", # Don't display the score
-          ]

@@ -16,8 +16,6 @@ from .conftest import (
     add_uniform_sphere_3d,
 )
 
-# pylint: disable = redefined-outer-name
-
 #
 # Fixtures
 #

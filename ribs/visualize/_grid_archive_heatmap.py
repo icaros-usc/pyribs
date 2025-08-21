@@ -11,9 +11,6 @@ from ribs.visualize._utils import (
     validate_heatmap_visual_args,
 )
 
-# Matplotlib functions tend to have a ton of args.
-# pylint: disable = too-many-arguments
-
 
 def grid_archive_heatmap(
     archive,

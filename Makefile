@@ -37,8 +37,8 @@ clean-test: ## remove test and coverage artifacts
 	rm -rf .pytest_cache
 .PHONY: clean-test
 
-lint: ## check style with pylint
-	pylint ribs tests examples benchmarks
+lint: ## check style with ruff
+	ruff check
 .PHONY: lint
 
 test: ## run tests with the default Python

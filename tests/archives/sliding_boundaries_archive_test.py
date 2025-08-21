@@ -8,8 +8,6 @@ from ribs.archives import AddStatus, SlidingBoundariesArchive
 from .conftest import get_archive_data
 from .grid_archive_test import assert_archive_elite
 
-# pylint: disable = redefined-outer-name
-
 
 @pytest.fixture
 def data():

@@ -8,13 +8,13 @@ from matplotlib.testing.decorators import image_comparison
 
 from ribs.visualize import parallel_axes_plot
 
-from .grid_archive_heatmap_test import (  # pylint: disable = unused-import
+# See https://github.com/astral-sh/ruff/issues/10662
+# ruff: noqa: F401, F811
+from .grid_archive_heatmap_test import (
     grid_archive_2d,
     grid_archive_3d,
     grid_archive_3d_empty,
 )
-
-# pylint: disable = redefined-outer-name
 
 
 @image_comparison(baseline_images=["2d"], remove_text=False, extensions=["png"])

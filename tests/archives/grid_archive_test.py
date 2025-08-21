@@ -7,8 +7,6 @@ from ribs.archives import AddStatus, GridArchive
 
 from .conftest import get_archive_data
 
-# pylint: disable = redefined-outer-name
-
 
 @pytest.fixture
 def data():
@@ -19,7 +17,7 @@ def data():
 def assert_archive_elite(archive, solution, objective, measures, grid_indices):
     """Asserts that the archive has one specific elite."""
     assert len(archive) == 1
-    elite = list(archive)[0]
+    elite = next(iter(archive))
     assert np.isclose(elite["solution"], solution).all()
     assert np.isclose(elite["objective"], objective).all()
     assert np.isclose(elite["measures"], measures).all()
@@ -77,10 +75,7 @@ def assert_archive_elites(
                 measures_match = True
 
             index_match = (
-                grid_indices_batch is None
-                or
-                # pylint: disable-next = possibly-used-before-assignment
-                data["index"][j] == index_batch[i]
+                grid_indices_batch is None or data["index"][j] == index_batch[i]
             )
 
             # Used for testing custom fields.

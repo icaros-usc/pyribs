@@ -18,7 +18,6 @@ from ribs.archives._utils import fill_sentinel_values, parse_dtype
 
 
 class ProximityArchive(ArchiveBase):
-    # pylint: disable = too-many-public-methods
     """An archive that adds new solutions based on novelty, where novelty is defined via
     proximity to other solutions in measure space.
 
@@ -430,7 +429,6 @@ class ProximityArchive(ArchiveBase):
                 )
 
         if use_local_competition:
-            # pylint: disable-next = used-before-assignment
             return novelty, local_competition_scores
         else:
             return novelty

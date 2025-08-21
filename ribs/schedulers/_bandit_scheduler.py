@@ -102,7 +102,7 @@ class BanditScheduler:
                 "`emitter_pool` must be a list of emitter objects."
             ) from exception
 
-        emitter_ids = set(id(e) for e in emitter_pool)
+        emitter_ids = {id(e) for e in emitter_pool}
         if len(emitter_ids) != len(emitter_pool):
             raise ValueError(
                 "Not all emitters passed in were unique (i.e. some emitters "
@@ -311,7 +311,6 @@ class BanditScheduler:
                 f"has length {len(arr)}"
             )
 
-    # pylint: disable-next = protected-access
     _validate_tell_data = Scheduler._validate_tell_data
 
     def tell_dqd(self, objective, measures, jacobian):
@@ -387,12 +386,18 @@ class BanditScheduler:
             for name, arr in add_info.items():
                 add_info[name] = np.asarray(arr)
 
-        # Warn the user if nothing was inserted into the archives.
+        # Warn the user if nothing was inserted into the archives -- these warnings use
+        # stacklevel=2 so that it's clear the error comes from tell().
         if archive_empty_before and self.archive.empty:
-            warnings.warn(Scheduler.EMPTY_WARNING.format(name="archive"))
-        if self._result_archive is not None:
-            if result_archive_empty_before and self.result_archive.empty:
-                warnings.warn(Scheduler.EMPTY_WARNING.format(name="result_archive"))
+            warnings.warn(Scheduler.EMPTY_WARNING.format(name="archive"), stacklevel=2)
+        if (
+            self._result_archive is not None
+            and result_archive_empty_before
+            and self.result_archive.empty
+        ):
+            warnings.warn(
+                Scheduler.EMPTY_WARNING.format(name="result_archive"), stacklevel=2
+            )
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0

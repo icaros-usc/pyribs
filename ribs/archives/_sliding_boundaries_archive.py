@@ -87,7 +87,6 @@ class SolutionBuffer:
 
 
 class SlidingBoundariesArchive(ArchiveBase):
-    # pylint: disable = too-many-public-methods
     """An archive with a fixed number of sliding boundaries in each dimension.
 
     This archive is the container described in `Fontaine 2019
@@ -453,10 +452,6 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         # We cannot use `grid_to_int_index` since that takes in an array of indices, not
         # index columns.
-        #
-        # pylint seems to think that ravel_multi_index returns a list and thus has no
-        # astype method.
-        # pylint: disable = no-member
         return np.ravel_multi_index(idx_cols, self._dims).astype(np.int32)
 
     def index_of_single(self, measures):
@@ -513,7 +508,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         cur_data.pop("index")
 
         new_data_single = list(self._buffer)  # List of dicts.
-        new_data = {name: None for name in new_data_single[0]}
+        new_data = dict.fromkeys(new_data_single[0])
         for name in new_data:
             new_data[name] = [d[name] for d in new_data_single]
 

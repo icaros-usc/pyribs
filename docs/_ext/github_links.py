@@ -46,7 +46,7 @@ def github_link_role(
     lineno,
     inliner,
     options=None,
-    content=(),  # pylint: disable = unused-argument
+    content=(),  # noqa: ARG001
 ):
     """Link to a GitHub issue or pull request.
 

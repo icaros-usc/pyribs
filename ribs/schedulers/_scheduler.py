@@ -63,7 +63,7 @@ class Scheduler:
                 "`emitters` must be a list of emitter objects."
             ) from exception
 
-        emitter_ids = set(id(e) for e in emitters)
+        emitter_ids = {id(e) for e in emitters}
         if len(emitter_ids) != len(emitters):
             raise ValueError(
                 "Not all emitters passed in were unique (i.e. some emitters "
@@ -267,12 +267,18 @@ class Scheduler:
             for name, arr in add_info.items():
                 add_info[name] = np.asarray(arr)
 
-        # Warn the user if nothing was inserted into the archives.
+        # Warn the user if nothing was inserted into the archives -- these warnings use
+        # stacklevel=3 so that it's clear the error comes from tell() or tell_dqd().
         if archive_empty_before and self.archive.empty:
-            warnings.warn(self.EMPTY_WARNING.format(name="archive"))
-        if self._result_archive is not None:
-            if result_archive_empty_before and self.result_archive.empty:
-                warnings.warn(self.EMPTY_WARNING.format(name="result_archive"))
+            warnings.warn(self.EMPTY_WARNING.format(name="archive"), stacklevel=3)
+        if (
+            self._result_archive is not None
+            and result_archive_empty_before
+            and self.result_archive.empty
+        ):
+            warnings.warn(
+                self.EMPTY_WARNING.format(name="result_archive"), stacklevel=3
+            )
 
         return add_info
 

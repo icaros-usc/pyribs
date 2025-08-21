@@ -81,7 +81,7 @@ def test_density_after_add(density_method):
     # all points since all are equally far from [0, 0], and the final density is
     # the average, so it is the same as just one point.
     expected_density = (
-        np.exp(-0.5 * np.square((np.sqrt(2) / bandwidth)))
+        np.exp(-0.5 * np.square(np.sqrt(2) / bandwidth))
         / np.sqrt(2 * np.pi)
         / bandwidth
     )

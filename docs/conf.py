@@ -9,8 +9,6 @@
 #
 # All configuration values have a default; values that are commented out serve to show
 # the default.
-#
-# pylint: skip-file
 
 import datetime
 import os
@@ -49,7 +47,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "pyribs"
-copyright = f"2021-{datetime.datetime.now().year}, ICAROS Lab"
+copyright = f"2021-{datetime.datetime.now().year}, ICAROS Lab"  # noqa: A001
 author = "ICAROS Lab pyribs Team"
 
 # The version info for the project you"re documenting, acts as replacement
@@ -263,9 +261,9 @@ myst_heading_anchors = 3
 
 # -- minify_html_files extension -- see docs/_ext/minify.py
 # This has been turned off since minifying seems to prevent ReadTheDocs from injecting
-# the flyout menu.
+# the flyout menu; however, it can be toggled based on the DEV_MODE as shown below.
 # Options: "minify", "prettify", None
-minify_mode = None if DEV_MODE else None
+minify_mode = None if DEV_MODE else None  # noqa: RUF034
 
 # -- colab_link extension.
 # GitHub path where notebooks live (without "https://github.com/")

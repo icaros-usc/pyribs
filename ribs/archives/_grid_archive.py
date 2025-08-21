@@ -22,7 +22,6 @@ from ribs.archives._utils import (
 
 
 class GridArchive(ArchiveBase):
-    # pylint: disable = too-many-public-methods
     """An archive that divides each dimension into uniformly-sized cells.
 
     This archive is the container described in `Mouret 2015

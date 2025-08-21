@@ -5,11 +5,9 @@ from array_api_compat import numpy as np
 
 from ribs.archives import ArrayStore
 
-# pylint: disable = redefined-outer-name
-
 
 def test_init_reserved_field(xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     with pytest.raises(ValueError):
         ArrayStore(
@@ -23,7 +21,7 @@ def test_init_reserved_field(xp_and_device):
 
 
 def test_init_invalid_field(xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     with pytest.raises(ValueError):
         ArrayStore(
@@ -41,7 +39,7 @@ def test_init_invalid_field(xp_and_device):
     "shape", [((), (2,), (10,)), ((), 2, 10)], ids=["tuple", "int"]
 )
 def test_init(xp_and_device, shape):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     capacity = 10
     store = ArrayStore(
@@ -88,7 +86,7 @@ def test_init(xp_and_device, shape):
 @pytest.fixture
 def store(xp_and_device):
     """Simple ArrayStore for testing."""
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
     return ArrayStore(
         field_desc={
             "objective": ((), xp.float32),
@@ -114,7 +112,7 @@ def test_add_wrong_keys(store):
 
 
 def test_add_mismatch_indices(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     with pytest.raises(ValueError):
         store.add(
@@ -129,7 +127,7 @@ def test_add_mismatch_indices(store, xp_and_device):
 
 def test_simple_add_retrieve_clear(store, xp_and_device):
     """Add without transforms, retrieve the data, and clear the archive."""
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3, 5],
@@ -168,7 +166,7 @@ def test_simple_add_retrieve_clear(store, xp_and_device):
             device=device,
         )
     )
-    assert data.keys() == set(["objective", "measures", "solution", "index"])
+    assert data.keys() == {"objective", "measures", "solution", "index"}
     assert xp.all(
         data["objective"]
         == xp.asarray(
@@ -216,7 +214,7 @@ def test_simple_add_retrieve_clear(store, xp_and_device):
 
 
 def test_add_duplicate_indices(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3, 3],
@@ -247,7 +245,7 @@ def test_add_duplicate_indices(store, xp_and_device):
 
 
 def test_add_nothing(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [],
@@ -278,7 +276,7 @@ def test_add_nothing(store, xp_and_device):
 
 
 def test_dtypes(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3, 5],
@@ -300,7 +298,7 @@ def test_dtypes(store, xp_and_device):
 
 
 def test_retrieve_duplicate_indices(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3],
@@ -321,7 +319,7 @@ def test_retrieve_duplicate_indices(store, xp_and_device):
             device=device,
         )
     )
-    assert data.keys() == set(["objective", "measures", "solution", "index"])
+    assert data.keys() == {"objective", "measures", "solution", "index"}
     assert xp.all(
         data["objective"]
         == xp.asarray(
@@ -366,7 +364,7 @@ def test_retrieve_invalid_return_type(store):
 
 
 def test_retrieve_pandas_2d_fields(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store = ArrayStore(
         {
@@ -405,7 +403,7 @@ def test_retrieve(return_type, store, xp_and_device):
                 device=device,
             )
         )
-        assert data.keys() == set(["objective", "measures", "solution", "index"])
+        assert data.keys() == {"objective", "measures", "solution", "index"}
         assert xp.all(
             data["objective"]
             == xp.asarray(
@@ -538,7 +536,7 @@ def test_retrieve_custom_fields(store, return_type, xp_and_device):
                 device=device,
             )
         )
-        assert data.keys() == set(["index", "objective"])
+        assert data.keys() == {"index", "objective"}
         assert xp.all(
             data["index"]
             == xp.asarray(
@@ -690,7 +688,7 @@ def test_data(store, xp_and_device):
 
     d = store.data()
 
-    assert d.keys() == set(["objective", "measures", "solution", "index"])
+    assert d.keys() == {"objective", "measures", "solution", "index"}
     assert all(len(v) == 2 for v in d.values())
 
     row0 = xp.concat(
@@ -777,7 +775,7 @@ def test_data_with_tuple_return_type(store, xp_and_device):
 
 
 def test_data_with_pandas_return_type(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3, 5],
@@ -834,7 +832,7 @@ def test_iteration(store, xp_and_device):
     )
 
     for entry in store:
-        assert entry.keys() == set(["objective", "measures", "solution", "index"])
+        assert entry.keys() == {"objective", "measures", "solution", "index"}
         assert entry["objective"] == 1.0
         assert xp.all(
             entry["measures"]
@@ -856,7 +854,7 @@ def test_iteration(store, xp_and_device):
 
 
 def test_add_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3],
@@ -869,7 +867,7 @@ def test_add_during_iteration(store, xp_and_device):
 
     # Even with just one entry, adding during iteration should still raise an
     # error, just like it does in a set.
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in store:
             store.add(
                 [4],
@@ -882,7 +880,7 @@ def test_add_during_iteration(store, xp_and_device):
 
 
 def test_clear_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3],
@@ -893,13 +891,13 @@ def test_clear_during_iteration(store, xp_and_device):
         },
     )
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in store:
             store.clear()
 
 
 def test_clear_and_add_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device  # pylint: disable = unused-variable
+    xp, device = xp_and_device
 
     store.add(
         [3],
@@ -910,7 +908,7 @@ def test_clear_and_add_during_iteration(store, xp_and_device):
         },
     )
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in store:
             store.clear()
             store.add(

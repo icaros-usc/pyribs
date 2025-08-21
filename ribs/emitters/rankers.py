@@ -91,7 +91,6 @@ class RankerBase(ABC):
 
     @abstractmethod
     def rank(self, emitter, archive, data, add_info):
-        # pylint: disable=missing-function-docstring
         pass
 
     # Generates the docstring for rank
@@ -102,7 +101,6 @@ Generates a batch of indices that represents an ordering of ``data["solution"]``
     """
 
     def reset(self, emitter, archive):
-        # pylint: disable=missing-function-docstring
         pass
 
     reset.__doc__ = f"""
