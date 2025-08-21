@@ -89,6 +89,7 @@ def test_seed_sequence():
 
 @pytest.mark.parametrize("es", ES_LIST)
 def test_sphere(es):
+    rng = np.random.default_rng()
     archive = GridArchive(solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2)
     emitter = GradientArborescenceEmitter(
         archive,
@@ -105,7 +106,7 @@ def test_sphere(es):
         solution = emitter.ask_dqd()
         objective = -np.sum(np.square(solution), axis=1)
         measures = solution[:, :2]
-        jacobian = np.random.uniform(-1, 1, (1, 3, 10))
+        jacobian = rng.uniform(-1, 1, (1, 3, 10))
         add_info = archive.add(solution, objective, measures)
         emitter.tell_dqd(solution, objective, measures, jacobian, add_info)
 

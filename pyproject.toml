@@ -124,8 +124,7 @@ select = [
   "ARG",  # flake8-unused-arguments
   "FLY",  # flynt
   "I",  # isort
-  # TODO
-  # "NPY",  # numpy
+  "NPY",  # numpy
   "PD",  # pandas-vet
   # TODO
   # "PT",  # pytest

@@ -18,6 +18,8 @@ def archive_fixture():
 def full_archive_emitter_fixture(archive_fixture):
     """Returns a BayesianOptimizationEmitter that has filled its archive to
     100% coverage."""
+    rng = np.random.default_rng()
+
     emitter = BayesianOptimizationEmitter(
         archive=archive_fixture,
         bounds=[[-1, 1]] * 4,
@@ -32,7 +34,7 @@ def full_archive_emitter_fixture(archive_fixture):
         np.meshgrid(np.linspace(-1, 1, md1), np.linspace(-1, 1, md2))
     ).T.reshape(-1, 2)
     for solution, objective, measures in zip(
-        np.random.uniform(-1, 1, (archive_fixture.cells, 4)),
+        rng.uniform(-1, 1, (archive_fixture.cells, 4)),
         np.full((100,), archive_fixture.cells),
         all_measures,
     ):
@@ -106,6 +108,7 @@ def test_upscale(full_archive_emitter_fixture):
     BayesianOptimizationScheduler to ensure all emitters upscale at the same
     time, so we only test that BayesianOptimizationEmitter returns the next
     resolution correctly in this test."""
+    rng = np.random.default_rng()
     # With starting resolution [md1, md2], full_archive_emitter_fixture should
     # tolerate sqrt(md1*md2) tell() calls that do not improve archive coverage
     # before upscaling the archive.
@@ -114,7 +117,7 @@ def test_upscale(full_archive_emitter_fixture):
         + 1
     )
     for solution, objective, measures in zip(
-        np.random.uniform(-1, 1, (no_improve_tolerance, 4)),
+        rng.uniform(-1, 1, (no_improve_tolerance, 4)),
         np.full((no_improve_tolerance,), 100),
         np.zeros((no_improve_tolerance, 2)),
     ):
