@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from typing import Literal
 
 import matplotlib.colors
@@ -37,7 +37,7 @@ def cvt_archive_3d_plot(
     vmin: float | None = None,
     vmax: float | None = None,
     cbar: Literal["auto"] | None | Axes = "auto",
-    cbar_kwargs: Mapping | None = None,
+    cbar_kwargs: dict | None = None,
     plot_elites: bool = False,
     elite_ms: float = 100,
     elite_alpha: float = 0.5,
