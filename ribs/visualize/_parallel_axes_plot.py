@@ -89,7 +89,8 @@ def parallel_axes_plot(
             >>> plt.show()
 
     Args:
-        archive: Any pyribs archive.
+        archive: Pyribs archive that has ``lower_bounds`` and ``upper_bounds``
+            properties.
         ax: Axes on which to create the plot. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
