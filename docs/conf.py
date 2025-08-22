@@ -282,6 +282,12 @@ autodoc_member_order = "groupwise"  # Can be overridden by :member-order:
 autodoc_default_options = {
     "inherited-members": True,
 }
+autodoc_mock_imports = ["matplotlib.typing"]
+autodoc_type_aliases = {
+    # Aliases that we do not want to expand.
+    # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_type_aliases
+    "ColorType": "matplotlib.typing.ColorType",
+}
 autosummary_generate = True
 
 # -- Matplotlib plot directive.
