@@ -55,8 +55,8 @@ def _as_cvt_archive(
 def qdax_repertoire_heatmap(
     repertoire: MapElitesRepertoire,
     ranges: Sequence[tuple[float, float]],
-    *args: Any,  # noqa: ANN401
-    **kwargs: Any,  # noqa: ANN401
+    *args: Any,
+    **kwargs: Any,
 ) -> None:
     """Plots a heatmap of a single-objective QDax MapElitesRepertoire.
 
@@ -83,8 +83,8 @@ def qdax_repertoire_heatmap(
 def qdax_repertoire_3d_plot(
     repertoire: MapElitesRepertoire,
     ranges: Sequence[tuple[float, float]],
-    *args: Any,  # noqa: ANN401
-    **kwargs: Any,  # noqa: ANN401
+    *args: Any,
+    **kwargs: Any,
 ) -> None:
     """Plots a single-objective QDax MapElitesRepertoire with 3D measure space.
 
