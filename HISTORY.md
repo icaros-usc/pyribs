@@ -12,7 +12,7 @@
 
 #### Improvements
 
-- Migrate from pylint to ruff for linting ({pr}`605`)
+- Migrate from pylint to ruff for linting ({pr}`605`, {pr}`607`)
 - Replace isort with ruff import check ({pr}`603`)
 
 ## 0.8.2
