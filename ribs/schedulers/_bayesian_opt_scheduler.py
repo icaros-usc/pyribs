@@ -132,14 +132,13 @@ class BayesianOptimizationScheduler(Scheduler):
             if self.upscale_schedule is not None:
                 if i == 0:
                     this_upscale_res = upscale_res
-                else:
-                    if np.any(this_upscale_res != upscale_res):
-                        raise ValueError(
-                            "Emitters returned different upscale resolutions "
-                            "when they should return the same. Emitter0 "
-                            f"returned resolution {this_upscale_res}, but "
-                            f"emitter{i} returned resolution {upscale_res}"
-                        )
+                elif np.any(this_upscale_res != upscale_res):
+                    raise ValueError(
+                        "Emitters returned different upscale resolutions "
+                        "when they should return the same. Emitter0 "
+                        f"returned resolution {this_upscale_res}, but "
+                        f"emitter{i} returned resolution {upscale_res}"
+                    )
 
         # If the upscale resolution is not None, upscales :attr:`archive` and all
         # emitter archives.
