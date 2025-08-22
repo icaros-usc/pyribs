@@ -1,6 +1,7 @@
 """Utilities shared by the visualize module."""
 
-import matplotlib
+import matplotlib.axes
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 

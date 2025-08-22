@@ -1,6 +1,6 @@
 """Provides cvt_archive_heatmap."""
 
-import matplotlib
+import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
 import shapely

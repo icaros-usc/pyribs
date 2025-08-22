@@ -1,6 +1,6 @@
 """Provides parallel_axes_plot."""
 
-import matplotlib
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable

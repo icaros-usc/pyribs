@@ -1,11 +1,15 @@
 """Provides cvt_archive_3d_plot."""
 
+from __future__ import annotations
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from mpl_toolkits.mplot3d.axes3d import Axes3D
 from scipy.spatial import Voronoi
 
+from ribs.archives import ArchiveDataFrame, CVTArchive
 from ribs.visualize._utils import (
     retrieve_cmap,
     set_cbar,
@@ -15,10 +19,10 @@ from ribs.visualize._utils import (
 
 
 def cvt_archive_3d_plot(
-    archive,
-    ax=None,
+    archive: CVTArchive,
+    ax: Axes3D | None = None,
     *,
-    df=None,
+    df: ArchiveDataFrame | None = None,
     measure_order=None,
     cmap="magma",
     lw=0.5,
@@ -269,7 +273,7 @@ def cvt_archive_3d_plot(
 
     # Default ax behavior.
     if ax is None:
-        ax = plt.axes(projection="3d")
+        ax: Axes3D = plt.axes(projection="3d")  # ty: ignore[invalid-assignment]
 
     ax.set_xlim(lower_bounds[0], upper_bounds[0])
     ax.set_ylim(lower_bounds[1], upper_bounds[1])
