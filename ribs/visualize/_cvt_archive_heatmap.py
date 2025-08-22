@@ -1,12 +1,22 @@
 """Provides cvt_archive_heatmap."""
 
-import matplotlib
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import Literal
+
+import matplotlib.collections
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 import shapely
+from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
+from matplotlib.typing import ColorType
+from pandas import DataFrame
 from scipy.spatial import Voronoi
 
+from ribs.archives import ArchiveDataFrame, CVTArchive
 from ribs.visualize._utils import (
     archive_heatmap_1d,
     retrieve_cmap,
@@ -17,26 +27,26 @@ from ribs.visualize._utils import (
 
 
 def cvt_archive_heatmap(
-    archive,
-    ax=None,
+    archive: CVTArchive,
+    ax: Axes | None = None,
     *,
-    df=None,
-    transpose_measures=False,
-    cmap="magma",
-    aspect=None,
-    lw=0.5,
-    ec="black",
-    vmin=None,
-    vmax=None,
-    cbar="auto",
-    cbar_kwargs=None,
-    rasterized=False,
-    clip=False,
-    plot_centroids=False,
-    plot_samples=False,
-    ms=1,
-    pcm_kwargs=None,
-):
+    df: DataFrame | ArchiveDataFrame | None = None,
+    transpose_measures: bool = False,
+    cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
+    aspect: Literal["auto", "equal"] | float | None = None,
+    lw: float = 0.5,
+    ec: ColorType = "black",
+    vmin: float | None = None,
+    vmax: float | None = None,
+    cbar: Literal["auto"] | None | Axes = "auto",
+    cbar_kwargs: dict | None = None,
+    rasterized: bool = False,
+    clip: bool | shapely.Polygon = False,
+    plot_centroids: bool = False,
+    plot_samples: bool = False,
+    ms: float = 1,
+    pcm_kwargs: dict | None = None,
+) -> None:
     """Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 1D or 2D measure
     space.
 
@@ -100,63 +110,58 @@ def cvt_archive_heatmap(
             >>> plt.show()
 
     Args:
-        archive (CVTArchive): A 1D or 2D :class:`~ribs.archives.CVTArchive`.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap.  If ``None``, the
-            current axis will be used.
-        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from this
-            argument instead of the data currently in the archive. This data can be
-            obtained by, for instance, calling :meth:`ribs.archives.ArchiveBase.data`
-            with ``return_type="pandas"`` and modifying the resulting
-            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum, the data
-            must contain columns for index, objective, and measures. To display a custom
-            metric, replace the "objective" column.
-        transpose_measures (bool): By default, the first measure in the archive will
-            appear along the x-axis, and the second will be along the y-axis. To switch
-            this behavior (i.e. to transpose the axes), set this to ``True``. Does not
-            apply for 1D archives.
-        cmap (str, list, matplotlib.colors.Colormap): The colormap to use when plotting
-            intensity. Either the name of a :class:`~matplotlib.colors.Colormap`, a list
-            of RGB or RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4`
-            array), or a :class:`~matplotlib.colors.Colormap` object.
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
-            height/width). Defaults to ``'auto'`` for 2D and ``0.5`` for 1D.
-            ``'equal'`` is the same as ``aspect=1``. See
-            :meth:`matplotlib.axes.Axes.set_aspect` for more info.
-        lw (float): Line width when plotting the Voronoi diagram.
-        ec (matplotlib color): Edge color of the cells in the Voronoi diagram.  See
+        archive: A 1D or 2D :class:`~ribs.archives.CVTArchive`.
+        ax: Axes on which to plot the heatmap.  If ``None``, the current axis will be
+            used.
+        df: If provided, we will plot data from this argument instead of the data
+            currently in the archive. This data can be obtained by, for instance,
+            calling :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
+            and modifying the resulting :class:`~ribs.archives.ArchiveDataFrame`. Note
+            that, at a minimum, the data must contain columns for index, objective, and
+            measures. To display a custom metric, replace the "objective" column.
+        transpose_measures: By default, the first measure in the archive will appear
+            along the x-axis, and the second will be along the y-axis. To switch this
+            behavior (i.e. to transpose the axes), set this to ``True``. Does not apply
+            for 1D archives.
+        cmap: The colormap to use when plotting intensity. Either the name of a
+            :class:`~matplotlib.colors.Colormap`, a list of Matplotlib color
+            specifications (e.g., an :math:`N \\times 3` or :math:`N \\times 4` array --
+            see :class:`~matplotlib.colors.ListedColormap`), or a
+            :class:`~matplotlib.colors.Colormap` object.
+        aspect: The aspect ratio of the heatmap (i.e. height/width). Defaults to
+            ``'auto'`` for 2D and ``0.5`` for 1D. ``'equal'`` is the same as
+            ``aspect=1``. See :meth:`matplotlib.axes.Axes.set_aspect` for more info.
+        lw: Line width when plotting the Voronoi diagram.
+        ec: Edge color of the cells in the Voronoi diagram. See
             `here <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ for
             more info on specifying colors in Matplotlib.
-        vmin (float): Minimum objective value to use in the plot. If ``None``, the
-            minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If ``None``, the
-            maximum objective value in the archive is used.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to ``'auto'``
-            which displays the colorbar on the archive's current
-            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not displayed.
-            If this is an :class:`~matplotlib.axes.Axes`, displays the colorbar on the
-            specified Axes.
-        cbar_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.pyplot.colorbar`.
-        rasterized (bool): Whether to rasterize the heatmap. This can be useful for
-            saving to a vector format like PDF. Essentially, only the heatmap will be
-            converted to a raster graphic so that the archive cells will not have to be
-            individually rendered. Meanwhile, the surrounding axes, particularly text
-            labels, will remain in vector format.
-        clip (bool, shapely.Polygon): Clip the heatmap cells to a given polygon.  By
-            default, we draw the cells along the outer edges of the heatmap as polygons
-            that extend beyond the archive bounds, but these polygons are hidden because
-            we set the axis limits to be the archive bounds. Passing `clip=True` will
-            clip the heatmap such that these "outer edge" polygons are within the
-            archive bounds. An arbitrary polygon can also be passed in to clip the
-            heatmap to a custom shape. See :pr:`356` for more info. Only applies to 2D
-            archives.
-        plot_centroids (bool): Whether to plot the cluster centroids.
-        plot_samples (bool): Whether to plot the samples used when generating the
-            clusters.
-        ms (float): Marker size for both centroids and samples.
-        pcm_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.pyplot.pcolormesh`. Only applicable to 1D heatmaps.
-            linewidth and edgecolor are set with the ``lw`` and ``ec`` args.
+        vmin: Minimum objective value to use in the plot. If ``None``, the minimum
+            objective value in the archive is used.
+        vmax: Maximum objective value to use in the plot. If ``None``, the maximum
+            objective value in the archive is used.
+        cbar: By default, this is set to ``'auto'`` which displays the colorbar on the
+            archive's current :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar
+            is not displayed. If this is an :class:`~matplotlib.axes.Axes`, displays the
+            colorbar on the specified Axes.
+        cbar_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.colorbar`.
+        rasterized: Whether to rasterize the heatmap. This can be useful for saving to a
+            vector format like PDF. Essentially, only the heatmap will be converted to a
+            raster graphic so that the archive cells will not have to be individually
+            rendered. Meanwhile, the surrounding axes, particularly text labels, will
+            remain in vector format.
+        clip: Clip the heatmap cells to a given polygon.  By default, we draw the cells
+            along the outer edges of the heatmap as polygons that extend beyond the
+            archive bounds, but these polygons are hidden because we set the axis limits
+            to be the archive bounds. Passing `clip=True` will clip the heatmap such
+            that these "outer edge" polygons are within the archive bounds. An arbitrary
+            polygon can also be passed in to clip the heatmap to a custom shape. See
+            :pr:`356` for more info. Only applies to 2D archives.
+        plot_centroids: Whether to plot the cluster centroids.
+        plot_samples: Whether to plot the samples used when generating the clusters.
+        ms: Marker size for both centroids and samples.
+        pcm_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.pcolormesh`.
+            Only applicable to 1D heatmaps. linewidth and edgecolor are set with the
+            ``lw`` and ``ec`` args.
 
     Raises:
         ValueError: The archive's measure dimension must be 1D or 2D.

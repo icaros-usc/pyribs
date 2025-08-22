@@ -53,14 +53,17 @@ Ready to contribute? Here's how to set up pyribs for local development.
 1. Now make the appropriate changes locally. If relevant, make sure to write
    tests for your code in the `tests/` folder.
 
-1. Lint and auto-format your code using [ruff](https://docs.astral.sh/ruff/).
-   Note that pre-commit will automatically run ruff whenever you commit your
-   code; you can also run it with `pre-commit run`. You can also run the
-   following commands on the command line:
+1. Lint and auto-format your code using [ruff](https://docs.astral.sh/ruff/) and
+   [ty](https://docs.astral.sh/ty/). Note that pre-commit will automatically run
+   ruff and ty whenever you commit your code; you can also run it with
+   `pre-commit run`. You can also run the following commands on the command
+   line:
 
    ```bash
    # Lint (without fixing).
    ruff check FILES
+   # Run type checking.
+   ty check FILES
    # Sort imports.
    ruff check --select I --fix FILES
    # Run formatter.

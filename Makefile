@@ -39,6 +39,7 @@ clean-test: ## remove test and coverage artifacts
 
 lint: ## check style with ruff
 	ruff check
+	ty check
 .PHONY: lint
 
 test: ## run tests with the default Python

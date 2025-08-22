@@ -3,6 +3,8 @@ include HISTORY.md
 include LICENSE
 include README.md
 
+include ribs/py.typed
+
 exclude tests
 
 global-exclude __pycache__

@@ -110,7 +110,7 @@ def test_3d(cvt_archive_3d):
 )
 def test_3d_custom_axis(cvt_archive_3d):
     ax = plt.axes(projection="3d")
-    cvt_archive_3d_plot(cvt_archive_3d, ax=ax)
+    cvt_archive_3d_plot(cvt_archive_3d, ax=ax)  # ty: ignore[invalid-argument-type]
 
 
 @image_comparison(

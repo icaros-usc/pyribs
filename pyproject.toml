@@ -57,6 +57,7 @@ all = [
 dev = [
   # Tools
   "ruff",
+  "ty",
   "pre-commit",
 
   # Testing
