@@ -106,8 +106,7 @@ def proximity_archive_plot(
 
     Args:
         archive: A 2D :class:`~ribs.archives.ProximityArchive`.
-        ax (matplotlib.axes.Axes): Axes on which to make the plot. If ``None``, the
-            current axis will be used.
+        ax: Axes on which to make the plot. If ``None``, the current axis will be used.
         df: If provided, we will plot data from this argument instead of the data
             currently in the archive. This data can be obtained by, for instance,
             calling :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
