@@ -20,13 +20,14 @@ defaults:
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+    env:
+      # Skip ty since it is not yet ready for pre-commit
+      SKIP: ty
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: "3.12"
-      - name: Install all deps -- needed for ty, which runs locally.
-        run: pip install .[all,dev]
       - uses: pre-commit/action@v3.0.0
   test:
     strategy:
