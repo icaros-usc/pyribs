@@ -13,12 +13,17 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.typing import ColorType
 from pandas import DataFrame
 
-from ribs.archives import ArchiveBase, ArchiveDataFrame
+from ribs.archives import (
+    ArchiveDataFrame,
+    CVTArchive,
+    GridArchive,
+    SlidingBoundariesArchive,
+)
 from ribs.visualize._utils import retrieve_cmap, set_cbar, validate_df
 
 
 def parallel_axes_plot(
-    archive: ArchiveBase,
+    archive: CVTArchive | GridArchive | SlidingBoundariesArchive,
     ax: Axes | None = None,
     *,
     df: DataFrame | ArchiveDataFrame | None = None,
@@ -214,7 +219,6 @@ def parallel_axes_plot(
     # Create a colorbar.
     mappable = ScalarMappable(cmap=cmap)
     mappable.set_clim(vmin, vmax)
-
     # Add default colorbar settings.
     cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs.copy()
     cbar_kwargs.setdefault("orientation", "horizontal")
