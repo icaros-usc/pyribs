@@ -135,8 +135,8 @@ class Scheduler:
     def result_archive(self) -> ArchiveBase:
         """An additional archive for storing solutions found in this scheduler.
 
-        If `result_archive` was not passed to the constructor, this property is the same
-        as :attr:`archive`.
+        If ``result_archive`` was not passed to the constructor, this property is the
+        same as :attr:`archive`.
         """
         return self._archive if self._result_archive is None else self._result_archive
 
@@ -314,8 +314,8 @@ class Scheduler:
                 function evaluation of a solution. This can also be None to indicate
                 there is no objective, which would be the case in diversity optimization
                 problems.
-            measures: ``(batch_size, measure_dim)`` where each row contains a solution's
-                coordinates in measure space.
+            measures: ``(batch_size, measure_dim)`` array where each row contains a
+                solution's coordinates in measure space.
             jacobian: ``(batch_size, 1 + measure_dim, solution_dim)`` array consisting
                 of Jacobian matrices of the solutions obtained from :meth:`ask_dqd`.
                 Each matrix should consist of the objective gradient of the solution
@@ -374,8 +374,8 @@ class Scheduler:
                 function evaluation of a solution. This can also be None to indicate
                 there is no objective, which would be the case in diversity optimization
                 problems.
-            measures: ``(batch_size, measure_dim)`` where each row contains a solution's
-                coordinates in measure space.
+            measures: ``(batch_size, measure_dim)`` array where each row contains a
+                solution's coordinates in measure space.
             fields: Additional data for each solution. Each argument should be an array
                 with ``batch_size`` as the first dimension.
         Raises:
