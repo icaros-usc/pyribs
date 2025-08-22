@@ -1,11 +1,18 @@
 """Provides the Bandit Scheduler."""
 
+from __future__ import annotations
+
 import warnings
 from collections import defaultdict
+from collections.abc import Sequence
+from typing import Literal
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from ribs._utils import readonly
+from ribs.archives import ArchiveBase
+from ribs.emitters import EmitterBase
 from ribs.schedulers._scheduler import Scheduler
 
 
@@ -34,33 +41,30 @@ class BanditScheduler:
         range 5]``, which creates 5 unique instances of ``EmitterClass``.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive object, e.g.,
-            :class:`~ribs.archives.GridArchive`.
-        emitter_pool (list of ribs.archives.EmitterBase): A pool of emitters to select
-            from, e.g. :class:`ribs.emitters.GaussianEmitter`. On the first iteration,
-            the first `num_active` emitters from the emitter_pool will be activated.
-        result_archive (ribs.archives.ArchiveBase): An additional archive where all
-            solutions are added. For example, in CMA-MAE, this archive stores all the
-            best-performing solutions, since the main archive does not store all the
-            best-performing solutions.
+        archive: An archive object, e.g., :class:`~ribs.archives.GridArchive`.
+        emitter_pool: A pool of emitters to select from, e.g.
+            :class:`ribs.emitters.GaussianEmitter`. On the first iteration, the first
+            `num_active` emitters from the emitter_pool will be activated.
+        result_archive: An additional archive where all solutions are added. For
+            example, in CMA-MAE, this archive stores all the best-performing solutions,
+            since the main archive does not store all the best-performing solutions.
         num_active (int): The number of active emitters at a time. Active emitters are
             used when calling ask-tell.
-        reselect (str): Indicates how emitters are reselected from the pool. The default
-            is "terminated", where only terminated/restarted emitters are deactivated
-            and reselected (but they might be selected again). Alternatively, use "all"
-            to reselect all active emitters every iteration.
-        zeta (float): Hyperparamter of UCB1 that balances the trade-off between the
-            accuracy and the uncertainty of the emitters. Increasing this parameter will
-            emphasize the uncertainty of the emitters. Refer to the original paper for
-            more information.
-        add_mode (str): Indicates how solutions should be added to the archive. The
-            default is "batch", which adds all solutions with one call to
+        reselect: Indicates how emitters are reselected from the pool. The default is
+            "terminated", where only terminated/restarted emitters are deactivated and
+            reselected (but they might be selected again). Alternatively, use "all" to
+            reselect all active emitters every iteration.
+        zeta: Hyperparamter of UCB1 that balances the trade-off between the accuracy and
+            the uncertainty of the emitters. Increasing this parameter will emphasize
+            the uncertainty of the emitters. Refer to the original paper for more
+            information.
+        add_mode: Indicates how solutions should be added to the archive. The default is
+            "batch", which adds all solutions with one call to
             :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single" to add
             the solutions one at a time with
-            :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is included for
-            legacy reasons, as it was the only mode of operation in pyribs 0.4.0 and
-            before. We highly recommend using "batch" mode since it is significantly
-            faster.
+            :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is included
+            since implementing batch addition on an archive is sometimes non-trivial.
+            We highly recommend "batch" mode since it is significantly faster.
     Raises:
         TypeError: The ``emitter_pool`` argument was not a list of emitters.
         ValueError: Number of active emitters is less than one.
@@ -75,15 +79,15 @@ class BanditScheduler:
 
     def __init__(
         self,
-        archive,
-        emitter_pool,
-        result_archive=None,
+        archive: ArchiveBase,
+        emitter_pool: Sequence[EmitterBase],
+        result_archive: ArchiveBase | None = None,
         *,
-        num_active,
-        reselect="terminated",
-        zeta=0.05,
-        add_mode="batch",
-    ):
+        num_active: int,
+        reselect: Literal["terminated", "all"] = "terminated",
+        zeta: float = 0.05,
+        add_mode: Literal["batch", "single"] = "batch",
+    ) -> None:
         if num_active < 1:
             raise ValueError("num_active cannot be less than 1.")
 
@@ -165,34 +169,31 @@ class BanditScheduler:
         self._num_emitted = np.array([None for _ in self._active_arr])
 
     @property
-    def archive(self):
-        """ribs.archives.ArchiveBase: Archive for storing solutions found in this
-        scheduler."""
+    def archive(self) -> ArchiveBase:
+        """Archive for storing solutions found in this scheduler."""
         return self._archive
 
     @property
-    def emitter_pool(self):
-        """list of ribs.archives.EmitterBase: The pool of emitters available in the
-        scheduler."""
+    def emitter_pool(self) -> Sequence[EmitterBase]:
+        """The pool of emitters available in the scheduler."""
         return self._emitter_pool
 
     @property
-    def active(self):
-        """numpy.ndarray: Boolean array indicating which emitters in the
-        :attr:`emitter_pool` are currently active."""
+    def active(self) -> np.ndarray:
+        """Boolean array indicating which emitters in the :attr:`emitter_pool` are
+        currently active."""
         return readonly(self._active_arr.view())
 
     @property
-    def result_archive(self):
-        """ribs.archives.ArchiveBase: An additional archive for storing solutions found
-        in this scheduler.
+    def result_archive(self) -> ArchiveBase:
+        """An additional archive for storing solutions found in this scheduler.
 
-        If `result_archive` was not passed to the constructor, this property is
-        the same as :attr:`archive`.
+        If `result_archive` was not passed to the constructor, this property is the same
+        as :attr:`archive`.
         """
         return self._archive if self._result_archive is None else self._result_archive
 
-    def ask_dqd(self):
+    def ask_dqd(self) -> None:
         """This method is not supported for this scheduler and throws an error.
 
         Raises:
@@ -200,7 +201,7 @@ class BanditScheduler:
         """
         raise NotImplementedError("ask_dqd() is not supported by BanditScheduler.")
 
-    def ask(self):
+    def ask(self) -> np.ndarray:
         """Generates a batch of solutions by calling ask() on all active emitters.
 
         The emitters used by ask are determined by the UCB1 algorithm. Briefly, emitters
@@ -211,8 +212,8 @@ class BanditScheduler:
             do not rearrange them.
 
         Returns:
-            (batch_size, dim) array: An array of n solutions to evaluate. Each row
-            contains a single solution.
+            A ``(batch_size, dim)`` array of solutions to evaluate. Each row contains a
+            single solution.
         Raises:
             RuntimeError: This method was called immediately after calling an ask
                 method.
@@ -301,19 +302,16 @@ class BanditScheduler:
         )
         return self._cur_solutions
 
-    def _check_length(self, name, arr):
-        """Raises a ValueError if array does not have the same length as the
-        solutions."""
-        if len(arr) != len(self._cur_solutions):
-            raise ValueError(
-                f"{name} should have length {len(self._cur_solutions)} "
-                "(this is the number of solutions output by ask()) but "
-                f"has length {len(arr)}"
-            )
-
+    _check_length = Scheduler._check_length
     _validate_tell_data = Scheduler._validate_tell_data
 
-    def tell_dqd(self, objective, measures, jacobian):
+    def tell_dqd(
+        self,
+        objective: ArrayLike | None,
+        measures: ArrayLike,
+        jacobian: ArrayLike,
+        **fields: ArrayLike | None,
+    ) -> None:
         """This method is not supported for this scheduler and throws an error.
 
         Raises:
@@ -321,24 +319,29 @@ class BanditScheduler:
         """
         raise NotImplementedError("tell_dqd() is not supported by BanditScheduler.")
 
-    def tell(self, objective, measures, **fields):
+    def tell(
+        self,
+        objective: ArrayLike | None,
+        measures: ArrayLike,
+        **fields: ArrayLike | None,
+    ) -> None:
         """Returns info for solutions from :meth:`ask`.
 
         The emitters are the same with those used in the last call to :meth:`ask`.
 
         .. note:: The objective and measures arrays must be in the same order as the
-            solutions created by :meth:`ask_dqd`; i.e. ``objective[i]`` and
-            ``measures[i]`` should be the objective and measures for ``solution[i]``.
+            solutions created by :meth:`ask`; i.e. ``objective[i]`` and ``measures[i]``
+            should be the objective and measures for ``solution[i]``.
 
         Args:
-            objective ((batch_size,) array or None): Each entry of this array contains
-                the objective function evaluation of a solution. This can also be None
-                to indicate there is no objective -- this would be the case in diversity
-                optimization problems.
-            measures ((batch_size, measures_dm) array): Each row of this array contains
-                a solution's coordinates in measure space.
-            fields (keyword arguments): Additional data for each solution. Each argument
-                should be an array with batch_size as the first dimension.
+            objective: ``(batch_size,)`` array where each entry contains the objective
+                function evaluation of a solution. This can also be None to indicate
+                there is no objective, which would be the case in diversity optimization
+                problems.
+            measures: ``(batch_size, measure_dim)`` where each row contains a solution's
+                coordinates in measure space.
+            fields: Additional data for each solution. Each argument should be an array
+                with ``batch_size`` as the first dimension.
         Raises:
             RuntimeError: This method was called without first calling :meth:`ask`.
             ValueError: One of the inputs has the wrong shape.
