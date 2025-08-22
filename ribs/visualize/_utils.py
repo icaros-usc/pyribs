@@ -1,20 +1,27 @@
 """Utilities shared by the visualize module."""
 
+from __future__ import annotations
+
+from collections.abc import Sequence
+
 import matplotlib.axes
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.typing import ColorType
 
 from ribs.archives import ArchiveDataFrame
 
 
-def retrieve_cmap(cmap):
+def retrieve_cmap(
+    cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap,
+) -> matplotlib.colors.Colormap:
     """Retrieves colormap from Matplotlib."""
     if isinstance(cmap, str):
         return plt.get_cmap(cmap)
-    if isinstance(cmap, list):
+    if isinstance(cmap, Sequence):
         return matplotlib.colors.ListedColormap(cmap)
-    return cmap
+    return cmap  # ty: ignore[invalid-return-type]
 
 
 def validate_heatmap_visual_args(

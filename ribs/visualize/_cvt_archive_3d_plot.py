@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Literal
+
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
+from matplotlib.typing import ColorType
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from mpl_toolkits.mplot3d.axes3d import Axes3D
 from scipy.spatial import Voronoi
@@ -23,22 +29,22 @@ def cvt_archive_3d_plot(
     ax: Axes3D | None = None,
     *,
     df: ArchiveDataFrame | None = None,
-    measure_order=None,
-    cmap="magma",
-    lw=0.5,
-    ec=(0.0, 0.0, 0.0, 0.1),
-    cell_alpha=1.0,
-    vmin=None,
-    vmax=None,
-    cbar="auto",
-    cbar_kwargs=None,
-    plot_elites=False,
-    elite_ms=100,
-    elite_alpha=0.5,
-    plot_centroids=False,
-    plot_samples=False,
-    ms=1,
-):
+    measure_order: Iterable[int] | None = None,
+    cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
+    lw: float = 0.5,
+    ec: ColorType = (0.0, 0.0, 0.0, 0.1),
+    cell_alpha: float = 1.0,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    cbar: Literal["auto"] | None | Axes = "auto",
+    cbar_kwargs: Mapping | None = None,
+    plot_elites: bool = False,
+    elite_ms: float = 100,
+    elite_alpha: float = 0.5,
+    plot_centroids: bool = False,
+    plot_samples: bool = False,
+    ms: float = 1,
+) -> None:
     """Plots a :class:`~ribs.archives.CVTArchive` with 3D measure space.
 
     This function relies on Matplotlib's `mplot3d
@@ -156,52 +162,48 @@ def cvt_archive_3d_plot(
             >>> plt.show()
 
     Args:
-        archive (CVTArchive): A 3D :class:`~ribs.archives.CVTArchive`.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If ``None``, we
-            will create a new 3D axis.
-        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from this
-            argument instead of the data currently in the archive. This data can be
-            obtained by, for instance, calling :meth:`ribs.archives.ArchiveBase.data`
-            with ``return_type="pandas"`` and modifying the resulting
-            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum, the data
-            must contain columns for index, objective, and measures. To display a custom
-            metric, replace the "objective" column.
-        measure_order (array-like of int): Specifies the axes order for plotting the
-            measures. By default, the first measure (measure 0) in the archive appears
-            on the x-axis, the second (measure 1) on y-axis, and third (measure 2) on
-            z-axis. This argument is an array of length 3 that specifies which measure
-            should appear on the x, y, and z axes. For instance, [2, 1, 0] will put
-            measure 2 on the x-axis, measure 1 on the y-axis, and measure 0 on the
-            z-axis.
-        cmap (str, list, matplotlib.colors.Colormap): The colormap to use when plotting
-            intensity. Either the name of a :class:`~matplotlib.colors.Colormap`, a list
-            of RGB or RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4`
-            array), or a :class:`~matplotlib.colors.Colormap` object.
-        lw (float): Line width when plotting the Voronoi diagram.
-        ec (matplotlib color): Edge color of the cells in the Voronoi diagram. See
+        archive: A 3D :class:`~ribs.archives.CVTArchive`.
+        ax: Axes on which to plot the heatmap. If ``None``, we will create a new 3D
+            axis.
+        df: If provided, we will plot data from this argument instead of the data
+            currently in the archive. This data can be obtained by, for instance,
+            calling :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
+            and modifying the resulting :class:`~ribs.archives.ArchiveDataFrame`. Note
+            that, at a minimum, the data must contain columns for index, objective, and
+            measures. To display a custom metric, replace the "objective" column.
+        measure_order: Specifies the axes order for plotting the measures. By default,
+            the first measure (measure 0) in the archive appears on the x-axis, the
+            second (measure 1) on y-axis, and third (measure 2) on z-axis. This argument
+            is an array of length 3 that specifies which measure should appear on the x,
+            y, and z axes. For instance, [2, 1, 0] will put measure 2 on the x-axis,
+            measure 1 on the y-axis, and measure 0 on the z-axis.
+        cmap: The colormap to use when plotting intensity. Either the name of a
+            :class:`~matplotlib.colors.Colormap`, a list of Matplotlib color
+            specifications (e.g., an :math:`N \\times 3` or :math:`N \\times 4` array --
+            see :class:`~matplotlib.colors.ListedColormap`), or a
+            :class:`~matplotlib.colors.Colormap` object.
+        lw: Line width when plotting the Voronoi diagram.
+        ec: Edge color of the cells in the Voronoi diagram. See
             `here <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ for
             more info on specifying colors in Matplotlib.
         cell_alpha: Alpha value for the cell colors. Set to 1.0 for opaque cells; set to
             0.0 for fully transparent cells.
-        vmin (float): Minimum objective value to use in the plot. If ``None``, the
-            minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If ``None``, the
-            maximum objective value in the archive is used.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to ``'auto'``
-            which displays the colorbar on the archive's current
-            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not displayed.
-            If this is an :class:`~matplotlib.axes.Axes`, displays the colorbar on the
-            specified Axes.
-        cbar_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.pyplot.colorbar`.
-        plot_elites (bool): If True, we will plot a scatter plot of the elites in the
+        vmin: Minimum objective value to use in the plot. If ``None``, the minimum
+            objective value in the archive is used.
+        vmax: Maximum objective value to use in the plot. If ``None``, the maximum
+            objective value in the archive is used.
+        cbar: By default, this is set to ``'auto'`` which displays the colorbar on the
+            archive's current :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar
+            is not displayed. If this is an :class:`~matplotlib.axes.Axes`, displays the
+            colorbar on the specified Axes.
+        cbar_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.colorbar`.
+        plot_elites: If True, we will plot a scatter plot of the elites in the
             archive. The elites will be colored according to their objective value.
-        elite_ms (float): Marker size for plotting elites.
-        elite_alpha (float): Alpha value for plotting elites.
-        plot_centroids (bool): Whether to plot the cluster centroids.
-        plot_samples (bool): Whether to plot the samples used when generating the
-            clusters.
-        ms (float): Marker size for both centroids and samples.
+        elite_ms: Marker size for plotting elites.
+        elite_alpha: Alpha value for plotting elites.
+        plot_centroids: Whether to plot the cluster centroids.
+        plot_samples: Whether to plot the samples used when generating the clusters.
+        ms: Marker size for both centroids and samples.
 
     Raises:
         ValueError: The archive's measure dimension must be 1D or 2D.
