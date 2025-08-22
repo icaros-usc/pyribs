@@ -126,6 +126,8 @@ select = [
   "I",  # isort
   "NPY",  # numpy
   "PD",  # pandas-vet
+  "PL",  # pylint
+  "PYI",  # flake8-pyi
   "PT",  # pytest
   "N",  # pep8-naming
   "E",  # pycodestyle errors
@@ -144,6 +146,20 @@ ignore = [
   "SIM108",  # if-else-block-instead-of-if-exp; rather opinionated.
   "PT011",  # pytest-raises-too-broad
   "PT030",  # pytest-warns-too-broad
+  "PLR2004",  # magic-value-comparison
+  "PLC0415",  # import-outside-top-level
+  "PLC0206",  # dict-index-missing-items
+  "PLW2901",  # redefined-loop-name
+  # These are pylint's errors about "too many X"
+  "PLR0904",
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0914",
+  "PLR0915",
+  "PLR0916",
+  "PLR0917",
+  "PLR1702",
 ]
 
 [tool.ruff.lint.pep8-naming]
