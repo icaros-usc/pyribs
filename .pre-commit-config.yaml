@@ -21,6 +21,12 @@ repos:
         args: [--select, I, --fix]
       # Run formatter.
       - id: ruff-format
+  - repo: local
+    hooks:
+      - id: ty
+        name: ty-check
+        language: system
+        entry: ty check
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.0.2
     hooks:
