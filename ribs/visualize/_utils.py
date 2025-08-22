@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Literal
 
 import matplotlib.axes
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.cm import ScalarMappable
 from matplotlib.typing import ColorType
+from pandas import DataFrame
 
-from ribs.archives import ArchiveDataFrame
+from ribs.archives import ArchiveDataFrame, CVTArchive, GridArchive
 
 
 def retrieve_cmap(
@@ -25,16 +29,20 @@ def retrieve_cmap(
 
 
 def validate_heatmap_visual_args(
-    aspect, cbar, measure_dim, valid_dims, error_msg_measure_dim
-):
+    aspect: Literal["auto", "equal"] | float | None,
+    cbar: Literal["auto"] | None | Axes,
+    measure_dim: int,
+    valid_dims: list[int],
+    error_msg_measure_dim: str,
+) -> None:
     """Helper function to validate arguments passed to `*_archive_heatmap` plotting
     functions.
 
     Args:
-        valid_dims (list[int]): All specified valid archive dimensions that may be
-            plotted into heatmaps.
-        error_msg_measure_dim (str): Error message in ValueError if archive dimension
-            plotting is not supported.
+        valid_dims: All specified valid archive dimensions that may be plotted into
+            heatmaps.
+        error_msg_measure_dim: Error message in ValueError if archive dimension plotting
+            is not supported.
 
     Raises:
         ValueError: if validity checks for heatmap args fail
@@ -53,7 +61,7 @@ def validate_heatmap_visual_args(
         )
 
 
-def validate_df(df):
+def validate_df(df: DataFrame | ArchiveDataFrame | None) -> ArchiveDataFrame:
     """Helper to validate the df passed into visualization functions."""
 
     # Cast to an ArchiveDataFrame in case someone passed in a regular DataFrame
@@ -64,7 +72,12 @@ def validate_df(df):
     return df
 
 
-def set_cbar(t, ax, cbar, cbar_kwargs):
+def set_cbar(
+    t: ScalarMappable,
+    ax: Axes,
+    cbar: Literal["auto"] | None | Axes,
+    cbar_kwargs: dict | None,
+) -> None:
     """Sets cbar on the Axes given cbar arg."""
     cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs
     if cbar == "auto":
@@ -74,20 +87,20 @@ def set_cbar(t, ax, cbar, cbar_kwargs):
 
 
 def archive_heatmap_1d(
-    archive,
+    archive: GridArchive | CVTArchive,
     *,
-    cell_boundaries,
-    cell_objectives,
-    ax,
-    cmap,
-    aspect,
-    vmin,
-    vmax,
-    cbar,
-    cbar_kwargs,
-    rasterized,
-    pcm_kwargs,
-):
+    cell_boundaries: np.ndarray,
+    cell_objectives: np.ndarray,
+    ax: Axes | None,
+    cmap: matplotlib.colors.Colormap,
+    aspect: Literal["auto", "equal"] | float,
+    vmin: float | None,
+    vmax: float | None,
+    cbar: Literal["auto"] | None | Axes,
+    cbar_kwargs: dict | None,
+    rasterized: bool,
+    pcm_kwargs: dict | None,
+) -> Axes:
     """Plots a heatmap of a 1D archive.
 
     The y-bounds of the plot are set to [0, 1].
@@ -95,26 +108,24 @@ def archive_heatmap_1d(
     Currently, this function supports GridArchive and CVTArchive.
 
     Args:
-        archive (ribs.archives.ArchiveBase): A 1D archive to plot.
-        cell_boundaries (np.ndarray): 1D array with the boundaries of the cells. Length
-            should be archive.cells + 1.
-        cell_objectives (np.ndarray): Objectives of all cells in the archive, with the
-            cells going from left to right. Length should be archive.cells. Empty cells
-            should have objective of NaN.
-        ax (matplotlib.axes.Axes): See heatmap methods, e.g., grid_archive_heatmap.
-        cmap (matplotlib.colors.Colormap): The colormap to use when plotting intensity.
-            Unlike in user-facing functions, we expect that this arg was already through
-            retrieve_cmap to get a colormap object.
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap. No default
-            value for this function, unlike in user-facing functions.
-        vmin (float): See heatmap methods, e.g., grid_archive_heatmap.
-        vmax (float): See heatmap methods, e.g., grid_archive_heatmap.
-        cbar ('auto', None, matplotlib.axes.Axes): See heatmap methods, e.g.,
-            grid_archive_heatmap.
-        cbar_kwargs (dict): See heatmap methods, e.g., grid_archive_heatmap.
-        rasterized (bool): See heatmap methods, e.g., grid_archive_heatmap.
-        pcm_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.pyplot.pcolormesh`.
+        archive: A 1D archive to plot.
+        cell_boundaries: 1D array with the boundaries of the cells. Length should be
+            archive.cells + 1.
+        cell_objectives: Objectives of all cells in the archive, with the cells going
+            from left to right. Length should be archive.cells. Empty cells should have
+            objective of NaN.
+        ax: See heatmap methods, e.g., grid_archive_heatmap.
+        cmap: The colormap to use when plotting intensity. Unlike in user-facing
+            functions, we expect that this arg was already passed through retrieve_cmap
+            to get a colormap object.
+        aspect: The aspect ratio of the heatmap. No default value for this function,
+            unlike in user-facing functions.
+        vmin: See heatmap methods, e.g., grid_archive_heatmap.
+        vmax: See heatmap methods, e.g., grid_archive_heatmap.
+        cbar: See heatmap methods, e.g., grid_archive_heatmap.
+        cbar_kwargs: See heatmap methods, e.g., grid_archive_heatmap.
+        rasterized: See heatmap methods, e.g., grid_archive_heatmap.
+        pcm_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.pcolormesh`.
     Returns:
         The Axes where the heatmap was plotted. This may be used to further modify the
         plot.

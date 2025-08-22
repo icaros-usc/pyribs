@@ -13,6 +13,7 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.typing import ColorType
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from mpl_toolkits.mplot3d.axes3d import Axes3D
+from pandas import DataFrame
 from scipy.spatial import Voronoi
 
 from ribs.archives import ArchiveDataFrame, CVTArchive
@@ -28,7 +29,7 @@ def cvt_archive_3d_plot(
     archive: CVTArchive,
     ax: Axes3D | None = None,
     *,
-    df: ArchiveDataFrame | None = None,
+    df: DataFrame | ArchiveDataFrame | None = None,
     measure_order: Iterable[int] | None = None,
     cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
     lw: float = 0.5,

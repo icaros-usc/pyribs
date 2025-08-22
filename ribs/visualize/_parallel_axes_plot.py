@@ -1,28 +1,37 @@
 """Provides parallel_axes_plot."""
 
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import Literal
+
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
+from matplotlib.typing import ColorType
+from pandas import DataFrame
 
+from ribs.archives import ArchiveBase, ArchiveDataFrame
 from ribs.visualize._utils import retrieve_cmap, set_cbar, validate_df
 
 
 def parallel_axes_plot(
-    archive,
-    ax=None,
+    archive: ArchiveBase,
+    ax: Axes | None = None,
     *,
-    df=None,
-    measure_order=None,
-    cmap="magma",
-    linewidth=1.5,
-    alpha=0.8,
-    vmin=None,
-    vmax=None,
-    sort_archive=False,
-    cbar="auto",
-    cbar_kwargs=None,
-):
+    df: DataFrame | ArchiveDataFrame | None = None,
+    measure_order: Sequence[int] | Sequence[tuple[int, str]] | None = None,
+    cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
+    linewidth: float = 1.5,
+    alpha: float = 0.8,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    sort_archive: bool = False,
+    cbar: Literal["auto"] | None | Axes = "auto",
+    cbar_kwargs: dict | None = None,
+) -> None:
     """Visualizes archive elites in measure space with a parallel axes plot.
 
     This visualization is meant to show the coverage of the measure space at a glance.
@@ -75,45 +84,42 @@ def parallel_axes_plot(
             >>> plt.show()
 
     Args:
-        archive (ArchiveBase): Any ribs archive.
-        ax (matplotlib.axes.Axes): Axes on which to create the plot. If ``None``, the
-            current axis will be used.
-        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from this
-            argument instead of the data currently in the archive. This data can be
-            obtained by, for instance, calling :meth:`ribs.archives.ArchiveBase.data`
-            with ``return_type="pandas"`` and modifying the resulting
-            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum, the data
-            must contain columns for index, objective, and measures. To display a custom
-            metric, replace the "objective" column.
-        measure_order (list of int or list of (int, str)): If this is a list of ints, it
-            specifies the axes order for measures (e.g. ``[2, 0, 1]``). If this is a
-            list of tuples, each tuple takes the form ``(int, str)`` where the int
-            specifies the measure index and the str specifies a name for the measure
-            (e.g. ``[(1, "y-value"), (2, "z-value"), (0, "x-value")]``). The order
-            specified does not need to have the same number of elements as the number of
-            measures in the archive, e.g. ``[1, 3]`` or ``[1, 2, 3, 2]``.
-        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when plotting
-            intensity. Either the name of a :class:`~matplotlib.colors.Colormap`, a list
-            of RGB or RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4`
-            array), or a :class:`~matplotlib.colors.Colormap` object.
-        linewidth (float): Line width for each elite in the plot.
-        alpha (float): Opacity of the line for each elite (passing a low value here may
-            be helpful if there are many archive elites, as more elites would be
-            visible).
-        vmin (float): Minimum objective value to use in the plot. If ``None``, the
-            minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If ``None``, the
-            maximum objective value in the archive is used.
-        sort_archive (bool): If ``True``, sorts the archive so that the highest
-            performing elites are plotted on top of lower performing elites.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to ``'auto'``
-            which displays the colorbar on the archive's current
-            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not displayed.
-            If this is an :class:`~matplotlib.axes.Axes`, displays the colorbar on the
-            specified Axes.
-        cbar_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.pyplot.colorbar`. By default, we set "orientation" to
-            "horizontal" and "pad" to 0.1.
+        archive: Any pyribs archive.
+        ax: Axes on which to create the plot. If ``None``, the current axis will be
+            used.
+        df: If provided, we will plot data from this argument instead of the data
+            currently in the archive. This data can be obtained by, for instance,
+            calling :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
+            and modifying the resulting :class:`~ribs.archives.ArchiveDataFrame`. Note
+            that, at a minimum, the data must contain columns for index, objective, and
+            measures. To display a custom metric, replace the "objective" column.
+        measure_order: If this is a list of ints, it specifies the axes order for
+            measures (e.g. ``[2, 0, 1]``). If this is a list of tuples, each tuple takes
+            the form ``(int, str)`` where the int specifies the measure index and the
+            str specifies a name for the measure (e.g. ``[(1, "y-value"), (2,
+            "z-value"), (0, "x-value")]``). The order specified does not need to have
+            the same number of elements as the number of measures in the archive, e.g.
+            ``[1, 3]`` or ``[1, 2, 3, 2]``.
+        cmap: The colormap to use when plotting intensity. Either the name of a
+            :class:`~matplotlib.colors.Colormap`, a list of Matplotlib color
+            specifications (e.g., an :math:`N \\times 3` or :math:`N \\times 4` array --
+            see :class:`~matplotlib.colors.ListedColormap`), or a
+            :class:`~matplotlib.colors.Colormap` object.
+        linewidth: Line width for each elite in the plot.
+        alpha: Opacity of the line for each elite (passing a low value here may be
+            helpful if there are many archive elites, as more elites would be visible).
+        vmin: Minimum objective value to use in the plot. If ``None``, the minimum
+            objective value in the archive is used.
+        vmax: Maximum objective value to use in the plot. If ``None``, the maximum
+            objective value in the archive is used.
+        sort_archive: If ``True``, sorts the archive so that the highest performing
+            elites are plotted on top of lower performing elites.
+        cbar: By default, this is set to ``'auto'`` which displays the colorbar on the
+            archive's current :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar
+            is not displayed. If this is an :class:`~matplotlib.axes.Axes`, displays the
+            colorbar on the specified Axes.
+        cbar_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.colorbar`.
+            By default, we set "orientation" to "horizontal" and "pad" to 0.1.
 
     Raises:
         ValueError: The measures provided do not exist in the archive.
@@ -136,9 +142,9 @@ def parallel_axes_plot(
             cols = np.array(measure_order)
             axis_labels = [f"measure_{i}" for i in cols]
         elif all(
-            len(measure) == 2
-            and isinstance(measure[0], int)
-            and isinstance(measure[1], str)
+            len(measure) == 2  # ty: ignore[non-subscriptable,invalid-argument-type]
+            and isinstance(measure[0], int)  # ty: ignore[non-subscriptable]
+            and isinstance(measure[1], str)  # ty: ignore[non-subscriptable]
             for measure in measure_order
         ):
             cols, axis_labels = zip(*measure_order)
@@ -168,7 +174,7 @@ def parallel_axes_plot(
     vmax = df["objective"].max() if vmax is None else vmax
     norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
     if sort_archive:
-        df.sort_values("objective", inplace=True)
+        df = df.sort_values("objective")
     objectives = df.get_field("objective")
     ys = df.get_field("measures")[:, cols]
     y_ranges = upper_bounds - lower_bounds
@@ -213,5 +219,4 @@ def parallel_axes_plot(
     cbar_kwargs = {} if cbar_kwargs is None else cbar_kwargs.copy()
     cbar_kwargs.setdefault("orientation", "horizontal")
     cbar_kwargs.setdefault("pad", 0.1)
-
     set_cbar(mappable, host_ax, cbar, cbar_kwargs)

@@ -13,6 +13,7 @@ import shapely
 from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
 from matplotlib.typing import ColorType
+from pandas import DataFrame
 from scipy.spatial import Voronoi
 
 from ribs.archives import ArchiveDataFrame, CVTArchive
@@ -29,7 +30,7 @@ def cvt_archive_heatmap(
     archive: CVTArchive,
     ax: Axes | None = None,
     *,
-    df: ArchiveDataFrame | None = None,
+    df: DataFrame | ArchiveDataFrame | None = None,
     transpose_measures: bool = False,
     cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
     aspect: Literal["auto", "equal"] | float | None = None,

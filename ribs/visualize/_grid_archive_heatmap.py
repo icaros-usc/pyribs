@@ -1,8 +1,18 @@
 """Provides grid_archive_heatmap."""
 
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import Literal
+
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.typing import ColorType
+from pandas import DataFrame
 
+from ribs.archives import ArchiveDataFrame, GridArchive
 from ribs.visualize._utils import (
     archive_heatmap_1d,
     retrieve_cmap,
@@ -13,20 +23,20 @@ from ribs.visualize._utils import (
 
 
 def grid_archive_heatmap(
-    archive,
-    ax=None,
+    archive: GridArchive,
+    ax: Axes | None = None,
     *,
-    df=None,
-    transpose_measures=False,
-    cmap="magma",
-    aspect=None,
-    vmin=None,
-    vmax=None,
-    cbar="auto",
-    cbar_kwargs=None,
-    rasterized=False,
-    pcm_kwargs=None,
-):
+    df: DataFrame | ArchiveDataFrame | None = None,
+    transpose_measures: bool = False,
+    cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
+    aspect: Literal["auto", "equal"] | float | None = None,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    cbar: Literal["auto"] | None | Axes = "auto",
+    cbar_kwargs: dict | None = None,
+    rasterized: bool = False,
+    pcm_kwargs: dict | None = None,
+) -> None:
     """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 1D or 2D measure
     space.
 
@@ -88,47 +98,42 @@ def grid_archive_heatmap(
             >>> plt.show()
 
     Args:
-        archive (GridArchive): A 1D or 2D :class:`~ribs.archives.GridArchive`.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If ``None``, the
-            current axis will be used.
-        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from this
-            argument instead of the data currently in the archive. This data can be
-            obtained by, for instance, calling :meth:`ribs.archives.ArchiveBase.data`
-            with ``return_type="pandas"`` and modifying the resulting
-            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum, the data
-            must contain columns for index, objective, and measures. To display a custom
-            metric, replace the "objective" column.
-        transpose_measures (bool): By default, the first measure in the archive will
-            appear along the x-axis, and the second will be along the y-axis. To switch
-            this behavior (i.e. to transpose the axes), set this to ``True``. Does not
-            apply for 1D archives.
-        cmap (str, list, matplotlib.colors.Colormap): The colormap to use when plotting
-            intensity. Either the name of a :class:`~matplotlib.colors.Colormap`, a list
-            of RGB or RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4`
-            array), or a :class:`~matplotlib.colors.Colormap` object.
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
-            height/width). Defaults to ``'auto'`` for 2D and ``0.5`` for 1D.
-            ``'equal'`` is the same as ``aspect=1``. See
-            :meth:`matplotlib.axes.Axes.set_aspect` for more info.
-        vmin (float): Minimum objective value to use in the plot. If ``None``, the
-            minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If ``None``, the
-            maximum objective value in the archive is used.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to ``'auto'``
-            which displays the colorbar on the archive's current
-            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not displayed.
-            If this is an :class:`~matplotlib.axes.Axes`, displays the colorbar on the
-            specified Axes.
-        cbar_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.pyplot.colorbar`.
-        rasterized (bool): Whether to rasterize the heatmap. This can be useful for
-            saving to a vector format like PDF. Essentially, only the heatmap will be
-            converted to a raster graphic so that the archive cells will not have to be
-            individually rendered. Meanwhile, the surrounding axes, particularly text
-            labels, will remain in vector format. This is implemented by passing
-            ``rasterized`` to :func:`~matplotlib.pyplot.pcolormesh`, so passing
-            ``"rasterized"`` in the ``pcm_kwargs`` below will raise an error.
-        pcm_kwargs (dict): Additional kwargs to pass to
+        archive: A 1D or 2D :class:`~ribs.archives.GridArchive`.
+        ax: Axes on which to plot the heatmap.  If ``None``, the current axis will be
+            used.
+        df: If provided, we will plot data from this argument instead of the data
+            currently in the archive. This data can be obtained by, for instance,
+            calling :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
+            and modifying the resulting :class:`~ribs.archives.ArchiveDataFrame`. Note
+            that, at a minimum, the data must contain columns for index, objective, and
+            measures. To display a custom metric, replace the "objective" column.
+        transpose_measures: By default, the first measure in the archive will appear
+            along the x-axis, and the second will be along the y-axis. To switch this
+            behavior (i.e. to transpose the axes), set this to ``True``. Does not apply
+            for 1D archives.
+        cmap: The colormap to use when plotting intensity. Either the name of a
+            :class:`~matplotlib.colors.Colormap`, a list of Matplotlib color
+            specifications (e.g., an :math:`N \\times 3` or :math:`N \\times 4` array --
+            see :class:`~matplotlib.colors.ListedColormap`), or a
+            :class:`~matplotlib.colors.Colormap` object.
+        aspect: The aspect ratio of the heatmap (i.e. height/width). Defaults to
+            ``'auto'`` for 2D and ``0.5`` for 1D. ``'equal'`` is the same as
+            ``aspect=1``. See :meth:`matplotlib.axes.Axes.set_aspect` for more info.
+        vmin: Minimum objective value to use in the plot. If ``None``, the minimum
+            objective value in the archive is used.
+        vmax: Maximum objective value to use in the plot. If ``None``, the maximum
+            objective value in the archive is used.
+        cbar: By default, this is set to ``'auto'`` which displays the colorbar on the
+            archive's current :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar
+            is not displayed. If this is an :class:`~matplotlib.axes.Axes`, displays the
+            colorbar on the specified Axes.
+        cbar_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.colorbar`.
+        rasterized: Whether to rasterize the heatmap. This can be useful for saving to a
+            vector format like PDF. Essentially, only the heatmap will be converted to a
+            raster graphic so that the archive cells will not have to be individually
+            rendered. Meanwhile, the surrounding axes, particularly text labels, will
+            remain in vector format.
+        pcm_kwargs: Additional kwargs to pass to
             :func:`~matplotlib.pyplot.pcolormesh`.
 
     Raises:
