@@ -286,6 +286,7 @@ autodoc_type_aliases = {
     # Aliases that we do not want to expand.
     # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_type_aliases
     "ArrayLike": "numpy.typing.ArrayLike",
+    "DTypeLike": "numpy.typing.DTypeLike",
     "ColorType": "matplotlib.typing.ColorType",
 }
 autosummary_generate = True
