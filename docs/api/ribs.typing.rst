@@ -12,3 +12,5 @@ ribs.typing
 .. autodata:: ribs.typing.SingleData
 .. autodata:: ribs.typing.Int
 .. autodata:: ribs.typing.Float
+.. autodata:: ribs.typing.Array
+.. autodata:: ribs.typing.Device
