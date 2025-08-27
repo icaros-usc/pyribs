@@ -21,7 +21,6 @@ def _as_cvt_archive(
     ranges: Sequence[tuple[float, float]],
 ) -> CVTArchive:
     """Converts a QDax repertoire into a CVTArchive."""
-
     # Construct a CVTArchive. We set solution_dim to 0 since we are only plotting and do
     # not need to have the solutions available.
     cvt_archive = CVTArchive(
@@ -73,10 +72,10 @@ def qdax_repertoire_heatmap(
             does not store measure space bounds.
         *args: Positional arguments to pass to :meth:`cvt_archive_heatmap`.
         **kwargs: Keyword arguments to pass to :meth:`cvt_archive_heatmap`.
+
     Raises:
         ValueError: The repertoire passed in has more than one fitness.
     """
-
     cvt_archive_heatmap(_as_cvt_archive(repertoire, ranges), *args, **kwargs)
 
 
@@ -102,6 +101,7 @@ def qdax_repertoire_3d_plot(
             measure space bounds.
         *args: Positional arguments to pass to :meth:`cvt_archive_3d_plot`.
         **kwargs: Keyword arguments to pass to :meth:`cvt_archive_3d_plot`.
+
     Raises:
         ValueError: The repertoire passed in has more than one fitness.
     """

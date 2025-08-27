@@ -37,8 +37,7 @@ def grid_archive_heatmap(
     rasterized: bool = False,
     pcm_kwargs: dict | None = None,
 ) -> None:
-    """Plots heatmap of a :class:`~ribs.archives.GridArchive` with 1D or 2D measure
-    space.
+    r"""Plots heatmap of a :class:`~ribs.archives.GridArchive` with 1D or 2D measure space.
 
     This function creates a grid of cells and shades each cell with a color
     corresponding to the objective value of that cell's elite. This function uses
@@ -113,7 +112,7 @@ def grid_archive_heatmap(
             for 1D archives.
         cmap: The colormap to use when plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of Matplotlib color
-            specifications (e.g., an :math:`N \\times 3` or :math:`N \\times 4` array --
+            specifications (e.g., an :math:`N \times 3` or :math:`N \times 4` array --
             see :class:`~matplotlib.colors.ListedColormap`), or a
             :class:`~matplotlib.colors.Colormap` object.
         aspect: The aspect ratio of the heatmap (i.e. height/width). Defaults to
