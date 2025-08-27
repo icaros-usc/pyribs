@@ -18,7 +18,7 @@
 
 #### Bugs
 
-- Fix bug in ribs.visualize args tests ({pr}`613`)
+- Fix bug in ribs.visualize args tests ({pr}`615`)
 
 ## 0.8.2
 
