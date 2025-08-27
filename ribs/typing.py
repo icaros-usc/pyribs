@@ -1,6 +1,6 @@
 """Custom data types for pyribs."""
 
-# DEVELOPER NOTE: When adding new types, make sure to update the API listing in
+# Developer Note: When adding new types, make sure to update the API listing in
 # `docs/api/ribs.typing.rst`.
 
 from __future__ import annotations
