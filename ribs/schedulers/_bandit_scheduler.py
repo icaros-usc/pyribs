@@ -48,8 +48,8 @@ class BanditScheduler:
         result_archive: An additional archive where all solutions are added. For
             example, in CMA-MAE, this archive stores all the best-performing solutions,
             since the main archive does not store all the best-performing solutions.
-        num_active (int): The number of active emitters at a time. Active emitters are
-            used when calling ask-tell.
+        num_active: The number of active emitters at a time. Active emitters are used
+            when calling ask-tell.
         reselect: Indicates how emitters are reselected from the pool. The default is
             "terminated", where only terminated/restarted emitters are deactivated and
             reselected (but they might be selected again). Alternatively, use "all" to
@@ -129,7 +129,7 @@ class BanditScheduler:
 
         if reselect not in ["terminated", "all"]:
             raise ValueError(
-                f"add_mode must either be 'terminated' or 'all',but it was '{reselect}'"
+                f"add_mode must either be 'terminated' or 'all', but it was '{reselect}'"
             )
 
         if add_mode not in ["single", "batch"]:
