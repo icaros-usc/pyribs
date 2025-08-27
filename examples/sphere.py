@@ -833,6 +833,7 @@ def sphere(solutions):
 
     Args:
         solutions (np.ndarray): (batch_size, dim) batch of solutions.
+
     Returns:
         objectives (np.ndarray): (batch_size,) batch of objectives.
         objective_grads (np.ndarray): (batch_size, solution_dim) batch of objective
@@ -895,6 +896,7 @@ def create_scheduler(config, algorithm, seed=None):
             components.
         algorithm (string): Name of the algorithm.
         seed (int): Main seed for the various components.
+
     Returns:
         ribs.schedulers.Scheduler: A ribs scheduler for running the algorithm.
     """

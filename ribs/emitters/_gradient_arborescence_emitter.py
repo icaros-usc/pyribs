@@ -11,34 +11,31 @@ from ribs.emitters.rankers import _get_ranker
 
 
 class GradientArborescenceEmitter(EmitterBase):
-    """Generates solutions with a gradient arborescence, with coefficients parameterized
-    by an evolution strategy.
+    r"""Generates solutions with a gradient arborescence, with coefficients parameterized by an evolution strategy.
 
     This emitter originates in `Fontaine 2021 <https://arxiv.org/abs/2106.03894>`_. It
     leverages the gradient information of the objective and measure functions,
-    generating new solutions around a *solution point* :math:`\\boldsymbol{\\theta}`
-    using *gradient arborescence*, with coefficients drawn from a Gaussian distribution.
+    generating new solutions around a *solution point* :math:`\boldsymbol{\theta}` using
+    *gradient arborescence*, with coefficients drawn from a Gaussian distribution.
     Essentially, this means that the emitter samples coefficients
-    :math:`\\boldsymbol{c_i} \\sim \\mathcal{N}(\\boldsymbol{\\mu},
-    \\boldsymbol{\\Sigma})` and creates new solutions :math:`\\boldsymbol{\\theta'_i}`
-    according to
+    :math:`\boldsymbol{c_i} \sim \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})` and
+    creates new solutions :math:`\boldsymbol{\theta'_i}` according to
 
     .. math::
 
-        \\boldsymbol{\\theta'_i} \\gets \\boldsymbol{\\theta} +
-            c_{i,0} \\boldsymbol{\\nabla} f(\\boldsymbol{\\theta}) +
-            \\sum_{j=1}^k c_{i,j}\\boldsymbol{\\nabla}m_j(\\boldsymbol{\\theta})
+        \boldsymbol{\theta'_i} \gets \boldsymbol{\theta} +
+            c_{i,0} \boldsymbol{\nabla} f(\boldsymbol{\theta}) +
+            \sum_{j=1}^k c_{i,j}\boldsymbol{\nabla}m_j(\boldsymbol{\theta})
 
     Where :math:`k` is the number of measures, and
-    :math:`\\boldsymbol{\\nabla} f(\\boldsymbol{\\theta})` and
-    :math:`\\boldsymbol{\\nabla} m_j(\\boldsymbol{\\theta})` are the objective and
-    measure gradients of the solution point :math:`\\boldsymbol{\\theta}`, respectively.
+    :math:`\boldsymbol{\nabla} f(\boldsymbol{\theta})` and
+    :math:`\boldsymbol{\nabla} m_j(\boldsymbol{\theta})` are the objective and
+    measure gradients of the solution point :math:`\boldsymbol{\theta}`, respectively.
 
     Based on how the solutions are ranked after being inserted into the archive (see
-    ``ranker``), the solution point :math:`\\boldsymbol{\\theta}` is updated with
-    gradient ascent, and the coefficient distribution parameters
-    :math:`\\boldsymbol{\\mu}` and :math:`\\boldsymbol{\\Sigma}` are updated with an ES
-    (the default ES is CMA-ES).
+    ``ranker``), the solution point :math:`\boldsymbol{\theta}` is updated with gradient
+    ascent, and the coefficient distribution parameters :math:`\boldsymbol{\mu}` and
+    :math:`\boldsymbol{\Sigma}` are updated with an ES (the default ES is CMA-ES).
 
     .. note::
 
@@ -47,7 +44,6 @@ class GradientArborescenceEmitter(EmitterBase):
         and :meth:`tell` to communicate the gradient information to the emitter.
 
     See Also:
-
         Our DQD tutorial goes into detail on how to use this emitter:
         :doc:`/tutorials/tom_cruise_dqd`
 
@@ -113,6 +109,7 @@ class GradientArborescenceEmitter(EmitterBase):
             Pass this parameter to configure that epsilon.
         seed (int): Value to seed the random number generator. Set to None to avoid a
             fixed seed.
+
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: ``bounds`` is set even though it is not currently supported.
@@ -242,8 +239,7 @@ class GradientArborescenceEmitter(EmitterBase):
 
     @property
     def epsilon(self):
-        """int: The epsilon added for numerical stability when normalizing
-        gradients in :meth:`tell_dqd`."""
+        """float: Added for numerical stability when normalizing gradients in :meth:`tell_dqd`."""
         return self._epsilon
 
     def ask_dqd(self):
@@ -258,11 +254,10 @@ class GradientArborescenceEmitter(EmitterBase):
         return self._grad_opt.theta[None]
 
     def ask(self):
-        """Samples new solutions from a gradient arborescence parameterized by a
-        multivariate Gaussian distribution.
+        """Samples new solutions from a gradient arborescence.
 
-        The multivariate Gaussian is parameterized by the evolution strategy optimizer
-        ``self._opt``.
+        The coefficients come from a multivariate Gaussian distribution that is managed
+        by the evolution strategy optimizer ``self._opt``.
 
         This method returns ``batch_size`` solutions, even though one solution is
         returned via ``ask_dqd``.
@@ -270,6 +265,7 @@ class GradientArborescenceEmitter(EmitterBase):
         Returns:
             (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
+
         Raises:
             RuntimeError: This method was called without first passing gradients with
                 calls to ask_dqd() and tell_dqd().
@@ -290,6 +286,7 @@ class GradientArborescenceEmitter(EmitterBase):
         Args:
             num_parents (int): The number of solution to propagate to the next
                 generation from the solutions generated by CMA-ES.
+
         Raises:
             ValueError: If :attr:`restart_rule` is invalid.
         """
@@ -354,6 +351,7 @@ class GradientArborescenceEmitter(EmitterBase):
                 :meth:`~ribs.archives.ArchiveBase.add` method.
             fields (keyword arguments): Additional data for each solution. Each argument
                 should be an array with batch_size as the first dimension.
+
         Raises:
             RuntimeError: This method was called without first passing gradients with
                 calls to ask_dqd() and tell_dqd().

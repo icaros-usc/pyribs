@@ -64,6 +64,7 @@ class EvolutionStrategyEmitter(EmitterBase):
             rules.
         seed (int): Value to seed the random number generator. Set to None to avoid a
             fixed seed.
+
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
@@ -149,8 +150,10 @@ class EvolutionStrategyEmitter(EmitterBase):
 
     @property
     def itrs(self):
-        """int: The number of iterations for this emitter, where each iteration is a
-        call to :meth:`tell`."""
+        """int: The number of iterations for this emitter.
+
+        Each iteration is a call to :meth:`tell`.
+        """
         return self._itrs
 
     def ask(self):

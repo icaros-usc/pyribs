@@ -1,4 +1,4 @@
-"""Quantifies the performance of different centroid generation techniques
+"""Quantifies the performance of different centroid generation techniques.
 
 To measure how well a generation technique, i.e., random centroids, CVT, etc, performs,
 we measure the probability of generating a random point within a certain region defined
@@ -22,7 +22,7 @@ from ribs.archives import CVTArchive
 
 
 def get_score(centroids, num_samples, seed):
-    """Returns the performance of generated centroids
+    """Returns the performance of generated centroids.
 
     Args:
         centroids (numpy.ndarray): centroids being evaluated
@@ -33,7 +33,6 @@ def get_score(centroids, num_samples, seed):
         float: probability a sampled point hits a region
 
     """
-
     num_centroids = centroids.shape[0]
     centroid_dim = centroids.shape[1]
 
@@ -58,9 +57,7 @@ def get_score(centroids, num_samples, seed):
 
 
 def main():
-    """Benchmarks 6 different centroid generation techniques used in the aforementioned
-    paper."""
-
+    """Benchmarks the different centroid generation techniques."""
     # Default settings to benchmark different centroid generation techniques.
     score_seed = 1823170571
     num_samples = 100000

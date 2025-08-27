@@ -44,7 +44,7 @@ class ArchiveBase(ABC):
 
     @property
     def solution_dim(self):
-        """int or tuple of int: Dimensionality of the solution space."""
+        """int or tuple of int: Dimensionality of the solution space."""  # noqa: D403
         return self._solution_dim
 
     @property
@@ -52,7 +52,7 @@ class ArchiveBase(ABC):
         """int or empty tuple: Dimensionality of the objective space.
 
         The empty tuple ``()`` indicates a scalar objective.
-        """
+        """  # noqa: D403
         return self._objective_dim
 
     @property
@@ -95,7 +95,6 @@ class ArchiveBase(ABC):
         """Creates an iterator over the elites in the archive.
 
         Example:
-
             ::
 
                 for elite in archive:
@@ -188,9 +187,11 @@ class ArchiveBase(ABC):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of measure
                 space points at which to retrieve solutions.
+
         Returns:
             tuple: 2-element tuple of (boolean ``occupied`` array, dict of elite data).
             See above for description.
+
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -213,8 +214,10 @@ class ArchiveBase(ABC):
 
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures.
+
         Returns:
             tuple: 2-element tuple of (boolean, dict of data for one elite)
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -304,7 +307,6 @@ class ArchiveBase(ABC):
         sampling methods may be supported in the future.
 
         Example:
-
             ::
 
                 elites = archive.sample_elites(16)
@@ -315,8 +317,10 @@ class ArchiveBase(ABC):
 
         Args:
             n (int): Number of elites to sample.
+
         Returns:
             dict: Holds a batch of elites randomly selected from the archive.
+
         Raises:
             IndexError: The archive is empty.
         """

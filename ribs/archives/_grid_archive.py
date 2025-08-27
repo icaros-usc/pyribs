@@ -81,6 +81,7 @@ class GridArchive(ArchiveBase):
             "foo" field that contains scalar values and a "bar" field that contains 10D
             values. Note that field names must be valid Python identifiers, and names
             already used in the archive are not allowed.
+
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
@@ -234,8 +235,7 @@ class GridArchive(ArchiveBase):
 
     @property
     def interval_size(self):
-        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds -
-        lower_bounds)."""
+        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds - lower_bounds)."""
         return self._interval_size
 
     @property
@@ -253,13 +253,15 @@ class GridArchive(ArchiveBase):
         bounds of cell ``j`` in dimension ``i``. To access the lower bounds of all the
         cells in dimension ``i``, use ``boundaries[i][:-1]``, and to access all the
         upper bounds, use ``boundaries[i][1:]``.
-        """
+        """  # noqa: D403
         return self._boundaries
 
     @property
     def epsilon(self):
-        """dtypes["measures"]: Epsilon for computing archive indices. Refer to the
-        documentation for this class."""
+        """dtypes["measures"]: Epsilon for computing archive indices.
+
+        Refer to the documentation for this class.
+        """
         return self._epsilon
 
     @property
@@ -274,8 +276,7 @@ class GridArchive(ArchiveBase):
 
     @property
     def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when computing
-        the QD score."""
+        """float: Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     ## dunder methods ##
@@ -302,8 +303,11 @@ class GridArchive(ArchiveBase):
         )
 
     def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values (new_objective_sum)
-        and the index of a potential new best elite (new_best_index)."""
+        """Updates archive statistics.
+
+        Update is based on a new sum of objective values (new_objective_sum) and the
+        index of a potential new best elite (new_best_index).
+        """
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
@@ -359,9 +363,11 @@ class GridArchive(ArchiveBase):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
+
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing the
             flattened grid coordinates.
+
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -391,9 +397,11 @@ class GridArchive(ArchiveBase):
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures for a single
                 solution.
+
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's storage
             arrays.
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -411,8 +419,10 @@ class GridArchive(ArchiveBase):
         Args:
             grid_indices (array-like): (batch_size, :attr:`measure_dim`) array of
                 indices in the archive grid.
+
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices.
+
         Raises:
             ValueError: ``grid_indices`` is not of shape (batch_size,
                 :attr:`measure_dim`).
@@ -430,9 +440,11 @@ class GridArchive(ArchiveBase):
         Args:
             int_indices (array-like): (batch_size,) array of integer indices such as
                 those output by :meth:`index_of`.
+
         Returns:
             numpy.ndarray: (batch_size, :attr:`measure_dim`) array of indices in the
             archive grid.
+
         Raises:
             ValueError: ``int_indices`` is not of shape (batch_size,).
         """

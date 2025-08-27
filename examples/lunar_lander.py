@@ -73,6 +73,7 @@ def simulate(model, seed=None, video_env=None):
         seed (int): The seed for the environment.
         video_env (gym.Env): If passed in, this will be used instead of creating a new
             env. This is used primarily for recording video during evaluation.
+
     Returns:
         total_reward (float): The reward accrued by the lander throughout its
             trajectory.
@@ -191,6 +192,7 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
         env_seed (int): Seed for the environment.
         iterations (int): Iterations to run.
         log_freq (int): Number of iterations to wait before recording metrics.
+
     Returns:
         dict: A mapping from various metric names to a list of "x" and "y" values where
         x is the iteration and y is the value of the metric. Think of each entry as the

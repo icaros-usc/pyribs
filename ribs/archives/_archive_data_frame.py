@@ -20,7 +20,6 @@ class ArchiveDataFrame(pd.DataFrame):
     elites. This documentation only lists these additional methods and attributes.
 
     Example:
-
         This object is created by :meth:`~ArchiveBase.data` (i.e. users typically do not
         create it on their own)::
 

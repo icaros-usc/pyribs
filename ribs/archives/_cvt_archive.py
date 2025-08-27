@@ -128,6 +128,7 @@ class CVTArchive(ArchiveBase):
             we do not pass in any kwargs.
         chunk_size (int): If passed, brute forcing the closest centroid search will
             chunk the distance calculations to compute chunk_size inputs at a time.
+
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
@@ -362,8 +363,7 @@ class CVTArchive(ArchiveBase):
 
     @property
     def interval_size(self):
-        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds -
-        lower_bounds)."""
+        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds - lower_bounds)."""
         return self._interval_size
 
     @property
@@ -378,23 +378,19 @@ class CVTArchive(ArchiveBase):
 
     @property
     def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when computing
-        the QD score."""
+        """float: Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     @property
     def centroids(self):
-        """(n_centroids, measure_dim) numpy.ndarray: The centroids used in the
-        CVT.
-        """
+        """(n_centroids, measure_dim) numpy.ndarray: Centroids used in the CVT."""
         return self._centroids
 
     @property
     def samples(self):
-        """(num_samples, measure_dim) numpy.ndarray: The samples used in creating the
-        CVT.
+        """(num_samples, measure_dim) numpy.ndarray: Samples used in creating the CVT.
 
-        Will be None if custom centroids were passed in to the archive.
+        None if custom centroids were passed in to the archive.
         """
         return self._samples
 
@@ -422,8 +418,11 @@ class CVTArchive(ArchiveBase):
         )
 
     def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values (new_objective_sum)
-        and the index of a potential new best elite (new_best_index)."""
+        """Updates archive statistics.
+
+        Update is based on a new sum of objective values (new_objective_sum) and the
+        index of a potential new best elite (new_best_index).
+        """
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
@@ -456,8 +455,7 @@ class CVTArchive(ArchiveBase):
         )
 
     def index_of(self, measures):
-        """Finds the indices of the centroid closest to the given coordinates in measure
-        space.
+        """Finds indices of the centroids closest to the given measures.
 
         If ``index_batch`` is the batch of indices returned by this method, then
         ``archive.centroids[index_batch[i]]`` holds the coordinates of the centroid
@@ -469,9 +467,11 @@ class CVTArchive(ArchiveBase):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
+
         Returns:
             numpy.ndarray: (batch_size,) array of centroid indices
             corresponding to each measure space coordinate.
+
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -515,9 +515,11 @@ class CVTArchive(ArchiveBase):
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures for a single
                 solution.
+
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's storage
             arrays.
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
