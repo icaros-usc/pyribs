@@ -19,6 +19,7 @@
 
 #### Bugs
 
+- Correct types of ArchiveStats obj_max and obj_mean ({pr}`617`)
 - Fix bug in ribs.visualize args tests ({pr}`615`)
 
 ## 0.8.2
