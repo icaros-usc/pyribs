@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Union
 
 import numpy as np
 
@@ -15,3 +15,9 @@ BatchData = dict[str, np.ndarray]
 
 #: Represents data about a single solution.
 SingleData = dict[str, Any]
+
+#: General type for integers.
+Int = Union[int, np.integer]
+
+#: General type for floats.
+Float = Union[float, np.floating]
