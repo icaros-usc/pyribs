@@ -126,7 +126,7 @@ select = [
   "I",  # isort
   "NPY",  # numpy
   "PD",  # pandas-vet
-  "D",  # pydocstyle
+  # "D",  # pydocstyle
   "PL",  # pylint
   "PYI",  # flake8-pyi
   "PT",  # pytest
