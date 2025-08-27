@@ -212,8 +212,10 @@ def readonly(arr):
 
 
 def arr_readonly(arr):
-    """Sets an array to be readonly if possible. Inteded to support arrays across
-    libraries; currently only supports numpy."""
+    """Sets an array to be readonly if possible.
+
+    Intended to support arrays across libraries; currently only supports numpy.
+    """
     if isinstance(arr, np_compat.ndarray):
         readonly_arr = arr.view()
         readonly_arr.flags.writeable = False

@@ -67,6 +67,7 @@ class CategoricalArchive(ArchiveBase):
             "foo" field that contains scalar values and a "bar" field that contains 10D
             values. Note that field names must be valid Python identifiers, and names
             already used in the archive are not allowed.
+
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
@@ -191,8 +192,7 @@ class CategoricalArchive(ArchiveBase):
 
     @property
     def categories(self):
-        """list of list of any: The categories in each dimension of the measure
-        space."""
+        """list of list: The categories in each dimension of the measure space."""  # noqa: D403
         return self._categories
 
     @property
@@ -217,8 +217,7 @@ class CategoricalArchive(ArchiveBase):
 
     @property
     def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when computing
-        the QD score."""
+        """float: Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     ## dunder methods ##
@@ -245,8 +244,11 @@ class CategoricalArchive(ArchiveBase):
         )
 
     def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values (new_objective_sum)
-        and the index of a potential new best elite (new_best_index)."""
+        """Updates archive statistics.
+
+        Update is based on a new sum of objective values (new_objective_sum) and the
+        index of a potential new best elite (new_best_index).
+        """
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
@@ -287,9 +289,11 @@ class CategoricalArchive(ArchiveBase):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
+
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing the
             flattened grid coordinates.
+
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -312,9 +316,11 @@ class CategoricalArchive(ArchiveBase):
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures for a single
                 solution.
+
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's storage
             arrays.
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).

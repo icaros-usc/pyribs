@@ -26,6 +26,7 @@ def gaussian_kde_measures(measures, buffer, h):
         buffer (np.ndarray): (buffer_batch_size, measure_dim) batch of measures that
             parameterize the KDE.
         h (float): Kernel bandwidth.
+
     Returns:
         Evaluation of KDE(m).
     """
@@ -85,6 +86,7 @@ class DensityArchive(ArchiveBase):
             / ``np.float32``, ``"d"`` / ``np.float64``. For consistency with other
             archives, this can also be a dict specifying separate dtypes, of the form
             ``{"solution": <dtype>, "objective": <dtype>, "measures": <dtype>}``.
+
     Raises:
         ValueError: Unknown ``density_method`` provided.
     """
@@ -138,16 +140,20 @@ class DensityArchive(ArchiveBase):
     # Necessary to implement this since `Scheduler` calls it.
     @property
     def empty(self):
-        """bool: Whether the archive is empty. Since the archive does not store elites,
-        we always mark it as not empty."""
+        """bool: Whether the archive is empty; always ``False``.
+
+        Since the archive does not store elites, we always mark it as not empty.
+        """
         return False
 
     ## Properties that are not in ArchiveBase ##
 
     @property
     def buffer(self):
-        """numpy.ndarray: Buffer of measures considered in the density estimator. Shape
-        (n, :attr:`measure_dim`)."""
+        """numpy.ndarray: Buffer of measures considered in the density estimator.
+
+        Shape (n, :attr:`measure_dim`).
+        """
         return readonly(self._buffer[: self._n_occupied])
 
     ## Utilities ##
@@ -158,6 +164,7 @@ class DensityArchive(ArchiveBase):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array with measure
                 space coordinates of all the solutions.
+
         Returns:
             numpy.ndarray: Array of density values of the input solutions.
         """

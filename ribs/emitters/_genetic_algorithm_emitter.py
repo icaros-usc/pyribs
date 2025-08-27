@@ -33,6 +33,7 @@ class GeneticAlgorithmEmitter(EmitterBase):
         batch_size (int): Number of solutions to return in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to avoid a
             fixed seed.
+
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
@@ -88,14 +89,12 @@ class GeneticAlgorithmEmitter(EmitterBase):
 
     @property
     def x0(self):
-        """numpy.ndarray: Initial Solution (if ``initial_solutions`` is not
-        set)."""
+        """numpy.ndarray: Initial solution (if ``initial_solutions`` is not set)."""
         return self._x0
 
     @property
     def initial_solutions(self):
-        """numpy.ndarray: The initial solutions which are returned when the
-        archive is empty (if x0 is not set)."""
+        """numpy.ndarray: Returned when the archive is empty (if :attr:`x0` is not set)."""
         return self._initial_solutions
 
     @property
@@ -120,6 +119,7 @@ class GeneticAlgorithmEmitter(EmitterBase):
             array -- contains ``batch_size`` new solutions to evaluate. If the archive
             is empty, we return ``initial_solutions``, which might not have
             ``batch_size`` solutions.
+
         Raises:
             ValueError: The ``parent_type`` of the operator is unknown.
         """

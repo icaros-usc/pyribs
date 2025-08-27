@@ -167,6 +167,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = ["ANN", "D"]
+"tutorials/**/*" = ["D100", "D101", "D102", "D103"]
 
 [tool.ruff.lint.pep8-naming]
 ignore-names = [

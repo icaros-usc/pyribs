@@ -18,20 +18,19 @@ from ribs.archives._utils import fill_sentinel_values, parse_dtype
 
 
 class ProximityArchive(ArchiveBase):
-    """An archive that adds new solutions based on novelty, where novelty is defined via
-    proximity to other solutions in measure space.
+    r"""An archive that adds new solutions based on novelty.
 
     This archive originates in Novelty Search and is described in `Lehman 2011
     <https://web.archive.org/web/20220707041732/https://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf>`_.
     Solutions are added to the archive if their `novelty` exceeds a certain threshold.
-    `Novelty` :math:`\\rho` is defined as the average (Euclidean) distance in measure
+    `Novelty` :math:`\rho` is defined as the average (Euclidean) distance in measure
     space to the :math:`k`-nearest neighbors of the solution in the archive:
 
     .. math::
 
-        \\rho(x) = \\frac{1}{k}\\sum_{i=1}^{k}\\text{dist}(x, \\mu_i)
+        \rho(x) = \frac{1}{k}\sum_{i=1}^{k}\text{dist}(x, \mu_i)
 
-    Where :math:`x` is the measure value of some solution, and :math:`\\mu_{1..k}` are
+    Where :math:`x` is the measure value of some solution, and :math:`\mu_{1..k}` are
     the measure values of the :math:`k`-nearest neighbors in measure space.
 
     This archive also supports the local competition computation from Novelty Search
@@ -112,6 +111,7 @@ class ProximityArchive(ArchiveBase):
         ckdtree_kwargs (dict): When computing nearest neighbors, we construct a
             :class:`~scipy.spatial.cKDTree`. This parameter will pass additional kwargs
             when constructing the tree. By default, we do not pass in any kwargs.
+
     Raises:
         ValueError: ``initial_capacity`` must be at least 1.
     """
@@ -221,8 +221,7 @@ class ProximityArchive(ArchiveBase):
 
     @property
     def novelty_threshold(self):
-        """dtypes["measures"]: The degree of novelty required add a solution to
-        the archive."""
+        """dtypes["measures"]: The degree of novelty required add a solution to the archive."""
         return self._novelty_threshold
 
     @property
@@ -232,22 +231,25 @@ class ProximityArchive(ArchiveBase):
 
     @property
     def capacity(self):
-        """int: The number of solutions that can currently be stored in this
-        archive. The capacity doubles every time the archive fills up."""
+        """int: Number of solutions that can currently be stored in this archive.
+
+        The capacity doubles every time the archive fills up.
+        """
         return self._store.capacity
 
     @property
     def cells(self):
-        """int: Strictly speaking, this archive does not have "cells" since it
-        does not have a tessellation like other archives. However, for API
-        compatibility, we set the number of cells as equal to the number of
-        solutions currently in the archive."""
+        """int: Included for API compatibility; equivalent to :meth:`__len__`.
+
+        Strictly speaking, this archive does not have "cells" since it does not have a
+        tessellation like other archives. However, for API compatibility, we set the
+        number of cells as equal to the number of solutions currently in the archive.
+        """
         return len(self)
 
     @property
     def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when
-        computing the QD score."""
+        """float: Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     ## dunder methods ##
@@ -274,8 +276,11 @@ class ProximityArchive(ArchiveBase):
         )
 
     def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values (new_objective_sum)
-        and the index of a potential new best elite (new_best_index)."""
+        """Updates archive statistics.
+
+        Update is based on a new sum of objective values (new_objective_sum) and the
+        index of a potential new best elite (new_best_index).
+        """
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
@@ -321,9 +326,11 @@ class ProximityArchive(ArchiveBase):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
+
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing the
             location of the solution in the archive.
+
         Raises:
             RuntimeError: There were no entries in the archive.
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
@@ -352,9 +359,11 @@ class ProximityArchive(ArchiveBase):
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures for a single
                 solution.
+
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's storage
             arrays.
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -373,6 +382,7 @@ class ProximityArchive(ArchiveBase):
             local_competition (None or array-like): This can be None to indicate not to
                 compute local competition. Otherwise, it can be a (batch_size,) array of
                 objective values to use as references for computing objective values.
+
         Returns:
             numpy.ndarray or tuple: Either one value or a tuple of two values:
 

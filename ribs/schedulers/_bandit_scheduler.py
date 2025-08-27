@@ -32,8 +32,8 @@ class BanditScheduler:
 
     To initialize this class, first create an archive and a list of emitters for the QD
     algorithm. The BanditScheduler will schedule the emitters using the Upper Confidence
-    Bound - 1 algorithm (UCB1). Every time :meth:`ask` is called, the emitters are sorted
-    based on the potential reward function from UCB1. Then, the top `num_active`
+    Bound - 1 algorithm (UCB1). Every time :meth:`ask` is called, the emitters are
+    sorted based on the potential reward function from UCB1. Then, the top `num_active`
     emitters are used for ask-tell.
 
     .. warning:: If constructing many emitters at once, do not pass something like
