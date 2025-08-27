@@ -31,7 +31,7 @@ class BanditScheduler:
 
     To initialize this class, first create an archive and a list of emitters for the QD
     algorithm. The BanditScheduler will schedule the emitters using the Upper Confidence
-    Bound - 1 algorithm (UCB1). Everytime :meth:`ask` is called, the emitters are sorted
+    Bound - 1 algorithm (UCB1). Every time :meth:`ask` is called, the emitters are sorted
     based on the potential reward function from UCB1. Then, the top `num_active`
     emitters are used for ask-tell.
 
@@ -65,6 +65,7 @@ class BanditScheduler:
             :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is included
             since implementing batch addition on an archive is sometimes non-trivial.
             We highly recommend "batch" mode since it is significantly faster.
+
     Raises:
         TypeError: The ``emitter_pool`` argument was not a list of emitters.
         ValueError: Number of active emitters is less than one.
@@ -180,8 +181,7 @@ class BanditScheduler:
 
     @property
     def active(self) -> np.ndarray:
-        """Boolean array indicating which emitters in the :attr:`emitter_pool` are
-        currently active."""
+        """Boolean array indicating which emitters in the :attr:`emitter_pool` are currently active."""
         return readonly(self._active_arr.view())
 
     @property
@@ -202,7 +202,7 @@ class BanditScheduler:
         raise NotImplementedError("ask_dqd() is not supported by BanditScheduler.")
 
     def ask(self) -> np.ndarray:
-        """Generates a batch of solutions by calling ask() on all active emitters.
+        """Generates a batch of solutions by calling ask on all active emitters.
 
         The emitters used by ask are determined by the UCB1 algorithm. Briefly, emitters
         that have never been selected before are prioritized, then emitters are sorted
@@ -214,6 +214,7 @@ class BanditScheduler:
         Returns:
             A ``(batch_size, dim)`` array of solutions to evaluate. Each row contains a
             single solution.
+
         Raises:
             RuntimeError: This method was called immediately after calling an ask
                 method.
@@ -342,6 +343,7 @@ class BanditScheduler:
                 solution's coordinates in measure space.
             fields: Additional data for each solution. Each argument should be an array
                 with ``batch_size`` as the first dimension.
+
         Raises:
             RuntimeError: This method was called without first calling :meth:`ask`.
             ValueError: One of the inputs has the wrong shape.

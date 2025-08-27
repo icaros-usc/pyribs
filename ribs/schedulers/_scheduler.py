@@ -45,6 +45,7 @@ class Scheduler:
             :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is included
             since implementing batch addition on an archive is sometimes non-trivial.
             We highly recommend "batch" mode since it is significantly faster.
+
     Raises:
         TypeError: The ``emitters`` argument was not a list of emitters.
         ValueError: The emitters passed in do not have the same solution dimensions.
@@ -141,7 +142,7 @@ class Scheduler:
         return self._archive if self._result_archive is None else self._result_archive
 
     def ask_dqd(self) -> np.ndarray:
-        """Generates a batch of solutions by calling ask_dqd() on all DQD emitters.
+        """Generates a batch of solutions by calling ``ask_dqd`` on all DQD emitters.
 
         .. note:: The order of the solutions returned from this method is important, so
             do not rearrange them.
@@ -149,6 +150,7 @@ class Scheduler:
         Returns:
             A ``(batch_size, dim)`` array of solutions to evaluate. Each row contains a
             single solution.
+
         Raises:
             RuntimeError: This method was called immediately after calling an ask
                 method.
@@ -175,7 +177,7 @@ class Scheduler:
         return self._cur_solutions
 
     def ask(self) -> np.ndarray:
-        """Generates a batch of solutions by calling ask() on all emitters.
+        """Generates a batch of solutions by calling ``ask`` on all emitters.
 
         .. note:: The order of the solutions returned from this method is important, so
             do not rearrange them.
@@ -183,6 +185,7 @@ class Scheduler:
         Returns:
             A ``(batch_size, dim)`` array of solutions to evaluate. Each row contains a
             single solution.
+
         Raises:
             RuntimeError: This method was called immediately after calling an ask
                 method.
@@ -209,8 +212,7 @@ class Scheduler:
         return self._cur_solutions
 
     def _check_length(self, name: str, arr: ArrayLike) -> None:
-        """Raises a ValueError if array does not have the same length as the
-        solutions."""
+        """Raises a ValueError if array does not have the same length as the solutions."""
         if len(arr) != len(self._cur_solutions):
             raise ValueError(
                 f"{name} should have length {len(self._cur_solutions)} "
@@ -248,7 +250,6 @@ class Scheduler:
         self, data: dict[str, np.ndarray | None]
     ) -> dict[str, np.ndarray]:
         """Adds solutions to both the regular archive and the result archive."""
-
         archive_empty_before = self.archive.empty
         if self._result_archive is not None:
             # Check self._result_archive here since self.result_archive is a property
@@ -322,6 +323,7 @@ class Scheduler:
                 followed by the measure gradients.
             fields: Additional data for each solution. Each argument should be an array
                 with ``batch_size`` as the first dimension.
+
         Raises:
             RuntimeError: This method was called without first calling :meth:`ask_dqd`.
             ValueError: One of the inputs has the wrong shape.
@@ -378,6 +380,7 @@ class Scheduler:
                 solution's coordinates in measure space.
             fields: Additional data for each solution. Each argument should be an array
                 with ``batch_size`` as the first dimension.
+
         Raises:
             RuntimeError: This method was called without first calling :meth:`ask`.
             ValueError: One of the inputs has the wrong shape.
