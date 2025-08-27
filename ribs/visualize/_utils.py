@@ -134,7 +134,7 @@ def archive_heatmap_1d(
     """
     # Initialize the axis.
     ax = plt.gca() if ax is None else ax
-    ax.set_xlim(archive.lower_bounds[0], archive.upper_bounds[0])
+    ax.set_xlim(archive.lower_bounds[0], archive.upper_bounds[0])  # ty: ignore[invalid-argument-type]
     ax.set_aspect(aspect)
 
     # Turn off yticks; this is a 1D plot so only the x-axis matters.
