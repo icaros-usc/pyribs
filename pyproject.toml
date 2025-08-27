@@ -126,7 +126,7 @@ select = [
   "I",  # isort
   "NPY",  # numpy
   "PD",  # pandas-vet
-  # "D",  # pydocstyle
+  "D",  # pydocstyle
   "PL",  # pylint
   "PYI",  # flake8-pyi
   "PT",  # pytest
@@ -151,6 +151,7 @@ ignore = [
   "PLC0415",  # import-outside-top-level
   "PLC0206",  # dict-index-missing-items
   "PLW2901",  # redefined-loop-name
+  "D107",  # undocumented-public-init; we document the class rather than __init__
   # These are pylint's errors about "too many X"
   "PLR0904",
   "PLR0911",
