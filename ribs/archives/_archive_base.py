@@ -252,7 +252,7 @@ class ArchiveBase(ABC):
 
     def data(
         self,
-        fields: str | Sequence[str] | None = None,
+        fields: None | Sequence[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
     ) -> dict[str, np.ndarray] | tuple[np.ndarray] | ArchiveDataFrame:
         """Returns data of the elites in the archive.
