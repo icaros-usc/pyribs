@@ -37,6 +37,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+# Since the docstrings in this module are auto-generated, Ruff does not catch them.
 # ruff: noqa: D102
 
 __all__ = [
