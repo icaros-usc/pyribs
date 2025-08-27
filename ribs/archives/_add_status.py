@@ -18,6 +18,7 @@ class AddStatus(IntEnum):
       the archive.
 
     Example:
+
         Check the status of an add operation as follows (note that these examples use
         :meth:`~ArchiveBase.add_single` rather than :meth:`~ArchiveBase.add`)::
 
