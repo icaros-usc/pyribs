@@ -1,5 +1,7 @@
 """Provides ArchiveStats."""
 
+from __future__ import annotations
+
 import dataclasses
 
 import numpy as np
@@ -38,8 +40,8 @@ class ArchiveStats:
     #:     the *threshold* of the cell they are being inserted into, not the
     #:     *objective* of the elite currently in the cell. See :pr:`314` for
     #:     more info.
-    obj_max: np.floating
+    obj_max: np.floating | None
 
     #: Mean objective value of the elites in the archive. None if there are no
     #: elites in the archive.
-    obj_mean: np.floating
+    obj_mean: np.floating | None
