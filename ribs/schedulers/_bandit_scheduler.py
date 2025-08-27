@@ -14,6 +14,7 @@ from ribs._utils import readonly
 from ribs.archives import ArchiveBase
 from ribs.emitters import EmitterBase
 from ribs.schedulers._scheduler import Scheduler
+from ribs.typing import Float, Int
 
 
 class BanditScheduler:
@@ -84,9 +85,9 @@ class BanditScheduler:
         emitter_pool: Sequence[EmitterBase],
         result_archive: ArchiveBase | None = None,
         *,
-        num_active: int,
+        num_active: Int,
         reselect: Literal["terminated", "all"] = "terminated",
-        zeta: float = 0.05,
+        zeta: Float = 0.05,
         add_mode: Literal["batch", "single"] = "batch",
     ) -> None:
         if num_active < 1:
