@@ -15,6 +15,7 @@ from matplotlib.typing import ColorType
 from pandas import DataFrame
 
 from ribs.archives import ArchiveDataFrame, CVTArchive, GridArchive
+from ribs.typing import Float, Int
 
 
 def retrieve_cmap(
@@ -29,10 +30,10 @@ def retrieve_cmap(
 
 
 def validate_heatmap_visual_args(
-    aspect: Literal["auto", "equal"] | float | None,
+    aspect: Literal["auto", "equal"] | Float | None,
     cbar: Literal["auto"] | None | Axes,
-    measure_dim: int,
-    valid_dims: list[int],
+    measure_dim: Int,
+    valid_dims: list[Int],
     error_msg_measure_dim: str,
 ) -> None:
     """Helper function to validate arguments passed to `*_archive_heatmap` plotting functions.
@@ -50,7 +51,7 @@ def validate_heatmap_visual_args(
         ValueError: if validity checks for heatmap args fail
     """
     if aspect is not None and not (
-        isinstance(aspect, float) or aspect in ["equal", "auto"]
+        isinstance(aspect, Float) or aspect in ["equal", "auto"]
     ):
         raise ValueError(
             f"Invalid arg aspect='{aspect}'; must be 'auto', 'equal', or float"
@@ -94,9 +95,9 @@ def archive_heatmap_1d(
     cell_objectives: np.ndarray,
     ax: Axes | None,
     cmap: matplotlib.colors.Colormap,
-    aspect: Literal["auto", "equal"] | float,
-    vmin: float | None,
-    vmax: float | None,
+    aspect: Literal["auto", "equal"] | Float,
+    vmin: Float | None,
+    vmax: Float | None,
     cbar: Literal["auto"] | None | Axes,
     cbar_kwargs: dict | None,
     rasterized: bool,

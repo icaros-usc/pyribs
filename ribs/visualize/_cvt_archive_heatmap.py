@@ -17,6 +17,7 @@ from pandas import DataFrame
 from scipy.spatial import Voronoi
 
 from ribs.archives import ArchiveDataFrame, CVTArchive
+from ribs.typing import Float
 from ribs.visualize._utils import (
     archive_heatmap_1d,
     retrieve_cmap,
@@ -33,18 +34,18 @@ def cvt_archive_heatmap(
     df: DataFrame | ArchiveDataFrame | None = None,
     transpose_measures: bool = False,
     cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
-    aspect: Literal["auto", "equal"] | float | None = None,
-    lw: float = 0.5,
+    aspect: Literal["auto", "equal"] | Float | None = None,
+    lw: Float = 0.5,
     ec: ColorType = "black",
-    vmin: float | None = None,
-    vmax: float | None = None,
+    vmin: Float | None = None,
+    vmax: Float | None = None,
     cbar: Literal["auto"] | None | Axes = "auto",
     cbar_kwargs: dict | None = None,
     rasterized: bool = False,
     clip: bool | shapely.Polygon = False,
     plot_centroids: bool = False,
     plot_samples: bool = False,
-    ms: float = 1,
+    ms: Float = 1,
     pcm_kwargs: dict | None = None,
 ) -> None:
     r"""Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 1D or 2D measure space.

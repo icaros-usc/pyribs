@@ -13,6 +13,7 @@ from matplotlib.typing import ColorType
 from pandas import DataFrame
 
 from ribs.archives import ArchiveDataFrame, GridArchive
+from ribs.typing import Float
 from ribs.visualize._utils import (
     archive_heatmap_1d,
     retrieve_cmap,
@@ -29,9 +30,9 @@ def grid_archive_heatmap(
     df: DataFrame | ArchiveDataFrame | None = None,
     transpose_measures: bool = False,
     cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
-    aspect: Literal["auto", "equal"] | float | None = None,
-    vmin: float | None = None,
-    vmax: float | None = None,
+    aspect: Literal["auto", "equal"] | Float | None = None,
+    vmin: Float | None = None,
+    vmax: Float | None = None,
     cbar: Literal["auto"] | None | Axes = "auto",
     cbar_kwargs: dict | None = None,
     rasterized: bool = False,
@@ -208,8 +209,8 @@ def grid_archive_heatmap(
 
         # Initialize the axis.
         ax = plt.gca() if ax is None else ax
-        ax.set_xlim(lower_bounds[0], upper_bounds[0])
-        ax.set_ylim(lower_bounds[1], upper_bounds[1])
+        ax.set_xlim(lower_bounds[0], upper_bounds[0])  # ty: ignore[invalid-argument-type]
+        ax.set_ylim(lower_bounds[1], upper_bounds[1])  # ty: ignore[invalid-argument-type]
 
         ax.set_aspect(aspect)
 

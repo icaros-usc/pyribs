@@ -17,6 +17,7 @@ from pandas import DataFrame
 from scipy.spatial import Voronoi
 
 from ribs.archives import ArchiveDataFrame, CVTArchive
+from ribs.typing import Float, Int
 from ribs.visualize._utils import (
     retrieve_cmap,
     set_cbar,
@@ -30,21 +31,21 @@ def cvt_archive_3d_plot(
     ax: Axes3D | None = None,
     *,
     df: DataFrame | ArchiveDataFrame | None = None,
-    measure_order: Iterable[int] | None = None,
+    measure_order: Iterable[Int] | None = None,
     cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
-    lw: float = 0.5,
+    lw: Float = 0.5,
     ec: ColorType = (0.0, 0.0, 0.0, 0.1),
-    cell_alpha: float = 1.0,
-    vmin: float | None = None,
-    vmax: float | None = None,
+    cell_alpha: Float = 1.0,
+    vmin: Float | None = None,
+    vmax: Float | None = None,
     cbar: Literal["auto"] | None | Axes = "auto",
     cbar_kwargs: dict | None = None,
     plot_elites: bool = False,
-    elite_ms: float = 100,
-    elite_alpha: float = 0.5,
+    elite_ms: Float = 100,
+    elite_alpha: Float = 0.5,
     plot_centroids: bool = False,
     plot_samples: bool = False,
-    ms: float = 1,
+    ms: Float = 1,
 ) -> None:
     r"""Plots a :class:`~ribs.archives.CVTArchive` with 3D measure space.
 
