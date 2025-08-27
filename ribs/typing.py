@@ -1,11 +1,7 @@
-"""Custom data types for pyribs.
+"""Custom data types for pyribs."""
 
-.. autosummary::
-    :toctree:
-
-    BatchData
-    SingleData
-"""
+# DEVELOPER NOTE: When adding new types, make sure to update the API listing in
+# `docs/api/ribs.typing.rst`.
 
 from __future__ import annotations
 
