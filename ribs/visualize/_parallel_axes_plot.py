@@ -37,7 +37,7 @@ def parallel_axes_plot(
     cbar: Literal["auto"] | None | Axes = "auto",
     cbar_kwargs: dict | None = None,
 ) -> None:
-    """Visualizes archive elites in measure space with a parallel axes plot.
+    r"""Visualizes archive elites in measure space with a parallel axes plot.
 
     This visualization is meant to show the coverage of the measure space at a glance.
     Each axis represents one measure dimension, and each line in the diagram represents
@@ -108,7 +108,7 @@ def parallel_axes_plot(
             ``[1, 3]`` or ``[1, 2, 3, 2]``.
         cmap: The colormap to use when plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of Matplotlib color
-            specifications (e.g., an :math:`N \\times 3` or :math:`N \\times 4` array --
+            specifications (e.g., an :math:`N \times 3` or :math:`N \times 4` array --
             see :class:`~matplotlib.colors.ListedColormap`), or a
             :class:`~matplotlib.colors.Colormap` object.
         linewidth: Line width for each elite in the plot.

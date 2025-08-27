@@ -35,10 +35,12 @@ def validate_heatmap_visual_args(
     valid_dims: list[int],
     error_msg_measure_dim: str,
 ) -> None:
-    """Helper function to validate arguments passed to `*_archive_heatmap` plotting
-    functions.
+    """Helper function to validate arguments passed to `*_archive_heatmap` plotting functions.
 
     Args:
+        aspect: See a visualization function like grid_archive_heatmap.
+        cbar: See a visualization function like grid_archive_heatmap.
+        measure_dim: See a visualization function like grid_archive_heatmap.
         valid_dims: All specified valid archive dimensions that may be plotted into
             heatmaps.
         error_msg_measure_dim: Error message in ValueError if archive dimension plotting
@@ -63,7 +65,6 @@ def validate_heatmap_visual_args(
 
 def validate_df(df: DataFrame | ArchiveDataFrame | None) -> ArchiveDataFrame:
     """Helper to validate the df passed into visualization functions."""
-
     # Cast to an ArchiveDataFrame in case someone passed in a regular DataFrame
     # or other object.
     if not isinstance(df, ArchiveDataFrame):
@@ -126,6 +127,7 @@ def archive_heatmap_1d(
         cbar_kwargs: See heatmap methods, e.g., grid_archive_heatmap.
         rasterized: See heatmap methods, e.g., grid_archive_heatmap.
         pcm_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.pcolormesh`.
+
     Returns:
         The Axes where the heatmap was plotted. This may be used to further modify the
         plot.

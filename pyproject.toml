@@ -126,6 +126,7 @@ select = [
   "I",  # isort
   "NPY",  # numpy
   "PD",  # pandas-vet
+  "D",  # pydocstyle
   "PL",  # pylint
   "PYI",  # flake8-pyi
   "PT",  # pytest
@@ -161,6 +162,9 @@ ignore = [
   "PLR0917",
   "PLR1702",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = ["D"]
 
 [tool.ruff.lint.pep8-naming]
 ignore-names = [
