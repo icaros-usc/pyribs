@@ -351,7 +351,6 @@ class BayesianOptimizationEmitter(EmitterBase):
             numpy.ndarray: Array of shape (num_samples, :attr:`solution_dim`) containing
             the sampled solutions.
         """
-
         # SOBOL samples are in range [0, 1]. Need to rescale to bounds
         sobol_samples = self._sobol.random(n=num_samples)
         rescaled_samples = self.lower_bounds + sobol_samples * (

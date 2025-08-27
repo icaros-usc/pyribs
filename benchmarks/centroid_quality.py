@@ -33,7 +33,6 @@ def get_score(centroids, num_samples, seed):
         float: probability a sampled point hits a region
 
     """
-
     num_centroids = centroids.shape[0]
     centroid_dim = centroids.shape[1]
 
@@ -60,7 +59,6 @@ def get_score(centroids, num_samples, seed):
 def main():
     """Benchmarks 6 different centroid generation techniques used in the aforementioned
     paper."""
-
     # Default settings to benchmark different centroid generation techniques.
     score_seed = 1823170571
     num_samples = 100000

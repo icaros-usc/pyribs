@@ -575,7 +575,6 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         `data` should be similar to the data created in `add_single`.
         """
-
         # Information to return about the addition.
         add_info = {}
 
