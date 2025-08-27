@@ -188,9 +188,11 @@ class ArchiveBase(ABC):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of measure
                 space points at which to retrieve solutions.
+
         Returns:
             tuple: 2-element tuple of (boolean ``occupied`` array, dict of elite data).
             See above for description.
+
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -213,8 +215,10 @@ class ArchiveBase(ABC):
 
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures.
+
         Returns:
             tuple: 2-element tuple of (boolean, dict of data for one elite)
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -315,8 +319,10 @@ class ArchiveBase(ABC):
 
         Args:
             n (int): Number of elites to sample.
+
         Returns:
             dict: Holds a batch of elites randomly selected from the archive.
+
         Raises:
             IndexError: The archive is empty.
         """

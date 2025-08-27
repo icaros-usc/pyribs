@@ -41,6 +41,7 @@ class EmitterBase(ABC):
 
         Returns:
             tuple: Two arrays containing all the lower bounds and all the upper bounds.
+
         Raises:
             ValueError: There is an error in the bounds configuration.
         """

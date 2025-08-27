@@ -76,6 +76,7 @@ class EvolutionStrategyBase(ABC):
                 ``n_values`` is the number of values that the ranker used. Note that
                 unlike in :meth:`tell`, these values must be sorted according to the
                 ``ranking_indices`` passed to :meth:`tell`.
+
         Returns:
             True if any of the stopping conditions are satisfied.
         """

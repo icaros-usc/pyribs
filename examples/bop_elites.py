@@ -27,6 +27,7 @@ def sphere(solutions):
 
     Args:
         solutions (np.ndarray): (batch_size, dim) batch of solutions.
+
     Returns:
         objectives (np.ndarray): (batch_size,) batch of objectives.
         objective_grads (np.ndarray): (batch_size, solution_dim) batch of objective

@@ -443,6 +443,7 @@ class ArrayStore:
         Args:
             fields (str or array-like of str): See :meth:`retrieve`.
             return_type (str): See :meth:`retrieve`.
+
         Returns:
             See ``data`` in :meth:`retrieve`. ``occupied`` is not returned since
             all indices are known to be occupied in this method.
@@ -536,6 +537,7 @@ class ArrayStore:
 
         Args:
             capacity (int): New capacity.
+
         Raises:
             ValueError: The new capacity is less than or equal to the current capacity.
         """

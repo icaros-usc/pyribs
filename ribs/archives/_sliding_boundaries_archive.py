@@ -422,9 +422,11 @@ class SlidingBoundariesArchive(ArchiveBase):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
+
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing the
             flattened grid coordinates.
+
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
         """
@@ -462,9 +464,11 @@ class SlidingBoundariesArchive(ArchiveBase):
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures for a single
                 solution.
+
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's storage
             arrays.
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).

@@ -81,6 +81,7 @@ class GridArchive(ArchiveBase):
             "foo" field that contains scalar values and a "bar" field that contains 10D
             values. Note that field names must be valid Python identifiers, and names
             already used in the archive are not allowed.
+
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
@@ -359,9 +360,11 @@ class GridArchive(ArchiveBase):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
+
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing the
             flattened grid coordinates.
+
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -391,9 +394,11 @@ class GridArchive(ArchiveBase):
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures for a single
                 solution.
+
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's storage
             arrays.
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -411,8 +416,10 @@ class GridArchive(ArchiveBase):
         Args:
             grid_indices (array-like): (batch_size, :attr:`measure_dim`) array of
                 indices in the archive grid.
+
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices.
+
         Raises:
             ValueError: ``grid_indices`` is not of shape (batch_size,
                 :attr:`measure_dim`).
@@ -430,9 +437,11 @@ class GridArchive(ArchiveBase):
         Args:
             int_indices (array-like): (batch_size,) array of integer indices such as
                 those output by :meth:`index_of`.
+
         Returns:
             numpy.ndarray: (batch_size, :attr:`measure_dim`) array of indices in the
             archive grid.
+
         Raises:
             ValueError: ``int_indices`` is not of shape (batch_size,).
         """

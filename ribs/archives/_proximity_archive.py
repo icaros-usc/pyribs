@@ -112,6 +112,7 @@ class ProximityArchive(ArchiveBase):
         ckdtree_kwargs (dict): When computing nearest neighbors, we construct a
             :class:`~scipy.spatial.cKDTree`. This parameter will pass additional kwargs
             when constructing the tree. By default, we do not pass in any kwargs.
+
     Raises:
         ValueError: ``initial_capacity`` must be at least 1.
     """
@@ -321,9 +322,11 @@ class ProximityArchive(ArchiveBase):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
+
         Returns:
             numpy.ndarray: (batch_size,) array of integer indices representing the
             location of the solution in the archive.
+
         Raises:
             RuntimeError: There were no entries in the archive.
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
@@ -352,9 +355,11 @@ class ProximityArchive(ArchiveBase):
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures for a single
                 solution.
+
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's storage
             arrays.
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -373,6 +378,7 @@ class ProximityArchive(ArchiveBase):
             local_competition (None or array-like): This can be None to indicate not to
                 compute local competition. Otherwise, it can be a (batch_size,) array of
                 objective values to use as references for computing objective values.
+
         Returns:
             numpy.ndarray or tuple: Either one value or a tuple of two values:
 

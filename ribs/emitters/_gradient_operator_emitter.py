@@ -88,6 +88,7 @@ class GradientOperatorEmitter(EmitterBase):
         batch_size (int): Number of solutions to return in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to avoid a
             fixed seed.
+
     Raises:
         ValueError: There is an error in the bounds configuration.
     """
@@ -256,6 +257,7 @@ class GradientOperatorEmitter(EmitterBase):
         Returns:
             (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
+
         Raises:
             RuntimeError: This method was called without first passing gradients with
                 calls to ask_dqd() and tell_dqd().

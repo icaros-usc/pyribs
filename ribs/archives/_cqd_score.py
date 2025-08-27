@@ -77,8 +77,10 @@ def cqd_score(
             is passed to :func:`numpy.linalg.norm` as the ``ord`` argument. See
             :func:`numpy.linalg.norm` for possible values. The default is to use
             Euclidean distance (L2 norm).
+
     Returns:
         CQDScoreResult: Object containing results of the CQD score calculations.
+
     Raises:
         ValueError: target_points or penalties is an array with the wrong shape.
     """

@@ -64,6 +64,7 @@ class EvolutionStrategyEmitter(EmitterBase):
             rules.
         seed (int): Value to seed the random number generator. Set to None to avoid a
             fixed seed.
+
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.

@@ -128,6 +128,7 @@ class CVTArchive(ArchiveBase):
             we do not pass in any kwargs.
         chunk_size (int): If passed, brute forcing the closest centroid search will
             chunk the distance calculations to compute chunk_size inputs at a time.
+
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
@@ -469,9 +470,11 @@ class CVTArchive(ArchiveBase):
         Args:
             measures (array-like): (batch_size, :attr:`measure_dim`) array of
                 coordinates in measure space.
+
         Returns:
             numpy.ndarray: (batch_size,) array of centroid indices
             corresponding to each measure space coordinate.
+
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -515,9 +518,11 @@ class CVTArchive(ArchiveBase):
         Args:
             measures (array-like): (:attr:`measure_dim`,) array of measures for a single
                 solution.
+
         Returns:
             int or numpy.integer: Integer index of the measures in the archive's storage
             arrays.
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
