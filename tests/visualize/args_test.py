@@ -38,7 +38,7 @@ def test_fails_on_unsupported_dims(archive_type):
         ),
     }[archive_type]()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r".* can only be .* for .*"):
         {
             "grid": grid_archive_heatmap,
             "cvt": cvt_archive_heatmap,
