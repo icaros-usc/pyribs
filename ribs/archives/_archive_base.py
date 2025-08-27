@@ -110,7 +110,6 @@ class ArchiveBase(ABC):
         """Creates an iterator over the elites in the archive.
 
         Example:
-
             ::
 
                 for elite in archive:
@@ -215,9 +214,11 @@ class ArchiveBase(ABC):
         Args:
             measures: (batch_size, :attr:`measure_dim`) array of measure space points at
                 which to retrieve solutions.
+
         Returns:
             2-element tuple of (boolean ``occupied`` array, dict of elite data). See
             above for description.
+
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -240,8 +241,10 @@ class ArchiveBase(ABC):
 
         Args:
             measures: (:attr:`measure_dim`,) array of measures.
+
         Returns:
             2-element tuple of (boolean, dict of data for one elite)
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -254,13 +257,13 @@ class ArchiveBase(ABC):
         self,
         fields: None | Sequence[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> dict[str, np.ndarray] | tuple[np.ndarray] | ArchiveDataFrame:
+    ) -> np.ndarray | dict[str, np.ndarray] | tuple[np.ndarray] | ArchiveDataFrame:
         """Returns data of the elites in the archive.
 
         Args:
-            fields: List of fields to include, such as ``solution``, ``objective``,
-                ``measures``, and other fields in the archive. This can also be a single
-                str indicating a field name.
+            fields: List of fields to include, such as ``"solution"``, ``"objective"``,
+                ``"measures"``, and other fields in the archive. This can also be a
+                single str indicating a field name.
             return_type: Data to return; see below. Ignored if ``fields`` is a str.
 
         Returns:
@@ -323,6 +326,12 @@ class ArchiveBase(ABC):
 
               Like the other return types, the columns returned can be adjusted with the
               ``fields`` parameter.
+
+        Raises:
+            ValueError: Invalid field name provided.
+            ValueError: Invalid return_type provided.
+            ValueError: Passed ``return_type="pandas"`` when one of the fields has >1D
+                data.
         """
         raise NotImplementedError("`data` has not been implemented in this archive")
 
@@ -334,7 +343,6 @@ class ArchiveBase(ABC):
         sampling methods may be supported in the future.
 
         Example:
-
             ::
 
                 elites = archive.sample_elites(16)
@@ -345,8 +353,10 @@ class ArchiveBase(ABC):
 
         Args:
             n: Number of elites to sample.
+
         Returns:
             A batch of elites randomly selected from the archive.
+
         Raises:
             IndexError: The archive is empty.
         """
