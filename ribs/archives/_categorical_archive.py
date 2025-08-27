@@ -192,8 +192,7 @@ class CategoricalArchive(ArchiveBase):
 
     @property
     def categories(self):
-        """list of list of any: The categories in each dimension of the measure
-        space."""
+        """list of list: The categories in each dimension of the measure space."""  # noqa: D403
         return self._categories
 
     @property
@@ -218,8 +217,7 @@ class CategoricalArchive(ArchiveBase):
 
     @property
     def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when computing
-        the QD score."""
+        """float: Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     ## dunder methods ##
@@ -246,8 +244,11 @@ class CategoricalArchive(ArchiveBase):
         )
 
     def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values (new_objective_sum)
-        and the index of a potential new best elite (new_best_index)."""
+        """Updates archive statistics.
+
+        Update is based on a new sum of objective values (new_objective_sum) and the
+        index of a potential new best elite (new_best_index).
+        """
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 

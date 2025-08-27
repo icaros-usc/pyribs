@@ -7,7 +7,7 @@ from ribs.emitters._emitter_base import EmitterBase
 
 
 class IsoLineEmitter(EmitterBase):
-    """Emits solutions by leveraging correlations between existing elites.
+    r"""Emits solutions by leveraging correlations between existing elites.
 
     If the archive is empty and ``initial_solutions`` is set, a call to :meth:`ask` will
     return ``initial_solutions``. If ``initial_solutions`` is not set, we draw solutions
@@ -17,8 +17,8 @@ class IsoLineEmitter(EmitterBase):
 
     .. math::
 
-        x_i + \\sigma_{iso} \\mathcal{N}(0,\\mathcal{I}) +
-            \\sigma_{line}(x_j - x_i)\\mathcal{N}(0,1)
+        x_i + \sigma_{iso} \mathcal{N}(0,\mathcal{I}) +
+            \sigma_{line}(x_j - x_i)\mathcal{N}(0,1)
 
     This emitter is based on the Iso+LineDD operator presented in `Vassiliades 2018
     <https://arxiv.org/abs/1804.03906>`_.
@@ -99,26 +99,26 @@ class IsoLineEmitter(EmitterBase):
 
     @property
     def x0(self):
-        """numpy.ndarray: Center of the Gaussian distribution from which to sample
-        solutions when the archive is empty (if initial_solutions is not set)."""
+        """numpy.ndarray: Initial Gaussian distribution center.
+
+        Solutions are sampled from this distribution when the archive is empty (if
+        :attr:`initial_solutions` is not set).
+        """
         return self._x0
 
     @property
     def initial_solutions(self):
-        """numpy.ndarray: The initial solutions which are returned when the archive is
-        empty (if x0 is not set)."""
+        """numpy.ndarray: Returned when the archive is empty (if :attr:`x0` is not set)."""
         return self._initial_solutions
 
     @property
     def iso_sigma(self):
-        """float: Scale factor for the isotropic distribution used to generate solutions
-        when the archive is not empty."""
+        """float: Scale factor for the isotropic distribution."""
         return self._iso_sigma
 
     @property
     def line_sigma(self):
-        """float: Scale factor for the line distribution used when generating
-        solutions."""
+        """float: Scale factor for the line distribution."""
         return self._line_sigma
 
     @property
@@ -131,7 +131,7 @@ class IsoLineEmitter(EmitterBase):
         return np.clip(solutions, self.lower_bounds, self.upper_bounds)
 
     def ask(self):
-        """Generates ``batch_size`` solutions.
+        r"""Generates ``batch_size`` solutions.
 
         If the archive is empty and ``initial_solutions`` is set, a call to :meth:`ask`
         will return ``initial_solutions``. If ``initial_solutions`` is not set, we draw
@@ -141,8 +141,8 @@ class IsoLineEmitter(EmitterBase):
 
         .. math::
 
-            x_i + \\sigma_{iso} \\mathcal{N}(0,\\mathcal{I}) +
-                \\sigma_{line}(x_j - x_i)\\mathcal{N}(0,1)
+            x_i + \sigma_{iso} \mathcal{N}(0,\mathcal{I}) +
+                \sigma_{line}(x_j - x_i)\mathcal{N}(0,1)
 
         Returns:
             If the archive is not empty, ``(batch_size, solution_dim)`` array --

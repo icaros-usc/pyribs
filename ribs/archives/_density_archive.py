@@ -140,16 +140,20 @@ class DensityArchive(ArchiveBase):
     # Necessary to implement this since `Scheduler` calls it.
     @property
     def empty(self):
-        """bool: Whether the archive is empty. Since the archive does not store elites,
-        we always mark it as not empty."""
+        """bool: Whether the archive is empty; always ``False``.
+
+        Since the archive does not store elites, we always mark it as not empty.
+        """
         return False
 
     ## Properties that are not in ArchiveBase ##
 
     @property
     def buffer(self):
-        """numpy.ndarray: Buffer of measures considered in the density estimator. Shape
-        (n, :attr:`measure_dim`)."""
+        """numpy.ndarray: Buffer of measures considered in the density estimator.
+
+        Shape (n, :attr:`measure_dim`).
+        """
         return readonly(self._buffer[: self._n_occupied])
 
     ## Utilities ##

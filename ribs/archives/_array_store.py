@@ -149,8 +149,10 @@ class ArrayStore:
             )
 
     def __len__(self):
-        """Number of occupied indices in the store, i.e., number of indices that have a
-        corresponding data entry."""
+        """Number of occupied indices in the store.
+
+        AKA, number of indices that have a corresponding data entry.
+        """
         return self._props["n_occupied"]
 
     def __iter__(self):
@@ -162,7 +164,6 @@ class ArrayStore:
         the index is included in the output).
 
         Example:
-
             ::
 
                 for entry in store:
@@ -179,8 +180,7 @@ class ArrayStore:
 
     @property
     def occupied(self):
-        """array: Boolean array of size ``(capacity,)`` indicating whether each index
-        has a data entry."""
+        """array: ``(capacity,)`` Boolean array indicating whether each index has a data entry."""
         return arr_readonly(self._props["occupied"])
 
     @property
@@ -193,7 +193,6 @@ class ArrayStore:
         """dict: Description of fields in the store.
 
         Example:
-
             ::
 
                 store.field_desc == {
@@ -214,7 +213,6 @@ class ArrayStore:
         """dict: Data types of fields in the store.
 
         Example:
-
             ::
 
                 store.dtypes == {
@@ -229,7 +227,6 @@ class ArrayStore:
         """dict: Data types of fields in the store, plus the index.
 
         Example:
-
             ::
 
                 store.dtypes == {
@@ -245,7 +242,6 @@ class ArrayStore:
         """list: List of fields in the store.
 
         Example:
-
             ::
 
                 store.field_list == ["objective", "measures"]
@@ -261,7 +257,6 @@ class ArrayStore:
         The index is always added at the end of the list.
 
         Example:
-
             ::
 
                 store.field_list_with_index == \
@@ -271,8 +266,10 @@ class ArrayStore:
 
     @staticmethod
     def _convert_to_numpy(arr):
-        """If needed, converts the given array to a numpy array for the pandas
-        return type in `retrieve`."""
+        """If needed, converts the given array to a numpy array.
+
+        This is intended to be used in the pandas return type in `retrieve`.
+        """
         if is_numpy_array(arr):
             return arr
         elif is_torch_array(arr):
@@ -454,7 +451,6 @@ class ArrayStore:
         """Adds new data to the store at the given indices.
 
         Example:
-
             ::
 
                 indices = [4, 7, 8]

@@ -285,20 +285,20 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     @property
     def interval_size(self):
-        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds -
-        lower_bounds)."""
+        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds - lower_bounds)."""
         return self._interval_size
 
     @property
     def epsilon(self):
-        """dtypes["measures"]: Epsilon for computing archive indices. Refer to the
-        documentation for this class."""
+        """dtypes["measures"]: Epsilon for computing archive indices.
+
+        Refer to the documentation for this class.
+        """
         return self._epsilon
 
     @property
     def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when computing
-        the QD score."""
+        """float: Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     @property
@@ -332,7 +332,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         bounds of cell ``j`` in dimension ``i``. To access the lower bounds of all the
         cells in dimension ``i``, use ``boundaries[i][:-1]``, and to access all the
         upper bounds, use ``boundaries[i][1:]``.
-        """
+        """  # noqa: D403
         return [bound[: dim + 1] for bound, dim in zip(self._boundaries, self._dims)]
 
     ## dunder methods ##
@@ -359,8 +359,11 @@ class SlidingBoundariesArchive(ArchiveBase):
         )
 
     def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values (new_objective_sum)
-        and the index of a potential new best elite (new_best_index)."""
+        """Updates archive statistics.
+
+        Update is based on a new sum of objective values (new_objective_sum) and the
+        index of a potential new best elite (new_best_index).
+        """
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 

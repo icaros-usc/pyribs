@@ -44,7 +44,7 @@ class ArchiveBase(ABC):
 
     @property
     def solution_dim(self):
-        """int or tuple of int: Dimensionality of the solution space."""
+        """int or tuple of int: Dimensionality of the solution space."""  # noqa: D403
         return self._solution_dim
 
     @property
@@ -52,7 +52,7 @@ class ArchiveBase(ABC):
         """int or empty tuple: Dimensionality of the objective space.
 
         The empty tuple ``()`` indicates a scalar objective.
-        """
+        """  # noqa: D403
         return self._objective_dim
 
     @property
@@ -95,7 +95,6 @@ class ArchiveBase(ABC):
         """Creates an iterator over the elites in the archive.
 
         Example:
-
             ::
 
                 for elite in archive:
@@ -308,7 +307,6 @@ class ArchiveBase(ABC):
         sampling methods may be supported in the future.
 
         Example:
-
             ::
 
                 elites = archive.sample_elites(16)

@@ -53,7 +53,7 @@ def cqd_score(
     dist_max,
     dist_ord=None,
 ):
-    """Computes the CQD score of an archive.
+    r"""Computes the CQD score of an archive.
 
     The Continuous Quality Diversity (CQD) score was introduced in `Kent 2022
     <https://dl.acm.org/doi/10.1145/3520304.3534018>`_. Please see the
@@ -69,7 +69,7 @@ def cqd_score(
         penalties (int or array-like): Number of penalty values over which to compute
             the score (the values are distributed evenly over the range [0,1]).
             Alternatively, this may be a 1D array that explicitly lists the penalty
-            values. Known as :math:`\\theta` in Kent 2022.
+            values. Known as :math:`\theta` in Kent 2022.
         obj_min (float): Minimum objective value, used when normalizing the objectives.
         obj_max (float): Maximum objective value, used when normalizing the objectives.
         dist_max (float): Maximum distance between points in measure space.

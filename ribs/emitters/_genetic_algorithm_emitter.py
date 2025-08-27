@@ -89,14 +89,12 @@ class GeneticAlgorithmEmitter(EmitterBase):
 
     @property
     def x0(self):
-        """numpy.ndarray: Initial Solution (if ``initial_solutions`` is not
-        set)."""
+        """numpy.ndarray: Initial solution (if ``initial_solutions`` is not set)."""
         return self._x0
 
     @property
     def initial_solutions(self):
-        """numpy.ndarray: The initial solutions which are returned when the
-        archive is empty (if x0 is not set)."""
+        """numpy.ndarray: Returned when the archive is empty (if :attr:`x0` is not set)."""
         return self._initial_solutions
 
     @property

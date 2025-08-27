@@ -18,20 +18,19 @@ from ribs.archives._utils import fill_sentinel_values, parse_dtype
 
 
 class ProximityArchive(ArchiveBase):
-    """An archive that adds new solutions based on novelty, where novelty is defined via
-    proximity to other solutions in measure space.
+    r"""An archive that adds new solutions based on novelty.
 
     This archive originates in Novelty Search and is described in `Lehman 2011
     <https://web.archive.org/web/20220707041732/https://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf>`_.
     Solutions are added to the archive if their `novelty` exceeds a certain threshold.
-    `Novelty` :math:`\\rho` is defined as the average (Euclidean) distance in measure
+    `Novelty` :math:`\rho` is defined as the average (Euclidean) distance in measure
     space to the :math:`k`-nearest neighbors of the solution in the archive:
 
     .. math::
 
-        \\rho(x) = \\frac{1}{k}\\sum_{i=1}^{k}\\text{dist}(x, \\mu_i)
+        \rho(x) = \frac{1}{k}\sum_{i=1}^{k}\text{dist}(x, \mu_i)
 
-    Where :math:`x` is the measure value of some solution, and :math:`\\mu_{1..k}` are
+    Where :math:`x` is the measure value of some solution, and :math:`\mu_{1..k}` are
     the measure values of the :math:`k`-nearest neighbors in measure space.
 
     This archive also supports the local competition computation from Novelty Search
@@ -222,8 +221,7 @@ class ProximityArchive(ArchiveBase):
 
     @property
     def novelty_threshold(self):
-        """dtypes["measures"]: The degree of novelty required add a solution to
-        the archive."""
+        """dtypes["measures"]: The degree of novelty required add a solution to the archive."""
         return self._novelty_threshold
 
     @property
@@ -233,22 +231,25 @@ class ProximityArchive(ArchiveBase):
 
     @property
     def capacity(self):
-        """int: The number of solutions that can currently be stored in this
-        archive. The capacity doubles every time the archive fills up."""
+        """int: Number of solutions that can currently be stored in this archive.
+
+        The capacity doubles every time the archive fills up.
+        """
         return self._store.capacity
 
     @property
     def cells(self):
-        """int: Strictly speaking, this archive does not have "cells" since it
-        does not have a tessellation like other archives. However, for API
-        compatibility, we set the number of cells as equal to the number of
-        solutions currently in the archive."""
+        """int: Included for API compatibility; equivalent to :meth:`__len__`.
+
+        Strictly speaking, this archive does not have "cells" since it does not have a
+        tessellation like other archives. However, for API compatibility, we set the
+        number of cells as equal to the number of solutions currently in the archive.
+        """
         return len(self)
 
     @property
     def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when
-        computing the QD score."""
+        """float: Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     ## dunder methods ##
@@ -275,8 +276,11 @@ class ProximityArchive(ArchiveBase):
         )
 
     def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values (new_objective_sum)
-        and the index of a potential new best elite (new_best_index)."""
+        """Updates archive statistics.
+
+        Update is based on a new sum of objective values (new_objective_sum) and the
+        index of a potential new best elite (new_best_index).
+        """
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 

@@ -150,8 +150,10 @@ class EvolutionStrategyEmitter(EmitterBase):
 
     @property
     def itrs(self):
-        """int: The number of iterations for this emitter, where each iteration is a
-        call to :meth:`tell`."""
+        """int: The number of iterations for this emitter.
+
+        Each iteration is a call to :meth:`tell`.
+        """
         return self._itrs
 
     def ask(self):
