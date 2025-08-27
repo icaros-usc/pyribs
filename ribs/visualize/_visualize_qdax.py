@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from ribs.archives import CVTArchive
-from ribs.typing import Float
 from ribs.visualize._cvt_archive_3d_plot import cvt_archive_3d_plot
 from ribs.visualize._cvt_archive_heatmap import cvt_archive_heatmap
 
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 
 def _as_cvt_archive(
     repertoire: MapElitesRepertoire,
-    ranges: Sequence[tuple[Float, Float]],
+    ranges: Sequence[tuple[float, float]],
 ) -> CVTArchive:
     """Converts a QDax repertoire into a CVTArchive."""
     # Construct a CVTArchive. We set solution_dim to 0 since we are only plotting and do
@@ -54,7 +53,7 @@ def _as_cvt_archive(
 
 def qdax_repertoire_heatmap(
     repertoire: MapElitesRepertoire,
-    ranges: Sequence[tuple[Float, Float]],
+    ranges: Sequence[tuple[float, float]],
     *args: Any,
     **kwargs: Any,
 ) -> None:
@@ -82,7 +81,7 @@ def qdax_repertoire_heatmap(
 
 def qdax_repertoire_3d_plot(
     repertoire: MapElitesRepertoire,
-    ranges: Sequence[tuple[Float, Float]],
+    ranges: Sequence[tuple[float, float]],
     *args: Any,
     **kwargs: Any,
 ) -> None:

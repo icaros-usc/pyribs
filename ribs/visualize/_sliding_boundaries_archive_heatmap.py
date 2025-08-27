@@ -13,7 +13,6 @@ from matplotlib.typing import ColorType
 from pandas import DataFrame
 
 from ribs.archives import ArchiveDataFrame, SlidingBoundariesArchive
-from ribs.typing import Float
 from ribs.visualize._utils import (
     retrieve_cmap,
     set_cbar,
@@ -29,11 +28,11 @@ def sliding_boundaries_archive_heatmap(
     df: DataFrame | ArchiveDataFrame | None = None,
     transpose_measures: bool = False,
     cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
-    aspect: Literal["auto", "equal"] | Float | None = None,
-    ms: Float | None = None,
-    boundary_lw: Float = 0,
-    vmin: Float | None = None,
-    vmax: Float | None = None,
+    aspect: Literal["auto", "equal"] | float | None = None,
+    ms: float | None = None,
+    boundary_lw: float = 0,
+    vmin: float | None = None,
+    vmax: float | None = None,
     cbar: Literal["auto"] | None | Axes = "auto",
     cbar_kwargs: dict | None = None,
     rasterized: bool = False,

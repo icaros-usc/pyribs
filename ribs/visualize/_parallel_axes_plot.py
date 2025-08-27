@@ -19,7 +19,6 @@ from ribs.archives import (
     GridArchive,
     SlidingBoundariesArchive,
 )
-from ribs.typing import Float, Int
 from ribs.visualize._utils import retrieve_cmap, set_cbar, validate_df
 
 
@@ -28,12 +27,12 @@ def parallel_axes_plot(
     ax: Axes | None = None,
     *,
     df: DataFrame | ArchiveDataFrame | None = None,
-    measure_order: Sequence[Int] | Sequence[tuple[Int, str]] | None = None,
+    measure_order: Sequence[int] | Sequence[tuple[int, str]] | None = None,
     cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
-    linewidth: Float = 1.5,
-    alpha: Float = 0.8,
-    vmin: Float | None = None,
-    vmax: Float | None = None,
+    linewidth: float = 1.5,
+    alpha: float = 0.8,
+    vmin: float | None = None,
+    vmax: float | None = None,
     sort_archive: bool = False,
     cbar: Literal["auto"] | None | Axes = "auto",
     cbar_kwargs: dict | None = None,
