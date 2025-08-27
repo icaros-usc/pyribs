@@ -37,6 +37,8 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+# ruff: noqa: D102
+
 __all__ = [
     "DensityRanker",
     "ImprovementRanker",
@@ -111,7 +113,7 @@ Resets the internal state of the ranker.
 
 
 class ImprovementRanker(RankerBase):
-    """Ranks the solutions based on the improvement in the objective.
+    """Ranks solutions based on improvement in the objective.
 
     This ranker ranks solutions in a single stage. The solutions are ranked by the
     improvement "value" described in :meth:`ribs.archives.ArchiveBase.add`.
@@ -137,7 +139,7 @@ Generates a list of indices that represents an ordering of solutions.
 
 
 class TwoStageImprovementRanker(RankerBase):
-    """Ranks the solutions based on the improvement in the objective.
+    """Ranks solutions based on status and improvement in the objective.
 
     This ranker originates in `Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_ in
     which it was referred to as "Improvement Emitter". This ranker ranks solutions in
@@ -175,7 +177,7 @@ Generates a list of indices that represents an ordering of solutions.
 
 
 class RandomDirectionRanker(RankerBase):
-    """Ranks the solutions based on projection onto a direction in measure space.
+    """Ranks solutions based on projection onto a direction in measure space.
 
     This ranker originates from the random direction emitter in `Fontaine 2020
     <https://arxiv.org/abs/1912.02400>`_. The solutions are ranked solely based on their
@@ -191,8 +193,7 @@ class RandomDirectionRanker(RankerBase):
 
     @property
     def target_measure_dir(self):
-        """numpy.ndarray: ``(measure_dim,)`` array with the target measure direction
-        vector."""
+        """numpy.ndarray: ``(measure_dim,)`` array with the target measure direction vector."""
         return self._target_measure_dir
 
     @target_measure_dir.setter
@@ -231,9 +232,11 @@ the archive bounds so that it is a random archive direction.
 
 
 class TwoStageRandomDirectionRanker(RankerBase):
-    """Similar to :class:`ribs.emitters.rankers.RandomDirectionRanker`, but the
-    solutions are first ranked by whether they are added, then by their projection onto
-    a random direction in the archive space.
+    """Ranks solutions based on status and projection onto a direction in measure space.
+
+    This ranker differs from :class:`ribs.emitters.rankers.RandomDirectionRanker` in
+    that solutions are ranked in two stages: first by whether they are added, then by
+    their projection onto a random direction in the archive space.
 
     This ranker originates from the random direction emitter in `Fontaine 2020
     <https://arxiv.org/abs/1912.02400>`_.
@@ -245,8 +248,7 @@ class TwoStageRandomDirectionRanker(RankerBase):
 
     @property
     def target_measure_dir(self):
-        """numpy.ndarray: ``(measure_dim,)`` array with the target measure
-        direction vector."""
+        """numpy.ndarray: ``(measure_dim,)`` array with the target measure direction vector."""
         return self._target_measure_dir
 
     @target_measure_dir.setter
@@ -270,8 +272,8 @@ class TwoStageRandomDirectionRanker(RankerBase):
         )
 
     rank.__doc__ = f"""
-Ranks the solutions first by whether they are added, then by their projection onto a
-random direction in the archive.
+Ranks solutions first by whether they are added, then by their projection onto a random
+direction in the archive.
 
 {_RANK_ARGS}
     """
@@ -286,7 +288,7 @@ random direction in the archive.
 
 
 class ObjectiveRanker(RankerBase):
-    """Ranks the solutions solely based on their objective values.
+    """Ranks solutions based on objective values.
 
     This ranker originates in the optimizing emitter in `Fontaine 2020
     <https://arxiv.org/abs/1912.02400>`_.
@@ -304,8 +306,10 @@ Ranks the solutions based on their objective values.
 
 
 class TwoStageObjectiveRanker(RankerBase):
-    """Similar to :class:`ribs.emitters.rankers.ObjectiveRanker`, but ranks newly added
-    solutions before improved solutions.
+    """Ranks solutions based on status and objective values.
+
+    This ranker is similar to :class:`ribs.emitters.rankers.ObjectiveRanker`, but ranks
+    newly added solutions before improved solutions.
 
     This ranker originates in the optimizing emitter in `Fontaine 2020
     <https://arxiv.org/abs/1912.02400>`_.
@@ -324,7 +328,7 @@ class TwoStageObjectiveRanker(RankerBase):
         )
 
     rank.__doc__ = f"""
-Ranks the solutions based on their objective values, while prioritizing newly added
+Ranks solutions based on their objective values, while prioritizing newly added
 solutions.
 
 {_RANK_ARGS}
@@ -350,6 +354,8 @@ Ranks solutions based on novelty scores.
 
 class DensityRanker(RankerBase):
     """Ranks solutions based on density in measure space.
+
+    Solutions with lower density are ranked first.
 
     This ranker can only be used with archives that return the ``density`` field from
     their ``add`` method, such as :meth:`ribs.archives.DensityArchive.add`.
@@ -396,6 +402,7 @@ def _get_ranker(klass, seed):
         klass (callable or str): This parameter may either be a callable (e.g. a class
             or a lambda function) that takes in no parameters and returns an instance of
             :class:`RankerBase`, or it may be a full or abbreviated ranker name.
+        seed (int or None): Seed for the ranker.
 
     Returns:
         The corresponding ranker class instance.
