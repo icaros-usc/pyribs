@@ -1,6 +1,16 @@
 """Provides ArchiveBase."""
 
+from __future__ import annotations
+
 from abc import ABC
+from collections.abc import Iterator, Sequence
+from typing import Any, Literal
+
+import numpy as np
+from numpy.typing import ArrayLike
+
+from ribs.archives._archive_data_frame import ArchiveDataFrame
+from ribs.archives._archive_stats import ArchiveStats
 
 
 class ArchiveBase(ABC):
@@ -24,18 +34,23 @@ class ArchiveBase(ABC):
     called.
 
     Args:
-        solution_dim (int or tuple of int): Dimensionality of the solution space. Scalar
-            or multi-dimensional solution shapes are allowed by passing an empty tuple
-            or tuple of integers, respectively.
-        objective_dim (int or empty tuple): Dimensionality of the objective space. For
-            single-objective optimization problems where the objective is a scalar, this
-            argument should be an empty tuple ``()``. In multi-objective optimization
-            problems, this argument should be an integer indicating the number of
-            objectives.
-        measure_dim (int): Dimensionality of the measure space.
+        solution_dim: Dimensionality of the solution space. Scalar or multi-dimensional
+            solution shapes are allowed by passing an empty tuple or tuple of integers,
+            respectively.
+        objective_dim: Dimensionality of the objective space. For single-objective
+            optimization problems where the objective is a scalar, this argument should
+            be an empty tuple ``()``. In multi-objective optimization problems, this
+            argument should be an integer indicating the number of objectives.
+        measure_dim: Dimensionality of the measure space.
     """
 
-    def __init__(self, *, solution_dim, objective_dim, measure_dim):
+    def __init__(
+        self,
+        *,
+        solution_dim: int | tuple[int],
+        objective_dim: tuple[()] | int,
+        measure_dim: int,
+    ) -> None:
         self._solution_dim = solution_dim
         self._objective_dim = objective_dim
         self._measure_dim = measure_dim
@@ -43,55 +58,55 @@ class ArchiveBase(ABC):
     ## Properties of the archive ##
 
     @property
-    def solution_dim(self):
-        """int or tuple of int: Dimensionality of the solution space."""
+    def solution_dim(self) -> int | tuple[int]:
+        """Dimensionality of the solution space."""
         return self._solution_dim
 
     @property
-    def objective_dim(self):
-        """int or empty tuple: Dimensionality of the objective space.
+    def objective_dim(self) -> tuple[()] | int:
+        """Dimensionality of the objective space.
 
         The empty tuple ``()`` indicates a scalar objective.
         """
         return self._objective_dim
 
     @property
-    def measure_dim(self):
-        """int: Dimensionality of the measure space."""
+    def measure_dim(self) -> int:
+        """Dimensionality of the measure space."""
         return self._measure_dim
 
     @property
-    def field_list(self):
-        """list: List of data fields in the archive."""
+    def field_list(self) -> list[str]:
+        """List of data fields in the archive."""
         raise NotImplementedError(
             "`field_list` has not been implemented in this archive"
         )
 
     @property
-    def dtypes(self):
-        """dict: Mapping from field name to dtype for all fields in the archive."""
+    def dtypes(self) -> dict:
+        """Mapping from field name to dtype for all fields in the archive."""
         raise NotImplementedError("`dtypes` has not been implemented in this archive")
 
     @property
-    def stats(self):
-        """:class:`~ribs.archives.ArchiveStats`: Statistics about the archive.
+    def stats(self) -> ArchiveStats:
+        """Statistics about the archive.
 
         See :class:`~ribs.archives.ArchiveStats` for more info.
         """
         raise NotImplementedError("`stats` has not been implemented in this archive")
 
     @property
-    def empty(self):
-        """bool: Whether the archive is empty."""
+    def empty(self) -> bool:
+        """Whether the archive is empty."""
         raise NotImplementedError("`empty` has not been implemented in this archive")
 
     ## dunder methods ##
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Number of elites in the archive."""
         raise NotImplementedError("`__len__` has not been implemented in this archive")
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[dict[str, ArrayLike]]:
         """Creates an iterator over the elites in the archive.
 
         Example:
@@ -108,7 +123,13 @@ class ArchiveBase(ABC):
 
     ## Methods for writing to the archive ##
 
-    def add(self, solution, objective, measures, **fields):
+    def add(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike,
+        measures: ArrayLike,
+        **fields: ArrayLike,
+    ) -> dict[str, np.ndarray]:
         """Inserts a batch of solutions and their data into the archive.
 
         The indices of all arguments should "correspond" to each other, i.e.,
@@ -122,40 +143,46 @@ class ArchiveBase(ABC):
         as the argument.
 
         Args:
-            solution (array-like): (batch_size, :attr:`solution_dim`) array of solution
-                parameters.
-            objective (array-like): (batch_size, :attr:`objective_dim`) array with
-                objective function evaluations of the solutions.
-            measures (array-like): (batch_size, :attr:`measure_dim`) array with measure
-                space coordinates of all the solutions.
-            fields (keyword arguments): Additional data for each solution. Each argument
-                should be an array with ``batch_size`` as the first dimension.
+            solution: (batch_size, :attr:`solution_dim`) array of solution parameters.
+            objective: (batch_size, :attr:`objective_dim`) array with objective function
+                evaluations of the solutions.
+            measures: (batch_size, :attr:`measure_dim`) array with measure space
+                coordinates of all the solutions.
+            fields: Additional data for each solution. Each argument should be an array
+                with ``batch_size`` as the first dimension.
 
         Returns:
-            dict: Information describing the result of the add operation. The content of
-            the dict is to be determined by child classes.
+            Dict describing the result of the add operation. Each entry should be an
+            array that provides the information for each solution, e.g., one entry might
+            be a "status" array of shape ``(batch_size,)`` that provides the status of
+            each solution. The exact keys and values are determined by child classes.
         """
         raise NotImplementedError("`add` has not been implemented in this archive")
 
-    def add_single(self, solution, objective, measures, **fields):
+    def add_single(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike,
+        measures: ArrayLike,
+        **fields: ArrayLike,
+    ) -> dict[str, Any]:
         """Inserts a single solution and its data into the archive.
 
         Args:
-            solution (array-like): Parameters of the solution.
-            objective (scalar or array-like): Objective function evaluation of the
-                solution.
-            measures (array-like): Coordinates in measure space of the solution.
-            fields (keyword arguments): Additional data for the solution.
+            solution: Parameters of the solution.
+            objective: Objective function evaluation of the solution.
+            measures: Coordinates in measure space of the solution.
+            fields: Additional data for the solution.
 
         Returns:
-            dict: Information describing the result of the add operation. As in
-            :meth:`add`, the content of this dict is determined by child classes.
+            Information describing the result of the add operation. As in :meth:`add`,
+            the content of this dict is determined by child classes.
         """
         raise NotImplementedError(
             "`add_single` has not been implemented in this archive"
         )
 
-    def clear(self):
+    def clear(self) -> None:
         """Resets the archive, e.g., by removing all elites in it.
 
         After calling this method, the archive should be :attr:`empty`.
@@ -164,7 +191,7 @@ class ArchiveBase(ABC):
 
     ## Methods for reading from the archive ##
 
-    def retrieve(self, measures):
+    def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, dict[str, np.ndarray]]:
         """Queries the archive for elites with the given batch of measures.
 
         This method operates in batch. It takes in a batch of measures and outputs the
@@ -186,18 +213,18 @@ class ArchiveBase(ABC):
         to all NaN.
 
         Args:
-            measures (array-like): (batch_size, :attr:`measure_dim`) array of measure
-                space points at which to retrieve solutions.
+            measures: (batch_size, :attr:`measure_dim`) array of measure space points at
+                which to retrieve solutions.
         Returns:
-            tuple: 2-element tuple of (boolean ``occupied`` array, dict of elite data).
-            See above for description.
+            2-element tuple of (boolean ``occupied`` array, dict of elite data). See
+            above for description.
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
         raise NotImplementedError("`retrieve` has not been implemented in this archive")
 
-    def retrieve_single(self, measures):
+    def retrieve_single(self, measures: ArrayLike) -> dict[str, Any]:
         """Queries the archive for an elite with the given measures.
 
         While :meth:`retrieve` takes in a *batch* of measures, this method takes in the
@@ -212,9 +239,9 @@ class ArchiveBase(ABC):
             ...
 
         Args:
-            measures (array-like): (:attr:`measure_dim`,) array of measures.
+            measures: (:attr:`measure_dim`,) array of measures.
         Returns:
-            tuple: 2-element tuple of (boolean, dict of data for one elite)
+            2-element tuple of (boolean, dict of data for one elite)
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -223,15 +250,18 @@ class ArchiveBase(ABC):
             "`retrieve_single` has not been implemented in this archive"
         )
 
-    def data(self, fields=None, return_type="dict"):
+    def data(
+        self,
+        fields: str | Sequence[str] | None = None,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> dict[str, np.ndarray] | tuple[np.ndarray] | ArchiveDataFrame:
         """Returns data of the elites in the archive.
 
         Args:
-            fields (str or array-like of str): List of fields to include, such as
-                ``solution``, ``objective``, ``measures``, and other fields in the
-                archive. This can also be a single str indicating a field name.
-            return_type (str): Type of data to return. See below. Ignored if ``fields``
-                is a str.
+            fields: List of fields to include, such as ``solution``, ``objective``,
+                ``measures``, and other fields in the archive. This can also be a single
+                str indicating a field name.
+            return_type: Data to return; see below. Ignored if ``fields`` is a str.
 
         Returns:
             The data for all elites in the archive. All data returned by this method
@@ -296,7 +326,7 @@ class ArchiveBase(ABC):
         """
         raise NotImplementedError("`data` has not been implemented in this archive")
 
-    def sample_elites(self, n):
+    def sample_elites(self, n: int) -> dict[str, np.ndarray]:
         """Randomly samples elites from the archive.
 
         Currently, this sampling is done uniformly at random. Furthermore, each sample
@@ -314,9 +344,9 @@ class ArchiveBase(ABC):
                 ...
 
         Args:
-            n (int): Number of elites to sample.
+            n: Number of elites to sample.
         Returns:
-            dict: Holds a batch of elites randomly selected from the archive.
+            A batch of elites randomly selected from the archive.
         Raises:
             IndexError: The archive is empty.
         """
