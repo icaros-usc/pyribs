@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from abc import ABC
 from collections.abc import Iterator, Sequence
-from typing import Any, Literal
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
 
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
+from ribs.typing import BatchData, SingleData
 
 
 class ArchiveBase(ABC):
@@ -83,7 +84,7 @@ class ArchiveBase(ABC):
         )
 
     @property
-    def dtypes(self) -> dict:
+    def dtypes(self) -> dict[str, np.dtype]:
         """Mapping from field name to dtype for all fields in the archive."""
         raise NotImplementedError("`dtypes` has not been implemented in this archive")
 
@@ -106,7 +107,7 @@ class ArchiveBase(ABC):
         """Number of elites in the archive."""
         raise NotImplementedError("`__len__` has not been implemented in this archive")
 
-    def __iter__(self) -> Iterator[dict[str, ArrayLike]]:
+    def __iter__(self) -> Iterator[SingleData]:
         """Creates an iterator over the elites in the archive.
 
         Example:
@@ -128,7 +129,7 @@ class ArchiveBase(ABC):
         objective: ArrayLike,
         measures: ArrayLike,
         **fields: ArrayLike,
-    ) -> dict[str, np.ndarray]:
+    ) -> BatchData:
         """Inserts a batch of solutions and their data into the archive.
 
         The indices of all arguments should "correspond" to each other, i.e.,
@@ -164,7 +165,7 @@ class ArchiveBase(ABC):
         objective: ArrayLike,
         measures: ArrayLike,
         **fields: ArrayLike,
-    ) -> dict[str, Any]:
+    ) -> SingleData:
         """Inserts a single solution and its data into the archive.
 
         Args:
@@ -190,7 +191,7 @@ class ArchiveBase(ABC):
 
     ## Methods for reading from the archive ##
 
-    def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+    def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, BatchData]:
         """Queries the archive for elites with the given batch of measures.
 
         This method operates in batch. It takes in a batch of measures and outputs the
@@ -225,7 +226,7 @@ class ArchiveBase(ABC):
         """
         raise NotImplementedError("`retrieve` has not been implemented in this archive")
 
-    def retrieve_single(self, measures: ArrayLike) -> dict[str, Any]:
+    def retrieve_single(self, measures: ArrayLike) -> SingleData:
         """Queries the archive for an elite with the given measures.
 
         While :meth:`retrieve` takes in a *batch* of measures, this method takes in the
@@ -257,7 +258,7 @@ class ArchiveBase(ABC):
         self,
         fields: None | Sequence[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> np.ndarray | dict[str, np.ndarray] | tuple[np.ndarray] | ArchiveDataFrame:
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         """Returns data of the elites in the archive.
 
         Args:
@@ -335,7 +336,7 @@ class ArchiveBase(ABC):
         """
         raise NotImplementedError("`data` has not been implemented in this archive")
 
-    def sample_elites(self, n: int) -> dict[str, np.ndarray]:
+    def sample_elites(self, n: int) -> BatchData:
         """Randomly samples elites from the archive.
 
         Currently, this sampling is done uniformly at random. Furthermore, each sample
