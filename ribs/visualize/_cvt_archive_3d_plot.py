@@ -46,7 +46,7 @@ def cvt_archive_3d_plot(
     plot_samples: bool = False,
     ms: float = 1,
 ) -> None:
-    """Plots a :class:`~ribs.archives.CVTArchive` with 3D measure space.
+    r"""Plots a :class:`~ribs.archives.CVTArchive` with 3D measure space.
 
     This function relies on Matplotlib's `mplot3d
     <https://matplotlib.org/stable/tutorials/toolkits/mplot3d.html>`_ toolkit. By
@@ -180,7 +180,7 @@ def cvt_archive_3d_plot(
             measure 1 on the y-axis, and measure 0 on the z-axis.
         cmap: The colormap to use when plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of Matplotlib color
-            specifications (e.g., an :math:`N \\times 3` or :math:`N \\times 4` array --
+            specifications (e.g., an :math:`N \times 3` or :math:`N \times 4` array --
             see :class:`~matplotlib.colors.ListedColormap`), or a
             :class:`~matplotlib.colors.Colormap` object.
         lw: Line width when plotting the Voronoi diagram.

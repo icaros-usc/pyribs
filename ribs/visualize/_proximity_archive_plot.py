@@ -38,8 +38,7 @@ def proximity_archive_plot(
     cbar_kwargs: dict | None = None,
     rasterized: bool = False,
 ) -> None:
-    """Plots scatterplot of a :class:`~ribs.archives.ProximityArchive` with 2D measure
-    space.
+    r"""Plots scatterplot of a :class:`~ribs.archives.ProximityArchive` with 2D measure space.
 
     Each marker in the scatterplot is an elite, and its color represents the objective
     value (objective values default to 0 in the ``ProximityArchive``).
@@ -118,7 +117,7 @@ def proximity_archive_plot(
             behavior (i.e. to transpose the axes), set this to ``True``.
         cmap: The colormap to use when plotting intensity. Either the name of a
             :class:`~matplotlib.colors.Colormap`, a list of Matplotlib color
-            specifications (e.g., an :math:`N \\times 3` or :math:`N \\times 4` array --
+            specifications (e.g., an :math:`N \times 3` or :math:`N \times 4` array --
             see :class:`~matplotlib.colors.ListedColormap`), or a
             :class:`~matplotlib.colors.Colormap` object.
         aspect: The aspect ratio of the heatmap (i.e. height/width). Defaults to
@@ -143,6 +142,7 @@ def proximity_archive_plot(
             raster graphic so that the archive cells will not have to be individually
             rendered. Meanwhile, the surrounding axes, particularly text labels, will
             remain in vector format.
+
     Raises:
         ValueError: The archive is not 2D.
     """
