@@ -38,7 +38,7 @@ def test_fails_on_unsupported_dims(archive_type):
         ),
     }[archive_type]()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r".* can only be .* for .*"):
         {
             "grid": grid_archive_heatmap,
             "cvt": cvt_archive_heatmap,
@@ -54,18 +54,18 @@ def test_fails_on_unsupported_dims(archive_type):
 def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
     archive = {
         "grid": lambda: GridArchive(
-            solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3
+            solution_dim=2, dims=[20, 20], ranges=[(-1, 1)] * 2
         ),
         "cvt": lambda: CVTArchive(
             solution_dim=2,
             cells=100,
-            ranges=[(-1, 1)] * 3,
+            ranges=[(-1, 1)] * 2,
             samples=100,
         ),
         "sliding": lambda: SlidingBoundariesArchive(
             solution_dim=2,
-            dims=[20, 20, 20],
-            ranges=[(-1, 1)] * 3,
+            dims=[20, 20],
+            ranges=[(-1, 1)] * 2,
         ),
         "cvt_3d": lambda: CVTArchive(
             solution_dim=2,
@@ -75,7 +75,7 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
         ),
     }[archive_type]()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Invalid arg cbar=.*"):
         {
             "grid": grid_archive_heatmap,
             "cvt": cvt_archive_heatmap,
@@ -93,17 +93,17 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
 def test_heatmap_fails_on_invalid_aspect_option(archive_type, invalid_arg_aspect):
     archive = {
         "grid": lambda: GridArchive(
-            solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3
+            solution_dim=2, dims=[20, 20], ranges=[(-1, 1)] * 2
         ),
         "cvt": lambda: CVTArchive(
-            solution_dim=2, cells=100, ranges=[(-1, 1)] * 3, samples=100
+            solution_dim=2, cells=100, ranges=[(-1, 1)] * 2, samples=100
         ),
         "sliding": lambda: SlidingBoundariesArchive(
-            solution_dim=2, dims=[20, 20, 20], ranges=[(-1, 1)] * 3
+            solution_dim=2, dims=[20, 20], ranges=[(-1, 1)] * 2
         ),
     }[archive_type]()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Invalid arg aspect=.*"):
         {
             "grid": grid_archive_heatmap,
             "cvt": cvt_archive_heatmap,
