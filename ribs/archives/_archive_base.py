@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from collections.abc import Iterator, Sequence
+from collections.abc import Collection, Iterator
 from typing import Literal, overload
 
 import numpy as np
@@ -11,7 +11,7 @@ from numpy.typing import ArrayLike
 
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
-from ribs.typing import BatchData, SingleData
+from ribs.typing import Array, BatchData, Int, SingleData
 
 
 class ArchiveBase(ABC):
@@ -48,9 +48,9 @@ class ArchiveBase(ABC):
     def __init__(
         self,
         *,
-        solution_dim: int | tuple[int],
-        objective_dim: tuple[()] | int,
-        measure_dim: int,
+        solution_dim: Int | tuple[Int],
+        objective_dim: tuple[()] | Int,
+        measure_dim: Int,
     ) -> None:
         self._solution_dim = solution_dim
         self._objective_dim = objective_dim
@@ -59,12 +59,12 @@ class ArchiveBase(ABC):
     ## Properties of the archive ##
 
     @property
-    def solution_dim(self) -> int | tuple[int]:
+    def solution_dim(self) -> Int | tuple[Int]:
         """Dimensionality of the solution space."""
         return self._solution_dim
 
     @property
-    def objective_dim(self) -> tuple[()] | int:
+    def objective_dim(self) -> tuple[()] | Int:
         """Dimensionality of the objective space.
 
         The empty tuple ``()`` indicates a scalar objective.
@@ -72,7 +72,7 @@ class ArchiveBase(ABC):
         return self._objective_dim
 
     @property
-    def measure_dim(self) -> int:
+    def measure_dim(self) -> Int:
         """Dimensionality of the measure space."""
         return self._measure_dim
 
@@ -254,28 +254,39 @@ class ArchiveBase(ABC):
             "`retrieve_single` has not been implemented in this archive"
         )
 
-    # TODO: other overloads
     @overload
     def data(
         self,
-        fields: None | Sequence[str] = None,
-        return_type: Literal["tuple"] = "tuple",
-    ) -> tuple[np.ndarray]: ...
+        fields: str,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array: ...
 
     @overload
     def data(
         self,
-        fields: None | Sequence[str] = None,
+        fields: None | Collection[str] = None,
+        return_type: Literal["dict"] = "dict",
+    ) -> BatchData: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["tuple"] = "tuple",
+    ) -> tuple[Array]: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
         return_type: Literal["pandas"] = "pandas",
     ) -> ArchiveDataFrame: ...
 
-    # TODO: Split out ArchiveBase into a PR
-    # TODO: Can use Collection instead of Sequence?
     def data(
         self,
-        fields: None | Sequence[str] | str = None,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
+    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
         """Returns data of the elites in the archive.
 
         Args:
@@ -353,7 +364,7 @@ class ArchiveBase(ABC):
         """
         raise NotImplementedError("`data` has not been implemented in this archive")
 
-    def sample_elites(self, n: int) -> BatchData:
+    def sample_elites(self, n: Int) -> BatchData:
         """Randomly samples elites from the archive.
 
         Currently, this sampling is done uniformly at random. Furthermore, each sample
