@@ -287,6 +287,9 @@ autodoc_type_aliases = {
     "ArrayLike": "numpy.typing.ArrayLike",
     "DTypeLike": "numpy.typing.DTypeLike",
     "ColorType": "matplotlib.typing.ColorType",
+    # We are okay expanding these aliases because they are quite readable.
+    #  "BatchData": "ribs.typing.BatchData",
+    #  "SingleData": "ribs.typing.SingleData",
 }
 autosummary_generate = True
 
