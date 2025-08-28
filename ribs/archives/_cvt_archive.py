@@ -4,7 +4,7 @@ import numbers
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
-from scipy.spatial import cKDTree
+from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
 from scipy.stats.qmc import Halton, Sobol
 from sklearn.cluster import k_means
 
@@ -547,11 +547,11 @@ class CVTArchive(ArchiveBase):
         #
         # All objective_sizes should be > 0 since we only retrieve counts for indices in
         # `indices`.
-        objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]
+        objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]  # ty: ignore[call-non-callable]
 
         # Compute the sum of the objectives inserted into each cell -- again, we index
         # with `indices`.
-        objective_sums = aggregate(indices, objective, func="sum", fill_value=np.nan)[
+        objective_sums = aggregate(indices, objective, func="sum", fill_value=np.nan)[  # ty: ignore[call-non-callable]
             indices
         ]
 
@@ -740,7 +740,7 @@ class CVTArchive(ArchiveBase):
         # elite will be inserted if there is a tie. See their default numpy
         # implementation for more info:
         # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-        archive_argmax = aggregate(
+        archive_argmax = aggregate(  # ty: ignore[call-non-callable]
             indices, data["objective"], func="argmax", fill_value=-1
         )
         should_insert = archive_argmax[archive_argmax != -1]

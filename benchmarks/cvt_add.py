@@ -113,7 +113,7 @@ def main():
     def add_entries():
         nonlocal archive
         for i in range(n_batches):
-            archive.add(
+            archive.add(  # ty: ignore[unresolved-attribute]
                 all_solution_batch[i],
                 all_objective_batch[i],
                 all_measures_batch[i],

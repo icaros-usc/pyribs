@@ -1,5 +1,7 @@
 """Utilities for computing CQD score."""
 
+from __future__ import annotations
+
 import dataclasses
 import typing
 
@@ -13,10 +15,10 @@ class CQDScoreResult:
     """Stores the result of running :func:`cqd_score`."""
 
     #: Number of times the score was computed.
-    iterations: int
+    iterations: int | np.integer
 
     #: The mean score. This is the result most users will need.
-    mean: float
+    mean: float | np.floating
 
     #: Array of scores obtained on each iteration.
     scores: np.ndarray
@@ -29,13 +31,13 @@ class CQDScoreResult:
     penalties: np.ndarray
 
     #: Minimum objective passed into the function.
-    obj_min: float
+    obj_min: float | np.floating
 
     #: Maximum objective passed into the function.
-    obj_max: float
+    obj_max: float | np.floating
 
     #: Max distance passed into the function.
-    dist_max: float
+    dist_max: float | np.floating
 
     #: Order of the norm for distance that was passed into the function. Refer to the
     #: ``ord`` argument in :func:`numpy.linalg.norm` for type info.
