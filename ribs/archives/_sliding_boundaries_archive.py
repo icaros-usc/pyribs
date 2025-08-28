@@ -515,7 +515,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         cur_data.pop("index")
 
         new_data_single = list(self._buffer)  # List of dicts.
-        new_data = dict.fromkeys(new_data_single[0])
+        new_data: dict[str, list] = dict.fromkeys(new_data_single[0])  # ty: ignore[invalid-assignment]
         for name in new_data:
             new_data[name] = [d[name] for d in new_data_single]
 
