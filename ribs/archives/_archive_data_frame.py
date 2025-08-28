@@ -1,15 +1,8 @@
 """Provides ArchiveDataFrame."""
 
-from __future__ import annotations
-
 import re
-from collections.abc import Iterable
-from typing import Any
 
-import numpy as np
 import pandas as pd
-
-from ribs.typing import SingleData
 
 # Developer Notes:
 # - The documentation for this class is hacked -- to add new methods, manually modify
@@ -78,14 +71,14 @@ class ArchiveDataFrame(pd.DataFrame):
         ``get_field("objective")[i]``, and ``get_field("solution")[i]``.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
         return ArchiveDataFrame
 
-    def iterelites(self) -> Iterable[SingleData]:
+    def iterelites(self):
         """Iterator that outputs every elite in the ArchiveDataFrame as a dict."""
         # Identify fields in the data frame. There are some edge cases here, such as if
         # someone purposely names their field with an underscore and a number at the end
@@ -115,7 +108,7 @@ class ArchiveDataFrame(pd.DataFrame):
 
         return ({name: arr[i] for name, arr in fields.items()} for i in range(n_elites))
 
-    def get_field(self, field: str) -> np.ndarray | None:
+    def get_field(self, field):
         """Array holding the data for the given field.
 
         None if there is no data for the field.
