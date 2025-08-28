@@ -103,6 +103,8 @@ def main(
     solution_dim: int = 4,
     search_nrestarts: int = 5,
     entropy_ejie: bool = False,
+    # See here for how to annotate tuples:
+    # https://docs.python.org/3/library/typing.html#annotating-tuples
     upscale_schedule: tuple[tuple[int, ...], ...] = ((5, 5), (10, 10), (25, 25)),
     num_initial_samples: int = 20,
     initial_solutions: np.ndarray | None = None,
