@@ -91,8 +91,8 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
                 "pycma must be installed -- please run `pip install cma` or "
                 "`conda install cma`"
             ) from e
-
-        self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)
+        else:
+            self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)  # ty: ignore[possibly-unbound-attribute]
 
     def check_stop(self, ranking_values):
         """Checks if the optimization should stop and be reset.
