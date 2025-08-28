@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections.abc import Iterator, Sequence
-from typing import Literal
+from typing import Literal, overload
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -254,6 +254,23 @@ class ArchiveBase(ABC):
             "`retrieve_single` has not been implemented in this archive"
         )
 
+    # TODO: other overloads
+    @overload
+    def data(
+        self,
+        fields: None | Sequence[str] = None,
+        return_type: Literal["tuple"] = "tuple",
+    ) -> tuple[np.ndarray]: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Sequence[str] = None,
+        return_type: Literal["pandas"] = "pandas",
+    ) -> ArchiveDataFrame: ...
+
+    # TODO: Split out ArchiveBase into a PR
+    # TODO: Can use Collection instead of Sequence?
     def data(
         self,
         fields: None | Sequence[str] | str = None,
