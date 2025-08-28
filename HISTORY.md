@@ -20,6 +20,7 @@
 
 #### Bugs
 
+- Add best_elite back to SlidingBoundariesArchive ({pr}`622`)
 - Correct types of ArchiveStats obj_max and obj_mean ({pr}`617`)
 - Fix bug in ribs.visualize args tests ({pr}`615`)
 
