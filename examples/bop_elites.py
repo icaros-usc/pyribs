@@ -7,6 +7,8 @@ Install the following dependencies before running this example:
     pip install ribs[visualize] pymoo tqdm fire
 """
 
+from __future__ import annotations
+
 import json
 import time
 from pathlib import Path
@@ -101,9 +103,9 @@ def main(
     solution_dim: int = 4,
     search_nrestarts: int = 5,
     entropy_ejie: bool = False,
-    upscale_schedule: tuple[tuple] = ((5, 5), (10, 10), (25, 25)),
+    upscale_schedule: tuple[tuple[int, ...], ...] = ((5, 5), (10, 10), (25, 25)),
     num_initial_samples: int = 20,
-    initial_solutions: np.ndarray = None,
+    initial_solutions: np.ndarray | None = None,
     batch_size: int = 8,
     num_emitters: int = 1,
     seed: int = 42,
