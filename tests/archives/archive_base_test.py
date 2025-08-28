@@ -218,7 +218,25 @@ def test_stats_add_and_overwrite(add_mode, qd_score_offset):
     assert np.isclose(archive.stats.obj_mean, 3.0)
 
 
-def test_best_elite(add_mode):
+@pytest.mark.parametrize("name", ARCHIVE_NAMES)
+def test_best_elite_basic(name):
+    data = get_archive_data(name)
+    assert np.isclose(
+        data.archive_with_elite.best_elite["solution"], data.solution
+    ).all()
+    assert np.isclose(
+        data.archive_with_elite.best_elite["objective"], data.objective
+    ).all()
+
+    if isinstance(data.archive_with_elite, CategoricalArchive):
+        assert np.all(data.archive_with_elite.best_elite["measures"] == data.measures)
+    else:
+        assert np.isclose(
+            data.archive_with_elite.best_elite["measures"], data.measures
+        ).all()
+
+
+def test_best_elite_extended(add_mode):
     archive = GridArchive(solution_dim=3, dims=[10, 20], ranges=[(-1, 1), (-2, 2)])
 
     # Initial elite is None.
