@@ -1,9 +1,14 @@
 """Contains the CategoricalArchive."""
 
 import numpy as np
-from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import check_batch_shape, check_shape, validate_batch, validate_single
+from ribs._utils import (
+    check_batch_shape,
+    check_shape,
+    import_aggregate,
+    validate_batch,
+    validate_single,
+)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
@@ -13,6 +18,8 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
+
+aggregate = import_aggregate()
 
 
 class CategoricalArchive(ArchiveBase):
@@ -351,11 +358,11 @@ class CategoricalArchive(ArchiveBase):
         #
         # All objective_sizes should be > 0 since we only retrieve counts for indices in
         # `indices`.
-        objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]  # ty: ignore[call-non-callable]
+        objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]
 
         # Compute the sum of the objectives inserted into each cell -- again, we index
         # with `indices`.
-        objective_sums = aggregate(indices, objective, func="sum", fill_value=np.nan)[  # ty: ignore[call-non-callable]
+        objective_sums = aggregate(indices, objective, func="sum", fill_value=np.nan)[
             indices
         ]
 
@@ -544,7 +551,7 @@ class CategoricalArchive(ArchiveBase):
         # elite will be inserted if there is a tie. See their default numpy
         # implementation for more info:
         # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-        archive_argmax = aggregate(  # ty: ignore[call-non-callable]
+        archive_argmax = aggregate(
             indices, data["objective"], func="argmax", fill_value=-1
         )
         should_insert = archive_argmax[archive_argmax != -1]

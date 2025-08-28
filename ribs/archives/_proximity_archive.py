@@ -1,13 +1,13 @@
 """Contains the ProximityArchive."""
 
 import numpy as np
-from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
 
 from ribs._utils import (
     check_batch_shape,
     check_finite,
     check_shape,
+    import_aggregate,
     validate_batch,
     validate_single,
 )
@@ -15,6 +15,8 @@ from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._utils import fill_sentinel_values, parse_dtype
+
+aggregate = import_aggregate()
 
 
 class ProximityArchive(ArchiveBase):
@@ -673,7 +675,7 @@ class ProximityArchive(ArchiveBase):
                 # first elite will be inserted if there is a tie. See their default
                 # numpy implementation for more info:
                 # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-                archive_argmax = aggregate(  # ty: ignore[call-non-callable]
+                archive_argmax = aggregate(
                     indices, data["objective"], func="argmax", fill_value=-1
                 )
                 should_insert = archive_argmax[archive_argmax != -1]
