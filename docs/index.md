@@ -24,6 +24,7 @@ api/ribs.emitters.operators
 api/ribs.emitters.opt
 api/ribs.emitters.rankers
 api/ribs.schedulers
+api/ribs.typing
 api/ribs.visualize
 ```
 
