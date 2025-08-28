@@ -115,7 +115,8 @@ class ArchiveDataFrame(pd.DataFrame):
 
         return ({name: arr[i] for name, arr in fields.items()} for i in range(n_elites))
 
-    def get_field(self, field: str) -> np.ndarray | None:
+    # TODO: get_field should throw KeyError if field is not found
+    def get_field(self, field: str) -> np.ndarray:
         """Array holding the data for the given field.
 
         None if there is no data for the field.
@@ -124,11 +125,11 @@ class ArchiveDataFrame(pd.DataFrame):
         # might change in-place, e.g., when a column is deleted.
 
         if field in self:
-            # Scalar field -- e.g., "objective"
+            # Scalar field, e.g., "objective".
             return self[field].to_numpy(copy=True)
         else:
-            # Vector field -- e.g., field="measures" and we want columns like
-            # "measures_0" and "measures_1".
+            # Vector field, e.g., field="measures" and we want columns like "measures_0"
+            # and "measures_1".
             field_re = f"{field}_\\d+"
             cols = [c for c in self if re.fullmatch(field_re, c)]
             return self[cols].to_numpy(copy=True) if cols else None
