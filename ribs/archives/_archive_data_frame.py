@@ -78,11 +78,11 @@ class ArchiveDataFrame(pd.DataFrame):
         ``get_field("objective")[i]``, and ``get_field("solution")[i]``.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
     @property
-    def _constructor(self):  # noqa: ANN202
+    def _constructor(self):
         return ArchiveDataFrame
 
     def iterelites(self) -> Iterable[SingleData]:
