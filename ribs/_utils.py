@@ -1,6 +1,7 @@
 """Miscellaneous internal utilities."""
 
 import numbers
+import warnings
 
 import array_api_compat.numpy as np_compat
 import numpy as np  # TODO (#576): Remove import of np
@@ -236,3 +237,23 @@ def xp_namespace(xp):
     https://github.com/data-apis/array-api-compat/issues/342
     """
     return np_compat if xp is None else array_namespace(xp.empty(0))
+
+
+def import_aggregate():
+    """Imports the aggregate function from numpy groupies.
+
+    If we are unable to get the numba version (aggregate_nb), we import the regular
+    aggregate (which may be slow) and warn the user accordingly.
+    """
+    from numpy_groupies import aggregate_nb
+
+    if aggregate_nb is not None:
+        return aggregate_nb
+    else:
+        from numpy_groupies import aggregate
+
+        warnings.warn(
+            "Unable to import aggregate_nb from numpy_groupies. For best performance, please make sure numba is installed.",
+            stacklevel=2,
+        )
+        return aggregate
