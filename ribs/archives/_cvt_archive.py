@@ -4,7 +4,7 @@ import numbers
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
-from scipy.spatial import cKDTree
+from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
 from scipy.stats.qmc import Halton, Sobol
 from sklearn.cluster import k_means
 

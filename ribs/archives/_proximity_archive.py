@@ -2,7 +2,7 @@
 
 import numpy as np
 from numpy_groupies import aggregate_nb as aggregate
-from scipy.spatial import cKDTree
+from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
 
 from ribs._utils import (
     check_batch_shape,
