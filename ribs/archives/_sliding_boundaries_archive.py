@@ -264,6 +264,14 @@ class SlidingBoundariesArchive(ArchiveBase):
     ## Roughly ordered by the parameter list in the constructor. ##
 
     @property
+    def best_elite(self):
+        """dict: The elite with the highest objective in the archive.
+
+        None if there are no elites in the archive.
+        """
+        return self._best_elite
+
+    @property
     def dims(self):
         """(measure_dim,) numpy.ndarray: Number of cells in each dimension."""
         return self._dims
@@ -314,8 +322,6 @@ class SlidingBoundariesArchive(ArchiveBase):
     def buffer_capacity(self):
         """int: Maximum capacity of the buffer."""
         return self._buffer.capacity
-
-    ## Boundaries property (updates over time) ##
 
     @property
     def boundaries(self):
