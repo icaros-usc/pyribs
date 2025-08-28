@@ -12,15 +12,14 @@
 
 #### Improvements
 
-- Add type annotations and use ty for type checking ({pr}`606`, {pr}`610`,
-  {pr}`620`)
+- Add type annotations and use ty for type checking ({issue}`624`)
 - Migrate from pylint to ruff for linting ({pr}`605`, {pr}`607`, {pr}`612`,
   {pr}`619`)
 - Replace isort with ruff import check ({pr}`603`)
 
 #### Bugs
 
-- Add best_elite back to SlidingBoundariesArchive ({pr}`622`)
+- Add best_elite back to SlidingBoundariesArchive ({pr}`623`)
 - Correct types of ArchiveStats obj_max and obj_mean ({pr}`617`)
 - Fix bug in ribs.visualize args tests ({pr}`615`)
 

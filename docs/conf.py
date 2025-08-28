@@ -285,7 +285,9 @@ autodoc_type_aliases = {
     # Aliases that we do not want to expand.
     # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_type_aliases
     "ArrayLike": "numpy.typing.ArrayLike",
+    "DTypeLike": "numpy.typing.DTypeLike",
     "ColorType": "matplotlib.typing.ColorType",
+    # We are okay expanding most ribs.typing aliases because they are quite readable.
 }
 autosummary_generate = True
 
