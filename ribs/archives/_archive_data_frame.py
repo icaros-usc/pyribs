@@ -115,7 +115,6 @@ class ArchiveDataFrame(pd.DataFrame):
 
         return ({name: arr[i] for name, arr in fields.items()} for i in range(n_elites))
 
-    # TODO: get_field should throw KeyError if field is not found
     def get_field(self, field: str) -> np.ndarray:
         """Array holding the data for the given field.
 
@@ -132,4 +131,6 @@ class ArchiveDataFrame(pd.DataFrame):
             # and "measures_1".
             field_re = f"{field}_\\d+"
             cols = [c for c in self if re.fullmatch(field_re, c)]
-            return self[cols].to_numpy(copy=True) if cols else None
+            if cols:
+                return self[cols].to_numpy(copy=True)
+            raise KeyError(f"Field '{field}' was not found.")
