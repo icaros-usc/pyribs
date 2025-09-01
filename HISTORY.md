@@ -16,6 +16,12 @@
 - Migrate from pylint to ruff for linting ({pr}`605`, {pr}`607`)
 - Replace isort with ruff import check ({pr}`603`)
 
+## 0.8.3
+
+Small bugfix release.
+
+### Changelog
+
 #### Bugs
 
 - Add best_elite back to SlidingBoundariesArchive ({pr}`622`)
