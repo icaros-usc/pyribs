@@ -1,21 +1,5 @@
 # History
 
-## (Forthcoming)
-
-### Changelog
-
-#### API
-
-- Support array backends via Python array API Standard ({issue}`570`)
-- **Backwards-incompatible:** Remove raw_dict methods from ArrayStore
-  ({pr}`575`)
-
-#### Improvements
-
-- Add type annotations and use ty for type checking ({pr}`606`, {pr}`610`)
-- Migrate from pylint to ruff for linting ({pr}`605`, {pr}`607`)
-- Replace isort with ruff import check ({pr}`603`)
-
 ## 0.8.3
 
 Small bugfix release.
