@@ -1,18 +1,25 @@
 """Provides ArrayStore."""
 
+from __future__ import annotations
+
 import contextlib
 import itertools
 import numbers
+from collections.abc import Iterator, Sequence
 from enum import IntEnum
 from functools import cached_property
+from typing import Literal, overload
 
+import numpy as np
 from array_api_compat import is_cupy_array, is_numpy_array, is_torch_array
+from numpy.typing import ArrayLike, DTypeLike
 
 with contextlib.suppress(ImportError):
     from array_api_compat import cupy as cp
 
 from ribs._utils import arr_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
+from ribs.typing import BatchData
 
 
 class Update(IntEnum):
@@ -25,7 +32,7 @@ class Update(IntEnum):
 class ArrayStoreIterator:
     """An iterator for an ArrayStore's entries."""
 
-    def __init__(self, store):
+    def __init__(self, store: ArrayStore) -> None:
         self.store = store
         self.iter_idx = 0
         self.state = store._props["updates"].copy()
@@ -85,13 +92,13 @@ class ArrayStore:
     for ``xp`` and ``device``.
 
     Args:
-        field_desc (dict): Description of fields in the array store. The description is
-            a dict mapping from a str to a tuple of ``(shape, dtype)``. For instance,
+        field_desc: Description of fields in the array store. The description is a dict
+            mapping from a str to a tuple of ``(shape, dtype)``. For instance,
             ``{"objective": ((), np.float32), "measures": ((10,), np.float32)}`` will
             create an "objective" field with shape ``(capacity,)`` and a "measures"
             field with shape ``(capacity, 10)``. Note that field names must be valid
             Python identifiers.
-        capacity (int): Total possible entries in the store.
+        capacity: Total possible entries in the store.
         xp (array_namespace): Optional array namespace. Should be compatible with the
             array API standard, or supported by array-api-compat. Defaults to
             ``numpy``.
@@ -119,7 +126,13 @@ class ArrayStore:
             Python identifier.
     """
 
-    def __init__(self, field_desc, capacity, xp=None, device=None):
+    def __init__(
+        self,
+        field_desc: dict[str, tuple[ArrayLike, DTypeLike]],
+        capacity: int,  # TODO(#123): Add
+        xp=None,  # TODO(#123): Add
+        device=None,  # TODO(#123): Add
+    ) -> None:
         self._xp = xp_namespace(xp)
         self._device = device
 
@@ -148,7 +161,7 @@ class ArrayStore:
                 array_shape, dtype=dtype, device=self._device
             )
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Number of occupied indices in the store.
 
         AKA, number of indices that have a corresponding data entry.
@@ -174,8 +187,8 @@ class ArrayStore:
         return ArrayStoreIterator(self)
 
     @property
-    def capacity(self):
-        """int: Maximum number of data entries in the store."""
+    def capacity(self) -> int:
+        """Maximum number of data entries in the store."""
         return self._props["capacity"]
 
     @property
@@ -189,8 +202,8 @@ class ArrayStore:
         return arr_readonly(self._props["occupied_list"][: self._props["n_occupied"]])
 
     @cached_property
-    def field_desc(self):
-        """dict: Description of fields in the store.
+    def field_desc(self):  # TODO(#123): how to type dtypes for xp?
+        """Description of fields in the store.
 
         Example:
             ::
@@ -238,8 +251,8 @@ class ArrayStore:
         return self.dtypes | {"index": self._xp.int32}
 
     @cached_property
-    def field_list(self):
-        """list: List of fields in the store.
+    def field_list(self) -> list[str]:
+        """List of fields in the store.
 
         Example:
             ::
@@ -251,7 +264,7 @@ class ArrayStore:
         return list(self._fields)
 
     @cached_property
-    def field_list_with_index(self):
+    def field_list_with_index(self) -> list[str]:
         """list: List of fields in the store, plus the index.
 
         The index is always added at the end of the list.
@@ -282,15 +295,48 @@ class ArrayStore:
                 "with NumPy, PyTorch, and CuPy arrays."
             )
 
-    def retrieve(self, indices, fields=None, return_type="dict"):
+    @overload
+    def retrieve(
+        self,
+        fields: str,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> np.ndarray: ...
+
+    @overload
+    def retrieve(
+        self,
+        fields: None | Sequence[str] = None,
+        return_type: Literal["dict"] = "dict",
+    ) -> BatchData: ...
+
+    @overload
+    def retrieve(
+        self,
+        fields: None | Sequence[str] = None,
+        return_type: Literal["tuple"] = "tuple",
+    ) -> tuple[np.ndarray]: ...
+
+    @overload
+    def retrieve(
+        self,
+        fields: None | Sequence[str] = None,
+        return_type: Literal["pandas"] = "pandas",
+    ) -> ArchiveDataFrame: ...
+
+    def retrieve(
+        self,
+        indices: ArrayLike,  # TODO (#123): xp arraylike?
+        fields: None | Sequence[str] | str = None,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         """Collects data at the given indices.
 
         Args:
-            indices (array-like): List of indices at which to collect data.
-            fields (str or array-like of str): List of fields to include. By default,
-                all fields will be included, with an additional "index" as the last
-                field. The "index" field can also be added anywhere in this list of
-                fields. This argument can also be a single str indicating a field name.
+            indices: List of indices at which to collect data.
+            fields: List of fields to include. By default, all fields will be included,
+                with an additional "index" as the last field. The "index" field can also
+                be added anywhere in this list of fields. This argument can also be a
+                single str indicating a field name.
             return_type (str): Type of data to return. See the ``data`` returned below.
                 Ignored if ``fields`` is a str.
 
@@ -367,6 +413,8 @@ class ArrayStore:
         Raises:
             ValueError: Invalid field name provided.
             ValueError: Invalid return_type provided.
+            ValueError: Passed ``return_type="pandas"`` when one of the fields has >1D
+                data.
         """
         single_field = isinstance(fields, str)
         indices = self._xp.asarray(indices, dtype=self._xp.int32, device=self._device)
@@ -375,18 +423,18 @@ class ArrayStore:
         occupied = self._props["occupied"][indices]
 
         if single_field:
-            data = None
+            data: np.ndarray | None = None
         elif return_type in ("dict", "pandas"):
-            data = {}
+            data: BatchData = {}
         elif return_type == "tuple":
-            data = []
+            data: list[np.ndarray] = []
         else:
             raise ValueError(f"Invalid return_type {return_type}.")
 
         if single_field:
             fields = [fields]
         elif fields is None:
-            fields = itertools.chain(self._fields, ["index"])
+            fields: Iterator[str] = itertools.chain(self._fields, ["index"])
 
         for name in fields:
             # Collect array data.
