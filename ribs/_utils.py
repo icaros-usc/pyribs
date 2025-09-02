@@ -209,19 +209,15 @@ def validate_single(archive, data, none_objective_ok=False):
     return data
 
 
-# TODO (#576): Replace all calls to readonly with arr_readonly below.
-def readonly(arr):
-    """Sets an array to be readonly."""
-    arr.flags.writeable = False
-    return arr
-
-
 def arr_readonly(arr: ArrayVar, view: bool = False) -> ArrayVar:
     """Sets an array to be readonly if possible.
 
-    Intended to support arrays across libraries; currently only supports numpy.
+    Intended to support arrays across libraries; currently only supports numpy. Other
+    arrays are returned as is.
 
-    Pass `view` to call `arr.view` when the array is a numpy array.
+    Pass `view` to call `arr.view` when the array is a numpy array. This is useful if
+    you will still need to modify the array, as you can return a readonly view that does
+    not make the original array readonly.
     """
     if isinstance(arr, np.ndarray):
         readonly_arr = arr.view() if view else arr
