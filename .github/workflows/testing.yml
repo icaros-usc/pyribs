@@ -186,7 +186,7 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install deps
-        run: pip install .[all,dev]
+        run: pip install .[all,dev,dev-array-api]
       - name: Build docs
         run: make docs
   deploy:

@@ -19,6 +19,6 @@ python:
     - method: pip
       path: .
       extra_requirements:
-        - visualize
+        - all
         - dev
         - dev-array-api
