@@ -272,28 +272,28 @@ class SlidingBoundariesArchive(ArchiveBase):
         return self._best_elite
 
     @property
-    def dims(self):
-        """(measure_dim,) numpy.ndarray: Number of cells in each dimension."""
+    def dims(self) -> np.ndarray:
+        """(:attr:`measure_dim`,) array listing the number of cells in each dimension."""
         return self._dims
 
     @property
-    def cells(self):
-        """int: Total number of cells in the archive."""
+    def cells(self) -> int:
+        """Total number of cells in the archive."""
         return self._store.capacity
 
     @property
-    def lower_bounds(self):
-        """(measure_dim,) numpy.ndarray: Lower bound of each dimension."""
+    def lower_bounds(self) -> np.ndarray:
+        """(:attr:`measure_dim`,) array listing the lower bound of each dimension."""
         return self._lower_bounds
 
     @property
-    def upper_bounds(self):
-        """(measure_dim,) numpy.ndarray: Upper bound of each dimension."""
+    def upper_bounds(self) -> np.ndarray:
+        """(:attr:`measure_dim`,) array listing the upper bound of each dimension."""
         return self._upper_bounds
 
     @property
-    def interval_size(self):
-        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds - lower_bounds)."""
+    def interval_size(self) -> np.ndarray:
+        """(:attr:`measure_dim`,) array listing the size of each dim (upper_bounds - lower_bounds)."""
         return self._interval_size
 
     @property
