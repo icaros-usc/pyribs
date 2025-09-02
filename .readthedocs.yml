@@ -21,3 +21,4 @@ python:
       extra_requirements:
         - visualize
         - dev
+        - dev-array-api
