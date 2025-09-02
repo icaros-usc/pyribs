@@ -319,4 +319,6 @@ intersphinx_mapping = {
     "qdax": ("https://qdax.readthedocs.io/en/latest/", None),
     "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
     "cma": ("https://cma-es.github.io/apidocs-pycma/", None),
+    "cupy": ("https://docs.cupy.dev/en/stable/", None),
+    "torch": ("https://docs.pytorch.org/docs/stable/", None),
 }
