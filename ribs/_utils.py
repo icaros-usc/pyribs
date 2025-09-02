@@ -6,6 +6,8 @@ import array_api_compat.numpy as np_compat
 import numpy as np
 from array_api_compat import array_namespace
 
+from ribs.typing import ArrayVar
+
 
 def check_finite(x, name):
     """Checks that x is finite (i.e. not infinity or NaN).
@@ -211,7 +213,7 @@ def readonly(arr):
     return arr
 
 
-def arr_readonly(arr):
+def arr_readonly(arr: ArrayVar) -> ArrayVar:
     """Sets an array to be readonly if possible.
 
     Intended to support arrays across libraries; currently only supports numpy.
@@ -219,7 +221,7 @@ def arr_readonly(arr):
     if isinstance(arr, np_compat.ndarray):
         readonly_arr = arr.view()
         readonly_arr.flags.writeable = False
-        return readonly_arr
+        return readonly_arr  # ty: ignore[invalid-return-type]
     else:
         return arr
 

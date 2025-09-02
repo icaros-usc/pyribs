@@ -35,19 +35,16 @@ Array = np.ndarray
 Device = Union[str, int]
 
 # Modify types based on which array backends are available.
-_array_var_constraints = [np.ndarray]
 if is_torch_available:
     Array = Union[Array, torch.Tensor]
-    _array_var_constraints.append(torch.Tensor)
     Device = Union[Device, torch.device]
 if is_cp_availalbe:
     Array = Union[Array, cp.ndarray]
-    _array_var_constraints.append(cp.ndarray)
     Device = Union[Device, cp.cuda.Device]
 
 #: TypeVar for arrays; can be used, e.g., to indicate that input and output arrays are
 #: the same type.
-ArrayVar = TypeVar("ArrayVar", *_array_var_constraints)
+ArrayVar = TypeVar("ArrayVar")
 
 #: Represents data about a batch of solutions. The first dimension of each entry should
 #: be the batch dimension.
