@@ -1,10 +1,15 @@
 """Miscellaneous internal utilities."""
 
+from __future__ import annotations
+
 import numbers
+from types import ModuleType
 
 import array_api_compat.numpy as np_compat
-import numpy as np  # TODO (#576): Remove import of np
+import numpy as np
 from array_api_compat import array_namespace
+
+from ribs.typing import ArrayVar
 
 
 def check_finite(x, name):
@@ -211,20 +216,20 @@ def readonly(arr):
     return arr
 
 
-def arr_readonly(arr):
+def arr_readonly(arr: ArrayVar) -> ArrayVar:
     """Sets an array to be readonly if possible.
 
     Intended to support arrays across libraries; currently only supports numpy.
     """
-    if isinstance(arr, np_compat.ndarray):
+    if isinstance(arr, np.ndarray):
         readonly_arr = arr.view()
         readonly_arr.flags.writeable = False
-        return readonly_arr
+        return readonly_arr  # ty: ignore[invalid-return-type]
     else:
         return arr
 
 
-def xp_namespace(xp):
+def xp_namespace(xp: ModuleType | None) -> ModuleType:
     """Utility for retrieving a namespace compatible with the array API.
 
     Expects to receive an argument like `torch` or `numpy`.
@@ -235,4 +240,4 @@ def xp_namespace(xp):
     For more context, see:
     https://github.com/data-apis/array-api-compat/issues/342
     """
-    return np_compat if xp is None else array_namespace(xp.empty(0))
+    return np_compat if xp is None else array_namespace(xp.empty(0))  # ty: ignore[unresolved-attribute]

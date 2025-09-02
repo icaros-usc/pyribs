@@ -15,6 +15,17 @@ import sys
 
 import ribs
 
+try:
+    # These must be installed in order to make type annotations like ribs.typing.Device
+    # show up properly.
+    import cupy as cp  # noqa: F401
+    import numpy as np  # noqa: F401
+    import torch  # noqa: F401
+except ImportError as e:
+    raise ImportError(
+        "Array libraries must be installed to build the documentation."
+    ) from e
+
 # If extensions (or modules to document with autodoc) are in another directory, add
 # these directories to sys.path here. If the directory is relative to the documentation
 # root, use os.path.abspath to make it absolute, like shown here.
@@ -308,4 +319,6 @@ intersphinx_mapping = {
     "qdax": ("https://qdax.readthedocs.io/en/latest/", None),
     "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
     "cma": ("https://cma-es.github.io/apidocs-pycma/", None),
+    "cupy": ("https://docs.cupy.dev/en/stable/", None),
+    "torch": ("https://docs.pytorch.org/docs/stable/", None),
 }
