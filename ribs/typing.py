@@ -31,15 +31,19 @@ Float = Union[float, np.floating]
 
 #: Represents an array compatible with pyribs.
 Array = np.ndarray
+#: Represents a dtype compatible with pyribs.
+DType = np.dtype
 #: Represents an array's device.
 Device = Union[str, int]
 
 # Modify types based on which array backends are available.
 if is_torch_available:
     Array = Union[Array, torch.Tensor]
+    DType = Union[DType, torch.dtype]
     Device = Union[Device, torch.device]
 if is_cp_availalbe:
     Array = Union[Array, cp.ndarray]
+    DType = Union[DType, cp.dtype]
     Device = Union[Device, cp.cuda.Device]
 
 #: TypeVar for arrays; can be used, e.g., to indicate that input and output arrays are
