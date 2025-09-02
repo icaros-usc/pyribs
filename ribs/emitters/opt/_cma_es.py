@@ -9,6 +9,7 @@ import warnings
 import numba as nb
 import numpy as np
 from threadpoolctl import threadpool_limits
+from typing import Union
 
 from ribs._utils import readonly
 from ribs.emitters.opt._evolution_strategy_base import (
@@ -34,7 +35,7 @@ class DecompMatrix:
             np.float64.
     """
 
-    def __init__(self, dimension, dtype):
+    def __init__(self, dimension: int, dtype: Union[str, np.dtype]) -> None:
         self.cov = np.eye(dimension, dtype=dtype)
         self.eigenbasis = np.eye(dimension, dtype=dtype)
         self.eigenvalues = np.ones((dimension,), dtype=dtype)
@@ -45,7 +46,7 @@ class DecompMatrix:
         # The last evaluation on which the eigensystem was updated.
         self.updated_eval = 0
 
-    def update_eigensystem(self, current_eval, lazy_gap_evals):
+    def update_eigensystem(self, current_eval: int, lazy_gap_evals: int) -> None:
         """Updates the covariance matrix if lazy_gap_evals have passed.
 
         We have attempted to use numba in this method, but since np.linalg.eigh is the
@@ -102,14 +103,14 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
 
     def __init__(
         self,
-        sigma0,
-        solution_dim,
-        batch_size=None,
-        seed=None,
-        dtype=np.float64,
-        lower_bounds=-np.inf,
-        upper_bounds=np.inf,
-    ):
+        sigma0: float,
+        solution_dim: int,
+        batch_size: int = None,
+        seed: int = None,
+        dtype: np.dtype = np.float64,
+        lower_bounds: Union[float, np.ndarray] = -np.inf,
+        upper_bounds: Union[float, np.ndarray] = np.inf,
+    ) -> None:
         self.batch_size = (
             4 + int(3 * np.log(solution_dim)) if batch_size is None else batch_size
         )
@@ -144,7 +145,8 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         self.ps = None
         self.cov = None
 
-    def reset(self, x0):
+    def reset(self, 
+              x0: np.ndarray) -> None:
         self.current_eval = 0
         self.sigma = self.sigma0
         self.mean = np.array(x0, self.dtype)
@@ -156,7 +158,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         # Setup the covariance matrix.
         self.cov = DecompMatrix(self.solution_dim, self.dtype)
 
-    def check_stop(self, ranking_values):
+    def check_stop(self, ranking_values: np.ndarray) -> bool:
         # Tolerances from pycma CMA-ES.
         if self.cov.condition_number > 1e14:
             return True
@@ -179,8 +181,12 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     @staticmethod
     @nb.jit(nopython=True)
     def _transform_and_check_sol(
-        unscaled_params, transform_mat, mean, lower_bounds, upper_bounds
-    ):
+        unscaled_params: np.ndarray, 
+        transform_mat: np.ndarray, 
+        mean: np.ndarray, 
+        lower_bounds: np.ndarray, 
+        upper_bounds: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Numba helper for transforming parameters to the solution space.
 
         Numba is important here since we may be resampling multiple times.
@@ -195,7 +201,8 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def ask(self, batch_size=None):
+    def ask(self, 
+            batch_size: int = None) -> np.ndarray:
         if batch_size is None:
             batch_size = self.batch_size
 
@@ -234,7 +241,13 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
 
         return readonly(self._solutions)
 
-    def _calc_strat_params(self, num_parents):
+    def _calc_strat_params(self, 
+                           num_parents: int) -> tuple[np.ndarray, 
+                                                      np.float64, 
+                                                      np.float64, 
+                                                      np.float64, 
+                                                      np.float64, 
+                                                      np.float64]:
         """Calculates weights, mueff, and learning rates for CMA-ES."""
         # Create fresh weights for the number of parents found.
         weights = np.log(num_parents + 0.5) - np.log(np.arange(1, num_parents + 1))
@@ -258,7 +271,14 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
 
     @staticmethod
     @nb.jit(nopython=True)
-    def _calc_cov_update(cov, c1a, cmu, c1, pc, sigma, rank_mu_update, weights):
+    def _calc_cov_update(cov: np.ndarray, 
+                         c1a: float, 
+                         cmu: np.float64, 
+                         c1: np.float64, 
+                         pc: np.ndarray, 
+                         sigma: float, 
+                         rank_mu_update: np.ndarray, 
+                         weights: np.ndarray) -> np.ndarray:
         """Calculates covariance matrix update."""
         rank_one_update = c1 * np.outer(pc, pc)
         return (
@@ -270,7 +290,10 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def tell(self, ranking_indices, ranking_values, num_parents):
+    def tell(self, 
+             ranking_indices: np.ndarray, 
+             ranking_values: np.ndarray, 
+             num_parents: int) -> None:
         self.current_eval += len(self._solutions[ranking_indices])
 
         if num_parents == 0:
