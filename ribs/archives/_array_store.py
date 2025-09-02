@@ -11,6 +11,7 @@ from functools import cached_property
 from typing import Literal, overload
 
 import numpy as np
+from array_api._2024_12 import ArrayNamespace
 from array_api_compat import is_cupy_array, is_numpy_array, is_torch_array
 from numpy.typing import ArrayLike, DTypeLike
 
@@ -99,9 +100,8 @@ class ArrayStore:
             field with shape ``(capacity, 10)``. Note that field names must be valid
             Python identifiers.
         capacity: Total possible entries in the store.
-        xp (array_namespace): Optional array namespace. Should be compatible with the
-            array API standard, or supported by array-api-compat. Defaults to
-            ``numpy``.
+        xp: Optional array namespace. Should be compatible with the array API standard,
+            or supported by array-api-compat. Defaults to ``numpy``.
         device: Device for arrays.
 
     Attributes:
@@ -130,7 +130,7 @@ class ArrayStore:
         self,
         field_desc: dict[str, tuple[Int | tuple[Int], DTypeLike]],
         capacity: Int,
-        xp=None,
+        xp: ArrayNamespace | None = None,
         device: Device = None,
     ) -> None:
         self._xp = xp_namespace(xp)
