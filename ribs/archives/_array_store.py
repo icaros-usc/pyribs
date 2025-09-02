@@ -12,7 +12,11 @@ from typing import Literal, overload
 
 import numpy as np
 from array_api._2024_12 import ArrayNamespace
-from array_api_compat import is_cupy_array, is_numpy_array, is_torch_array
+from array_api_compat import (
+    is_cupy_array,  # ty: ignore[unresolved-import]
+    is_numpy_array,  # ty: ignore[unresolved-import]
+    is_torch_array,  # ty: ignore[unresolved-import]
+)
 from numpy.typing import ArrayLike, DTypeLike
 
 with contextlib.suppress(ImportError):
@@ -295,15 +299,52 @@ class ArrayStore:
                 "with NumPy, PyTorch, and CuPy arrays."
             )
 
-    def retrieve(self, indices, fields=None, return_type="dict"):
+    @overload
+    def retrieve(
+        self,
+        indices: ArrayLike,
+        fields: str,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array: ...
+
+    @overload
+    def retrieve(
+        self,
+        indices: ArrayLike,
+        fields: None | Collection[str] = None,
+        return_type: Literal["dict"] = "dict",
+    ) -> BatchData: ...
+
+    @overload
+    def retrieve(
+        self,
+        indices: ArrayLike,
+        fields: None | Collection[str] = None,
+        return_type: Literal["tuple"] = "tuple",
+    ) -> tuple[Array]: ...
+
+    @overload
+    def retrieve(
+        self,
+        indices: ArrayLike,
+        fields: None | Collection[str] = None,
+        return_type: Literal["pandas"] = "pandas",
+    ) -> ArchiveDataFrame: ...
+
+    def retrieve(
+        self,
+        indices: ArrayLike,
+        fields: None | Collection[str] | str = None,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
         """Collects data at the given indices.
 
         Args:
-            indices (array-like): List of indices at which to collect data.
-            fields (str or array-like of str): List of fields to include. By default,
-                all fields will be included, with an additional "index" as the last
-                field. The "index" field can also be added anywhere in this list of
-                fields. This argument can also be a single str indicating a field name.
+            indices: List of indices at which to collect data.
+            fields: List of fields to include. By default, all fields will be included,
+                with an additional "index" as the last field. The "index" field can also
+                be added anywhere in this list of fields. This argument can also be a
+                single str indicating a field name.
             return_type (str): Type of data to return. See the ``data`` returned below.
                 Ignored if ``fields`` is a str.
 
@@ -380,6 +421,8 @@ class ArrayStore:
         Raises:
             ValueError: Invalid field name provided.
             ValueError: Invalid return_type provided.
+            ValueError: Passed ``return_type="pandas"`` when one of the fields has >1D
+                data.
         """
         single_field = isinstance(fields, str)
         indices = self._xp.asarray(indices, dtype=self._xp.int32, device=self._device)
@@ -399,7 +442,7 @@ class ArrayStore:
         if single_field:
             fields = [fields]
         elif fields is None:
-            fields = itertools.chain(self._fields, ["index"])
+            fields: Iterator[str] = itertools.chain(self._fields, ["index"])
 
         for name in fields:
             # Collect array data.
@@ -417,17 +460,17 @@ class ArrayStore:
             if single_field:
                 data = arr
             elif return_type == "dict":
-                data[name] = arr
+                data[name] = arr  # ty: ignore[invalid-assignment]
             elif return_type == "tuple":
-                data.append(arr)
+                data.append(arr)  # ty: ignore[possibly-unbound-attribute]
             elif return_type == "pandas":
                 arr = self._convert_to_numpy(arr)
 
                 if len(arr.shape) == 1:  # Scalar entries.
-                    data[name] = arr
+                    data[name] = arr  # ty: ignore[invalid-assignment]
                 elif len(arr.shape) == 2:  # 1D array entries.
                     for i in range(arr.shape[1]):
-                        data[f"{name}_{i}"] = arr[:, i]
+                        data[f"{name}_{i}"] = arr[:, i]  # ty: ignore[invalid-assignment]
                 else:
                     raise ValueError(
                         f"Field `{name}` has shape {arr.shape[1:]} -- "
@@ -436,7 +479,7 @@ class ArrayStore:
 
         # Postprocess return data.
         if return_type == "tuple":
-            data = tuple(data)
+            data = tuple(data)  # ty: ignore[invalid-argument-type]
         elif return_type == "pandas":
             occupied = self._convert_to_numpy(occupied)
 
@@ -445,11 +488,39 @@ class ArrayStore:
 
         return occupied, data
 
+    @overload
+    def data(
+        self,
+        fields: str,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["dict"] = "dict",
+    ) -> BatchData: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["tuple"] = "tuple",
+    ) -> tuple[Array]: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["pandas"] = "pandas",
+    ) -> ArchiveDataFrame: ...
+
     def data(
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
+    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
         """Retrieves data for all entries in the store.
 
         Equivalent to calling :meth:`retrieve` with ``indices`` set to

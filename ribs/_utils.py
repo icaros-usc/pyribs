@@ -1,10 +1,12 @@
 """Miscellaneous internal utilities."""
 
+from __future__ import annotations
+
 import numbers
 
 import array_api_compat.numpy as np_compat
 import numpy as np
-from array_api._2024_12 import ArrayNamespace
+from array_api._2024_12 import ArrayNamespace, ArrayNamespaceFull
 from array_api_compat import array_namespace
 
 from ribs.typing import ArrayVar
@@ -219,7 +221,7 @@ def arr_readonly(arr: ArrayVar) -> ArrayVar:
 
     Intended to support arrays across libraries; currently only supports numpy.
     """
-    if isinstance(arr, np_compat.ndarray):
+    if isinstance(arr, np.ndarray):
         readonly_arr = arr.view()
         readonly_arr.flags.writeable = False
         return readonly_arr  # ty: ignore[invalid-return-type]
@@ -227,7 +229,7 @@ def arr_readonly(arr: ArrayVar) -> ArrayVar:
         return arr
 
 
-def xp_namespace(xp: ArrayNamespace) -> ArrayNamespace:
+def xp_namespace(xp: ArrayNamespace | ArrayNamespaceFull | None) -> ArrayNamespaceFull:
     """Utility for retrieving a namespace compatible with the array API.
 
     Expects to receive an argument like `torch` or `numpy`.
@@ -238,4 +240,4 @@ def xp_namespace(xp: ArrayNamespace) -> ArrayNamespace:
     For more context, see:
     https://github.com/data-apis/array-api-compat/issues/342
     """
-    return np_compat if xp is None else array_namespace(xp.empty(0))
+    return np_compat if xp is None else array_namespace(xp.empty(0))  # ty: ignore[invalid-return-type]
