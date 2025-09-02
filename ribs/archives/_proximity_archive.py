@@ -63,9 +63,9 @@ class ProximityArchive(ArchiveBase):
     identifies each cell.
 
     Args:
-        solution_dim (int or tuple of int): Dimensionality of the solution space. Scalar
-            or multi-dimensional solution shapes are allowed by passing an empty tuple
-            or tuple of integers, respectively.
+        solution_dim: Dimensionality of the solution space. Scalar or multi-dimensional
+            solution shapes are allowed by passing an empty tuple or tuple of integers,
+            respectively.
         measure_dim (int): Dimensionality of the measure space.
         k_neighbors (int): The maximum number of nearest neighbors for computing novelty
             (`maximum` here is indicated since there may be fewer than ``k_neighbors``

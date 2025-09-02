@@ -111,9 +111,9 @@ class SlidingBoundariesArchive(ArchiveBase):
     identifies each cell.
 
     Args:
-        solution_dim (int or tuple of int): Dimensionality of the solution space. Scalar
-            or multi-dimensional solution shapes are allowed by passing an empty tuple
-            or tuple of integers, respectively.
+        solution_dim: Dimensionality of the solution space. Scalar or multi-dimensional
+            solution shapes are allowed by passing an empty tuple or tuple of integers,
+            respectively.
         dims (array-like): Number of cells in each dimension of the measure space, e.g.
             ``[20, 30, 40]`` indicates there should be 3 dimensions with 20, 30, and 40
             cells. (The number of dimensions is implicitly defined in the length of this

@@ -32,9 +32,9 @@ class CategoricalArchive(ArchiveBase):
     while the integer ``index`` uniquely identifies each cell.
 
     Args:
-        solution_dim (int or tuple of int): Dimensionality of the solution space. Scalar
-            or multi-dimensional solution shapes are allowed by passing an empty tuple
-            or tuple of integers, respectively.
+        solution_dim: Dimensionality of the solution space. Scalar or multi-dimensional
+            solution shapes are allowed by passing an empty tuple or tuple of integers,
+            respectively.
         categories (list of list of any): The name of each category for each dimension
             of the measure space. The length of this list is the dimensionality of the
             measure space. An example is ``[["A", "B", "C"], ["One", "Two", "Three",
