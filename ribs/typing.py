@@ -23,13 +23,6 @@ try:
 except ImportError:
     is_cp_availalbe = False
 
-#: Represents data about a batch of solutions. The first dimension of each entry should
-#: be the batch dimension.
-BatchData = dict[str, np.ndarray]
-
-#: Represents data about a single solution.
-SingleData = dict[str, Any]
-
 #: General type for integers.
 Int = Union[int, np.integer]
 
@@ -49,3 +42,10 @@ if is_torch_available:
     Device = Union[Device, torch.device]
 if is_cp_availalbe:
     Device = Union[Device, cp.cuda.Device]
+
+#: Represents data about a batch of solutions. The first dimension of each entry should
+#: be the batch dimension.
+BatchData = dict[str, Array]
+
+#: Represents data about a single solution.
+SingleData = dict[str, Any]
