@@ -187,13 +187,6 @@ known-first-party = ["ribs"]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
-[tool.ty.src]
-exclude = [
-  "examples/lunar_lander.py",
-  "tutorials/lunar_lander.ipynb",
-  "tutorials/qdhf.ipynb",
-]
-
 [tool.pytest.ini_options]
 python_files = "*_test.py"
 python_functions = "test_*"
