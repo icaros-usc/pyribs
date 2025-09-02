@@ -38,6 +38,7 @@ dependencies = [
   "scipy>=1.7.0",
   "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
   "threadpoolctl>=3.0.0",
+  "typing-extensions>=4.12.0",
 ]
 
 [project.optional-dependencies]
@@ -91,6 +92,12 @@ dev = [
   "build",
   "check-wheel-contents",
   "twine",
+]
+dev-array-api = [
+  # Extras when working with the Array API. These can be pretty heavy, so they are
+  # separate from `dev`.
+  "torch",
+  "cupy-cuda12x",
 ]
 
 [project.urls]
