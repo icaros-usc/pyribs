@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 import itertools
 import numbers
-from collections.abc import Iterator, Sequence
+from collections.abc import Collection, Iterator
 from enum import IntEnum
 from functools import cached_property
 from typing import Literal, overload
@@ -445,14 +445,19 @@ class ArrayStore:
 
         return occupied, data
 
-    def data(self, fields=None, return_type="dict"):
+    def data(
+        self,
+        fields: None | Collection[str] | str = None,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         """Retrieves data for all entries in the store.
 
-        Equivalent to calling :meth:`retrieve` with :attr:`occupied_list`.
+        Equivalent to calling :meth:`retrieve` with ``indices`` set to
+        :attr:`occupied_list`.
 
         Args:
-            fields (str or array-like of str): See :meth:`retrieve`.
-            return_type (str): See :meth:`retrieve`.
+            fields: See :meth:`retrieve`.
+            return_type: See :meth:`retrieve`.
 
         Returns:
             See ``data`` in :meth:`retrieve`. ``occupied`` is not returned since
