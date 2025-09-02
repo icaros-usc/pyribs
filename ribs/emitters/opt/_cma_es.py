@@ -11,7 +11,7 @@ import numpy as np
 from threadpoolctl import threadpool_limits
 from typing import Union
 
-from ribs._utils import readonly
+from ribs._utils import arr_readonly
 from ribs.emitters.opt._evolution_strategy_base import (
     BOUNDS_SAMPLING_THRESHOLD,
     BOUNDS_WARNING,
@@ -239,7 +239,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
             if sampling_itrs > BOUNDS_SAMPLING_THRESHOLD:
                 warnings.warn(BOUNDS_WARNING, stacklevel=2)
 
-        return readonly(self._solutions)
+        return arr_readonly(self._solutions)
 
     def _calc_strat_params(self, 
                            num_parents: int) -> tuple[np.ndarray, 

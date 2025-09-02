@@ -194,7 +194,7 @@ class ArrayStore:
     @property
     def occupied(self) -> Array:
         """``(capacity,)`` Boolean array indicating whether each index has an entry."""
-        return arr_readonly(self._props["occupied"])
+        return arr_readonly(self._props["occupied"], view=True)
 
     @property
     def occupied_list(self) -> Array:

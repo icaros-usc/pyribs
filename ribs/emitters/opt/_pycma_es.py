@@ -3,7 +3,7 @@
 import numpy as np
 from threadpoolctl import threadpool_limits
 
-from ribs._utils import readonly
+from ribs._utils import arr_readonly
 from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
 
 
@@ -146,7 +146,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         """
         # batch_size defaults to popsize in CMA-ES.
         self._solutions = np.asarray(self._es.ask(batch_size))
-        return readonly(self._solutions.astype(self.dtype))
+        return arr_readonly(self._solutions.astype(self.dtype))
 
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
