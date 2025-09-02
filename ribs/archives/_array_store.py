@@ -427,11 +427,11 @@ class ArrayStore:
         occupied = self._props["occupied"][indices]
 
         if single_field:
-            data: np.ndarray | None = None
+            data = None
         elif return_type in ("dict", "pandas"):
-            data: BatchData = {}
+            data = {}
         elif return_type == "tuple":
-            data: list[np.ndarray] = []
+            data = []
         else:
             raise ValueError(f"Invalid return_type {return_type}.")
 
