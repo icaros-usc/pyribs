@@ -4,6 +4,7 @@ import numbers
 
 import array_api_compat.numpy as np_compat
 import numpy as np
+from array_api._2024_12 import ArrayNamespace
 from array_api_compat import array_namespace
 
 from ribs.typing import ArrayVar
@@ -226,7 +227,7 @@ def arr_readonly(arr: ArrayVar) -> ArrayVar:
         return arr
 
 
-def xp_namespace(xp):
+def xp_namespace(xp: ArrayNamespace) -> ArrayNamespace:
     """Utility for retrieving a namespace compatible with the array API.
 
     Expects to receive an argument like `torch` or `numpy`.
