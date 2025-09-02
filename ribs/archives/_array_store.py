@@ -8,15 +8,11 @@ import numbers
 from collections.abc import Collection, Iterator
 from enum import IntEnum
 from functools import cached_property
+from types import ModuleType
 from typing import Literal, overload
 
 import numpy as np
-from array_api._2024_12 import ArrayNamespace
-from array_api_compat import (
-    is_cupy_array,  # ty: ignore[unresolved-import]
-    is_numpy_array,  # ty: ignore[unresolved-import]
-    is_torch_array,  # ty: ignore[unresolved-import]
-)
+from array_api_compat import is_cupy_array, is_numpy_array, is_torch_array
 from numpy.typing import ArrayLike, DTypeLike
 
 with contextlib.suppress(ImportError):
@@ -134,7 +130,7 @@ class ArrayStore:
         self,
         field_desc: dict[str, tuple[Int | tuple[Int], DTypeLike]],
         capacity: Int,
-        xp: ArrayNamespace | None = None,
+        xp: ModuleType | None = None,
         device: Device = None,
     ) -> None:
         self._xp = xp_namespace(xp)
@@ -290,7 +286,7 @@ class ArrayStore:
         if is_numpy_array(arr):
             return arr
         elif is_torch_array(arr):
-            return arr.cpu().detach().numpy()
+            return arr.cpu().detach().numpy()  # ty: ignore[possibly-unbound-attribute]
         elif is_cupy_array(arr):
             return cp.asnumpy(arr)
         else:
