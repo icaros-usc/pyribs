@@ -7,7 +7,7 @@ import warnings
 
 import numpy as np
 
-from ribs._utils import readonly
+from ribs._utils import arr_readonly
 from ribs.emitters.opt._adam_opt import AdamOpt
 from ribs.emitters.opt._evolution_strategy_base import (
     BOUNDS_SAMPLING_THRESHOLD,
@@ -163,7 +163,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             if sampling_itrs > BOUNDS_SAMPLING_THRESHOLD:
                 warnings.warn(BOUNDS_WARNING, stacklevel=2)
 
-        return readonly(self._solutions)
+        return arr_readonly(self._solutions)
 
     def tell(self, ranking_indices, ranking_values, num_parents):
         # Indices come in decreasing order, so we reverse to get them to
