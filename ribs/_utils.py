@@ -216,13 +216,15 @@ def readonly(arr):
     return arr
 
 
-def arr_readonly(arr: ArrayVar) -> ArrayVar:
+def arr_readonly(arr: ArrayVar, view: bool = False) -> ArrayVar:
     """Sets an array to be readonly if possible.
 
     Intended to support arrays across libraries; currently only supports numpy.
+
+    Pass `view` to call `arr.view` when the array is a numpy array.
     """
     if isinstance(arr, np.ndarray):
-        readonly_arr = arr.view()
+        readonly_arr = arr.view() if view else arr
         readonly_arr.flags.writeable = False
         return readonly_arr  # ty: ignore[invalid-return-type]
     else:
