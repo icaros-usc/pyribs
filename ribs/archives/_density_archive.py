@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KernelDensity
 
-from ribs._utils import check_batch_shape, check_finite, readonly
+from ribs._utils import arr_readonly, check_batch_shape, check_finite
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._utils import parse_dtype
 
@@ -154,7 +154,7 @@ class DensityArchive(ArchiveBase):
 
         Shape (n, :attr:`measure_dim`).
         """
-        return readonly(self._buffer[: self._n_occupied])
+        return arr_readonly(self._buffer[: self._n_occupied])
 
     ## Utilities ##
 
