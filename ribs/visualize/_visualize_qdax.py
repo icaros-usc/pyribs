@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
+from typing_extensions import ParamSpec
 
 from ribs.archives import CVTArchive
 from ribs.visualize._cvt_archive_3d_plot import cvt_archive_3d_plot
@@ -14,6 +15,8 @@ from ribs.visualize._cvt_archive_heatmap import cvt_archive_heatmap
 if TYPE_CHECKING:
     # Only import for type checking since QDax is not installed by default.
     from qdax.core.containers.mapelites_repertoire import MapElitesRepertoire
+
+P = ParamSpec("P")
 
 
 def _as_cvt_archive(
@@ -54,8 +57,8 @@ def _as_cvt_archive(
 def qdax_repertoire_heatmap(
     repertoire: MapElitesRepertoire,
     ranges: Sequence[tuple[float, float]],
-    *args: Any,
-    **kwargs: Any,
+    *args: P.args,
+    **kwargs: P.kwargs,
 ) -> None:
     """Plots a heatmap of a single-objective QDax MapElitesRepertoire.
 
@@ -82,8 +85,8 @@ def qdax_repertoire_heatmap(
 def qdax_repertoire_3d_plot(
     repertoire: MapElitesRepertoire,
     ranges: Sequence[tuple[float, float]],
-    *args: Any,
-    **kwargs: Any,
+    *args: P.args,
+    **kwargs: P.kwargs,
 ) -> None:
     """Plots a single-objective QDax MapElitesRepertoire with 3D measure space.
 
