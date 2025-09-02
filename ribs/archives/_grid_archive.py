@@ -1,6 +1,12 @@
 """Contains the GridArchive."""
 
+from __future__ import annotations
+
+from collections.abc import Iterator, Sequence
+from typing import Literal, Type
+
 import numpy as np
+from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (
@@ -12,6 +18,7 @@ from ribs._utils import (
     validate_single,
 )
 from ribs.archives._archive_base import ArchiveBase
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._utils import (
@@ -19,6 +26,7 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
+from ribs.typing import BatchData, SingleData
 
 
 class GridArchive(ArchiveBase):
@@ -41,46 +49,45 @@ class GridArchive(ArchiveBase):
     while the integer ``index`` uniquely identifies each cell.
 
     Args:
-        solution_dim (int or tuple of int): Dimensionality of the solution space. Scalar
-            or multi-dimensional solution shapes are allowed by passing an empty tuple
-            or tuple of integers, respectively.
-        dims (array-like of int): Number of cells in each dimension of the measure
-            space, e.g. ``[20, 30, 40]`` indicates there should be 3 dimensions with 20,
-            30, and 40 cells. (The number of dimensions is implicitly defined in the
-            length of this argument).
-        ranges (array-like of (float, float)): Upper and lower bound of each dimension
-            of the measure space, e.g. ``[(-1, 1), (-2, 2)]`` indicates the first
-            dimension should have bounds :math:`[-1,1]` (inclusive), and the second
-            dimension should have bounds :math:`[-2,2]` (inclusive). ``ranges`` should
-            be the same length as ``dims``.
-        epsilon (float): Due to floating point precision errors, a small epsilon is
-            added when computing the archive indices in the :meth:`index_of` method --
-            refer to the implementation `here
+        solution_dim: Dimensionality of the solution space. Scalar or multi-dimensional
+            solution shapes are allowed by passing an empty tuple or tuple of integers,
+            respectively.
+        dims: Number of cells in each dimension of the measure space, e.g. ``[20, 30,
+            40]`` indicates there should be 3 dimensions with 20, 30, and 40 cells. (The
+            number of dimensions is implicitly defined in the length of this argument).
+        ranges: Upper and lower bound of each dimension of the measure space, e.g.
+            ``[(-1, 1), (-2, 2)]`` indicates the first dimension should have bounds
+            :math:`[-1,1]` (inclusive), and the second dimension should have bounds
+            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
+            ``dims``.
+        learning_rate: The learning rate for threshold updates. Defaults to 1.0.
+        threshold_min: The initial threshold value for all the cells.
+        epsilon: Due to floating point precision errors, a small epsilon is added when
+            computing the archive indices in the :meth:`index_of` method -- refer to the
+            implementation `here
             <../_modules/ribs/archives/_grid_archive.html#GridArchive.index_of>`_. Pass
             this parameter to configure that epsilon.
-        learning_rate (float): The learning rate for threshold updates. Defaults to 1.0.
-        threshold_min (float): The initial threshold value for all the cells.
-        qd_score_offset (float): Archives often contain negative objective values, and
-            if the QD score were to be computed with these negative objectives, the
-            algorithm would be penalized for adding new cells with negative objectives.
-            Thus, a standard practice is to normalize all the objectives so that they
-            are non-negative by introducing an offset. This QD score offset will be
+        qd_score_offset: Archives often contain negative objective values, and if the QD
+            score were to be computed with these negative objectives, the algorithm
+            would be penalized for adding new cells with negative objectives. Thus, a
+            standard practice is to normalize all the objectives so that they are
+            non-negative by introducing an offset. This QD score offset will be
             *subtracted* from all objectives in the archive, e.g., if your objectives go
             as low as -300, pass in -300 so that each objective will be transformed as
             ``objective - (-300)``.
-        seed (int): Value to seed the random number generator. Set to None to avoid a
-            fixed seed.
-        dtype (str or data-type or dict): Data type of the solutions, objectives, and
-            measures. This can be ``"f"`` / ``np.float32``, ``"d"`` / ``np.float64``, or
-            a dict specifying separate dtypes, of the form ``{"solution": <dtype>,
-            "objective": <dtype>, "measures": <dtype>}``.
-        extra_fields (dict): Description of extra fields of data that is stored next to
-            elite data like solutions and objectives. The description is a dict mapping
-            from a field name (str) to a tuple of ``(shape, dtype)``. For instance,
-            ``{"foo": ((), np.float32), "bar": ((10,), np.float32)}`` will create a
-            "foo" field that contains scalar values and a "bar" field that contains 10D
-            values. Note that field names must be valid Python identifiers, and names
-            already used in the archive are not allowed.
+        seed: Value to seed the random number generator. Set to None to avoid a fixed
+            seed.
+        dtype: Data type of the solutions, objectives, and measures. This can be ``"f"``
+            / ``np.float32``, ``"d"`` / ``np.float64``, or a dict specifying separate
+            dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
+            "measures": <dtype>}``.
+        extra_fields: Description of extra fields of data that are stored next to elite
+            data like solutions and objectives. The description is a dict mapping from a
+            field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
+            ((), np.float32), "bar": ((10,), np.float32)}`` will create a "foo" field
+            that contains scalar values and a "bar" field that contains 10D values. Note
+            that field names must be valid Python identifiers, and names already used in
+            the archive are not allowed.
 
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
@@ -91,17 +98,20 @@ class GridArchive(ArchiveBase):
     def __init__(
         self,
         *,
-        solution_dim,
-        dims,
-        ranges,
-        learning_rate=None,
-        threshold_min=-np.inf,
-        epsilon=1e-6,
-        qd_score_offset=0.0,
-        seed=None,
-        dtype=np.float64,
-        extra_fields=None,
-    ):
+        solution_dim: int | tuple[int],
+        dims: Sequence[int],
+        ranges: Sequence[tuple[float, float]],
+        learning_rate: float | None = None,
+        threshold_min: float = -np.inf,
+        epsilon: float = 1e-6,
+        qd_score_offset: float = 0.0,
+        seed: int | None = None,
+        dtype: Literal["f", "d"]
+        | Type[np.float32]
+        | Type[np.float64]
+        | dict[str, DTypeLike] = np.float64,
+        extra_fields: dict[str, tuple[int | tuple[int], DTypeLike]] | None = None,
+    ) -> None:
         self._rng = np.random.default_rng(seed)
         self._dims = np.array(dims, dtype=np.int32)
 
@@ -163,7 +173,9 @@ class GridArchive(ArchiveBase):
         self._stats_reset()
 
     @staticmethod
-    def _compute_boundaries(dims, lower_bounds, upper_bounds):
+    def _compute_boundaries(
+        dims: np.ndarray, lower_bounds: np.ndarray, upper_bounds: np.ndarray
+    ) -> list[np.ndarray]:
         """Computes grid cell boundaries of the archive."""
         boundaries = []
         for dim, lower_bound, upper_bound in zip(dims, lower_bounds, upper_bounds):
@@ -173,27 +185,27 @@ class GridArchive(ArchiveBase):
     ## Properties inherited from ArchiveBase ##
 
     @property
-    def field_list(self):
+    def field_list(self) -> list[str]:
         return self._store.field_list_with_index
 
     @property
-    def dtypes(self):
+    def dtypes(self) -> dict[str, np.dtype]:
         return self._store.dtypes_with_index
 
     @property
-    def stats(self):
+    def stats(self) -> ArchiveStats:
         return self._stats
 
     @property
-    def empty(self):
+    def empty(self) -> bool:
         return len(self._store) == 0
 
     ## Properties that are not in ArchiveBase ##
     ## Roughly ordered by the parameter list in the constructor. ##
 
     @property
-    def best_elite(self):
-        """dict: The elite with the highest objective in the archive.
+    def best_elite(self) -> SingleData:
+        """The elite with the highest objective in the archive.
 
         None if there are no elites in the archive.
 
@@ -214,33 +226,33 @@ class GridArchive(ArchiveBase):
         return self._best_elite
 
     @property
-    def dims(self):
-        """(measure_dim,) numpy.ndarray: Number of cells in each dimension."""
+    def dims(self) -> np.ndarray:
+        """(:attr:`measure_dim`,) array listing the number of cells in each dimension."""
         return self._dims
 
     @property
-    def cells(self):
-        """int: Total number of cells in the archive."""
+    def cells(self) -> int:
+        """Total number of cells in the archive."""
         return self._store.capacity
 
     @property
-    def lower_bounds(self):
-        """(measure_dim,) numpy.ndarray: Lower bound of each dimension."""
+    def lower_bounds(self) -> np.ndarray:
+        """(:attr:`measure_dim`,) array listing the lower bound of each dimension."""
         return self._lower_bounds
 
     @property
-    def upper_bounds(self):
-        """(measure_dim,) numpy.ndarray: Upper bound of each dimension."""
+    def upper_bounds(self) -> np.ndarray:
+        """(:attr:`measure_dim`,) array listing the upper bound of each dimension."""
         return self._upper_bounds
 
     @property
-    def interval_size(self):
-        """(measure_dim,) numpy.ndarray: The size of each dim (upper_bounds - lower_bounds)."""
+    def interval_size(self) -> np.ndarray:
+        """(:attr:`measure_dim`,) array listing the size of each dim (upper_bounds - lower_bounds)."""
         return self._interval_size
 
     @property
-    def boundaries(self):
-        """list of numpy.ndarray: The boundaries of the cells in each dimension.
+    def boundaries(self) -> list[np.ndarray]:
+        """The boundaries of the cells in each dimension.
 
         Entry ``i`` in this list is an array that contains the boundaries of the cells
         in dimension ``i``. The array contains ``self.dims[i] + 1`` entries laid out
@@ -253,43 +265,40 @@ class GridArchive(ArchiveBase):
         bounds of cell ``j`` in dimension ``i``. To access the lower bounds of all the
         cells in dimension ``i``, use ``boundaries[i][:-1]``, and to access all the
         upper bounds, use ``boundaries[i][1:]``.
-        """  # noqa: D403
+        """
         return self._boundaries
 
     @property
-    def epsilon(self):
-        """dtypes["measures"]: Epsilon for computing archive indices.
-
-        Refer to the documentation for this class.
-        """
+    def epsilon(self) -> float:
+        """Epsilon for computing archive indices."""
         return self._epsilon
 
     @property
-    def learning_rate(self):
-        """float: The learning rate for threshold updates."""
+    def learning_rate(self) -> float:
+        """The learning rate for threshold updates."""
         return self._learning_rate
 
     @property
-    def threshold_min(self):
-        """float: The initial threshold value for all the cells."""
+    def threshold_min(self) -> float:
+        """The initial threshold value for all the cells."""
         return self._threshold_min
 
     @property
-    def qd_score_offset(self):
-        """float: Subtracted from objective values when computing the QD score."""
+    def qd_score_offset(self) -> float:
+        """Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     ## dunder methods ##
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._store)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[SingleData]:
         return iter(self._store)
 
     ## Utilities ##
 
-    def _stats_reset(self):
+    def _stats_reset(self) -> None:
         """Resets the archive stats."""
         self._best_elite = None
         self._objective_sum = np.asarray(0.0, dtype=self.dtypes["objective"])
@@ -302,8 +311,8 @@ class GridArchive(ArchiveBase):
             obj_mean=None,
         )
 
-    def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates archive statistics.
+    def _stats_update(self, new_objective_sum: float, new_best_index: float) -> None:
+        """Updates statistics.
 
         Update is based on a new sum of objective values (new_objective_sum) and the
         index of a potential new best elite (new_best_index).
@@ -339,7 +348,7 @@ class GridArchive(ArchiveBase):
             ),
         )
 
-    def index_of(self, measures):
+    def index_of(self, measures: ArrayLike) -> np.ndarray:
         """Returns archive indices for the given batch of measures.
 
         First, values are clipped to the bounds of the measure space. Then, the values
@@ -361,12 +370,12 @@ class GridArchive(ArchiveBase):
             upper = archive.boundaries[0][idx[0] + 1]
 
         Args:
-            measures (array-like): (batch_size, :attr:`measure_dim`) array of
-                coordinates in measure space.
+            measures: (batch_size, :attr:`measure_dim`) array of coordinates in measure
+                space.
 
         Returns:
-            numpy.ndarray: (batch_size,) array of integer indices representing the
-            flattened grid coordinates.
+            (batch_size,) array of integer indices representing the flattened grid
+            coordinates.
 
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
@@ -389,18 +398,16 @@ class GridArchive(ArchiveBase):
 
         return self.grid_to_int_index(grid_indices)
 
-    def index_of_single(self, measures):
+    def index_of_single(self, measures: ArrayLike) -> int:
         """Returns the index of the measures for one solution.
 
         See :meth:`index_of`.
 
         Args:
-            measures (array-like): (:attr:`measure_dim`,) array of measures for a single
-                solution.
+            measures: (:attr:`measure_dim`,) array of measures for a single solution.
 
         Returns:
-            int or numpy.integer: Integer index of the measures in the archive's storage
-            arrays.
+            Integer index of the measures in the archive's storage arrays.
 
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
@@ -411,17 +418,17 @@ class GridArchive(ArchiveBase):
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
 
-    def grid_to_int_index(self, grid_indices):
+    def grid_to_int_index(self, grid_indices: ArrayLike) -> np.ndarray:
         """Converts a batch of grid indices into a batch of integer indices.
 
         Refer to :meth:`index_of` for more info.
 
         Args:
-            grid_indices (array-like): (batch_size, :attr:`measure_dim`) array of
-                indices in the archive grid.
+            grid_indices: (batch_size, :attr:`measure_dim`) array of indices in the
+                archive grid.
 
         Returns:
-            numpy.ndarray: (batch_size,) array of integer indices.
+            (batch_size,) array of integer indices.
 
         Raises:
             ValueError: ``grid_indices`` is not of shape (batch_size,
@@ -432,18 +439,17 @@ class GridArchive(ArchiveBase):
 
         return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
-    def int_to_grid_index(self, int_indices):
+    def int_to_grid_index(self, int_indices: ArrayLike) -> np.ndarray:
         """Converts a batch of indices into indices in the archive's grid.
 
         Refer to :meth:`index_of` for more info.
 
         Args:
-            int_indices (array-like): (batch_size,) array of integer indices such as
-                those output by :meth:`index_of`.
+            int_indices: (batch_size,) array of integer indices such as those output by
+                :meth:`index_of`.
 
         Returns:
-            numpy.ndarray: (batch_size, :attr:`measure_dim`) array of indices in the
-            archive grid.
+            (batch_size, :attr:`measure_dim`) array of indices in the archive grid.
 
         Raises:
             ValueError: ``int_indices`` is not of shape (batch_size,).
@@ -461,7 +467,13 @@ class GridArchive(ArchiveBase):
     ## Methods for writing to the archive ##
 
     @staticmethod
-    def _compute_thresholds(indices, objective, cur_threshold, learning_rate, dtype):
+    def _compute_thresholds(
+        indices: np.ndarray,
+        objective: np.ndarray,
+        cur_threshold: np.ndarray,
+        learning_rate: float,
+        dtype: np.dtype,
+    ) -> np.ndarray:
         """Computes new thresholds with the CMA-MAE batch threshold update rule.
 
         If entries in `indices` are duplicated, they receive the same threshold.
@@ -499,7 +511,13 @@ class GridArchive(ArchiveBase):
 
         return new_threshold
 
-    def add(self, solution, objective, measures, **fields):
+    def add(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike,
+        measures: ArrayLike,
+        **fields: ArrayLike,
+    ) -> BatchData:
         """Inserts a batch of solutions into the archive.
 
         Each solution is only inserted if it has a higher ``objective`` than the
@@ -522,18 +540,17 @@ class GridArchive(ArchiveBase):
             solution parameters, objective, and measures for solution ``i``.
 
         Args:
-            solution (array-like): (batch_size, :attr:`solution_dim`) array of solution
-                parameters.
-            objective (array-like): (batch_size,) array with objective function
-                evaluations of the solutions.
-            measures (array-like): (batch_size, :attr:`measure_dim`) array with measure
-                space coordinates of all the solutions.
-            fields (keyword arguments): Additional data for each solution. Each argument
-                should be an array with batch_size as the first dimension.
+            solution: (batch_size, :attr:`solution_dim`) array of solution parameters.
+            objective: (batch_size,) array with objective function evaluations of the
+                solutions.
+            measures: (batch_size, :attr:`measure_dim`) array with measure space
+                coordinates of all the solutions.
+            fields: Additional data for each solution. Each argument should be an array
+                with batch_size as the first dimension.
 
         Returns:
-            dict: Information describing the result of the add operation. The dict
-            contains the following keys:
+            Information describing the result of the add operation. The dict contains
+            the following keys:
 
             - ``"status"`` (:class:`numpy.ndarray` of :class:`numpy.int32`): An array of
               integers that represent the "status" obtained when attempting to insert
@@ -692,7 +709,13 @@ class GridArchive(ArchiveBase):
 
         return add_info
 
-    def add_single(self, solution, objective, measures, **fields):
+    def add_single(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike,
+        measures: ArrayLike,
+        **fields: ArrayLike,
+    ) -> SingleData:
         """Inserts a single solution into the archive.
 
         The solution is only inserted if it has a higher ``objective`` than the
@@ -707,15 +730,15 @@ class GridArchive(ArchiveBase):
             time. For better performance, see :meth:`add`.
 
         Args:
-            solution (array-like): Parameters of the solution.
-            objective (float): Objective function evaluation of the solution.
-            measures (array-like): Coordinates in measure space of the solution.
-            fields (keyword arguments): Additional data for the solution.
+            solution: Parameters of the solution.
+            objective: Objective function evaluation of the solution.
+            measures: Coordinates in measure space of the solution.
+            fields: Additional data for the solution.
 
         Returns:
-            dict: Information describing the result of the add operation. The
-            dict contains ``status`` and ``value`` keys; refer to :meth:`add`
-            for the meaning of status and value.
+            Information describing the result of the add operation. The dict contains
+            ``status`` and ``value`` keys; refer to :meth:`add` for the meaning of
+            status and value.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
@@ -820,7 +843,7 @@ class GridArchive(ArchiveBase):
 
         return add_info
 
-    def clear(self):
+    def clear(self) -> None:
         """Removes all elites in the archive."""
         self._store.clear()
         self._stats_reset()
@@ -828,7 +851,7 @@ class GridArchive(ArchiveBase):
     ## Methods for reading from the archive ##
     ## Refer to ArchiveBase for documentation of these methods. ##
 
-    def retrieve(self, measures):
+    def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, BatchData]:
         measures = np.asarray(measures)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
@@ -838,7 +861,7 @@ class GridArchive(ArchiveBase):
 
         return occupied, data
 
-    def retrieve_single(self, measures):
+    def retrieve_single(self, measures: ArrayLike) -> SingleData:
         measures = np.asarray(measures)
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
@@ -847,10 +870,14 @@ class GridArchive(ArchiveBase):
 
         return occupied[0], {field: arr[0] for field, arr in data.items()}
 
-    def data(self, fields=None, return_type="dict"):
+    def data(
+        self,
+        fields: None | Sequence[str] | str = None,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
-    def sample_elites(self, n):
+    def sample_elites(self, n: int) -> BatchData:
         if self.empty:
             raise IndexError("No elements in archive.")
 
@@ -861,7 +888,7 @@ class GridArchive(ArchiveBase):
 
     ## retessellate ##
 
-    def retessellate(self, new_dims):
+    def retessellate(self, new_dims: Sequence[int]) -> None:
         """Updates the resolution of this archive to the given dimensions.
 
         Upon resizing the archive, this method re-inserts the solutions that are
@@ -878,10 +905,10 @@ class GridArchive(ArchiveBase):
         determined after retessellating.
 
         Args:
-            new_dims (array-like of int):  Number of cells in each dimension of the
-                measure space, e.g., ``[20, 30, 40]`` indicates there should be 3
-                dimensions with 20, 30, and 40 cells. The format is identical to the
-                ``dims`` argument in ``__init__``.
+            new_dims:  Number of cells in each dimension of the measure space, e.g.,
+                ``[20, 30, 40]`` indicates there should be 3 dimensions with 20, 30, and
+                40 cells. The format is identical to the ``dims`` argument in
+                ``__init__``.
 
         Raises:
             ValueError: Attempted to retessellate an archive with learning rate not
@@ -909,5 +936,4 @@ class GridArchive(ArchiveBase):
             self._dims, self._lower_bounds, self._upper_bounds
         )
         self._store = ArrayStore(self._store.field_desc, capacity=np.prod(self._dims))
-
         self.add(**cur_data)
