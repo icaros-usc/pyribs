@@ -13,14 +13,14 @@ from typing import Literal, overload
 
 import numpy as np
 from array_api_compat import is_cupy_array, is_numpy_array, is_torch_array
-from numpy.typing import ArrayLike, DTypeLike
+from numpy.typing import ArrayLike
 
 with contextlib.suppress(ImportError):
     from array_api_compat import cupy as cp
 
 from ribs._utils import arr_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
-from ribs.typing import Array, BatchData, Device, DType, Int, SingleData
+from ribs.typing import Array, BatchData, Device, DType, FieldDesc, Int, SingleData
 
 
 class Update(IntEnum):
@@ -128,7 +128,7 @@ class ArrayStore:
 
     def __init__(
         self,
-        field_desc: dict[str, tuple[Int | tuple[Int], DTypeLike]],
+        field_desc: FieldDesc,
         capacity: Int,
         xp: ModuleType | None = None,
         device: Device = None,

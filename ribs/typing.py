@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any, TypeVar, Union
 
 import numpy as np
+from numpy.typing import DTypeLike
 
 try:
     import torch
@@ -56,3 +57,6 @@ BatchData = dict[str, Array]
 
 #: Represents data about a single solution.
 SingleData = dict[str, Any]
+
+#: Description of fields for archives.
+FieldDesc = dict[str, tuple[Int | tuple[Int], DTypeLike]]

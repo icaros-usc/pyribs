@@ -16,3 +16,4 @@ ribs.typing
 .. autodata:: ribs.typing.ArrayVar
 .. autodata:: ribs.typing.BatchData
 .. autodata:: ribs.typing.SingleData
+.. autodata:: ribs.typing.FieldDesc
