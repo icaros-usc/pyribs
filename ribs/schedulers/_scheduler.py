@@ -12,7 +12,6 @@ from numpy.typing import ArrayLike
 
 from ribs.archives import ArchiveBase
 from ribs.emitters import EmitterBase
-from ribs.typing import BatchData
 
 
 class Scheduler:
@@ -247,7 +246,9 @@ class Scheduler:
         "objective value does not exceed `threshold_min`."
     )
 
-    def _add_to_archives(self, data: dict[str, np.ndarray | None]) -> BatchData:
+    def _add_to_archives(
+        self, data: dict[str, np.ndarray | None]
+    ) -> dict[str, np.ndarray]:
         """Adds solutions to both the regular archive and the result archive."""
         archive_empty_before = self.archive.empty
         if self._result_archive is not None:
