@@ -460,7 +460,7 @@ class ArrayStore:
         """
         return self.retrieve(self.occupied_list, fields, return_type)[1]
 
-    def add(self, indices, data):
+    def add(self, indices: ArrayLike, data: dict[str, ArrayLike]) -> None:
         """Adds new data to the store at the given indices.
 
         Example:
@@ -475,9 +475,9 @@ class ArrayStore:
                 # `objective` of 2.0, and index 8 will have objective of 3.0.
 
         Args:
-            indices (array-like): List of indices for addition.
-            data (dict): Dict with data to add at each index. The dict maps from field
-                names to arrays of data for each field.
+            indices: List of indices for addition.
+            data: Dict with data to add at each index. The dict maps from field names to
+                arrays of data for each field.
 
         Raise:
             ValueError: ``data`` does not have the same keys as the fields of this
@@ -535,7 +535,7 @@ class ArrayStore:
                 data[name], dtype=arr.dtype, device=self._device
             )
 
-    def clear(self):
+    def clear(self) -> None:
         """Removes all entries from the store."""
         self._props["updates"][Update.CLEAR] += 1
         self._props["n_occupied"] = 0  # Effectively clears occupied_list too.
