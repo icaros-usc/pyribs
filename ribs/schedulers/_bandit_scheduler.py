@@ -10,7 +10,7 @@ from typing import Literal
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ribs._utils import readonly
+from ribs._utils import arr_readonly
 from ribs.archives import ArchiveBase
 from ribs.emitters import EmitterBase
 from ribs.schedulers._scheduler import Scheduler
@@ -183,7 +183,7 @@ class BanditScheduler:
     @property
     def active(self) -> np.ndarray:
         """Boolean array indicating which emitters in the :attr:`emitter_pool` are currently active."""
-        return readonly(self._active_arr.view())
+        return arr_readonly(self._active_arr, view=True)
 
     @property
     def result_archive(self) -> ArchiveBase:
