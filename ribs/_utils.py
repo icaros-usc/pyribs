@@ -3,7 +3,7 @@
 import numbers
 
 import array_api_compat.numpy as np_compat
-import numpy as np  # TODO (#576): Remove import of np
+import numpy as np
 from array_api_compat import array_namespace
 
 
