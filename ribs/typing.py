@@ -1,8 +1,5 @@
 """Custom data types for pyribs."""
 
-# Developer Note: When adding new types, make sure to update the API listing in
-# `docs/api/ribs.typing.rst`.
-
 from __future__ import annotations
 
 from typing import Any, TypeVar, Union
