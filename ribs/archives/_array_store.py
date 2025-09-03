@@ -341,7 +341,7 @@ class ArrayStore:
                 with an additional "index" as the last field. The "index" field can also
                 be added anywhere in this list of fields. This argument can also be a
                 single str indicating a field name.
-            return_type (str): Type of data to return. See the ``data`` returned below.
+            return_type: Type of data to return. See the ``data`` returned below.
                 Ignored if ``fields`` is a str.
 
         Returns:
