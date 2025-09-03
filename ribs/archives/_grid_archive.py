@@ -6,7 +6,7 @@ from collections.abc import Collection, Iterator
 from typing import Literal, overload
 
 import numpy as np
-from numpy.typing import ArrayLike, DTypeLike
+from numpy.typing import ArrayLike
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (
@@ -26,7 +26,15 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
-from ribs.typing import Array, BatchData, FieldDesc, Float, Int, SingleData
+from ribs.typing import (
+    ArchiveDType,
+    Array,
+    BatchData,
+    FieldDesc,
+    Float,
+    Int,
+    SingleData,
+)
 
 
 class GridArchive(ArchiveBase):
@@ -106,9 +114,7 @@ class GridArchive(ArchiveBase):
         epsilon: Float = 1e-6,
         qd_score_offset: Float = 0.0,
         seed: Int | None = None,
-        dtype: Literal["f", "d"]
-        | type[np.float32 | np.float64]
-        | dict[str, DTypeLike] = np.float64,
+        dtype: ArchiveDType = np.float64,
         extra_fields: FieldDesc | None = None,
     ) -> None:
         self._rng = np.random.default_rng(seed)
