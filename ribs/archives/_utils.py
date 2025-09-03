@@ -15,6 +15,8 @@ def parse_dtype(dtype: DTypeLike, xp: ModuleType) -> DTypeLike:
     provided array backend.
     """
     if dtype is None:
+        # See here for info on array API inspection:
+        # https://data-apis.org/array-api/latest/API_specification/inspection.html
         return xp.__array_namespace_info__().default_dtypes()["real floating"]  # ty: ignore[unresolved-attribute]
     return dtype
 
