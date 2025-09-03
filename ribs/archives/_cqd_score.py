@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import dataclasses
-import typing
+from typing import Any
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from ribs._utils import check_is_1d
+from ribs.archives._archive_base import ArchiveBase
+from ribs.typing import Float, Int
 
 
 @dataclasses.dataclass
@@ -15,10 +18,10 @@ class CQDScoreResult:
     """Stores the result of running :func:`cqd_score`."""
 
     #: Number of times the score was computed.
-    iterations: int | np.integer
+    iterations: Int
 
     #: The mean score. This is the result most users will need.
-    mean: float | np.floating
+    mean: Float
 
     #: Array of scores obtained on each iteration.
     scores: np.ndarray
@@ -31,30 +34,30 @@ class CQDScoreResult:
     penalties: np.ndarray
 
     #: Minimum objective passed into the function.
-    obj_min: float | np.floating
+    obj_min: Float
 
     #: Maximum objective passed into the function.
-    obj_max: float | np.floating
+    obj_max: Float
 
     #: Max distance passed into the function.
-    dist_max: float | np.floating
+    dist_max: Float
 
     #: Order of the norm for distance that was passed into the function. Refer to the
     #: ``ord`` argument in :func:`numpy.linalg.norm` for type info.
-    dist_ord: typing.Any
+    dist_ord: Any
 
 
 def cqd_score(
-    archive,
+    archive: ArchiveBase,
     *,
-    iterations,
-    target_points,
-    penalties,
-    obj_min,
-    obj_max,
-    dist_max,
-    dist_ord=None,
-):
+    iterations: Int,
+    target_points: ArrayLike,
+    penalties: Int | ArrayLike,
+    obj_min: Float,
+    obj_max: Float,
+    dist_max: Float,
+    dist_ord: Any = None,
+) -> CQDScoreResult:
     r"""Computes the CQD score of an archive.
 
     The Continuous Quality Diversity (CQD) score was introduced in `Kent 2022
@@ -63,25 +66,25 @@ def cqd_score(
     archive.
 
     Args:
-        archive (ArchiveBase): Archive for which to compute the CQD score. The archive
-            must implement the :meth:`~ribs.archives.ArchiveBase.data` method.
-        iterations (int): Number of times to compute the CQD score.
-        target_points (array-like): (iterations, n, measure_dim) array that lists n
-            target points to use on each iteration.
-        penalties (int or array-like): Number of penalty values over which to compute
-            the score (the values are distributed evenly over the range [0,1]).
-            Alternatively, this may be a 1D array that explicitly lists the penalty
-            values. Known as :math:`\theta` in Kent 2022.
-        obj_min (float): Minimum objective value, used when normalizing the objectives.
-        obj_max (float): Maximum objective value, used when normalizing the objectives.
-        dist_max (float): Maximum distance between points in measure space.
+        archive: Archive for which to compute the CQD score. The archive must implement
+            the :meth:`~ribs.archives.ArchiveBase.data` method.
+        iterations: Number of times to compute the CQD score.
+        target_points: (iterations, n, measure_dim) array that lists n target points to
+            use on each iteration.
+        penalties: Number of penalty values over which to compute the score (the values
+            are distributed evenly over the range [0,1]). Alternatively, this may be a
+            1D array that explicitly lists the penalty values. Known as :math:`\theta`
+            in Kent 2022.
+        obj_min: Minimum objective value, used when normalizing the objectives.
+        obj_max: Maximum objective value, used when normalizing the objectives.
+        dist_max: Maximum distance between points in measure space.
         dist_ord: Order of the norm to use for calculating measure space distance; this
             is passed to :func:`numpy.linalg.norm` as the ``ord`` argument. See
             :func:`numpy.linalg.norm` for possible values. The default is to use
             Euclidean distance (L2 norm).
 
     Returns:
-        CQDScoreResult: Object containing results of the CQD score calculations.
+        Object containing results of the CQD score calculations.
 
     Raises:
         ValueError: target_points or penalties is an array with the wrong shape.
