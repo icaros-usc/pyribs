@@ -202,7 +202,7 @@ class ArrayStore:
         return arr_readonly(self._props["occupied_list"][: self._props["n_occupied"]])
 
     @cached_property
-    def field_desc(self) -> dict[str, tuple[tuple[int], DType]]:
+    def field_desc(self) -> FieldDesc:
         """Description of fields in the store.
 
         Example:
