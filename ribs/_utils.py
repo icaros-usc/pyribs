@@ -8,11 +8,13 @@ from types import ModuleType
 import array_api_compat.numpy as np_compat
 import numpy as np
 from array_api_compat import array_namespace
+from numpy.typing import ArrayLike
 
-from ribs.typing import ArrayVar
+from ribs.archives._archive_base import ArchiveBase
+from ribs.typing import ArrayVar, BatchData, Int, SingleData
 
 
-def check_finite(x, name):
+def check_finite(x: ArrayLike, name: str) -> None:
     """Checks that x is finite (i.e. not infinity or NaN).
 
     `x` must be either a scalar or NumPy array.
@@ -28,7 +30,13 @@ def check_finite(x, name):
         )
 
 
-def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
+def check_batch_shape(
+    array: np.ndarray,
+    array_name: str,
+    dim: Int | tuple[Int, ...],
+    dim_name: str,
+    extra_msg: str = "",
+) -> None:
     """Checks that the array has shape (batch_size, dim) or (batch_size, *dim).
 
     `batch_size` can be any value.
@@ -47,7 +55,13 @@ def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
         )
 
 
-def check_shape(array, array_name, dim, dim_name, extra_msg=""):
+def check_shape(
+    array: np.ndarray,
+    array_name: str,
+    dim: Int | tuple[Int, ...],
+    dim_name: str,
+    extra_msg: str = "",
+) -> None:
     """Checks that the array has shape dim.
 
     `array` must be a numpy array, and `dim` must be an int or tuple of int.
@@ -63,7 +77,7 @@ def check_shape(array, array_name, dim, dim_name, extra_msg=""):
         )
 
 
-def check_is_1d(array, array_name, extra_msg=""):
+def check_is_1d(array: np.ndarray, array_name: str, extra_msg: str = "") -> None:
     """Checks that an array is 1D."""
     if array.ndim != 1:
         raise ValueError(
@@ -72,7 +86,13 @@ def check_is_1d(array, array_name, extra_msg=""):
         )
 
 
-def check_solution_batch_dim(array, array_name, batch_size, is_1d=False, extra_msg=""):
+def check_solution_batch_dim(
+    array: np.ndarray,
+    array_name: str,
+    batch_size: int,
+    is_1d: bool = False,
+    extra_msg: str = "",
+) -> None:
     """Checks the batch dimension of an array with respect to the solutions."""
     if array.shape[0] != batch_size:
         raise ValueError(
@@ -85,8 +105,12 @@ def check_solution_batch_dim(array, array_name, batch_size, is_1d=False, extra_m
 
 
 def validate_batch(
-    archive, data, add_info=None, jacobian=None, none_objective_ok=False
-):
+    archive: ArchiveBase,
+    data: BatchData,
+    add_info: BatchData | None = None,
+    jacobian: ArrayLike = None,
+    none_objective_ok: bool = False,
+):  # No return annotation because it's quite complicated.
     """Preprocesses and validates batch arguments.
 
     ``data`` is a dict containing arrays with the data of each solution, e.g., objective
@@ -187,7 +211,9 @@ def validate_batch(
         return data
 
 
-def validate_single(archive, data, none_objective_ok=False):
+def validate_single(
+    archive: ArchiveBase, data: SingleData, none_objective_ok: bool = False
+) -> SingleData:
     """Performs preprocessing and checks for arguments to add_single()."""
     data["solution"] = np.asarray(data["solution"])
     check_shape(data["solution"], "solution", archive.solution_dim, "solution_dim")
