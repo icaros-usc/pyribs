@@ -2,8 +2,10 @@
 
 import numpy as np
 
+from ribs.typing import ArchiveDType
 
-def parse_dtype(dtype):
+
+def parse_dtype(dtype: ArchiveDType) -> dict[str, np.dtype]:
     """Parses dtypes for the archive.
 
     At the end, all dtypes will be scalar types like np.float32 or np.float64 -- note
@@ -75,5 +77,4 @@ def fill_sentinel_values(occupied, data):
             fill_val = 0
         else:  # Floating-point and other fields.
             fill_val = np.nan
-
         arr[unoccupied] = fill_val

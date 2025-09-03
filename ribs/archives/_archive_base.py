@@ -48,7 +48,7 @@ class ArchiveBase(ABC):
     def __init__(
         self,
         *,
-        solution_dim: Int | tuple[Int],
+        solution_dim: Int | tuple[Int, ...],
         objective_dim: tuple[()] | Int,
         measure_dim: Int,
     ) -> None:
@@ -59,7 +59,7 @@ class ArchiveBase(ABC):
     ## Properties of the archive ##
 
     @property
-    def solution_dim(self) -> Int | tuple[Int]:
+    def solution_dim(self) -> Int | tuple[Int, ...]:
         """Dimensionality of the solution space."""
         return self._solution_dim
 
@@ -226,7 +226,7 @@ class ArchiveBase(ABC):
         """
         raise NotImplementedError("`retrieve` has not been implemented in this archive")
 
-    def retrieve_single(self, measures: ArrayLike) -> SingleData:
+    def retrieve_single(self, measures: ArrayLike) -> tuple[bool, SingleData]:
         """Queries the archive for an elite with the given measures.
 
         While :meth:`retrieve` takes in a *batch* of measures, this method takes in the

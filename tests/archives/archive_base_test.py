@@ -260,7 +260,7 @@ def test_best_elite_extended(add_mode):
     assert archive.best_elite["objective"].shape == ()
     assert archive.best_elite["measures"].shape == (2,)
     assert archive.best_elite["threshold"].shape == ()
-    assert archive.stats.obj_max.shape == ()
+    assert archive.stats.obj_max.shape == ()  # ty: ignore[possibly-unbound-attribute]
 
     assert np.isclose(archive.best_elite["solution"], [1, 2, 3]).all()
     assert np.isclose(archive.best_elite["objective"], 1.0)
