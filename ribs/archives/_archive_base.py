@@ -48,7 +48,7 @@ class ArchiveBase(ABC):
     def __init__(
         self,
         *,
-        solution_dim: Int | tuple[Int],
+        solution_dim: Int | tuple[Int, ...],
         objective_dim: tuple[()] | Int,
         measure_dim: Int,
     ) -> None:
@@ -59,7 +59,7 @@ class ArchiveBase(ABC):
     ## Properties of the archive ##
 
     @property
-    def solution_dim(self) -> Int | tuple[Int]:
+    def solution_dim(self) -> Int | tuple[Int, ...]:
         """Dimensionality of the solution space."""
         return self._solution_dim
 

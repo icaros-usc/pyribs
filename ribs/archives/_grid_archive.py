@@ -106,7 +106,7 @@ class GridArchive(ArchiveBase):
     def __init__(
         self,
         *,
-        solution_dim: Int | tuple[Int],
+        solution_dim: Int | tuple[Int, ...],
         dims: Collection[Int],
         ranges: Collection[tuple[Float, Float]],
         learning_rate: Float | None = None,

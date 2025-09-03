@@ -55,11 +55,14 @@ ArrayVar = TypeVar("ArrayVar")
 #: be the batch dimension.
 BatchData = dict[str, Array]
 
+#: Same as above but allowing for optional values.
+OptionalBatchData = dict[str, Array | None]
+
 #: Represents data about a single solution.
 SingleData = dict[str, Any]
 
 #: Description of fields for archives.
-FieldDesc = dict[str, tuple[Int | tuple[Int], DTypeLike]]
+FieldDesc = dict[str, tuple[Int | tuple[Int, ...], DTypeLike]]
 
 #: Description of dtypes for archives.
 ArchiveDType = Union[
