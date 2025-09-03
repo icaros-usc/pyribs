@@ -46,6 +46,20 @@ def test_str_dtype_float(name, dtype):
     assert archive.dtypes["index"] == np.int32
 
 
+def test_default_dtypes():
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 10],
+        ranges=[(-1, 1), (-2, 2)],
+    )
+
+    assert archive.dtypes["solution"] == np.float64
+    assert archive.dtypes["objective"] == np.float64
+    assert archive.dtypes["measures"] == np.float64
+    assert archive.dtypes["threshold"] == np.float64
+    assert archive.dtypes["index"] == np.int32
+
+
 def test_different_dtypes():
     archive = GridArchive(
         solution_dim=3,
