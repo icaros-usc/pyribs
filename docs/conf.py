@@ -322,3 +322,22 @@ intersphinx_mapping = {
     "cupy": ("https://docs.cupy.dev/en/stable/", None),
     "torch": ("https://docs.pytorch.org/docs/stable/", None),
 }
+
+# -- Small custom extensions -------------------------------------------------
+
+
+def process_signature(app, what, name, obj, options, signature, return_annotation):  # noqa: ARG001
+    """Cleans up numpy dtypes in signatures.
+
+    According to ChatGPT, the problem seems to be that if you set the default value to
+    np.float64, autodoc will expand the value with repr() which gives a messy `class`
+    tag like the one shown below. So it is better to just replace it with text.
+    """
+    if signature:
+        signature = signature.replace("<class 'numpy.float64'>", "numpy.float64")
+    return (signature, return_annotation)
+
+
+def setup(app):
+    """Installs extensions."""
+    app.connect("autodoc-process-signature", process_signature)
