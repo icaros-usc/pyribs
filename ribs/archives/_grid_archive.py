@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
-from typing import Literal, Type
+from collections.abc import Collection, Iterator
+from typing import Literal, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
@@ -26,7 +26,7 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
-from ribs.typing import BatchData, SingleData
+from ribs.typing import Array, BatchData, FieldDesc, Float, Int, SingleData
 
 
 class GridArchive(ArchiveBase):
@@ -98,19 +98,18 @@ class GridArchive(ArchiveBase):
     def __init__(
         self,
         *,
-        solution_dim: int | tuple[int],
-        dims: Sequence[int],
-        ranges: Sequence[tuple[float, float]],
-        learning_rate: float | None = None,
-        threshold_min: float = -np.inf,
-        epsilon: float = 1e-6,
-        qd_score_offset: float = 0.0,
-        seed: int | None = None,
+        solution_dim: Int | tuple[Int],
+        dims: Collection[Int],
+        ranges: Collection[tuple[Float, Float]],
+        learning_rate: Float | None = None,
+        threshold_min: Float = -np.inf,
+        epsilon: Float = 1e-6,
+        qd_score_offset: Float = 0.0,
+        seed: Int | None = None,
         dtype: Literal["f", "d"]
-        | Type[np.float32]
-        | Type[np.float64]
+        | type[np.float32 | np.float64]
         | dict[str, DTypeLike] = np.float64,
-        extra_fields: dict[str, tuple[int | tuple[int], DTypeLike]] | None = None,
+        extra_fields: FieldDesc | None = None,
     ) -> None:
         self._rng = np.random.default_rng(seed)
         self._dims = np.array(dims, dtype=np.int32)
@@ -311,7 +310,7 @@ class GridArchive(ArchiveBase):
             obj_mean=None,
         )
 
-    def _stats_update(self, new_objective_sum: float, new_best_index: float) -> None:
+    def _stats_update(self, new_objective_sum: Float, new_best_index: Float) -> None:
         """Updates statistics.
 
         Update is based on a new sum of objective values (new_objective_sum) and the
@@ -398,7 +397,7 @@ class GridArchive(ArchiveBase):
 
         return self.grid_to_int_index(grid_indices)
 
-    def index_of_single(self, measures: ArrayLike) -> int:
+    def index_of_single(self, measures: ArrayLike) -> Int:
         """Returns the index of the measures for one solution.
 
         See :meth:`index_of`.
@@ -870,14 +869,42 @@ class GridArchive(ArchiveBase):
 
         return occupied[0], {field: arr[0] for field, arr in data.items()}
 
+    @overload
     def data(
         self,
-        fields: None | Sequence[str] | str = None,
+        fields: str,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
+    ) -> Array: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["dict"] = "dict",
+    ) -> BatchData: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["tuple"] = "tuple",
+    ) -> tuple[Array]: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["pandas"] = "pandas",
+    ) -> ArchiveDataFrame: ...
+
+    def data(
+        self,
+        fields: None | Collection[str] | str = None,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
-    def sample_elites(self, n: int) -> BatchData:
+    def sample_elites(self, n: Int) -> BatchData:
         if self.empty:
             raise IndexError("No elements in archive.")
 
@@ -888,7 +915,7 @@ class GridArchive(ArchiveBase):
 
     ## retessellate ##
 
-    def retessellate(self, new_dims: Sequence[int]) -> None:
+    def retessellate(self, new_dims: Collection[int]) -> None:
         """Updates the resolution of this archive to the given dimensions.
 
         Upon resizing the archive, this method re-inserts the solutions that are
