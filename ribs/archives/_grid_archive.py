@@ -236,7 +236,7 @@ class GridArchive(ArchiveBase):
         return self._dims
 
     @property
-    def cells(self) -> int:
+    def cells(self) -> Int:
         """Total number of cells in the archive."""
         return self._store.capacity
 
