@@ -1,8 +1,13 @@
 """Contains the SlidingBoundariesArchive."""
 
+from __future__ import annotations
+
 from collections import deque
+from collections.abc import Collection, Iterator
+from typing import Literal, overload
 
 import numpy as np
+from numpy.typing import ArrayLike
 from sortedcontainers import SortedList
 
 from ribs._utils import (
@@ -13,10 +18,20 @@ from ribs._utils import (
     validate_single,
 )
 from ribs.archives._archive_base import ArchiveBase
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._grid_archive import GridArchive
 from ribs.archives._utils import fill_sentinel_values, parse_dtype
+from ribs.typing import (
+    ArchiveDType,
+    Array,
+    BatchData,
+    FieldDesc,
+    Float,
+    Int,
+    SingleData,
+)
 
 
 class SolutionBuffer:
@@ -29,17 +44,17 @@ class SolutionBuffer:
       these lists when they are removed from the queue.
     """
 
-    def __init__(self, buffer_capacity, measure_dim):
+    def __init__(self, buffer_capacity: Int, measure_dim: Int) -> None:
         self._buffer_capacity = buffer_capacity
         self._queue = deque()
         self._measure_lists = [SortedList() for _ in range(measure_dim)]
         self._iter_idx = 0
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[SingleData]:
         """Enables iterating over solutions stored in the buffer."""
         return self
 
-    def __next__(self):
+    def __next__(self) -> SingleData:
         """Returns the next entry in the buffer."""
         if self._iter_idx >= self.size:
             self._iter_idx = 0
@@ -48,7 +63,7 @@ class SolutionBuffer:
         self._iter_idx += 1
         return result
 
-    def add(self, data):
+    def add(self, data: SingleData) -> None:
         """Inserts a new entry.
 
         Pops the oldest if it is full.
@@ -66,22 +81,22 @@ class SolutionBuffer:
         for i, m in enumerate(data["measures"]):
             self._measure_lists[i].add(m)
 
-    def full(self):
+    def full(self) -> bool:
         """Whether buffer is full."""
         return len(self._queue) >= self._buffer_capacity
 
     @property
-    def sorted_measures(self):
-        """(measure_dim, self.size) numpy.ndarray: Sorted measures of each dimension."""
+    def sorted_measures(self) -> np.ndarray:
+        """(measure_dim, self.size) array with sorted measures of each dimension."""
         return np.array(self._measure_lists, dtype=np.float64)
 
     @property
-    def size(self):
+    def size(self) -> int:
         """Number of solutions stored in the buffer."""
         return len(self._queue)
 
     @property
-    def capacity(self):
+    def capacity(self) -> Int:
         """Capacity of the buffer."""
         return self._buffer_capacity
 
@@ -114,61 +129,60 @@ class SlidingBoundariesArchive(ArchiveBase):
         solution_dim: Dimensionality of the solution space. Scalar or multi-dimensional
             solution shapes are allowed by passing an empty tuple or tuple of integers,
             respectively.
-        dims (array-like): Number of cells in each dimension of the measure space, e.g.
-            ``[20, 30, 40]`` indicates there should be 3 dimensions with 20, 30, and 40
-            cells. (The number of dimensions is implicitly defined in the length of this
-            argument).
-        ranges (array-like of (float, float)): `Initial` upper and lower bound of each
-            dimension of the measure space, e.g. ``[(-1, 1), (-2, 2)]`` indicates the
-            first dimension should have bounds :math:`[-1,1]` (inclusive), and the
-            second dimension should have bounds :math:`[-2,2]` (inclusive). ``ranges``
-            should be the same length as ``dims``.
-        epsilon (float): Due to floating point precision errors, we add a small epsilon
+        dims: Number of cells in each dimension of the measure space, e.g. ``[20, 30,
+            40]`` indicates there should be 3 dimensions with 20, 30, and 40 cells. (The
+            number of dimensions is implicitly defined in the length of this argument).
+        ranges: Upper and lower bound of each dimension of the measure space, e.g.
+            ``[(-1, 1), (-2, 2)]`` indicates the first dimension should have bounds
+            :math:`[-1,1]` (inclusive), and the second dimension should have bounds
+            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
+            ``dims``.
+        epsilon: Due to floating point precision errors, we add a small epsilon
             when computing the archive indices in the :meth:`index_of` method -- refer
             to the implementation `here
             <../_modules/ribs/archives/_sliding_boundaries_archive.html#SlidingBoundariesArchive.index_of>`_.
             Pass this parameter to configure that epsilon.
-        qd_score_offset (float): Archives often contain negative objective values, and
-            if the QD score were to be computed with these negative objectives, the
-            algorithm would be penalized for adding new cells with negative objectives.
-            Thus, a standard practice is to normalize all the objectives so that they
-            are non-negative by introducing an offset. This QD score offset will be
+        qd_score_offset: Archives often contain negative objective values, and if the QD
+            score were to be computed with these negative objectives, the algorithm
+            would be penalized for adding new cells with negative objectives. Thus, a
+            standard practice is to normalize all the objectives so that they are
+            non-negative by introducing an offset. This QD score offset will be
             *subtracted* from all objectives in the archive, e.g., if your objectives go
             as low as -300, pass in -300 so that each objective will be transformed as
             ``objective - (-300)``.
-        seed (int): Value to seed the random number generator. Set to None to avoid a
-            fixed seed.
-        dtype (str or data-type or dict): Data type of the solutions, objectives, and
-            measures. This can be ``"f"`` / ``np.float32``, ``"d"`` / ``np.float64``, or
-            a dict specifying separate dtypes, of the form ``{"solution": <dtype>,
-            "objective": <dtype>, "measures": <dtype>}``.
-        extra_fields (dict): Description of extra fields of data that is stored next to
-            elite data like solutions and objectives. The description is a dict mapping
-            from a field name (str) to a tuple of ``(shape, dtype)``. For instance,
-            ``{"foo": ((), np.float32), "bar": ((10,), np.float32)}`` will create a
-            "foo" field that contains scalar values and a "bar" field that contains 10D
-            values. Note that field names must be valid Python identifiers, and names
-            already used in the archive are not allowed.
-        remap_frequency (int): Frequency of remapping. Archive will remap once after
+        seed: Value to seed the random number generator. Set to None to avoid a fixed
+            seed.
+        dtype: Data type of the solutions, objectives, and measures. This can be ``"f"``
+            / ``np.float32``, ``"d"`` / ``np.float64``, or a dict specifying separate
+            dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
+            "measures": <dtype>}``.
+        extra_fields: Description of extra fields of data that are stored next to elite
+            data like solutions and objectives. The description is a dict mapping from a
+            field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
+            ((), np.float32), "bar": ((10,), np.float32)}`` will create a "foo" field
+            that contains scalar values and a "bar" field that contains 10D values. Note
+            that field names must be valid Python identifiers, and names already used in
+            the archive are not allowed.
+        remap_frequency: Frequency of remapping. Archive will remap once after
             ``remap_frequency`` number of solutions has been found.
-        buffer_capacity (int): Number of solutions to keep in the buffer. Solutions in
-            the buffer will be reinserted into the archive after remapping.
+        buffer_capacity: Number of solutions to keep in the buffer. Solutions in the
+            buffer will be reinserted into the archive after remapping.
     """
 
     def __init__(
         self,
         *,
-        solution_dim,
-        dims,
-        ranges,
-        epsilon=1e-6,
-        qd_score_offset=0.0,
-        seed=None,
-        dtype=np.float64,
-        extra_fields=None,
-        remap_frequency=100,
-        buffer_capacity=1000,
-    ):
+        solution_dim: Int | tuple[Int, ...],
+        dims: Collection[Int],
+        ranges: Collection[tuple[Float, Float]],
+        epsilon: Float = 1e-6,
+        qd_score_offset: Float = 0.0,
+        seed: Int | None = None,
+        dtype: ArchiveDType = np.float64,
+        extra_fields: FieldDesc | None = None,
+        remap_frequency: Int = 100,
+        buffer_capacity: Int = 1000,
+    ) -> None:
         self._rng = np.random.default_rng(seed)
         self._dims = np.array(dims)
 
@@ -245,27 +259,27 @@ class SlidingBoundariesArchive(ArchiveBase):
     ## Properties inherited from ArchiveBase ##
 
     @property
-    def field_list(self):
+    def field_list(self) -> list[str]:
         return self._store.field_list_with_index
 
     @property
-    def dtypes(self):
+    def dtypes(self) -> dict[str, np.dtype]:
         return self._store.dtypes_with_index
 
     @property
-    def stats(self):
+    def stats(self) -> ArchiveStats:
         return self._stats
 
     @property
-    def empty(self):
+    def empty(self) -> bool:
         return len(self._store) == 0
 
     ## Properties that are not in ArchiveBase ##
     ## Roughly ordered by the parameter list in the constructor. ##
 
     @property
-    def best_elite(self):
-        """dict: The elite with the highest objective in the archive.
+    def best_elite(self) -> SingleData:
+        """The elite with the highest objective in the archive.
 
         None if there are no elites in the archive.
         """
@@ -297,21 +311,18 @@ class SlidingBoundariesArchive(ArchiveBase):
         return self._interval_size
 
     @property
-    def epsilon(self):
-        """dtypes["measures"]: Epsilon for computing archive indices.
-
-        Refer to the documentation for this class.
-        """
+    def epsilon(self) -> float:
+        """Epsilon for computing archive indices."""
         return self._epsilon
 
     @property
-    def qd_score_offset(self):
-        """float: Subtracted from objective values when computing the QD score."""
+    def qd_score_offset(self) -> float:
+        """Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     @property
-    def remap_frequency(self):
-        """int: Frequency of remapping.
+    def remap_frequency(self) -> Int:
+        """Frequency of remapping.
 
         The archive will remap once after ``remap_frequency`` number of solutions has
         been found.
@@ -319,13 +330,13 @@ class SlidingBoundariesArchive(ArchiveBase):
         return self._remap_frequency
 
     @property
-    def buffer_capacity(self):
-        """int: Maximum capacity of the buffer."""
+    def buffer_capacity(self) -> Int:
+        """Maximum capacity of the buffer."""
         return self._buffer.capacity
 
     @property
-    def boundaries(self):
-        """list of numpy.ndarray: The dynamic boundaries of the cells in each dimension.
+    def boundaries(self) -> list[np.ndarray]:
+        """The dynamic boundaries of the cells in each dimension.
 
         Entry ``i`` in this list is an array that contains the boundaries of the cells
         in dimension ``i``. The array contains ``self.dims[i] + 1`` entries laid out
@@ -338,20 +349,20 @@ class SlidingBoundariesArchive(ArchiveBase):
         bounds of cell ``j`` in dimension ``i``. To access the lower bounds of all the
         cells in dimension ``i``, use ``boundaries[i][:-1]``, and to access all the
         upper bounds, use ``boundaries[i][1:]``.
-        """  # noqa: D403
+        """
         return [bound[: dim + 1] for bound, dim in zip(self._boundaries, self._dims)]
 
     ## dunder methods ##
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._store)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[SingleData]:
         return iter(self._store)
 
     ## Utilities ##
 
-    def _stats_reset(self):
+    def _stats_reset(self) -> None:
         """Resets the archive stats."""
         self._best_elite = None
         self._objective_sum = np.asarray(0.0, dtype=self.dtypes["objective"])
@@ -364,8 +375,8 @@ class SlidingBoundariesArchive(ArchiveBase):
             obj_mean=None,
         )
 
-    def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates archive statistics.
+    def _stats_update(self, new_objective_sum: Float, new_best_index: Float) -> None:
+        """Updates statistics.
 
         Update is based on a new sum of objective values (new_objective_sum) and the
         index of a potential new best elite (new_best_index).
@@ -401,7 +412,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             ),
         )
 
-    def index_of(self, measures):
+    def index_of(self, measures: ArrayLike) -> np.ndarray:
         """Returns archive indices for the given batch of measures.
 
         First, values are clipped to the bounds of the measure space. Then, the values
@@ -429,12 +440,12 @@ class SlidingBoundariesArchive(ArchiveBase):
         See :attr:`boundaries` for more info.
 
         Args:
-            measures (array-like): (batch_size, :attr:`measure_dim`) array of
-                coordinates in measure space.
+            measures: (batch_size, :attr:`measure_dim`) array of coordinates in measure
+                space.
 
         Returns:
-            numpy.ndarray: (batch_size,) array of integer indices representing the
-            flattened grid coordinates.
+            (batch_size,) array of integer indices representing the flattened grid
+            coordinates.
 
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
@@ -465,18 +476,16 @@ class SlidingBoundariesArchive(ArchiveBase):
         # index columns.
         return np.ravel_multi_index(idx_cols, self._dims).astype(np.int32)
 
-    def index_of_single(self, measures):
+    def index_of_single(self, measures: ArrayLike) -> Int:
         """Returns the index of the measures for one solution.
 
         See :meth:`index_of`.
 
         Args:
-            measures (array-like): (:attr:`measure_dim`,) array of measures for a single
-                solution.
+            measures: (:attr:`measure_dim`,) array of measures for a single solution.
 
         Returns:
-            int or numpy.integer: Integer index of the measures in the archive's storage
-            arrays.
+            Integer index of the measures in the archive's storage arrays.
 
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
@@ -491,7 +500,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     int_to_grid_index = GridArchive.int_to_grid_index
     grid_to_int_index = GridArchive.grid_to_int_index
 
-    def _remap(self):
+    def _remap(self) -> SingleData:
         """Remaps the archive.
 
         The boundaries are relocated to the percentage marks of the distribution of
@@ -501,8 +510,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         archive.
 
         Returns:
-            tuple: The result of calling :meth:`ArchiveBase.add` on the last item in the
-            buffer.
+            Result of calling :meth:`ArchiveBase.add` on the last item in the buffer.
         """
         # Sort each measure along its dimension.
         sorted_measures = self._buffer.sorted_measures
@@ -542,7 +550,13 @@ class SlidingBoundariesArchive(ArchiveBase):
 
     ## Methods for writing to the archive ##
 
-    def add(self, solution, objective, measures, **fields):
+    def add(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike,
+        measures: ArrayLike,
+        **fields: ArrayLike,
+    ) -> BatchData:
         """Inserts a batch of solutions into the archive.
 
         .. note:: Unlike in other archives, this method is not truly batched; rather, it
@@ -579,7 +593,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         return add_info
 
-    def _basic_add_single(self, data):
+    def _basic_add_single(self, data: SingleData) -> SingleData:
         """Regular addition following standard MAP-Elites procedures.
 
         `data` should be similar to the data created in `add_single`.
@@ -629,7 +643,13 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         return add_info
 
-    def add_single(self, solution, objective, measures, **fields):
+    def add_single(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike,
+        measures: ArrayLike,
+        **fields: ArrayLike,
+    ) -> SingleData:
         """Inserts a single solution into the archive.
 
         This method remaps the archive after every :attr:`remap_frequency` solutions are
@@ -638,14 +658,14 @@ class SlidingBoundariesArchive(ArchiveBase):
         solutions stored in the buffer `and` the current archive.
 
         Args:
-            solution (array-like): Parameters of the solution.
-            objective (float): Objective function evaluation of the solution.
-            measures (array-like): Coordinates in measure space of the solution.
-            fields (keyword arguments): Additional data for the solution.
+            solution: Parameters of the solution.
+            objective: Objective function evaluation of the solution.
+            measures: Coordinates in measure space of the solution.
+            fields: Additional data for the solution.
 
         Returns:
-            dict: Information describing the result of the add operation. The dict
-            contains ``status`` and ``value`` keys, exactly as in
+            Information describing the result of the add operation. The dict contains
+            ``status`` and ``value`` keys, exactly as in
             :meth:`ribs.archives.GridArchive.add`.
 
         Raises:
@@ -681,7 +701,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             add_info = self._basic_add_single(data)
         return add_info
 
-    def clear(self):
+    def clear(self) -> None:
         """Removes all elites in the archive."""
         self._store.clear()
         self._stats_reset()
@@ -689,7 +709,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     ## Methods for reading from the archive ##
     ## Refer to ArchiveBase for documentation of these methods. ##
 
-    def retrieve(self, measures):
+    def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, BatchData]:
         measures = np.asarray(measures)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
@@ -699,7 +719,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         return occupied, data
 
-    def retrieve_single(self, measures):
+    def retrieve_single(self, measures: ArrayLike) -> tuple[bool, SingleData]:
         measures = np.asarray(measures)
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
@@ -708,10 +728,42 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         return occupied[0], {field: arr[0] for field, arr in data.items()}
 
-    def data(self, fields=None, return_type="dict"):
+    @overload
+    def data(
+        self,
+        fields: str,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["dict"] = "dict",
+    ) -> BatchData: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["tuple"] = "tuple",
+    ) -> tuple[Array]: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["pandas"] = "pandas",
+    ) -> ArchiveDataFrame: ...
+
+    def data(
+        self,
+        fields: None | Collection[str] | str = None,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
-    def sample_elites(self, n):
+    def sample_elites(self, n: Int) -> BatchData:
         if self.empty:
             raise IndexError("No elements in archive.")
 
