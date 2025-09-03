@@ -6,8 +6,9 @@ from collections import deque
 from collections.abc import Collection, Iterator
 from typing import Literal, overload
 
+import array_api_compat.numpy as np_compat
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, DTypeLike
 from sortedcontainers import SortedList
 
 from ribs._utils import (
@@ -23,15 +24,7 @@ from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._grid_archive import GridArchive
 from ribs.archives._utils import fill_sentinel_values, parse_dtype
-from ribs.typing import (
-    ArchiveDType,
-    Array,
-    BatchData,
-    FieldDesc,
-    Float,
-    Int,
-    SingleData,
-)
+from ribs.typing import Array, BatchData, FieldDesc, Float, Int, SingleData
 
 
 class SolutionBuffer:
@@ -152,10 +145,13 @@ class SlidingBoundariesArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        dtype: Data type of the solutions, objectives, and measures. This can be ``"f"``
-            / ``np.float32``, ``"d"`` / ``np.float64``, or a dict specifying separate
-            dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
-            "measures": <dtype>}``.
+        solution_dtype: Data type of the solution. Defaults to float64 for numpy/cupy,
+            and float32 for torch.
+        objective_dtype: Data type of the objective. Defaults to float64 for numpy/cupy,
+            and float32 for torch.
+        measures_dtype: Data type of the measures. Defaults to float64 for numpy/cupy,
+            and float32 for torch.
+        dtype: DEPRECATED.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
             field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
@@ -178,11 +174,20 @@ class SlidingBoundariesArchive(ArchiveBase):
         epsilon: Float = 1e-6,
         qd_score_offset: Float = 0.0,
         seed: Int | None = None,
-        dtype: ArchiveDType = np.float64,
+        solution_dtype: DTypeLike = None,
+        objective_dtype: DTypeLike = None,
+        measures_dtype: DTypeLike = None,
+        dtype: None = None,
         extra_fields: FieldDesc | None = None,
         remap_frequency: Int = 100,
         buffer_capacity: Int = 1000,
     ) -> None:
+        if dtype is not None:
+            raise ValueError(
+                "dtype is deprecated. Please specify solution_dtype, "
+                "objective_dtype, and/or measures_dtype instead."
+            )
+
         self._rng = np.random.default_rng(seed)
         self._dims = np.array(dims)
 
@@ -202,12 +207,14 @@ class SlidingBoundariesArchive(ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        dtype = parse_dtype(dtype)
+        solution_dtype = parse_dtype(solution_dtype, np_compat)
+        objective_dtype = parse_dtype(objective_dtype, np_compat)
+        measures_dtype = parse_dtype(measures_dtype, np_compat)
         self._store = ArrayStore(
             field_desc={
-                "solution": (self.solution_dim, dtype["solution"]),
-                "objective": ((), dtype["objective"]),
-                "measures": (self.measure_dim, dtype["measures"]),
+                "solution": (self.solution_dim, solution_dtype),
+                "objective": ((), objective_dtype),
+                "measures": (self.measure_dim, measures_dtype),
                 **extra_fields,
             },
             capacity=np.prod(self._dims),
