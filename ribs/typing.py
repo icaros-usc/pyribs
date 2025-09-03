@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar, Union
+from typing import Any, Literal, TypeVar, Union
 
 import numpy as np
 from numpy.typing import DTypeLike
@@ -60,3 +60,8 @@ SingleData = dict[str, Any]
 
 #: Description of fields for archives.
 FieldDesc = dict[str, tuple[Int | tuple[Int], DTypeLike]]
+
+#: Description of dtypes for archives.
+ArchiveDType = Union[
+    Literal["f", "d"], type[Union[np.float32, np.float64]], dict[str, DTypeLike]
+]
