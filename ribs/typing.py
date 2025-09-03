@@ -1,7 +1,18 @@
-"""Custom data types for pyribs."""
+"""Custom data types for pyribs.
 
-# Developer Note: When adding new types, make sure to update the API listing in
-# `docs/api/ribs.typing.rst`.
+.. autodata:: ribs.typing.Int
+.. autodata:: ribs.typing.Float
+.. autodata:: ribs.typing.Array
+.. autodata:: ribs.typing.DType
+.. autodata:: ribs.typing.Device
+.. autodata:: ribs.typing.ArrayVar
+.. autodata:: ribs.typing.BatchData
+.. autodata:: ribs.typing.SingleData
+.. autodata:: ribs.typing.FieldDesc
+"""
+
+# Developer Note: When adding new types, make sure to update the API listing in the
+# docstring above.
 
 from __future__ import annotations
 
