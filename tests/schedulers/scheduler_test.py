@@ -426,11 +426,6 @@ def test_scheduler_with_categorical_archive(add_mode):
             ["A", "B", "C"],
             ["One", "Two", "Three", "Four"],
         ],
-        dtype={
-            "solution": np.float32,
-            "objective": np.float32,
-            "measures": object,
-        },
     )
     emitters = [GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=batch_size)]
     scheduler = Scheduler(archive, emitters, add_mode=add_mode)

@@ -28,7 +28,12 @@ def test_list_as_initial_solution():
 @pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
 def test_dtypes(dtype):
     archive = GridArchive(
-        solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2, dtype=dtype
+        solution_dim=10,
+        dims=[20, 20],
+        ranges=[(-1.0, 1.0)] * 2,
+        solution_dtype=dtype,
+        objective_dtype=dtype,
+        measures_dtype=dtype,
     )
     emitter = GradientArborescenceEmitter(archive, x0=np.zeros(10), sigma0=1.0, lr=1.0)
     assert emitter.x0.dtype == dtype
