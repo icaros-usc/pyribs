@@ -27,7 +27,7 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
-from ribs.typing import Array, BatchData, FieldDesc, Float, Int, SingleData
+from ribs.typing import Array, BatchData, DType, FieldDesc, Float, Int, SingleData
 
 
 class GridArchive(ArchiveBase):
@@ -201,7 +201,7 @@ class GridArchive(ArchiveBase):
         return self._store.field_list_with_index
 
     @property
-    def dtypes(self) -> dict[str, np.dtype]:
+    def dtypes(self) -> dict[str, DType]:
         return self._store.dtypes_with_index
 
     @property

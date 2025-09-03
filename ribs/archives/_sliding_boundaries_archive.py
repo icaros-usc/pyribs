@@ -24,7 +24,7 @@ from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._grid_archive import GridArchive
 from ribs.archives._utils import fill_sentinel_values, parse_dtype
-from ribs.typing import Array, BatchData, FieldDesc, Float, Int, SingleData
+from ribs.typing import Array, BatchData, DType, FieldDesc, Float, Int, SingleData
 
 
 class SolutionBuffer:
@@ -270,7 +270,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         return self._store.field_list_with_index
 
     @property
-    def dtypes(self) -> dict[str, np.dtype]:
+    def dtypes(self) -> dict[str, DType]:
         return self._store.dtypes_with_index
 
     @property
