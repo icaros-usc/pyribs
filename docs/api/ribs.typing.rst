@@ -2,6 +2,6 @@ ribs.typing
 ===========
 
 .. automodule:: ribs.typing
-   :no-members:
+   :members:
    :no-inherited-members:
    :no-special-members:
