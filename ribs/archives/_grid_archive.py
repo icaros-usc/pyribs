@@ -866,7 +866,7 @@ class GridArchive(ArchiveBase):
 
         return occupied, data
 
-    def retrieve_single(self, measures: ArrayLike) -> SingleData:
+    def retrieve_single(self, measures: ArrayLike) -> tuple[bool, SingleData]:
         measures = np.asarray(measures)
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")

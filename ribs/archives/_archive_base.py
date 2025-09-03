@@ -226,7 +226,7 @@ class ArchiveBase(ABC):
         """
         raise NotImplementedError("`retrieve` has not been implemented in this archive")
 
-    def retrieve_single(self, measures: ArrayLike) -> SingleData:
+    def retrieve_single(self, measures: ArrayLike) -> tuple[bool, SingleData]:
         """Queries the archive for an elite with the given measures.
 
         While :meth:`retrieve` takes in a *batch* of measures, this method takes in the
