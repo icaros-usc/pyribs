@@ -49,7 +49,7 @@ def test_density_dtype(density_method, dtype):
         buffer_size=10000,
         density_method=density_method,
         bandwidth=2.0,
-        dtype=dtype,
+        measures_dtype=dtype,
     )
 
     measures = np.arange(10).reshape((5, 2))

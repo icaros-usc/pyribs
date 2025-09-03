@@ -17,4 +17,3 @@ ribs.typing
 .. autodata:: ribs.typing.BatchData
 .. autodata:: ribs.typing.SingleData
 .. autodata:: ribs.typing.FieldDesc
-.. autodata:: ribs.typing.ArchiveDType

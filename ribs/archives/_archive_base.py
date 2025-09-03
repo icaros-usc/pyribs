@@ -11,7 +11,7 @@ from numpy.typing import ArrayLike
 
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
-from ribs.typing import Array, BatchData, Int, SingleData
+from ribs.typing import Array, BatchData, DType, Int, SingleData
 
 
 class ArchiveBase(ABC):
@@ -84,7 +84,7 @@ class ArchiveBase(ABC):
         )
 
     @property
-    def dtypes(self) -> dict[str, np.dtype]:
+    def dtypes(self) -> dict[str, DType]:
         """Mapping from field name to dtype for all fields in the archive."""
         raise NotImplementedError("`dtypes` has not been implemented in this archive")
 

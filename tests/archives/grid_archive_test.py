@@ -672,7 +672,9 @@ def test_values_go_to_correct_bin(dtype):
         dims=[10],
         ranges=[(0, 0.1)],
         epsilon=1e-6,
-        dtype=dtype,
+        solution_dtype=dtype,
+        objective_dtype=dtype,
+        measures_dtype=dtype,
     )
 
     # Values below the lower bound land in the first bin.
@@ -835,7 +837,7 @@ def test_str_solutions():
         solution_dim=(),
         dims=[10, 20],
         ranges=[(-1, 1), (-2, 2)],
-        dtype={"solution": object, "objective": np.float32, "measures": np.float32},
+        solution_dtype=object,
     )
     assert archive.solution_dim == ()
     assert archive.dtypes["solution"] == np.object_

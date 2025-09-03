@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Replace `dtype` parameter in archives with
+  `solution_dtype`, `objective_dtype`, and `measures_dtype` ({pr}`639`)
 - Raise `KeyError` in `ArchiveDataFrame.get_field` when field not found
   ({pr}`626`)
 - Support array backends via Python array API Standard ({issue}`570`)

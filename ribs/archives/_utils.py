@@ -1,46 +1,24 @@
 """Utilities specific to archives."""
 
+from __future__ import annotations
+
+from types import ModuleType
+
 import numpy as np
+from numpy.typing import DTypeLike
 
-from ribs.typing import ArchiveDType
 
+def parse_dtype(dtype: DTypeLike, xp: ModuleType) -> DTypeLike:
+    """Makes any necessary modifications to the input dtype.
 
-def parse_dtype(dtype: ArchiveDType) -> dict[str, np.dtype]:
-    """Parses dtypes for the archive.
-
-    At the end, all dtypes will be scalar types like np.float32 or np.float64 -- note
-    that this is different from the numpy.dtype like np.dtype("f"). See here:
-    https://numpy.org/doc/stable/reference/arrays.dtypes.html
+    Any dtypes that are `None` are set to the default "real floating" dtype for the
+    provided array backend.
     """
-    if isinstance(dtype, dict):
-        if (
-            "solution" not in dtype
-            or "objective" not in dtype
-            or "measures" not in dtype
-        ):
-            raise ValueError(
-                "If dtype is a dict, it must contain 'solution',"
-                "'objective', and 'measures' keys."
-            )
-        dtype_dict = dtype
-    else:
-        if dtype not in ["f", np.float32, "d", np.float64]:
-            raise ValueError(
-                "Unsupported dtype. Must be np.float32 or np.float64, or dict "
-                '{"solution": <dtype>, "objective": <dtype>, '
-                '"measures": <dtype>}'
-            )
-        dtype_dict = {
-            "solution": dtype,
-            "objective": dtype,
-            "measures": dtype,
-        }
-
-    # Cast everything to scalar types, including string abbreviations like "f".
-    for key in dtype_dict:
-        dtype_dict[key] = np.dtype(dtype_dict[key]).type
-
-    return dtype_dict
+    if dtype is None:
+        # See here for info on array API inspection:
+        # https://data-apis.org/array-api/latest/API_specification/inspection.html
+        return xp.__array_namespace_info__().default_dtypes()["real floating"]  # ty: ignore[unresolved-attribute]
+    return dtype
 
 
 def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
