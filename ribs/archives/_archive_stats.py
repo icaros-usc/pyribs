@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 
-import numpy as np
+from ribs.typing import Float, Int
 
 
 @dataclasses.dataclass
@@ -12,21 +12,21 @@ class ArchiveStats:
     """Holds statistics about an archive."""
 
     #: Number of elites in the archive.
-    num_elites: int
+    num_elites: Int
 
     #: Proportion of cells in the archive that have an elite - always in the
     #: range :math:`[0,1]`.
-    coverage: np.floating
+    coverage: Float
 
-    #: QD score, i.e. sum of objective values of all elites in the archive. If
+    #: QD score, i.e., sum of objective values of all elites in the archive. If
     #: ``qd_score_offset`` was passed in to the archive, this QD score
     #: normalizes the objectives by subtracting the offset from all objective
     #: values before computing the QD score.
-    qd_score: np.floating
+    qd_score: Float
 
-    #: Normalized QD score, i.e. the QD score divided by the number of cells in
+    #: Normalized QD score, i.e., the QD score divided by the number of cells in
     #: the archive.
-    norm_qd_score: np.floating
+    norm_qd_score: Float
 
     #: Maximum objective value of the elites in the archive. None if there are
     #: no elites in the archive.
@@ -40,8 +40,8 @@ class ArchiveStats:
     #:     the *threshold* of the cell they are being inserted into, not the
     #:     *objective* of the elite currently in the cell. See :pr:`314` for
     #:     more info.
-    obj_max: np.floating | None
+    obj_max: Float | None
 
     #: Mean objective value of the elites in the archive. None if there are no
     #: elites in the archive.
-    obj_mean: np.floating | None
+    obj_mean: Float | None

@@ -1,31 +1,39 @@
 """Contains the DensityArchive."""
 
+from __future__ import annotations
+
+from typing import Literal
+
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KernelDensity
 
 from ribs._utils import arr_readonly, check_batch_shape, check_finite
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._utils import parse_dtype
+from ribs.typing import ArchiveDType, BatchData, Float, Int
 
 
-def gkern(x):
+def gkern(x: np.ndarray) -> np.ndarray:
     """Gaussian kernel."""
     gauss = np.exp(-0.5 * np.square(x))
     return gauss / np.sqrt(2 * np.pi)
 
 
-def gaussian_kde_measures(measures, buffer, h):
+def gaussian_kde_measures(
+    measures: np.ndarray, buffer: np.ndarray, h: float
+) -> np.ndarray:
     """Evaluates kernel density estimation with a Gaussian kernel.
 
     The density is defined as zero if the buffer is empty.
 
     Args:
-        measures (numpy.ndarray): (measures_batch_size, measure_dim) array of measures
-            at which to estimate density.
-        buffer (np.ndarray): (buffer_batch_size, measure_dim) batch of measures that
-            parameterize the KDE.
-        h (float): Kernel bandwidth.
+        measures: (measures_batch_size, measure_dim) array of points at which to
+            estimate density.
+        buffer: (buffer_batch_size, measure_dim) batch of measures that parameterize the
+            KDE.
+        h: Kernel bandwidth.
 
     Returns:
         Evaluation of KDE(m).
@@ -68,24 +76,24 @@ class DensityArchive(ArchiveBase):
     solutions when using this archive.
 
     Args:
-        measure_dim (int): Dimension of the measure space.
-        buffer_size (int): Size of the buffer of measures.
-        density_method (str): Method for computing density. Currently supports ``"kde"``
-            (KDE -- kernel density estimator), ``"kde_sklearn"`` (KDE using
+        measure_dim: Dimension of the measure space.
+        buffer_size: Size of the buffer of measures.
+        density_method: Method for computing density. Currently supports ``"kde"`` (KDE
+            -- kernel density estimator), ``"kde_sklearn"`` (KDE using
             :class:`sklearn.neighbors.KernelDensity`). Note that when ``"kde_sklearn"``
             is used, this archive computes *log density*; see
             :meth:`sklearn.neighbors.KernelDensity.score_samples` for more info.
-        bandwidth (float): Bandwidth when using ``kde`` or ``kde_sklearn`` as the
+        bandwidth: Bandwidth when using ``kde`` or ``kde_sklearn`` as the
             ``density_method``.
-        sklearn_kwargs (dict): kwargs for :class:`sklearn.neighbors.KernelDensity` when
-            using ``"kde_sklearn"`` as the ``density_method``. Note that bandwidth is
-            already passed in via the ``bandwidth`` parameter above.
-        seed (int): Value to seed the random number generator. Set to None to avoid a
-            fixed seed.
-        dtype (str or data-type or dict): Data type of the measures. This can be ``"f"``
-            / ``np.float32``, ``"d"`` / ``np.float64``. For consistency with other
-            archives, this can also be a dict specifying separate dtypes, of the form
-            ``{"solution": <dtype>, "objective": <dtype>, "measures": <dtype>}``.
+        sklearn_kwargs: kwargs for :class:`sklearn.neighbors.KernelDensity` when using
+            ``"kde_sklearn"`` as the ``density_method``. Note that bandwidth is already
+            passed in via the ``bandwidth`` parameter above.
+        seed: Value to seed the random number generator. Set to None to avoid a fixed
+            seed.
+        dtype: Data type of the measures. This can be ``"f"`` / ``np.float32``, ``"d"``
+            / ``np.float64``. For consistency with other archives, this can also be a
+            dict specifying separate dtypes, of the form ``{"solution": <dtype>,
+            "objective": <dtype>, "measures": <dtype>}``.
 
     Raises:
         ValueError: Unknown ``density_method`` provided.
@@ -94,14 +102,14 @@ class DensityArchive(ArchiveBase):
     def __init__(
         self,
         *,
-        measure_dim,
-        buffer_size=10000,
-        density_method="kde",
-        bandwidth=None,
-        sklearn_kwargs=None,
-        seed=None,
-        dtype=np.float64,
-    ):
+        measure_dim: Int,
+        buffer_size: Int = 10000,
+        density_method: Literal["kde", "kde_sklearn"] = "kde",
+        bandwidth: Float | None = None,
+        sklearn_kwargs: dict | None = None,
+        seed: Int | None = None,
+        dtype: ArchiveDType = np.float64,
+    ) -> None:
         self._rng = np.random.default_rng(seed)
         dtypes = parse_dtype(dtype)
         self._measure_dtype = dtypes["measures"]
@@ -139,8 +147,8 @@ class DensityArchive(ArchiveBase):
 
     # Necessary to implement this since `Scheduler` calls it.
     @property
-    def empty(self):
-        """bool: Whether the archive is empty; always ``False``.
+    def empty(self) -> bool:
+        """Whether the archive is empty; always ``False``.
 
         Since the archive does not store elites, we always mark it as not empty.
         """
@@ -149,8 +157,8 @@ class DensityArchive(ArchiveBase):
     ## Properties that are not in ArchiveBase ##
 
     @property
-    def buffer(self):
-        """numpy.ndarray: Buffer of measures considered in the density estimator.
+    def buffer(self) -> np.ndarray:
+        """Buffer of measures considered in the density estimator.
 
         Shape (n, :attr:`measure_dim`).
         """
@@ -158,15 +166,15 @@ class DensityArchive(ArchiveBase):
 
     ## Utilities ##
 
-    def compute_density(self, measures):
+    def compute_density(self, measures: ArrayLike) -> np.ndarray:
         """Computes density at the given points in measure space.
 
         Args:
-            measures (array-like): (batch_size, :attr:`measure_dim`) array with measure
-                space coordinates of all the solutions.
+            measures: (batch_size, :attr:`measure_dim`) array with measure space
+                coordinates of all the solutions.
 
         Returns:
-            numpy.ndarray: Array of density values of the input solutions.
+            ``(batch_size,)`` array of density values of the input solutions.
         """
         measures = np.asarray(measures, dtype=self._measure_dtype)
 
@@ -194,29 +202,26 @@ class DensityArchive(ArchiveBase):
 
     def add(
         self,
-        solution,
-        objective,
-        measures,
-        **fields,
-    ):
+        solution: ArrayLike | None,
+        objective: ArrayLike | None,
+        measures: ArrayLike,
+        **fields: ArrayLike | None,
+    ) -> BatchData:
         """Adds measures to the buffer and updates the density estimator if necessary.
 
         The measures are added to the buffer with reservoir sampling to enable sampling
         uniformly from the incoming solutions.
 
         Args:
-            solution (None or array-like): Included for API consistency. Any value is
-                ignored.
-            objective (None or array-like): Included for API consistency. Any value is
-                ignored.
-            measures (array-like): (batch_size, :attr:`measure_dim`) array with measure
-                space coordinates of all the solutions.
-            fields (keyword arguments): Included for API consistency. Any value is
-                ignored.
+            solution: Included for API consistency. Any value is ignored.
+            objective: Included for API consistency. Any value is ignored.
+            measures: (batch_size, :attr:`measure_dim`) array with measure space
+                coordinates of all the solutions.
+            fields: Included for API consistency. Any value is ignored.
 
         Returns:
-            dict: Information describing the result of the add operation. The dict
-            contains the following keys:
+            Information describing the result of the add operation. The dict contains
+            the following keys:
 
             - ``"status"`` (:class:`numpy.ndarray` of :class:`np.int32`): An array of
               integers that represent the "status" obtained when attempting to insert
@@ -275,5 +280,4 @@ class DensityArchive(ArchiveBase):
             skip = min(self._n_skip, n_remaining)
             n_remaining -= skip
             self._n_skip -= skip
-
         return add_info

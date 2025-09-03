@@ -1,6 +1,12 @@
 """Contains the ProximityArchive."""
 
+from __future__ import annotations
+
+from collections.abc import Collection, Iterator
+from typing import Literal, overload
+
 import numpy as np
+from numpy.typing import ArrayLike
 from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
 
@@ -12,9 +18,19 @@ from ribs._utils import (
     validate_single,
 )
 from ribs.archives._archive_base import ArchiveBase
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._utils import fill_sentinel_values, parse_dtype
+from ribs.typing import (
+    ArchiveDType,
+    Array,
+    BatchData,
+    FieldDesc,
+    Float,
+    Int,
+    SingleData,
+)
 
 
 class ProximityArchive(ArchiveBase):
@@ -63,52 +79,52 @@ class ProximityArchive(ArchiveBase):
     identifies each cell.
 
     Args:
-        solution_dim (int or tuple of int): Dimensionality of the solution space. Scalar
-            or multi-dimensional solution shapes are allowed by passing an empty tuple
-            or tuple of integers, respectively.
-        measure_dim (int): Dimensionality of the measure space.
-        k_neighbors (int): The maximum number of nearest neighbors for computing novelty
+        solution_dim: Dimensionality of the solution space. Scalar or multi-dimensional
+            solution shapes are allowed by passing an empty tuple or tuple of integers,
+            respectively.
+        measure_dim: Dimensionality of the measure space.
+        k_neighbors: The maximum number of nearest neighbors for computing novelty
             (`maximum` here is indicated since there may be fewer than ``k_neighbors``
             solutions in the archive).
-        novelty_threshold (float): The level of novelty required to add a solution to
-            the archive.
-        local_competition (bool): Whether to turn on local competition behavior. If
-            turned on, the archive will require objectives to be passed in during
-            :meth:`add`. Furthermore, the ``add_info`` returned by :meth:`add` will
-            include local competition information. Finally, solutions can be replaced in
-            the archive. Specifically, if a candidate solution's novelty is below the
-            novelty threshold, its objective will be compared to that of its nearest
-            neighbor. If the candidate's objective is higher, it will replace the
-            nearest neighbor.
-        initial_capacity (int): Since this archive is unstructured, it does not have a
+        novelty_threshold: The level of novelty required to add a solution to the
+            archive.
+        local_competition: Whether to turn on local competition behavior. If turned on,
+            the archive will require objectives to be passed in during :meth:`add`.
+            Furthermore, the ``add_info`` returned by :meth:`add` will include local
+            competition information. Finally, solutions can be replaced in the archive.
+            Specifically, if a candidate solution's novelty is below the novelty
+            threshold, its objective will be compared to that of its nearest neighbor.
+            If the candidate's objective is higher, it will replace the nearest
+            neighbor.
+        initial_capacity: Since this archive is unstructured, it does not have a
             fixed size, and it will grow as solutions are added. In the implementation,
             we store solutions in fixed-size arrays, and every time the capacity of
             these arrays is reached, we double their sizes (similar to the vector in
             C++). This parameter determines the initial capacity of the archive's
             arrays. It may be useful when it is known in advance how large the archive
             will grow.
-        qd_score_offset (float): Archives often contain negative objective values, and
-            if the QD score were to be computed with these negative objectives, the
-            algorithm would be penalized for adding new cells with negative objectives.
-            Thus, a standard practice is to normalize all the objectives so that they
-            are non-negative by introducing an offset. This QD score offset will be
+        qd_score_offset: Archives often contain negative objective values, and if the QD
+            score were to be computed with these negative objectives, the algorithm
+            would be penalized for adding new cells with negative objectives. Thus, a
+            standard practice is to normalize all the objectives so that they are
+            non-negative by introducing an offset. This QD score offset will be
             *subtracted* from all objectives in the archive, e.g., if your objectives go
             as low as -300, pass in -300 so that each objective will be transformed as
             ``objective - (-300)``.
-        seed (int): Value to seed the random number generator. Set to None to avoid a
-            fixed seed.
-        dtype (str or data-type or dict): Data type of the solutions, objectives, and
-            measures. This can be ``"f"`` / ``np.float32``, ``"d"`` / ``np.float64``, or
-            a dict specifying separate dtypes, of the form ``{"solution": <dtype>,
-            "objective": <dtype>, "measures": <dtype>}``.
-        extra_fields (dict): Description of extra fields of data that is stored next to
-            elite data like solutions and objectives. The description is a dict mapping
-            from a field name (str) to a tuple of ``(shape, dtype)``. For instance,
-            ``{"foo": ((), np.float32), "bar": ((10,), np.float32)}`` will create a
-            "foo" field that contains scalar values and a "bar" field that contains 10D
-            values. Note that field names must be valid Python identifiers, and names
-            already used in the archive are not allowed.
-        ckdtree_kwargs (dict): When computing nearest neighbors, we construct a
+        seed: Value to seed the random number generator. Set to None to avoid a fixed
+            seed.
+        dtype: Data type of the solutions, objectives, and measures. This can be ``"f"``
+            / ``np.float32``, ``"d"`` / ``np.float64``, or a dict specifying separate
+            dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
+            "measures": <dtype>}``.
+        extra_fields: Description of extra fields of data that are stored next to elite
+            data like solutions and objectives. The description is a dict mapping from a
+            field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
+            ((), np.float32), "bar": ((10,), np.float32)}`` will create a "foo" field
+            that contains scalar values and a "bar" field that contains 10D values. Note
+            that field names must be valid Python identifiers, and names already used in
+            the archive are not allowed.
+        ckdtree_kwargs: When computing nearest neighbors, we construct a
             :class:`~scipy.spatial.cKDTree`. This parameter will pass additional kwargs
             when constructing the tree. By default, we do not pass in any kwargs.
 
@@ -119,18 +135,18 @@ class ProximityArchive(ArchiveBase):
     def __init__(
         self,
         *,
-        solution_dim,
-        measure_dim,
-        k_neighbors,
-        novelty_threshold,
-        local_competition=False,
-        initial_capacity=128,
-        qd_score_offset=0.0,
-        seed=None,
-        dtype=np.float64,
-        extra_fields=None,
-        ckdtree_kwargs=None,
-    ):
+        solution_dim: Int | tuple[Int, ...],
+        measure_dim: Int,
+        k_neighbors: Int,
+        novelty_threshold: Float,
+        local_competition: bool = False,
+        initial_capacity: Int = 128,
+        qd_score_offset: Float = 0.0,
+        seed: Int | None = None,
+        dtype: ArchiveDType = np.float64,
+        extra_fields: FieldDesc | None = None,
+        ckdtree_kwargs: dict | None = None,
+    ) -> None:
         self._rng = np.random.default_rng(seed)
 
         ArchiveBase.__init__(
@@ -188,58 +204,58 @@ class ProximityArchive(ArchiveBase):
     ## Properties inherited from ArchiveBase ##
 
     @property
-    def field_list(self):
+    def field_list(self) -> list[str]:
         return self._store.field_list_with_index
 
     @property
-    def dtypes(self):
+    def dtypes(self) -> dict[str, np.dtype]:
         return self._store.dtypes_with_index
 
     @property
-    def stats(self):
+    def stats(self) -> ArchiveStats:
         return self._stats
 
     @property
-    def empty(self):
+    def empty(self) -> bool:
         return len(self._store) == 0
 
     ## Properties that are not in ArchiveBase ##
     ## Roughly ordered by the parameter list in the constructor. ##
 
     @property
-    def best_elite(self):
-        """dict: The elite with the highest objective in the archive.
+    def best_elite(self) -> SingleData:
+        """The elite with the highest objective in the archive.
 
         None if there are no elites in the archive.
         """
         return self._best_elite
 
     @property
-    def k_neighbors(self):
-        """int: The number of nearest neighbors for computing novelty."""
+    def k_neighbors(self) -> int:
+        """The number of nearest neighbors for computing novelty."""
         return self._k_neighbors
 
     @property
-    def novelty_threshold(self):
-        """dtypes["measures"]: The degree of novelty required add a solution to the archive."""
+    def novelty_threshold(self) -> float:
+        """The degree of novelty required add a solution to the archive."""
         return self._novelty_threshold
 
     @property
-    def local_competition(self):
-        """bool: Whether local competition behavior is turned on."""
+    def local_competition(self) -> bool:
+        """Whether local competition behavior is turned on."""
         return self._local_competition
 
     @property
-    def capacity(self):
-        """int: Number of solutions that can currently be stored in this archive.
+    def capacity(self) -> int:
+        """Number of solutions that can currently be stored in this archive.
 
         The capacity doubles every time the archive fills up.
         """
         return self._store.capacity
 
     @property
-    def cells(self):
-        """int: Included for API compatibility; equivalent to :meth:`__len__`.
+    def cells(self) -> int:
+        """Included for API compatibility; equivalent to :meth:`__len__`.
 
         Strictly speaking, this archive does not have "cells" since it does not have a
         tessellation like other archives. However, for API compatibility, we set the
@@ -248,21 +264,21 @@ class ProximityArchive(ArchiveBase):
         return len(self)
 
     @property
-    def qd_score_offset(self):
-        """float: Subtracted from objective values when computing the QD score."""
+    def qd_score_offset(self) -> float:
+        """Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     ## dunder methods ##
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._store)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[SingleData]:
         return iter(self._store)
 
     ## Utilities ##
 
-    def _stats_reset(self):
+    def _stats_reset(self) -> None:
         """Resets the archive stats."""
         self._best_elite = None
         self._objective_sum = np.asarray(0.0, dtype=self.dtypes["objective"])
@@ -275,8 +291,8 @@ class ProximityArchive(ArchiveBase):
             obj_mean=None,
         )
 
-    def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates archive statistics.
+    def _stats_update(self, new_objective_sum: Float, new_best_index: Float) -> None:
+        """Updates statistics.
 
         Update is based on a new sum of objective values (new_objective_sum) and the
         index of a potential new best elite (new_best_index).
@@ -312,7 +328,7 @@ class ProximityArchive(ArchiveBase):
             ),
         )
 
-    def index_of(self, measures) -> np.ndarray:
+    def index_of(self, measures: ArrayLike) -> np.ndarray:
         """Returns the index of the closest solution to the given measures.
 
         Unlike the structured archives like :class:`~ribs.archives.GridArchive`, this
@@ -324,12 +340,12 @@ class ProximityArchive(ArchiveBase):
         measure to each measure passed into that method.
 
         Args:
-            measures (array-like): (batch_size, :attr:`measure_dim`) array of
-                coordinates in measure space.
+            measures: (batch_size, :attr:`measure_dim`) array of coordinates in measure
+                space.
 
         Returns:
-            numpy.ndarray: (batch_size,) array of integer indices representing the
-            location of the solution in the archive.
+            (batch_size,) array of integer indices representing the location of the
+            solution in the archive.
 
         Raises:
             RuntimeError: There were no entries in the archive.
@@ -351,18 +367,16 @@ class ProximityArchive(ArchiveBase):
         _, indices = self._cur_kd_tree.query(measures)
         return indices.astype(np.int32)
 
-    def index_of_single(self, measures):
+    def index_of_single(self, measures: ArrayLike) -> Int:
         """Returns the index of the measures for one solution.
 
         See :meth:`index_of`.
 
         Args:
-            measures (array-like): (:attr:`measure_dim`,) array of measures for a single
-                solution.
+            measures: (:attr:`measure_dim`,) array of measures for a single solution.
 
         Returns:
-            int or numpy.integer: Integer index of the measures in the archive's storage
-            arrays.
+            Integer index of the measures in the archive's storage arrays.
 
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
@@ -373,25 +387,26 @@ class ProximityArchive(ArchiveBase):
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
 
-    def compute_novelty(self, measures, local_competition=None):
+    def compute_novelty(
+        self, measures: ArrayLike, local_competition: ArrayLike | None = None
+    ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
         """Computes the novelty and local competition of the given measures.
 
         Args:
-            measures (array-like): (batch_size, :attr:`measure_dim`) array of
-                coordinates in measure space.
-            local_competition (None or array-like): This can be None to indicate not to
-                compute local competition. Otherwise, it can be a (batch_size,) array of
-                objective values to use as references for computing objective values.
+            measures: (batch_size, :attr:`measure_dim`) array of coordinates in measure
+                space.
+            local_competition: This can be None to indicate not to compute local
+                competition. Otherwise, it can be a (batch_size,) array of objective
+                values to use as references for computing objective values.
 
         Returns:
-            numpy.ndarray or tuple: Either one value or a tuple of two values:
+            Either one array or a tuple of two arrays:
 
-            - numpy.ndarray: (batch_size,) array holding the novelty score of each
-              measure. If the archive is empty, the novelty is set to the
-              :attr:`novelty_threshold`.
-            - numpy.ndarray: If ``local_competition`` is passed in, a (batch_size,)
-              array holding the local competition of each solution will also be
-              returned. If the archive is empty, the local competition will be set to 0.
+            - (batch_size,) array holding the novelty score of each measure. If the
+              archive is empty, the novelty is set to the :attr:`novelty_threshold`.
+            - If ``local_competition`` is passed in, a (batch_size,) array holding the
+              local competition of each solution will also be returned. If the archive
+              is empty, the local competition will be set to 0.
         """
         measures = np.asarray(measures)
         batch_size = len(measures)
@@ -445,7 +460,7 @@ class ProximityArchive(ArchiveBase):
 
     ## Methods for writing to the archive ##
 
-    def _maybe_resize(self, new_size):
+    def _maybe_resize(self, new_size: int) -> None:
         """Resizes the store by doubling its capacity.
 
         We may need to double the capacity multiple times. The log2 below indicates how
@@ -456,7 +471,13 @@ class ProximityArchive(ArchiveBase):
             multiplier = 2 ** int(np.ceil(np.log2(new_size / self.capacity)))
             self._store.resize(multiplier * self.capacity)
 
-    def add(self, solution, objective, measures, **fields):
+    def add(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike | None,
+        measures: ArrayLike,
+        **fields: ArrayLike,
+    ) -> BatchData:
         """Inserts a batch of solutions into the archive.
 
         Solutions are inserted if they have a high enough novelty score as discussed in
@@ -475,21 +496,20 @@ class ProximityArchive(ArchiveBase):
             solution parameters, objective, and measures for solution ``i``.
 
         Args:
-            solution (array-like): (batch_size, :attr:`solution_dim`) array of solution
-                parameters.
-            objective (None or array-like): A value of None will cause the objective
-                values to default to 0. However, if the user wishes to associate an
-                objective with each solution, this can be a (batch_size,) array with
-                objective function evaluations of the solutions. If
-                :attr:`local_competition` is turned on, this argument must be provided.
-            measures (array-like): (batch_size, :attr:`measure_dim`) array with measure
-                space coordinates of all the solutions.
-            fields (keyword arguments): Additional data for each solution. Each argument
-                should be an array with batch_size as the first dimension.
+            solution: (batch_size, :attr:`solution_dim`) array of solution parameters.
+            objective: A value of None will cause the objective values to default to 0.
+                However, if the user wishes to associate an objective with each
+                solution, this can be a (batch_size,) array with objective function
+                evaluations of the solutions. If :attr:`local_competition` is turned on,
+                this argument must be provided.
+            measures: (batch_size, :attr:`measure_dim`) array with measure space
+                coordinates of all the solutions.
+            fields: Additional data for each solution. Each argument should be an array
+                with batch_size as the first dimension.
 
         Returns:
-            dict: Information describing the result of the add operation. The dict
-            contains the following keys:
+            Information describing the result of the add operation. The dict contains
+            the following keys:
 
             - ``"status"`` (:class:`numpy.ndarray` of :class:`numpy.int32`): An array of
               integers that represent the "status" obtained when attempting to insert
@@ -709,20 +729,26 @@ class ProximityArchive(ArchiveBase):
 
             return add_info
 
-    def add_single(self, solution, objective, measures, **fields):
+    def add_single(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike | None,
+        measures: ArrayLike,
+        **fields: ArrayLike,
+    ) -> SingleData:
         """Inserts a single solution into the archive.
 
         Args:
-            solution (array-like): Parameters of the solution.
-            objective (None or float): Set to None to get the default value of 0;
-                otherwise, a valid objective value is also acceptable.
-            measures (array-like): Coordinates in measure space of the solution.
-            fields (keyword arguments): Additional data for the solution.
+            solution: Parameters of the solution.
+            objective: Set to None to get the default value of 0; otherwise, a valid
+                objective value is also acceptable.
+            measures: Coordinates in measure space of the solution.
+            fields: Additional data for the solution.
 
         Returns:
-            dict: Information describing the result of the add operation. The dict
-            contains ``status`` and ``novelty`` keys; refer to :meth:`add` for the
-            meaning of status and novelty.
+            Information describing the result of the add operation. The dict contains
+            ``status`` and ``novelty`` keys; refer to :meth:`add` for the meaning of
+            status and novelty.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
@@ -752,7 +778,7 @@ class ProximityArchive(ArchiveBase):
 
         return self.add(**{key: [val] for key, val in data.items()})
 
-    def clear(self):
+    def clear(self) -> None:
         """Removes all elites in the archive."""
         self._store.clear()
         self._stats_reset()
@@ -760,7 +786,7 @@ class ProximityArchive(ArchiveBase):
     ## Methods for reading from the archive ##
     ## Refer to ArchiveBase for documentation of these methods. ##
 
-    def retrieve(self, measures):
+    def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, BatchData]:
         measures = np.asarray(measures)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
@@ -770,7 +796,7 @@ class ProximityArchive(ArchiveBase):
 
         return occupied, data
 
-    def retrieve_single(self, measures):
+    def retrieve_single(self, measures: ArrayLike) -> tuple[bool, SingleData]:
         measures = np.asarray(measures)
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
@@ -779,10 +805,42 @@ class ProximityArchive(ArchiveBase):
 
         return occupied[0], {field: arr[0] for field, arr in data.items()}
 
-    def data(self, fields=None, return_type="dict"):
+    @overload
+    def data(
+        self,
+        fields: str,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["dict"] = "dict",
+    ) -> BatchData: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["tuple"] = "tuple",
+    ) -> tuple[Array]: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["pandas"] = "pandas",
+    ) -> ArchiveDataFrame: ...
+
+    def data(
+        self,
+        fields: None | Collection[str] | str = None,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
-    def sample_elites(self, n):
+    def sample_elites(self, n: Int) -> BatchData:
         if self.empty:
             raise IndexError("No elements in archive.")
 

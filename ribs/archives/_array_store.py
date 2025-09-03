@@ -13,14 +13,14 @@ from typing import Literal, overload
 
 import numpy as np
 from array_api_compat import is_cupy_array, is_numpy_array, is_torch_array
-from numpy.typing import ArrayLike, DTypeLike
+from numpy.typing import ArrayLike
 
 with contextlib.suppress(ImportError):
     from array_api_compat import cupy as cp
 
 from ribs._utils import arr_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
-from ribs.typing import Array, BatchData, Device, DType, Int, SingleData
+from ribs.typing import Array, BatchData, Device, DType, FieldDesc, Int, SingleData
 
 
 class Update(IntEnum):
@@ -128,7 +128,7 @@ class ArrayStore:
 
     def __init__(
         self,
-        field_desc: dict[str, tuple[Int | tuple[Int], DTypeLike]],
+        field_desc: FieldDesc,
         capacity: Int,
         xp: ModuleType | None = None,
         device: Device = None,
@@ -202,7 +202,7 @@ class ArrayStore:
         return arr_readonly(self._props["occupied_list"][: self._props["n_occupied"]])
 
     @cached_property
-    def field_desc(self) -> dict[str, tuple[tuple[int], DType]]:
+    def field_desc(self) -> FieldDesc:
         """Description of fields in the store.
 
         Example:
@@ -341,7 +341,7 @@ class ArrayStore:
                 with an additional "index" as the last field. The "index" field can also
                 be added anywhere in this list of fields. This argument can also be a
                 single str indicating a field name.
-            return_type (str): Type of data to return. See the ``data`` returned below.
+            return_type: Type of data to return. See the ``data`` returned below.
                 Ignored if ``fields`` is a str.
 
         Returns:
