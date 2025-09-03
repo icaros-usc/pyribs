@@ -409,7 +409,7 @@ class ArrayStore:
               ``fields`` parameter.
 
               .. note:: This return type will require copying all fields in the
-              ArrayStore into NumPy arrays, if they are not already NumPy arrays.
+                  ArrayStore into NumPy arrays, if they are not already NumPy arrays.
 
             All data returned by this method will be a copy, i.e., the data will not
             update as the store changes.
