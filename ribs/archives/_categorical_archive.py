@@ -73,7 +73,8 @@ class CategoricalArchive(ArchiveBase):
         dtype: Data type of the solutions, objectives, and measures. This can be ``"f"``
             / ``np.float32``, ``"d"`` / ``np.float64``, or a dict specifying separate
             dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
-            "measures": <dtype>}``.
+            "measures": <dtype>}``. By default, unless this parameter is a dict,
+            measures will default to have ``object`` dtype.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
             field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
