@@ -89,13 +89,12 @@ class ProximityArchive(ArchiveBase):
             threshold, its objective will be compared to that of its nearest neighbor.
             If the candidate's objective is higher, it will replace the nearest
             neighbor.
-        initial_capacity: Since this archive is unstructured, it does not have a
-            fixed size, and it will grow as solutions are added. In the implementation,
-            we store solutions in fixed-size arrays, and every time the capacity of
-            these arrays is reached, we double their sizes (similar to the vector in
-            C++). This parameter determines the initial capacity of the archive's
-            arrays. It may be useful when it is known in advance how large the archive
-            will grow.
+        initial_capacity: Since this archive is unstructured, it does not have a fixed
+            size, and it will grow as solutions are added. In the implementation, we
+            store solutions in fixed-size arrays, and every time the capacity of these
+            arrays is reached, we double their sizes (similar to the vector in C++).
+            This parameter determines the initial capacity of the archive's arrays. It
+            may be useful when it is known in advance how large the archive will grow.
         qd_score_offset: Archives often contain negative objective values, and if the QD
             score were to be computed with these negative objectives, the algorithm
             would be penalized for adding new cells with negative objectives. Thus, a

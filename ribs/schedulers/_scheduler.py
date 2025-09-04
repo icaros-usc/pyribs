@@ -44,8 +44,8 @@ class Scheduler:
             :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single" to add
             the solutions one at a time with
             :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is included
-            since implementing batch addition on an archive is sometimes non-trivial.
-            We highly recommend "batch" mode since it is significantly faster.
+            since implementing batch addition on an archive is sometimes non-trivial. We
+            highly recommend "batch" mode since it is significantly faster.
 
     Raises:
         TypeError: The ``emitters`` argument was not a list of emitters.

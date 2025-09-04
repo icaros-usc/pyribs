@@ -130,9 +130,9 @@ class SlidingBoundariesArchive(ArchiveBase):
             :math:`[-1,1]` (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
             ``dims``.
-        epsilon: Due to floating point precision errors, we add a small epsilon
-            when computing the archive indices in the :meth:`index_of` method -- refer
-            to the implementation `here
+        epsilon: Due to floating point precision errors, we add a small epsilon when
+            computing the archive indices in the :meth:`index_of` method -- refer to the
+            implementation `here
             <../_modules/ribs/archives/_sliding_boundaries_archive.html#SlidingBoundariesArchive.index_of>`_.
             Pass this parameter to configure that epsilon.
         qd_score_offset: Archives often contain negative objective values, and if the QD
