@@ -184,9 +184,9 @@ def cvt_archive_3d_plot(
             see :class:`~matplotlib.colors.ListedColormap`), or a
             :class:`~matplotlib.colors.Colormap` object.
         lw: Line width when plotting the Voronoi diagram.
-        ec: Edge color of the cells in the Voronoi diagram. See
-            `here <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ for
-            more info on specifying colors in Matplotlib.
+        ec: Edge color of the cells in the Voronoi diagram. See `here
+            <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ for more info
+            on specifying colors in Matplotlib.
         cell_alpha: Alpha value for the cell colors. Set to 1.0 for opaque cells; set to
             0.0 for fully transparent cells.
         vmin: Minimum objective value to use in the plot. If ``None``, the minimum
@@ -198,8 +198,8 @@ def cvt_archive_3d_plot(
             is not displayed. If this is an :class:`~matplotlib.axes.Axes`, displays the
             colorbar on the specified Axes.
         cbar_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.colorbar`.
-        plot_elites: If True, we will plot a scatter plot of the elites in the
-            archive. The elites will be colored according to their objective value.
+        plot_elites: If True, we will plot a scatter plot of the elites in the archive.
+            The elites will be colored according to their objective value.
         elite_ms: Marker size for plotting elites.
         elite_alpha: Alpha value for plotting elites.
         plot_centroids: Whether to plot the cluster centroids.

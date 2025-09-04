@@ -131,9 +131,9 @@ def cvt_archive_heatmap(
             ``'auto'`` for 2D and ``0.5`` for 1D. ``'equal'`` is the same as
             ``aspect=1``. See :meth:`matplotlib.axes.Axes.set_aspect` for more info.
         lw: Line width when plotting the Voronoi diagram.
-        ec: Edge color of the cells in the Voronoi diagram. See
-            `here <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ for
-            more info on specifying colors in Matplotlib.
+        ec: Edge color of the cells in the Voronoi diagram. See `here
+            <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ for more info
+            on specifying colors in Matplotlib.
         vmin: Minimum objective value to use in the plot. If ``None``, the minimum
             objective value in the archive is used.
         vmax: Maximum objective value to use in the plot. If ``None``, the maximum
