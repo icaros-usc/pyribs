@@ -1,5 +1,7 @@
 """Tests for ArrayStore."""
 
+import pickle as pkl
+
 import pytest
 from array_api_compat import numpy as np
 
@@ -919,3 +921,37 @@ def test_clear_and_add_during_iteration(store, xp_and_device):
                     "solution": xp.ones((1, 10)),
                 },
             )
+
+
+def test_picklable(xp_and_device):
+    xp, device = xp_and_device
+
+    store = ArrayStore(
+        field_desc={
+            "objective": ((), xp.float32),
+            "measures": ((2,), xp.float32),
+            "solution": ((10,), xp.float32),
+        },
+        capacity=10,
+        xp=xp,
+        device=device,
+    )
+
+    store.add(
+        [3, 3],
+        {
+            "objective": [1.0, 2.0],
+            "measures": [[1.0, 2.0], [3.0, 4.0]],
+            "solution": xp.stack((xp.zeros(10), xp.ones(10)), axis=0),
+        },
+    )
+
+    # Copy the store into a new one by pickling and unpickling.
+    pickled_str = pkl.dumps(store)
+    store2 = pkl.loads(pickled_str)
+
+    # Spot check a few properties.
+    assert store.capacity == store2.capacity
+    assert xp.all(store.occupied == store2.occupied)
+    assert xp.all(store.occupied_list == store2.occupied_list)
+    assert xp.all(store.data()["measures"] == store2.data()["measures"])
