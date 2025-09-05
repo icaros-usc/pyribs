@@ -15,6 +15,7 @@ from ribs._utils import (
     check_batch_shape,
     check_finite,
     check_shape,
+    deprecate_dtype,
     validate_batch,
     validate_single,
 )
@@ -145,11 +146,7 @@ class ProximityArchive(ArchiveBase):
         extra_fields: FieldDesc | None = None,
         ckdtree_kwargs: dict | None = None,
     ) -> None:
-        if dtype is not None:
-            raise ValueError(
-                "dtype is deprecated. Please specify solution_dtype, "
-                "objective_dtype, and/or measures_dtype instead."
-            )
+        deprecate_dtype(dtype)
 
         self._rng = np.random.default_rng(seed)
 

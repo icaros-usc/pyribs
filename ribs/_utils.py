@@ -265,3 +265,14 @@ def xp_namespace(xp: ModuleType | None) -> ModuleType:
     https://github.com/data-apis/array-api-compat/issues/342
     """
     return np_compat if xp is None else array_namespace(xp.empty(0))  # ty: ignore[unresolved-attribute]
+
+
+## Deprecations ##
+
+
+def deprecate_dtype(dtype: None) -> None:
+    if dtype is not None:
+        raise ValueError(
+            "dtype is deprecated as of pyribs 0.9.0. Please specify solution_dtype, "
+            "objective_dtype, and/or measures_dtype instead."
+        )
