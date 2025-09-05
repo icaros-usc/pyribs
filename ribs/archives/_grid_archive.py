@@ -15,6 +15,7 @@ from ribs._utils import (
     check_finite,
     check_is_1d,
     check_shape,
+    deprecate_dtype,
     validate_batch,
     validate_single,
 )
@@ -116,11 +117,7 @@ class GridArchive(ArchiveBase):
         dtype: None = None,
         extra_fields: FieldDesc | None = None,
     ) -> None:
-        if dtype is not None:
-            raise ValueError(
-                "dtype is deprecated. Please specify solution_dtype, "
-                "objective_dtype, and/or measures_dtype instead."
-            )
+        deprecate_dtype(dtype)
 
         self._rng = np.random.default_rng(seed)
         self._dims = np.array(dims, dtype=np.int32)

@@ -294,3 +294,14 @@ class PickleXPMixin:
         if self.XP_NAME in state:
             state[self.XP_NAME] = importlib.import_module(state[self.XP_NAME])
         self.__dict__.update(state)
+
+
+## Deprecations ##
+
+
+def deprecate_dtype(dtype: None) -> None:
+    if dtype is not None:
+        raise ValueError(
+            "dtype is deprecated as of pyribs 0.9.0. Please specify solution_dtype, "
+            "objective_dtype, and/or measures_dtype instead."
+        )

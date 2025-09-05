@@ -10,7 +10,7 @@ from numpy.typing import ArrayLike, DTypeLike
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KernelDensity
 
-from ribs._utils import arr_readonly, check_batch_shape, check_finite
+from ribs._utils import arr_readonly, check_batch_shape, check_finite, deprecate_dtype
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._utils import parse_dtype
 from ribs.typing import BatchData, Float, Int
@@ -111,11 +111,7 @@ class DensityArchive(ArchiveBase):
         measures_dtype: DTypeLike = None,
         dtype: None = None,
     ) -> None:
-        if dtype is not None:
-            raise ValueError(
-                "dtype is deprecated. Please specify solution_dtype, "
-                "objective_dtype, and/or measures_dtype instead."
-            )
+        deprecate_dtype(dtype)
 
         self._rng = np.random.default_rng(seed)
         self._measure_dtype = parse_dtype(measures_dtype, np_compat)
