@@ -18,7 +18,7 @@ from numpy.typing import ArrayLike
 with contextlib.suppress(ImportError):
     from array_api_compat import cupy as cp
 
-from ribs._utils import arr_readonly, xp_namespace
+from ribs._utils import PickleXPMixin, arr_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.typing import Array, BatchData, Device, DType, FieldDesc, Int, SingleData
 
@@ -68,7 +68,7 @@ class ArrayStoreIterator:
         return d
 
 
-class ArrayStore:
+class ArrayStore(PickleXPMixin):
     """Maintains a set of arrays that share a common dimension.
 
     The ArrayStore consists of several *fields* of data that are manipulated

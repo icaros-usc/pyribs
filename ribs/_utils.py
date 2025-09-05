@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import numbers
 from types import ModuleType
 
@@ -265,3 +266,31 @@ def xp_namespace(xp: ModuleType | None) -> ModuleType:
     https://github.com/data-apis/array-api-compat/issues/342
     """
     return np_compat if xp is None else array_namespace(xp.empty(0))  # ty: ignore[unresolved-attribute]
+
+
+class PickleXPMixin:
+    """This class makes it possible to pickle objects with the _xp attribute.
+
+    ``_xp`` here refers to an array API module. Modules in Python are not picklable, so
+    pickling an object that has the ``_xp`` attribute usually results in a TypeError.
+    This mixin fixes that by modifying the behavior of ``__getstate__`` and
+    ``__setstate__`` so that ``_xp`` is converted to a string before pickling, and
+    converted back to a module upon unpickling. See `here
+    <https://docs.python.org/3/library/pickle.html#pickling-class-instances>`_ for more
+    info. We assume `_xp` is the name since the array module is usually kept private.
+    """
+
+    XP_NAME = "_xp"
+
+    def __getstate__(self) -> dict:
+        """Sets xp to a str if it is available."""
+        state = self.__dict__.copy()
+        if self.XP_NAME in state:
+            state[self.XP_NAME] = state[self.XP_NAME].__name__
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """Sets xp to the module if possible."""
+        if self.XP_NAME in state:
+            state[self.XP_NAME] = importlib.import_module(state[self.XP_NAME])
+        self.__dict__.update(state)
