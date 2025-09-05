@@ -7,8 +7,6 @@ from ribs.archives import AddStatus, GridArchive
 
 from .conftest import get_archive_data
 
-# pylint: disable = redefined-outer-name
-
 
 @pytest.fixture
 def data():
@@ -19,7 +17,7 @@ def data():
 def assert_archive_elite(archive, solution, objective, measures, grid_indices):
     """Asserts that the archive has one specific elite."""
     assert len(archive) == 1
-    elite = list(archive)[0]
+    elite = next(iter(archive))
     assert np.isclose(elite["solution"], solution).all()
     assert np.isclose(elite["objective"], objective).all()
     assert np.isclose(elite["measures"], measures).all()
@@ -77,10 +75,7 @@ def assert_archive_elites(
                 measures_match = True
 
             index_match = (
-                grid_indices_batch is None
-                or
-                # pylint: disable-next = possibly-used-before-assignment
-                data["index"][j] == index_batch[i]
+                grid_indices_batch is None or data["index"][j] == index_batch[i]
             )
 
             # Used for testing custom fields.
@@ -677,7 +672,9 @@ def test_values_go_to_correct_bin(dtype):
         dims=[10],
         ranges=[(0, 0.1)],
         epsilon=1e-6,
-        dtype=dtype,
+        solution_dtype=dtype,
+        objective_dtype=dtype,
+        measures_dtype=dtype,
     )
 
     # Values below the lower bound land in the first bin.
@@ -840,7 +837,7 @@ def test_str_solutions():
         solution_dim=(),
         dims=[10, 20],
         ranges=[(-1, 1), (-2, 2)],
-        dtype={"solution": object, "objective": np.float32, "measures": np.float32},
+        solution_dtype=object,
     )
     assert archive.solution_dim == ()
     assert archive.dtypes["solution"] == np.object_

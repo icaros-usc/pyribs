@@ -7,10 +7,11 @@ Install the following dependencies before running this example:
     pip install ribs[visualize] pymoo tqdm fire
 """
 
+from __future__ import annotations
+
 import json
 import time
 from pathlib import Path
-from typing import Tuple
 
 import fire
 import matplotlib.pyplot as plt
@@ -28,6 +29,7 @@ def sphere(solutions):
 
     Args:
         solutions (np.ndarray): (batch_size, dim) batch of solutions.
+
     Returns:
         objectives (np.ndarray): (batch_size,) batch of objectives.
         objective_grads (np.ndarray): (batch_size, solution_dim) batch of objective
@@ -96,15 +98,16 @@ def save_heatmap(archive, heatmap_path):
     plt.close(plt.gcf())
 
 
-# pylint:disable = too-many-positional-arguments
 def main(
     iterations: int = 1000,
     solution_dim: int = 4,
     search_nrestarts: int = 5,
     entropy_ejie: bool = False,
-    upscale_schedule: Tuple[Tuple] = ((5, 5), (10, 10), (25, 25)),
+    # See here for how to annotate tuples:
+    # https://docs.python.org/3/library/typing.html#annotating-tuples
+    upscale_schedule: tuple[tuple[int, ...], ...] = ((5, 5), (10, 10), (25, 25)),
     num_initial_samples: int = 20,
-    initial_solutions: np.ndarray = None,
+    initial_solutions: np.ndarray | None = None,
     batch_size: int = 8,
     num_emitters: int = 1,
     seed: int = 42,

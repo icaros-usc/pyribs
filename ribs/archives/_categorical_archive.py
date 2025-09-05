@@ -1,10 +1,24 @@
 """Contains the CategoricalArchive."""
 
+from __future__ import annotations
+
+from collections.abc import Collection, Hashable, Iterator
+from typing import Literal, overload
+
+import array_api_compat.numpy as np_compat
 import numpy as np
+from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import check_batch_shape, check_shape, validate_batch, validate_single
+from ribs._utils import (
+    check_batch_shape,
+    check_shape,
+    deprecate_dtype,
+    validate_batch,
+    validate_single,
+)
 from ribs.archives._archive_base import ArchiveBase
+from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._grid_archive import GridArchive
@@ -13,10 +27,10 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
+from ribs.typing import Array, BatchData, DType, FieldDesc, Float, Int, SingleData
 
 
 class CategoricalArchive(ArchiveBase):
-    # pylint: disable = too-many-public-methods
     """An archive where each dimension is divided into categories.
 
     This archive is similar to a :class:`~ribs.archives.GridArchive`, except that each
@@ -33,41 +47,40 @@ class CategoricalArchive(ArchiveBase):
     while the integer ``index`` uniquely identifies each cell.
 
     Args:
-        solution_dim (int or tuple of int): Dimensionality of the solution space. Scalar
-            or multi-dimensional solution shapes are allowed by passing an empty tuple
-            or tuple of integers, respectively.
-        categories (list of list of any): The name of each category for each dimension
-            of the measure space. The length of this list is the dimensionality of the
-            measure space. An example is ``[["A", "B", "C"], ["One", "Two", "Three",
-            "Four"]]``, which defines a 2D measure space where the first dimension has
-            categories ``["A", "B", "C"]`` and the second has categories ``["One",
-            "Two", "Three", "Four"]``. While any object can be used for the category
-            name, strings are expected to be the typical use case.
-        learning_rate (float): The learning rate for threshold updates. Defaults to 1.0.
-        threshold_min (float): The initial threshold value for all the cells.
-        qd_score_offset (float): Archives often contain negative objective values, and
-            if the QD score were to be computed with these negative objectives, the
-            algorithm would be penalized for adding new cells with negative objectives.
-            Thus, a standard practice is to normalize all the objectives so that they
-            are non-negative by introducing an offset. This QD score offset will be
+        solution_dim: Dimensionality of the solution space. Scalar or multi-dimensional
+            solution shapes are allowed by passing an empty tuple or tuple of integers,
+            respectively.
+        categories: The name of each category for each dimension of the measure space.
+            The length of this list is the dimensionality of the measure space. An
+            example is ``[["A", "B", "C"], ["One", "Two", "Three", "Four"]]``, which
+            defines a 2D measure space where the first dimension has categories ``["A",
+            "B", "C"]`` and the second has categories ``["One", "Two", "Three",
+            "Four"]``. While any object can be used for the category name, strings are
+            expected to be the typical use case.
+        learning_rate: The learning rate for threshold updates. Defaults to 1.0.
+        threshold_min: The initial threshold value for all the cells.
+        qd_score_offset: Archives often contain negative objective values, and if the QD
+            score were to be computed with these negative objectives, the algorithm
+            would be penalized for adding new cells with negative objectives. Thus, a
+            standard practice is to normalize all the objectives so that they are
+            non-negative by introducing an offset. This QD score offset will be
             *subtracted* from all objectives in the archive, e.g., if your objectives go
             as low as -300, pass in -300 so that each objective will be transformed as
             ``objective - (-300)``.
-        seed (int): Value to seed the random number generator. Set to None to avoid a
-            fixed seed.
-        dtype (str or data-type or dict): There are two options for this parameter.
-            First, it can be just the data type of the solutions and objectives, with
-            the measures defaulting to a dtype of ``object``. In this case, ``dtype``
-            can be ``"f"`` / ``np.float32`` or ``"d"`` / ``np.float64``. Second,
-            ``dtype`` can be a dict specifying separate dtypes, of the form
-            ``{"solution": <dtype>, "objective": <dtype>, "measures": <dtype>}``.
-        extra_fields (dict): Description of extra fields of data that is stored next to
-            elite data like solutions and objectives. The description is a dict mapping
-            from a field name (str) to a tuple of ``(shape, dtype)``. For instance,
-            ``{"foo": ((), np.float32), "bar": ((10,), np.float32)}`` will create a
-            "foo" field that contains scalar values and a "bar" field that contains 10D
-            values. Note that field names must be valid Python identifiers, and names
-            already used in the archive are not allowed.
+        seed: Value to seed the random number generator. Set to None to avoid a fixed
+            seed.
+        solution_dtype: Data type of the solution. Defaults to float64.
+        objective_dtype: Data type of the objective. Defaults to float64.
+        measures_dtype: Data type of the measures. Defaults to object.
+        dtype: DEPRECATED.
+        extra_fields: Description of extra fields of data that are stored next to elite
+            data like solutions and objectives. The description is a dict mapping from a
+            field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
+            ((), np.float32), "bar": ((10,), np.float32)}`` will create a "foo" field
+            that contains scalar values and a "bar" field that contains 10D values. Note
+            that field names must be valid Python identifiers, and names already used in
+            the archive are not allowed.
+
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
@@ -76,15 +89,20 @@ class CategoricalArchive(ArchiveBase):
     def __init__(
         self,
         *,
-        solution_dim,
-        categories,
-        learning_rate=None,
-        threshold_min=-np.inf,
-        qd_score_offset=0.0,
-        seed=None,
-        dtype=np.float64,
-        extra_fields=None,
-    ):
+        solution_dim: Int | tuple[Int, ...],
+        categories: Collection[Collection[Hashable]],
+        learning_rate: Float | None = None,
+        threshold_min: Float = -np.inf,
+        qd_score_offset: Float = 0.0,
+        seed: Int | None = None,
+        solution_dtype: DTypeLike = None,
+        objective_dtype: DTypeLike = None,
+        measures_dtype: DTypeLike = None,
+        dtype: None = None,
+        extra_fields: FieldDesc | None = None,
+    ) -> None:
+        deprecate_dtype(dtype)
+
         self._rng = np.random.default_rng(seed)
         self._categories = [list(measure_dim) for measure_dim in categories]
         self._dims = np.array(
@@ -107,21 +125,16 @@ class CategoricalArchive(ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        if not isinstance(dtype, dict):
-            # Make measures default to `object` dtype.
-            dtype = {
-                "solution": dtype,
-                "measures": object,
-                "objective": dtype,
-            }
-        dtype = parse_dtype(dtype)
+        solution_dtype = parse_dtype(solution_dtype, np_compat)
+        objective_dtype = parse_dtype(objective_dtype, np_compat)
+        measures_dtype = object if measures_dtype is None else measures_dtype
         self._store = ArrayStore(
             field_desc={
-                "solution": (self.solution_dim, dtype["solution"]),
-                "objective": ((), dtype["objective"]),
-                "measures": (self.measure_dim, dtype["measures"]),
+                "solution": (self.solution_dim, solution_dtype),
+                "objective": ((), objective_dtype),
+                "measures": (self.measure_dim, measures_dtype),
                 # Must be same dtype as the objective since they share calculations.
-                "threshold": ((), dtype["objective"]),
+                "threshold": ((), objective_dtype),
                 **extra_fields,
             },
             capacity=np.prod(self._dims),
@@ -150,27 +163,27 @@ class CategoricalArchive(ArchiveBase):
     ## Properties inherited from ArchiveBase ##
 
     @property
-    def field_list(self):
+    def field_list(self) -> list[str]:
         return self._store.field_list_with_index
 
     @property
-    def dtypes(self):
+    def dtypes(self) -> dict[str, DType]:
         return self._store.dtypes_with_index
 
     @property
-    def stats(self):
+    def stats(self) -> ArchiveStats:
         return self._stats
 
     @property
-    def empty(self):
+    def empty(self) -> bool:
         return len(self._store) == 0
 
     ## Properties that are not in ArchiveBase ##
     ## Roughly ordered by the parameter list in the constructor. ##
 
     @property
-    def best_elite(self):
-        """dict: The elite with the highest objective in the archive.
+    def best_elite(self) -> SingleData:
+        """The elite with the highest objective in the archive.
 
         None if there are no elites in the archive.
 
@@ -191,48 +204,46 @@ class CategoricalArchive(ArchiveBase):
         return self._best_elite
 
     @property
-    def categories(self):
-        """list of list of any: The categories in each dimension of the measure
-        space."""
+    def categories(self) -> list[list[Hashable]]:
+        """The categories in each dimension of the measure space."""
         return self._categories
 
     @property
-    def dims(self):
-        """(measure_dim,) numpy.ndarray: Number of cells in each dimension."""
+    def dims(self) -> np.ndarray:
+        """(:attr:`measure_dim`,) array listing the number of cells in each dimension."""
         return self._dims
 
     @property
-    def cells(self):
-        """int: Total number of cells in the archive."""
+    def cells(self) -> Int:
+        """Total number of cells in the archive."""
         return self._store.capacity
 
     @property
-    def learning_rate(self):
-        """float: The learning rate for threshold updates."""
+    def learning_rate(self) -> float:
+        """The learning rate for threshold updates."""
         return self._learning_rate
 
     @property
-    def threshold_min(self):
-        """float: The initial threshold value for all the cells."""
+    def threshold_min(self) -> float:
+        """The initial threshold value for all the cells."""
         return self._threshold_min
 
     @property
-    def qd_score_offset(self):
-        """float: The offset which is subtracted from objective values when computing
-        the QD score."""
+    def qd_score_offset(self) -> float:
+        """Subtracted from objective values when computing the QD score."""
         return self._qd_score_offset
 
     ## dunder methods ##
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._store)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[SingleData]:
         return iter(self._store)
 
     ## Utilities ##
 
-    def _stats_reset(self):
+    def _stats_reset(self) -> None:
         """Resets the archive stats."""
         self._best_elite = None
         self._objective_sum = np.asarray(0.0, dtype=self.dtypes["objective"])
@@ -245,9 +256,12 @@ class CategoricalArchive(ArchiveBase):
             obj_mean=None,
         )
 
-    def _stats_update(self, new_objective_sum, new_best_index):
-        """Updates statistics based on a new sum of objective values (new_objective_sum)
-        and the index of a potential new best elite (new_best_index)."""
+    def _stats_update(self, new_objective_sum: Float, new_best_index: Float) -> None:
+        """Updates statistics.
+
+        Update is based on a new sum of objective values (new_objective_sum) and the
+        index of a potential new best elite (new_best_index).
+        """
         _, new_best_elite = self._store.retrieve([new_best_index])
         new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
 
@@ -279,18 +293,20 @@ class CategoricalArchive(ArchiveBase):
             ),
         )
 
-    def index_of(self, measures):
+    def index_of(self, measures: ArrayLike) -> np.ndarray:
         """Returns archive indices for the given batch of measures.
 
         This is by done by mapping from the category name to the cell indices, and then
         converting to integer indices with :meth:`grid_to_int_index`.
 
         Args:
-            measures (array-like): (batch_size, :attr:`measure_dim`) array of
-                coordinates in measure space.
+            measures: (batch_size, :attr:`measure_dim`) array of coordinates/categories
+                in measure space.
+
         Returns:
-            numpy.ndarray: (batch_size,) array of integer indices representing the
-            flattened grid coordinates.
+            (batch_size,) array of integer indices representing the flattened grid
+            coordinates.
+
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -305,17 +321,17 @@ class CategoricalArchive(ArchiveBase):
 
         return self.grid_to_int_index(grid_indices)
 
-    def index_of_single(self, measures):
+    def index_of_single(self, measures: ArrayLike) -> Int:
         """Returns the index of the measures for one solution.
 
         See :meth:`index_of`.
 
         Args:
-            measures (array-like): (:attr:`measure_dim`,) array of measures for a single
-                solution.
+            measures: (:attr:`measure_dim`,) array of measures for a single solution.
+
         Returns:
-            int or numpy.integer: Integer index of the measures in the archive's storage
-            arrays.
+            Integer index of the measures in the archive's storage arrays.
+
         Raises:
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
@@ -331,7 +347,13 @@ class CategoricalArchive(ArchiveBase):
     ## Methods for writing to the archive ##
 
     @staticmethod
-    def _compute_thresholds(indices, objective, cur_threshold, learning_rate, dtype):
+    def _compute_thresholds(
+        indices: np.ndarray,
+        objective: np.ndarray,
+        cur_threshold: np.ndarray,
+        learning_rate: float,
+        dtype: np.dtype,
+    ) -> np.ndarray:
         """Computes new thresholds with the CMA-MAE batch threshold update rule.
 
         If entries in `indices` are duplicated, they receive the same threshold.
@@ -346,11 +368,11 @@ class CategoricalArchive(ArchiveBase):
         #
         # All objective_sizes should be > 0 since we only retrieve counts for indices in
         # `indices`.
-        objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]
+        objective_sizes = aggregate(indices, 1, func="len", fill_value=0)[indices]  # ty: ignore[call-non-callable]
 
         # Compute the sum of the objectives inserted into each cell -- again, we index
         # with `indices`.
-        objective_sums = aggregate(indices, objective, func="sum", fill_value=np.nan)[
+        objective_sums = aggregate(indices, objective, func="sum", fill_value=np.nan)[  # ty: ignore[call-non-callable]
             indices
         ]
 
@@ -369,7 +391,13 @@ class CategoricalArchive(ArchiveBase):
 
         return new_threshold
 
-    def add(self, solution, objective, measures, **fields):
+    def add(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike,
+        measures: ArrayLike,
+        **fields: ArrayLike,
+    ) -> BatchData:
         """Inserts a batch of solutions into the archive.
 
         Each solution is only inserted if it has a higher ``objective`` than the
@@ -392,18 +420,17 @@ class CategoricalArchive(ArchiveBase):
             solution parameters, objective, and measures for solution ``i``.
 
         Args:
-            solution (array-like): (batch_size, :attr:`solution_dim`) array of solution
-                parameters.
-            objective (array-like): (batch_size,) array with objective function
-                evaluations of the solutions.
-            measures (array-like): (batch_size, :attr:`measure_dim`) array with measure
-                space coordinates of all the solutions.
-            fields (keyword arguments): Additional data for each solution. Each argument
-                should be an array with batch_size as the first dimension.
+            solution: (batch_size, :attr:`solution_dim`) array of solution parameters.
+            objective: (batch_size,) array with objective function evaluations of the
+                solutions.
+            measures: (batch_size, :attr:`measure_dim`) array with measure space
+                coordinates of all the solutions.
+            fields: Additional data for each solution. Each argument should be an array
+                with batch_size as the first dimension.
 
         Returns:
-            dict: Information describing the result of the add operation. The dict
-            contains the following keys:
+            Information describing the result of the add operation. The dict contains
+            the following keys:
 
             - ``"status"`` (:class:`numpy.ndarray` of :class:`numpy.int32`): An array of
               integers that represent the "status" obtained when attempting to insert
@@ -539,7 +566,7 @@ class CategoricalArchive(ArchiveBase):
         # elite will be inserted if there is a tie. See their default numpy
         # implementation for more info:
         # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-        archive_argmax = aggregate(
+        archive_argmax = aggregate(  # ty: ignore[call-non-callable]
             indices, data["objective"], func="argmax", fill_value=-1
         )
         should_insert = archive_argmax[archive_argmax != -1]
@@ -562,7 +589,13 @@ class CategoricalArchive(ArchiveBase):
 
         return add_info
 
-    def add_single(self, solution, objective, measures, **fields):
+    def add_single(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike,
+        measures: ArrayLike,
+        **fields: ArrayLike,
+    ) -> SingleData:
         """Inserts a single solution into the archive.
 
         The solution is only inserted if it has a higher ``objective`` than the
@@ -577,15 +610,15 @@ class CategoricalArchive(ArchiveBase):
             time. For better performance, see :meth:`add`.
 
         Args:
-            solution (array-like): Parameters of the solution.
-            objective (float): Objective function evaluation of the solution.
-            measures (array-like): Coordinates in measure space of the solution.
-            fields (keyword arguments): Additional data for the solution.
+            solution: Parameters of the solution.
+            objective: Objective function evaluation of the solution.
+            measures: Coordinates in measure space of the solution.
+            fields: Additional data for the solution.
 
         Returns:
-            dict: Information describing the result of the add operation. The
-            dict contains ``status`` and ``value`` keys; refer to :meth:`add`
-            for the meaning of status and value.
+            Information describing the result of the add operation. The dict contains
+            ``status`` and ``value`` keys; refer to :meth:`add` for the meaning of
+            status and value.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
@@ -690,7 +723,7 @@ class CategoricalArchive(ArchiveBase):
 
         return add_info
 
-    def clear(self):
+    def clear(self) -> None:
         """Removes all elites in the archive."""
         self._store.clear()
         self._stats_reset()
@@ -698,8 +731,8 @@ class CategoricalArchive(ArchiveBase):
     ## Methods for reading from the archive ##
     ## Refer to ArchiveBase for documentation of these methods. ##
 
-    def retrieve(self, measures):
-        measures = np.asarray(measures, dtype=self.dtypes["measures"])
+    def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, BatchData]:
+        measures = np.asarray(measures)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
 
         occupied, data = self._store.retrieve(self.index_of(measures))
@@ -707,18 +740,50 @@ class CategoricalArchive(ArchiveBase):
 
         return occupied, data
 
-    def retrieve_single(self, measures):
-        measures = np.asarray(measures, dtype=self.dtypes["measures"])
+    def retrieve_single(self, measures: ArrayLike) -> tuple[bool, SingleData]:
+        measures = np.asarray(measures)
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
 
         occupied, data = self.retrieve(measures[None])
 
         return occupied[0], {field: arr[0] for field, arr in data.items()}
 
-    def data(self, fields=None, return_type="dict"):
+    @overload
+    def data(
+        self,
+        fields: str,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["dict"] = "dict",
+    ) -> BatchData: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["tuple"] = "tuple",
+    ) -> tuple[Array]: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] = None,
+        return_type: Literal["pandas"] = "pandas",
+    ) -> ArchiveDataFrame: ...
+
+    def data(
+        self,
+        fields: None | Collection[str] | str = None,
+        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
-    def sample_elites(self, n):
+    def sample_elites(self, n: Int) -> BatchData:
         if self.empty:
             raise IndexError("No elements in archive.")
 

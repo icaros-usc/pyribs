@@ -1,15 +1,29 @@
 """Provides visualization functions for QDax repertoires."""
 
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
+
 import numpy as np
+from typing_extensions import ParamSpec
 
 from ribs.archives import CVTArchive
 from ribs.visualize._cvt_archive_3d_plot import cvt_archive_3d_plot
 from ribs.visualize._cvt_archive_heatmap import cvt_archive_heatmap
 
+if TYPE_CHECKING:
+    # Only import for type checking since QDax is not installed by default.
+    from qdax.core.containers.mapelites_repertoire import MapElitesRepertoire
 
-def _as_cvt_archive(repertoire, ranges):
+P = ParamSpec("P")
+
+
+def _as_cvt_archive(
+    repertoire: MapElitesRepertoire,
+    ranges: Sequence[tuple[float, float]],
+) -> CVTArchive:
     """Converts a QDax repertoire into a CVTArchive."""
-
     # Construct a CVTArchive. We set solution_dim to 0 since we are only plotting and do
     # not need to have the solutions available.
     cvt_archive = CVTArchive(
@@ -41,11 +55,11 @@ def _as_cvt_archive(repertoire, ranges):
 
 
 def qdax_repertoire_heatmap(
-    repertoire,
-    ranges,
-    *args,
-    **kwargs,
-):
+    repertoire: MapElitesRepertoire,
+    ranges: Sequence[tuple[float, float]],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> None:
     """Plots a heatmap of a single-objective QDax MapElitesRepertoire.
 
     Internally, this function converts a
@@ -53,28 +67,27 @@ def qdax_repertoire_heatmap(
     :class:`~ribs.archives.CVTArchive` and plots it with :meth:`cvt_archive_heatmap`.
 
     Args:
-        repertoire (qdax.core.containers.mapelites_repertoire.MapElitesRepertoire): A
-            MAP-Elites repertoire output by an algorithm in QDax.
-        ranges (array-like of (float, float)): Upper and lower bound of each dimension
-            of the measure space, e.g. ``[(-1, 1), (-2, 2)]`` indicates the first
-            dimension should have bounds :math:`[-1,1]` (inclusive), and the second
-            dimension should have bounds :math:`[-2,2]` (inclusive). This is needed
-            since the MapElitesRepertoire does not store measure space bounds.
+        repertoire: A MAP-Elites repertoire output by an algorithm in QDax.
+        ranges: Upper and lower bound of each dimension of the measure space, e.g.
+            ``[(-1, 1), (-2, 2)]`` indicates the first dimension should have bounds
+            :math:`[-1,1]` (inclusive), and the second dimension should have bounds
+            :math:`[-2,2]` (inclusive). This is needed since the MapElitesRepertoire
+            does not store measure space bounds.
         *args: Positional arguments to pass to :meth:`cvt_archive_heatmap`.
         **kwargs: Keyword arguments to pass to :meth:`cvt_archive_heatmap`.
+
     Raises:
         ValueError: The repertoire passed in has more than one fitness.
     """
-
     cvt_archive_heatmap(_as_cvt_archive(repertoire, ranges), *args, **kwargs)
 
 
 def qdax_repertoire_3d_plot(
-    repertoire,
-    ranges,
-    *args,
-    **kwargs,
-):
+    repertoire: MapElitesRepertoire,
+    ranges: Sequence[tuple[float, float]],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> None:
     """Plots a single-objective QDax MapElitesRepertoire with 3D measure space.
 
     Internally, this function converts a
@@ -82,18 +95,17 @@ def qdax_repertoire_3d_plot(
     :class:`~ribs.archives.CVTArchive` and plots it with :meth:`cvt_archive_3d_plot`.
 
     Args:
-        repertoire (qdax.core.containers.mapelites_repertoire.MapElitesRepertoire): A
-            MAP-Elites repertoire output by an algorithm in QDax.
-        ranges (array-like of (float, float)): Upper and lower bound of each dimension
-            of the measure space, e.g. ``[(-1, 1), (-2, 2), (-3, 3)]`` indicates the
-            first dimension should have bounds :math:`[-1,1]` (inclusive), the second
-            dimension should have bounds :math:`[-2,2]`, and the third dimension should
-            have bounds :math:`[-3,3]` (inclusive). This is needed since the
-            MapElitesRepertoire does not store measure space bounds.
+        repertoire: A MAP-Elites repertoire output by an algorithm in QDax.
+        ranges: Upper and lower bound of each dimension of the measure space, e.g.
+            ``[(-1, 1), (-2, 2), (-3, 3)]`` indicates the first dimension should have
+            bounds :math:`[-1,1]` (inclusive), the second dimension should have bounds
+            :math:`[-2,2]`, and the third dimension should have bounds :math:`[-3,3]`
+            (inclusive). This is needed since the MapElitesRepertoire does not store
+            measure space bounds.
         *args: Positional arguments to pass to :meth:`cvt_archive_3d_plot`.
         **kwargs: Keyword arguments to pass to :meth:`cvt_archive_3d_plot`.
+
     Raises:
         ValueError: The repertoire passed in has more than one fitness.
     """
-
     cvt_archive_3d_plot(_as_cvt_archive(repertoire, ranges), *args, **kwargs)

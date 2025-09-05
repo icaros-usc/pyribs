@@ -6,8 +6,6 @@ from ribs.archives import GridArchive
 from ribs.emitters import EvolutionStrategyEmitter
 from ribs.emitters.opt import PyCMAEvolutionStrategy
 
-# pylint: disable = redefined-outer-name
-
 
 def test_randomness():
     """If you create two separate ES's, they should not interfere with each

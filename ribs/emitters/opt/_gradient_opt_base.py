@@ -4,12 +4,12 @@ from abc import ABC, abstractmethod
 
 
 class GradientOptBase(ABC):
-    """Base class for gradient-based optimizers.
+    r"""Base class for gradient-based optimizers.
 
     .. note::
         These optimizers are designed for gradient ascent rather than gradient descent.
 
-    These optimizers maintain a current solution point :math:`\\theta`. The solution
+    These optimizers maintain a current solution point :math:`\theta`. The solution
     point is obtained with the :attr:`theta` property, and it is updated by passing a
     gradient to :meth:`step`. Finally, the point can be reset to a new value with
     :meth:`reset`.

@@ -5,8 +5,6 @@ import pytest
 
 from ribs.archives import ArchiveDataFrame
 
-# pylint: disable = redefined-outer-name
-
 
 @pytest.fixture
 def data():
@@ -82,11 +80,12 @@ def test_get_field(data, df):
         "index",
     ],
 )
-def test_field_can_be_none(df, field_col):
-    """Removes a column so that get_field returns None."""
+def test_field_not_found(df, field_col):
+    """Removes a column so that get_field has KeyError."""
     field, col = field_col
     del df[col]
-    assert df.get_field(field) is None
+    with pytest.raises(KeyError, match=f"Field '{field}' was not found."):
+        df.get_field(field)
 
 
 def test_correct_constructor(df):

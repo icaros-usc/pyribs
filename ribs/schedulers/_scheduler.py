@@ -1,9 +1,18 @@
 """Provides the Scheduler."""
 
+from __future__ import annotations
+
 import warnings
 from collections import defaultdict
+from collections.abc import Sequence
+from typing import Literal
 
 import numpy as np
+from numpy.typing import ArrayLike
+
+from ribs.archives import ArchiveBase
+from ribs.emitters import EmitterBase
+from ribs.typing import BatchData
 
 
 class Scheduler:
@@ -24,22 +33,20 @@ class Scheduler:
         range 5]``, which creates 5 unique instances of ``EmitterClass``.
 
     Args:
-        archive (ribs.archives.ArchiveBase): An archive object, e.g.,
-            :class:`~ribs.archives.GridArchive`.
-        emitters (list of ribs.emitters.EmitterBase): A list of emitter objects,
-            e.g., :class:`~ribs.emitters.EvolutionStrategyEmitter`.
-        result_archive (ribs.archives.ArchiveBase): An additional archive where all
-            solutions are added. For example, in CMA-MAE, this archive stores all the
-            best-performing solutions, since the main archive does not store all the
-            best-performing solutions.
-        add_mode (str): Indicates how solutions should be added to the archive. The
-            default is "batch", which adds all solutions with one call to
+        archive: An archive object, e.g., :class:`~ribs.archives.GridArchive`.
+        emitters: A list of emitter objects, e.g.,
+            :class:`~ribs.emitters.EvolutionStrategyEmitter`.
+        result_archive: An additional archive where all solutions are added. For
+            example, in CMA-MAE, this archive stores all the best-performing solutions,
+            since the main archive does not store all the best-performing solutions.
+        add_mode: Indicates how solutions should be added to the archive. The default is
+            "batch", which adds all solutions with one call to
             :meth:`~ribs.archives.ArchiveBase.add`. Alternatively, use "single" to add
             the solutions one at a time with
-            :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is included for
-            legacy reasons, as it was the only mode of operation in pyribs 0.4.0 and
-            before. We highly recommend using "batch" mode since it is significantly
-            faster.
+            :meth:`~ribs.archives.ArchiveBase.add_single`. "single" mode is included
+            since implementing batch addition on an archive is sometimes non-trivial. We
+            highly recommend "batch" mode since it is significantly faster.
+
     Raises:
         TypeError: The ``emitters`` argument was not a list of emitters.
         ValueError: The emitters passed in do not have the same solution dimensions.
@@ -51,7 +58,14 @@ class Scheduler:
             (``result_archive`` should not be passed in this case).
     """
 
-    def __init__(self, archive, emitters, result_archive=None, *, add_mode="batch"):
+    def __init__(
+        self,
+        archive: ArchiveBase,
+        emitters: Sequence[EmitterBase],
+        result_archive: ArchiveBase | None = None,
+        *,
+        add_mode: Literal["batch", "single"] = "batch",
+    ) -> None:
         try:
             if len(emitters) == 0:
                 raise ValueError("Pass in at least one emitter to the scheduler.")
@@ -63,7 +77,7 @@ class Scheduler:
                 "`emitters` must be a list of emitter objects."
             ) from exception
 
-        emitter_ids = set(id(e) for e in emitters)
+        emitter_ids = {id(e) for e in emitters}
         if len(emitter_ids) != len(emitters):
             raise ValueError(
                 "Not all emitters passed in were unique (i.e. some emitters "
@@ -110,36 +124,34 @@ class Scheduler:
         self._num_emitted = [None for _ in self._emitters]
 
     @property
-    def archive(self):
-        """ribs.archives.ArchiveBase: Archive for storing solutions found in this
-        scheduler."""
+    def archive(self) -> ArchiveBase:
+        """Archive for storing solutions found in this scheduler."""
         return self._archive
 
     @property
-    def emitters(self):
-        """list of ribs.archives.EmitterBase: Emitters for generating solutions in this
-        scheduler."""
+    def emitters(self) -> Sequence[EmitterBase]:
+        """Emitters for generating solutions in this scheduler."""
         return self._emitters
 
     @property
-    def result_archive(self):
-        """ribs.archives.ArchiveBase: An additional archive for storing solutions found
-        in this scheduler.
+    def result_archive(self) -> ArchiveBase:
+        """An additional archive for storing solutions found in this scheduler.
 
-        If `result_archive` was not passed to the constructor, this property is
-        the same as :attr:`archive`.
+        If ``result_archive`` was not passed to the constructor, this property is the
+        same as :attr:`archive`.
         """
         return self._archive if self._result_archive is None else self._result_archive
 
-    def ask_dqd(self):
-        """Generates a batch of solutions by calling ask_dqd() on all DQD emitters.
+    def ask_dqd(self) -> np.ndarray:
+        """Generates a batch of solutions by calling ``ask_dqd`` on all DQD emitters.
 
         .. note:: The order of the solutions returned from this method is important, so
             do not rearrange them.
 
         Returns:
-            (batch_size, dim) array: An array of n solutions to evaluate. Each row
-            contains a single solution.
+            A ``(batch_size, dim)`` array of solutions to evaluate. Each row contains a
+            single solution.
+
         Raises:
             RuntimeError: This method was called immediately after calling an ask
                 method.
@@ -165,15 +177,16 @@ class Scheduler:
         )
         return self._cur_solutions
 
-    def ask(self):
-        """Generates a batch of solutions by calling ask() on all emitters.
+    def ask(self) -> np.ndarray:
+        """Generates a batch of solutions by calling ``ask`` on all emitters.
 
         .. note:: The order of the solutions returned from this method is important, so
             do not rearrange them.
 
         Returns:
-            (batch_size, dim) array: An array of n solutions to evaluate. Each row
-            contains a single solution.
+            A ``(batch_size, dim)`` array of solutions to evaluate. Each row contains a
+            single solution.
+
         Raises:
             RuntimeError: This method was called immediately after calling an ask
                 method.
@@ -199,9 +212,8 @@ class Scheduler:
         )
         return self._cur_solutions
 
-    def _check_length(self, name, arr):
-        """Raises a ValueError if array does not have the same length as the
-        solutions."""
+    def _check_length(self, name: str, arr: ArrayLike) -> None:
+        """Raises a ValueError if array does not have the same length as the solutions."""
         if len(arr) != len(self._cur_solutions):
             raise ValueError(
                 f"{name} should have length {len(self._cur_solutions)} "
@@ -209,7 +221,9 @@ class Scheduler:
                 f"has length {len(arr)}"
             )
 
-    def _validate_tell_data(self, data):
+    def _validate_tell_data(
+        self, data: dict[str, ArrayLike | None]
+    ) -> dict[str, np.ndarray | None]:
         """Preprocesses data passed into tell methods."""
         for name, arr in data.items():
             # Fields are allowed to be None to indicate they are not present, e.g.,
@@ -225,7 +239,7 @@ class Scheduler:
 
         return data
 
-    EMPTY_WARNING = (
+    _EMPTY_WARNING = (
         "`{name}` was empty before adding solutions, and it is still empty "
         "after adding solutions. "
         "One potential cause is that `threshold_min` is too high in this "
@@ -233,9 +247,8 @@ class Scheduler:
         "objective value does not exceed `threshold_min`."
     )
 
-    def _add_to_archives(self, data):
+    def _add_to_archives(self, data: dict[str, np.ndarray | None]) -> BatchData:
         """Adds solutions to both the regular archive and the result archive."""
-
         archive_empty_before = self.archive.empty
         if self._result_archive is not None:
             # Check self._result_archive here since self.result_archive is a property
@@ -267,16 +280,28 @@ class Scheduler:
             for name, arr in add_info.items():
                 add_info[name] = np.asarray(arr)
 
-        # Warn the user if nothing was inserted into the archives.
+        # Warn the user if nothing was inserted into the archives -- these warnings use
+        # stacklevel=3 so that it's clear the error comes from tell() or tell_dqd().
         if archive_empty_before and self.archive.empty:
-            warnings.warn(self.EMPTY_WARNING.format(name="archive"))
-        if self._result_archive is not None:
-            if result_archive_empty_before and self.result_archive.empty:
-                warnings.warn(self.EMPTY_WARNING.format(name="result_archive"))
+            warnings.warn(self._EMPTY_WARNING.format(name="archive"), stacklevel=3)
+        if (
+            self._result_archive is not None
+            and result_archive_empty_before
+            and self.result_archive.empty
+        ):
+            warnings.warn(
+                self._EMPTY_WARNING.format(name="result_archive"), stacklevel=3
+            )
 
         return add_info
 
-    def tell_dqd(self, objective, measures, jacobian, **fields):
+    def tell_dqd(
+        self,
+        objective: ArrayLike | None,
+        measures: ArrayLike,
+        jacobian: ArrayLike,
+        **fields: ArrayLike | None,
+    ) -> None:
         """Returns info for solutions from :meth:`ask_dqd`.
 
         .. note:: The objective, measures, and jacobian arrays must be in the same order
@@ -285,18 +310,19 @@ class Scheduler:
             jacobian for ``solution[i]``.
 
         Args:
-            objective ((batch_size,) array or None): Each entry of this array contains
-                the objective function evaluation of a solution. This can also be None
-                to indicate there is no objective -- this would be the case in diversity
-                optimization problems.
-            measures ((batch_size, measure_dim) array): Each row of this array contains
-                a solution's coordinates in measure space.
-            jacobian (numpy.ndarray): ``(batch_size, 1 + measure_dim, solution_dim)``
-                array consisting of Jacobian matrices of the solutions obtained from
-                :meth:`ask_dqd`. Each matrix should consist of the objective gradient of
-                the solution followed by the measure gradients.
-            fields (keyword arguments): Additional data for each solution. Each argument
-                should be an array with batch_size as the first dimension.
+            objective: ``(batch_size,)`` array where each entry contains the objective
+                function evaluation of a solution. This can also be None to indicate
+                there is no objective, which would be the case in diversity optimization
+                problems.
+            measures: ``(batch_size, measure_dim)`` array where each row contains a
+                solution's coordinates in measure space.
+            jacobian: ``(batch_size, 1 + measure_dim, solution_dim)`` array consisting
+                of Jacobian matrices of the solutions obtained from :meth:`ask_dqd`.
+                Each matrix should consist of the objective gradient of the solution
+                followed by the measure gradients.
+            fields: Additional data for each solution. Each argument should be an array
+                with ``batch_size`` as the first dimension.
+
         Raises:
             RuntimeError: This method was called without first calling :meth:`ask_dqd`.
             ValueError: One of the inputs has the wrong shape.
@@ -332,22 +358,28 @@ class Scheduler:
             )
             pos = end
 
-    def tell(self, objective, measures, **fields):
+    def tell(
+        self,
+        objective: ArrayLike | None,
+        measures: ArrayLike,
+        **fields: ArrayLike | None,
+    ) -> None:
         """Returns info for solutions from :meth:`ask`.
 
         .. note:: The objective and measures arrays must be in the same order as the
-            solutions created by :meth:`ask_dqd`; i.e. ``objective[i]`` and
-            ``measures[i]`` should be the objective and measures for ``solution[i]``.
+            solutions created by :meth:`ask`; i.e. ``objective[i]`` and ``measures[i]``
+            should be the objective and measures for ``solution[i]``.
 
         Args:
-            objective ((batch_size,) array or None): Each entry of this array contains
-                the objective function evaluation of a solution. This can also be None
-                to indicate there is no objective -- this would be the case in diversity
-                optimization problems.
-            measures ((batch_size, measures_dm) array): Each row of this array contains
-                a solution's coordinates in measure space.
-            fields (keyword arguments): Additional data for each solution. Each argument
-                should be an array with batch_size as the first dimension.
+            objective: ``(batch_size,)`` array where each entry contains the objective
+                function evaluation of a solution. This can also be None to indicate
+                there is no objective, which would be the case in diversity optimization
+                problems.
+            measures: ``(batch_size, measure_dim)`` array where each row contains a
+                solution's coordinates in measure space.
+            fields: Additional data for each solution. Each argument should be an array
+                with ``batch_size`` as the first dimension.
+
         Raises:
             RuntimeError: This method was called without first calling :meth:`ask`.
             ValueError: One of the inputs has the wrong shape.

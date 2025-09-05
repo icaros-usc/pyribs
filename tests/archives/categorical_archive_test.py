@@ -48,11 +48,7 @@ def test_str_solutions():
             ["A", "B", "C"],
             ["One", "Two", "Three", "Four"],
         ],
-        dtype={
-            "solution": object,
-            "objective": np.float32,
-            "measures": object,
-        },
+        solution_dtype=object,
     )
     assert archive.solution_dim == ()
     assert archive.dtypes["solution"] == np.object_

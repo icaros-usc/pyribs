@@ -1,13 +1,21 @@
 """Miscellaneous internal utilities."""
 
+from __future__ import annotations
+
+import importlib
 import numbers
+from types import ModuleType
 
 import array_api_compat.numpy as np_compat
-import numpy as np  # TODO (#576): Remove import of np
+import numpy as np
 from array_api_compat import array_namespace
+from numpy.typing import ArrayLike
+
+from ribs.archives._archive_base import ArchiveBase
+from ribs.typing import ArrayVar, BatchData, Int, SingleData
 
 
-def check_finite(x, name):
+def check_finite(x: ArrayLike, name: str) -> None:
     """Checks that x is finite (i.e. not infinity or NaN).
 
     `x` must be either a scalar or NumPy array.
@@ -23,7 +31,13 @@ def check_finite(x, name):
         )
 
 
-def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
+def check_batch_shape(
+    array: np.ndarray,
+    array_name: str,
+    dim: Int | tuple[Int, ...],
+    dim_name: str,
+    extra_msg: str = "",
+) -> None:
     """Checks that the array has shape (batch_size, dim) or (batch_size, *dim).
 
     `batch_size` can be any value.
@@ -42,7 +56,13 @@ def check_batch_shape(array, array_name, dim, dim_name, extra_msg=""):
         )
 
 
-def check_shape(array, array_name, dim, dim_name, extra_msg=""):
+def check_shape(
+    array: np.ndarray,
+    array_name: str,
+    dim: Int | tuple[Int, ...],
+    dim_name: str,
+    extra_msg: str = "",
+) -> None:
     """Checks that the array has shape dim.
 
     `array` must be a numpy array, and `dim` must be an int or tuple of int.
@@ -58,7 +78,7 @@ def check_shape(array, array_name, dim, dim_name, extra_msg=""):
         )
 
 
-def check_is_1d(array, array_name, extra_msg=""):
+def check_is_1d(array: np.ndarray, array_name: str, extra_msg: str = "") -> None:
     """Checks that an array is 1D."""
     if array.ndim != 1:
         raise ValueError(
@@ -67,7 +87,13 @@ def check_is_1d(array, array_name, extra_msg=""):
         )
 
 
-def check_solution_batch_dim(array, array_name, batch_size, is_1d=False, extra_msg=""):
+def check_solution_batch_dim(
+    array: np.ndarray,
+    array_name: str,
+    batch_size: int,
+    is_1d: bool = False,
+    extra_msg: str = "",
+) -> None:
     """Checks the batch dimension of an array with respect to the solutions."""
     if array.shape[0] != batch_size:
         raise ValueError(
@@ -80,8 +106,12 @@ def check_solution_batch_dim(array, array_name, batch_size, is_1d=False, extra_m
 
 
 def validate_batch(
-    archive, data, add_info=None, jacobian=None, none_objective_ok=False
-):
+    archive: ArchiveBase,
+    data: BatchData,
+    add_info: BatchData | None = None,
+    jacobian: ArrayLike = None,
+    none_objective_ok: bool = False,
+):  # No return annotation because it's quite complicated.
     """Preprocesses and validates batch arguments.
 
     ``data`` is a dict containing arrays with the data of each solution, e.g., objective
@@ -182,7 +212,9 @@ def validate_batch(
         return data
 
 
-def validate_single(archive, data, none_objective_ok=False):
+def validate_single(
+    archive: ArchiveBase, data: SingleData, none_objective_ok: bool = False
+) -> SingleData:
     """Performs preprocessing and checks for arguments to add_single()."""
     data["solution"] = np.asarray(data["solution"])
     check_shape(data["solution"], "solution", archive.solution_dim, "solution_dim")
@@ -204,25 +236,25 @@ def validate_single(archive, data, none_objective_ok=False):
     return data
 
 
-# TODO (#576): Replace all calls to readonly with arr_readonly below.
-def readonly(arr):
-    """Sets an array to be readonly."""
-    arr.flags.writeable = False
-    return arr
+def arr_readonly(arr: ArrayVar, view: bool = False) -> ArrayVar:
+    """Sets an array to be readonly if possible.
 
+    Intended to support arrays across libraries; currently only supports numpy. Other
+    arrays are returned as is.
 
-def arr_readonly(arr):
-    """Sets an array to be readonly if possible. Inteded to support arrays across
-    libraries; currently only supports numpy."""
-    if isinstance(arr, np_compat.ndarray):
-        readonly_arr = arr.view()
+    Pass `view` to call `arr.view` when the array is a numpy array. This is useful if
+    you will still need to modify the array, as you can return a readonly view that does
+    not make the original array readonly.
+    """
+    if isinstance(arr, np.ndarray):
+        readonly_arr = arr.view() if view else arr
         readonly_arr.flags.writeable = False
-        return readonly_arr
+        return readonly_arr  # ty: ignore[invalid-return-type]
     else:
         return arr
 
 
-def xp_namespace(xp):
+def xp_namespace(xp: ModuleType | None) -> ModuleType:
     """Utility for retrieving a namespace compatible with the array API.
 
     Expects to receive an argument like `torch` or `numpy`.
@@ -233,4 +265,43 @@ def xp_namespace(xp):
     For more context, see:
     https://github.com/data-apis/array-api-compat/issues/342
     """
-    return np_compat if xp is None else array_namespace(xp.empty(0))
+    return np_compat if xp is None else array_namespace(xp.empty(0))  # ty: ignore[unresolved-attribute]
+
+
+class PickleXPMixin:
+    """This class makes it possible to pickle objects with the _xp attribute.
+
+    ``_xp`` here refers to an array API module. Modules in Python are not picklable, so
+    pickling an object that has the ``_xp`` attribute usually results in a TypeError.
+    This mixin fixes that by modifying the behavior of ``__getstate__`` and
+    ``__setstate__`` so that ``_xp`` is converted to a string before pickling, and
+    converted back to a module upon unpickling. See `here
+    <https://docs.python.org/3/library/pickle.html#pickling-class-instances>`_ for more
+    info. We assume `_xp` is the name since the array module is usually kept private.
+    """
+
+    XP_NAME = "_xp"
+
+    def __getstate__(self) -> dict:
+        """Sets xp to a str if it is available."""
+        state = self.__dict__.copy()
+        if self.XP_NAME in state:
+            state[self.XP_NAME] = state[self.XP_NAME].__name__
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """Sets xp to the module if possible."""
+        if self.XP_NAME in state:
+            state[self.XP_NAME] = importlib.import_module(state[self.XP_NAME])
+        self.__dict__.update(state)
+
+
+## Deprecations ##
+
+
+def deprecate_dtype(dtype: None) -> None:
+    if dtype is not None:
+        raise ValueError(
+            "dtype is deprecated as of pyribs 0.9.0. Please specify solution_dtype, "
+            "objective_dtype, and/or measures_dtype instead."
+        )

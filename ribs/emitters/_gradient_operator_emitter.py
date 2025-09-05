@@ -7,8 +7,7 @@ from ribs.emitters._emitter_base import EmitterBase
 
 
 class GradientOperatorEmitter(EmitterBase):
-    """Generates solutions by first applying a genetic operator, then applying a
-    gradient arborescence with coefficients parameterized by a fixed Gaussian.
+    r"""Generates solutions with a genetic operator and gradient arborescence.
 
     This emitter is from `Fontaine 2021 <https://arxiv.org/abs/2106.03894>`_. It
     proceeds in two stages. The first stage samples a batch of intermediate solutions
@@ -27,29 +26,28 @@ class GradientOperatorEmitter(EmitterBase):
     The second stage creates new solutions by branching from each of the intermediate
     solutions. It leverages the gradient information of the objective and measure
     functions, generating a new solution from each *solution point*
-    :math:`\\boldsymbol{\\theta_i}` using *gradient arborescence*. The gradient
-    coefficients :math:`\\boldsymbol{c_i}` are drawn from a zero-centered Gaussian
+    :math:`\boldsymbol{\theta_i}` using *gradient arborescence*. The gradient
+    coefficients :math:`\boldsymbol{c_i}` are drawn from a zero-centered Gaussian
     distribution with standard deviation ``sigma_g``. Note that the objective gradient
     coefficient is forced to be non-negative by taking its absolute value
     :math:`|c_{i,0}|`.
 
     Essentially, this means that the emitter samples coefficients
-    :math:`\\boldsymbol{c_i} \\sim
-    \\mathcal{N}(\\boldsymbol{0}, \\boldsymbol{\\sigma_g}I)`
-    and creates new solutions :math:`\\boldsymbol{\\theta'_i}` by updating the
-    intermediate solutions :math:`\\boldsymbol{\\theta_i}` from the first stage
-    according to:
+    :math:`\boldsymbol{c_i} \sim \mathcal{N}(\boldsymbol{0}, \boldsymbol{\sigma_g}I)`
+    and creates new solutions :math:`\boldsymbol{\theta'_i}` by updating the
+    intermediate solutions :math:`\boldsymbol{\theta_i}` from the first stage according
+    to:
 
     .. math::
 
-        \\boldsymbol{\\theta'_i} \\gets \\boldsymbol{\\theta_i} +
-        |c_{i,0}| \\boldsymbol{\\nabla} f(\\boldsymbol{\\theta_i}) +
-        \\sum_{j=1}^k c_{i,j}\\boldsymbol{\\nabla}m_j(\\boldsymbol{\\theta_i})
+        \boldsymbol{\theta'_i} \gets \boldsymbol{\theta_i} +
+        |c_{i,0}| \boldsymbol{\nabla} f(\boldsymbol{\theta_i}) +
+        \sum_{j=1}^k c_{i,j}\boldsymbol{\nabla}m_j(\boldsymbol{\theta_i})
 
-    Where :math:`k` is the number of measures, and
-    :math:`\\boldsymbol{\\nabla} f(\\boldsymbol{\\theta})` and
-    :math:`\\boldsymbol{\\nabla} m_j(\\boldsymbol{\\theta})` are the objective and
-    measure gradients of the solution point :math:`\\boldsymbol{\\theta}`, respectively.
+    Where :math:`k` is the number of measures, and :math:`\boldsymbol{\nabla}
+    f(\boldsymbol{\theta})` and :math:`\boldsymbol{\nabla} m_j(\boldsymbol{\theta})` are
+    the objective and measure gradients of the solution point
+    :math:`\boldsymbol{\theta}`, respectively.
 
 
     Args:
@@ -88,6 +86,7 @@ class GradientOperatorEmitter(EmitterBase):
         batch_size (int): Number of solutions to return in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to avoid a
             fixed seed.
+
     Raises:
         ValueError: There is an error in the bounds configuration.
     """
@@ -153,21 +152,22 @@ class GradientOperatorEmitter(EmitterBase):
         self._parents = None
 
     @property
-    def initial_solutions(self):
-        """numpy.ndarray: The initial solutions which are returned when the archive is
-        empty (if x0 is not set)."""
-        return self._initial_solutions
-
-    @property
     def x0(self):
-        """numpy.ndarray: Center of the Gaussian distribution from which to sample
-        solutions when the archive is empty (if initial_solutions is not set)."""
+        """numpy.ndarray: Initial Gaussian distribution center.
+
+        Solutions are sampled from this distribution when the archive is empty (if
+        :attr:`initial_solutions` is not set).
+        """
         return self._x0
 
     @property
+    def initial_solutions(self):
+        """numpy.ndarray: Returned when the archive is empty (if :attr:`x0` is not set)."""
+        return self._initial_solutions
+
+    @property
     def sigma(self):
-        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
-        distribution."""
+        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian distribution."""  # noqa: D403
         return self._sigma
 
     @property
@@ -182,13 +182,11 @@ class GradientOperatorEmitter(EmitterBase):
 
     @property
     def epsilon(self):
-        """int: The epsilon added for numerical stability when normalizing gradients in
-        :meth:`tell_dqd`."""
+        """float: Added for numerical stability when normalizing gradients in :meth:`tell_dqd`."""
         return self._epsilon
 
     def ask_dqd(self):
-        """Create new solutions by sampling elites from the archive with (optional)
-        Gaussian perturbation.
+        """Creates new solutions by sampling elites from the archive.
 
         If the archive is empty and initial_solutions is given, this method returns no
         solutions. Otherwise, this method will sample elites from the archive.
@@ -241,12 +239,14 @@ class GradientOperatorEmitter(EmitterBase):
         return self._parents
 
     def ask(self):
-        """Samples new solutions from a gradient arborescence parameterized by a
-        multivariate Gaussian distribution.
+        """Samples new solutions from a gradient arborescence.
+
+        The gradient arborescence is parameterized by a multivariate Gaussian
+        distribution.
 
         If measure_gradients is used, the multivariate Gaussian is parameterized by
         sigma_g, and the arborescence coefficient is sampled from the multivariate
-        Gaussian, with the objective coefficient being always non-negative. If
+        Gaussian, with the objective coefficient always being non-negative. If
         measure_gradients is not used, the arborescence coefficient is just sigma_g
         itself.
 
@@ -256,6 +256,7 @@ class GradientOperatorEmitter(EmitterBase):
         Returns:
             (:attr:`batch_size`, :attr:`solution_dim`) array -- a batch of new solutions
             to evaluate.
+
         Raises:
             RuntimeError: This method was called without first passing gradients with
                 calls to ask_dqd() and tell_dqd().
@@ -306,7 +307,7 @@ class GradientOperatorEmitter(EmitterBase):
             fields (keyword arguments): Additional data for each solution. Each argument
                 should be an array with batch_size as the first dimension.
         """
-        data, add_info, jacobian = validate_batch(  # pylint: disable = unused-variable
+        data, add_info, jacobian = validate_batch(
             self.archive,
             {
                 "solution": solution,

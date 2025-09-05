@@ -11,8 +11,6 @@ from matplotlib.testing.decorators import image_comparison
 from ribs.archives import ProximityArchive
 from ribs.visualize import proximity_archive_plot
 
-# pylint: disable = redefined-outer-name
-
 #
 # Fixtures
 #

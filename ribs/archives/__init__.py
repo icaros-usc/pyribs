@@ -11,13 +11,13 @@ inheriting from :class:`~ribs.archives.ArchiveBase`.
 .. autosummary::
     :toctree:
 
-    ribs.archives.CategoricalArchive
-    ribs.archives.CVTArchive
-    ribs.archives.DensityArchive
-    ribs.archives.GridArchive
-    ribs.archives.ProximityArchive
-    ribs.archives.SlidingBoundariesArchive
-    ribs.archives.ArchiveBase
+    CategoricalArchive
+    CVTArchive
+    DensityArchive
+    GridArchive
+    ProximityArchive
+    SlidingBoundariesArchive
+    ArchiveBase
 
 Utilities
 ---------
@@ -27,12 +27,12 @@ This subpackage also contains several utilities associated with the archives.
 .. autosummary::
     :toctree:
 
-    ribs.archives.ArrayStore
-    ribs.archives.AddStatus
-    ribs.archives.ArchiveDataFrame
-    ribs.archives.ArchiveStats
-    ribs.archives.cqd_score
-    ribs.archives.CQDScoreResult
+    ArrayStore
+    AddStatus
+    ArchiveDataFrame
+    ArchiveStats
+    cqd_score
+    CQDScoreResult
 """
 
 from ribs.archives._add_status import AddStatus

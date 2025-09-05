@@ -1,8 +1,18 @@
 """Provides sliding_boundaries_archive_heatmap."""
 
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import Literal
+
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.typing import ColorType
+from pandas import DataFrame
 
+from ribs.archives import ArchiveDataFrame, SlidingBoundariesArchive
 from ribs.visualize._utils import (
     retrieve_cmap,
     set_cbar,
@@ -10,28 +20,24 @@ from ribs.visualize._utils import (
     validate_heatmap_visual_args,
 )
 
-# Matplotlib functions tend to have a ton of args.
-# pylint: disable = too-many-arguments
-
 
 def sliding_boundaries_archive_heatmap(
-    archive,
-    ax=None,
+    archive: SlidingBoundariesArchive,
+    ax: Axes | None = None,
     *,
-    df=None,
-    transpose_measures=False,
-    cmap="magma",
-    aspect="auto",
-    ms=None,
-    boundary_lw=0,
-    vmin=None,
-    vmax=None,
-    cbar="auto",
-    cbar_kwargs=None,
-    rasterized=False,
-):
-    """Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with 2D
-    measure space.
+    df: DataFrame | ArchiveDataFrame | None = None,
+    transpose_measures: bool = False,
+    cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap = "magma",
+    aspect: Literal["auto", "equal"] | float | None = None,
+    ms: float | None = None,
+    boundary_lw: float = 0,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    cbar: Literal["auto"] | None | Axes = "auto",
+    cbar_kwargs: dict | None = None,
+    rasterized: bool = False,
+) -> None:
+    r"""Plots heatmap of a :class:`~ribs.archives.SlidingBoundariesArchive` with 2D measure space.
 
     Since the boundaries of :class:`ribs.archives.SlidingBoundariesArchive` are dynamic,
     we plot the heatmap as a scatter plot, in which each marker is an elite and its
@@ -68,46 +74,44 @@ def sliding_boundaries_archive_heatmap(
             >>> plt.show()
 
     Args:
-        archive (SlidingBoundariesArchive): A 2D
-            :class:`~ribs.archives.SlidingBoundariesArchive`.
-        ax (matplotlib.axes.Axes): Axes on which to plot the heatmap. If ``None``, the
-            current axis will be used.
-        df (ribs.archives.ArchiveDataFrame): If provided, we will plot data from this
-            argument instead of the data currently in the archive. This data can be
-            obtained by, for instance, calling :meth:`ribs.archives.ArchiveBase.data`
-            with ``return_type="pandas"`` and modifying the resulting
-            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum, the data
-            must contain columns for index, objective, and measures. To display a custom
-            metric, replace the "objective" column.
-        transpose_measures (bool): By default, the first measure in the archive will
-            appear along the x-axis, and the second will be along the y-axis. To switch
-            this behavior (i.e. to transpose the axes), set this to ``True``.
-        cmap (str, list, matplotlib.colors.Colormap): Colormap to use when plotting
-            intensity. Either the name of a :class:`~matplotlib.colors.Colormap`, a list
-            of RGB or RGBA colors (i.e. an :math:`N \\times 3` or :math:`N \\times 4`
-            array), or a :class:`~matplotlib.colors.Colormap` object.
-        aspect ('auto', 'equal', float): The aspect ratio of the heatmap (i.e.
-            height/width). Defaults to ``'auto'``. ``'equal'`` is the same as
+        archive: A 2D :class:`~ribs.archives.SlidingBoundariesArchive`.
+        ax: Axes on which to plot the heatmap.  If ``None``, the current axis will be
+            used.
+        df: If provided, we will plot data from this argument instead of the data
+            currently in the archive. This data can be obtained by, for instance,
+            calling :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
+            and modifying the resulting :class:`~ribs.archives.ArchiveDataFrame`. Note
+            that, at a minimum, the data must contain columns for index, objective, and
+            measures. To display a custom metric, replace the "objective" column.
+        transpose_measures: By default, the first measure in the archive will appear
+            along the x-axis, and the second will be along the y-axis. To switch this
+            behavior (i.e. to transpose the axes), set this to ``True``.
+        cmap: The colormap to use when plotting intensity. Either the name of a
+            :class:`~matplotlib.colors.Colormap`, a list of Matplotlib color
+            specifications (e.g., an :math:`N \times 3` or :math:`N \times 4` array --
+            see :class:`~matplotlib.colors.ListedColormap`), or a
+            :class:`~matplotlib.colors.Colormap` object.
+        aspect: The aspect ratio of the heatmap (i.e. height/width). Defaults to
+            ``'auto'`` for 2D and ``0.5`` for 1D. ``'equal'`` is the same as
             ``aspect=1``. See :meth:`matplotlib.axes.Axes.set_aspect` for more info.
-        ms (float): Marker size for the solutions.
-        boundary_lw (float): Line width when plotting the boundaries. Set to ``0`` to
-            have no boundaries.
-        vmin (float): Minimum objective value to use in the plot. If ``None``, the
-            minimum objective value in the archive is used.
-        vmax (float): Maximum objective value to use in the plot. If ``None``, the
-            maximum objective value in the archive is used.
-        cbar ('auto', None, matplotlib.axes.Axes): By default, this is set to ``'auto'``
-            which displays the colorbar on the archive's current
-            :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar is not displayed.
-            If this is an :class:`~matplotlib.axes.Axes`, displays the colorbar on the
-            specified Axes.
-        cbar_kwargs (dict): Additional kwargs to pass to
-            :func:`~matplotlib.pyplot.colorbar`.
-        rasterized (bool): Whether to rasterize the heatmap. This can be useful for
-            saving to a vector format like PDF. Essentially, only the heatmap will be
-            converted to a raster graphic so that the archive cells will not have to be
-            individually rendered. Meanwhile, the surrounding axes, particularly text
-            labels, will remain in vector format.
+        ms: Marker size for the solutions.
+        boundary_lw: Line width when plotting the boundaries. Set to ``0`` to have no
+            boundaries.
+        vmin: Minimum objective value to use in the plot. If ``None``, the minimum
+            objective value in the archive is used.
+        vmax: Maximum objective value to use in the plot. If ``None``, the maximum
+            objective value in the archive is used.
+        cbar: By default, this is set to ``'auto'`` which displays the colorbar on the
+            archive's current :class:`~matplotlib.axes.Axes`. If ``None``, then colorbar
+            is not displayed. If this is an :class:`~matplotlib.axes.Axes`, displays the
+            colorbar on the specified Axes.
+        cbar_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.colorbar`.
+        rasterized: Whether to rasterize the heatmap. This can be useful for saving to a
+            vector format like PDF. Essentially, only the heatmap will be converted to a
+            raster graphic so that the archive cells will not have to be individually
+            rendered. Meanwhile, the surrounding axes, particularly text labels, will
+            remain in vector format.
+
     Raises:
         ValueError: The archive is not 2D.
     """
@@ -150,8 +154,8 @@ def sliding_boundaries_archive_heatmap(
 
     # Initialize the axis.
     ax = plt.gca() if ax is None else ax
-    ax.set_xlim(lower_bounds[0], upper_bounds[0])
-    ax.set_ylim(lower_bounds[1], upper_bounds[1])
+    ax.set_xlim(lower_bounds[0], upper_bounds[0])  # ty: ignore[invalid-argument-type]
+    ax.set_ylim(lower_bounds[1], upper_bounds[1])  # ty: ignore[invalid-argument-type]
     ax.set_aspect(aspect)
 
     # Create the plot.

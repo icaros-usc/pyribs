@@ -10,7 +10,7 @@ import numba as nb
 import numpy as np
 from threadpoolctl import threadpool_limits
 
-from ribs._utils import readonly
+from ribs._utils import arr_readonly
 from ribs.emitters.opt._evolution_strategy_base import (
     BOUNDS_SAMPLING_THRESHOLD,
     BOUNDS_WARNING,
@@ -100,7 +100,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
             pass np.inf instead of -np.inf).
     """
 
-    def __init__(  # pylint: disable = super-init-not-called
+    def __init__(
         self,
         sigma0,
         solution_dim,
@@ -168,7 +168,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
 
         # Fitness is too flat (only applies if there are at least 2 parents).
         # NOTE: We use norm here because we may have multiple ranking values.
-        if (
+        if (  # noqa: SIM103
             len(ranking_values) >= 2
             and np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12
         ):
@@ -230,9 +230,9 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
             # Warn if we have resampled too many times.
             sampling_itrs += 1
             if sampling_itrs > BOUNDS_SAMPLING_THRESHOLD:
-                warnings.warn(BOUNDS_WARNING)
+                warnings.warn(BOUNDS_WARNING, stacklevel=2)
 
-        return readonly(self._solutions)
+        return arr_readonly(self._solutions)
 
     def _calc_strat_params(self, num_parents):
         """Calculates weights, mueff, and learning rates for CMA-ES."""

@@ -37,6 +37,7 @@ class GaussianEmitter(EmitterBase):
         batch_size (int): Number of solutions to return in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to avoid a
             fixed seed.
+
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
         ValueError: There is an error in the bounds configuration.
@@ -87,20 +88,21 @@ class GaussianEmitter(EmitterBase):
 
     @property
     def x0(self):
-        """numpy.ndarray: Center of the Gaussian distribution from which to sample
-        solutions when the archive is empty (if initial_solutions is not set)."""
+        """numpy.ndarray: Initial Gaussian distribution center.
+
+        Solutions are sampled from this distribution when the archive is empty (if
+        :attr:`initial_solutions` is not set).
+        """
         return self._x0
 
     @property
     def initial_solutions(self):
-        """numpy.ndarray: The initial solutions which are returned when the archive is
-        empty (if x0 is not set)."""
+        """numpy.ndarray: Returned when the archive is empty (if :attr:`x0` is not set)."""
         return self._initial_solutions
 
     @property
     def sigma(self):
-        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian
-        distribution when the archive is not empty."""
+        """float or numpy.ndarray: Standard deviation of the (diagonal) Gaussian distribution."""  # noqa: D403
         return self._sigma
 
     @property

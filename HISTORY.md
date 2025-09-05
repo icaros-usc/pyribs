@@ -6,18 +6,53 @@
 
 #### API
 
+- **Backwards-incompatible:** Replace `dtype` parameter in archives with
+  `solution_dtype`, `objective_dtype`, and `measures_dtype` ({pr}`639`,
+  {pr}`643`)
+- Raise `KeyError` in `ArchiveDataFrame.get_field` when field not found
+  ({pr}`626`)
 - Support array backends via Python array API Standard ({issue}`570`)
 - **Backwards-incompatible:** Remove raw_dict methods from ArrayStore
   ({pr}`575`)
 
 #### Improvements
 
-- Migrate from yapf to ruff for formatting ({pr}`581`, {pr}`582`, {pr}`583`)
+- Add type annotations and use ty for type checking ({issue}`624`)
+- Migrate from pylint to ruff for linting ({pr}`605`, {pr}`607`, {pr}`612`,
+  {pr}`619`)
+- Replace isort with ruff import check ({pr}`603`)
+
+## 0.8.3
+
+Small bugfix release.
+
+### Changelog
+
+#### Bugs
+
+- Add best_elite back to SlidingBoundariesArchive ({pr}`623`)
+- Correct types of ArchiveStats obj_max and obj_mean ({pr}`617`)
+- Fix bug in ribs.visualize args tests ({pr}`615`)
+
+## 0.8.2
+
+This release focuses on improving documentation for pyribs, particularly by
+adding the
+[QDAIF tutorial](https://docs.pyribs.org/en/stable/tutorials/qdaif.html).
+
+### Changelog
 
 #### Documentation
 
+- Migrate docs to sphinx-immaterial theme ({pr}`596`)
+- Misc documentation fixes ({pr}`588`, {pr}`595`, {pr}`597`)
+- Add QDAIF tutorial ({pr}`587`, {pr}`589`, {pr}`590`, {pr}`594`, {pr}`600`)
 - Make all metrics start from values in archive stats ({pr}`586`)
 - Update dependencies for lunar lander ({pr}`585`)
+
+#### Improvements
+
+- Migrate from yapf to ruff for formatting ({pr}`581`, {pr}`582`, {pr}`583`)
 
 ## 0.8.1
 

@@ -10,13 +10,14 @@ from ribs.emitters.opt import (
     _get_grad_opt,
 )
 
-# Evolution Strategy Tests
+# Evolution Strategy Tests -- see here for why we sort parameters:
+# https://pytest-xdist.readthedocs.io/en/stable/known-limitations.html
 
 
 @pytest.mark.parametrize(
     "es_name",
     # Exclude since we only test core library in these tests.
-    _NAME_TO_ES_MAP.keys() - {"PyCMAEvolutionStrategy", "pycma_es"},
+    sorted(_NAME_TO_ES_MAP.keys() - {"PyCMAEvolutionStrategy", "pycma_es"}),
 )
 def test_init_with_get_es(es_name):
     es_kwargs = {
@@ -36,7 +37,7 @@ def test_init_with_get_es(es_name):
 # Gradient Optimizer Tests
 
 
-@pytest.mark.parametrize("grad_opt_name", _NAME_TO_GRAD_OPT_MAP.keys())
+@pytest.mark.parametrize("grad_opt_name", sorted(_NAME_TO_GRAD_OPT_MAP.keys()))
 def test_init_with_get_grad_opt(grad_opt_name):
     theta0 = 2.0
     lr = 1
@@ -55,7 +56,6 @@ def test_init_with_get_grad_opt(grad_opt_name):
 
     assert grad_opt.theta == theta0
 
-    # pylint: disable = protected-access
     assert grad_opt._lr == lr
     if grad_opt_name == "adam":
         assert grad_opt._beta1 == grad_opt_kwargs["beta1"]

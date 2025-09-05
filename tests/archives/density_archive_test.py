@@ -49,7 +49,7 @@ def test_density_dtype(density_method, dtype):
         buffer_size=10000,
         density_method=density_method,
         bandwidth=2.0,
-        dtype=dtype,
+        measures_dtype=dtype,
     )
 
     measures = np.arange(10).reshape((5, 2))
@@ -81,7 +81,7 @@ def test_density_after_add(density_method):
     # all points since all are equally far from [0, 0], and the final density is
     # the average, so it is the same as just one point.
     expected_density = (
-        np.exp(-0.5 * np.square((np.sqrt(2) / bandwidth)))
+        np.exp(-0.5 * np.square(np.sqrt(2) / bandwidth))
         / np.sqrt(2 * np.pi)
         / bandwidth
     )

@@ -3,7 +3,7 @@
 import numpy as np
 from threadpoolctl import threadpool_limits
 
-from ribs._utils import readonly
+from ribs._utils import arr_readonly
 from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
 
 
@@ -34,7 +34,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             also pass in a custom value here.
     """
 
-    def __init__(  # pylint: disable = super-init-not-called
+    def __init__(
         self,
         sigma0,
         solution_dim,
@@ -82,18 +82,17 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             x0 (np.ndarray): Initial mean.
         """
         try:
-            # We do not want to import at the top because that would require cma
-            # to always be installed, as cma would be imported whenever this
-            # class is imported.
-            # pylint: disable = import-outside-toplevel
+            # We do not want to import at the top because that would require cma to
+            # always be installed, as cma would be imported whenever this class is
+            # imported.
             import cma
         except ImportError as e:
             raise ImportError(
                 "pycma must be installed -- please run `pip install cma` or "
                 "`conda install cma`"
             ) from e
-
-        self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)
+        else:
+            self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)  # ty: ignore[possibly-unbound-attribute]
 
     def check_stop(self, ranking_values):
         """Checks if the optimization should stop and be reset.
@@ -128,7 +127,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
 
         # Fitness is too flat (only applies if there are at least 2 parents).
         # NOTE: We use norm here because we may have multiple ranking values.
-        if (
+        if (  # noqa: SIM103
             len(ranking_values) >= 2
             and np.linalg.norm(ranking_values[0] - ranking_values[-1]) < 1e-12
         ):
@@ -147,7 +146,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         """
         # batch_size defaults to popsize in CMA-ES.
         self._solutions = np.asarray(self._es.ask(batch_size))
-        return readonly(self._solutions.astype(self.dtype))
+        return arr_readonly(self._solutions.astype(self.dtype))
 
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.

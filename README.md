@@ -1,8 +1,8 @@
 # pyribs
 
-|                                                        Discord                                                        |                     Mailing List                     |                                                 X                                                  |
-| :-------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
-| [![](https://dcbadge.limes.pink/api/server/QxhcJSqZ8G?compact=true&style=flat-square)](https://discord.gg/QxhcJSqZ8G) | [Google Groups](https://groups.google.com/g/pyribs/) | [![X](https://img.shields.io/twitter/follow/pyribs?style=flat-square)](https://twitter.com/pyribs) |
+|                                                               Discord                                                               |                     Mailing List                     |                                                 X                                                  |
+| :---------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
+| [![Discord Invite](https://dcbadge.limes.pink/api/server/QxhcJSqZ8G?compact=true&style=flat-square)](https://discord.gg/QxhcJSqZ8G) | [Google Groups](https://groups.google.com/g/pyribs/) | [![X](https://img.shields.io/twitter/follow/pyribs?style=flat-square)](https://twitter.com/pyribs) |
 
 |             Website              |                     Source                     |                    Docs                    |                    Paper                     |
 | :------------------------------: | :--------------------------------------------: | :----------------------------------------: | :------------------------------------------: |
@@ -258,6 +258,17 @@ USC. For information on contributing to the repo, see
 - [Robby Costales](https://robbycostales.com)
 - [Sam Sommerer](https://github.com/sam-sommerer)
 - [Vincent Vu](https://vuvincent.com/)
+- [Yutai Zhou](https://github.com/yutaizhou)
+- [Varun Bhatt](https://github.com/vbhatt-cs)
+- [Henry Chen](https://henrychen4.github.io)
+- [Steve Vott](https://github.com/svott03)
+- [Li Ding](https://liding.info)
+- [N. Piatte](https://github.com/Ennpeh)
+- [Tom Gresavage](https://github.com/gresavage)
+- [Shihan Zhao](https://szhaovas.github.io)
+- [Sid Srikanth](https://sidsrikanth.com)
+- [Saeed Hedayatian](https://conflictednerd.github.io)
+- [Andrew Dai](https://daia99.github.io/)
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 
 We thank [Amy K. Hoover](http://amykhoover.com/) and
@@ -275,6 +286,7 @@ pyribs users include:
 - [Chair of Statistical Learning and Data Science (LMU Munich)](https://www.slds.stat.uni-muenchen.de/)
 - [Game Innovation Lab (New York University)](https://game.engineering.nyu.edu)
 - [Giovanni Iacca (University of Trento)](https://sites.google.com/site/giovanniiacca/)
+- [Google DeepMind (Iris)](https://github.com/google-deepmind/iris)
 - [HUAWEI Noah's Ark Lab](https://github.com/huawei-noah)
 - [ICAROS Lab (University of Southern California)](http://icaros.usc.edu/)
 - [Jacob Schrum (Southwestern University)](https://github.com/schrum2/PyribsForGameGAN)

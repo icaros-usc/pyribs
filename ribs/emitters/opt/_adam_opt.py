@@ -31,7 +31,7 @@ class AdamOpt(GradientOptBase):
             info.
     """
 
-    def __init__(  # pylint: disable = super-init-not-called
+    def __init__(
         self,
         theta0,
         lr=0.001,

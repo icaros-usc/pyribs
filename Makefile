@@ -37,8 +37,9 @@ clean-test: ## remove test and coverage artifacts
 	rm -rf .pytest_cache
 .PHONY: clean-test
 
-lint: ## check style with pylint
-	pylint ribs tests examples benchmarks
+lint: ## check style with ruff
+	ruff check
+	ty check
 .PHONY: lint
 
 test: ## run tests with the default Python
@@ -81,6 +82,13 @@ servedocs: ## compile the docs watching for changes
 		docs/ \
 		docs/_build/html
 .PHONY: servedocs
+
+latexdocs: ## generate Sphinx Latex documentation, including API docs
+	$(MAKE) -C docs clean
+	$(MAKE) -C docs latex
+	cd docs/_build/latex && LATEXMKOPTS="-output-directory=../pdf" $(MAKE)
+	echo "PDF available in docs/_build/pdf"
+.PHONY: docs
 
 release-test: dist ## package and upload a release to TestPyPI
 	twine upload --repository testpypi dist/*

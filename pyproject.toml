@@ -31,13 +31,14 @@ requires-python = ">=3.9.0"
 dependencies = [
   "array_api_compat",
   "numba>=0.51.0",
-  "numpy>=1.22.0", # numpy>=1.22.0 is when Array API gains support.
+  "numpy>=1.22.0",  # numpy>=1.22.0 is when Array API gains support.
   "numpy_groupies>=0.9.16",  # Supports Python 3.7 and up.
   "pandas>=1.0.0",
   "scikit-learn>=1.1.0",
   "scipy>=1.7.0",
   "sortedcontainers>=2.0.0",  # Primarily used in SlidingBoundariesArchive.
   "threadpoolctl>=3.0.0",
+  "typing-extensions>=4.12.0",
 ]
 
 [project.optional-dependencies]
@@ -56,9 +57,8 @@ all = [
 ]
 dev = [
   # Tools
-  "isort",
   "ruff",
-  "pylint",
+  "ty",
   "pre-commit",
 
   # Testing
@@ -66,31 +66,38 @@ dev = [
   "pytest==8.3.5",
   "pytest-cov==6.0.0",
   "pytest-benchmark==5.1.0",
-  "pytest-xdist==3.6.1",
+  "pytest-xdist==3.8.0",
 
   # Documentation
-  "myst-nb==0.17.1",
-  "Sphinx==4.5.0",
+  "myst-nb==1.3.0",
+  "Sphinx==8.1.3",
   "sphinx-autobuild==2021.3.14",
-  "sphinx-autodoc-typehints==1.18.2",
-  "sphinx-codeautolink==0.12.1",
-  "sphinx-copybutton==0.3.1",
-  "sphinx-jinja2-compat==0.2.0",
-  "sphinx-material==0.0.32",
-  "sphinx-prompt==1.5.0",
-  "sphinx-tabs==3.3.1",
-  "sphinx-toolbox==3.1.0",
-  "sphinxcontrib-applehelp==1.0.4",
-  "sphinxcontrib-devhelp==1.0.2",
-  "sphinxcontrib-htmlhelp==2.0.1",
+  "sphinx-autodoc-typehints==3.0.1",
+  "sphinx-jinja2-compat==0.4.1",
+  "sphinx-prompt==1.9.0",
+  "sphinx-tabs==3.4.5",
+  "sphinx-toolbox==4.0.0",
+  "sphinx_immaterial==0.13.5",
+  "sphinxcontrib-applehelp==2.0.0",
+  "sphinxcontrib-devhelp==2.0.0",
+  "sphinxcontrib-htmlhelp==2.1.0",
   "sphinxcontrib-jsmath==1.0.1",
-  "sphinxcontrib-qthelp==1.0.3",
-  "sphinxcontrib-serializinghtml==1.1.5",
+  "sphinxcontrib-qthelp==2.0.0",
+  "sphinxcontrib-serializinghtml==2.0.0",
+  "sphinxcontrib-svg2pdfconverter==1.3.0",
+  "minify-html==0.15.0",
+  "beautifulsoup4==4.13.4",
 
   # Distribution
   "build",
   "check-wheel-contents",
   "twine",
+]
+dev-array-api = [
+  # Extras when working with the Array API. These can be pretty heavy, so they are
+  # separate from `dev`.
+  "torch",
+  "cupy-cuda12x",
 ]
 
 [project.urls]
@@ -108,11 +115,77 @@ include = ["ribs", "ribs.*"]
 version = {attr = "ribs.__version__"}
 readme = {file = ["README.md", "HISTORY.md"], content-type = "text/markdown"}
 
-[tool.isort]
-known_first_party = "ribs"
-line_length = 88
-multi_line_output = 3  # Matches ruff.
-include_trailing_comma = true  # Matches ruff.
+[tool.ruff.lint]
+# Reference: https://docs.astral.sh/ruff/rules/
+select = [
+  "B",  # flake8-bugbear
+  "A",  # flake8-builtins
+  "COM818",  # trailing-comma-on-bare-tuple
+  "C4",  # flake8-comprehensions
+  "EXE",  # flake8-executable
+  "FA",  # flake8-future-annotations
+  "PIE",  # flake8-pie
+  "RSE",  # flake8-raise
+  "SIM",  # flake8-simplify
+  "TD",  # flake8-todos
+  "ARG",  # flake8-unused-arguments
+  "FLY",  # flynt
+  "I",  # isort
+  "NPY",  # numpy
+  "PD",  # pandas-vet
+  "D",  # pydocstyle
+  "PL",  # pylint
+  "PYI",  # flake8-pyi
+  "PT",  # pytest
+  "N",  # pep8-naming
+  "E",  # pycodestyle errors
+  "W",  # pycodestyle warnings
+  "F",  # pyflakes
+  "UP",  # pyupgrade
+  "RUF",  # ruff-specific rules
+]
+ignore = [
+  "B024",  # abstract-base-class-without-abstract-method; we have base classes where no methods are abstract.
+  "B027",  # empty-method-without-abstract-decorator; we have base class methods that are empty.
+  "E501",  # line-too-long; we already have the formatter.
+  "ARG002",  # unused-method-argument; we have many cases where arguments have to be included for API compatibility.
+  "PD901",  # pandas-df-variable-name; this rule is actually deprecated in ruff.
+  "RUF022",  # unsorted-dunder-all; we sort it ourselves.
+  "SIM108",  # if-else-block-instead-of-if-exp; rather opinionated.
+  "PT011",  # pytest-raises-too-broad
+  "PT030",  # pytest-warns-too-broad
+  "PLR2004",  # magic-value-comparison
+  "PLC0415",  # import-outside-top-level
+  "PLC0206",  # dict-index-missing-items
+  "PLW2901",  # redefined-loop-name
+  "D107",  # undocumented-public-init; we document the class rather than __init__
+  # These are pylint's errors about "too many X"
+  "PLR0904",
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0914",
+  "PLR0915",
+  "PLR0916",
+  "PLR0917",
+  "PLR1702",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = ["D"]
+"tutorials/**/*" = ["D100", "D101", "D102", "D103"]
+
+[tool.ruff.lint.pep8-naming]
+ignore-names = [
+  "F",  # torch.nn.functional
+  "G",  # GAN generator
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ribs"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.pytest.ini_options]
 python_files = "*_test.py"

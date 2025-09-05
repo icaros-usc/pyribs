@@ -7,22 +7,25 @@
 {# First call parent block #}
 {{ super() }}
 
-<link rel="canonical" href="{{ theme_base_url + pagename }}">
+{#
+Apple touch icon. See here for info on pathto:
+https://www.sphinx-doc.org/en/master/development/html_themes/templating.html#helper-functions
+#}
+<link rel="apple-touch-icon" href="{{ pathto('_static/imgs/apple-touch-icon.png', 1) }}">
+
+<link rel="canonical" href="{{ config.site_url }}{{ pagename }}.html">
 
 {# Open Graph #}
 <meta property="og:title" content="{{ title }}" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="{{
-  theme_base_url +
-  (pagename if pagename != 'index' else '')
-}}" />
-<meta property="og:image" content="{{ theme_base_url + '_static/imgs/open-graph-preview.png' }}" />
+<meta property="og:url" content="{{ config.site_url }}{{ pagename }}.html" />
+<meta property="og:image" content="{{ config.site_url }}_static/imgs/open-graph-preview.png" />
 
 {# Twitter #}
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content="{{ title }}" />
 {# <meta name="twitter:description" content="{{ description }}" /> #}
-<meta name="twitter:image" content="{{ theme_base_url + '_static/imgs/twitter-preview.png' }}" />
+<meta name="twitter:image" content="{{ config.site_url }}_static/imgs/twitter-preview.png" />
 
 {# Currently, there is no description available. #}
 {# <meta property="og:description" content="{{ description }}" /> #}

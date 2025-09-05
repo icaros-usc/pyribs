@@ -11,8 +11,8 @@ Pyribs v0.8.0 introduces implementations of several new algorithms:
 - **Novelty Search**
   ([Lehman 2011](https://web.archive.org/web/20220707041732/https://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf))
   via the {class}`~ribs.archives.ProximityArchive`. We illustrate how to run
-  Novelty Search in our new tutorial, {doc}`tutorials/ns_maze`. Visualization is
-  available via {func}`~ribs.visualize.proximity_archive_plot`.
+  Novelty Search in our new tutorial, {doc}`/tutorials/ns_maze`. Visualization
+  is available via {func}`~ribs.visualize.proximity_archive_plot`.
   - Thanks to [@gresavage](https://github.com/gresavage) for helping with this
     implementation!
 - **Density Descent Search**

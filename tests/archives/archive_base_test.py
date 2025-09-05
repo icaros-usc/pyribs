@@ -19,7 +19,6 @@ MAE_ARCHIVES = (
     GridArchive,
 )
 
-# pylint: disable = redefined-outer-name
 
 #
 # Test the dtypes of all classes.
@@ -47,16 +46,28 @@ def test_str_dtype_float(name, dtype):
     assert archive.dtypes["index"] == np.int32
 
 
-def test_dict_dtype():
+def test_default_dtypes():
     archive = GridArchive(
         solution_dim=3,
         dims=[10, 10],
         ranges=[(-1, 1), (-2, 2)],
-        dtype={
-            "solution": object,
-            "objective": np.float32,
-            "measures": np.float32,
-        },
+    )
+
+    assert archive.dtypes["solution"] == np.float64
+    assert archive.dtypes["objective"] == np.float64
+    assert archive.dtypes["measures"] == np.float64
+    assert archive.dtypes["threshold"] == np.float64
+    assert archive.dtypes["index"] == np.int32
+
+
+def test_different_dtypes():
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 10],
+        ranges=[(-1, 1), (-2, 2)],
+        solution_dtype=object,
+        objective_dtype=np.float32,
+        measures_dtype=np.float32,
     )
 
     assert archive.dtypes["solution"] == np.object_
@@ -64,25 +75,6 @@ def test_dict_dtype():
     assert archive.dtypes["measures"] == np.float32
     assert archive.dtypes["threshold"] == np.float32
     assert archive.dtypes["index"] == np.int32
-
-
-def test_invalid_dtype():
-    with pytest.raises(ValueError):
-        GridArchive(solution_dim=0, dims=[20, 20], ranges=[(-1, 1)] * 2, dtype=np.int32)
-
-
-def test_invalid_dict_dtype():
-    with pytest.raises(ValueError):
-        GridArchive(
-            solution_dim=3,
-            dims=[10, 10],
-            ranges=[(-1, 1), (-2, 2)],
-            dtype={
-                "solution": object,
-                "objective": np.float32,
-                # Missing measures.
-            },
-        )
 
 
 #
@@ -106,7 +98,7 @@ def test_add_during_iteration(add_mode):
     # Even with just one entry, adding during iteration should still raise an
     # error, just like it does in set.
     data = get_archive_data("GridArchive")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in data.archive_with_elite:
             if add_mode == "single":
                 data.archive_with_elite.add_single(
@@ -120,14 +112,14 @@ def test_add_during_iteration(add_mode):
 
 def test_clear_during_iteration():
     data = get_archive_data("GridArchive")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in data.archive_with_elite:
             data.archive_with_elite.clear()
 
 
 def test_clear_and_add_during_iteration(add_mode):
     data = get_archive_data("GridArchive")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # noqa: PT012
         for _ in data.archive_with_elite:
             data.archive_with_elite.clear()
             if add_mode == "single":
@@ -219,7 +211,25 @@ def test_stats_add_and_overwrite(add_mode, qd_score_offset):
     assert np.isclose(archive.stats.obj_mean, 3.0)
 
 
-def test_best_elite(add_mode):
+@pytest.mark.parametrize("name", ARCHIVE_NAMES)
+def test_best_elite_basic(name):
+    data = get_archive_data(name)
+    assert np.isclose(
+        data.archive_with_elite.best_elite["solution"], data.solution
+    ).all()
+    assert np.isclose(
+        data.archive_with_elite.best_elite["objective"], data.objective
+    ).all()
+
+    if isinstance(data.archive_with_elite, CategoricalArchive):
+        assert np.all(data.archive_with_elite.best_elite["measures"] == data.measures)
+    else:
+        assert np.isclose(
+            data.archive_with_elite.best_elite["measures"], data.measures
+        ).all()
+
+
+def test_best_elite_extended(add_mode):
     archive = GridArchive(solution_dim=3, dims=[10, 20], ranges=[(-1, 1), (-2, 2)])
 
     # Initial elite is None.
@@ -243,9 +253,7 @@ def test_best_elite(add_mode):
     assert archive.best_elite["objective"].shape == ()
     assert archive.best_elite["measures"].shape == (2,)
     assert archive.best_elite["threshold"].shape == ()
-    # Seem to be spurious pylint warnings.
-    # pylint: disable-next=use-implicit-booleaness-not-comparison,comparison-with-callable
-    assert archive.stats.obj_max.shape == ()
+    assert archive.stats.obj_max.shape == ()  # ty: ignore[possibly-unbound-attribute]
 
     assert np.isclose(archive.best_elite["solution"], [1, 2, 3]).all()
     assert np.isclose(archive.best_elite["objective"], 1.0)
