@@ -10,7 +10,13 @@ import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import check_batch_shape, check_shape, validate_batch, validate_single
+from ribs._utils import (
+    check_batch_shape,
+    check_shape,
+    deprecate_dtype,
+    validate_batch,
+    validate_single,
+)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
@@ -95,11 +101,7 @@ class CategoricalArchive(ArchiveBase):
         dtype: None = None,
         extra_fields: FieldDesc | None = None,
     ) -> None:
-        if dtype is not None:
-            raise ValueError(
-                "dtype is deprecated. Please specify solution_dtype, "
-                "objective_dtype, and/or measures_dtype instead."
-            )
+        deprecate_dtype(dtype)
 
         self._rng = np.random.default_rng(seed)
         self._categories = [list(measure_dim) for measure_dim in categories]
