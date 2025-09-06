@@ -20,6 +20,7 @@ from ribs._utils import (
     deprecate_dtype,
     validate_batch,
     validate_single,
+    xp_namespace,
 )
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_data_frame import ArchiveDataFrame
@@ -29,11 +30,9 @@ from ribs.archives._utils import (
     fill_sentinel_values,
     parse_dtype,
     validate_cma_mae_settings,
-    xp_namespace,
 )
 from ribs.typing import (
     Array,
-    ArrayVar,
     BatchData,
     Device,
     DType,
@@ -195,6 +194,7 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         self._boundaries = self._compute_boundaries(
             self._dims, self._lower_bounds, self._upper_bounds
         )
+        # TODO: change these too
         self._epsilon = np.asarray(epsilon, dtype=self.dtypes["measures"])
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
             learning_rate, threshold_min, self.dtypes["threshold"]
@@ -211,8 +211,8 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         self._stats_reset()
 
     def _compute_boundaries(
-        self, dims: ArrayVar, lower_bounds: ArrayVar, upper_bounds: ArrayVar
-    ) -> list[ArrayVar]:
+        self, dims: Array, lower_bounds: Array, upper_bounds: Array
+    ) -> list[Array]:
         """Computes grid cell boundaries of the archive."""
         boundaries = []
         for dim, lower_bound, upper_bound in zip(dims, lower_bounds, upper_bounds):
@@ -263,7 +263,7 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         return self._best_elite
 
     @property
-    def dims(self) -> np.ndarray:
+    def dims(self) -> Array:
         """(:attr:`measure_dim`,) array listing the number of cells in each dimension."""
         return self._dims
 
@@ -273,22 +273,22 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         return self._store.capacity
 
     @property
-    def lower_bounds(self) -> np.ndarray:
+    def lower_bounds(self) -> Array:
         """(:attr:`measure_dim`,) array listing the lower bound of each dimension."""
         return self._lower_bounds
 
     @property
-    def upper_bounds(self) -> np.ndarray:
+    def upper_bounds(self) -> Array:
         """(:attr:`measure_dim`,) array listing the upper bound of each dimension."""
         return self._upper_bounds
 
     @property
-    def interval_size(self) -> np.ndarray:
+    def interval_size(self) -> Array:
         """(:attr:`measure_dim`,) array listing the size of each dim (upper_bounds - lower_bounds)."""
         return self._interval_size
 
     @property
-    def boundaries(self) -> list[np.ndarray]:
+    def boundaries(self) -> list[Array]:
         """The boundaries of the cells in each dimension.
 
         Entry ``i`` in this list is an array that contains the boundaries of the cells
@@ -335,6 +335,7 @@ class GridArchive(PickleXPMixin, ArchiveBase):
 
     ## Utilities ##
 
+    # TODO: stats
     def _stats_reset(self) -> None:
         """Resets the archive stats."""
         self._best_elite = None
@@ -385,7 +386,7 @@ class GridArchive(PickleXPMixin, ArchiveBase):
             ),
         )
 
-    def index_of(self, measures: ArrayLike) -> np.ndarray:
+    def index_of(self, measures: ArrayLike) -> Array:
         """Returns archive indices for the given batch of measures.
 
         First, values are clipped to the bounds of the measure space. Then, the values
@@ -455,7 +456,7 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
 
-    def grid_to_int_index(self, grid_indices: ArrayLike) -> np.ndarray:
+    def grid_to_int_index(self, grid_indices: ArrayLike) -> Array:
         """Converts a batch of grid indices into a batch of integer indices.
 
         Refer to :meth:`index_of` for more info.
@@ -476,7 +477,7 @@ class GridArchive(PickleXPMixin, ArchiveBase):
 
         return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
-    def int_to_grid_index(self, int_indices: ArrayLike) -> np.ndarray:
+    def int_to_grid_index(self, int_indices: ArrayLike) -> Array:
         """Converts a batch of indices into indices in the archive's grid.
 
         Refer to :meth:`index_of` for more info.
