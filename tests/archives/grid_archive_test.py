@@ -95,12 +95,17 @@ def assert_archive_elites(
     assert np.all(archive_covered)
 
 
-def test_fails_on_dim_mismatch():
-    with pytest.raises(ValueError):
+def test_fails_on_dim_mismatch(xp_and_device):
+    xp, device = xp_and_device
+    with pytest.raises(
+        ValueError, match=r"dims .* and ranges .* must be the same length"
+    ):
         GridArchive(
             solution_dim=10,  # arbitrary
             dims=[10] * 2,  # 2D space here.
             ranges=[(-1, 1)] * 3,  # But 3D space here.
+            xp=xp,
+            device=device,
         )
 
 
