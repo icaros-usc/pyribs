@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Collection, Iterator
+from types import ModuleType
 from typing import Literal, overload
 
-import array_api_compat.numpy as np_compat
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (
+    PickleXPMixin,
     check_batch_shape,
     check_finite,
     check_is_1d,
@@ -18,6 +19,7 @@ from ribs._utils import (
     deprecate_dtype,
     validate_batch,
     validate_single,
+    xp_namespace,
 )
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_data_frame import ArchiveDataFrame
@@ -28,10 +30,19 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
-from ribs.typing import Array, BatchData, DType, FieldDesc, Float, Int, SingleData
+from ribs.typing import (
+    Array,
+    BatchData,
+    Device,
+    DType,
+    FieldDesc,
+    Float,
+    Int,
+    SingleData,
+)
 
 
-class GridArchive(ArchiveBase):
+class GridArchive(PickleXPMixin, ArchiveBase):
     """An archive that divides each dimension into uniformly-sized cells.
 
     This archive is the container described in `Mouret 2015
@@ -93,6 +104,9 @@ class GridArchive(ArchiveBase):
             that contains scalar values and a "bar" field that contains 10D values. Note
             that field names must be valid Python identifiers, and names already used in
             the archive are not allowed.
+        xp: Optional array namespace. Should be compatible with the array API standard,
+            or supported by array-api-compat. Defaults to ``numpy``.
+        device: Device for arrays.
 
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
@@ -116,11 +130,18 @@ class GridArchive(ArchiveBase):
         measures_dtype: DTypeLike = None,
         dtype: None = None,
         extra_fields: FieldDesc | None = None,
+        xp: ModuleType | None = None,
+        device: Device = None,
     ) -> None:
         deprecate_dtype(dtype)
 
+        self._xp = xp_namespace(xp)
+        self._device = device
+
+        # TODO: How to handle rng? Maybe do it depending on framework? How does array
+        # API handle randomness?
         self._rng = np.random.default_rng(seed)
-        self._dims = np.array(dims, dtype=np.int32)
+        self._dims = self._xp.asarray(dims, dtype=self._xp.int32, device=self._device)
 
         ArchiveBase.__init__(
             self,
@@ -138,9 +159,9 @@ class GridArchive(ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        solution_dtype = parse_dtype(solution_dtype, np_compat)
-        objective_dtype = parse_dtype(objective_dtype, np_compat)
-        measures_dtype = parse_dtype(measures_dtype, np_compat)
+        solution_dtype = parse_dtype(solution_dtype, self._xp)
+        objective_dtype = parse_dtype(objective_dtype, self._xp)
+        measures_dtype = parse_dtype(measures_dtype, self._xp)
         self._store = ArrayStore(
             field_desc={
                 "solution": (self.solution_dim, solution_dtype),
@@ -150,7 +171,9 @@ class GridArchive(ArchiveBase):
                 "threshold": ((), objective_dtype),
                 **extra_fields,
             },
-            capacity=np.prod(self._dims),
+            capacity=self._xp.prod(self._dims),
+            xp=self._xp,
+            device=self._device,
         )
 
         # Set up constant properties.
@@ -160,18 +183,28 @@ class GridArchive(ArchiveBase):
                 f"(length {len(ranges)}) must be the same length"
             )
         ranges = list(zip(*ranges))  # Rearrange into lower and upper bounds.
-        self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
-        self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
+        self._lower_bounds = self._xp.asarray(
+            ranges[0], dtype=self.dtypes["measures"], device=self._device
+        )
+        self._upper_bounds = self._xp.asarray(
+            ranges[1], dtype=self.dtypes["measures"], device=self._device
+        )
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._boundaries = self._compute_boundaries(
             self._dims, self._lower_bounds, self._upper_bounds
         )
-        self._epsilon = np.asarray(epsilon, dtype=self.dtypes["measures"])
-        self._learning_rate, self._threshold_min = validate_cma_mae_settings(
-            learning_rate, threshold_min, self.dtypes["threshold"]
+        self._epsilon = self._xp.asarray(
+            epsilon, dtype=self.dtypes["measures"], device=self._device
         )
-        self._qd_score_offset = np.asarray(
-            qd_score_offset, dtype=self.dtypes["objective"]
+        self._learning_rate, self._threshold_min = validate_cma_mae_settings(
+            learning_rate,
+            threshold_min,
+            self._xp,
+            self.dtypes["threshold"],
+            self._device,
+        )
+        self._qd_score_offset = self._xp.asarray(
+            qd_score_offset, dtype=self.dtypes["objective"], device=self._device
         )
 
         # Set up statistics -- objective_sum is the sum of all objective values in the
@@ -181,14 +214,13 @@ class GridArchive(ArchiveBase):
         self._stats = None
         self._stats_reset()
 
-    @staticmethod
     def _compute_boundaries(
-        dims: np.ndarray, lower_bounds: np.ndarray, upper_bounds: np.ndarray
-    ) -> list[np.ndarray]:
+        self, dims: Array, lower_bounds: Array, upper_bounds: Array
+    ) -> list[Array]:
         """Computes grid cell boundaries of the archive."""
         boundaries = []
         for dim, lower_bound, upper_bound in zip(dims, lower_bounds, upper_bounds):
-            boundaries.append(np.linspace(lower_bound, upper_bound, dim + 1))
+            boundaries.append(self._xp.linspace(lower_bound, upper_bound, dim + 1))
         return boundaries
 
     ## Properties inherited from ArchiveBase ##
@@ -235,7 +267,7 @@ class GridArchive(ArchiveBase):
         return self._best_elite
 
     @property
-    def dims(self) -> np.ndarray:
+    def dims(self) -> Array:
         """(:attr:`measure_dim`,) array listing the number of cells in each dimension."""
         return self._dims
 
@@ -245,22 +277,22 @@ class GridArchive(ArchiveBase):
         return self._store.capacity
 
     @property
-    def lower_bounds(self) -> np.ndarray:
+    def lower_bounds(self) -> Array:
         """(:attr:`measure_dim`,) array listing the lower bound of each dimension."""
         return self._lower_bounds
 
     @property
-    def upper_bounds(self) -> np.ndarray:
+    def upper_bounds(self) -> Array:
         """(:attr:`measure_dim`,) array listing the upper bound of each dimension."""
         return self._upper_bounds
 
     @property
-    def interval_size(self) -> np.ndarray:
+    def interval_size(self) -> Array:
         """(:attr:`measure_dim`,) array listing the size of each dim (upper_bounds - lower_bounds)."""
         return self._interval_size
 
     @property
-    def boundaries(self) -> list[np.ndarray]:
+    def boundaries(self) -> list[Array]:
         """The boundaries of the cells in each dimension.
 
         Entry ``i`` in this list is an array that contains the boundaries of the cells
@@ -310,12 +342,20 @@ class GridArchive(ArchiveBase):
     def _stats_reset(self) -> None:
         """Resets the archive stats."""
         self._best_elite = None
-        self._objective_sum = np.asarray(0.0, dtype=self.dtypes["objective"])
+        self._objective_sum = self._xp.asarray(
+            0.0, dtype=self.dtypes["objective"], device=self._device
+        )
         self._stats = ArchiveStats(
             num_elites=0,
-            coverage=np.asarray(0.0, dtype=self.dtypes["objective"]),
-            qd_score=np.asarray(0.0, dtype=self.dtypes["objective"]),
-            norm_qd_score=np.asarray(0.0, dtype=self.dtypes["objective"]),
+            coverage=self._xp.asarray(
+                0.0, dtype=self.dtypes["objective"], device=self._device
+            ),
+            qd_score=self._xp.asarray(
+                0.0, dtype=self.dtypes["objective"], device=self._device
+            ),
+            norm_qd_score=self._xp.asarray(
+                0.0, dtype=self.dtypes["objective"], device=self._device
+            ),
             obj_max=None,
             obj_mean=None,
         )
@@ -341,23 +381,34 @@ class GridArchive(ArchiveBase):
         self._objective_sum = new_objective_sum
         new_qd_score = (
             self._objective_sum
-            - np.asarray(len(self), dtype=self.dtypes["objective"])
+            - self._xp.asarray(
+                len(self), dtype=self.dtypes["objective"], device=self._device
+            )
             * self._qd_score_offset
         )
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=np.asarray(len(self) / self.cells, dtype=self.dtypes["objective"]),
+            coverage=self._xp.asarray(
+                len(self) / self.cells,
+                dtype=self.dtypes["objective"],
+                device=self._device,
+            ),
             qd_score=new_qd_score,
-            norm_qd_score=np.asarray(
-                new_qd_score / self.cells, dtype=self.dtypes["objective"]
+            norm_qd_score=self._xp.asarray(
+                new_qd_score / self.cells,
+                dtype=self.dtypes["objective"],
+                device=self._device,
             ),
             obj_max=new_obj_max,
-            obj_mean=np.asarray(
-                self._objective_sum / len(self), dtype=self.dtypes["objective"]
+            obj_mean=self._xp.asarray(
+                self._objective_sum / len(self),
+                dtype=self.dtypes["objective"],
+                device=self._device,
             ),
         )
 
-    def index_of(self, measures: ArrayLike) -> np.ndarray:
+    # TODO: continue from here
+    def index_of(self, measures: ArrayLike) -> Array:
         """Returns archive indices for the given batch of measures.
 
         First, values are clipped to the bounds of the measure space. Then, the values
@@ -390,7 +441,7 @@ class GridArchive(ArchiveBase):
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = self._xp.asarray(measures)  # TODO: dtype and device
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
@@ -422,12 +473,12 @@ class GridArchive(ArchiveBase):
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = self._xp.asarray(measures)  # TODO: dtype and device
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
 
-    def grid_to_int_index(self, grid_indices: ArrayLike) -> np.ndarray:
+    def grid_to_int_index(self, grid_indices: ArrayLike) -> Array:
         """Converts a batch of grid indices into a batch of integer indices.
 
         Refer to :meth:`index_of` for more info.
@@ -448,7 +499,7 @@ class GridArchive(ArchiveBase):
 
         return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
-    def int_to_grid_index(self, int_indices: ArrayLike) -> np.ndarray:
+    def int_to_grid_index(self, int_indices: ArrayLike) -> Array:
         """Converts a batch of indices into indices in the archive's grid.
 
         Refer to :meth:`index_of` for more info.

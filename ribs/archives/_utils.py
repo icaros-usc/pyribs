@@ -21,7 +21,7 @@ def parse_dtype(dtype: DTypeLike, xp: ModuleType) -> DTypeLike:
     return dtype
 
 
-def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
+def validate_cma_mae_settings(learning_rate, threshold_min, xp, dtype, device):
     """Checks variables related to CMA-MAE, i.e., learning_rate and threshold_min."""
     if threshold_min != -np.inf and learning_rate is None:
         raise ValueError(
@@ -34,8 +34,8 @@ def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
         learning_rate = 1.0  # Default value.
     if threshold_min == -np.inf and learning_rate != 1.0:
         raise ValueError("threshold_min can only be -np.inf if learning_rate is 1.0")
-    learning_rate = np.asarray(learning_rate, dtype=dtype)
-    threshold_min = np.asarray(threshold_min, dtype=dtype)
+    learning_rate = xp.asarray(learning_rate, dtype=dtype, device=device)
+    threshold_min = xp.asarray(threshold_min, dtype=dtype, device=device)
     return learning_rate, threshold_min
 
 

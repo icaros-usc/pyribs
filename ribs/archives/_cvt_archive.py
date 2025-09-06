@@ -211,7 +211,7 @@ class CVTArchive(ArchiveBase):
         self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
-            learning_rate, threshold_min, self.dtypes["threshold"]
+            learning_rate, threshold_min, np, self.dtypes["threshold"], None
         )
         self._qd_score_offset = np.asarray(
             qd_score_offset, dtype=self.dtypes["objective"]
