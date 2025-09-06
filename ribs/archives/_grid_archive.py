@@ -194,13 +194,18 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         self._boundaries = self._compute_boundaries(
             self._dims, self._lower_bounds, self._upper_bounds
         )
-        # TODO: change these too
-        self._epsilon = np.asarray(epsilon, dtype=self.dtypes["measures"])
-        self._learning_rate, self._threshold_min = validate_cma_mae_settings(
-            learning_rate, threshold_min, self.dtypes["threshold"]
+        self._epsilon = self._xp.asarray(
+            epsilon, dtype=self.dtypes["measures"], device=self._device
         )
-        self._qd_score_offset = np.asarray(
-            qd_score_offset, dtype=self.dtypes["objective"]
+        self._learning_rate, self._threshold_min = validate_cma_mae_settings(
+            learning_rate,
+            threshold_min,
+            self._xp,
+            self.dtypes["threshold"],
+            self._device,
+        )
+        self._qd_score_offset = self._xp.asarray(
+            qd_score_offset, dtype=self.dtypes["objective"], device=self._device
         )
 
         # Set up statistics -- objective_sum is the sum of all objective values in the
@@ -335,16 +340,23 @@ class GridArchive(PickleXPMixin, ArchiveBase):
 
     ## Utilities ##
 
-    # TODO: stats
     def _stats_reset(self) -> None:
         """Resets the archive stats."""
         self._best_elite = None
-        self._objective_sum = np.asarray(0.0, dtype=self.dtypes["objective"])
+        self._objective_sum = self._xp.asarray(
+            0.0, dtype=self.dtypes["objective"], device=self._device
+        )
         self._stats = ArchiveStats(
             num_elites=0,
-            coverage=np.asarray(0.0, dtype=self.dtypes["objective"]),
-            qd_score=np.asarray(0.0, dtype=self.dtypes["objective"]),
-            norm_qd_score=np.asarray(0.0, dtype=self.dtypes["objective"]),
+            coverage=self._xp.asarray(
+                0.0, dtype=self.dtypes["objective"], device=self._device
+            ),
+            qd_score=self._xp.asarray(
+                0.0, dtype=self.dtypes["objective"], device=self._device
+            ),
+            norm_qd_score=self._xp.asarray(
+                0.0, dtype=self.dtypes["objective"], device=self._device
+            ),
             obj_max=None,
             obj_mean=None,
         )
@@ -370,22 +382,33 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         self._objective_sum = new_objective_sum
         new_qd_score = (
             self._objective_sum
-            - np.asarray(len(self), dtype=self.dtypes["objective"])
+            - self._xp.asarray(
+                len(self), dtype=self.dtypes["objective"], device=self._device
+            )
             * self._qd_score_offset
         )
         self._stats = ArchiveStats(
             num_elites=len(self),
-            coverage=np.asarray(len(self) / self.cells, dtype=self.dtypes["objective"]),
+            coverage=self._xp.asarray(
+                len(self) / self.cells,
+                dtype=self.dtypes["objective"],
+                device=self._device,
+            ),
             qd_score=new_qd_score,
-            norm_qd_score=np.asarray(
-                new_qd_score / self.cells, dtype=self.dtypes["objective"]
+            norm_qd_score=self._xp.asarray(
+                new_qd_score / self.cells,
+                dtype=self.dtypes["objective"],
+                device=self._device,
             ),
             obj_max=new_obj_max,
-            obj_mean=np.asarray(
-                self._objective_sum / len(self), dtype=self.dtypes["objective"]
+            obj_mean=self._xp.asarray(
+                self._objective_sum / len(self),
+                dtype=self.dtypes["objective"],
+                device=self._device,
             ),
         )
 
+    # TODO: continue from here
     def index_of(self, measures: ArrayLike) -> Array:
         """Returns archive indices for the given batch of measures.
 
