@@ -6,7 +6,6 @@ from collections.abc import Collection, Iterator
 from types import ModuleType
 from typing import Literal, overload
 
-import array_api_compat.numpy as np_compat
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
@@ -160,9 +159,9 @@ class GridArchive(PickleXPMixin, ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        solution_dtype = parse_dtype(solution_dtype, np_compat)
-        objective_dtype = parse_dtype(objective_dtype, np_compat)
-        measures_dtype = parse_dtype(measures_dtype, np_compat)
+        solution_dtype = parse_dtype(solution_dtype, self._xp)
+        objective_dtype = parse_dtype(objective_dtype, self._xp)
+        measures_dtype = parse_dtype(measures_dtype, self._xp)
         self._store = ArrayStore(
             field_desc={
                 "solution": (self.solution_dim, solution_dtype),
