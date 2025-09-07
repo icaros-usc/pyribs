@@ -124,7 +124,7 @@ def validate_batch(
     size of data["solution"].
     """
     # Process and validate solutions.
-    data["solution"] = np.asarray(data["solution"])
+    data["solution"] = np.asarray(data["solution"], dtype=archive.dtypes["solution"])
     check_batch_shape(
         data["solution"], "solution", archive.solution_dim, "solution_dim", ""
     )
@@ -142,7 +142,7 @@ def validate_batch(
                 if not none_objective_ok:
                     raise ValueError("objective cannot be None")
             else:
-                arr = np.asarray(arr)
+                arr = np.asarray(arr, dtype=archive.dtypes["objective"])
                 check_is_1d(arr, "objective", "")
                 check_solution_batch_dim(
                     arr, "objective", batch_size, is_1d=True, extra_msg=""
@@ -150,7 +150,7 @@ def validate_batch(
                 check_finite(arr, "objective")
 
         elif name == "measures":
-            arr = np.asarray(arr)
+            arr = np.asarray(arr, dtype=archive.dtypes["measures"])
             check_batch_shape(arr, "measures", archive.measure_dim, "measure_dim", "")
             check_solution_batch_dim(
                 arr, "measures", batch_size, is_1d=False, extra_msg=""
@@ -159,6 +159,7 @@ def validate_batch(
                 check_finite(arr, "measures")
 
         else:
+            # dtype not cast here because the field may not be in the archive.
             arr = np.asarray(arr)
             check_solution_batch_dim(arr, name, batch_size, is_1d=False, extra_msg="")
 
@@ -216,7 +217,7 @@ def validate_single(
     archive: ArchiveBase, data: SingleData, none_objective_ok: bool = False
 ) -> SingleData:
     """Performs preprocessing and checks for arguments to add_single()."""
-    data["solution"] = np.asarray(data["solution"])
+    data["solution"] = np.asarray(data["solution"], dtype=archive.dtypes["solution"])
     check_shape(data["solution"], "solution", archive.solution_dim, "solution_dim")
 
     if data["objective"] is None:
@@ -228,7 +229,7 @@ def validate_single(
         )
         check_finite(data["objective"], "objective")
 
-    data["measures"] = np.asarray(data["measures"])
+    data["measures"] = np.asarray(data["measures"], dtype=archive.dtypes["objective"])
     check_shape(data["measures"], "measures", archive.measure_dim, "measure_dim")
     if np.issubdtype(data["measures"].dtype, np.number):
         check_finite(data["measures"], "measures")
