@@ -27,7 +27,7 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
-from ribs.typing import Array, BatchData, DType, FieldDesc, Float, Int, SingleData
+from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
 
 
 class CategoricalArchive(ArchiveBase):
@@ -167,7 +167,7 @@ class CategoricalArchive(ArchiveBase):
         return self._store.field_list_with_index
 
     @property
-    def dtypes(self) -> dict[str, DType]:
+    def dtypes(self) -> dict[str, np.dtype]:
         return self._store.dtypes_with_index
 
     @property
@@ -753,7 +753,7 @@ class CategoricalArchive(ArchiveBase):
         self,
         fields: str,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array: ...
+    ) -> np.ndarray: ...
 
     @overload
     def data(
@@ -767,7 +767,7 @@ class CategoricalArchive(ArchiveBase):
         self,
         fields: None | Collection[str] = None,
         return_type: Literal["tuple"] = "tuple",
-    ) -> tuple[Array]: ...
+    ) -> tuple[np.ndarray]: ...
 
     @overload
     def data(
@@ -780,7 +780,7 @@ class CategoricalArchive(ArchiveBase):
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
     def sample_elites(self, n: Int) -> BatchData:
