@@ -44,9 +44,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install core deps
         run: pip install .[dev]
+      # Torch and cupy are tricky, so we only install them on ubuntu. They are
+      # only used for testing array API stuff.
       - name: Install torch
+        if: matrix.os == 'ubuntu-latest'
         run: pip install torch
       - name: Install cupy
+        if: matrix.os == 'ubuntu-latest'
         run: pip install cupy-cuda12x
       - name: Test core
         run: >
