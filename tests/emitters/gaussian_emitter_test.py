@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+from ribs.archives import GridArchive
 from ribs.emitters import GaussianEmitter
 
 
@@ -92,3 +93,22 @@ def test_degenerate_gauss_emits_parent(archive_fixture):
     solutions = emitter.ask()
 
     assert (solutions == np.expand_dims(parent_sol, axis=0)).all()
+
+
+def test_multidim_solutions():
+    archive = GridArchive(
+        solution_dim=(5, 5),
+        dims=[20, 20],
+        ranges=[(-1, 1), (-1, 1)],
+    )
+    x0 = np.zeros((5, 5))
+    emitter = GaussianEmitter(archive, sigma=0.1, x0=x0, batch_size=2)
+
+    solutions = emitter.ask()
+    assert solutions.shape == (2, 5, 5)
+
+    archive.add(solutions, objective=np.ones(2), measures=[[-1, -1], [1, 1]])
+
+    # Ask again since behavior changes once the archive is not empty.
+    solutions = emitter.ask()
+    assert solutions.shape == (2, 5, 5)
