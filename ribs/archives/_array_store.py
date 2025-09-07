@@ -20,7 +20,7 @@ with contextlib.suppress(ImportError):
 
 from ribs._utils import PickleXPMixin, arr_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
-from ribs.typing import Array, BatchData, Device, DType, FieldDesc, Int, SingleData
+from ribs.typing import Array, Device, DType, FieldDesc, Int, SingleData
 
 
 class Update(IntEnum):
@@ -309,7 +309,7 @@ class ArrayStore(PickleXPMixin):
         indices: ArrayLike,
         fields: None | Collection[str] = None,
         return_type: Literal["dict"] = "dict",
-    ) -> BatchData: ...
+    ) -> dict[str, Array]: ...
 
     @overload
     def retrieve(
@@ -332,7 +332,7 @@ class ArrayStore(PickleXPMixin):
         indices: ArrayLike,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> Array | dict[str, Array] | tuple[Array] | ArchiveDataFrame:
         """Collects data at the given indices.
 
         Args:
@@ -496,7 +496,7 @@ class ArrayStore(PickleXPMixin):
         self,
         fields: None | Collection[str] = None,
         return_type: Literal["dict"] = "dict",
-    ) -> BatchData: ...
+    ) -> dict[str, Array]: ...
 
     @overload
     def data(
@@ -516,7 +516,7 @@ class ArrayStore(PickleXPMixin):
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> Array | dict[str, Array] | tuple[Array] | ArchiveDataFrame:
         """Retrieves data for all entries in the store.
 
         Equivalent to calling :meth:`retrieve` with ``indices`` set to

@@ -57,7 +57,7 @@ ARCHIVE_NAMES = [
 ]
 
 
-def get_archive_data(name, dtype=np.float64):
+def get_archive_data(name, *, dtype=np.float64):
     """Returns data to use for testing each archive.
 
     The archives vary, but there will always be an empty 2D archive, as well as

@@ -28,7 +28,7 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
-from ribs.typing import Array, BatchData, DType, FieldDesc, Float, Int, SingleData
+from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
 
 
 class GridArchive(ArchiveBase):
@@ -198,7 +198,7 @@ class GridArchive(ArchiveBase):
         return self._store.field_list_with_index
 
     @property
-    def dtypes(self) -> dict[str, DType]:
+    def dtypes(self) -> dict[str, np.dtype]:
         return self._store.dtypes_with_index
 
     @property
@@ -445,7 +445,6 @@ class GridArchive(ArchiveBase):
         """
         grid_indices = np.asarray(grid_indices)
         check_batch_shape(grid_indices, "grid_indices", self.measure_dim, "measure_dim")
-
         return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
     def int_to_grid_index(self, int_indices: ArrayLike) -> np.ndarray:
@@ -465,13 +464,7 @@ class GridArchive(ArchiveBase):
         """
         int_indices = np.asarray(int_indices)
         check_is_1d(int_indices, "int_indices")
-
-        return np.asarray(
-            np.unravel_index(
-                int_indices,
-                self._dims,
-            )
-        ).T.astype(np.int32)
+        return np.asarray(np.unravel_index(int_indices, self._dims), dtype=np.int32).T
 
     ## Methods for writing to the archive ##
 
@@ -884,7 +877,7 @@ class GridArchive(ArchiveBase):
         self,
         fields: str,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array: ...
+    ) -> np.ndarray: ...
 
     @overload
     def data(
@@ -898,7 +891,7 @@ class GridArchive(ArchiveBase):
         self,
         fields: None | Collection[str] = None,
         return_type: Literal["tuple"] = "tuple",
-    ) -> tuple[Array]: ...
+    ) -> tuple[np.ndarray]: ...
 
     @overload
     def data(
@@ -911,7 +904,7 @@ class GridArchive(ArchiveBase):
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
     def sample_elites(self, n: Int) -> BatchData:

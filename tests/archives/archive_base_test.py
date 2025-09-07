@@ -31,7 +31,7 @@ MAE_ARCHIVES = (
 )
 def test_str_dtype_float(name, dtype):
     str_dtype, np_dtype = dtype
-    archive = get_archive_data(name, str_dtype).archive
+    archive = get_archive_data(name, dtype=str_dtype).archive
     assert archive.dtypes["solution"] == np_dtype
     assert archive.dtypes["objective"] == np_dtype
 
@@ -532,7 +532,7 @@ def test_sample_elites_fails_when_empty(data):
 @pytest.mark.parametrize("with_elite", [True, False], ids=["nonempty", "empty"])
 @pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
 def test_pandas_data(name, with_elite, dtype):
-    data = get_archive_data(name, dtype)
+    data = get_archive_data(name, dtype=dtype)
 
     # Set up expected columns and data types.
     solution_dim = len(data.solution)
