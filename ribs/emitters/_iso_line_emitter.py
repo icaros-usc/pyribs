@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_shape
+from ribs._utils import check_batch_shape, check_shape, deprecate_bounds
 from ribs.emitters._emitter_base import EmitterBase
 
 
@@ -37,12 +37,11 @@ class IsoLineEmitter(EmitterBase):
             used when the archive is empty. If this argument is None, then solutions
             will be sampled from a Gaussian distribution centered at ``x0`` with
             standard deviation ``iso_sigma``.
-        bounds (None or array-like): Bounds of the solution space. Solutions are clipped
-            to these bounds. Pass None to indicate there are no bounds. Alternatively,
-            pass an array-like to specify the bounds for each dim. Each element in this
-            array-like can be None to indicate no bound, or a tuple of ``(lower_bound,
-            upper_bound)``, where ``lower_bound`` or ``upper_bound`` may be None to
-            indicate no bound.
+        lower_bounds (None or array-like): Lower bounds of the solution space. Pass None
+            to indicate there are no bounds (i.e., bounds are set to -inf).
+        upper_bounds (None or array-like): Upper bounds of the solution space. Pass None
+            to indicate there are no bounds (i.e., bounds are set to inf).
+        bounds: DEPRECATED.
         batch_size (int): Number of solutions to return in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to avoid a
             fixed seed.
@@ -60,15 +59,20 @@ class IsoLineEmitter(EmitterBase):
         line_sigma=0.2,
         x0=None,
         initial_solutions=None,
+        lower_bounds=None,
+        upper_bounds=None,
         bounds=None,
         batch_size=64,
         seed=None,
     ):
+        deprecate_bounds(bounds)
+
         EmitterBase.__init__(
             self,
             archive,
             solution_dim=archive.solution_dim,
-            bounds=bounds,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
         )
 
         self._rng = np.random.default_rng(seed)

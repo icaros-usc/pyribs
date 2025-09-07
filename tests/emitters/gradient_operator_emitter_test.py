@@ -83,7 +83,8 @@ def test_upper_bounds_enforced(archive_fixture):
         sigma=0,
         sigma_g=sigma_g,
         x0=[2, 2, 2, 2],
-        bounds=[(-1, 1)] * 4,
+        lower_bounds=[-1, -1, -1, -1],
+        upper_bounds=[1, 1, 1, 1],
     )
     sols = emitter.ask_dqd()
     assert np.all(sols <= 1)
@@ -97,7 +98,8 @@ def test_lower_bounds_enforced(archive_fixture):
         sigma=0,
         sigma_g=sigma_g,
         x0=[-2, -2, -2, -2],
-        bounds=[(-1, 1)] * 4,
+        lower_bounds=[-1, -1, -1, -1],
+        upper_bounds=[1, 1, 1, 1],
     )
     sols = emitter.ask_dqd()
     assert np.all(sols >= -1)

@@ -4,7 +4,7 @@ import numbers
 
 import numpy as np
 
-from ribs._utils import check_shape, validate_batch
+from ribs._utils import check_shape, deprecate_bounds, validate_batch
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import _get_es
 from ribs.emitters.rankers import _get_ranker
@@ -51,14 +51,11 @@ class EvolutionStrategyEmitter(EmitterBase):
             "basic", only the default CMA-ES convergence rules will be used, while with
             "no_improvement", the emitter will restart when none of the proposed
             solutions were added to the archive.
-        bounds (None or array-like): Bounds of the solution space. As suggested in
-            `Biedrzycki 2020
-            <https://www.sciencedirect.com/science/article/abs/pii/S2210650219301622>`_,
-            solutions are resampled until they fall within these bounds. Pass None to
-            indicate there are no bounds. Alternatively, pass an array-like to specify
-            the bounds for each dim. Each element in this array-like can be None to
-            indicate no bound, or a tuple of ``(lower_bound, upper_bound)``, where
-            ``lower_bound`` or ``upper_bound`` may be None to indicate no bound.
+        lower_bounds (None or array-like): Lower bounds of the solution space. Pass None
+            to indicate there are no bounds (i.e., bounds are set to -inf).
+        upper_bounds (None or array-like): Upper bounds of the solution space. Pass None
+            to indicate there are no bounds (i.e., bounds are set to inf).
+        bounds: DEPRECATED.
         batch_size (int): Number of solutions to return in :meth:`ask`. If not passed
             in, a batch size will be automatically calculated using the default CMA-ES
             rules.
@@ -82,15 +79,20 @@ class EvolutionStrategyEmitter(EmitterBase):
         es_kwargs=None,
         selection_rule="filter",
         restart_rule="no_improvement",
+        lower_bounds=None,
+        upper_bounds=None,
         bounds=None,
         batch_size=None,
         seed=None,
     ):
+        deprecate_bounds(bounds)
+
         EmitterBase.__init__(
             self,
             archive,
             solution_dim=archive.solution_dim,
-            bounds=bounds,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
         )
 
         seed_sequence = (

@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from ribs._utils import check_batch_shape, check_shape, validate_batch
+from ribs._utils import check_batch_shape, check_shape, deprecate_bounds, validate_batch
 from ribs.emitters._emitter_base import EmitterBase
 
 
@@ -77,12 +77,11 @@ class GradientOperatorEmitter(EmitterBase):
             Pass this parameter to configure that epsilon.
         operator_type (str): Either 'isotropic' or 'iso_line_dd' to mark the operator
             type for intermediate operations. Defaults to 'isotropic'.
-        bounds (None or array-like): Bounds of the solution space. Solutions are clipped
-            to these bounds. Pass None to indicate there are no bounds. Alternatively,
-            pass an array-like to specify the bounds for each dim. Each element in this
-            array-like can be None to indicate no bound, or a tuple of ``(lower_bound,
-            upper_bound)``, where ``lower_bound`` or ``upper_bound`` may be None to
-            indicate no bound.
+        lower_bounds (None or array-like): Lower bounds of the solution space. Pass None
+            to indicate there are no bounds (i.e., bounds are set to -inf).
+        upper_bounds (None or array-like): Upper bounds of the solution space. Pass None
+            to indicate there are no bounds (i.e., bounds are set to inf).
+        bounds: DEPRECATED.
         batch_size (int): Number of solutions to return in :meth:`ask`.
         seed (int): Value to seed the random number generator. Set to None to avoid a
             fixed seed.
@@ -104,15 +103,20 @@ class GradientOperatorEmitter(EmitterBase):
         normalize_grad=False,
         epsilon=1e-8,
         operator_type="isotropic",
+        lower_bounds=None,
+        upper_bounds=None,
         bounds=None,
         batch_size=64,
         seed=None,
     ):
+        deprecate_bounds(bounds)
+
         EmitterBase.__init__(
             self,
             archive=archive,
             solution_dim=archive.solution_dim,
-            bounds=bounds,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
         )
 
         self._x0 = None

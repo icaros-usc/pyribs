@@ -22,7 +22,8 @@ def full_archive_emitter_fixture(archive_fixture):
 
     emitter = BayesianOptimizationEmitter(
         archive=archive_fixture,
-        bounds=[[-1, 1]] * 4,
+        lower_bounds=[-1, -1, -1, -1],
+        upper_bounds=[1, 1, 1, 1],
         upscale_schedule=[[2, 2], [4, 4]],
         num_initial_samples=1,
         seed=0,
@@ -59,7 +60,9 @@ def test_wrong_archive_type():
     raise NotImplementedError."""
     archive = CVTArchive(solution_dim=1, cells=100, ranges=[(-1, 1)])
     with pytest.raises(NotImplementedError):
-        BayesianOptimizationEmitter(archive, bounds=[(-1, 1)], num_initial_samples=1)
+        BayesianOptimizationEmitter(
+            archive, lower_bounds=[-1], upper_bounds=[1], num_initial_samples=1
+        )
 
 
 @pytest.mark.parametrize(
@@ -93,7 +96,8 @@ def test_invalid_upscale_schedule(archive_fixture, wrong_upscale_schedule):
     with pytest.raises(ValueError):
         BayesianOptimizationEmitter(
             archive=archive_fixture,
-            bounds=[[-1, 1]] * 4,
+            lower_bounds=[-1, -1, -1, -1],
+            upper_bounds=[1, 1, 1, 1],
             upscale_schedule=wrong_upscale_schedule,
             num_initial_samples=1,
             seed=0,

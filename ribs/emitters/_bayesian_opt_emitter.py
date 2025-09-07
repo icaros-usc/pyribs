@@ -9,7 +9,12 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 
-from ribs._utils import check_batch_shape, check_finite, validate_batch
+from ribs._utils import (
+    check_batch_shape,
+    check_finite,
+    deprecate_bounds,
+    validate_batch,
+)
 from ribs.archives import GridArchive
 from ribs.emitters._emitter_base import EmitterBase
 
@@ -63,8 +68,10 @@ class BayesianOptimizationEmitter(EmitterBase):
     def __init__(
         self,
         archive,
-        bounds,
         *,
+        lower_bounds,
+        upper_bounds,
+        bounds=None,
         search_nrestarts=5,
         entropy_ejie=False,
         upscale_schedule=None,
@@ -74,6 +81,8 @@ class BayesianOptimizationEmitter(EmitterBase):
         batch_size=1,
         seed=None,
     ):
+        deprecate_bounds(bounds)
+
         try:
             from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
             from pymoo.optimize import minimize
@@ -91,13 +100,15 @@ class BayesianOptimizationEmitter(EmitterBase):
             "DefaultSingleObjectiveTermination": DefaultSingleObjectiveTermination,
         }
 
-        check_finite(bounds, "bounds")
         EmitterBase.__init__(
             self,
             archive,
             solution_dim=archive.solution_dim,
-            bounds=bounds,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
         )
+        check_finite(self.lower_bounds, "lower_bounds")
+        check_finite(self.upper_bounds, "upper_bounds")
 
         if not isinstance(archive, GridArchive):
             raise NotImplementedError(

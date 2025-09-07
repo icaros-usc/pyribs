@@ -145,7 +145,8 @@ def main(
             archive=main_archive,
             # BayesianOptimizationEmitter requires solution space bounds due to Sobol
             # sampling. i.e., bounds cannot be None.
-            bounds=[(-10.24, 10.24)] * solution_dim,
+            lower_bounds=np.full(solution_dim, -10.24),
+            upper_bounds=np.full(solution_dim, 10.24),
             search_nrestarts=search_nrestarts,
             entropy_ejie=entropy_ejie,
             upscale_schedule=upscale_schedule,

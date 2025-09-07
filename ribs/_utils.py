@@ -303,6 +303,14 @@ class PickleXPMixin:
 def deprecate_dtype(dtype: None) -> None:
     if dtype is not None:
         raise ValueError(
-            "dtype is deprecated as of pyribs 0.9.0. Please specify solution_dtype, "
-            "objective_dtype, and/or measures_dtype instead."
+            "The dtype parameter is deprecated as of pyribs 0.9.0. Please specify "
+            "solution_dtype, objective_dtype, and/or measures_dtype instead."
+        )
+
+
+def deprecate_bounds(bounds: None) -> None:
+    if bounds is not None:
+        raise ValueError(
+            "The bounds parameter is deprecated as of pyribs 0.9.0. "
+            "Please specify lower_bounds and upper_bounds instead."
         )
