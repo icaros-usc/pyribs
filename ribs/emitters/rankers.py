@@ -65,7 +65,8 @@ Args:
     archive: Archive used by ``emitter`` when creating and inserting solutions.
     data: Dict mapping from field names like ``solution`` and ``objective`` to arrays
         with data for the solutions.
-    add_info: Information returned by an archive's add() method.
+    add_info: Information returned by an archive's
+        :meth:`~ribs.archives.ArchiveBase.add` method.
 
 Returns:
     The first array (shape ``(batch_size,)``) is an array of indices representing a
