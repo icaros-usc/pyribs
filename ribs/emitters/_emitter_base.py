@@ -5,6 +5,8 @@ from abc import ABC
 
 import numpy as np
 
+from ribs._utils import deprecate_bounds
+
 
 class EmitterBase(ABC):
     """Base class for emitters.
@@ -20,50 +22,30 @@ class EmitterBase(ABC):
             :class:`ribs.archives.GridArchive`.
         solution_dim (int or tuple of int): The dimensionality of solutions produced by
             this emitter.
-        bounds (None or array-like): Bounds of the solution space. Pass None to indicate
-            there are no bounds. Alternatively, pass an array-like to specify the bounds
-            for each dim. Each element in this array-like can be None to indicate no
-            bound, or a tuple of ``(lower_bound, upper_bound)``, where ``lower_bound``
-            or ``upper_bound`` may be None to indicate no bound. Unbounded upper bounds
-            are set to +inf, and unbounded lower bounds are set to -inf.
+        lower_bounds (None or array-like): Lower bounds of the solution space. Pass None
+            to indicate there are no bounds (i.e., bounds are set to -inf).
+        upper_bounds (None or array-like): Upper bounds of the solution space. Pass None
+            to indicate there are no bounds (i.e., bounds are set to inf).
+        bounds: DEPRECATED.
     """
 
-    def __init__(self, archive, *, solution_dim, bounds):
+    def __init__(
+        self, archive, *, solution_dim, lower_bounds, upper_bounds, bounds=None
+    ):
+        deprecate_bounds(bounds)
+
         self._archive = archive
         self._solution_dim = solution_dim
-        (self._lower_bounds, self._upper_bounds) = self._process_bounds(
-            bounds, self._solution_dim, archive.dtypes["solution"]
+        self._lower_bounds = (
+            np.full(solution_dim, -np.inf, dtype=archive.dtypes["solution"])
+            if lower_bounds is None
+            else np.asarray(lower_bounds, dtype=archive.dtypes["solution"])
         )
-
-    @staticmethod
-    def _process_bounds(bounds, solution_dim, dtype):
-        """Processes the input bounds.
-
-        Returns:
-            tuple: Two arrays containing all the lower bounds and all the upper bounds.
-
-        Raises:
-            ValueError: There is an error in the bounds configuration.
-        """
-        lower_bounds = np.full(solution_dim, -np.inf, dtype=dtype)
-        upper_bounds = np.full(solution_dim, np.inf, dtype=dtype)
-
-        if bounds is None:
-            return lower_bounds, upper_bounds
-
-        # Handle array-like bounds.
-        if len(bounds) != solution_dim:
-            raise ValueError(
-                "If it is an array-like, bounds must have the same length as x0"
-            )
-        for idx, bnd in enumerate(bounds):
-            if bnd is None:
-                continue  # Bounds already default to -inf and inf.
-            if len(bnd) != 2:
-                raise ValueError("All entries of bounds must be length 2")
-            lower_bounds[idx] = -np.inf if bnd[0] is None else bnd[0]
-            upper_bounds[idx] = np.inf if bnd[1] is None else bnd[1]
-        return lower_bounds, upper_bounds
+        self._upper_bounds = (
+            np.full(solution_dim, np.inf, dtype=archive.dtypes["solution"])
+            if upper_bounds is None
+            else np.asarray(upper_bounds, dtype=archive.dtypes["solution"])
+        )
 
     @property
     def archive(self):
