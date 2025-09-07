@@ -1,5 +1,7 @@
 """Provides the IsoLineEmitter."""
 
+import numbers
+
 import numpy as np
 
 from ribs._utils import check_batch_shape, check_shape, deprecate_bounds
@@ -81,6 +83,11 @@ class IsoLineEmitter(EmitterBase):
         self._line_sigma = np.asarray(line_sigma, dtype=archive.dtypes["solution"])
         self._x0 = None
         self._initial_solutions = None
+        self._noise_shape = (
+            (self.batch_size, self.solution_dim)
+            if isinstance(self.solution_dim, numbers.Integral)
+            else (self.batch_size, *self.solution_dim)
+        )
 
         if x0 is None and initial_solutions is None:
             raise ValueError("Either x0 or initial_solutions must be provided.")
@@ -164,19 +171,19 @@ class IsoLineEmitter(EmitterBase):
         else:
             parents = self.archive.sample_elites(2 * self.batch_size)["solution"]
 
-        parents = parents.reshape(2, self.batch_size, self.solution_dim)
+        parents = parents.reshape(2, *self._noise_shape)
         elites = parents[0]
         directions = parents[1] - parents[0]
 
         iso_gaussian = self._rng.normal(
             scale=self.iso_sigma,
-            size=(self.batch_size, self.solution_dim),
+            size=self._noise_shape,
         ).astype(elites.dtype)
         line_gaussian = self._rng.normal(
             scale=self.line_sigma,
-            size=(self.batch_size, 1),
+            # Put enough ones to make the shapes match and broadcast properly.
+            size=(self.batch_size, *(1 for _ in range(len(self._noise_shape) - 1))),
         ).astype(elites.dtype)
 
         solutions = elites + iso_gaussian + line_gaussian * directions
-
         return self._clip(solutions)
