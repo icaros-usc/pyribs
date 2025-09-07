@@ -156,7 +156,7 @@ Generates a list of indices that represents an ordering of solutions.
 
 
 class TwoStageImprovementRanker(RankerBase):
-    """Ranks solutions based on status and improvement in the objective.
+    """Ranks solutions based on status and on improvement in the objective.
 
     This ranker originates in `Fontaine 2020 <https://arxiv.org/abs/1912.02400>`_ in
     which it was referred to as "Improvement Emitter". This ranker ranks solutions in
@@ -264,7 +264,7 @@ the archive bounds so that it is a random archive direction.
 
 
 class TwoStageRandomDirectionRanker(RankerBase):
-    """Ranks solutions based on status and projection onto a direction in measure space.
+    """Ranks solutions based on status and on projection onto a direction in measure space.
 
     This ranker differs from :class:`ribs.emitters.rankers.RandomDirectionRanker` in
     that solutions are ranked in two stages: first by whether they are added, then by
@@ -353,7 +353,7 @@ Ranks the solutions based on their objective values.
 
 
 class TwoStageObjectiveRanker(RankerBase):
-    """Ranks solutions based on status and objective values.
+    """Ranks solutions based on status and on objective values.
 
     This ranker is similar to :class:`ribs.emitters.rankers.ObjectiveRanker`, but ranks
     newly added solutions before improved solutions.
