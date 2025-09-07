@@ -92,17 +92,19 @@ def parallel_axes_plot(
     Args:
         archive: Pyribs archive. If the archive has the ``lower_bounds`` and
             ``upper_bounds`` properties, those will be used as the measure space bounds
-            for the plot. Otherwise, we will call :class:`~ArchiveBase.data`` and
-            retrieve the min/max measure values in the archive to determine the bounds
-            -- this call may fail if the archive has no ``data`` method.
+            for the plot. Otherwise, we will call
+            :meth:`~ribs.archives.ArchiveBase.data` and retrieve the min/max measure
+            values in the archive to determine the bounds -- this call may fail if the
+            archive has no ``data`` method.
         ax: Axes on which to create the plot. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
             currently in the archive. This data can be obtained by, for instance,
-            calling :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
-            and modifying the resulting :class:`~ribs.archives.ArchiveDataFrame`. Note
-            that, at a minimum, the data must contain columns for index, objective, and
-            measures. To display a custom metric, replace the "objective" column.
+            calling :meth:`~ribs.archives.ArchiveBase.data` with
+            ``return_type="pandas"`` and modifying the resulting
+            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum, the data
+            must contain columns for index, objective, and measures. To display a custom
+            metric, replace the "objective" column.
         measure_order: If this is a list of ints, it specifies the axes order for
             measures (e.g. ``[2, 0, 1]``). If this is a list of tuples, each tuple takes
             the form ``(int, str)`` where the int specifies the measure index and the
