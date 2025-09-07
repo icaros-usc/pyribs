@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Replace emitter `bounds` params with
+  `lower_bounds` and `upper_bounds` ({pr}`649`)
 - **Backwards-incompatible:** Replace `dtype` parameter in archives with
   `solution_dtype`, `objective_dtype`, and `measures_dtype` ({pr}`639`,
   {pr}`643`)
