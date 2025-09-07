@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from ribs.archives import GridArchive
+from ribs.archives import DensityArchive, GridArchive, ProximityArchive
 from ribs.emitters.rankers import (
     DensityRanker,
     NoveltyRanker,
@@ -81,7 +81,7 @@ def test_random_direction_ranker(emitter):
     add_info = archive.add(solution_batch, objective_batch, measures_batch)
 
     ranker = RandomDirectionRanker()
-    ranker.target_measure_dir = [0, 1, 0]  # Set the random direction.
+    ranker.target_measure_dir = np.asarray([0, 1, 0], dtype=np.float64)
     indices, ranking_values = ranker.rank(
         emitter,
         archive,
@@ -124,7 +124,7 @@ def test_two_stage_random_direction(emitter):
     }
 
     ranker = TwoStageRandomDirectionRanker()
-    ranker.target_measure_dir = [0, 1, 0]  # Set the random direction.
+    ranker.target_measure_dir = np.asarray([0, 1, 0], dtype=np.float64)
     indices, ranking_values = ranker.rank(
         emitter,
         archive,
@@ -214,12 +214,15 @@ def test_two_stage_objective_ranker(archive_fixture, emitter):
     ).all()
 
 
-def test_novelty_ranker():
+def test_novelty_ranker(emitter):
     ranker = NoveltyRanker()
+    archive = ProximityArchive(
+        solution_dim=3, measure_dim=2, k_neighbors=5, novelty_threshold=0.01
+    )
 
     indices, ranking_values = ranker.rank(
-        emitter=None,
-        archive=None,
+        emitter=emitter,
+        archive=archive,
         data={
             "solution": [[1, 2, 3]] * 4,
             "measures": [[0, 0], [1.2, 1.2], [0.1, 0.1], [1.5, 1.5]],
@@ -233,12 +236,13 @@ def test_novelty_ranker():
     assert_allclose(ranking_values, [1.0, 0.5, 0.9, 0.4])
 
 
-def test_density_ranker():
+def test_density_ranker(emitter):
     ranker = DensityRanker()
+    archive = DensityArchive(measure_dim=2)
 
     indices, ranking_values = ranker.rank(
-        emitter=None,
-        archive=None,
+        emitter=emitter,
+        archive=archive,
         data={
             "solution": [[1, 2, 3]] * 4,
             "measures": [[0, 0], [1.2, 1.2], [0.1, 0.1], [1.5, 1.5]],
@@ -247,6 +251,5 @@ def test_density_ranker():
             "density": [0.5, 0.3, 0.7, 0.1],
         },
     )
-
     assert (indices == [3, 1, 0, 2]).all()
     assert_allclose(ranking_values, [0.5, 0.3, 0.7, 0.1])
