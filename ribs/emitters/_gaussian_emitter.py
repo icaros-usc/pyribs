@@ -1,5 +1,7 @@
 """Provides the GaussianEmitter."""
 
+import numbers
+
 import numpy as np
 
 from ribs._utils import check_batch_shape, check_shape, deprecate_bounds
@@ -70,6 +72,11 @@ class GaussianEmitter(EmitterBase):
         self._sigma = np.asarray(sigma, dtype=archive.dtypes["solution"])
         self._x0 = None
         self._initial_solutions = None
+        self._noise_shape = (
+            (self.batch_size, self.solution_dim)
+            if isinstance(self.solution_dim, numbers.Integral)
+            else (self.batch_size, *self.solution_dim)
+        )
 
         if x0 is None and initial_solutions is None:
             raise ValueError("Either x0 or initial_solutions must be provided.")
@@ -143,7 +150,6 @@ class GaussianEmitter(EmitterBase):
 
         noise = self._rng.normal(
             scale=self.sigma,
-            size=(self.batch_size, self.solution_dim),
+            size=self._noise_shape,
         ).astype(self.archive.dtypes["solution"])
-
         return self._clip(parents + noise)
