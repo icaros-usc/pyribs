@@ -445,3 +445,31 @@ def test_scheduler_with_categorical_archive(add_mode):
         objective_batch=np.ones(batch_size),
         measures_batch=measures_batch,
     )
+
+
+def test_multidim_solutions(add_mode):
+    batch_size = 4
+    archive = GridArchive(
+        solution_dim=(5, 5), dims=[100, 100], ranges=[(-1, 1), (-1, 1)]
+    )
+    emitters = [
+        GaussianEmitter(archive, sigma=1, x0=np.zeros((5, 5)), batch_size=batch_size)
+    ]
+    scheduler = Scheduler(archive, emitters, add_mode=add_mode)
+
+    measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
+
+    solutions = scheduler.ask()
+    assert solutions.shape == (4, 5, 5)
+
+    # We pass in 4 solutions with unique measures, so all should go into
+    # the archive.
+    scheduler.tell(np.ones(batch_size), measures_batch)
+
+    assert_archive_elites(
+        archive=scheduler.archive,
+        batch_size=batch_size,
+        solution_batch=solutions,
+        objective_batch=np.ones(batch_size),
+        measures_batch=measures_batch,
+    )
