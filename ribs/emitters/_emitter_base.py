@@ -149,8 +149,7 @@ class EmitterBase(ABC):
                 :meth:`ask_dqd`. Each matrix should consist of the objective gradient of
                 the solution followed by the measure gradients.
             add_info (dict): Data returned from the archive
-                :meth:`~ribs.archives.ArchiveBase.add` method. should be an array with
-                batch_size as the first dimension.
+                :meth:`~ribs.archives.ArchiveBase.add` method.
             fields (keyword arguments): Additional data for each solution. Each argument
                 should be an array with batch_size as the first dimension.
         """
