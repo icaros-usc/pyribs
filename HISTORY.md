@@ -11,7 +11,8 @@
   {pr}`643`)
 - Raise `KeyError` in `ArchiveDataFrame.get_field` when field not found
   ({pr}`626`)
-- Support array backends via Python array API Standard ({issue}`570`)
+- Support array backends in ArrayStore via Python array API Standard
+  ({issue}`570`, {pr}`645`)
 - **Backwards-incompatible:** Remove raw_dict methods from ArrayStore
   ({pr}`575`)
 
