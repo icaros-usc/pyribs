@@ -32,38 +32,9 @@ jobs:
       - uses: pre-commit/action@v3.0.0
   test:
     strategy:
-      max-parallel: 12 # All in parallel.
+      max-parallel: 3 # All in parallel.
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.12"]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v3
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install core deps
-        run: pip install .[dev]
-      - name: Test core
-        run: >
-          pytest tests/archives tests/emitters tests/schedulers
-      - name: Install visualize dep
-        run: pip install .[visualize]
-      - name: Test visualize extra
-        run: pytest tests/visualize
-      - name: Install cma
-        run: pip install cma
-      - name: Test cma extra
-        run: pytest tests/emitters_pycma
-      - name: Install pymoo
-        run: pip install pymoo
-      - name: Test pymoo extra
-        run: pytest tests/emitters_pymoo tests/schedulers_pymoo
-  test_array_api:
-    strategy:
-      max-parallel: 12 # All in parallel.
-      matrix:
-        os: [ubuntu-latest]
         python-version: ["3.12"]
     runs-on: ${{ matrix.os }}
     steps:
