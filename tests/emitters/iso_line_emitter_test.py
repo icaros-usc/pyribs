@@ -63,7 +63,8 @@ def test_upper_bounds_enforced(archive_fixture):
         x0=[2, 2, 2, 2],
         iso_sigma=0,
         line_sigma=0,
-        bounds=[(-1, 1)] * 4,
+        lower_bounds=[-1, -1, -1, -1],
+        upper_bounds=[1, 1, 1, 1],
     )
     sols = emitter.ask()
     assert np.all(sols <= 1)
@@ -76,7 +77,8 @@ def test_lower_bounds_enforced(archive_fixture):
         x0=[-2, -2, -2, -2],
         iso_sigma=0,
         line_sigma=0,
-        bounds=[(-1, 1)] * 4,
+        lower_bounds=[-1, -1, -1, -1],
+        upper_bounds=[1, 1, 1, 1],
     )
     sols = emitter.ask()
     assert np.all(sols >= -1)

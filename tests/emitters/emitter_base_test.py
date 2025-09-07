@@ -201,12 +201,32 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
 
 def test_array_bound_correct(archive_fixture):
     archive, x0 = archive_fixture
-    bounds = [(-i, i) for i in range(len(x0) - 1)]
-    bounds.append(None)
-    emitter = GaussianEmitter(archive, sigma=1, x0=x0, bounds=bounds)
-
     lower_bounds = np.concatenate((-np.arange(len(x0) - 1), [-np.inf]))
     upper_bounds = np.concatenate((np.arange(len(x0) - 1), [np.inf]))
+
+    emitter = GaussianEmitter(
+        archive,
+        sigma=1,
+        x0=x0,
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+    )
+
+    assert (emitter.lower_bounds == lower_bounds).all()
+    assert (emitter.upper_bounds == upper_bounds).all()
+
+
+def test_multidim_array_bound_correct():
+    archive = GridArchive(solution_dim=(5, 5), dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
+    lower_bounds = np.full((5, 5), -1)
+    upper_bounds = np.full((5, 5), 1)
+    emitter = GaussianEmitter(
+        archive,
+        sigma=1,
+        x0=np.zeros((5, 5)),
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+    )
 
     assert (emitter.lower_bounds == lower_bounds).all()
     assert (emitter.upper_bounds == upper_bounds).all()
@@ -214,17 +234,43 @@ def test_array_bound_correct(archive_fixture):
 
 def test_long_array_bound_fails(archive_fixture):
     archive, x0 = archive_fixture
-    bounds = [(-1, 1)] * (len(x0) + 1)  # More bounds than solution dims.
-    with pytest.raises(ValueError):
-        GaussianEmitter(archive, sigma=1, x0=x0, bounds=bounds)
+
+    with pytest.raises(
+        ValueError, match="Expected lower_bounds to be an array with shape .*"
+    ):
+        GaussianEmitter(
+            archive,
+            sigma=1,
+            x0=x0,
+            # More bounds than solution dims.
+            lower_bounds=[-1] * (len(x0) + 1),
+            upper_bounds=[1] * len(x0),
+        )
+    with pytest.raises(
+        ValueError, match="Expected upper_bounds to be an array with shape .*"
+    ):
+        GaussianEmitter(
+            archive,
+            sigma=1,
+            x0=x0,
+            lower_bounds=[1] * len(x0),
+            upper_bounds=[-1] * (len(x0) + 1),
+        )
 
 
-def test_array_bound_bad_entry_fails(archive_fixture):
+def test_wrong_bound_shape(archive_fixture):
     archive, x0 = archive_fixture
-    bounds = [(-1, 1)] * len(x0)
-    bounds[0] = (-1, 0, 1)  # Invalid entry.
-    with pytest.raises(ValueError):
-        GaussianEmitter(archive, sigma=1, x0=x0, bounds=bounds)
+
+    with pytest.raises(
+        ValueError, match="Expected .*_bounds to be an array with shape .*"
+    ):
+        GaussianEmitter(
+            archive,
+            sigma=1,
+            x0=x0,
+            lower_bounds=np.ones((10, 10)),
+            upper_bounds=np.ones((10, 10)),
+        )
 
 
 @pytest.mark.parametrize(
