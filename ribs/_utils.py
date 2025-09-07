@@ -229,7 +229,7 @@ def validate_single(
         )
         check_finite(data["objective"], "objective")
 
-    data["measures"] = np.asarray(data["measures"], dtype=archive.dtypes["objective"])
+    data["measures"] = np.asarray(data["measures"], dtype=archive.dtypes["measures"])
     check_shape(data["measures"], "measures", archive.measure_dim, "measure_dim")
     if np.issubdtype(data["measures"].dtype, np.number):
         check_finite(data["measures"], "measures")
