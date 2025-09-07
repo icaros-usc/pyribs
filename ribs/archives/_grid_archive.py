@@ -6,6 +6,7 @@ from collections.abc import Collection, Iterator
 from types import ModuleType
 from typing import Literal, overload
 
+import array_api_compat
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
@@ -25,6 +26,8 @@ from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
+from ribs.archives._torchist import ravel_multi_index as torch_ravel_multi_index
+from ribs.archives._torchist import unravel_index as torch_unravel_index
 from ribs.archives._utils import (
     fill_sentinel_values,
     parse_dtype,
@@ -213,6 +216,19 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         self._objective_sum = None
         self._stats = None
         self._stats_reset()
+
+        if array_api_compat.is_torch_namespace(self._xp):
+            #  self._ravel_multi_index = torch_ravel_multi_index
+            #  self._unravel_index = torch_unravel_index
+            self._ravel_multi_index = lambda indices, dims: self._xp.asarray(
+                np.ravel_multi_index(np.asarray(indices), np.asarray(dims))
+            )
+            self._unravel_index = lambda indices, dims: self._xp.asarray(
+                np.unravel_index(np.asarray(indices), np.asarray(dims))
+            )
+        else:
+            self._ravel_multi_index = self._xp.ravel_multi_index
+            self._unravel_index = self._xp.unravel_index
 
     def _compute_boundaries(
         self, dims: Array, lower_bounds: Array, upper_bounds: Array
@@ -407,7 +423,6 @@ class GridArchive(PickleXPMixin, ArchiveBase):
             ),
         )
 
-    # TODO: continue from here
     def index_of(self, measures: ArrayLike) -> Array:
         """Returns archive indices for the given batch of measures.
 
@@ -441,20 +456,23 @@ class GridArchive(PickleXPMixin, ArchiveBase):
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = self._xp.asarray(measures)  # TODO: dtype and device
+        measures = self._xp.asarray(
+            measures, dtype=self.dtypes["measures"], device=self._device
+        )
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
         # Adding epsilon accounts for floating point precision errors from transforming
         # measures. We then cast to int32 to obtain integer indices.
-        grid_indices = (
+        grid_indices = self._xp.astype(
             (self._dims * (measures - self._lower_bounds) + self._epsilon)
-            / self._interval_size
-        ).astype(np.int32)
+            / self._interval_size,
+            self._xp.int32,
+        )
 
         # Clip indices to the archive dimensions (for example, for 20 cells, we want
         # indices to run from 0 to 19).
-        grid_indices = np.clip(grid_indices, 0, self._dims - 1)
+        grid_indices = self._xp.clip(grid_indices, 0, self._dims - 1)
 
         return self.grid_to_int_index(grid_indices)
 
@@ -473,7 +491,9 @@ class GridArchive(PickleXPMixin, ArchiveBase):
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = self._xp.asarray(measures)  # TODO: dtype and device
+        measures = self._xp.asarray(
+            measures, dtype=self.dtypes["measures"], device=self._device
+        )
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
@@ -494,10 +514,14 @@ class GridArchive(PickleXPMixin, ArchiveBase):
             ValueError: ``grid_indices`` is not of shape (batch_size,
                 :attr:`measure_dim`).
         """
-        grid_indices = np.asarray(grid_indices)
+        grid_indices = self._xp.asarray(
+            grid_indices, dtype=self._xp.int32, device=self._device
+        )
         check_batch_shape(grid_indices, "grid_indices", self.measure_dim, "measure_dim")
 
-        return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
+        return self._xp.astype(
+            self._ravel_multi_index(grid_indices.T, self._dims), self._xp.int32
+        )
 
     def int_to_grid_index(self, int_indices: ArrayLike) -> Array:
         """Converts a batch of indices into indices in the archive's grid.
@@ -514,15 +538,18 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         Raises:
             ValueError: ``int_indices`` is not of shape (batch_size,).
         """
-        int_indices = np.asarray(int_indices)
+        int_indices = self._xp.asarray(
+            int_indices, dtype=self._xp.int32, device=self._device
+        )
         check_is_1d(int_indices, "int_indices")
 
-        return np.asarray(
-            np.unravel_index(
+        return self._xp.asarray(
+            self._unravel_index(
                 int_indices,
                 self._dims,
-            )
-        ).T.astype(np.int32)
+            ),
+            dtype=self._xp.int32,
+        ).T
 
     ## Methods for writing to the archive ##
 
@@ -667,6 +694,8 @@ class GridArchive(PickleXPMixin, ArchiveBase):
                 "measures": measures,
                 **fields,
             },
+            xp=self._xp,
+            device=self._device,
         )
 
         # Delete these so that we only use the clean, validated data in `data`.
@@ -692,7 +721,9 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         can_insert = data["objective"] > cur_threshold
         is_new = can_insert & ~cur_occupied
         improve_existing = can_insert & cur_occupied
-        add_info["status"] = np.zeros(batch_size, dtype=np.int32)
+        add_info["status"] = self._xp.zeros(
+            batch_size, dtype=self._xp.int32, device=self._device
+        )
         add_info["status"][is_new] = 2
         add_info["status"][improve_existing] = 1
 
@@ -813,6 +844,8 @@ class GridArchive(PickleXPMixin, ArchiveBase):
                 "measures": measures,
                 **fields,
             },
+            xp=self._xp,
+            device=self._device,
         )
 
         # Delete these so that we only use the clean, validated data in `data`.
@@ -840,7 +873,9 @@ class GridArchive(PickleXPMixin, ArchiveBase):
             # improvement value with a threshold of zero for new solutions. Otherwise,
             # we will set cur_threshold to threshold_min.
             cur_threshold = (
-                np.asarray(0.0, self.dtypes["threshold"])
+                self._xp.asarray(
+                    0.0, dtype=self.dtypes["threshold"], device=self._device
+                )
                 if self.threshold_min == -np.inf
                 else self.threshold_min
             )
@@ -849,7 +884,9 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         objective = data["objective"]
 
         # Compute status and threshold.
-        add_info["status"] = np.int32(0)  # NOT_ADDED
+        add_info["status"] = self._xp.asarray(
+            0, dtype=self._xp.int32, device=self._device
+        )  # NOT_ADDED
 
         # Now we check whether a solution should be added to the archive. We use the
         # addition rule from MAP-Elites (Fig. 2 of Mouret 2015
@@ -873,9 +910,13 @@ class GridArchive(PickleXPMixin, ArchiveBase):
 
         if is_new or improve_existing:
             if improve_existing:
-                add_info["status"] = np.int32(1)  # IMPROVE_EXISTING
+                add_info["status"] = self._xp.asarray(
+                    1, dtype=self._xp.int32, device=self._device
+                )  # IMPROVE_EXISTING
             else:
-                add_info["status"] = np.int32(2)  # NEW
+                add_info["status"] = self._xp.asarray(
+                    2, dtype=self._xp.int32, device=self._device
+                )  # NEW
 
             # This calculation works in the case where threshold_min is -inf because
             # cur_threshold will be set to 0.0 instead.
@@ -887,14 +928,16 @@ class GridArchive(PickleXPMixin, ArchiveBase):
             # Insert elite into the store.
             self._store.add(
                 index[None],
-                {name: np.expand_dims(arr, axis=0) for name, arr in data.items()},
+                {name: arr[None] for name, arr in data.items()},
             )
 
             # Update stats.
             cur_objective = (
                 cur_data["objective"][0]
                 if cur_occupied
-                else np.asarray(0.0, dtype=self.dtypes["objective"])
+                else self._xp.asarray(
+                    0.0, dtype=self.dtypes["objective"], device=self._device
+                )
             )
             self._stats_update(self._objective_sum + objective - cur_objective, index)
 
@@ -912,7 +955,9 @@ class GridArchive(PickleXPMixin, ArchiveBase):
     ## Refer to ArchiveBase for documentation of these methods. ##
 
     def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, BatchData]:
-        measures = np.asarray(measures)
+        measures = self._xp.asarray(
+            measures, dtype=self.dtypes["measures"], device=self._device
+        )
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
@@ -922,7 +967,9 @@ class GridArchive(PickleXPMixin, ArchiveBase):
         return occupied, data
 
     def retrieve_single(self, measures: ArrayLike) -> tuple[bool, SingleData]:
-        measures = np.asarray(measures)
+        measures = self._xp.asarray(
+            measures, dtype=self.dtypes["measures"], device=self._device
+        )
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 

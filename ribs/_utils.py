@@ -8,31 +8,25 @@ from types import ModuleType
 
 import array_api_compat.numpy as np_compat
 import numpy as np
-from array_api_compat import array_namespace
+from array_api_compat import array_namespace, get_namespace
 from numpy.typing import ArrayLike
 
 from ribs.archives._archive_base import ArchiveBase
-from ribs.typing import ArrayVar, BatchData, Int, SingleData
+from ribs.typing import Array, ArrayVar, BatchData, Device, Int, SingleData
 
 
 def check_finite(x: ArrayLike, name: str) -> None:
-    """Checks that x is finite (i.e. not infinity or NaN).
+    """Checks that x is finite (i.e. not infinity or NaN)."""
+    xp = get_namespace(x)
 
-    `x` must be either a scalar or NumPy array.
-    """
-    if not np.all(np.isfinite(x)):
-        if np.isscalar(x):
-            raise ValueError(
-                f"{name} must be finite (infinity and NaN values are not supported)."
-            )
+    if not xp.all(xp.isfinite(x)):
         raise ValueError(
-            f"All elements of {name} must be finite (infinity "
-            "and NaN values are not supported)."
+            f"{name} must be finite (infinity and NaN values are not supported)."
         )
 
 
 def check_batch_shape(
-    array: np.ndarray,
+    array: Array,
     array_name: str,
     dim: Int | tuple[Int, ...],
     dim_name: str,
@@ -57,7 +51,7 @@ def check_batch_shape(
 
 
 def check_shape(
-    array: np.ndarray,
+    array: Array,
     array_name: str,
     dim: Int | tuple[Int, ...],
     dim_name: str,
@@ -78,7 +72,7 @@ def check_shape(
         )
 
 
-def check_is_1d(array: np.ndarray, array_name: str, extra_msg: str = "") -> None:
+def check_is_1d(array: Array, array_name: str, extra_msg: str = "") -> None:
     """Checks that an array is 1D."""
     if array.ndim != 1:
         raise ValueError(
@@ -88,7 +82,7 @@ def check_is_1d(array: np.ndarray, array_name: str, extra_msg: str = "") -> None
 
 
 def check_solution_batch_dim(
-    array: np.ndarray,
+    array: Array,
     array_name: str,
     batch_size: int,
     is_1d: bool = False,
@@ -111,6 +105,8 @@ def validate_batch(
     add_info: BatchData | None = None,
     jacobian: ArrayLike = None,
     none_objective_ok: bool = False,
+    xp: ModuleType = np_compat,
+    device: Device = None,
 ):  # No return annotation because it's quite complicated.
     """Preprocesses and validates batch arguments.
 
@@ -119,12 +115,17 @@ def validate_batch(
     to data["solution"].
 
     The arguments are assumed to come directly from users, so they may not be arrays.
-    Thus, we preprocess each argument by converting it into a numpy array. We then
-    perform checks on the array, including seeing if its batch size matches the batch
-    size of data["solution"].
+    Thus, we preprocess each argument by converting it into an array. We then perform
+    checks on the array, including seeing if its batch size matches the batch size of
+    data["solution"].
+
+    We do not use the xp and device from the archive because (1) they are not public and
+    (2) not all archives have them. So it is easier to just require passing in manually.
     """
     # Process and validate solutions.
-    data["solution"] = np.asarray(data["solution"])
+    data["solution"] = xp.asarray(
+        data["solution"], dtype=archive.dtypes["solution"], device=device
+    )
     check_batch_shape(
         data["solution"], "solution", archive.solution_dim, "solution_dim", ""
     )
@@ -142,7 +143,7 @@ def validate_batch(
                 if not none_objective_ok:
                     raise ValueError("objective cannot be None")
             else:
-                arr = np.asarray(arr)
+                arr = xp.asarray(arr, dtype=archive.dtypes["objective"], device=device)
                 check_is_1d(arr, "objective", "")
                 check_solution_batch_dim(
                     arr, "objective", batch_size, is_1d=True, extra_msg=""
@@ -150,27 +151,32 @@ def validate_batch(
                 check_finite(arr, "objective")
 
         elif name == "measures":
-            arr = np.asarray(arr)
+            arr = xp.asarray(arr, dtype=archive.dtypes["measures"], device=device)
             check_batch_shape(arr, "measures", archive.measure_dim, "measure_dim", "")
             check_solution_batch_dim(
                 arr, "measures", batch_size, is_1d=False, extra_msg=""
             )
-            if np.issubdtype(arr.dtype, np.number):
+            if arr.dtype != np.object_:
+                # When the dtype is object (e.g., strings), this check fails.
                 check_finite(arr, "measures")
 
         else:
-            arr = np.asarray(arr)
+            # Note: We do not cast the dtype here because the field may not be in the
+            # archive, so we cannot retrieve the appropriate dtype. Casting will happen
+            # anyways upon insertion into the ArrayStore.
+            arr = xp.asarray(arr, device=device)
             check_solution_batch_dim(arr, name, batch_size, is_1d=False, extra_msg="")
 
         data[name] = arr
 
     extra_returns = []
 
-    # add_info is optional; check it if provided.
+    # add_info is optional; check it if provided. We leave out dtype when casting the
+    # arrays here because we do not know what dtypes the add_info should have.
     if add_info is not None:
         for name, arr in add_info.items():
             if name == "status":
-                arr = np.asarray(arr)
+                arr = xp.asarray(arr, device=device)
                 check_is_1d(arr, "status", "")
                 check_solution_batch_dim(
                     arr, "status", batch_size, is_1d=True, extra_msg=""
@@ -178,14 +184,14 @@ def validate_batch(
                 check_finite(arr, "status")
 
             elif name == "value":
-                arr = np.asarray(arr)
+                arr = xp.asarray(arr, device=device)
                 check_is_1d(arr, "value", "")
                 check_solution_batch_dim(
                     arr, "value", batch_size, is_1d=True, extra_msg=""
                 )
 
             else:
-                arr = np.asarray(arr)
+                arr = xp.asarray(arr, device=device)
                 check_solution_batch_dim(
                     arr, name, batch_size, is_1d=False, extra_msg=""
                 )
@@ -196,7 +202,7 @@ def validate_batch(
 
     # jacobian is optional; check it if provided.
     if jacobian is not None:
-        jacobian = np.asarray(jacobian)
+        jacobian = xp.asarray(jacobian, device=device)
         check_batch_shape(
             jacobian,
             "jacobian",
@@ -213,24 +219,32 @@ def validate_batch(
 
 
 def validate_single(
-    archive: ArchiveBase, data: SingleData, none_objective_ok: bool = False
+    archive: ArchiveBase,
+    data: SingleData,
+    none_objective_ok: bool = False,
+    xp: ModuleType = np_compat,
+    device: Device = None,
 ) -> SingleData:
     """Performs preprocessing and checks for arguments to add_single()."""
-    data["solution"] = np.asarray(data["solution"])
+    data["solution"] = xp.asarray(
+        data["solution"], dtype=archive.dtypes["solution"], device=device
+    )
     check_shape(data["solution"], "solution", archive.solution_dim, "solution_dim")
 
     if data["objective"] is None:
         if not none_objective_ok:
             raise ValueError("objective cannot be None")
     else:
-        data["objective"] = np.asarray(
-            data["objective"], dtype=archive.dtypes["objective"]
+        data["objective"] = xp.asarray(
+            data["objective"], dtype=archive.dtypes["objective"], device=device
         )
         check_finite(data["objective"], "objective")
 
-    data["measures"] = np.asarray(data["measures"])
+    data["measures"] = xp.asarray(
+        data["measures"], dtype=archive.dtypes["measures"], device=device
+    )
     check_shape(data["measures"], "measures", archive.measure_dim, "measure_dim")
-    if np.issubdtype(data["measures"].dtype, np.number):
+    if data["measures"].dtype != np.object_:
         check_finite(data["measures"], "measures")
 
     return data

@@ -9,19 +9,39 @@ from .conftest import get_archive_data
 
 
 @pytest.fixture
-def data():
+def data(xp_and_device):
     """Data for grid archive tests."""
-    return get_archive_data("GridArchive")
+    xp, device = xp_and_device
+    return get_archive_data("GridArchive", xp=xp, device=device)
 
 
-def assert_archive_elite(archive, solution, objective, measures, grid_indices):
+def assert_archive_elite(
+    archive, solution, objective, measures, grid_indices, xp, device
+):
     """Asserts that the archive has one specific elite."""
     assert len(archive) == 1
     elite = next(iter(archive))
-    assert np.isclose(elite["solution"], solution).all()
-    assert np.isclose(elite["objective"], objective).all()
-    assert np.isclose(elite["measures"], measures).all()
-    assert elite["index"] == archive.grid_to_int_index([grid_indices])
+    assert xp.all(
+        xp.isclose(
+            elite["solution"],
+            xp.asarray(solution, dtype=archive.dtypes["solution"], device=device),
+        )
+    )
+    assert xp.all(
+        xp.isclose(
+            elite["objective"],
+            xp.asarray(objective, dtype=archive.dtypes["objective"], device=device),
+        )
+    )
+    assert xp.all(
+        xp.isclose(
+            elite["measures"],
+            xp.asarray(measures, dtype=archive.dtypes["measures"], device=device),
+        )
+    )
+    assert xp.all(
+        xp.asarray(elite["index"]) == archive.grid_to_int_index([grid_indices])
+    )
 
 
 def assert_archive_elites(
@@ -109,27 +129,26 @@ def test_fails_on_dim_mismatch(xp_and_device):
         )
 
 
-def test_properties_are_correct(data):
-    assert np.all(data.archive.dims == [10, 20])
-    assert np.all(data.archive.lower_bounds == [-1, -2])
-    assert np.all(data.archive.upper_bounds == [1, 2])
-    assert np.all(data.archive.interval_size == [2, 4])
+def test_properties_are_correct(data, xp_and_device):
+    xp, device = xp_and_device
+    assert xp.all(data.archive.dims == xp.asarray([10, 20], device=device))
+    assert xp.all(data.archive.lower_bounds == xp.asarray([-1.0, -2.0], device=device))
+    assert xp.all(data.archive.upper_bounds == xp.asarray([1.0, 2.0], device=device))
+    assert xp.all(data.archive.interval_size == xp.asarray([2.0, 4.0], device=device))
 
     boundaries = data.archive.boundaries
     assert len(boundaries) == 2
-    assert np.isclose(boundaries[0], np.linspace(-1, 1, 10 + 1)).all()
-    assert np.isclose(boundaries[1], np.linspace(-2, 2, 20 + 1)).all()
+    assert xp.isclose(boundaries[0], xp.linspace(-1, 1, 10 + 1)).all()
+    assert xp.isclose(boundaries[1], xp.linspace(-2, 2, 20 + 1)).all()
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
-def test_add_single_to_archive(data, use_list, add_mode):
+def test_add_single_to_archive(data, use_list, add_mode, xp_and_device):
+    xp, device = xp_and_device
+
     solution = data.solution
     objective = data.objective
     measures = data.measures
-
-    if use_list:
-        solution = list(data.solution)
-        measures = list(data.measures)
 
     if add_mode == "single":
         add_info = data.archive.add_single(solution, objective, measures)
@@ -137,13 +156,15 @@ def test_add_single_to_archive(data, use_list, add_mode):
         add_info = data.archive.add([solution], [objective], [measures])
 
     assert add_info["status"] == AddStatus.NEW
-    assert np.isclose(add_info["value"], data.objective)
+    assert xp.isclose(add_info["value"], xp.asarray(data.objective, device=device))
     assert_archive_elite(
         data.archive_with_elite,
         data.solution,
         data.objective,
         data.measures,
         data.grid_indices,
+        xp,
+        device,
     )
 
 
@@ -656,9 +677,11 @@ def test_grid_to_int_index_wrong_shape(data):
         data.archive.grid_to_int_index([data.grid_indices[:-1]])
 
 
-def test_int_to_grid_index(data):
-    assert np.all(
-        data.archive.int_to_grid_index([data.int_index])[0] == data.grid_indices
+def test_int_to_grid_index(data, xp_and_device):
+    xp, device = xp_and_device
+    assert xp.all(
+        data.archive.int_to_grid_index([data.int_index])[0]
+        == xp.asarray(data.grid_indices, device=device)
     )
 
 

@@ -1,5 +1,6 @@
 """Useful utilities for all archive tests."""
 
+import array_api_compat.numpy as np_compat
 import numpy as np
 import pytest
 from box import Box
@@ -57,7 +58,7 @@ ARCHIVE_NAMES = [
 ]
 
 
-def get_archive_data(name, dtype=np.float64):
+def get_archive_data(name, *, xp=np_compat, dtype=None, device=None):
     """Returns data to use for testing each archive.
 
     The archives vary, but there will always be an empty 2D archive, as well as
@@ -69,6 +70,9 @@ def get_archive_data(name, dtype=np.float64):
     ARCHIVE_NAMES.
     """
     # All local variables are captured at the end.
+
+    if dtype is None:
+        dtype = xp.__array_namespace_info__().default_dtypes()["real floating"]  # ty: ignore[unresolved-attribute]
 
     # Characteristics of a single solution to insert into archive_with_elite.
     solution = np.array([1.0, 2.0, 3.0])
@@ -89,6 +93,8 @@ def get_archive_data(name, dtype=np.float64):
             solution_dtype=dtype,
             objective_dtype=dtype,
             measures_dtype=dtype,
+            xp=xp,
+            device=device,
         )
 
         archive_with_elite = GridArchive(
@@ -98,6 +104,8 @@ def get_archive_data(name, dtype=np.float64):
             solution_dtype=dtype,
             objective_dtype=dtype,
             measures_dtype=dtype,
+            xp=xp,
+            device=device,
         )
         grid_indices = (6, 11)
         int_index = 131
