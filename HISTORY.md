@@ -18,6 +18,7 @@
 
 #### Improvements
 
+- Cast dtype when validating arguments ({pr}`646`)
 - Add type annotations and use ty for type checking ({issue}`624`)
 - Migrate from pylint to ruff for linting ({pr}`605`, {pr}`607`, {pr}`612`,
   {pr}`619`)
