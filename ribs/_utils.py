@@ -12,7 +12,7 @@ from array_api_compat import array_namespace
 from numpy.typing import ArrayLike
 
 from ribs.archives._archive_base import ArchiveBase
-from ribs.typing import ArrayVar, BatchData, Int, SingleData
+from ribs.typing import Array, BatchData, Int, SingleData
 
 
 def check_finite(x: ArrayLike, name: str) -> None:
@@ -236,7 +236,7 @@ def validate_single(
     return data
 
 
-def arr_readonly(arr: ArrayVar, view: bool = False) -> ArrayVar:
+def arr_readonly(arr: Array, view: bool = False) -> Array:
     """Sets an array to be readonly if possible.
 
     Intended to support arrays across libraries; currently only supports numpy. Other
@@ -249,7 +249,7 @@ def arr_readonly(arr: ArrayVar, view: bool = False) -> ArrayVar:
     if isinstance(arr, np.ndarray):
         readonly_arr = arr.view() if view else arr
         readonly_arr.flags.writeable = False
-        return readonly_arr  # ty: ignore[invalid-return-type]
+        return readonly_arr
     else:
         return arr
 
