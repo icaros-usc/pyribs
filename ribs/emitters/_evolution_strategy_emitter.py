@@ -12,7 +12,7 @@ from numpy.typing import ArrayLike
 from ribs._utils import check_shape, deprecate_bounds, validate_batch
 from ribs.archives import ArchiveBase
 from ribs.emitters._emitter_base import EmitterBase
-from ribs.emitters.opt import _get_es
+from ribs.emitters.opt import EvolutionStrategyBase, _get_es
 from ribs.emitters.rankers import RankerBase, _get_ranker
 from ribs.typing import BatchData, Float, Int
 
@@ -78,7 +78,7 @@ class EvolutionStrategyEmitter(EmitterBase):
         x0: ArrayLike,
         sigma0: Float,
         ranker: Callable[[Int | None], RankerBase] | str = "2imp",
-        es: Callable | str = "cma_es",
+        es: Callable[..., EvolutionStrategyBase] | str = "cma_es",
         es_kwargs: dict | None = None,
         selection_rule: Literal["mu", "filter"] = "filter",
         restart_rule: Literal["no_improvement", "basic"] | int = "no_improvement",
