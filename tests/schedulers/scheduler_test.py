@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from ribs.archives import CategoricalArchive, GridArchive, ProximityArchive
-from ribs.emitters import GaussianEmitter
+from ribs.emitters import GaussianEmitter, IsoLineEmitter
 from ribs.schedulers import BanditScheduler, Scheduler
 
 from ..archives.grid_archive_test import assert_archive_elites
@@ -453,23 +453,45 @@ def test_multidim_solutions(add_mode):
         solution_dim=(5, 5), dims=[100, 100], ranges=[(-1, 1), (-1, 1)]
     )
     emitters = [
-        GaussianEmitter(archive, sigma=1, x0=np.zeros((5, 5)), batch_size=batch_size)
+        # Both these emitters support multi-dimensional solutions.
+        GaussianEmitter(
+            archive,
+            sigma=1,
+            x0=np.zeros((5, 5)),
+            batch_size=batch_size,
+        ),
+        IsoLineEmitter(
+            archive,
+            iso_sigma=0.1,
+            line_sigma=0.2,
+            x0=np.zeros((5, 5)),
+            batch_size=batch_size,
+        ),
     ]
     scheduler = Scheduler(archive, emitters, add_mode=add_mode)
 
-    measures_batch = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
+    measures_batch = [
+        [1.0, 1.0],
+        [-1.0, 1.0],
+        [-1.0, -1.0],
+        [1.0, -1.0],
+        [0.5, 0.5],
+        [-0.5, 0.5],
+        [-0.5, -0.5],
+        [0.5, -0.5],
+    ]
 
     solutions = scheduler.ask()
-    assert solutions.shape == (4, 5, 5)
+    assert solutions.shape == (8, 5, 5)
 
     # We pass in 4 solutions with unique measures, so all should go into
     # the archive.
-    scheduler.tell(np.ones(batch_size), measures_batch)
+    scheduler.tell(np.ones(2 * batch_size), measures_batch)
 
     assert_archive_elites(
         archive=scheduler.archive,
-        batch_size=batch_size,
+        batch_size=2 * batch_size,
         solution_batch=solutions,
-        objective_batch=np.ones(batch_size),
+        objective_batch=np.ones(2 * batch_size),
         measures_batch=measures_batch,
     )

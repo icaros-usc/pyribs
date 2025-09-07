@@ -103,5 +103,12 @@ def test_multidim_solutions():
     )
     x0 = np.zeros((5, 5))
     emitter = GaussianEmitter(archive, sigma=0.1, x0=x0, batch_size=2)
+
+    solutions = emitter.ask()
+    assert solutions.shape == (2, 5, 5)
+
+    archive.add(solutions, objective=np.ones(2), measures=[[-1, -1], [1, 1]])
+
+    # Ask again since behavior changes once the archive is not empty.
     solutions = emitter.ask()
     assert solutions.shape == (2, 5, 5)
