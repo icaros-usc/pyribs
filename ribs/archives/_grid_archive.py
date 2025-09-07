@@ -445,7 +445,6 @@ class GridArchive(ArchiveBase):
         """
         grid_indices = np.asarray(grid_indices)
         check_batch_shape(grid_indices, "grid_indices", self.measure_dim, "measure_dim")
-
         return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
     def int_to_grid_index(self, int_indices: ArrayLike) -> np.ndarray:
@@ -465,13 +464,7 @@ class GridArchive(ArchiveBase):
         """
         int_indices = np.asarray(int_indices)
         check_is_1d(int_indices, "int_indices")
-
-        return np.asarray(
-            np.unravel_index(
-                int_indices,
-                self._dims,
-            )
-        ).T.astype(np.int32)
+        return np.asarray(np.unravel_index(int_indices, self._dims), dtype=np.int32).T
 
     ## Methods for writing to the archive ##
 
