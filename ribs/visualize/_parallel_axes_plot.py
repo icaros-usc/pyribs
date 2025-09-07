@@ -92,9 +92,9 @@ def parallel_axes_plot(
     Args:
         archive: Pyribs archive. If the archive has the ``lower_bounds`` and
             ``upper_bounds`` properties, those will be used as the measure space bounds
-            for the plot. Otherwise, we will call :class:`~ArchiveBase.data`` and
-            retrieve the min/max measure values in the archive to determine the bounds
-            -- this call may fail if the archive has no ``data`` method.
+            for the plot. Otherwise, we will call :meth:`~ArchiveBase.data` and retrieve
+            the min/max measure values in the archive to determine the bounds -- this
+            call may fail if the archive has no ``data`` method.
         ax: Axes on which to create the plot. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
