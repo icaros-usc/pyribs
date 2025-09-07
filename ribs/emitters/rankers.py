@@ -70,7 +70,7 @@ Args:
 Returns:
     The first array (shape ``(batch_size,)``) is an array of indices representing a
     ranking of the solutions and the second array (shape ``(batch_size,)`` or
-    (batch_size, n_values)``) is an array of values that this ranker used to rank the
+    ``(batch_size, n_values)``) is an array of values that this ranker used to rank the
     solutions. ``batch_size`` is the number of solutions and ``n_values`` is the number
     of values that the rank function used.
 """
