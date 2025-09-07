@@ -884,3 +884,36 @@ def test_multi_dim_solutions():
         measures_batch=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
         grid_indices_batch=[[5, 10], [6, 11], [7, 12]],
     )
+
+
+@pytest.mark.parametrize("mae", [True, False])
+def test_add_int_values(add_mode, mae):
+    """See https://github.com/icaros-usc/pyribs/issues/613"""
+    if mae:
+        archive = GridArchive(
+            solution_dim=3,
+            dims=[10, 20],
+            ranges=[(-1, 1), (-2, 2)],
+            learning_rate=0.1,
+            threshold_min=0.0,
+        )
+    else:
+        archive = GridArchive(solution_dim=3, dims=[10, 20], ranges=[(-1, 1), (-2, 2)])
+
+    # All these are integers, which previously caused errors.
+    solution = [1, 2, 3]
+    objective = 4
+    measures = [1, 2]
+
+    if add_mode == "single":
+        archive.add_single(solution, objective, measures)
+    else:
+        archive.add([solution], [objective], [measures])
+
+    assert_archive_elite(
+        archive,
+        np.asarray(solution, dtype=np.float64),
+        np.asarray(objective, dtype=np.float64),
+        np.asarray(measures, dtype=np.float64),
+        [9, 19],
+    )
