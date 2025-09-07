@@ -5,7 +5,7 @@ from abc import ABC
 
 import numpy as np
 
-from ribs._utils import deprecate_bounds
+from ribs._utils import check_shape, deprecate_bounds
 
 
 class EmitterBase(ABC):
@@ -27,6 +27,9 @@ class EmitterBase(ABC):
         upper_bounds (None or array-like): Upper bounds of the solution space. Pass None
             to indicate there are no bounds (i.e., bounds are set to inf).
         bounds: DEPRECATED.
+
+    Raises:
+        ValueError: There is an error in the bounds configuration.
     """
 
     def __init__(
@@ -36,6 +39,7 @@ class EmitterBase(ABC):
 
         self._archive = archive
         self._solution_dim = solution_dim
+
         self._lower_bounds = (
             np.full(solution_dim, -np.inf, dtype=archive.dtypes["solution"])
             if lower_bounds is None
@@ -45,6 +49,12 @@ class EmitterBase(ABC):
             np.full(solution_dim, np.inf, dtype=archive.dtypes["solution"])
             if upper_bounds is None
             else np.asarray(upper_bounds, dtype=archive.dtypes["solution"])
+        )
+        check_shape(
+            self._lower_bounds, "lower_bounds", self._solution_dim, "solution_dim"
+        )
+        check_shape(
+            self._upper_bounds, "upper_bounds", self._solution_dim, "solution_dim"
         )
 
     @property
@@ -139,7 +149,8 @@ class EmitterBase(ABC):
                 :meth:`ask_dqd`. Each matrix should consist of the objective gradient of
                 the solution followed by the measure gradients.
             add_info (dict): Data returned from the archive
-                :meth:`~ribs.archives.ArchiveBase.add` method.
+                :meth:`~ribs.archives.ArchiveBase.add` method. should be an array with
+                batch_size as the first dimension.
             fields (keyword arguments): Additional data for each solution. Each argument
                 should be an array with batch_size as the first dimension.
         """
