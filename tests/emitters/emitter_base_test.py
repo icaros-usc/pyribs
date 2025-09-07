@@ -199,6 +199,14 @@ def test_tell_arguments_incorrect_shape(emitter_type, wrong_array, offsets):
 #
 
 
+def test_default_bounds_correct(archive_fixture):
+    archive, x0 = archive_fixture
+    emitter = GaussianEmitter(archive, sigma=1, x0=x0)
+
+    assert (emitter.lower_bounds == np.full(archive.solution_dim, -np.inf)).all()
+    assert (emitter.upper_bounds == np.full(archive.solution_dim, np.inf)).all()
+
+
 def test_array_bound_correct(archive_fixture):
     archive, x0 = archive_fixture
     lower_bounds = np.concatenate((-np.arange(len(x0) - 1), [-np.inf]))
