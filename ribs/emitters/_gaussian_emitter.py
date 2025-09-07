@@ -101,7 +101,7 @@ class GaussianEmitter(EmitterBase):
             )
 
     @property
-    def x0(self) -> np.ndarray:
+    def x0(self) -> np.ndarray | None:
         """Initial Gaussian distribution center.
 
         Solutions are sampled from this distribution when the archive is empty (if
@@ -110,7 +110,7 @@ class GaussianEmitter(EmitterBase):
         return self._x0
 
     @property
-    def initial_solutions(self) -> np.ndarray:
+    def initial_solutions(self) -> np.ndarray | None:
         """Returned when the archive is empty (if :attr:`x0` is not set)."""
         return self._initial_solutions
 
