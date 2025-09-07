@@ -103,23 +103,37 @@ if __name__ == "__main__":
 
     archive = GridArchive(solution_dim=31, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2)
     emitter = EvolutionStrategyEmitter(
-        archive, x0=np.zeros(31), sigma0=1.0, bounds=[(0, 1.0)] * 31, es="cma_es"
+        archive,
+        x0=np.zeros(31),
+        sigma0=1.0,
+        lower_bounds=[0] * 31,
+        upper_bounds=[1] * 31,
+        es="cma_es",
     )
-    #  emitter = EvolutionStrategyEmitter(archive,
-    #                                     x0=np.zeros(31),
-    #                                     sigma0=1.0,
-    #                                     bounds=[(0, 1.0)] * 31,
-    #                                     es="sep_cma_es")
-    #  emitter = EvolutionStrategyEmitter(archive,
-    #                                     x0=np.zeros(31),
-    #                                     sigma0=1.0,
-    #                                     bounds=[(0, 1.0)] * 31,
-    #                                     es="lm_ma_es")
-    #  emitter = EvolutionStrategyEmitter(archive,
-    #                                     x0=np.zeros(31),
-    #                                     sigma0=1.0,
-    #                                     bounds=[(0, 1.0)] * 31,
-    #                                     es="openai_es",
-    #                                     es_kwargs={"mirror_sampling": False})
+    #  emitter = EvolutionStrategyEmitter(
+    #      archive,
+    #      x0=np.zeros(31),
+    #      sigma0=1.0,
+    #      lower_bounds=[0] * 31,
+    #      upper_bounds=[1] * 31,
+    #      es="sep_cma_es",
+    #  )
+    #  emitter = EvolutionStrategyEmitter(
+    #      archive,
+    #      x0=np.zeros(31),
+    #      sigma0=1.0,
+    #      lower_bounds=[0] * 31,
+    #      upper_bounds=[1] * 31,
+    #      es="lm_ma_es",
+    #  )
+    #  emitter = EvolutionStrategyEmitter(
+    #      archive,
+    #      x0=np.zeros(31),
+    #      sigma0=1.0,
+    #      lower_bounds=[0] * 31,
+    #      upper_bounds=[1] * 31,
+    #      es="openai_es",
+    #      es_kwargs={"mirror_sampling": False},
+    #  )
 
     emitter.ask()
