@@ -65,7 +65,7 @@ class EmitterBase(ABC):
                 "either specify bounds or specify lower_bounds/upper_bounds."
             )
         elif use_bounds:
-            (self._lower_bounds, self._upper_bounds) = self._process_bounds(
+            self._lower_bounds, self._upper_bounds = self._process_bounds(
                 bounds, self._solution_dim, archive.dtypes["solution"]
             )
         else:
