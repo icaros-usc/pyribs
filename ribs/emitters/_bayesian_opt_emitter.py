@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Collection
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -12,12 +13,7 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 
-from ribs._utils import (
-    check_batch_shape,
-    check_finite,
-    deprecate_bounds,
-    validate_batch,
-)
+from ribs._utils import check_batch_shape, check_finite, validate_batch
 from ribs.archives import GridArchive
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.typing import BatchData, Float, Int
@@ -39,11 +35,15 @@ class BayesianOptimizationEmitter(EmitterBase):
     Args:
         archive: An archive to use when creating and inserting solutions. Currently, the
             only supported archive type is :class:`ribs.archives.GridArchive`.
-        lower_bounds: Lower bounds of the solution space. Cannot be ``None`` or
-            ``+-inf`` because SOBOL sampling is used.
-        upper_bounds: Upper bounds of the solution space. Cannot be ``None`` or
-            ``+-inf`` because SOBOL sampling is used.
-        bounds: DEPRECATED.
+        bounds: Bounds of the solution space. This is a sequence of tuples, each of the
+            form ``(lower_bound, upper_bound)``. Unlike other emitters, either these
+            bounds or the ``lower_bounds``/``upper_bounds`` below must be provided since
+            SOBOL sampling is used.
+        lower_bounds: Instead of specifying ``bounds``, ``lower_bounds`` and
+            ``upper_bounds`` may be specified. This is useful if, for instance,
+            solutions are multi-dimensional. Here, pass an array specifying the lower
+            bounds of the solution space.
+        upper_bounds: Upper bounds of the solution space; see ``lower_bounds`` above.
         search_nrestarts: Number of starting points for EJIE pattern search.
         entropy_ejie: If ``True``, augments EJIE acquisition function with entropy to
             encourage measure space exploration. Refer to Sec. 4.1 of `Kent 2023
@@ -73,9 +73,9 @@ class BayesianOptimizationEmitter(EmitterBase):
         self,
         archive: GridArchive,
         *,
-        lower_bounds: ArrayLike,
-        upper_bounds: ArrayLike,
-        bounds: None = None,
+        bounds: Collection[tuple[None | Float, None | Float]] | None = None,
+        lower_bounds: ArrayLike | None = None,
+        upper_bounds: ArrayLike | None = None,
         search_nrestarts: Int = 5,
         entropy_ejie: bool = False,
         upscale_schedule: ArrayLike | None = None,
@@ -85,8 +85,6 @@ class BayesianOptimizationEmitter(EmitterBase):
         batch_size: Int = 1,
         seed: Int | None = None,
     ) -> None:
-        deprecate_bounds(bounds)
-
         try:
             from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
             from pymoo.optimize import minimize
@@ -104,10 +102,16 @@ class BayesianOptimizationEmitter(EmitterBase):
             "DefaultSingleObjectiveTermination": DefaultSingleObjectiveTermination,
         }
 
+        if bounds is None and lower_bounds is None and upper_bounds is None:
+            raise ValueError(
+                "Bounds must be specified for BayesianOptimizationEmitter, either "
+                "with the bounds parameter or with lower_bounds and upper_bounds."
+            )
         EmitterBase.__init__(
             self,
             archive,
             solution_dim=archive.solution_dim,
+            bounds=bounds,
             lower_bounds=lower_bounds,
             upper_bounds=upper_bounds,
         )

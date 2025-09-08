@@ -75,32 +75,52 @@ def test_both_x0_and_initial_solutions_provided(archive_fixture):
         )
 
 
-def test_upper_bounds_enforced(archive_fixture):
+@pytest.mark.parametrize("bound_type", ["bounds", "lower_upper"])
+def test_upper_bounds_enforced(archive_fixture, bound_type):
     archive, _ = archive_fixture
     sigma_g = 0.05
-    emitter = GradientOperatorEmitter(
-        archive,
-        sigma=0,
-        sigma_g=sigma_g,
-        x0=[2, 2, 2, 2],
-        lower_bounds=[-1, -1, -1, -1],
-        upper_bounds=[1, 1, 1, 1],
-    )
+    if bound_type == "bounds":
+        emitter = GradientOperatorEmitter(
+            archive,
+            sigma=0,
+            sigma_g=sigma_g,
+            x0=[2, 2, 2, 2],
+            bounds=[(-1, 1)] * 4,
+        )
+    else:
+        emitter = GradientOperatorEmitter(
+            archive,
+            sigma=0,
+            sigma_g=sigma_g,
+            x0=[2, 2, 2, 2],
+            lower_bounds=[-1, -1, -1, -1],
+            upper_bounds=[1, 1, 1, 1],
+        )
     sols = emitter.ask_dqd()
     assert np.all(sols <= 1)
 
 
-def test_lower_bounds_enforced(archive_fixture):
+@pytest.mark.parametrize("bound_type", ["bounds", "lower_upper"])
+def test_lower_bounds_enforced(archive_fixture, bound_type):
     archive, _ = archive_fixture
     sigma_g = 0.05
-    emitter = GradientOperatorEmitter(
-        archive,
-        sigma=0,
-        sigma_g=sigma_g,
-        x0=[-2, -2, -2, -2],
-        lower_bounds=[-1, -1, -1, -1],
-        upper_bounds=[1, 1, 1, 1],
-    )
+    if bound_type == "bounds":
+        emitter = GradientOperatorEmitter(
+            archive,
+            sigma=0,
+            sigma_g=sigma_g,
+            x0=[2, 2, 2, 2],
+            bounds=[(-1, 1)] * 4,
+        )
+    else:
+        emitter = GradientOperatorEmitter(
+            archive,
+            sigma=0,
+            sigma_g=sigma_g,
+            x0=[2, 2, 2, 2],
+            lower_bounds=[-1, -1, -1, -1],
+            upper_bounds=[1, 1, 1, 1],
+        )
     sols = emitter.ask_dqd()
     assert np.all(sols >= -1)
 

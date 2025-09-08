@@ -82,38 +82,66 @@ def test_both_x0_and_initial_solutions_provided(archive_fixture):
         )
 
 
-def test_upper_bounds_enforced(archive_fixture):
+@pytest.mark.parametrize("bound_type", ["bounds", "lower_upper"])
+def test_upper_bounds_enforced(archive_fixture, bound_type):
     archive, _ = archive_fixture
-    emitter = GeneticAlgorithmEmitter(
-        archive,
-        batch_size=36,
-        x0=[2, 2, 2, 2],
-        lower_bounds=[-1, -1, -1, -1],
-        upper_bounds=[1, 1, 1, 1],
-        operator="isoline",
-        operator_kwargs={
-            "iso_sigma": 0.1,
-            "line_sigma": 0.2,
-        },
-    )
+    if bound_type == "bounds":
+        emitter = GeneticAlgorithmEmitter(
+            archive,
+            batch_size=36,
+            x0=[2, 2, 2, 2],
+            bounds=[(-1, 1)] * 4,
+            operator="isoline",
+            operator_kwargs={
+                "iso_sigma": 0.1,
+                "line_sigma": 0.2,
+            },
+        )
+    else:
+        emitter = GeneticAlgorithmEmitter(
+            archive,
+            batch_size=36,
+            x0=[2, 2, 2, 2],
+            lower_bounds=[-1, -1, -1, -1],
+            upper_bounds=[1, 1, 1, 1],
+            operator="isoline",
+            operator_kwargs={
+                "iso_sigma": 0.1,
+                "line_sigma": 0.2,
+            },
+        )
     sols = emitter.ask()
     assert np.all(sols <= 1)
 
 
-def test_lower_bounds_enforced(archive_fixture):
+@pytest.mark.parametrize("bound_type", ["bounds", "lower_upper"])
+def test_lower_bounds_enforced(archive_fixture, bound_type):
     archive, _ = archive_fixture
-    emitter = GeneticAlgorithmEmitter(
-        archive,
-        batch_size=36,
-        x0=[-2, -2, -2, -2],
-        lower_bounds=[-1, -1, -1, -1],
-        upper_bounds=[1, 1, 1, 1],
-        operator="isoline",
-        operator_kwargs={
-            "iso_sigma": 0.1,
-            "line_sigma": 0.2,
-        },
-    )
+    if bound_type == "bounds":
+        emitter = GeneticAlgorithmEmitter(
+            archive,
+            batch_size=36,
+            x0=[2, 2, 2, 2],
+            bounds=[(-1, 1)] * 4,
+            operator="isoline",
+            operator_kwargs={
+                "iso_sigma": 0.1,
+                "line_sigma": 0.2,
+            },
+        )
+    else:
+        emitter = GeneticAlgorithmEmitter(
+            archive,
+            batch_size=36,
+            x0=[2, 2, 2, 2],
+            lower_bounds=[-1, -1, -1, -1],
+            upper_bounds=[1, 1, 1, 1],
+            operator="isoline",
+            operator_kwargs={
+                "iso_sigma": 0.1,
+                "line_sigma": 0.2,
+            },
+        )
     sols = emitter.ask()
     assert np.all(sols >= -1)
 

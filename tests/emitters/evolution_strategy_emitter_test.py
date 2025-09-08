@@ -106,9 +106,12 @@ if __name__ == "__main__":
         archive,
         x0=np.zeros(31),
         sigma0=1.0,
-        lower_bounds=[0] * 31,
-        upper_bounds=[1] * 31,
+        bounds=[(0, 1)] * 31,
         es="cma_es",
+        # es="sep_cma_es",
+        # es="lm_ma_es",
+        # es="openai_es",
+        # es_kwargs={"mirror_sampling": False},
     )
     #  emitter = EvolutionStrategyEmitter(
     #      archive,
@@ -116,24 +119,11 @@ if __name__ == "__main__":
     #      sigma0=1.0,
     #      lower_bounds=[0] * 31,
     #      upper_bounds=[1] * 31,
-    #      es="sep_cma_es",
-    #  )
-    #  emitter = EvolutionStrategyEmitter(
-    #      archive,
-    #      x0=np.zeros(31),
-    #      sigma0=1.0,
-    #      lower_bounds=[0] * 31,
-    #      upper_bounds=[1] * 31,
-    #      es="lm_ma_es",
-    #  )
-    #  emitter = EvolutionStrategyEmitter(
-    #      archive,
-    #      x0=np.zeros(31),
-    #      sigma0=1.0,
-    #      lower_bounds=[0] * 31,
-    #      upper_bounds=[1] * 31,
-    #      es="openai_es",
-    #      es_kwargs={"mirror_sampling": False},
+    #      es="cma_es",
+    #      # es="sep_cma_es",
+    #      # es="lm_ma_es",
+    #      # es="openai_es",
+    #      # es_kwargs={"mirror_sampling": False},
     #  )
 
     emitter.ask()

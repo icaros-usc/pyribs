@@ -207,18 +207,42 @@ def test_default_bounds_correct(archive_fixture):
     assert (emitter.upper_bounds == np.full(archive.solution_dim, np.inf)).all()
 
 
-def test_array_bound_correct(archive_fixture):
+def test_cannot_specify_both_bounds(archive_fixture):
+    archive, x0 = archive_fixture
+    with pytest.raises(
+        ValueError, match="Cannot specify both bounds and lower_bounds/upper_bounds.*"
+    ):
+        GaussianEmitter(
+            archive,
+            sigma=1,
+            x0=x0,
+            bounds=[(-1, 1)] * len(x0),
+            lower_bounds=[-1] * len(x0),
+            upper_bounds=[1] * len(x0),
+        )
+
+
+@pytest.mark.parametrize("bound_type", ["bounds", "lower_upper"])
+def test_array_bound_correct(archive_fixture, bound_type):
     archive, x0 = archive_fixture
     lower_bounds = np.concatenate((-np.arange(len(x0) - 1), [-np.inf]))
     upper_bounds = np.concatenate((np.arange(len(x0) - 1), [np.inf]))
 
-    emitter = GaussianEmitter(
-        archive,
-        sigma=1,
-        x0=x0,
-        lower_bounds=lower_bounds,
-        upper_bounds=upper_bounds,
-    )
+    if bound_type == "bounds":
+        emitter = GaussianEmitter(
+            archive,
+            sigma=1,
+            x0=x0,
+            bounds=list(zip(lower_bounds, upper_bounds)),
+        )
+    else:
+        emitter = GaussianEmitter(
+            archive,
+            sigma=1,
+            x0=x0,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
+        )
 
     assert (emitter.lower_bounds == lower_bounds).all()
     assert (emitter.upper_bounds == upper_bounds).all()
@@ -240,30 +264,44 @@ def test_multidim_array_bound_correct():
     assert (emitter.upper_bounds == upper_bounds).all()
 
 
-def test_long_array_bound_fails(archive_fixture):
+@pytest.mark.parametrize("bound_type", ["bounds", "lower_upper"])
+def test_long_array_bound_fails(archive_fixture, bound_type):
     archive, x0 = archive_fixture
 
-    with pytest.raises(
-        ValueError, match="Expected lower_bounds to be an array with shape .*"
-    ):
-        GaussianEmitter(
-            archive,
-            sigma=1,
-            x0=x0,
-            # More bounds than solution dims.
-            lower_bounds=[-1] * (len(x0) + 1),
-            upper_bounds=[1] * len(x0),
-        )
-    with pytest.raises(
-        ValueError, match="Expected upper_bounds to be an array with shape .*"
-    ):
-        GaussianEmitter(
-            archive,
-            sigma=1,
-            x0=x0,
-            lower_bounds=[1] * len(x0),
-            upper_bounds=[-1] * (len(x0) + 1),
-        )
+    if bound_type == "bounds":
+        with pytest.raises(
+            ValueError,
+            match="If it is an array-like, bounds must have length solution_dim",
+        ):
+            GaussianEmitter(
+                archive,
+                sigma=1,
+                x0=x0,
+                # More bounds than solution dims.
+                bounds=[(-1, 1)] * (len(x0) + 1),
+            )
+    else:
+        with pytest.raises(
+            ValueError, match="Expected lower_bounds to be an array with shape .*"
+        ):
+            GaussianEmitter(
+                archive,
+                sigma=1,
+                x0=x0,
+                # More bounds than solution dims.
+                lower_bounds=[-1] * (len(x0) + 1),
+                upper_bounds=[1] * len(x0),
+            )
+        with pytest.raises(
+            ValueError, match="Expected upper_bounds to be an array with shape .*"
+        ):
+            GaussianEmitter(
+                archive,
+                sigma=1,
+                x0=x0,
+                lower_bounds=[1] * len(x0),
+                upper_bounds=[-1] * (len(x0) + 1),
+            )
 
 
 def test_wrong_bound_shape(archive_fixture):

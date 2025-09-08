@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import numbers
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ribs._utils import check_shape, deprecate_bounds, validate_batch
+from ribs._utils import check_shape, validate_batch
 from ribs.archives import ArchiveBase
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.opt import (
@@ -100,6 +100,10 @@ class GradientArborescenceEmitter(EmitterBase):
             arguments allowed by each optimizer.
         normalize_grad: If true (default), then gradient infomation will be normalized.
             Otherwise, it will not be normalized.
+        bounds: This argument may be used for providing solution space bounds in the
+            future. This emitter does not currently support solution space bounds, as
+            bounding solutions for DQD algorithms such as CMA-MEGA is an open problem.
+            Hence, this argument must be set to None.
         lower_bounds: This argument may be used for providing solution space bounds in
             the future. This emitter does not currently support solution space bounds,
             as bounding solutions for DQD algorithms such as CMA-MEGA is an open
@@ -108,7 +112,6 @@ class GradientArborescenceEmitter(EmitterBase):
             the future. This emitter does not currently support solution space bounds,
             as bounding solutions for DQD algorithms such as CMA-MEGA is an open
             problem. Hence, this argument must be set to None.
-        bounds: DEPRECATED.
         batch_size: Number of solutions to return in :meth:`ask`. If not passed in, a
             batch size will be automatically calculated using the default CMA-ES rules.
             This **does not** account for the **one** solution returned by
@@ -142,18 +145,16 @@ class GradientArborescenceEmitter(EmitterBase):
         es: Callable[..., EvolutionStrategyBase] | str = "cma_es",
         es_kwargs: dict | None = None,
         normalize_grad: bool = True,
+        bounds: Collection[tuple[None | Float, None | Float]] | None = None,
         lower_bounds: ArrayLike | None = None,
         upper_bounds: ArrayLike | None = None,
-        bounds: None = None,
         batch_size: Int | None = None,
         epsilon: Float = 1e-8,
         seed: Int | None = None,
     ) -> None:
-        deprecate_bounds(bounds)
-
-        if lower_bounds is not None or upper_bounds is not None:
+        if bounds is not None or lower_bounds is not None or upper_bounds is not None:
             raise ValueError(
-                "lower_bounds and upper_bounds must be set to None. "
+                "bounds, lower_bounds, and upper_bounds must be set to None. "
                 "The GradientArborescenceEmitter does not currently support solution "
                 "space bounds, as bounding solutions for DQD algorithms such as "
                 "CMA-MEGA is an open problem."
@@ -163,6 +164,7 @@ class GradientArborescenceEmitter(EmitterBase):
             self,
             archive,
             solution_dim=archive.solution_dim,
+            bounds=bounds,
             lower_bounds=lower_bounds,
             upper_bounds=upper_bounds,
         )
