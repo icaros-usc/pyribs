@@ -133,7 +133,7 @@ def _get_es(
 
     Args:
         klass: Either a callable or a str for the ES.
-        es_kwargs (dict): Additional keyword arguments for the ES.
+        es_kwargs: Additional keyword arguments for the ES.
 
     Returns:
         The corresponding evolution strategy class instance.

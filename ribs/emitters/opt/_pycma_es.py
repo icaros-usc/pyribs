@@ -102,7 +102,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         """Checks if the optimization should stop and be reset.
 
         Args:
-            ranking_values (np.ndarray): Not used.
+            ranking_values: Not used.
 
         Returns:
             Output of cma.CMAEvolutionStrategy.stop
@@ -146,7 +146,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         """Samples new solutions from the Gaussian distribution.
 
         Args:
-            batch_size (int): batch size of the sample. Defaults to ``self.batch_size``.
+            batch_size: batch size of the sample. Defaults to ``self.batch_size``.
         """
         # batch_size defaults to popsize in CMA-ES.
         self._solutions = np.asarray(self._es.ask(batch_size))
