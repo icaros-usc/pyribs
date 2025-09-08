@@ -2,6 +2,9 @@
 
 from abc import ABC, abstractmethod
 
+import numpy as np
+from numpy.typing import ArrayLike
+
 
 class OperatorBase(ABC):
     """Base class for operators.
@@ -10,14 +13,14 @@ class OperatorBase(ABC):
     """
 
     @abstractmethod
-    def ask(self, parents):
+    def ask(self, parents: ArrayLike) -> np.ndarray:
         """Operates on parents to generate new solutions.
 
         Args:
-            parents (array-like): Array of solutions to be mutated. Typically passed in
-                by an emitter after selection from an archive.
+            parents: Array of solutions to be mutated. Typically passed in by an emitter
+                after selection from an archive.
 
         Returns:
-            numpy.ndarray: ``(batch_size, solution_dim)`` array that contains
-            ``batch_size`` mutated solutions.
+            ``(batch_size, solution_dim)`` array that contains ``batch_size`` mutated
+            solutions.
         """

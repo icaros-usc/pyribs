@@ -92,7 +92,9 @@ class GeneticAlgorithmEmitter(EmitterBase):
         operator_class = _get_op(operator)
         self._operator = operator_class(
             **(operator_kwargs if operator_kwargs is not None else {}),
-            seed=seed,
+            # We assume the class takes in a seed, but this is technically not part of
+            # the API.
+            seed=seed,  # ty: ignore[unknown-argument]
         )
 
     @property
