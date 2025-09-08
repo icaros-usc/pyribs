@@ -44,6 +44,12 @@ These gradient-based optimizers inherit from :class:`GradientOptBase`:
     GradientOptBase
 """
 
+from __future__ import annotations
+
+from collections.abc import Callable
+
+from typing_extensions import ParamSpec
+
 from ribs.emitters.opt._adam_opt import AdamOpt
 from ribs.emitters.opt._cma_es import CMAEvolutionStrategy
 from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
@@ -73,13 +79,17 @@ _NAME_TO_GRAD_OPT_MAP = {
     "gradient_ascent": GradientAscentOpt,
 }
 
+P = ParamSpec("P")
 
-def _get_grad_opt(klass, **grad_opt_kwargs):
+
+def _get_grad_opt(
+    klass: Callable[..., GradientOptBase] | str, **grad_opt_kwargs: P.kwargs
+) -> GradientOptBase:
     """Returns a gradient optimizer class based on its name.
 
     Args:
         klass: Either a callable or a str for the gradient optimizer.
-        grad_opt_kwargs (dict): Additional kwargs for the gradient optimizer.
+        grad_opt_kwargs: Additional kwargs for the gradient optimizer.
 
     Returns:
         The corresponding gradient optimizer class instance.
@@ -116,7 +126,9 @@ _NAME_TO_ES_MAP = {
 }
 
 
-def _get_es(klass, **es_kwargs):
+def _get_es(
+    klass: Callable[..., EvolutionStrategyBase] | str, **es_kwargs: P.kwargs
+) -> EvolutionStrategyBase:
     """Returns an evolution strategy (ES) class based on its name.
 
     Args:

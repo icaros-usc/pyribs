@@ -8,8 +8,10 @@ https://pytorch.org/docs/stable/generated/torch.optim.Adam.html
 """
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from ribs.emitters.opt._gradient_opt_base import GradientOptBase
+from ribs.typing import Float
 
 
 class AdamOpt(GradientOptBase):
@@ -19,13 +21,13 @@ class AdamOpt(GradientOptBase):
     information on hyperparameters.
 
     Args:
-        theta0 (array-like): Initial solution. 1D array.
-        lr (float): Learning rate for the update.
-        beta1 (float): Exponential decay rate for the moment estimates.
-        beta2 (float): Another exponential decay rate for the moment estimates.
-        epsilon (float): Hyperparameter for numerical stability.
-        l2_coeff (float): Coefficient for L2 regularization. Note this is **not** the
-            same as "weight decay" -- see `this blog post
+        theta0: Initial solution. 1D array.
+        lr: Learning rate for the update.
+        beta1: Exponential decay rate for the moment estimates.
+        beta2: Another exponential decay rate for the moment estimates.
+        epsilon: Hyperparameter for numerical stability.
+        l2_coeff: Coefficient for L2 regularization. Note this is **not** the same as
+            "weight decay" -- see `this blog post
             <https://www.fast.ai/posts/2018-07-02-adam-weight-decay.html>_` and
             `Loshchilov and Hutler 2019 <https://arxiv.org/abs/1711.05101>_` for more
             info.
@@ -33,12 +35,12 @@ class AdamOpt(GradientOptBase):
 
     def __init__(
         self,
-        theta0,
-        lr=0.001,
-        beta1=0.9,
-        beta2=0.999,
-        epsilon=1e-8,
-        l2_coeff=0.0,
+        theta0: ArrayLike,
+        lr: Float = 0.001,
+        beta1: Float = 0.9,
+        beta2: Float = 0.999,
+        epsilon: Float = 1e-8,
+        l2_coeff: Float = 0.0,
     ):
         self._m = None
         self._v = None
@@ -54,16 +56,16 @@ class AdamOpt(GradientOptBase):
         self.reset(theta0)
 
     @property
-    def theta(self):
+    def theta(self) -> np.ndarray:
         return self._theta
 
-    def reset(self, theta0):
-        self._theta = np.copy(theta0)
+    def reset(self, theta0: ArrayLike) -> None:
+        self._theta = np.asarray(theta0, copy=True)
         self._m = np.zeros_like(self._theta)
         self._v = np.zeros_like(self._theta)
         self._t = 0
 
-    def step(self, gradient):
+    def step(self, gradient: ArrayLike) -> None:
         # Invert gradient since we seek to maximize -- see pseudocode here:
         # https://pytorch.org/docs/stable/generated/torch.optim.Adam.html
         gradient = -np.asarray(gradient)
