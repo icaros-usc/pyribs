@@ -14,21 +14,31 @@ def archive_fixture():
     return archive
 
 
-@pytest.fixture
-def full_archive_emitter_fixture(archive_fixture):
+@pytest.fixture(params=["bounds", "lower_upper"])
+def full_archive_emitter_fixture(archive_fixture, request):
     """Returns a BayesianOptimizationEmitter that has filled its archive to
     100% coverage."""
     rng = np.random.default_rng()
 
-    emitter = BayesianOptimizationEmitter(
-        archive=archive_fixture,
-        lower_bounds=[-1, -1, -1, -1],
-        upper_bounds=[1, 1, 1, 1],
-        upscale_schedule=[[2, 2], [4, 4]],
-        num_initial_samples=1,
-        seed=0,
-        batch_size=1,
-    )
+    if request.param == "bounds":
+        emitter = BayesianOptimizationEmitter(
+            archive=archive_fixture,
+            bounds=[(-1, 1)] * 4,
+            upscale_schedule=[[2, 2], [4, 4]],
+            num_initial_samples=1,
+            seed=0,
+            batch_size=1,
+        )
+    else:
+        emitter = BayesianOptimizationEmitter(
+            archive=archive_fixture,
+            lower_bounds=[-1, -1, -1, -1],
+            upper_bounds=[1, 1, 1, 1],
+            upscale_schedule=[[2, 2], [4, 4]],
+            num_initial_samples=1,
+            seed=0,
+            batch_size=1,
+        )
 
     md1, md2 = archive_fixture.dims
     all_measures = np.array(
