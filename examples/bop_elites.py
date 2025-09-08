@@ -209,7 +209,7 @@ def main(
             )
 
             save_heatmap(
-                scheduler.result_archive,
+                scheduler.result_archive,  # ty: ignore[invalid-argument-type]
                 logdir / f"heatmap_{i:08d}.png",
             )
 
