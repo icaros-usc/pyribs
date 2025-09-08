@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ribs._utils import check_batch_shape, check_shape, deprecate_bounds, validate_batch
+from ribs._utils import check_batch_shape, check_shape, validate_batch
 from ribs.archives import ArchiveBase
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.typing import BatchData, Float, Int
@@ -81,11 +82,19 @@ class GradientOperatorEmitter(EmitterBase):
             Pass this parameter to configure that epsilon.
         operator_type: Either 'isotropic' or 'iso_line_dd' to mark the operator type for
             intermediate operations. Defaults to 'isotropic'.
-        lower_bounds: Lower bounds of the solution space. Pass None to indicate there
-            are no bounds (i.e., bounds are set to -inf).
-        upper_bounds: Upper bounds of the solution space. Pass None to indicate there
-            are no bounds (i.e., bounds are set to inf).
-        bounds: DEPRECATED.
+        bounds: Bounds of the solution space. Pass None to indicate there are no bounds.
+            Alternatively, pass an array-like to specify the bounds for each dim. Each
+            element in this array-like can be None to indicate no bound, or a tuple of
+            ``(lower_bound, upper_bound)``, where ``lower_bound`` or ``upper_bound`` may
+            be None to indicate no bound. Unbounded upper bounds are set to +inf, and
+            unbounded lower bounds are set to -inf.
+        lower_bounds: Instead of specifying ``bounds``, ``lower_bounds`` and
+            ``upper_bounds`` may be specified. This is useful if, for instance,
+            solutions are multi-dimensional. Here, pass None to indicate there are no
+            bounds (i.e., bounds are set to -inf), or pass an array specifying the lower
+            bounds of the solution space.
+        upper_bounds: Upper bounds of the solution space; see ``lower_bounds`` above.
+            Pass None to indicate there are no bounds (i.e., bounds are set to inf).
         batch_size: Number of solutions to return in :meth:`ask`.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
@@ -107,18 +116,17 @@ class GradientOperatorEmitter(EmitterBase):
         normalize_grad: bool = False,
         epsilon: Float = 1e-8,
         operator_type: Literal["isotropic", "iso_line_dd"] = "isotropic",
+        bounds: Collection[tuple[None | Float, None | Float]] | None = None,
         lower_bounds: ArrayLike | None = None,
         upper_bounds: ArrayLike | None = None,
-        bounds: None = None,
         batch_size: Int = 64,
         seed: Int | None = None,
     ) -> None:
-        deprecate_bounds(bounds)
-
         EmitterBase.__init__(
             self,
             archive=archive,
             solution_dim=archive.solution_dim,
+            bounds=bounds,
             lower_bounds=lower_bounds,
             upper_bounds=upper_bounds,
         )

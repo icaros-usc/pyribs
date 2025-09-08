@@ -57,30 +57,50 @@ def test_both_x0_and_initial_solutions_provided(archive_fixture):
         IsoLineEmitter(archive, x0=x0, initial_solutions=initial_solutions)
 
 
-def test_upper_bounds_enforced(archive_fixture):
+@pytest.mark.parametrize("bound_type", ["bounds", "lower_upper"])
+def test_upper_bounds_enforced(archive_fixture, bound_type):
     archive, _ = archive_fixture
-    emitter = IsoLineEmitter(
-        archive,
-        x0=[2, 2, 2, 2],
-        iso_sigma=0,
-        line_sigma=0,
-        lower_bounds=[-1, -1, -1, -1],
-        upper_bounds=[1, 1, 1, 1],
-    )
+    if bound_type == "bounds":
+        emitter = IsoLineEmitter(
+            archive,
+            x0=[2, 2, 2, 2],
+            iso_sigma=0,
+            line_sigma=0,
+            bounds=[(-1, 1)] * 4,
+        )
+    else:
+        emitter = IsoLineEmitter(
+            archive,
+            x0=[2, 2, 2, 2],
+            iso_sigma=0,
+            line_sigma=0,
+            lower_bounds=[-1, -1, -1, -1],
+            upper_bounds=[1, 1, 1, 1],
+        )
     sols = emitter.ask()
     assert np.all(sols <= 1)
 
 
-def test_lower_bounds_enforced(archive_fixture):
+@pytest.mark.parametrize("bound_type", ["bounds", "lower_upper"])
+def test_lower_bounds_enforced(archive_fixture, bound_type):
     archive, _ = archive_fixture
-    emitter = IsoLineEmitter(
-        archive,
-        x0=[-2, -2, -2, -2],
-        iso_sigma=0,
-        line_sigma=0,
-        lower_bounds=[-1, -1, -1, -1],
-        upper_bounds=[1, 1, 1, 1],
-    )
+    if bound_type == "bounds":
+        emitter = IsoLineEmitter(
+            archive,
+            x0=[2, 2, 2, 2],
+            iso_sigma=0,
+            line_sigma=0,
+            bounds=[(-1, 1)] * 4,
+        )
+    else:
+        emitter = IsoLineEmitter(
+            archive,
+            x0=[2, 2, 2, 2],
+            iso_sigma=0,
+            line_sigma=0,
+            lower_bounds=[-1, -1, -1, -1],
+            upper_bounds=[1, 1, 1, 1],
+        )
     sols = emitter.ask()
     assert np.all(sols >= -1)
 

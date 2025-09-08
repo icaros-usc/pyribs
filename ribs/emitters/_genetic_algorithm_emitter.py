@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
+
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ribs._utils import check_batch_shape, check_shape, deprecate_bounds
+from ribs._utils import check_batch_shape, check_shape
 from ribs.archives import ArchiveBase
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.operators import _get_op
-from ribs.typing import Int
+from ribs.typing import Float, Int
 
 
 class GeneticAlgorithmEmitter(EmitterBase):
@@ -28,11 +30,19 @@ class GeneticAlgorithmEmitter(EmitterBase):
         x0: Initial solution.
         initial_solutions: An (n, solution_dim) array of solutions to be used when the
             archive is empty, in lieu of ``x0``.
-        lower_bounds: Lower bounds of the solution space. Pass None to indicate there
-            are no bounds (i.e., bounds are set to -inf).
-        upper_bounds: Upper bounds of the solution space. Pass None to indicate there
-            are no bounds (i.e., bounds are set to inf).
-        bounds: DEPRECATED.
+        bounds: Bounds of the solution space. Pass None to indicate there are no bounds.
+            Alternatively, pass an array-like to specify the bounds for each dim. Each
+            element in this array-like can be None to indicate no bound, or a tuple of
+            ``(lower_bound, upper_bound)``, where ``lower_bound`` or ``upper_bound`` may
+            be None to indicate no bound. Unbounded upper bounds are set to +inf, and
+            unbounded lower bounds are set to -inf.
+        lower_bounds: Instead of specifying ``bounds``, ``lower_bounds`` and
+            ``upper_bounds`` may be specified. This is useful if, for instance,
+            solutions are multi-dimensional. Here, pass None to indicate there are no
+            bounds (i.e., bounds are set to -inf), or pass an array specifying the lower
+            bounds of the solution space.
+        upper_bounds: Upper bounds of the solution space; see ``lower_bounds`` above.
+            Pass None to indicate there are no bounds (i.e., bounds are set to inf).
         batch_size: Number of solutions to return in :meth:`ask`.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
@@ -50,18 +60,17 @@ class GeneticAlgorithmEmitter(EmitterBase):
         operator_kwargs: dict | None = None,
         x0: ArrayLike | None = None,
         initial_solutions: ArrayLike | None = None,
+        bounds: Collection[tuple[None | Float, None | Float]] | None = None,
         lower_bounds: ArrayLike | None = None,
         upper_bounds: ArrayLike | None = None,
-        bounds: None = None,
         batch_size: Int = 64,
         seed: Int | None = None,
     ) -> None:
-        deprecate_bounds(bounds)
-
         EmitterBase.__init__(
             self,
             archive,
             solution_dim=archive.solution_dim,
+            bounds=bounds,
             lower_bounds=lower_bounds,
             upper_bounds=upper_bounds,
         )
