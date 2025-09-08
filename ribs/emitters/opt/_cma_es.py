@@ -4,10 +4,13 @@ Adapted from Nikolaus Hansen's pycma:
 https://github.com/CMA-ES/pycma/blob/master/cma/purecma.py
 """
 
+from __future__ import annotations
+
 import warnings
 
 import numba as nb
 import numpy as np
+from numpy.typing import DTypeLike
 from threadpoolctl import threadpool_limits
 
 from ribs._utils import arr_readonly
@@ -16,6 +19,7 @@ from ribs.emitters.opt._evolution_strategy_base import (
     BOUNDS_WARNING,
     EvolutionStrategyBase,
 )
+from ribs.typing import Float, Int
 
 
 class DecompMatrix:
@@ -29,12 +33,11 @@ class DecompMatrix:
     waits several evals before recomputing the inverse square root.
 
     Args:
-        dimension (int): Size of the (square) covariance matrix.
-        dtype (str or data-type): Data type of the matrix, typically np.float32 or
-            np.float64.
+        dimension: Size of the (square) covariance matrix.
+        dtype: Data type of the matrix, typically np.float32 or np.float64.
     """
 
-    def __init__(self, dimension, dtype):
+    def __init__(self, dimension: Int, dtype: DTypeLike) -> None:
         self.cov = np.eye(dimension, dtype=dtype)
         self.eigenbasis = np.eye(dimension, dtype=dtype)
         self.eigenvalues = np.ones((dimension,), dtype=dtype)
@@ -45,7 +48,7 @@ class DecompMatrix:
         # The last evaluation on which the eigensystem was updated.
         self.updated_eval = 0
 
-    def update_eigensystem(self, current_eval, lazy_gap_evals):
+    def update_eigensystem(self, current_eval: Int, lazy_gap_evals: Int) -> None:
         """Updates the covariance matrix if lazy_gap_evals have passed.
 
         We have attempted to use numba in this method, but since np.linalg.eigh is the
@@ -53,10 +56,9 @@ class DecompMatrix:
         much (and actually slows things down a bit).
 
         Args:
-            current_eval (int): The number of solutions the optimizer has evaluated so
-                far.
-            lazy_gap_evals (int): The number of evaluations to wait between covariance
-                matrix updates.
+            current_eval: The number of solutions the optimizer has evaluated so far.
+            lazy_gap_evals: The number of evaluations to wait between covariance matrix
+                updates.
         """
         if current_eval <= self.updated_eval + lazy_gap_evals:
             return
@@ -86,30 +88,30 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     Refer to :class:`EvolutionStrategyBase` for usage instruction.
 
     Args:
-        sigma0 (float): Initial step size.
-        batch_size (int): Number of solutions to evaluate at a time. If None, we
-            calculate a default batch size based on solution_dim.
-        solution_dim (int): Size of the solution space.
-        seed (int): Seed for the random number generator.
-        dtype (str or data-type): Data type of solutions.
-        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array indicating
-            lower bounds of the solution space. Scalars specify the same bound for the
-            entire space, while arrays specify a bound for each dimension. Pass -np.inf
-            in the array or scalar to indicated unbounded space.
-        upper_bounds (float or np.ndarray): Same as above, but for upper bounds (and
-            pass np.inf instead of -np.inf).
+        sigma0: Initial step size.
+        batch_size: Number of solutions to evaluate at a time. If None, we calculate a
+            default batch size based on solution_dim.
+        solution_dim: Size of the solution space.
+        seed: Seed for the random number generator.
+        dtype: Data type of solutions.
+        lower_bounds: scalar or (solution_dim,) array indicating lower bounds of the
+            solution space. Scalars specify the same bound for the entire space, while
+            arrays specify a bound for each dimension. Pass -np.inf in the array or
+            scalar to indicated unbounded space.
+        upper_bounds: Same as above, but for upper bounds (and pass np.inf instead of
+            -np.inf).
     """
 
     def __init__(
         self,
-        sigma0,
-        solution_dim,
-        batch_size=None,
-        seed=None,
-        dtype=np.float64,
-        lower_bounds=-np.inf,
-        upper_bounds=np.inf,
-    ):
+        sigma0: Float,
+        solution_dim: Int,
+        batch_size: Int | None = None,
+        seed: Int | None = None,
+        dtype: DTypeLike = np.float64,
+        lower_bounds: Float | np.ndarray = -np.inf,
+        upper_bounds: Float | np.ndarray = np.inf,
+    ) -> None:
         self.batch_size = (
             4 + int(3 * np.log(solution_dim)) if batch_size is None else batch_size
         )
@@ -144,7 +146,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         self.ps = None
         self.cov = None
 
-    def reset(self, x0):
+    def reset(self, x0: np.ndarray) -> None:
         self.current_eval = 0
         self.sigma = self.sigma0
         self.mean = np.array(x0, self.dtype)
@@ -156,7 +158,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
         # Setup the covariance matrix.
         self.cov = DecompMatrix(self.solution_dim, self.dtype)
 
-    def check_stop(self, ranking_values):
+    def check_stop(self, ranking_values: np.ndarray) -> bool:
         # Tolerances from pycma CMA-ES.
         if self.cov.condition_number > 1e14:
             return True
@@ -195,7 +197,7 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def ask(self, batch_size=None):
+    def ask(self, batch_size: Int | None = None) -> np.ndarray:
         if batch_size is None:
             batch_size = self.batch_size
 
@@ -270,7 +272,9 @@ class CMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def tell(self, ranking_indices, ranking_values, num_parents):
+    def tell(
+        self, ranking_indices: np.ndarray, ranking_values: np.ndarray, num_parents: Int
+    ) -> None:
         self.current_eval += len(self._solutions[ranking_indices])
 
         if num_parents == 0:

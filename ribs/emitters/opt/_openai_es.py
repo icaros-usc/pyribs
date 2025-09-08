@@ -3,9 +3,13 @@
 See here for more info: https://arxiv.org/abs/1703.03864
 """
 
+from __future__ import annotations
+
 import warnings
 
 import numpy as np
+from numpy.typing import DTypeLike
+from typing_extensions import ParamSpec
 
 from ribs._utils import arr_readonly
 from ribs.emitters.opt._adam_opt import AdamOpt
@@ -14,6 +18,9 @@ from ribs.emitters.opt._evolution_strategy_base import (
     BOUNDS_WARNING,
     EvolutionStrategyBase,
 )
+from ribs.typing import Float, Int
+
+P = ParamSpec("P")
 
 
 class OpenAIEvolutionStrategy(EvolutionStrategyBase):
@@ -22,35 +29,35 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
     Refer to :class:`EvolutionStrategyBase` for usage instruction.
 
     Args:
-        sigma0 (float): Initial step size.
-        batch_size (int): Number of solutions to evaluate at a time. If None, we
-            calculate a default batch size based on solution_dim.
-        solution_dim (int): Size of the solution space.
-        seed (int): Seed for the random number generator.
-        dtype (str or data-type): Data type of solutions.
-        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array indicating
-            lower bounds of the solution space. Scalars specify the same bound for the
-            entire space, while arrays specify a bound for each dimension. Pass -np.inf
-            in the array or scalar to indicated unbounded space.
-        upper_bounds (float or np.ndarray): Same as above, but for upper bounds (and
-            pass np.inf instead of -np.inf).
-        mirror_sampling (bool): Whether to use mirror sampling when gathering solutions.
+        sigma0: Initial step size.
+        batch_size: Number of solutions to evaluate at a time. If None, we calculate a
+            default batch size based on solution_dim.
+        solution_dim: Size of the solution space.
+        seed: Seed for the random number generator.
+        dtype: Data type of solutions.
+        lower_bounds: scalar or (solution_dim,) array indicating lower bounds of the
+            solution space. Scalars specify the same bound for the entire space, while
+            arrays specify a bound for each dimension. Pass -np.inf in the array or
+            scalar to indicated unbounded space.
+        upper_bounds: Same as above, but for upper bounds (and pass np.inf instead of
+            -np.inf).
+        mirror_sampling: Whether to use mirror sampling when gathering solutions.
             Defaults to True.
-        adam_kwargs (dict): Keyword arguments passed to :class:`AdamOpt`.
+        adam_kwargs: Keyword arguments passed to :class:`AdamOpt`.
     """
 
     def __init__(
         self,
-        sigma0,
-        solution_dim,
-        batch_size=None,
-        seed=None,
-        dtype=np.float64,
-        lower_bounds=-np.inf,
-        upper_bounds=np.inf,
-        mirror_sampling=True,
-        **adam_kwargs,
-    ):
+        sigma0: Float,
+        solution_dim: Int,
+        batch_size: Int | None = None,
+        seed: Int | None = None,
+        dtype: DTypeLike = np.float64,
+        lower_bounds: Float | np.ndarray = -np.inf,
+        upper_bounds: Float | np.ndarray = np.inf,
+        mirror_sampling: bool = True,
+        **adam_kwargs: P.kwargs,
+    ) -> None:
         self.batch_size = (
             4 + int(3 * np.log(solution_dim)) if batch_size is None else batch_size
         )
@@ -98,12 +105,12 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
         self.last_update_ratio = None
         self.noise = None
 
-    def reset(self, x0):
+    def reset(self, x0: np.ndarray) -> None:
         self.adam_opt.reset(x0)
         self.last_update_ratio = np.inf  # Updated at end of tell().
         self.noise = None  # Becomes (batch_size, solution_dim) array in ask().
 
-    def check_stop(self, ranking_values):
+    def check_stop(self, ranking_values: np.ndarray) -> bool:
         if self.last_update_ratio < 1e-9:
             return True
 
@@ -117,7 +124,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         return False
 
-    def ask(self, batch_size=None):
+    def ask(self, batch_size: Int | None = None) -> np.ndarray:
         if batch_size is None:
             batch_size = self.batch_size
 
@@ -165,7 +172,9 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
 
         return arr_readonly(self._solutions)
 
-    def tell(self, ranking_indices, ranking_values, num_parents):
+    def tell(
+        self, ranking_indices: np.ndarray, ranking_values: np.ndarray, num_parents: Int
+    ) -> None:
         # Indices come in decreasing order, so we reverse to get them to
         # increasing order.
         ranks = np.empty(self.batch_size, dtype=np.int32)

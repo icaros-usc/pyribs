@@ -1,10 +1,14 @@
 """ES that wraps pycma."""
 
+from __future__ import annotations
+
 import numpy as np
+from numpy.typing import DTypeLike
 from threadpoolctl import threadpool_limits
 
 from ribs._utils import arr_readonly
 from ribs.emitters.opt._evolution_strategy_base import EvolutionStrategyBase
+from ribs.typing import Float, Int
 
 
 class PyCMAEvolutionStrategy(EvolutionStrategyBase):
@@ -16,19 +20,19 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         which can be installed with ``pip install cma`` or ``conda install cma``.
 
     Args:
-        sigma0 (float): Initial step size.
-        batch_size (int or str): Number of solutions to evaluate at a time. This is
-            passed directly as ``popsize`` in ``opts``.
-        solution_dim (int): Size of the solution space.
-        seed (int): Seed for the random number generator.
-        dtype (str or data-type): Data type of solutions.
-        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array indicating
-            lower bounds of the solution space. Scalars specify the same bound for the
-            entire space, while arrays specify a bound for each dimension. Pass -np.inf
-            in the array or scalar to indicated unbounded space.
-        upper_bounds (float or np.ndarray): Same as above, but for upper bounds (and
-            pass np.inf instead of -np.inf).
-        opts (dict): Additional options for pycma. Note that ``popsize``, ``bounds``,
+        sigma0: Initial step size.
+        batch_size: Number of solutions to evaluate at a time. This is passed directly
+            as ``popsize`` in ``opts``.
+        solution_dim: Size of the solution space.
+        seed: Seed for the random number generator.
+        dtype: Data type of solutions.
+        lower_bounds: scalar or (solution_dim,) array indicating lower bounds of the
+            solution space. Scalars specify the same bound for the entire space, while
+            arrays specify a bound for each dimension. Pass -np.inf in the array or
+            scalar to indicated unbounded space.
+        upper_bounds: Same as above, but for upper bounds (and pass np.inf instead of
+            -np.inf).
+        opts: Additional options for pycma. Note that ``popsize``, ``bounds``,
             ``randn``, and ``seed`` are overwritten by us and thus should not be
             provided in this dict. We also make ``verbose`` default to -9, but you can
             also pass in a custom value here.
@@ -36,15 +40,15 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
 
     def __init__(
         self,
-        sigma0,
-        solution_dim,
-        batch_size=None,
-        seed=None,
-        dtype=np.float64,
-        lower_bounds=None,
-        upper_bounds=None,
-        opts=None,
-    ):
+        sigma0: Float,
+        solution_dim: Int,
+        batch_size: int | None = None,
+        seed: Int | None = None,
+        dtype: DTypeLike = np.float64,
+        lower_bounds: Float | np.ndarray | None = None,
+        upper_bounds: Float | np.ndarray | None = None,
+        opts: dict | None = None,
+    ) -> None:
         self.sigma0 = sigma0
         self.solution_dim = solution_dim
         self.dtype = dtype
@@ -68,18 +72,18 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         self._opts.setdefault("verbose", -9)
 
     @property
-    def batch_size(self):
-        """int: Number of solutions per iteration.
+    def batch_size(self) -> Int:
+        """Number of solutions per iteration.
 
         Only valid after a call to :meth:`reset`.
         """
         return self._es.popsize
 
-    def reset(self, x0):
+    def reset(self, x0: np.ndarray) -> None:
         """Resets the optimizer to start at x0.
 
         Args:
-            x0 (np.ndarray): Initial mean.
+            x0: Initial mean.
         """
         try:
             # We do not want to import at the top because that would require cma to
@@ -94,7 +98,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
         else:
             self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)  # ty: ignore[possibly-unbound-attribute]
 
-    def check_stop(self, ranking_values):
+    def check_stop(self, ranking_values: np.ndarray) -> bool:
         """Checks if the optimization should stop and be reset.
 
         Args:
@@ -138,7 +142,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def ask(self, batch_size=None):
+    def ask(self, batch_size: Int | None = None) -> np.ndarray:
         """Samples new solutions from the Gaussian distribution.
 
         Args:
@@ -151,7 +155,9 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
     # Limit OpenBLAS to single thread. This is typically faster than
     # multithreading because our data is too small.
     @threadpool_limits.wrap(limits=1, user_api="blas")
-    def tell(self, ranking_indices, ranking_values, num_parents):
+    def tell(
+        self, ranking_indices: np.ndarray, ranking_values: np.ndarray, num_parents: Int
+    ) -> None:
         # Convert (batch_size, 1) array into (batch_size,).
         if ranking_values.ndim == 2 and ranking_values.shape[1] == 1:
             ranking_values = ranking_values[:, 0]
