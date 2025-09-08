@@ -5,7 +5,7 @@ from __future__ import annotations
 import warnings
 from collections import defaultdict
 from collections.abc import Sequence
-from typing import Literal
+from typing import Literal, TypeVar
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -15,6 +15,10 @@ from ribs.archives import ArchiveBase
 from ribs.emitters import EmitterBase
 from ribs.schedulers._scheduler import Scheduler
 from ribs.typing import Float, Int
+
+ArchiveT = TypeVar("ArchiveT", bound=ArchiveBase)
+EmittersT = TypeVar("EmittersT", bound=Sequence[EmitterBase])
+ResultArchiveT = TypeVar("ResultArchiveT", bound=ArchiveBase)
 
 
 class BanditScheduler:
@@ -81,9 +85,9 @@ class BanditScheduler:
 
     def __init__(
         self,
-        archive: ArchiveBase,
-        emitter_pool: Sequence[EmitterBase],
-        result_archive: ArchiveBase | None = None,
+        archive: ArchiveT,
+        emitter_pool: EmittersT,
+        result_archive: ResultArchiveT | None = None,
         *,
         num_active: Int,
         reselect: Literal["terminated", "all"] = "terminated",
@@ -171,12 +175,12 @@ class BanditScheduler:
         self._num_emitted = np.array([None for _ in self._active_arr])
 
     @property
-    def archive(self) -> ArchiveBase:
+    def archive(self) -> ArchiveT:
         """Archive for storing solutions found in this scheduler."""
         return self._archive
 
     @property
-    def emitter_pool(self) -> Sequence[EmitterBase]:
+    def emitter_pool(self) -> EmittersT:
         """The pool of emitters available in the scheduler."""
         return self._emitter_pool
 
@@ -186,7 +190,7 @@ class BanditScheduler:
         return arr_readonly(self._active_arr, view=True)
 
     @property
-    def result_archive(self) -> ArchiveBase:
+    def result_archive(self) -> ResultArchiveT | ArchiveT:
         """An additional archive for storing solutions found in this scheduler.
 
         If ``result_archive`` was not passed to the constructor, this property is the

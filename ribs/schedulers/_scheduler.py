@@ -5,7 +5,7 @@ from __future__ import annotations
 import warnings
 from collections import defaultdict
 from collections.abc import Sequence
-from typing import Literal
+from typing import Literal, TypeVar
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -13,6 +13,10 @@ from numpy.typing import ArrayLike
 from ribs.archives import ArchiveBase
 from ribs.emitters import EmitterBase
 from ribs.typing import BatchData
+
+ArchiveT = TypeVar("ArchiveT", bound=ArchiveBase)
+EmittersT = TypeVar("EmittersT", bound=Sequence[EmitterBase])
+ResultArchiveT = TypeVar("ResultArchiveT", bound=ArchiveBase)
 
 
 class Scheduler:
@@ -60,9 +64,9 @@ class Scheduler:
 
     def __init__(
         self,
-        archive: ArchiveBase,
-        emitters: Sequence[EmitterBase],
-        result_archive: ArchiveBase | None = None,
+        archive: ArchiveT,
+        emitters: EmittersT,
+        result_archive: ResultArchiveT | None = None,
         *,
         add_mode: Literal["batch", "single"] = "batch",
     ) -> None:
@@ -124,17 +128,17 @@ class Scheduler:
         self._num_emitted = [None for _ in self._emitters]
 
     @property
-    def archive(self) -> ArchiveBase:
+    def archive(self) -> ArchiveT:
         """Archive for storing solutions found in this scheduler."""
         return self._archive
 
     @property
-    def emitters(self) -> Sequence[EmitterBase]:
+    def emitters(self) -> EmittersT:
         """Emitters for generating solutions in this scheduler."""
         return self._emitters
 
     @property
-    def result_archive(self) -> ArchiveBase:
+    def result_archive(self) -> ResultArchiveT | ArchiveT:
         """An additional archive for storing solutions found in this scheduler.
 
         If ``result_archive`` was not passed to the constructor, this property is the
