@@ -8,6 +8,7 @@ import numpy as np
 from numpy.typing import DTypeLike
 
 from ribs._utils import xp_namespace
+from ribs.typing import BatchData, Float
 
 
 def parse_dtype(dtype: DTypeLike, xp: ModuleType) -> DTypeLike:
@@ -24,7 +25,9 @@ def parse_dtype(dtype: DTypeLike, xp: ModuleType) -> DTypeLike:
     return dtype
 
 
-def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
+def validate_cma_mae_settings(
+    learning_rate: Float | None, threshold_min: Float, dtype: np.dtype
+) -> tuple[np.floating, np.floating]:
     """Checks variables related to CMA-MAE, i.e., learning_rate and threshold_min."""
     if threshold_min != -np.inf and learning_rate is None:
         raise ValueError(
@@ -42,7 +45,7 @@ def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
     return learning_rate, threshold_min
 
 
-def fill_sentinel_values(occupied, data):
+def fill_sentinel_values(occupied: np.ndarray, data: BatchData) -> None:
     """Fills unoccupied entries in data with sentinel values.
 
     Operates in-place on `data`.
