@@ -8,8 +8,8 @@
 
 - Support multi-dimensional solutions in GaussianEmitter and IsoLineEmitter
   ({pr}`650`)
-- **Backwards-incompatible:** Replace emitter `bounds` params with
-  `lower_bounds` and `upper_bounds` ({pr}`649`)
+- Allow specifying emitter bounds with `lower_bounds` and `upper_bounds`
+  ({pr}`649`, {pr}`657`)
 - **Backwards-incompatible:** Replace `dtype` parameter in archives with
   `solution_dtype`, `objective_dtype`, and `measures_dtype` ({pr}`639`,
   {pr}`643`)
