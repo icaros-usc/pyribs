@@ -14,6 +14,7 @@ from ribs.archives import ArchiveBase
 from ribs.emitters import EmitterBase
 from ribs.typing import BatchData
 
+# Make sure to update the notes below if these change!
 ArchiveT = TypeVar("ArchiveT", bound=ArchiveBase)
 EmittersT = TypeVar("EmittersT", bound=Sequence[EmitterBase])
 ResultArchiveT = TypeVar("ResultArchiveT", bound=ArchiveBase)
@@ -60,6 +61,16 @@ class Scheduler:
         ValueError: Invalid value for ``add_mode``.
         ValueError: The ``result_archive`` and ``archive`` are the same object
             (``result_archive`` should not be passed in this case).
+
+    Notes:
+        The following :class:`~typing.TypeVar`'s are used in this class:
+
+        .. py:type:: ArchiveT
+            :canonical: TypeVar(bound=ArchiveBase)
+        .. py:type:: EmittersT
+            :canonical: TypeVar(bound=Sequence[EmitterBase])
+        .. py:type:: ResultArchiveT
+            :canonical: TypeVar(bound=ArchiveBase)
     """
 
     def __init__(
