@@ -126,10 +126,10 @@ class EmitterBase(ABC):
                 solution.
             measures: ``(n, <measure space dimension>)`` array with the measure space
                 coordinates of each solution.
-            add_info (dict): Data returned from the archive
+            add_info: Data returned from the archive
                 :meth:`~ribs.archives.ArchiveBase.add` method.
-            fields (keyword arguments): Additional data for each solution. Each argument
-                should be an array with batch_size as the first dimension.
+            fields: Additional data for each solution. Each argument should be an array
+                with batch_size as the first dimension.
         """
 
     def ask_dqd(self) -> np.ndarray:
