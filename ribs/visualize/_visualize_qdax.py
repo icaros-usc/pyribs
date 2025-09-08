@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Collection
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -21,7 +21,7 @@ P = ParamSpec("P")
 
 def _as_cvt_archive(
     repertoire: MapElitesRepertoire,
-    ranges: Sequence[tuple[float, float]],
+    ranges: Collection[tuple[float, float]],
 ) -> CVTArchive:
     """Converts a QDax repertoire into a CVTArchive."""
     # Construct a CVTArchive. We set solution_dim to 0 since we are only plotting and do
@@ -56,7 +56,7 @@ def _as_cvt_archive(
 
 def qdax_repertoire_heatmap(
     repertoire: MapElitesRepertoire,
-    ranges: Sequence[tuple[float, float]],
+    ranges: Collection[tuple[float, float]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> None:
@@ -84,7 +84,7 @@ def qdax_repertoire_heatmap(
 
 def qdax_repertoire_3d_plot(
     repertoire: MapElitesRepertoire,
-    ranges: Sequence[tuple[float, float]],
+    ranges: Collection[tuple[float, float]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> None:
