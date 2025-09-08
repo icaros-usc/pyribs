@@ -7,6 +7,9 @@ from types import ModuleType
 import numpy as np
 from numpy.typing import DTypeLike
 
+from ribs._utils import xp_namespace
+from ribs.typing import BatchData, Float
+
 
 def parse_dtype(dtype: DTypeLike, xp: ModuleType) -> DTypeLike:
     """Makes any necessary modifications to the input dtype.
@@ -15,13 +18,16 @@ def parse_dtype(dtype: DTypeLike, xp: ModuleType) -> DTypeLike:
     provided array backend.
     """
     if dtype is None:
+        xp = xp_namespace(xp)
         # See here for info on array API inspection:
         # https://data-apis.org/array-api/latest/API_specification/inspection.html
         return xp.__array_namespace_info__().default_dtypes()["real floating"]  # ty: ignore[unresolved-attribute]
     return dtype
 
 
-def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
+def validate_cma_mae_settings(
+    learning_rate: Float | None, threshold_min: Float, dtype: np.dtype
+) -> tuple[np.floating, np.floating]:
     """Checks variables related to CMA-MAE, i.e., learning_rate and threshold_min."""
     if threshold_min != -np.inf and learning_rate is None:
         raise ValueError(
@@ -39,7 +45,7 @@ def validate_cma_mae_settings(learning_rate, threshold_min, dtype):
     return learning_rate, threshold_min
 
 
-def fill_sentinel_values(occupied, data):
+def fill_sentinel_values(occupied: np.ndarray, data: BatchData) -> None:
     """Fills unoccupied entries in data with sentinel values.
 
     Operates in-place on `data`.
