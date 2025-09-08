@@ -105,7 +105,7 @@ class ArrayStore(PickleXPMixin):
         device: Device for arrays.
 
     Attributes:
-        _props: Dict with properties that are common to every ArrayStore.
+        _props (dict): Properties that are common to every ArrayStore.
 
             - "capacity": Maximum number of data entries in the store.
             - "occupied": Boolean array of size ``(capacity,)`` indicating whether each
@@ -117,7 +117,7 @@ class ArrayStore(PickleXPMixin):
             - "updates": Int list recording number of calls to functions that modified
               the store.
 
-        _fields: Dict holding all the arrays with their data.
+        _fields (dict): Holds all the arrays with their data.
 
     Raises:
         ValueError: One of the fields in ``field_desc`` has a reserved name (currently,
