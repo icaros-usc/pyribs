@@ -6,10 +6,16 @@ from collections.abc import Collection, Hashable, Iterator
 from typing import Literal, overload
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 
-from ribs._utils import check_batch_shape, check_shape, validate_batch, validate_single
+from ribs._utils import (
+    check_batch_shape,
+    check_shape,
+    deprecate_dtype,
+    validate_batch,
+    validate_single,
+)
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
@@ -20,15 +26,7 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
-from ribs.typing import (
-    ArchiveDType,
-    Array,
-    BatchData,
-    FieldDesc,
-    Float,
-    Int,
-    SingleData,
-)
+from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
 
 
 class CategoricalArchive(ArchiveBase):
@@ -70,11 +68,10 @@ class CategoricalArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        dtype: Data type of the solutions, objectives, and measures. This can be ``"f"``
-            / ``np.float32``, ``"d"`` / ``np.float64``, or a dict specifying separate
-            dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
-            "measures": <dtype>}``. By default, unless this parameter is a dict,
-            measures will default to have ``object`` dtype.
+        solution_dtype: Data type of the solution. Defaults to float64.
+        objective_dtype: Data type of the objective. Defaults to float64.
+        measures_dtype: Data type of the measures. Defaults to object.
+        dtype: DEPRECATED.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
             field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
@@ -97,9 +94,14 @@ class CategoricalArchive(ArchiveBase):
         threshold_min: Float = -np.inf,
         qd_score_offset: Float = 0.0,
         seed: Int | None = None,
-        dtype: ArchiveDType = np.float64,
+        solution_dtype: DTypeLike = None,
+        objective_dtype: DTypeLike = None,
+        measures_dtype: DTypeLike = None,
+        dtype: None = None,
         extra_fields: FieldDesc | None = None,
     ) -> None:
+        deprecate_dtype(dtype)
+
         self._rng = np.random.default_rng(seed)
         self._categories = [list(measure_dim) for measure_dim in categories]
         self._dims = np.array(
@@ -122,21 +124,16 @@ class CategoricalArchive(ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        if not isinstance(dtype, dict):
-            # Make measures default to `object` dtype.
-            dtype = {
-                "solution": dtype,
-                "measures": object,
-                "objective": dtype,
-            }
-        dtype = parse_dtype(dtype)
+        solution_dtype = parse_dtype(solution_dtype, np)
+        objective_dtype = parse_dtype(objective_dtype, np)
+        measures_dtype = object if measures_dtype is None else measures_dtype
         self._store = ArrayStore(
             field_desc={
-                "solution": (self.solution_dim, dtype["solution"]),
-                "objective": ((), dtype["objective"]),
-                "measures": (self.measure_dim, dtype["measures"]),
+                "solution": (self.solution_dim, solution_dtype),
+                "objective": ((), objective_dtype),
+                "measures": (self.measure_dim, measures_dtype),
                 # Must be same dtype as the objective since they share calculations.
-                "threshold": ((), dtype["objective"]),
+                "threshold": ((), objective_dtype),
                 **extra_fields,
             },
             capacity=np.prod(self._dims),
@@ -755,7 +752,7 @@ class CategoricalArchive(ArchiveBase):
         self,
         fields: str,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array: ...
+    ) -> np.ndarray: ...
 
     @overload
     def data(
@@ -769,7 +766,7 @@ class CategoricalArchive(ArchiveBase):
         self,
         fields: None | Collection[str] = None,
         return_type: Literal["tuple"] = "tuple",
-    ) -> tuple[Array]: ...
+    ) -> tuple[np.ndarray]: ...
 
     @overload
     def data(
@@ -782,7 +779,7 @@ class CategoricalArchive(ArchiveBase):
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
     def sample_elites(self, n: Int) -> BatchData:

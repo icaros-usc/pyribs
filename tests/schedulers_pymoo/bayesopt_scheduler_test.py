@@ -40,14 +40,16 @@ def test_bayesopt_mismatched_upscale_schedules(wrong_upscale_schedules):
     emitters = [
         BayesianOptimizationEmitter(
             archive=archive,
-            bounds=[[-1, 1]] * 4,
+            lower_bounds=[-1, -1, -1, -1],
+            upper_bounds=[1, 1, 1, 1],
             upscale_schedule=emitter1_upscale_schedule,
             num_initial_samples=1,
             seed=0,
         ),
         BayesianOptimizationEmitter(
             archive=archive,
-            bounds=[[-1, 1]] * 4,
+            lower_bounds=[-1, -1, -1, -1],
+            upper_bounds=[1, 1, 1, 1],
             upscale_schedule=emitter2_upscale_schedule,
             num_initial_samples=1,
             seed=1,

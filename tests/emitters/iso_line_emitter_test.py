@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+from ribs.archives import GridArchive
 from ribs.emitters import IsoLineEmitter
 
 
@@ -63,7 +64,8 @@ def test_upper_bounds_enforced(archive_fixture):
         x0=[2, 2, 2, 2],
         iso_sigma=0,
         line_sigma=0,
-        bounds=[(-1, 1)] * 4,
+        lower_bounds=[-1, -1, -1, -1],
+        upper_bounds=[1, 1, 1, 1],
     )
     sols = emitter.ask()
     assert np.all(sols <= 1)
@@ -76,7 +78,8 @@ def test_lower_bounds_enforced(archive_fixture):
         x0=[-2, -2, -2, -2],
         iso_sigma=0,
         line_sigma=0,
-        bounds=[(-1, 1)] * 4,
+        lower_bounds=[-1, -1, -1, -1],
+        upper_bounds=[1, 1, 1, 1],
     )
     sols = emitter.ask()
     assert np.all(sols >= -1)
@@ -114,3 +117,24 @@ def test_degenerate_gauss_emits_along_line(archive_fixture):
     # cases. In any case, this assertion should hold for all solutions
     # generated.
     assert (solutions[:, 1:] == 0).all()
+
+
+def test_multidim_solutions():
+    archive = GridArchive(
+        solution_dim=(5, 5),
+        dims=[20, 20],
+        ranges=[(-1, 1), (-1, 1)],
+    )
+    x0 = np.zeros((5, 5))
+    emitter = IsoLineEmitter(
+        archive, x0=x0, iso_sigma=0.1, line_sigma=0.2, batch_size=2
+    )
+
+    solutions = emitter.ask()
+    assert solutions.shape == (2, 5, 5)
+
+    archive.add(solutions, objective=np.ones(2), measures=[[-1, -1], [1, 1]])
+
+    # Ask again since behavior changes once the archive is not empty.
+    solutions = emitter.ask()
+    assert solutions.shape == (2, 5, 5)

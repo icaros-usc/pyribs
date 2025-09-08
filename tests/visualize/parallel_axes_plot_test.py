@@ -15,6 +15,7 @@ from .grid_archive_heatmap_test import (
     grid_archive_3d,
     grid_archive_3d_empty,
 )
+from .proximity_archive_plot_test import proximity_archive_2d_obj
 
 
 @image_comparison(baseline_images=["2d"], remove_text=False, extensions=["png"])
@@ -116,3 +117,12 @@ def test_plot_with_df(grid_archive_3d):
     df = grid_archive_3d.data(return_type="pandas")
     df["objective"] = -df["objective"]
     parallel_axes_plot(grid_archive_3d, df=df)
+
+
+@image_comparison(
+    baseline_images=["proximity_archive"], remove_text=False, extensions=["png"]
+)
+def test_proximity_archive(proximity_archive_2d_obj):
+    plt.figure(figsize=(8, 6))
+    print(proximity_archive_2d_obj.stats.num_elites)
+    parallel_axes_plot(proximity_archive_2d_obj)

@@ -7,13 +7,14 @@ from collections.abc import Collection, Iterator
 from typing import Literal, overload
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, DTypeLike
 from sortedcontainers import SortedList
 
 from ribs._utils import (
     check_batch_shape,
     check_finite,
     check_shape,
+    deprecate_dtype,
     validate_batch,
     validate_single,
 )
@@ -23,15 +24,7 @@ from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._grid_archive import GridArchive
 from ribs.archives._utils import fill_sentinel_values, parse_dtype
-from ribs.typing import (
-    ArchiveDType,
-    Array,
-    BatchData,
-    FieldDesc,
-    Float,
-    Int,
-    SingleData,
-)
+from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
 
 
 class SolutionBuffer:
@@ -137,9 +130,9 @@ class SlidingBoundariesArchive(ArchiveBase):
             :math:`[-1,1]` (inclusive), and the second dimension should have bounds
             :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
             ``dims``.
-        epsilon: Due to floating point precision errors, we add a small epsilon
-            when computing the archive indices in the :meth:`index_of` method -- refer
-            to the implementation `here
+        epsilon: Due to floating point precision errors, we add a small epsilon when
+            computing the archive indices in the :meth:`index_of` method -- refer to the
+            implementation `here
             <../_modules/ribs/archives/_sliding_boundaries_archive.html#SlidingBoundariesArchive.index_of>`_.
             Pass this parameter to configure that epsilon.
         qd_score_offset: Archives often contain negative objective values, and if the QD
@@ -152,10 +145,13 @@ class SlidingBoundariesArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        dtype: Data type of the solutions, objectives, and measures. This can be ``"f"``
-            / ``np.float32``, ``"d"`` / ``np.float64``, or a dict specifying separate
-            dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
-            "measures": <dtype>}``.
+        solution_dtype: Data type of the solution. Defaults to float64 (numpy's
+            default floating point type).
+        objective_dtype: Data type of the objective. Defaults to float64 (numpy's
+            default floating point type).
+        measures_dtype: Data type of the measures. Defaults to float64 (numpy's
+            default floating point type).
+        dtype: DEPRECATED.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
             field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
@@ -178,11 +174,16 @@ class SlidingBoundariesArchive(ArchiveBase):
         epsilon: Float = 1e-6,
         qd_score_offset: Float = 0.0,
         seed: Int | None = None,
-        dtype: ArchiveDType = np.float64,
+        solution_dtype: DTypeLike = None,
+        objective_dtype: DTypeLike = None,
+        measures_dtype: DTypeLike = None,
+        dtype: None = None,
         extra_fields: FieldDesc | None = None,
         remap_frequency: Int = 100,
         buffer_capacity: Int = 1000,
     ) -> None:
+        deprecate_dtype(dtype)
+
         self._rng = np.random.default_rng(seed)
         self._dims = np.array(dims)
 
@@ -202,12 +203,14 @@ class SlidingBoundariesArchive(ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        dtype = parse_dtype(dtype)
+        solution_dtype = parse_dtype(solution_dtype, np)
+        objective_dtype = parse_dtype(objective_dtype, np)
+        measures_dtype = parse_dtype(measures_dtype, np)
         self._store = ArrayStore(
             field_desc={
-                "solution": (self.solution_dim, dtype["solution"]),
-                "objective": ((), dtype["objective"]),
-                "measures": (self.measure_dim, dtype["measures"]),
+                "solution": (self.solution_dim, solution_dtype),
+                "objective": ((), objective_dtype),
+                "measures": (self.measure_dim, measures_dtype),
                 **extra_fields,
             },
             capacity=np.prod(self._dims),
@@ -733,7 +736,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         self,
         fields: str,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array: ...
+    ) -> np.ndarray: ...
 
     @overload
     def data(
@@ -747,7 +750,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         self,
         fields: None | Collection[str] = None,
         return_type: Literal["tuple"] = "tuple",
-    ) -> tuple[Array]: ...
+    ) -> tuple[np.ndarray]: ...
 
     @overload
     def data(
@@ -760,7 +763,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
     def sample_elites(self, n: Int) -> BatchData:

@@ -1,10 +1,15 @@
 """Provides the GeneticAlgorithmEmitter."""
 
-import numpy as np
+from __future__ import annotations
 
-from ribs._utils import check_batch_shape, check_shape
+import numpy as np
+from numpy.typing import ArrayLike
+
+from ribs._utils import check_batch_shape, check_shape, deprecate_bounds
+from ribs.archives import ArchiveBase
 from ribs.emitters._emitter_base import EmitterBase
 from ribs.emitters.operators import _get_op
+from ribs.typing import Int
 
 
 class GeneticAlgorithmEmitter(EmitterBase):
@@ -15,24 +20,22 @@ class GeneticAlgorithmEmitter(EmitterBase):
     through the operator.
 
     Args:
-        archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
-            :class:`ribs.archives.GridArchive`.
-        operator (str): Internal operator for mutating solutions. See
+        archive: Archive of solutions, e.g., :class:`ribs.archives.GridArchive`.
+        operator: Internal operator for mutating solutions. See
             :mod:`ribs.emitters.operators` for the list of allowed names.
-        operator_kwargs (dict): Additional arguments to pass to the operator. See
+        operator_kwargs: Additional arguments to pass to the operator. See
             :mod:`ribs.emitters.operators` for the arguments allowed by each operator.
-        x0 (numpy.ndarray): Initial solution.
-        initial_solutions (array-like): An (n, solution_dim) array of solutions to be
-            used when the archive is empty, in lieu of ``x0``.
-        bounds (None or array-like): Bounds of the solution space. Solutions are clipped
-            to these bounds. Pass None to indicate there are no bounds. Alternatively,
-            pass an array-like to specify the bounds for each dim. Each element in this
-            array-like can be None to indicate no bound, or a tuple of ``(lower_bound,
-            upper_bound)``, where ``lower_bound`` or ``upper_bound`` may be None to
-            indicate no bound.
-        batch_size (int): Number of solutions to return in :meth:`ask`.
-        seed (int): Value to seed the random number generator. Set to None to avoid a
-            fixed seed.
+        x0: Initial solution.
+        initial_solutions: An (n, solution_dim) array of solutions to be used when the
+            archive is empty, in lieu of ``x0``.
+        lower_bounds: Lower bounds of the solution space. Pass None to indicate there
+            are no bounds (i.e., bounds are set to -inf).
+        upper_bounds: Upper bounds of the solution space. Pass None to indicate there
+            are no bounds (i.e., bounds are set to inf).
+        bounds: DEPRECATED.
+        batch_size: Number of solutions to return in :meth:`ask`.
+        seed: Value to seed the random number generator. Set to None to avoid a fixed
+            seed.
 
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
@@ -41,21 +44,26 @@ class GeneticAlgorithmEmitter(EmitterBase):
 
     def __init__(
         self,
-        archive,
+        archive: ArchiveBase,
         *,
-        operator,
-        operator_kwargs=None,
-        x0=None,
-        initial_solutions=None,
-        bounds=None,
-        batch_size=64,
-        seed=None,
-    ):
+        operator: str,
+        operator_kwargs: dict | None = None,
+        x0: ArrayLike | None = None,
+        initial_solutions: ArrayLike | None = None,
+        lower_bounds: ArrayLike | None = None,
+        upper_bounds: ArrayLike | None = None,
+        bounds: None = None,
+        batch_size: Int = 64,
+        seed: Int | None = None,
+    ) -> None:
+        deprecate_bounds(bounds)
+
         EmitterBase.__init__(
             self,
             archive,
             solution_dim=archive.solution_dim,
-            bounds=bounds,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
         )
 
         self._batch_size = batch_size
@@ -84,29 +92,31 @@ class GeneticAlgorithmEmitter(EmitterBase):
         operator_class = _get_op(operator)
         self._operator = operator_class(
             **(operator_kwargs if operator_kwargs is not None else {}),
-            seed=seed,
+            # We assume the class takes in a seed, but this is technically not part of
+            # the API.
+            seed=seed,  # ty: ignore[unknown-argument]
         )
 
     @property
-    def x0(self):
-        """numpy.ndarray: Initial solution (if ``initial_solutions`` is not set)."""
+    def x0(self) -> np.ndarray | None:
+        """Initial solution (if ``initial_solutions`` is not set)."""
         return self._x0
 
     @property
-    def initial_solutions(self):
-        """numpy.ndarray: Returned when the archive is empty (if :attr:`x0` is not set)."""
+    def initial_solutions(self) -> np.ndarray | None:
+        """Returned when the archive is empty (if :attr:`x0` is not set)."""
         return self._initial_solutions
 
     @property
-    def batch_size(self):
-        """int: Number of solutions to return in :meth:`ask`."""
+    def batch_size(self) -> Int:
+        """Number of solutions to return in :meth:`ask`."""
         return self._batch_size
 
-    def _clip(self, solutions):
+    def _clip(self, solutions: np.ndarray) -> np.ndarray:
         """Clips solutions to the bounds of the solution space."""
         return np.clip(solutions, self.lower_bounds, self.upper_bounds)
 
-    def ask(self):
+    def ask(self) -> np.ndarray:
         """Creates solutions with the provided operator.
 
         If the archive is empty and ``initial_solutions`` is set, a call to :meth:`ask`
@@ -115,7 +125,7 @@ class GeneticAlgorithmEmitter(EmitterBase):
         passed to the operator.
 
         Returns:
-            numpy.ndarray: If the archive is not empty, ``(batch_size, solution_dim)``
+            If the archive is not empty, ``(batch_size, solution_dim)``
             array -- contains ``batch_size`` new solutions to evaluate. If the archive
             is empty, we return ``initial_solutions``, which might not have
             ``batch_size`` solutions.

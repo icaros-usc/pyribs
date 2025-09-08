@@ -11,7 +11,7 @@ from numpy.typing import ArrayLike
 
 from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
-from ribs.typing import Array, BatchData, Int, SingleData
+from ribs.typing import BatchData, Int, SingleData
 
 
 class ArchiveBase(ABC):
@@ -259,7 +259,7 @@ class ArchiveBase(ABC):
         self,
         fields: str,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array: ...
+    ) -> np.ndarray: ...
 
     @overload
     def data(
@@ -273,7 +273,7 @@ class ArchiveBase(ABC):
         self,
         fields: None | Collection[str] = None,
         return_type: Literal["tuple"] = "tuple",
-    ) -> tuple[Array]: ...
+    ) -> tuple[np.ndarray]: ...
 
     @overload
     def data(
@@ -286,7 +286,7 @@ class ArchiveBase(ABC):
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         """Returns data of the elites in the archive.
 
         Args:

@@ -6,14 +6,24 @@
 
 #### API
 
+- Support multi-dimensional solutions in GaussianEmitter and IsoLineEmitter
+  ({pr}`650`)
+- **Backwards-incompatible:** Replace emitter `bounds` params with
+  `lower_bounds` and `upper_bounds` ({pr}`649`)
+- **Backwards-incompatible:** Replace `dtype` parameter in archives with
+  `solution_dtype`, `objective_dtype`, and `measures_dtype` ({pr}`639`,
+  {pr}`643`)
 - Raise `KeyError` in `ArchiveDataFrame.get_field` when field not found
   ({pr}`626`)
-- Support array backends via Python array API Standard ({issue}`570`)
+- Support array backends in ArrayStore via Python array API Standard
+  ({issue}`570`, {pr}`645`)
 - **Backwards-incompatible:** Remove raw_dict methods from ArrayStore
   ({pr}`575`)
 
 #### Improvements
 
+- Support ProximityArchive in parallel_axes_plot ({pr}`647`)
+- Cast dtype when validating arguments ({pr}`646`)
 - Add type annotations and use ty for type checking ({issue}`624`)
 - Migrate from pylint to ruff for linting ({pr}`605`, {pr}`607`, {pr}`612`,
   {pr}`619`)

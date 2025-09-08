@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import numbers
 from types import ModuleType
 
@@ -11,7 +12,7 @@ from array_api_compat import array_namespace
 from numpy.typing import ArrayLike
 
 from ribs.archives._archive_base import ArchiveBase
-from ribs.typing import ArrayVar, BatchData, Int, SingleData
+from ribs.typing import Array, BatchData, Int, SingleData
 
 
 def check_finite(x: ArrayLike, name: str) -> None:
@@ -123,7 +124,7 @@ def validate_batch(
     size of data["solution"].
     """
     # Process and validate solutions.
-    data["solution"] = np.asarray(data["solution"])
+    data["solution"] = np.asarray(data["solution"], dtype=archive.dtypes["solution"])
     check_batch_shape(
         data["solution"], "solution", archive.solution_dim, "solution_dim", ""
     )
@@ -141,7 +142,7 @@ def validate_batch(
                 if not none_objective_ok:
                     raise ValueError("objective cannot be None")
             else:
-                arr = np.asarray(arr)
+                arr = np.asarray(arr, dtype=archive.dtypes["objective"])
                 check_is_1d(arr, "objective", "")
                 check_solution_batch_dim(
                     arr, "objective", batch_size, is_1d=True, extra_msg=""
@@ -149,7 +150,7 @@ def validate_batch(
                 check_finite(arr, "objective")
 
         elif name == "measures":
-            arr = np.asarray(arr)
+            arr = np.asarray(arr, dtype=archive.dtypes["measures"])
             check_batch_shape(arr, "measures", archive.measure_dim, "measure_dim", "")
             check_solution_batch_dim(
                 arr, "measures", batch_size, is_1d=False, extra_msg=""
@@ -158,6 +159,7 @@ def validate_batch(
                 check_finite(arr, "measures")
 
         else:
+            # dtype not cast here because the field may not be in the archive.
             arr = np.asarray(arr)
             check_solution_batch_dim(arr, name, batch_size, is_1d=False, extra_msg="")
 
@@ -215,7 +217,7 @@ def validate_single(
     archive: ArchiveBase, data: SingleData, none_objective_ok: bool = False
 ) -> SingleData:
     """Performs preprocessing and checks for arguments to add_single()."""
-    data["solution"] = np.asarray(data["solution"])
+    data["solution"] = np.asarray(data["solution"], dtype=archive.dtypes["solution"])
     check_shape(data["solution"], "solution", archive.solution_dim, "solution_dim")
 
     if data["objective"] is None:
@@ -227,7 +229,7 @@ def validate_single(
         )
         check_finite(data["objective"], "objective")
 
-    data["measures"] = np.asarray(data["measures"])
+    data["measures"] = np.asarray(data["measures"], dtype=archive.dtypes["measures"])
     check_shape(data["measures"], "measures", archive.measure_dim, "measure_dim")
     if np.issubdtype(data["measures"].dtype, np.number):
         check_finite(data["measures"], "measures")
@@ -235,7 +237,7 @@ def validate_single(
     return data
 
 
-def arr_readonly(arr: ArrayVar, view: bool = False) -> ArrayVar:
+def arr_readonly(arr: Array, view: bool = False) -> Array:
     """Sets an array to be readonly if possible.
 
     Intended to support arrays across libraries; currently only supports numpy. Other
@@ -248,7 +250,7 @@ def arr_readonly(arr: ArrayVar, view: bool = False) -> ArrayVar:
     if isinstance(arr, np.ndarray):
         readonly_arr = arr.view() if view else arr
         readonly_arr.flags.writeable = False
-        return readonly_arr  # ty: ignore[invalid-return-type]
+        return readonly_arr
     else:
         return arr
 
@@ -265,3 +267,50 @@ def xp_namespace(xp: ModuleType | None) -> ModuleType:
     https://github.com/data-apis/array-api-compat/issues/342
     """
     return np_compat if xp is None else array_namespace(xp.empty(0))  # ty: ignore[unresolved-attribute]
+
+
+class PickleXPMixin:
+    """This class makes it possible to pickle objects with the _xp attribute.
+
+    ``_xp`` here refers to an array API module. Modules in Python are not picklable, so
+    pickling an object that has the ``_xp`` attribute usually results in a TypeError.
+    This mixin fixes that by modifying the behavior of ``__getstate__`` and
+    ``__setstate__`` so that ``_xp`` is converted to a string before pickling, and
+    converted back to a module upon unpickling. See `here
+    <https://docs.python.org/3/library/pickle.html#pickling-class-instances>`_ for more
+    info. We assume `_xp` is the name since the array module is usually kept private.
+    """
+
+    XP_NAME = "_xp"
+
+    def __getstate__(self) -> dict:
+        """Sets xp to a str if it is available."""
+        state = self.__dict__.copy()
+        if self.XP_NAME in state:
+            state[self.XP_NAME] = state[self.XP_NAME].__name__
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """Sets xp to the module if possible."""
+        if self.XP_NAME in state:
+            state[self.XP_NAME] = importlib.import_module(state[self.XP_NAME])
+        self.__dict__.update(state)
+
+
+## Deprecations ##
+
+
+def deprecate_dtype(dtype: None) -> None:
+    if dtype is not None:
+        raise ValueError(
+            "The dtype parameter is deprecated as of pyribs 0.9.0. Please specify "
+            "solution_dtype, objective_dtype, and/or measures_dtype instead."
+        )
+
+
+def deprecate_bounds(bounds: None) -> None:
+    if bounds is not None:
+        raise ValueError(
+            "The bounds parameter is deprecated as of pyribs 0.9.0. "
+            "Please specify lower_bounds and upper_bounds instead."
+        )

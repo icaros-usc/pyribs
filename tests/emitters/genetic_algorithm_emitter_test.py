@@ -88,7 +88,8 @@ def test_upper_bounds_enforced(archive_fixture):
         archive,
         batch_size=36,
         x0=[2, 2, 2, 2],
-        bounds=[(-1, 1)] * 4,
+        lower_bounds=[-1, -1, -1, -1],
+        upper_bounds=[1, 1, 1, 1],
         operator="isoline",
         operator_kwargs={
             "iso_sigma": 0.1,
@@ -105,7 +106,8 @@ def test_lower_bounds_enforced(archive_fixture):
         archive,
         batch_size=36,
         x0=[-2, -2, -2, -2],
-        bounds=[(-1, 1)] * 4,
+        lower_bounds=[-1, -1, -1, -1],
+        upper_bounds=[1, 1, 1, 1],
         operator="isoline",
         operator_kwargs={
             "iso_sigma": 0.1,

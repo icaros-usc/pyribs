@@ -18,9 +18,9 @@ from numpy.typing import ArrayLike
 with contextlib.suppress(ImportError):
     from array_api_compat import cupy as cp
 
-from ribs._utils import arr_readonly, xp_namespace
+from ribs._utils import PickleXPMixin, arr_readonly, xp_namespace
 from ribs.archives._archive_data_frame import ArchiveDataFrame
-from ribs.typing import Array, BatchData, Device, DType, FieldDesc, Int, SingleData
+from ribs.typing import Array, Device, DType, FieldDesc, Int, SingleData
 
 
 class Update(IntEnum):
@@ -68,7 +68,7 @@ class ArrayStoreIterator:
         return d
 
 
-class ArrayStore:
+class ArrayStore(PickleXPMixin):
     """Maintains a set of arrays that share a common dimension.
 
     The ArrayStore consists of several *fields* of data that are manipulated
@@ -309,7 +309,7 @@ class ArrayStore:
         indices: ArrayLike,
         fields: None | Collection[str] = None,
         return_type: Literal["dict"] = "dict",
-    ) -> BatchData: ...
+    ) -> dict[str, Array]: ...
 
     @overload
     def retrieve(
@@ -332,7 +332,7 @@ class ArrayStore:
         indices: ArrayLike,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> Array | dict[str, Array] | tuple[Array] | ArchiveDataFrame:
         """Collects data at the given indices.
 
         Args:
@@ -409,7 +409,7 @@ class ArrayStore:
               ``fields`` parameter.
 
               .. note:: This return type will require copying all fields in the
-              ArrayStore into NumPy arrays, if they are not already NumPy arrays.
+                  ArrayStore into NumPy arrays, if they are not already NumPy arrays.
 
             All data returned by this method will be a copy, i.e., the data will not
             update as the store changes.
@@ -496,7 +496,7 @@ class ArrayStore:
         self,
         fields: None | Collection[str] = None,
         return_type: Literal["dict"] = "dict",
-    ) -> BatchData: ...
+    ) -> dict[str, Array]: ...
 
     @overload
     def data(
@@ -516,7 +516,7 @@ class ArrayStore:
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> Array | dict[str, Array] | tuple[Array] | ArchiveDataFrame:
         """Retrieves data for all entries in the store.
 
         Equivalent to calling :meth:`retrieve` with ``indices`` set to

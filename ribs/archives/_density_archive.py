@@ -5,14 +5,14 @@ from __future__ import annotations
 from typing import Literal
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, DTypeLike
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KernelDensity
 
-from ribs._utils import arr_readonly, check_batch_shape, check_finite
+from ribs._utils import arr_readonly, check_batch_shape, check_finite, deprecate_dtype
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._utils import parse_dtype
-from ribs.typing import ArchiveDType, BatchData, Float, Int
+from ribs.typing import BatchData, Float, Int
 
 
 def gkern(x: np.ndarray) -> np.ndarray:
@@ -90,10 +90,9 @@ class DensityArchive(ArchiveBase):
             passed in via the ``bandwidth`` parameter above.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        dtype: Data type of the measures. This can be ``"f"`` / ``np.float32``, ``"d"``
-            / ``np.float64``. For consistency with other archives, this can also be a
-            dict specifying separate dtypes, of the form ``{"solution": <dtype>,
-            "objective": <dtype>, "measures": <dtype>}``.
+        measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
+            floating point type).
+        dtype: DEPRECATED.
 
     Raises:
         ValueError: Unknown ``density_method`` provided.
@@ -108,11 +107,13 @@ class DensityArchive(ArchiveBase):
         bandwidth: Float | None = None,
         sklearn_kwargs: dict | None = None,
         seed: Int | None = None,
-        dtype: ArchiveDType = np.float64,
+        measures_dtype: DTypeLike = None,
+        dtype: None = None,
     ) -> None:
+        deprecate_dtype(dtype)
+
         self._rng = np.random.default_rng(seed)
-        dtypes = parse_dtype(dtype)
-        self._measure_dtype = dtypes["measures"]
+        self._measure_dtype = parse_dtype(measures_dtype, np)
 
         ArchiveBase.__init__(
             self,

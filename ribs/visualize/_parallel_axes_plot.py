@@ -17,13 +17,14 @@ from ribs.archives import (
     ArchiveDataFrame,
     CVTArchive,
     GridArchive,
+    ProximityArchive,
     SlidingBoundariesArchive,
 )
 from ribs.visualize._utils import retrieve_cmap, set_cbar, validate_df
 
 
 def parallel_axes_plot(
-    archive: CVTArchive | GridArchive | SlidingBoundariesArchive,
+    archive: CVTArchive | GridArchive | SlidingBoundariesArchive | ProximityArchive,
     ax: Axes | None = None,
     *,
     df: DataFrame | ArchiveDataFrame | None = None,
@@ -89,16 +90,21 @@ def parallel_axes_plot(
             >>> plt.show()
 
     Args:
-        archive: Pyribs archive that has ``lower_bounds`` and ``upper_bounds``
-            properties.
+        archive: Pyribs archive. If the archive has the ``lower_bounds`` and
+            ``upper_bounds`` properties, those will be used as the measure space bounds
+            for the plot. Otherwise, we will call
+            :meth:`~ribs.archives.ArchiveBase.data` and retrieve the min/max measure
+            values in the archive to determine the bounds -- this call may fail if the
+            archive has no ``data`` method.
         ax: Axes on which to create the plot. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
             currently in the archive. This data can be obtained by, for instance,
-            calling :meth:`ribs.archives.ArchiveBase.data` with ``return_type="pandas"``
-            and modifying the resulting :class:`~ribs.archives.ArchiveDataFrame`. Note
-            that, at a minimum, the data must contain columns for index, objective, and
-            measures. To display a custom metric, replace the "objective" column.
+            calling :meth:`~ribs.archives.ArchiveBase.data` with
+            ``return_type="pandas"`` and modifying the resulting
+            :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum, the data
+            must contain columns for index, objective, and measures. To display a custom
+            metric, replace the "objective" column.
         measure_order: If this is a list of ints, it specifies the axes order for
             measures (e.g. ``[2, 0, 1]``). If this is a list of tuples, each tuple takes
             the form ``(int, str)`` where the int specifies the measure index and the
@@ -138,8 +144,6 @@ def parallel_axes_plot(
     if measure_order is None:
         cols = np.arange(archive.measure_dim)
         axis_labels = [f"measure_{i}" for i in range(archive.measure_dim)]
-        lower_bounds = archive.lower_bounds
-        upper_bounds = archive.upper_bounds
 
     # Use the requested measures (may be less than the original number of measures).
     else:
@@ -170,12 +174,30 @@ def parallel_axes_plot(
         if any(measure < 0 for measure in cols):
             raise ValueError("Invalid Measures: requested a negative measure index.")
 
-        # Find the indices of the requested order.
-        lower_bounds = archive.lower_bounds[cols]
-        upper_bounds = archive.upper_bounds[cols]
+    df = archive.data(return_type="pandas") if df is None else validate_df(df)
+    measures = df.get_field("measures")
+
+    # Compute lower and upper bounds; take them from the archive if possible.
+    if hasattr(archive, "lower_bounds"):
+        lower_bounds: np.ndarray = archive.lower_bounds  # ty: ignore[invalid-assignment]
+    elif len(measures) > 0:
+        lower_bounds = np.min(measures, axis=0) - 0.01
+    else:
+        # Sensible defaults when the archive is empty.
+        lower_bounds = np.full(archive.measure_dim, -0.01)
+
+    if hasattr(archive, "upper_bounds"):
+        upper_bounds: np.ndarray = archive.upper_bounds  # ty: ignore[invalid-assignment]
+    elif len(measures) > 0:
+        upper_bounds = np.max(measures, axis=0) + 0.01
+    else:
+        upper_bounds = np.full(archive.measure_dim, 0.01)
+
+    # Rearrange bounds based on cols.
+    lower_bounds = lower_bounds[cols]
+    upper_bounds = upper_bounds[cols]
 
     host_ax = plt.gca() if ax is None else ax  # Try to get current axis.
-    df = archive.data(return_type="pandas") if df is None else validate_df(df)
     vmin = df["objective"].min() if vmin is None else vmin
     vmax = df["objective"].max() if vmax is None else vmax
     norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)

@@ -24,19 +24,19 @@ from ribs.schedulers import BayesianOptimizationScheduler
 from ribs.visualize import grid_archive_heatmap
 
 
-def sphere(solutions):
+def sphere(
+    solutions: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Sphere function evaluation and measures for a batch of solutions.
 
     Args:
-        solutions (np.ndarray): (batch_size, dim) batch of solutions.
+        solutions: (batch_size, dim) batch of solutions.
 
     Returns:
-        objectives (np.ndarray): (batch_size,) batch of objectives.
-        objective_grads (np.ndarray): (batch_size, solution_dim) batch of objective
-            gradients.
-        measures (np.ndarray): (batch_size, 2) batch of measures.
-        measure_grads (np.ndarray): (batch_size, 2, solution_dim) batch of measure
-            gradients.
+        objectives: (batch_size,) batch of objectives.
+        objective_grads: (batch_size, solution_dim) batch of objective gradients.
+        measures: (batch_size, 2) batch of measures.
+        measure_grads: (batch_size, 2, solution_dim) batch of measure gradients.
     """
     dim = solutions.shape[1]
 
@@ -84,11 +84,11 @@ def sphere(solutions):
     )
 
 
-def save_heatmap(archive, heatmap_path):
+def save_heatmap(archive: GridArchive, heatmap_path: str | Path) -> None:
     """Saves a heatmap of the archive to the given path.
 
     Args:
-        archive (GridArchive): The archive to save.
+        archive: The archive to save.
         heatmap_path: Image path for the heatmap.
     """
     plt.figure(figsize=(8, 6))
@@ -113,7 +113,7 @@ def main(
     seed: int = 42,
     outdir: str = "test_logs",
     log_every: int = 20,
-):
+) -> None:
     """Main function for running BOP-Elites on the sphere domain."""
     # logdir for saving experiment data
     logdir = Path(outdir)
@@ -145,7 +145,8 @@ def main(
             archive=main_archive,
             # BayesianOptimizationEmitter requires solution space bounds due to Sobol
             # sampling. i.e., bounds cannot be None.
-            bounds=[(-10.24, 10.24)] * solution_dim,
+            lower_bounds=np.full(solution_dim, -10.24),
+            upper_bounds=np.full(solution_dim, 10.24),
             search_nrestarts=search_nrestarts,
             entropy_ejie=entropy_ejie,
             upscale_schedule=upscale_schedule,
@@ -208,7 +209,7 @@ def main(
             )
 
             save_heatmap(
-                scheduler.result_archive,
+                scheduler.result_archive,  # ty: ignore[invalid-argument-type]
                 logdir / f"heatmap_{i:08d}.png",
             )
 

@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from typing import Any
 
 import numpy as np
 import pandas as pd
+from typing_extensions import ParamSpec
 
 from ribs.typing import SingleData
+
+P = ParamSpec("P")
 
 # Developer Notes:
 # - The documentation for this class is hacked -- to add new methods, manually modify
@@ -78,11 +80,11 @@ class ArchiveDataFrame(pd.DataFrame):
         ``get_field("objective")[i]``, and ``get_field("solution")[i]``.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: P.args, **kwargs: P.kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @property
-    def _constructor(self):
+    def _constructor(self) -> type:
         return ArchiveDataFrame
 
     def iterelites(self) -> Iterable[SingleData]:

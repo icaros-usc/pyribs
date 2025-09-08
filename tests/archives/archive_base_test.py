@@ -31,7 +31,7 @@ MAE_ARCHIVES = (
 )
 def test_str_dtype_float(name, dtype):
     str_dtype, np_dtype = dtype
-    archive = get_archive_data(name, str_dtype).archive
+    archive = get_archive_data(name, dtype=str_dtype).archive
     assert archive.dtypes["solution"] == np_dtype
     assert archive.dtypes["objective"] == np_dtype
 
@@ -46,16 +46,28 @@ def test_str_dtype_float(name, dtype):
     assert archive.dtypes["index"] == np.int32
 
 
-def test_dict_dtype():
+def test_default_dtypes():
     archive = GridArchive(
         solution_dim=3,
         dims=[10, 10],
         ranges=[(-1, 1), (-2, 2)],
-        dtype={
-            "solution": object,
-            "objective": np.float32,
-            "measures": np.float32,
-        },
+    )
+
+    assert archive.dtypes["solution"] == np.float64
+    assert archive.dtypes["objective"] == np.float64
+    assert archive.dtypes["measures"] == np.float64
+    assert archive.dtypes["threshold"] == np.float64
+    assert archive.dtypes["index"] == np.int32
+
+
+def test_different_dtypes():
+    archive = GridArchive(
+        solution_dim=3,
+        dims=[10, 10],
+        ranges=[(-1, 1), (-2, 2)],
+        solution_dtype=object,
+        objective_dtype=np.float32,
+        measures_dtype=np.float32,
     )
 
     assert archive.dtypes["solution"] == np.object_
@@ -63,25 +75,6 @@ def test_dict_dtype():
     assert archive.dtypes["measures"] == np.float32
     assert archive.dtypes["threshold"] == np.float32
     assert archive.dtypes["index"] == np.int32
-
-
-def test_invalid_dtype():
-    with pytest.raises(ValueError):
-        GridArchive(solution_dim=0, dims=[20, 20], ranges=[(-1, 1)] * 2, dtype=np.int32)
-
-
-def test_invalid_dict_dtype():
-    with pytest.raises(ValueError):
-        GridArchive(
-            solution_dim=3,
-            dims=[10, 10],
-            ranges=[(-1, 1), (-2, 2)],
-            dtype={
-                "solution": object,
-                "objective": np.float32,
-                # Missing measures.
-            },
-        )
 
 
 #
@@ -539,7 +532,7 @@ def test_sample_elites_fails_when_empty(data):
 @pytest.mark.parametrize("with_elite", [True, False], ids=["nonempty", "empty"])
 @pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
 def test_pandas_data(name, with_elite, dtype):
-    data = get_archive_data(name, dtype)
+    data = get_archive_data(name, dtype=dtype)
 
     # Set up expected columns and data types.
     solution_dim = len(data.solution)

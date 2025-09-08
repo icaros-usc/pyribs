@@ -6,7 +6,7 @@ from collections.abc import Collection, Iterator
 from typing import Literal, overload
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
 
@@ -14,6 +14,7 @@ from ribs._utils import (
     check_batch_shape,
     check_finite,
     check_shape,
+    deprecate_dtype,
     validate_batch,
     validate_single,
 )
@@ -22,15 +23,7 @@ from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._utils import fill_sentinel_values, parse_dtype
-from ribs.typing import (
-    ArchiveDType,
-    Array,
-    BatchData,
-    FieldDesc,
-    Float,
-    Int,
-    SingleData,
-)
+from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
 
 
 class ProximityArchive(ArchiveBase):
@@ -96,13 +89,12 @@ class ProximityArchive(ArchiveBase):
             threshold, its objective will be compared to that of its nearest neighbor.
             If the candidate's objective is higher, it will replace the nearest
             neighbor.
-        initial_capacity: Since this archive is unstructured, it does not have a
-            fixed size, and it will grow as solutions are added. In the implementation,
-            we store solutions in fixed-size arrays, and every time the capacity of
-            these arrays is reached, we double their sizes (similar to the vector in
-            C++). This parameter determines the initial capacity of the archive's
-            arrays. It may be useful when it is known in advance how large the archive
-            will grow.
+        initial_capacity: Since this archive is unstructured, it does not have a fixed
+            size, and it will grow as solutions are added. In the implementation, we
+            store solutions in fixed-size arrays, and every time the capacity of these
+            arrays is reached, we double their sizes (similar to the vector in C++).
+            This parameter determines the initial capacity of the archive's arrays. It
+            may be useful when it is known in advance how large the archive will grow.
         qd_score_offset: Archives often contain negative objective values, and if the QD
             score were to be computed with these negative objectives, the algorithm
             would be penalized for adding new cells with negative objectives. Thus, a
@@ -113,10 +105,13 @@ class ProximityArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        dtype: Data type of the solutions, objectives, and measures. This can be ``"f"``
-            / ``np.float32``, ``"d"`` / ``np.float64``, or a dict specifying separate
-            dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
-            "measures": <dtype>}``.
+        solution_dtype: Data type of the solution. Defaults to float64 (numpy's
+            default floating point type).
+        objective_dtype: Data type of the objective. Defaults to float64 (numpy's
+            default floating point type).
+        measures_dtype: Data type of the measures. Defaults to float64 (numpy's
+            default floating point type).
+        dtype: DEPRECATED.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
             field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
@@ -143,10 +138,15 @@ class ProximityArchive(ArchiveBase):
         initial_capacity: Int = 128,
         qd_score_offset: Float = 0.0,
         seed: Int | None = None,
-        dtype: ArchiveDType = np.float64,
+        solution_dtype: DTypeLike = None,
+        objective_dtype: DTypeLike = None,
+        measures_dtype: DTypeLike = None,
+        dtype: None = None,
         extra_fields: FieldDesc | None = None,
         ckdtree_kwargs: dict | None = None,
     ) -> None:
+        deprecate_dtype(dtype)
+
         self._rng = np.random.default_rng(seed)
 
         ArchiveBase.__init__(
@@ -167,12 +167,14 @@ class ProximityArchive(ArchiveBase):
             )
         if initial_capacity < 1:
             raise ValueError("initial_capacity must be at least 1.")
-        dtype = parse_dtype(dtype)
+        solution_dtype = parse_dtype(solution_dtype, np)
+        objective_dtype = parse_dtype(objective_dtype, np)
+        measures_dtype = parse_dtype(measures_dtype, np)
         self._store = ArrayStore(
             field_desc={
-                "solution": (self.solution_dim, dtype["solution"]),
-                "objective": ((), dtype["objective"]),
-                "measures": (self.measure_dim, dtype["measures"]),
+                "solution": (self.solution_dim, solution_dtype),
+                "objective": ((), objective_dtype),
+                "measures": (self.measure_dim, measures_dtype),
                 **extra_fields,
             },
             capacity=initial_capacity,
@@ -810,7 +812,7 @@ class ProximityArchive(ArchiveBase):
         self,
         fields: str,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array: ...
+    ) -> np.ndarray: ...
 
     @overload
     def data(
@@ -824,7 +826,7 @@ class ProximityArchive(ArchiveBase):
         self,
         fields: None | Collection[str] = None,
         return_type: Literal["tuple"] = "tuple",
-    ) -> tuple[Array]: ...
+    ) -> tuple[np.ndarray]: ...
 
     @overload
     def data(
@@ -837,7 +839,7 @@ class ProximityArchive(ArchiveBase):
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
     def sample_elites(self, n: Int) -> BatchData:

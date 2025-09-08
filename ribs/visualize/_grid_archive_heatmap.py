@@ -132,8 +132,7 @@ def grid_archive_heatmap(
             raster graphic so that the archive cells will not have to be individually
             rendered. Meanwhile, the surrounding axes, particularly text labels, will
             remain in vector format.
-        pcm_kwargs: Additional kwargs to pass to
-            :func:`~matplotlib.pyplot.pcolormesh`.
+        pcm_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.pcolormesh`.
 
     Raises:
         ValueError: The archive's measure dimension must be 1D or 2D.

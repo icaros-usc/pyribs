@@ -53,7 +53,12 @@ def test_list_as_initial_solution():
 @pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
 def test_dtypes(dtype):
     archive = GridArchive(
-        solution_dim=10, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2, dtype=dtype
+        solution_dim=10,
+        dims=[20, 20],
+        ranges=[(-1.0, 1.0)] * 2,
+        solution_dtype=dtype,
+        objective_dtype=dtype,
+        measures_dtype=dtype,
     )
     emitter = EvolutionStrategyEmitter(archive, x0=np.zeros(10), sigma0=1.0)
     assert emitter.x0.dtype == dtype
@@ -98,23 +103,37 @@ if __name__ == "__main__":
 
     archive = GridArchive(solution_dim=31, dims=[20, 20], ranges=[(-1.0, 1.0)] * 2)
     emitter = EvolutionStrategyEmitter(
-        archive, x0=np.zeros(31), sigma0=1.0, bounds=[(0, 1.0)] * 31, es="cma_es"
+        archive,
+        x0=np.zeros(31),
+        sigma0=1.0,
+        lower_bounds=[0] * 31,
+        upper_bounds=[1] * 31,
+        es="cma_es",
     )
-    #  emitter = EvolutionStrategyEmitter(archive,
-    #                                     x0=np.zeros(31),
-    #                                     sigma0=1.0,
-    #                                     bounds=[(0, 1.0)] * 31,
-    #                                     es="sep_cma_es")
-    #  emitter = EvolutionStrategyEmitter(archive,
-    #                                     x0=np.zeros(31),
-    #                                     sigma0=1.0,
-    #                                     bounds=[(0, 1.0)] * 31,
-    #                                     es="lm_ma_es")
-    #  emitter = EvolutionStrategyEmitter(archive,
-    #                                     x0=np.zeros(31),
-    #                                     sigma0=1.0,
-    #                                     bounds=[(0, 1.0)] * 31,
-    #                                     es="openai_es",
-    #                                     es_kwargs={"mirror_sampling": False})
+    #  emitter = EvolutionStrategyEmitter(
+    #      archive,
+    #      x0=np.zeros(31),
+    #      sigma0=1.0,
+    #      lower_bounds=[0] * 31,
+    #      upper_bounds=[1] * 31,
+    #      es="sep_cma_es",
+    #  )
+    #  emitter = EvolutionStrategyEmitter(
+    #      archive,
+    #      x0=np.zeros(31),
+    #      sigma0=1.0,
+    #      lower_bounds=[0] * 31,
+    #      upper_bounds=[1] * 31,
+    #      es="lm_ma_es",
+    #  )
+    #  emitter = EvolutionStrategyEmitter(
+    #      archive,
+    #      x0=np.zeros(31),
+    #      sigma0=1.0,
+    #      lower_bounds=[0] * 31,
+    #      upper_bounds=[1] * 31,
+    #      es="openai_es",
+    #      es_kwargs={"mirror_sampling": False},
+    #  )
 
     emitter.ask()

@@ -6,7 +6,7 @@ from collections.abc import Collection, Iterator
 from typing import Literal, overload
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 
 from ribs._utils import (
@@ -14,6 +14,7 @@ from ribs._utils import (
     check_finite,
     check_is_1d,
     check_shape,
+    deprecate_dtype,
     validate_batch,
     validate_single,
 )
@@ -26,15 +27,7 @@ from ribs.archives._utils import (
     parse_dtype,
     validate_cma_mae_settings,
 )
-from ribs.typing import (
-    ArchiveDType,
-    Array,
-    BatchData,
-    FieldDesc,
-    Float,
-    Int,
-    SingleData,
-)
+from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
 
 
 class GridArchive(ArchiveBase):
@@ -85,10 +78,13 @@ class GridArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        dtype: Data type of the solutions, objectives, and measures. This can be ``"f"``
-            / ``np.float32``, ``"d"`` / ``np.float64``, or a dict specifying separate
-            dtypes, of the form ``{"solution": <dtype>, "objective": <dtype>,
-            "measures": <dtype>}``.
+        solution_dtype: Data type of the solution. Defaults to float64 (numpy's
+            default floating point type).
+        objective_dtype: Data type of the objective. Defaults to float64 (numpy's
+            default floating point type).
+        measures_dtype: Data type of the measures. Defaults to float64 (numpy's
+            default floating point type).
+        dtype: DEPRECATED.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
             field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
@@ -114,9 +110,14 @@ class GridArchive(ArchiveBase):
         epsilon: Float = 1e-6,
         qd_score_offset: Float = 0.0,
         seed: Int | None = None,
-        dtype: ArchiveDType = np.float64,
+        solution_dtype: DTypeLike = None,
+        objective_dtype: DTypeLike = None,
+        measures_dtype: DTypeLike = None,
+        dtype: None = None,
         extra_fields: FieldDesc | None = None,
     ) -> None:
+        deprecate_dtype(dtype)
+
         self._rng = np.random.default_rng(seed)
         self._dims = np.array(dims, dtype=np.int32)
 
@@ -136,14 +137,16 @@ class GridArchive(ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        dtype = parse_dtype(dtype)
+        solution_dtype = parse_dtype(solution_dtype, np)
+        objective_dtype = parse_dtype(objective_dtype, np)
+        measures_dtype = parse_dtype(measures_dtype, np)
         self._store = ArrayStore(
             field_desc={
-                "solution": (self.solution_dim, dtype["solution"]),
-                "objective": ((), dtype["objective"]),
-                "measures": (self.measure_dim, dtype["measures"]),
+                "solution": (self.solution_dim, solution_dtype),
+                "objective": ((), objective_dtype),
+                "measures": (self.measure_dim, measures_dtype),
                 # Must be same dtype as the objective since they share calculations.
-                "threshold": ((), dtype["objective"]),
+                "threshold": ((), objective_dtype),
                 **extra_fields,
             },
             capacity=np.prod(self._dims),
@@ -441,7 +444,6 @@ class GridArchive(ArchiveBase):
         """
         grid_indices = np.asarray(grid_indices)
         check_batch_shape(grid_indices, "grid_indices", self.measure_dim, "measure_dim")
-
         return np.ravel_multi_index(grid_indices.T, self._dims).astype(np.int32)
 
     def int_to_grid_index(self, int_indices: ArrayLike) -> np.ndarray:
@@ -461,13 +463,7 @@ class GridArchive(ArchiveBase):
         """
         int_indices = np.asarray(int_indices)
         check_is_1d(int_indices, "int_indices")
-
-        return np.asarray(
-            np.unravel_index(
-                int_indices,
-                self._dims,
-            )
-        ).T.astype(np.int32)
+        return np.asarray(np.unravel_index(int_indices, self._dims), dtype=np.int32).T
 
     ## Methods for writing to the archive ##
 
@@ -880,7 +876,7 @@ class GridArchive(ArchiveBase):
         self,
         fields: str,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array: ...
+    ) -> np.ndarray: ...
 
     @overload
     def data(
@@ -894,7 +890,7 @@ class GridArchive(ArchiveBase):
         self,
         fields: None | Collection[str] = None,
         return_type: Literal["tuple"] = "tuple",
-    ) -> tuple[Array]: ...
+    ) -> tuple[np.ndarray]: ...
 
     @overload
     def data(
@@ -907,7 +903,7 @@ class GridArchive(ArchiveBase):
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> Array | BatchData | tuple[Array] | ArchiveDataFrame:
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
     def sample_elites(self, n: Int) -> BatchData:

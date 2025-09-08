@@ -1,17 +1,26 @@
 """Provides the BayesianOptimizationEmitter."""
 
+from __future__ import annotations
+
 import warnings
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.stats import entropy, norm
 from scipy.stats.qmc import Sobol
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 
-from ribs._utils import check_batch_shape, check_finite, validate_batch
+from ribs._utils import (
+    check_batch_shape,
+    check_finite,
+    deprecate_bounds,
+    validate_batch,
+)
 from ribs.archives import GridArchive
 from ribs.emitters._emitter_base import EmitterBase
+from ribs.typing import BatchData, Float, Int
 
 
 class BayesianOptimizationEmitter(EmitterBase):
@@ -28,52 +37,56 @@ class BayesianOptimizationEmitter(EmitterBase):
         installed with ``pip install pymoo`` or ``conda install pymoo``.
 
     Args:
-        archive (ribs.archives.GridArchive): An archive to use when creating and
-            inserting solutions. Currently, the only supported archive type is
-            :class:`ribs.archives.GridArchive`.
-        bounds (array-like): Bounds of the solution space. Pass an array-like to specify
-            the bounds for each dim. Each element in this array-like must be a tuple of
-            ``(lower_bound, upper_bound)``. Cannot be ``None`` or ``+-inf`` because
-            SOBOL sampling is used.
-        search_nrestarts (int): Number of starting points for EJIE pattern search.
-        entropy_ejie (bool): If ``True``, augments EJIE acquisition function with
-            entropy to encourage measure space exploration. Refer to Sec. 4.1 of `Kent
-            2023 <https://dl.acm.org/doi/10.1145/3583131.3590486>`_ for more details.
-        upscale_schedule (array-like): An array of increasing archive resolutions
-            starting with :attr:`archive.resolution` and ending with the user's intended
-            final archive resolution. This will upscale the archive to the next
-            scheduled resolution if every cell within the current archive has been
-            filled, or the number of evaluated solutions is more than twice
-            :attr:`archive.cells`. If ``None``, the archive will not be upscaled.
-        min_obj (float or int): The lowest possible objective value. Serves as the
-            default objective value within archive cells that have not been filled.
-            Mainly used when computing expected improvement.
-        num_initial_samples (int): The number of solutions that will be sampled from a
-            Sobol sequence as the first batch of training data for gaussian processes.
-            Either ``num_initial_samples`` or ``initial_solutions`` must be set.
-        initial_solutions (array-like): An (n, solution_dim) array of solutions to be
-            used as the first batch of training data for gaussian processes. Either
+        archive: An archive to use when creating and inserting solutions. Currently, the
+            only supported archive type is :class:`ribs.archives.GridArchive`.
+        lower_bounds: Lower bounds of the solution space. Cannot be ``None`` or
+            ``+-inf`` because SOBOL sampling is used.
+        upper_bounds: Upper bounds of the solution space. Cannot be ``None`` or
+            ``+-inf`` because SOBOL sampling is used.
+        bounds: DEPRECATED.
+        search_nrestarts: Number of starting points for EJIE pattern search.
+        entropy_ejie: If ``True``, augments EJIE acquisition function with entropy to
+            encourage measure space exploration. Refer to Sec. 4.1 of `Kent 2023
+            <https://dl.acm.org/doi/10.1145/3583131.3590486>`_ for more details.
+        upscale_schedule: An array of increasing archive resolutions starting with
+            :attr:`archive.resolution` and ending with the user's intended final archive
+            resolution. This will upscale the archive to the next scheduled resolution
+            if every cell within the current archive has been filled, or the number of
+            evaluated solutions is more than twice :attr:`archive.cells`. If ``None``,
+            the archive will not be upscaled.
+        min_obj: The lowest possible objective value. Serves as the default objective
+            value within archive cells that have not been filled. Mainly used when
+            computing expected improvement.
+        num_initial_samples: The number of solutions that will be sampled from a Sobol
+            sequence as the first batch of training data for gaussian processes. Either
             ``num_initial_samples`` or ``initial_solutions`` must be set.
-        batch_size (int): Number of solutions to return in :meth:`ask`. Must not exceed
+        initial_solutions: An (n, solution_dim) array of solutions to be used as the
+            first batch of training data for gaussian processes. Either
+            ``num_initial_samples`` or ``initial_solutions`` must be set.
+        batch_size: Number of solutions to return in :meth:`ask`. Must not exceed
             ``search_nrestarts``. It is recommended to set this to 1 for sample
             efficiency.
-        seed (int): Seed for the random number generator.
+        seed: Seed for the random number generator.
     """
 
     def __init__(
         self,
-        archive,
-        bounds,
+        archive: GridArchive,
         *,
-        search_nrestarts=5,
-        entropy_ejie=False,
-        upscale_schedule=None,
-        min_obj=0,
-        num_initial_samples=None,
-        initial_solutions=None,
-        batch_size=1,
-        seed=None,
-    ):
+        lower_bounds: ArrayLike,
+        upper_bounds: ArrayLike,
+        bounds: None = None,
+        search_nrestarts: Int = 5,
+        entropy_ejie: bool = False,
+        upscale_schedule: ArrayLike | None = None,
+        min_obj: Float = 0,
+        num_initial_samples: Int | None = None,
+        initial_solutions: ArrayLike | None = None,
+        batch_size: Int = 1,
+        seed: Int | None = None,
+    ) -> None:
+        deprecate_bounds(bounds)
+
         try:
             from pymoo.algorithms.soo.nonconvex.pattern import PatternSearch
             from pymoo.optimize import minimize
@@ -91,13 +104,15 @@ class BayesianOptimizationEmitter(EmitterBase):
             "DefaultSingleObjectiveTermination": DefaultSingleObjectiveTermination,
         }
 
-        check_finite(bounds, "bounds")
         EmitterBase.__init__(
             self,
             archive,
             solution_dim=archive.solution_dim,
-            bounds=bounds,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
         )
+        check_finite(self.lower_bounds, "lower_bounds")
+        check_finite(self.upper_bounds, "upper_bounds")
 
         if not isinstance(archive, GridArchive):
             raise NotImplementedError(
@@ -178,13 +193,13 @@ class BayesianOptimizationEmitter(EmitterBase):
         self._min_obj = min_obj
 
     @property
-    def batch_size(self):
-        """int: Number of solutions to return in :meth:`ask`."""
+    def batch_size(self) -> Int:
+        """Number of solutions to return in :meth:`ask`."""
         return self._batch_size
 
     @property
-    def cell_prob_cutoff(self):
-        """np.float64: Cutoff value (ohm) for :meth:`_get_cell_probs`.
+    def cell_prob_cutoff(self) -> Float:
+        """Cutoff value (ohm) for :meth:`_get_cell_probs`.
 
         Described in `Kent 2024
         <https://ieeexplore.ieee.org/abstract/document/10472301>`_ Sec.IV-D.
@@ -205,8 +220,8 @@ class BayesianOptimizationEmitter(EmitterBase):
         )
 
     @property
-    def num_evals(self):
-        """int: Number of solutions stored in :attr:`_dataset`.
+    def num_evals(self) -> int:
+        """Number of solutions stored in :attr:`_dataset`.
 
         This is the number of solutions that have been evaluated since the
         initialization of this emitter.
@@ -214,13 +229,13 @@ class BayesianOptimizationEmitter(EmitterBase):
         return self._dataset["solution"].shape[0]
 
     @property
-    def measure_dim(self):
-        """int: Number of measure functions."""
+    def measure_dim(self) -> int:
+        """Number of measure functions."""
         return self.archive.measure_dim
 
     @property
-    def num_sobol_samples(self):
-        """int: Number of SOBOL samples when choosing pattern search starting points in :meth:`ask`.
+    def num_sobol_samples(self) -> Int:
+        """Number of SOBOL samples when choosing pattern search starting points in :meth:`ask`.
 
         .. note:: If measure function gradients are available, a potentially better way
             to do this might be to do Latin Hypercube sampling within measure space, and
@@ -237,21 +252,21 @@ class BayesianOptimizationEmitter(EmitterBase):
         )
 
     @property
-    def dtype(self):
-        """numpy.dtype: Data type of solutions."""
+    def dtype(self) -> np.dtype:
+        """Data type of solutions."""
         return self.archive.dtypes["solution"]
 
     @property
-    def upscale_schedule(self):
-        """numpy.ndarray: Archive upscale schedule.
+    def upscale_schedule(self) -> np.ndarray | None:
+        """Archive upscale schedule.
 
         Defined when initializing this emitter.
         """
         return self._upscale_schedule
 
     @property
-    def upscale_trigger_threshold(self):
-        """int: Maximum number of iterations the emitter is allowed to not find new cells before archive upscale is triggered.
+    def upscale_trigger_threshold(self) -> Int:
+        """Maximum number of iterations the emitter is allowed to not find new cells before archive upscale is triggered.
 
         See `here
         <https://github.com/kentwar/BOPElites/blob/main/algorithm/BOP_Elites_UKD_beta.py#L187>`_
@@ -260,24 +275,24 @@ class BayesianOptimizationEmitter(EmitterBase):
         return np.floor(np.sqrt(self.archive.cells))
 
     @property
-    def min_obj(self):
-        """float: The lowest possible objective value.
+    def min_obj(self) -> Float:
+        """The lowest possible objective value.
 
         Refer to the documentation for this class.
         """
         return self._min_obj
 
     @property
-    def initial_solutions(self):
-        """numpy.ndarray: Returned when the archive is empty (if :attr:`x0` is not set)."""
+    def initial_solutions(self) -> np.ndarray | None:
+        """Returned when the archive is empty (if :attr:`x0` is not set)."""
         return self._initial_solutions
 
     @EmitterBase.archive.setter
-    def archive(self, new_archive):
+    def archive(self, new_archive: GridArchive) -> None:
         """Allows resetting the archive associated with this emitter (for archive upscaling)."""
         self._archive = new_archive
 
-    def post_upscale_updates(self):
+    def post_upscale_updates(self) -> None:
         """Runs after the scheduler upscales the archive.
 
         This method updates :attr:`_entropy_norm` according to new number of archive
@@ -290,7 +305,7 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         self._numitrs_noprogress = 0
 
-    def _update_no_coverage_progress(self):
+    def _update_no_coverage_progress(self) -> None:
         """Potentially increments :attr:`_numitrs_noprogress`.
 
         Increments if number of discovered archive cells remains the same for two
@@ -303,7 +318,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             self._numitrs_noprogress = 0
             self._prev_numcells = len(self.archive)
 
-    def _check_upscale_schedule(self, upscale_schedule):
+    def _check_upscale_schedule(self, upscale_schedule: np.ndarray) -> None:
         """Checks that ``upscale_schedule`` is a valid upscale schedule.
 
         Specifically:
@@ -327,8 +342,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             ]
 
         Args:
-            upscale_schedule (np.ndarray): See ``upscale_schedule`` from
-            :meth:`__init__`.
+            upscale_schedule: See ``upscale_schedule`` from :meth:`__init__`.
         """
         if upscale_schedule.ndim != 2:
             raise ValueError("upscale_schedule must have 2 dimensions.")
@@ -352,17 +366,17 @@ class BayesianOptimizationEmitter(EmitterBase):
                 f"archive), actually got {upscale_schedule[0]}."
             )
 
-    def _sample_n_rescale(self, num_samples):
+    def _sample_n_rescale(self, num_samples: int) -> np.ndarray:
         """Samples `num_samples` solutions from the SOBOL sequence.
 
         The solutions are also rescaled to the bounds of the search space.
 
         Args:
-            num_samples (int): Number of solutions to sample.
+            num_samples: Number of solutions to sample.
 
         Returns:
-            numpy.ndarray: Array of shape (num_samples, :attr:`solution_dim`) containing
-            the sampled solutions.
+            Array of shape (num_samples, :attr:`solution_dim`) containing the sampled
+            solutions.
         """
         # SOBOL samples are in range [0, 1]. Need to rescale to bounds
         sobol_samples = self._sobol.random(n=num_samples)
@@ -372,7 +386,9 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         return rescaled_samples
 
-    def _get_expected_improvements(self, obj_mus, obj_stds):
+    def _get_expected_improvements(
+        self, obj_mus: np.ndarray, obj_stds: np.ndarray
+    ) -> np.ndarray:
         """Computes expected improvements predicted by :attr:`_gp`.
 
         The improvements are calculated for a batch of solutions over all cells in the
@@ -381,15 +397,14 @@ class BayesianOptimizationEmitter(EmitterBase):
         themselves to avoid redundant computation.
 
         Args:
-            obj_mus (numpy.ndarray): Array of shape (num_solutions,) containing the
-                posterior objective means predicted by the gaussian process.
-            obj_stds (numpy.ndarray): Array of shape (num_solutions,) containing the
-                posterior objective standard deviations predicted by the gaussian
-                process.
+            obj_mus: Array of shape (num_solutions,) containing the posterior objective
+                means predicted by the gaussian process.
+            obj_stds: Array of shape (num_solutions,) containing the posterior objective
+                standard deviations predicted by the gaussian process.
 
         Returns:
-            numpy.ndarray: Array of shape (num_solutions, :attr:`archive.cells`)
-            containing the expected improvements for each solution over each cell.
+            Array of shape (num_solutions, :attr:`archive.cells`) containing the
+            expected improvements for each solution over each cell.
         """
         num_samples = obj_mus.shape[0]
         all_obj = np.full((self.archive.cells,), self.min_obj)
@@ -407,7 +422,13 @@ class BayesianOptimizationEmitter(EmitterBase):
             obj_mus[:, None]
         ) + obj_stds[:, None] * distribution.pdf(obj_mus[:, None])
 
-    def _get_cell_probs(self, meas_mus, meas_stds, normalize=True, cutoff=True):
+    def _get_cell_probs(
+        self,
+        meas_mus: np.ndarray,
+        meas_stds: np.ndarray,
+        normalize: bool = True,
+        cutoff: bool = True,
+    ) -> np.ndarray:
         """Computes archive cell membership probabilities predicted by :attr:`_gp`.
 
         Probabilities are computed for a batch of solutions. This function takes in the
@@ -415,20 +436,19 @@ class BayesianOptimizationEmitter(EmitterBase):
         processes instead of the solutions themselves to avoid redundant computation.
 
         Args:
-            meas_mus (numpy.ndarray): Array of shape (num_solutions,
-                :attr:`measure_dim`) containing the posterior measure means predicted by
-                the gaussian process.
-            meas_stds (numpy.ndarray): Array of shape (num_solutions,
-                :attr:`measure_dim`) containing the posterior measure standard
-                deviations predicted by the gaussian process.
-            normalize (bool): If ``True``, normalizes the cell probabilities such that
-                they sum to 1 for each solution.
-            cutoff (bool): If ``True``, sets cell probabilities below
-                :attr:`cell_prob_cutoff` to 0.
+            meas_mus: Array of shape (num_solutions, :attr:`measure_dim`) containing the
+                posterior measure means predicted by the gaussian process.
+            meas_stds: Array of shape (num_solutions, :attr:`measure_dim`) containing
+                the posterior measure standard deviations predicted by the gaussian
+                process.
+            normalize: If ``True``, normalizes the cell probabilities such that they sum
+                to 1 for each solution.
+            cutoff: If ``True``, sets cell probabilities below :attr:`cell_prob_cutoff`
+                to 0.
 
         Returns:
-            numpy.ndarray: Array of shape (num_solutions, :attr:`archive.cells`)
-            containing the predicted cell probabilities for each solution.
+            Array of shape (num_solutions, :attr:`archive.cells`) containing the
+            predicted cell probabilities for each solution.
         """
         num_solutions = meas_mus.shape[0]
 
@@ -467,7 +487,7 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         return cell_probs
 
-    def _get_ejie_values(self, samples):
+    def _get_ejie_values(self, samples: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Computes *Expected Joint Improvement of Elites* (EJIE) acquisition values.
 
         Value are computed by multiplying the predicted expected improvements and cell
@@ -478,15 +498,14 @@ class BayesianOptimizationEmitter(EmitterBase):
         of shape (num_solutions, :attr:`archive.cells`).
 
         Args:
-            samples (numpy.ndarray): Array of shape (num_samples, :attr:`solution_dim`)
-                containing samples whose EJIE values need to be computed.
+            samples: Array of shape (num_samples, :attr:`solution_dim`) containing
+                samples whose EJIE values need to be computed.
 
         Returns:
-            tuple of (numpy.ndarray, numpy.ndarray): Returns an array of shape
-            (num_solutions, :attr:`archive.cells`) containing each solution's EJIE
-            values for each cell. Also returns an array of shape (num_solutions,
-            :attr:`archive.cells`) containing the predicted cell membership
-            probabilities for each solution.
+            Returns an array of shape (num_solutions, :attr:`archive.cells`) containing
+            each solution's EJIE values for each cell. Also returns an array of shape
+            (num_solutions, :attr:`archive.cells`) containing the predicted cell
+            membership probabilities for each solution.
         """
         mus, stds = self._gp.predict(
             samples.reshape(-1, self.solution_dim), return_std=True
@@ -514,7 +533,7 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         return ejie_by_cell, cell_probs
 
-    def ask(self):
+    def ask(self) -> np.ndarray:
         """Returns solutions that are predicted to have high EJIE values.
 
         If ``self._gp`` has not been trained on any data and ``self._initial_solutions``
@@ -659,7 +678,14 @@ class BayesianOptimizationEmitter(EmitterBase):
 
         return optimized_samples[sorted_idx]
 
-    def tell(self, solution, objective, measures, add_info, **fields):
+    def tell(
+        self,
+        solution: ArrayLike,
+        objective: ArrayLike,
+        measures: ArrayLike,
+        add_info: BatchData,
+        **fields: ArrayLike,
+    ) -> np.ndarray | None:
         """Updates the gaussian process and potentially upscales the archive.
 
         The function does the following:
@@ -674,19 +700,19 @@ class BayesianOptimizationEmitter(EmitterBase):
            next resolution to upscale to.
 
         Args:
-            solution (array-like): (batch_size, :attr:`solution_dim`) array of solutions
-                generated by this emitter's :meth:`ask()` method.
-            objective (array-like): 1D array containing the objective function value of
+            solution: (batch_size, :attr:`solution_dim`) array of solutions generated by
+                this emitter's :meth:`ask()` method.
+            objective: 1D array containing the objective function value of each
+                solution.
+            measures: (batch_size, :attr:`measure_dim`) array with the measure values of
                 each solution.
-            measures (array-like): (batch_size, :attr:`measure_dim`) array with the
-                measure values of each solution.
-            add_info (dict): Data returned from the archive
+            add_info: Data returned from the archive
                 :meth:`~ribs.archives.ArchiveBase.add` method.
-            fields (keyword arguments): Additional data for each solution. Each argument
-                should be an array with batch_size as the first dimension.
+            fields: Additional data for each solution. Each argument should be an array
+                with batch_size as the first dimension.
 
         Returns:
-            numpy.ndarray: A 1D array of shape (:attr:`measure_dim`,) containing the
+            A 1D array of shape (:attr:`measure_dim`,) containing the
             next resolution to upscale to. The actual upscaling will be done in the
             scheduler, through
             :meth:`~ribs.schedulers.BayesianOptimizationScheduler.tell`. If no upscaling
