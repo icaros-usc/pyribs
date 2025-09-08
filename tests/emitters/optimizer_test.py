@@ -1,11 +1,15 @@
 """Tests for the Optimizers."""
 
+from typing import cast
+
 import numpy as np
 import pytest
 
 from ribs.emitters.opt import (
     _NAME_TO_ES_MAP,
     _NAME_TO_GRAD_OPT_MAP,
+    AdamOpt,
+    GradientAscentOpt,
     _get_es,
     _get_grad_opt,
 )
@@ -28,10 +32,12 @@ def test_init_with_get_es(es_name):
     }
     es = _get_es(es_name, **es_kwargs)
 
-    assert es.batch_size == es_kwargs["batch_size"]
-    assert es.sigma0 == es_kwargs["sigma0"]
-    assert es.solution_dim == es_kwargs["solution_dim"]
-    assert es.dtype == es_kwargs["dtype"]
+    # Technically, these attributes are not part of the API, but all of our ES's have
+    # them.
+    assert es.batch_size == es_kwargs["batch_size"]  # ty: ignore[unresolved-attribute]
+    assert es.sigma0 == es_kwargs["sigma0"]  # ty: ignore[unresolved-attribute]
+    assert es.solution_dim == es_kwargs["solution_dim"]  # ty: ignore[unresolved-attribute]
+    assert es.dtype == es_kwargs["dtype"]  # ty: ignore[unresolved-attribute]
 
 
 # Gradient Optimizer Tests
@@ -56,8 +62,10 @@ def test_init_with_get_grad_opt(grad_opt_name):
 
     assert grad_opt.theta == theta0
 
+    grad_opt = cast(GradientAscentOpt | AdamOpt, grad_opt)
     assert grad_opt._lr == lr
     if grad_opt_name == "adam":
+        grad_opt = cast(AdamOpt, grad_opt)
         assert grad_opt._beta1 == grad_opt_kwargs["beta1"]
         assert grad_opt._beta2 == grad_opt_kwargs["beta2"]
         assert grad_opt._epsilon == grad_opt_kwargs["epsilon"]

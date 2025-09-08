@@ -40,18 +40,20 @@ def test_dtypes(dtype):
 
 
 def test_bounds_must_be_none():
-    bound = [(-1, 1)]
     batch_size = 1
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="lower_bounds and upper_bounds must be set to None.*"
+    ):
         GradientArborescenceEmitter(
             archive,
             x0=np.array([0]),
             sigma0=1.0,
             lr=1.0,
             normalize_grad=False,
-            bounds=bound,
+            lower_bounds=[-1],
+            upper_bounds=[1],
             batch_size=batch_size,
         )
 

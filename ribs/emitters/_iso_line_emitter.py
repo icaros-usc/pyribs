@@ -1,11 +1,16 @@
 """Provides the IsoLineEmitter."""
 
+from __future__ import annotations
+
 import numbers
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from ribs._utils import check_batch_shape, check_shape, deprecate_bounds
+from ribs.archives import ArchiveBase
 from ribs.emitters._emitter_base import EmitterBase
+from ribs.typing import Float, Int
 
 
 class IsoLineEmitter(EmitterBase):
@@ -26,27 +31,26 @@ class IsoLineEmitter(EmitterBase):
     <https://arxiv.org/abs/1804.03906>`_.
 
     Args:
-        archive (ribs.archives.ArchiveBase): Archive of solutions, e.g.,
-            :class:`ribs.archives.GridArchive`.
-        iso_sigma (float): Scale factor for the isotropic distribution used to generate
+        archive: Archive of solutions, e.g., :class:`ribs.archives.GridArchive`.
+        iso_sigma: Scale factor for the isotropic distribution used to generate
             solutions.
-        line_sigma (float): Scale factor for the line distribution used when generating
+        line_sigma: Scale factor for the line distribution used when generating
             solutions.
-        x0 (array-like): Center of the Gaussian distribution from which to sample
-            solutions when the archive is empty. Must be 1-dimensional. This argument is
-            ignored if ``initial_solutions`` is set.
-        initial_solutions (array-like): An (n, solution_dim) array of solutions to be
-            used when the archive is empty. If this argument is None, then solutions
-            will be sampled from a Gaussian distribution centered at ``x0`` with
-            standard deviation ``iso_sigma``.
-        lower_bounds (None or array-like): Lower bounds of the solution space. Pass None
-            to indicate there are no bounds (i.e., bounds are set to -inf).
-        upper_bounds (None or array-like): Upper bounds of the solution space. Pass None
-            to indicate there are no bounds (i.e., bounds are set to inf).
+        x0: Center of the Gaussian distribution from which to sample solutions when the
+            archive is empty. Must be 1-dimensional. This argument is ignored if
+            ``initial_solutions`` is set.
+        initial_solutions: An (n, solution_dim) array of solutions to be used when the
+            archive is empty. If this argument is None, then solutions will be sampled
+            from a Gaussian distribution centered at ``x0`` with standard deviation
+            ``iso_sigma``.
+        lower_bounds: Lower bounds of the solution space. Pass None to indicate there
+            are no bounds (i.e., bounds are set to -inf).
+        upper_bounds: Upper bounds of the solution space. Pass None to indicate there
+            are no bounds (i.e., bounds are set to inf).
         bounds: DEPRECATED.
-        batch_size (int): Number of solutions to return in :meth:`ask`.
-        seed (int): Value to seed the random number generator. Set to None to avoid a
-            fixed seed.
+        batch_size: Number of solutions to return in :meth:`ask`.
+        seed: Value to seed the random number generator. Set to None to avoid a fixed
+            seed.
 
     Raises:
         ValueError: There is an error in x0 or initial_solutions.
@@ -55,18 +59,18 @@ class IsoLineEmitter(EmitterBase):
 
     def __init__(
         self,
-        archive,
+        archive: ArchiveBase,
         *,
-        iso_sigma=0.01,
-        line_sigma=0.2,
-        x0=None,
-        initial_solutions=None,
-        lower_bounds=None,
-        upper_bounds=None,
-        bounds=None,
-        batch_size=64,
-        seed=None,
-    ):
+        iso_sigma: Float = 0.01,
+        line_sigma: Float = 0.2,
+        x0: ArrayLike | None = None,
+        initial_solutions: ArrayLike | None = None,
+        lower_bounds: ArrayLike | None = None,
+        upper_bounds: ArrayLike | None = None,
+        bounds: None = None,
+        batch_size: Int = 64,
+        seed: Int | None = None,
+    ) -> None:
         deprecate_bounds(bounds)
 
         EmitterBase.__init__(
@@ -109,8 +113,8 @@ class IsoLineEmitter(EmitterBase):
             )
 
     @property
-    def x0(self):
-        """numpy.ndarray: Initial Gaussian distribution center.
+    def x0(self) -> np.ndarray | None:
+        """Initial Gaussian distribution center.
 
         Solutions are sampled from this distribution when the archive is empty (if
         :attr:`initial_solutions` is not set).
@@ -118,30 +122,30 @@ class IsoLineEmitter(EmitterBase):
         return self._x0
 
     @property
-    def initial_solutions(self):
-        """numpy.ndarray: Returned when the archive is empty (if :attr:`x0` is not set)."""
+    def initial_solutions(self) -> np.ndarray | None:
+        """Returned when the archive is empty (if :attr:`x0` is not set)."""
         return self._initial_solutions
 
     @property
-    def iso_sigma(self):
-        """float: Scale factor for the isotropic distribution."""
+    def iso_sigma(self) -> np.floating:
+        """Scale factor for the isotropic distribution."""
         return self._iso_sigma
 
     @property
-    def line_sigma(self):
-        """float: Scale factor for the line distribution."""
+    def line_sigma(self) -> np.floating:
+        """Scale factor for the line distribution."""
         return self._line_sigma
 
     @property
-    def batch_size(self):
-        """int: Number of solutions to return in :meth:`ask`."""
+    def batch_size(self) -> Int:
+        """Number of solutions to return in :meth:`ask`."""
         return self._batch_size
 
-    def _clip(self, solutions):
+    def _clip(self, solutions: np.ndarray) -> np.ndarray:
         """Clips solutions to the bounds of the solution space."""
         return np.clip(solutions, self.lower_bounds, self.upper_bounds)
 
-    def ask(self):
+    def ask(self) -> np.ndarray:
         r"""Generates ``batch_size`` solutions.
 
         If the archive is empty and ``initial_solutions`` is set, a call to :meth:`ask`

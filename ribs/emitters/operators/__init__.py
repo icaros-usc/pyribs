@@ -32,7 +32,7 @@ _NAME_TO_OP_MAP = {
 }
 
 
-def _get_op(operator):
+def _get_op(operator: str) -> type[OperatorBase]:
     """Retrieves Matching Operator."""
     if isinstance(operator, str):
         if operator in _NAME_TO_OP_MAP:
