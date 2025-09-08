@@ -207,6 +207,21 @@ def test_default_bounds_correct(archive_fixture):
     assert (emitter.upper_bounds == np.full(archive.solution_dim, np.inf)).all()
 
 
+def test_cannot_specify_both_bounds(archive_fixture):
+    archive, x0 = archive_fixture
+    with pytest.raises(
+        ValueError, match="Cannot specify both bounds and lower_bounds/upper_bounds.*"
+    ):
+        GaussianEmitter(
+            archive,
+            sigma=1,
+            x0=x0,
+            bounds=[(-1, 1)] * len(x0),
+            lower_bounds=[-1] * len(x0),
+            upper_bounds=[1] * len(x0),
+        )
+
+
 @pytest.mark.parametrize("bound_type", ["bounds", "lower_upper"])
 def test_array_bound_correct(archive_fixture, bound_type):
     archive, x0 = archive_fixture
