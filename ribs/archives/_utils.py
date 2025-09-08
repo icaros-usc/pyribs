@@ -7,6 +7,8 @@ from types import ModuleType
 import numpy as np
 from numpy.typing import DTypeLike
 
+from ribs._utils import xp_namespace
+
 
 def parse_dtype(dtype: DTypeLike, xp: ModuleType) -> DTypeLike:
     """Makes any necessary modifications to the input dtype.
@@ -15,6 +17,7 @@ def parse_dtype(dtype: DTypeLike, xp: ModuleType) -> DTypeLike:
     provided array backend.
     """
     if dtype is None:
+        xp = xp_namespace(xp)
         # See here for info on array API inspection:
         # https://data-apis.org/array-api/latest/API_specification/inspection.html
         return xp.__array_namespace_info__().default_dtypes()["real floating"]  # ty: ignore[unresolved-attribute]

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Collection, Hashable, Iterator
 from typing import Literal, overload
 
-import array_api_compat.numpy as np_compat
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
@@ -125,8 +124,8 @@ class CategoricalArchive(ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        solution_dtype = parse_dtype(solution_dtype, np_compat)
-        objective_dtype = parse_dtype(objective_dtype, np_compat)
+        solution_dtype = parse_dtype(solution_dtype, np)
+        objective_dtype = parse_dtype(objective_dtype, np)
         measures_dtype = object if measures_dtype is None else measures_dtype
         self._store = ArrayStore(
             field_desc={

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Collection, Iterator
 from typing import Literal, overload
 
-import array_api_compat.numpy as np_compat
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
@@ -106,12 +105,12 @@ class ProximityArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        solution_dtype: Data type of the solution. Defaults to float64 for numpy/cupy,
-            and float32 for torch.
-        objective_dtype: Data type of the objective. Defaults to float64 for numpy/cupy,
-            and float32 for torch.
-        measures_dtype: Data type of the measures. Defaults to float64 for numpy/cupy,
-            and float32 for torch.
+        solution_dtype: Data type of the solution. Defaults to float64 (numpy's
+            default floating point type).
+        objective_dtype: Data type of the objective. Defaults to float64 (numpy's
+            default floating point type).
+        measures_dtype: Data type of the measures. Defaults to float64 (numpy's
+            default floating point type).
         dtype: DEPRECATED.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
@@ -168,9 +167,9 @@ class ProximityArchive(ArchiveBase):
             )
         if initial_capacity < 1:
             raise ValueError("initial_capacity must be at least 1.")
-        solution_dtype = parse_dtype(solution_dtype, np_compat)
-        objective_dtype = parse_dtype(objective_dtype, np_compat)
-        measures_dtype = parse_dtype(measures_dtype, np_compat)
+        solution_dtype = parse_dtype(solution_dtype, np)
+        objective_dtype = parse_dtype(objective_dtype, np)
+        measures_dtype = parse_dtype(measures_dtype, np)
         self._store = ArrayStore(
             field_desc={
                 "solution": (self.solution_dim, solution_dtype),
