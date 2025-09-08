@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -56,7 +56,7 @@ def cqd_score(
     obj_min: Float,
     obj_max: Float,
     dist_max: Float,
-    dist_ord: Any = None,
+    dist_ord: Int | Float | Literal["fro", "nuc"] = None,
 ) -> CQDScoreResult:
     r"""Computes the CQD score of an archive.
 

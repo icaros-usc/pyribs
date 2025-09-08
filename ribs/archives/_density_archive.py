@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-import array_api_compat.numpy as np_compat
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from scipy.spatial.distance import cdist
@@ -91,8 +90,8 @@ class DensityArchive(ArchiveBase):
             passed in via the ``bandwidth`` parameter above.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        measures_dtype: Data type of the measures. Defaults to float64 for numpy/cupy,
-            and float32 for torch.
+        measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
+            floating point type).
         dtype: DEPRECATED.
 
     Raises:
@@ -114,7 +113,7 @@ class DensityArchive(ArchiveBase):
         deprecate_dtype(dtype)
 
         self._rng = np.random.default_rng(seed)
-        self._measure_dtype = parse_dtype(measures_dtype, np_compat)
+        self._measure_dtype = parse_dtype(measures_dtype, np)
 
         ArchiveBase.__init__(
             self,
