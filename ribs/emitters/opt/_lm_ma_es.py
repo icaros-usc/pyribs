@@ -4,10 +4,13 @@ Adapted from Nikolaus Hansen's pycma:
 https://github.com/CMA-ES/pycma/blob/master/cma/purecma.py
 """
 
+from __future__ import annotations
+
 import warnings
 
 import numba as nb
 import numpy as np
+from numpy.typing import DTypeLike
 
 from ribs._utils import arr_readonly
 from ribs.emitters.opt._evolution_strategy_base import (
@@ -15,6 +18,7 @@ from ribs.emitters.opt._evolution_strategy_base import (
     BOUNDS_WARNING,
     EvolutionStrategyBase,
 )
+from ribs.typing import Float, Int
 
 
 class LMMAEvolutionStrategy(EvolutionStrategyBase):
@@ -23,33 +27,33 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
     Refer to :class:`EvolutionStrategyBase` for usage instruction.
 
     Args:
-        sigma0 (float): Initial step size.
-        batch_size (int): Number of solutions to evaluate at a time. If None, we
-            calculate a default batch size based on solution_dim.
-        solution_dim (int): Size of the solution space.
-        seed (int): Seed for the random number generator.
-        dtype (str or data-type): Data type of solutions.
-        lower_bounds (float or np.ndarray): scalar or (solution_dim,) array indicating
-            lower bounds of the solution space. Scalars specify the same bound for the
-            entire space, while arrays specify a bound for each dimension. Pass -np.inf
-            in the array or scalar to indicated unbounded space.
-        upper_bounds (float or np.ndarray): Same as above, but for upper bounds (and
-            pass np.inf instead of -np.inf).
-        n_vectors (int): Number of vectors to use in the approximation. If None, this
-            defaults to be equal to the batch size.
+        sigma0: Initial step size.
+        batch_size: Number of solutions to evaluate at a time. If None, we calculate a
+            default batch size based on solution_dim.
+        solution_dim: Size of the solution space.
+        seed: Seed for the random number generator.
+        dtype: Data type of solutions.
+        lower_bounds: scalar or (solution_dim,) array indicating lower bounds of the
+            solution space. Scalars specify the same bound for the entire space, while
+            arrays specify a bound for each dimension. Pass -np.inf in the array or
+            scalar to indicated unbounded space.
+        upper_bounds: Same as above, but for upper bounds (and pass np.inf instead of
+            -np.inf).
+        n_vectors: Number of vectors to use in the approximation. If None, this defaults
+            to be equal to the batch size.
     """
 
     def __init__(
         self,
-        sigma0,
-        solution_dim,
-        batch_size=None,
-        seed=None,
-        dtype=np.float64,
-        lower_bounds=-np.inf,
-        upper_bounds=np.inf,
-        n_vectors=None,
-    ):
+        sigma0: Float,
+        solution_dim: Int,
+        batch_size: Int | None = None,
+        seed: Int | None = None,
+        dtype: DTypeLike = np.float64,
+        lower_bounds: Float | np.ndarray = -np.inf,
+        upper_bounds: Float | np.ndarray = np.inf,
+        n_vectors: Int | None = None,
+    ) -> None:
         self.batch_size = (
             4 + int(3 * np.log(solution_dim)) if batch_size is None else batch_size
         )
@@ -94,7 +98,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         self.ps = None
         self.m = None
 
-    def reset(self, x0):
+    def reset(self, x0: np.ndarray) -> None:
         self.current_gens = 0
         self.sigma = self.sigma0
         self.mean = np.array(x0, self.dtype)
@@ -105,7 +109,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
         # Setup the matrix vectors.
         self.m = np.zeros((self.n_vectors, self.solution_dim))
 
-    def check_stop(self, ranking_values):
+    def check_stop(self, ranking_values: np.ndarray) -> bool:
         # Sigma too small - Note: this was 1e-20 in the reference LM-MA-ES code.
         if self.sigma < 1e-12:
             return True
@@ -147,7 +151,7 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
         return new_solutions, out_of_bounds
 
-    def ask(self, batch_size=None):
+    def ask(self, batch_size: Int | None = None) -> np.ndarray:
         # NOTE: The LM-MA-ES uses mirror sampling by default, but we do not.
         if batch_size is None:
             batch_size = self.batch_size
@@ -202,7 +206,9 @@ class LMMAEvolutionStrategy(EvolutionStrategyBase):
 
         return weights, mueff
 
-    def tell(self, ranking_indices, ranking_values, num_parents):
+    def tell(
+        self, ranking_indices: np.ndarray, ranking_values: np.ndarray, num_parents: Int
+    ) -> None:
         self.current_gens += 1
 
         if num_parents == 0:
