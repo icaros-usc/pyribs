@@ -12,7 +12,7 @@ from ribs.emitters import EvolutionStrategyEmitter
 from ribs.schedulers import Scheduler
 
 
-def main(itrs=1000):
+def main(itrs: int = 1000) -> None:
     """Runs CMA-ME on a basic function, computing CQD score along the way."""
     # Set up pyribs components.
     archive = GridArchive(

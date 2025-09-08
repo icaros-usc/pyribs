@@ -47,6 +47,8 @@ Help:
     python lunar_lander.py --help
 """
 
+from __future__ import annotations
+
 import json
 import time
 from pathlib import Path
@@ -59,28 +61,29 @@ import pandas as pd
 import tqdm
 from dask.distributed import Client, LocalCluster
 
-from ribs.archives import ArchiveDataFrame, GridArchive
+from ribs.archives import ArchiveBase, ArchiveDataFrame, GridArchive
 from ribs.emitters import EvolutionStrategyEmitter
 from ribs.schedulers import Scheduler
 from ribs.visualize import grid_archive_heatmap
 
 
-def simulate(model, seed=None, video_env=None):
+def simulate(
+    model: np.ndarray, seed: int | None = None, video_env: gym.Env | None = None
+) -> tuple[float, float, float]:
     """Simulates the lunar lander model.
 
     Args:
-        model (np.ndarray): The array of weights for the linear policy.
-        seed (int): The seed for the environment.
-        video_env (gym.Env): If passed in, this will be used instead of creating a new
-            env. This is used primarily for recording video during evaluation.
+        model: The array of weights for the linear policy.
+        seed: The seed for the environment.
+        video_env: If passed in, this will be used instead of creating a new env. This
+            is used primarily for recording video during evaluation.
 
     Returns:
-        total_reward (float): The reward accrued by the lander throughout its
-            trajectory.
-        impact_x_pos (float): The x position of the lander when it touches the ground
-            for the first time.
-        impact_y_vel (float): The y velocity of the lander when it touches the ground
-            for the first time.
+        total_reward: The reward accrued by the lander throughout its trajectory.
+        impact_x_pos: The x position of the lander when it touches the ground for the
+            first time.
+        impact_y_vel: The y velocity of the lander when it touches the ground for the
+            first time.
     """
     if video_env is None:
         # Since we are using multiple processes, it is simpler if each worker just
@@ -135,7 +138,9 @@ def simulate(model, seed=None, video_env=None):
     return total_reward, impact_x_pos, impact_y_vel
 
 
-def create_scheduler(seed, n_emitters, sigma0, batch_size):
+def create_scheduler(
+    seed: int | None, n_emitters: int, sigma0: float, batch_size: int
+) -> Scheduler:
     """Creates the Scheduler based on given configurations.
 
     See lunar_lander_main() for description of args.
@@ -183,20 +188,22 @@ def create_scheduler(seed, n_emitters, sigma0, batch_size):
     return scheduler
 
 
-def run_search(client, scheduler, env_seed, iterations, log_freq):
+def run_search(
+    client: Client, scheduler: Scheduler, env_seed: int, iterations: int, log_freq: int
+) -> dict[str, dict[str, list[int | float]]]:
     """Runs the QD algorithm for the given number of iterations.
 
     Args:
-        client (Client): A Dask client providing access to workers.
-        scheduler (Scheduler): pyribs scheduler.
-        env_seed (int): Seed for the environment.
-        iterations (int): Iterations to run.
-        log_freq (int): Number of iterations to wait before recording metrics.
+        client: A Dask client providing access to workers.
+        scheduler: pyribs scheduler.
+        env_seed: Seed for the environment.
+        iterations: Iterations to run.
+        log_freq: Number of iterations to wait before recording metrics.
 
     Returns:
-        dict: A mapping from various metric names to a list of "x" and "y" values where
-        x is the iteration and y is the value of the metric. Think of each entry as the
-        x's and y's for a matplotlib plot.
+        A mapping from various metric names to a list of "x" and "y" values where x is
+        the iteration and y is the value of the metric. Think of each entry as the x's
+        and y's for a matplotlib plot.
     """
     print(
         "> Starting search.\n"
@@ -258,12 +265,12 @@ def run_search(client, scheduler, env_seed, iterations, log_freq):
     return metrics
 
 
-def save_heatmap(archive, filename):
+def save_heatmap(archive: GridArchive, filename: str | Path) -> None:
     """Saves a heatmap of the scheduler's archive to the filename.
 
     Args:
-        archive (GridArchive): Archive with results from an experiment.
-        filename (str): Path to an image file.
+        archive: Archive with results from an experiment.
+        filename: Path to an image file.
     """
     fig, ax = plt.subplots(figsize=(8, 6))
     grid_archive_heatmap(archive, vmin=-300, vmax=300, ax=ax)
@@ -273,12 +280,14 @@ def save_heatmap(archive, filename):
     fig.savefig(filename)
 
 
-def save_metrics(outdir, metrics):
+def save_metrics(
+    outdir: Path, metrics: dict[str, dict[str, list[int | float]]]
+) -> None:
     """Saves metrics to png plots and a JSON file.
 
     Args:
-        outdir (Path): output directory for saving files.
-        metrics (dict): Metrics as output by run_search.
+        outdir: output directory for saving files.
+        metrics: Metrics as output by run_search.
     """
     # Plot metrics.
     for metric in metrics:
@@ -300,7 +309,7 @@ def save_metrics(outdir, metrics):
         json.dump(metrics, file, indent=2)
 
 
-def save_ccdf(archive, filename):
+def save_ccdf(archive: ArchiveBase, filename: str | Path) -> None:
     """Saves a CCDF showing the distribution of the archive's objectives.
 
     CCDF = Complementary Cumulative Distribution Function (see
@@ -310,8 +319,8 @@ def save_ccdf(archive, filename):
     archive has more cells filled).
 
     Args:
-        archive (GridArchive): Archive with results from an experiment.
-        filename (str): Path to an image file.
+        archive: Archive with results from an experiment.
+        filename: Path to an image file.
     """
     fig, ax = plt.subplots()
     ax.hist(
@@ -327,16 +336,16 @@ def save_ccdf(archive, filename):
     fig.savefig(filename)
 
 
-def run_evaluation(outdir, env_seed, seed):
+def run_evaluation(outdir: Path, env_seed: int, seed: int | None) -> None:
     """Simulates 10 random archive solutions and saves videos of them.
 
     Videos are saved to outdir / videos.
 
     Args:
-        outdir (Path): Path object for the output directory from which to retrieve the
-            archive and save videos.
-        env_seed (int): Seed for the environment.
-        seed (int): Seed for RNG.
+        outdir: Path object for the output directory from which to retrieve the archive
+            and save videos.
+        env_seed: Seed for the environment.
+        seed: Seed for RNG.
     """
     df = ArchiveDataFrame(pd.read_csv(outdir / "archive.csv"))
     solutions = df.get_field("solution")
@@ -368,35 +377,35 @@ def run_evaluation(outdir, env_seed, seed):
 
 
 def lunar_lander_main(
-    workers=4,
-    env_seed=52,
-    iterations=500,
-    log_freq=25,
-    n_emitters=5,
-    batch_size=30,
-    sigma0=1.0,
-    seed=None,
-    outdir="lunar_lander_output",
-    run_eval=False,
-):
+    workers: int = 4,
+    env_seed: int = 52,
+    iterations: int = 500,
+    log_freq: int = 25,
+    n_emitters: int = 5,
+    batch_size: int = 30,
+    sigma0: float = 1.0,
+    seed: int | None = None,
+    outdir: str = "lunar_lander_output",
+    run_eval: bool = False,
+) -> None:
     """Uses CMA-ME to train linear agents in Lunar Lander.
 
     Args:
-        workers (int): Number of workers to use for simulations.
-        env_seed (int): Environment seed. The default gives the flat terrain from the
+        workers: Number of workers to use for simulations.
+        env_seed: Environment seed. The default gives the flat terrain from the
             tutorial.
-        iterations (int): Number of iterations to run the algorithm.
-        log_freq (int): Number of iterations to wait before recording metrics and saving
+        iterations: Number of iterations to run the algorithm.
+        log_freq: Number of iterations to wait before recording metrics and saving
             heatmap.
-        n_emitters (int): Number of emitters.
-        batch_size (int): Batch size of each emitter.
-        sigma0 (float): Initial step size of each emitter.
-        seed (seed): Random seed for the pyribs components.
-        outdir (str): Directory for Lunar Lander output.
-        run_eval (bool): Pass this flag to run an evaluation of 10 random solutions
-            selected from the archive in the `outdir`.
+        n_emitters: Number of emitters.
+        batch_size: Batch size of each emitter.
+        sigma0: Initial step size of each emitter.
+        seed: Random seed for the pyribs components.
+        outdir: Directory for Lunar Lander output.
+        run_eval: Pass this flag to run an evaluation of 10 random solutions selected
+            from the archive in the `outdir`.
     """
-    outdir = Path(outdir)
+    outdir: Path = Path(outdir)
 
     if run_eval:
         run_evaluation(outdir, env_seed, seed)
@@ -422,7 +431,7 @@ def lunar_lander_main(
     # Outputs.
     scheduler.archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
     save_ccdf(scheduler.archive, str(outdir / "archive_ccdf.png"))
-    save_heatmap(scheduler.archive, str(outdir / "heatmap.png"))
+    save_heatmap(scheduler.archive, str(outdir / "heatmap.png"))  # ty: ignore[invalid-argument-type]
     save_metrics(outdir, metrics)
 
 

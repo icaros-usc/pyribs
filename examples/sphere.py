@@ -104,6 +104,8 @@ Help:
     python sphere.py --help
 """
 
+from __future__ import annotations
+
 import copy
 import json
 import time
@@ -114,7 +116,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 
-from ribs.archives import CVTArchive, DensityArchive, GridArchive, ProximityArchive
+from ribs.archives import (
+    ArchiveBase,
+    CVTArchive,
+    DensityArchive,
+    GridArchive,
+    ProximityArchive,
+)
 from ribs.emitters import (
     EvolutionStrategyEmitter,
     GaussianEmitter,
@@ -828,19 +836,19 @@ CONFIG = {
 }
 
 
-def sphere(solutions):
+def sphere(
+    solutions: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Sphere function evaluation and measures for a batch of solutions.
 
     Args:
-        solutions (np.ndarray): (batch_size, dim) batch of solutions.
+        solutions: (batch_size, dim) batch of solutions.
 
     Returns:
-        objectives (np.ndarray): (batch_size,) batch of objectives.
-        objective_grads (np.ndarray): (batch_size, solution_dim) batch of objective
-            gradients.
-        measures (np.ndarray): (batch_size, 2) batch of measures.
-        measure_grads (np.ndarray): (batch_size, 2, solution_dim) batch of measure
-            gradients.
+        objectives: (batch_size,) batch of objectives.
+        objective_grads: (batch_size, solution_dim) batch of objective gradients.
+        measures: (batch_size, 2) batch of measures.
+        measure_grads: (batch_size, 2, solution_dim) batch of measure gradients.
     """
     dim = solutions.shape[1]
 
@@ -888,14 +896,15 @@ def sphere(solutions):
     )
 
 
-def create_scheduler(config, algorithm, seed=None):
+def create_scheduler(
+    config: dict, algorithm: str, seed: int | None = None
+) -> Scheduler:
     """Creates a scheduler based on the algorithm.
 
     Args:
-        config (dict): Configuration dictionary with parameters for the various
-            components.
-        algorithm (string): Name of the algorithm.
-        seed (int): Main seed for the various components.
+        config: Configuration dictionary with parameters for the various components.
+        algorithm: Name of the algorithm.
+        seed: Main seed for the various components.
 
     Returns:
         ribs.schedulers.Scheduler: A ribs scheduler for running the algorithm.
@@ -982,11 +991,11 @@ def create_scheduler(config, algorithm, seed=None):
     return scheduler
 
 
-def save_heatmap(archive, heatmap_path):
+def save_heatmap(archive: ArchiveBase, heatmap_path: str | Path) -> None:
     """Saves a heatmap of the archive to the given path.
 
     Args:
-        archive (GridArchive or CVTArchive): The archive to save.
+        archive: The archive to save.
         heatmap_path: Image path for the heatmap.
     """
     if isinstance(archive, GridArchive):
@@ -1007,30 +1016,29 @@ def save_heatmap(archive, heatmap_path):
 
 
 def sphere_main(
-    algorithm,
-    dim=100,
-    itrs=10000,
-    grid_dims=None,
-    learning_rate=None,
-    es=None,
-    outdir="sphere_output",
-    log_freq=250,
-    seed=None,
-):
+    algorithm: str,
+    dim: int = 100,
+    itrs: int = 10000,
+    grid_dims: tuple[int, int] | None = None,
+    learning_rate: float | None = None,
+    es: str | None = None,
+    outdir: str = "sphere_output",
+    log_freq: int = 250,
+    seed: int | None = None,
+) -> None:
     """Demo on the Sphere function.
 
     Args:
-        algorithm (str): Name of the algorithm.
-        dim (int): Dimensionality of the sphere function.
-        itrs (int): Iterations to run.
-        grid_dims (tuple): Grid dimensions for GridArchive.
-        learning_rate (float): The archive learning rate.
-        es (str): If passed, this will set the ES for all EvolutionStrategyEmitter
-            instances.
-        outdir (str): Directory to save output.
-        log_freq (int): Number of iterations to wait before recording metrics and saving
+        algorithm: Name of the algorithm.
+        dim: Dimensionality of the sphere function.
+        itrs: Iterations to run.
+        grid_dims: Grid dimensions for GridArchive.
+        learning_rate: The archive learning rate.
+        es: If passed, this will set the ES for all EvolutionStrategyEmitter instances.
+        outdir: Directory to save output.
+        log_freq: Number of iterations to wait before recording metrics and saving
             heatmap.
-        seed (int): Seed for the algorithm. By default, there is no seed.
+        seed: Seed for the algorithm. By default, there is no seed.
     """
     config = copy.deepcopy(CONFIG[algorithm])
 
@@ -1055,7 +1063,7 @@ def sphere_main(
     name = f"{algorithm}_{config['dim']}"
     if es is not None:
         name += f"_{es}"
-    outdir = Path(outdir)
+    outdir: Path = Path(outdir)
     if not outdir.is_dir():
         outdir.mkdir()
 
