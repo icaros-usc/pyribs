@@ -342,8 +342,7 @@ class BayesianOptimizationEmitter(EmitterBase):
             ]
 
         Args:
-            upscale_schedule (np.ndarray): See ``upscale_schedule`` from
-            :meth:`__init__`.
+            upscale_schedule: See ``upscale_schedule`` from :meth:`__init__`.
         """
         if upscale_schedule.ndim != 2:
             raise ValueError("upscale_schedule must have 2 dimensions.")
