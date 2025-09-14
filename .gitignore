@@ -91,6 +91,9 @@ dask-worker-space/
 !readme_assets/*
 results/
 
+# Downloaded by DQD tutorial.
+tutorials/stylegan2-ada-pytorch
+
 # Allow matplotlib baseline images.
 !tests/**/*.png
 !tests/**/*.pdf
