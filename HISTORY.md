@@ -29,6 +29,10 @@
   {pr}`619`)
 - Replace isort with ruff import check ({pr}`603`)
 
+#### Documentation
+
+- Update DQD and QDHF tutorials ({pr}`659`)
+
 ## 0.8.3
 
 Small bugfix release.
