@@ -342,7 +342,7 @@ class GradientArborescenceEmitter(EmitterBase):
             fields: Additional data for each solution. Each argument should be an array
                 with batch_size as the first dimension.
         """
-        data, add_info, jacobian = validate_batch(
+        _, add_info, jacobian = validate_batch(
             self.archive,
             {
                 "solution": solution,

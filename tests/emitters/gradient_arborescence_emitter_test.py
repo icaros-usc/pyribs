@@ -43,7 +43,7 @@ def test_bounds_must_be_none():
     batch_size = 1
     archive = GridArchive(solution_dim=1, dims=[10], ranges=[(-1.0, 1.0)])
 
-    with pytest.raises(ValueError, match=".* must be set to None.*"):
+    with pytest.raises(ValueError, match=r".* must be set to None.*"):
         GradientArborescenceEmitter(
             archive,
             x0=np.array([0]),

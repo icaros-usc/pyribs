@@ -71,8 +71,8 @@ def test_wrong_archive_type():
     archive = CVTArchive(solution_dim=1, cells=100, ranges=[(-1, 1)])
     with pytest.raises(
         NotImplementedError,
-        match="archive type CVTArchive not implemented for"
-        " BayesianOptimizationEmitter. Expected GridArchive.",
+        match=r"archive type CVTArchive not implemented for"
+        r" BayesianOptimizationEmitter\. Expected GridArchive\.",
     ):
         BayesianOptimizationEmitter(
             archive,  # ty: ignore[invalid-argument-type]
