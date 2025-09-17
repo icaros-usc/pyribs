@@ -114,7 +114,7 @@ def test_add_wrong_keys(store):
 
 
 def test_add_mismatch_indices(store, xp_and_device):
-    xp, device = xp_and_device
+    xp, _ = xp_and_device
 
     with pytest.raises(ValueError):
         store.add(
@@ -278,7 +278,7 @@ def test_add_nothing(store, xp_and_device):
 
 
 def test_dtypes(store, xp_and_device):
-    xp, device = xp_and_device
+    xp, _ = xp_and_device
 
     store.add(
         [3, 5],
@@ -777,7 +777,7 @@ def test_data_with_tuple_return_type(store, xp_and_device):
 
 
 def test_data_with_pandas_return_type(store, xp_and_device):
-    xp, device = xp_and_device
+    xp, _ = xp_and_device
 
     store.add(
         [3, 5],
@@ -856,7 +856,7 @@ def test_iteration(store, xp_and_device):
 
 
 def test_add_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device
+    xp, _ = xp_and_device
 
     store.add(
         [3],
@@ -882,7 +882,7 @@ def test_add_during_iteration(store, xp_and_device):
 
 
 def test_clear_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device
+    xp, _ = xp_and_device
 
     store.add(
         [3],
@@ -899,7 +899,7 @@ def test_clear_during_iteration(store, xp_and_device):
 
 
 def test_clear_and_add_during_iteration(store, xp_and_device):
-    xp, device = xp_and_device
+    xp, _ = xp_and_device
 
     store.add(
         [3],

@@ -210,7 +210,7 @@ def test_default_bounds_correct(archive_fixture):
 def test_cannot_specify_both_bounds(archive_fixture):
     archive, x0 = archive_fixture
     with pytest.raises(
-        ValueError, match="Cannot specify both bounds and lower_bounds/upper_bounds.*"
+        ValueError, match=r"Cannot specify both bounds and lower_bounds/upper_bounds.*"
     ):
         GaussianEmitter(
             archive,
@@ -282,7 +282,7 @@ def test_long_array_bound_fails(archive_fixture, bound_type):
             )
     else:
         with pytest.raises(
-            ValueError, match="Expected lower_bounds to be an array with shape .*"
+            ValueError, match=r"Expected lower_bounds to be an array with shape .*"
         ):
             GaussianEmitter(
                 archive,
@@ -293,7 +293,7 @@ def test_long_array_bound_fails(archive_fixture, bound_type):
                 upper_bounds=[1] * len(x0),
             )
         with pytest.raises(
-            ValueError, match="Expected upper_bounds to be an array with shape .*"
+            ValueError, match=r"Expected upper_bounds to be an array with shape .*"
         ):
             GaussianEmitter(
                 archive,
@@ -308,7 +308,7 @@ def test_wrong_bound_shape(archive_fixture):
     archive, x0 = archive_fixture
 
     with pytest.raises(
-        ValueError, match="Expected .*_bounds to be an array with shape .*"
+        ValueError, match=r"Expected .*_bounds to be an array with shape .*"
     ):
         GaussianEmitter(
             archive,
