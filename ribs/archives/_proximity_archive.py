@@ -105,12 +105,12 @@ class ProximityArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        solution_dtype: Data type of the solution. Defaults to float64 (numpy's
-            default floating point type).
+        solution_dtype: Data type of the solution. Defaults to float64 (numpy's default
+            floating point type).
         objective_dtype: Data type of the objective. Defaults to float64 (numpy's
             default floating point type).
-        measures_dtype: Data type of the measures. Defaults to float64 (numpy's
-            default floating point type).
+        measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
+            floating point type).
         dtype: DEPRECATED.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
