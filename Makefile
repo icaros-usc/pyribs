@@ -88,7 +88,7 @@ latexdocs: ## generate Sphinx Latex documentation, including API docs
 	$(MAKE) -C docs latex
 	cd docs/_build/latex && LATEXMKOPTS="-output-directory=../pdf" $(MAKE)
 	echo "PDF available in docs/_build/pdf"
-.PHONY: docs
+.PHONY: latexdocs
 
 release-test: dist ## package and upload a release to TestPyPI
 	twine upload --repository testpypi dist/*
