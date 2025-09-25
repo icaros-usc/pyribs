@@ -25,6 +25,54 @@ def parse_dtype(dtype: DTypeLike, xp: ModuleType) -> DTypeLike:
     return dtype
 
 
+def parse_all_dtypes(
+    dtype: DTypeLike,
+    solution_dtype: DTypeLike,
+    objective_dtype: DTypeLike,
+    measures_dtype: DTypeLike,
+    xp: ModuleType,
+) -> DTypeLike:
+    """Parses dtypes for the archives.
+
+    Any dtypes that are `None` are set to the default "real floating" dtype for the
+    provided array backend.
+
+    Returns dtypes for the solution, objective, and measures.
+    """
+    if isinstance(dtype, dict):
+        raise ValueError(
+            "Passing a dict as `dtype` is now deprecated. Please use "
+            "`solution_dtype`, `objective_dtype`, and/or `measures_dtype` instead."
+        )
+
+    use_dtype = dtype is not None
+    use_individual_dtypes = (
+        solution_dtype is not None
+        or objective_dtype is not None
+        or measures_dtype is not None
+    )
+
+    if use_dtype and use_individual_dtypes:
+        raise ValueError(
+            "dtype cannot be used at the same time as solution_dtype, "
+            "objective_dtype, or measures_dtype. Either pass dtype on its own,"
+            "or pass solution_dtype, objective_dtype, and/or measures_dtype."
+        )
+    elif use_individual_dtypes:
+        # Parse each dtype individually.
+        solution_dtype = parse_dtype(solution_dtype, xp)
+        objective_dtype = parse_dtype(objective_dtype, xp)
+        measures_dtype = parse_dtype(measures_dtype, xp)
+    else:
+        # Everything set to `dtype`, which may also be None to get the default case.
+        dtype = parse_dtype(dtype, xp)
+        solution_dtype = dtype
+        objective_dtype = dtype
+        measures_dtype = dtype
+
+    return solution_dtype, objective_dtype, measures_dtype
+
+
 def validate_cma_mae_settings(
     learning_rate: Float | None, threshold_min: Float, dtype: np.dtype
 ) -> tuple[np.floating, np.floating]:

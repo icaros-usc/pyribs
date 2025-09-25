@@ -14,7 +14,6 @@ from ribs._utils import (
     check_batch_shape,
     check_finite,
     check_shape,
-    deprecate_dtype,
     validate_batch,
     validate_single,
 )
@@ -23,7 +22,7 @@ from ribs.archives._archive_data_frame import ArchiveDataFrame
 from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._grid_archive import GridArchive
-from ribs.archives._utils import fill_sentinel_values, parse_dtype
+from ribs.archives._utils import fill_sentinel_values, parse_all_dtypes
 from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
 
 
@@ -145,13 +144,17 @@ class SlidingBoundariesArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        solution_dtype: Data type of the solution. Defaults to float64 (numpy's default
+        solution_dtype: Data type of the solutions. Defaults to float64 (numpy's default
             floating point type).
-        objective_dtype: Data type of the objective. Defaults to float64 (numpy's
+        objective_dtype: Data type of the objectives. Defaults to float64 (numpy's
             default floating point type).
         measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
             floating point type).
-        dtype: DEPRECATED.
+        dtype: Shortcut for providing data type of the solutions, objectives, and
+            measures. Defaults to float64 (numpy's default floating point type). This
+            parameter sets all the dtypes simultaneously. To set individual dtypes, pass
+            ``solution_dtype``, ``objective_dtype``, and ``measures_dtype``. Note that
+            ``dtype`` cannot be used at the same time as those parameters.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
             field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
@@ -177,13 +180,11 @@ class SlidingBoundariesArchive(ArchiveBase):
         solution_dtype: DTypeLike = None,
         objective_dtype: DTypeLike = None,
         measures_dtype: DTypeLike = None,
-        dtype: None = None,
+        dtype: DTypeLike = None,
         extra_fields: FieldDesc | None = None,
         remap_frequency: Int = 100,
         buffer_capacity: Int = 1000,
     ) -> None:
-        deprecate_dtype(dtype)
-
         self._rng = np.random.default_rng(seed)
         self._dims = np.array(dims)
 
@@ -203,9 +204,9 @@ class SlidingBoundariesArchive(ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        solution_dtype = parse_dtype(solution_dtype, np)
-        objective_dtype = parse_dtype(objective_dtype, np)
-        measures_dtype = parse_dtype(measures_dtype, np)
+        solution_dtype, objective_dtype, measures_dtype = parse_all_dtypes(
+            dtype, solution_dtype, objective_dtype, measures_dtype, np
+        )
         self._store = ArrayStore(
             field_desc={
                 "solution": (self.solution_dim, solution_dtype),

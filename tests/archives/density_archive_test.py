@@ -24,6 +24,42 @@ def test_add_to_buffer():
     assert np.all(archive.buffer == np.arange(10).reshape((5, 2)))
 
 
+def test_dtype():
+    archive = DensityArchive(
+        measure_dim=2,
+        buffer_size=10000,
+        density_method="kde",
+        bandwidth=2.0,
+        dtype=np.float32,
+    )
+    assert archive._measure_dtype == np.float32
+
+
+def test_measures_dtype():
+    archive = DensityArchive(
+        measure_dim=2,
+        buffer_size=10000,
+        density_method="kde",
+        bandwidth=2.0,
+        measures_dtype=np.float32,
+    )
+    assert archive._measure_dtype == np.float32
+
+
+def test_simultaneous_dtypes():
+    with pytest.raises(
+        ValueError, match=r"dtype cannot be used at the same time as .*"
+    ):
+        DensityArchive(
+            measure_dim=2,
+            buffer_size=10000,
+            density_method="kde",
+            bandwidth=2.0,
+            dtype=np.float32,
+            measures_dtype=np.float32,
+        )
+
+
 @pytest.mark.parametrize("density_method", ["kde", "kde_sklearn"])
 def test_initial_density(density_method):
     archive = DensityArchive(

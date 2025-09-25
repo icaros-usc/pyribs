@@ -672,9 +672,7 @@ def test_values_go_to_correct_bin(dtype):
         dims=[10],
         ranges=[(0, 0.1)],
         epsilon=1e-6,
-        solution_dtype=dtype,
-        objective_dtype=dtype,
-        measures_dtype=dtype,
+        dtype=dtype,
     )
 
     # Values below the lower bound land in the first bin.
