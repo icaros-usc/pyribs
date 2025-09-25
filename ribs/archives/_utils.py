@@ -39,6 +39,12 @@ def parse_all_dtypes(
 
     Returns dtypes for the solution, objective, and measures.
     """
+    if isinstance(dtype, dict):
+        raise ValueError(
+            "Passing a dict as `dtype` is now deprecated. Please use "
+            "`solution_dtype`, `objective_dtype`, and/or `measures_dtype` instead."
+        )
+
     use_dtype = dtype is not None
     use_individual_dtypes = (
         solution_dtype is not None
