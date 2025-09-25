@@ -100,17 +100,17 @@ class CVTArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
-        dtype: Data type of the solutions, objectives, and measures. Defaults to float64
-            (numpy's default floating point type). This parameter sets all the dtypes
-            simultaneously; to set individual dtypes, pass ``solution_dtype``,
-            ``objective_dtype``, and ``measures_dtype``. Note that ``dtype`` cannot be
-            used at the same time as those parameters.
         solution_dtype: Data type of the solutions. Defaults to float64 (numpy's default
             floating point type).
         objective_dtype: Data type of the objectives. Defaults to float64 (numpy's
             default floating point type).
         measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
             floating point type).
+        dtype: Shortcut for providing data type of the solutions, objectives, and
+            measures. Defaults to float64 (numpy's default floating point type). This
+            parameter sets all the dtypes simultaneously. To set individual dtypes, pass
+            ``solution_dtype``, ``objective_dtype``, and ``measures_dtype``. Note that
+            ``dtype`` cannot be used at the same time as those parameters.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
             field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
@@ -157,10 +157,10 @@ class CVTArchive(ArchiveBase):
         threshold_min: Float = -np.inf,
         qd_score_offset: Float = 0.0,
         seed: Int | None = None,
-        dtype: DTypeLike = None,
         solution_dtype: DTypeLike = None,
         objective_dtype: DTypeLike = None,
         measures_dtype: DTypeLike = None,
+        dtype: DTypeLike = None,
         extra_fields: FieldDesc | None = None,
         custom_centroids: ArrayLike = None,
         centroid_method: Literal[

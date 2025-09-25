@@ -90,10 +90,10 @@ class DensityArchive(ArchiveBase):
             passed in via the ``bandwidth`` parameter above.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        dtype: Data type of the measures. Included for API compatibility. Cannot be used
-            at the same time as ``measures_dtype``.
         measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
             floating point type).
+        dtype: Alternative for providing data type of the measures. Included for API
+            compatibility. Cannot be used at the same time as ``measures_dtype``.
 
     Raises:
         ValueError: Unknown ``density_method`` provided.
@@ -108,8 +108,8 @@ class DensityArchive(ArchiveBase):
         bandwidth: Float | None = None,
         sklearn_kwargs: dict | None = None,
         seed: Int | None = None,
-        dtype: DTypeLike = None,
         measures_dtype: DTypeLike = None,
+        dtype: DTypeLike = None,
     ) -> None:
         self._rng = np.random.default_rng(seed)
         _, _, self._measure_dtype = parse_all_dtypes(
