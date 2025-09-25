@@ -92,6 +92,39 @@ def test_dtype_parameter():
     assert archive.dtypes["index"] == np.int32
 
 
+def test_simultaneous_dtypes():
+    with pytest.raises(
+        ValueError, match=r"dtype cannot be used at the same time as .*"
+    ):
+        GridArchive(
+            solution_dim=3,
+            dims=[10, 10],
+            ranges=[(-1, 1), (-2, 2)],
+            dtype=np.float32,
+            solution_dtype=np.float32,
+        )
+    with pytest.raises(
+        ValueError, match=r"dtype cannot be used at the same time as .*"
+    ):
+        GridArchive(
+            solution_dim=3,
+            dims=[10, 10],
+            ranges=[(-1, 1), (-2, 2)],
+            dtype=np.float32,
+            objective_dtype=np.float32,
+        )
+    with pytest.raises(
+        ValueError, match=r"dtype cannot be used at the same time as .*"
+    ):
+        GridArchive(
+            solution_dim=3,
+            dims=[10, 10],
+            ranges=[(-1, 1), (-2, 2)],
+            dtype=np.float32,
+            measures_dtype=np.float32,
+        )
+
+
 def test_dtype_dict_deprecated():
     with pytest.raises(
         ValueError, match=r"Passing a dict as `dtype` is now deprecated\..*"
