@@ -10,9 +10,9 @@
   ({pr}`650`)
 - Allow specifying emitter bounds with `lower_bounds` and `upper_bounds`
   ({pr}`649`, {pr}`657`)
-- **Backwards-incompatible:** Replace `dtype` parameter in archives with
+- **Backwards-incompatible:** Deprecate dict `dtype` in archives and instead use
   `solution_dtype`, `objective_dtype`, and `measures_dtype` ({pr}`639`,
-  {pr}`643`)
+  {pr}`643`, {pr}`661`)
 - Raise `KeyError` in `ArchiveDataFrame.get_field` when field not found
   ({pr}`626`)
 - Support array backends in ArrayStore via Python array API Standard
