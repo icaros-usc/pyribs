@@ -12,7 +12,6 @@ from numpy_groupies import aggregate_nb as aggregate
 from ribs._utils import (
     check_batch_shape,
     check_shape,
-    deprecate_dtype,
     validate_batch,
     validate_single,
 )
@@ -23,7 +22,7 @@ from ribs.archives._array_store import ArrayStore
 from ribs.archives._grid_archive import GridArchive
 from ribs.archives._utils import (
     fill_sentinel_values,
-    parse_dtype,
+    parse_all_dtypes,
     validate_cma_mae_settings,
 )
 from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
@@ -68,10 +67,15 @@ class CategoricalArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
-        solution_dtype: Data type of the solution. Defaults to float64.
-        objective_dtype: Data type of the objective. Defaults to float64.
+        solution_dtype: Data type of the solutions. Defaults to float64.
+        objective_dtype: Data type of the objectives. Defaults to float64.
         measures_dtype: Data type of the measures. Defaults to object.
-        dtype: DEPRECATED.
+        dtype: Shortcut for providing data type of the solutions and objectives.
+            Defaults to float64 (numpy's default floating point type). This parameter
+            sets the two dtypes simultaneously and does not set the dtype for the
+            measures. To set individual dtypes, pass ``solution_dtype``,
+            ``objective_dtype``, and ``measures_dtype``. Note that ``dtype`` cannot be
+            used at the same time as those parameters.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
             field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
@@ -97,11 +101,9 @@ class CategoricalArchive(ArchiveBase):
         solution_dtype: DTypeLike = None,
         objective_dtype: DTypeLike = None,
         measures_dtype: DTypeLike = None,
-        dtype: None = None,
+        dtype: DTypeLike = None,
         extra_fields: FieldDesc | None = None,
     ) -> None:
-        deprecate_dtype(dtype)
-
         self._rng = np.random.default_rng(seed)
         self._categories = [list(measure_dim) for measure_dim in categories]
         self._dims = np.array(
@@ -124,8 +126,13 @@ class CategoricalArchive(ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        solution_dtype = parse_dtype(solution_dtype, np)
-        objective_dtype = parse_dtype(objective_dtype, np)
+        # measures_dtype can only be set if individual dtypes are used, so we pass it
+        # into parse_all_dtypes to check that it is unused, but we ignore the
+        # measures_dtype output by parse_all_dtypes since measures_dtype needs to
+        # default to object.
+        solution_dtype, objective_dtype, _ = parse_all_dtypes(
+            dtype, solution_dtype, objective_dtype, measures_dtype, np
+        )
         measures_dtype = object if measures_dtype is None else measures_dtype
         self._store = ArrayStore(
             field_desc={

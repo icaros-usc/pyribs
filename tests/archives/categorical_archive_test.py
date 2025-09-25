@@ -1,6 +1,7 @@
 """Tests for the CategoricalArchive."""
 
 import numpy as np
+import pytest
 
 from ribs.archives import CategoricalArchive
 
@@ -72,3 +73,60 @@ def test_str_solutions():
         measures_batch=[["A", "Four"], ["B", "Three"], ["C", "One"]],
         grid_indices_batch=[[0, 3], [1, 2], [2, 0]],
     )
+
+
+def test_dtype():
+    archive = CategoricalArchive(
+        solution_dim=(),
+        categories=[
+            ["A", "B", "C"],
+            ["One", "Two", "Three", "Four"],
+        ],
+        dtype=np.float32,
+    )
+    assert archive.dtypes["solution"] == np.float32
+    assert archive.dtypes["objective"] == np.float32
+    assert archive.dtypes["measures"] == np.object_
+
+
+def test_individual_dtypes():
+    archive = CategoricalArchive(
+        solution_dim=(),
+        categories=[
+            ["A", "B", "C"],
+            ["One", "Two", "Three", "Four"],
+        ],
+        solution_dtype=object,
+        objective_dtype=np.float32,
+        measures_dtype=object,
+    )
+    assert archive.dtypes["solution"] == np.object_
+    assert archive.dtypes["objective"] == np.float32
+    assert archive.dtypes["measures"] == np.object_
+
+
+def test_simultaneous_dtypes():
+    with pytest.raises(
+        ValueError, match=r"dtype cannot be used at the same time as .*"
+    ):
+        CategoricalArchive(
+            solution_dim=(),
+            categories=[
+                ["A", "B", "C"],
+                ["One", "Two", "Three", "Four"],
+            ],
+            dtype=np.float32,
+            measures_dtype=object,
+        )
+    with pytest.raises(
+        ValueError, match=r"dtype cannot be used at the same time as .*"
+    ):
+        CategoricalArchive(
+            solution_dim=(),
+            categories=[
+                ["A", "B", "C"],
+                ["One", "Two", "Three", "Four"],
+            ],
+            dtype=np.float32,
+            measures_dtype=object,
+        )
