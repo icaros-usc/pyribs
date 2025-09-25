@@ -17,7 +17,6 @@ from ribs._utils import (
     check_batch_shape,
     check_finite,
     check_shape,
-    deprecate_dtype,
     validate_batch,
     validate_single,
 )
@@ -27,7 +26,7 @@ from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._utils import (
     fill_sentinel_values,
-    parse_dtype,
+    parse_all_dtypes,
     validate_cma_mae_settings,
 )
 from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
@@ -101,13 +100,17 @@ class CVTArchive(ArchiveBase):
             ``objective - (-300)``.
         seed: Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
-        solution_dtype: Data type of the solution. Defaults to float64 (numpy's default
+        dtype: Data type of the solutions, objectives, and measures. Defaults to float64
+            (numpy's default floating point type). This parameter sets all the dtypes
+            simultaneously; to set individual dtypes, pass ``solution_dtype``,
+            ``objective_dtype``, and ``measures_dtype``. Note that ``dtype`` cannot be
+            used at the same time as those parameters.
+        solution_dtype: Data type of the solutions. Defaults to float64 (numpy's default
             floating point type).
-        objective_dtype: Data type of the objective. Defaults to float64 (numpy's
+        objective_dtype: Data type of the objectives. Defaults to float64 (numpy's
             default floating point type).
         measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
             floating point type).
-        dtype: DEPRECATED.
         extra_fields: Description of extra fields of data that are stored next to elite
             data like solutions and objectives. The description is a dict mapping from a
             field name (str) to a tuple of ``(shape, dtype)``. For instance, ``{"foo":
@@ -154,10 +157,10 @@ class CVTArchive(ArchiveBase):
         threshold_min: Float = -np.inf,
         qd_score_offset: Float = 0.0,
         seed: Int | None = None,
+        dtype: DTypeLike = None,
         solution_dtype: DTypeLike = None,
         objective_dtype: DTypeLike = None,
         measures_dtype: DTypeLike = None,
-        dtype: None = None,
         extra_fields: FieldDesc | None = None,
         custom_centroids: ArrayLike = None,
         centroid_method: Literal[
@@ -169,8 +172,6 @@ class CVTArchive(ArchiveBase):
         ckdtree_kwargs: dict | None = None,
         chunk_size: Int = None,
     ) -> None:
-        deprecate_dtype(dtype)
-
         self._rng = np.random.default_rng(seed)
 
         ArchiveBase.__init__(
@@ -189,9 +190,9 @@ class CVTArchive(ArchiveBase):
                 "The following names are not allowed in "
                 f"extra_fields: {reserved_fields}"
             )
-        solution_dtype = parse_dtype(solution_dtype, np)
-        objective_dtype = parse_dtype(objective_dtype, np)
-        measures_dtype = parse_dtype(measures_dtype, np)
+        solution_dtype, objective_dtype, measures_dtype = parse_all_dtypes(
+            dtype, solution_dtype, objective_dtype, measures_dtype, np
+        )
         self._store = ArrayStore(
             field_desc={
                 "solution": (self.solution_dim, solution_dtype),
