@@ -9,9 +9,9 @@ from numpy.typing import ArrayLike, DTypeLike
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KernelDensity
 
-from ribs._utils import arr_readonly, check_batch_shape, check_finite, deprecate_dtype
+from ribs._utils import arr_readonly, check_batch_shape, check_finite
 from ribs.archives._archive_base import ArchiveBase
-from ribs.archives._utils import parse_dtype
+from ribs.archives._utils import parse_all_dtypes
 from ribs.typing import BatchData, Float, Int
 
 
@@ -90,9 +90,10 @@ class DensityArchive(ArchiveBase):
             passed in via the ``bandwidth`` parameter above.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
+        dtype: Data type of the measures. Included for API compatibility. Cannot be used
+            at the same time as ``measures_dtype``.
         measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
             floating point type).
-        dtype: DEPRECATED.
 
     Raises:
         ValueError: Unknown ``density_method`` provided.
@@ -107,13 +108,13 @@ class DensityArchive(ArchiveBase):
         bandwidth: Float | None = None,
         sklearn_kwargs: dict | None = None,
         seed: Int | None = None,
+        dtype: DTypeLike = None,
         measures_dtype: DTypeLike = None,
-        dtype: None = None,
     ) -> None:
-        deprecate_dtype(dtype)
-
         self._rng = np.random.default_rng(seed)
-        self._measure_dtype = parse_dtype(measures_dtype, np)
+        _, _, self._measure_dtype = parse_all_dtypes(
+            dtype, None, None, measures_dtype, np
+        )
 
         ArchiveBase.__init__(
             self,
