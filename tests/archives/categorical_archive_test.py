@@ -87,6 +87,8 @@ def test_dtype():
     assert archive.dtypes["solution"] == np.float32
     assert archive.dtypes["objective"] == np.float32
     assert archive.dtypes["measures"] == np.object_
+    assert archive.dtypes["threshold"] == np.float32
+    assert archive.dtypes["index"] == np.int32
 
 
 def test_individual_dtypes():
@@ -103,6 +105,8 @@ def test_individual_dtypes():
     assert archive.dtypes["solution"] == np.object_
     assert archive.dtypes["objective"] == np.float32
     assert archive.dtypes["measures"] == np.object_
+    assert archive.dtypes["threshold"] == np.float32
+    assert archive.dtypes["index"] == np.int32
 
 
 def test_simultaneous_dtypes():
