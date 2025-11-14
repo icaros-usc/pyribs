@@ -124,7 +124,6 @@ class CVTArchive(ArchiveBase):
             ``samples`` will be ignored, and ``archive.samples`` will be None. This can
             be useful when one wishes to use the same CVT across experiments for fair
             comparison.
-        centroid_method: DEPRECATED.
         samples: If it is an int, this specifies the number of samples to generate when
             creating the CVT. Otherwise, this must be a (num_samples, measure_dim) array
             where samples[i] is a sample to use when creating the CVT. It can be useful
@@ -138,6 +137,7 @@ class CVTArchive(ArchiveBase):
             not pass in any kwargs.
         chunk_size: If passed, brute forcing the closest centroid search will chunk the
             distance calculations to compute chunk_size inputs at a time.
+        centroid_method: DEPRECATED.
 
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
@@ -162,12 +162,12 @@ class CVTArchive(ArchiveBase):
         dtype: DTypeLike = None,
         extra_fields: FieldDesc | None = None,
         custom_centroids: ArrayLike = None,
-        centroid_method: None = None,
         samples: Int | ArrayLike = 100_000,
         k_means_kwargs: dict | None = None,
         use_kd_tree: bool = True,
         ckdtree_kwargs: dict | None = None,
         chunk_size: Int = None,
+        centroid_method: None = None,
     ) -> None:
         if centroid_method is not None:
             raise ValueError(
