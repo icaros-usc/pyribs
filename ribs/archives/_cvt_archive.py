@@ -50,9 +50,9 @@ class CVTArchive(ArchiveBase):
 
     To compare the performance of using the k-D tree vs brute force, we ran benchmarks
     where we inserted 1k batches of 100 solutions into a 2D archive with varying numbers
-    of cells. We took the minimum over 5 runs for each data point, as recommended in the
-    docs for :meth:`timeit.Timer.repeat`. Note the logarithmic scales. This plot was
-    generated on a reasonably modern laptop.
+    of cells. We took the minimum over 5 runs for each data point --- minimum is
+    recommended in the docs for :meth:`timeit.Timer.repeat`. Note the logarithmic
+    scales. This plot was generated on a reasonably modern laptop.
 
     .. image:: ../_static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
