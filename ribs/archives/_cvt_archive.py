@@ -66,7 +66,9 @@ class CVTArchive(ArchiveBase):
     reduce execution time. To do this, either (1) construct custom centroids and pass
     them in via the ``custom_centroids`` argument, or (2) access the centroids created
     in the first archive with :attr:`centroids` and pass them into ``custom_centroids``
-    when constructing archives for subsequent experiments.
+    when constructing archives for subsequent experiments. For more information on
+    custom centroids, including different methods for generating centroids, see the
+    tutorial :doc:`/tutorials/centroid_methods`.
 
     .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
         <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds, including the
