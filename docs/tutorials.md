@@ -47,10 +47,9 @@ the other algorithm tutorials.
 tutorials/lsi_mnist
 tutorials/arm_repertoire
 tutorials/fooling_mnist
-tutorials/optuna
 ```
 
-The following tutorials show how pyribs can be applied to a variety of problems.
+The following tutorials apply pyribs to a variety of problems:
 
 - {doc}`tutorials/lsi_mnist`: Generates diverse handwritten MNIST digits with
   CMA-ME.
@@ -58,8 +57,21 @@ The following tutorials show how pyribs can be applied to a variety of problems.
   for optimal configurations for a robot arm.
 - {doc}`tutorials/fooling_mnist`: Searches for misclassified MNIST images with
   MAP-Elites.
+
+## How-To
+
+```{toctree}
+:hidden:
+
+tutorials/optuna
+tutorials/centroid_methods
+```
+
+These short-form tutorials demonstrate some of the features of pyribs:
+
 - {doc}`tutorials/optuna`: Details on how pyribs can be integrated with the
   [Optuna](https://optuna.org) framework for hyperparameter optimization.
+- {doc}`tutorials/centroid_methods`
 
 <!-- How MyST handles section labels: https://jupyterbook.org/en/stable/content/references.html -->
 

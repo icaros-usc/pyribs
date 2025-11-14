@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Remove `centroid_method` from `CVTArchive`
+  ({pr}`662`)
 - Support multi-dimensional solutions in GaussianEmitter and IsoLineEmitter
   ({pr}`650`)
 - Allow specifying emitter bounds with `lower_bounds` and `upper_bounds`
@@ -31,6 +33,7 @@
 
 #### Documentation
 
+- Add tutorial on centroid generation for `CVTArchive` ({pr}`662`)
 - Update DQD and QDHF tutorials ({pr}`659`)
 
 ## 0.8.3
