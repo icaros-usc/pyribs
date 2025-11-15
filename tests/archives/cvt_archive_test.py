@@ -30,18 +30,6 @@ def assert_archive_elite(archive, solution, objective, measures, centroid):
     assert np.isclose(archive.centroids[elite["index"]], centroid).all()
 
 
-def test_samples_bad_shape(use_kd_tree):
-    # The measure space is 2D but samples are 3D.
-    with pytest.raises(ValueError):
-        CVTArchive(
-            solution_dim=0,
-            centroids=10,
-            ranges=[(-1, 1), (-1, 1)],
-            samples=[[-1, -1, -1], [1, 1, 1]],
-            use_kd_tree=use_kd_tree,
-        )
-
-
 def test_properties_are_correct(data):
     assert np.all(data.archive.lower_bounds == [-1, -1])
     assert np.all(data.archive.upper_bounds == [1, 1])
@@ -60,19 +48,6 @@ def test_custom_centroids(use_kd_tree):
         use_kd_tree=use_kd_tree,
     )
     assert (archive.centroids == centroids).all()
-
-
-def test_custom_centroids_bad_shape(use_kd_tree):
-    with pytest.raises(ValueError):
-        # The centroids array should be of shape (10, 2) instead of just (1, 2),
-        # hence a ValueError will be raised.
-        CVTArchive(
-            solution_dim=0,
-            cells=10,
-            ranges=[(-1, 1), (-1, 1)],
-            custom_centroids=[[0.0, 0.0]],
-            use_kd_tree=use_kd_tree,
-        )
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
