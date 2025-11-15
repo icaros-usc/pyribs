@@ -292,33 +292,6 @@ class CVTArchive(ArchiveBase):
             measure_dim=len(ranges),
         )
 
-        if isinstance(centroids, numbers.Integral):
-            # Generate centroids with k-means.
-            centroids = k_means_centroids(
-                centroids=centroids,
-                ranges=ranges,
-                # Use default value for samples.
-                dtype=self.dtypes["measures"],
-            )
-        else:
-            # Validate custom centroids.
-            centroids = np.asarray(centroids, dtype=self.dtypes["measures"])
-            check_batch_shape(
-                array=centroids,
-                array_name="centroids",
-                dim=self.measure_dim,
-                dim_name="measure_dim",
-                batch_name="num_centroids",
-            )
-            self._centroids = centroids
-
-        self._use_kd_tree = use_kd_tree
-        self._centroid_kd_tree = None
-        self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
-        self._chunk_size = chunk_size
-        if self._use_kd_tree:
-            self._centroid_kd_tree = cKDTree(self._centroids, **self._ckdtree_kwargs)
-
         # Set up the ArrayStore, which is a data structure that stores all the elites'
         # data in arrays sharing a common index.
         extra_fields = extra_fields or {}
@@ -340,7 +313,9 @@ class CVTArchive(ArchiveBase):
                 "threshold": ((), objective_dtype),
                 **extra_fields,
             },
-            capacity=self._centroids.shape[0],
+            capacity=(
+                centroids if isinstance(centroids, numbers.Integral) else len(centroids)
+            ),
         )
 
         # Set up constant properties.
@@ -361,6 +336,32 @@ class CVTArchive(ArchiveBase):
         self._objective_sum = None
         self._stats = None
         self._stats_reset()
+
+        if isinstance(centroids, numbers.Integral):
+            # Generate centroids with k-means.
+            self._centroids = k_means_centroids(
+                centroids=centroids,
+                ranges=ranges,
+                # Use default value for samples.
+                dtype=self.dtypes["measures"],
+            )
+        else:
+            # Validate custom centroids.
+            self._centroids = np.asarray(centroids, dtype=self.dtypes["measures"])
+            check_batch_shape(
+                array=self._centroids,
+                array_name="centroids",
+                dim=self.measure_dim,
+                dim_name="measure_dim",
+                batch_name="num_centroids",
+            )
+
+        self._use_kd_tree = use_kd_tree
+        self._centroid_kd_tree = None
+        self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
+        self._chunk_size = chunk_size
+        if self._use_kd_tree:
+            self._centroid_kd_tree = cKDTree(self._centroids, **self._ckdtree_kwargs)
 
     ## Properties inherited from ArchiveBase ##
 
