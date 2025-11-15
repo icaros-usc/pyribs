@@ -35,7 +35,7 @@ def test_samples_bad_shape(use_kd_tree):
     with pytest.raises(ValueError):
         CVTArchive(
             solution_dim=0,
-            cells=10,
+            centroids=10,
             ranges=[(-1, 1), (-1, 1)],
             samples=[[-1, -1, -1], [1, 1, 1]],
             use_kd_tree=use_kd_tree,
@@ -48,20 +48,17 @@ def test_properties_are_correct(data):
     assert np.all(data.archive.interval_size == [2, 2])
 
     points = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
-    unittest.TestCase().assertCountEqual(data.archive.samples.tolist(), points)  # noqa: PT009
     unittest.TestCase().assertCountEqual(data.archive.centroids.tolist(), points)  # noqa: PT009
 
 
 def test_custom_centroids(use_kd_tree):
-    centroids = np.array([[-0.25, -0.25], [0.25, 0.25]])
+    centroids = np.asarray([[-0.25, -0.25], [0.25, 0.25]])
     archive = CVTArchive(
         solution_dim=3,
-        cells=centroids.shape[0],
+        centroids=centroids,
         ranges=[(-1, 1), (-1, 1)],
-        custom_centroids=centroids,
         use_kd_tree=use_kd_tree,
     )
-    assert archive.samples is None
     assert (archive.centroids == centroids).all()
 
 
