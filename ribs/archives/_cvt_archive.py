@@ -11,6 +11,7 @@ from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
 from sklearn.cluster import k_means
+from typing_extensions import ParamSpec
 
 from ribs._utils import (
     check_batch_shape,
@@ -30,77 +31,96 @@ from ribs.archives._utils import (
 )
 from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
 
+P = ParamSpec("P")
+
 
 def k_means_centroids(
     centroids: Int,
+    ranges: Collection[tuple[Float, Float]],
     samples: Int | ArrayLike = 100_000,
-    k_means_kwargs: dict | None = None,
-) -> np.ndarray:
+    dtype: DTypeLike = np.float64,
+    seed: Int | None = None,
+    **k_means_kwargs: P.kwargs,
+) -> tuple[np.ndarray, np.ndarray]:
     """Generates archive centroids with k-means clustering.
 
     K-means is run on points sampled from the measure space.
 
     Args:
-        ranges: TODO
-        k_means_kwargs: kwargs for :func:`~sklearn.cluster.k_means`. By default, we pass
-            `n_init=1`, `init="random"`, `algorithm="lloyd"`, and `random_state=seed`.
-        samples: If it is an int, this specifies the number of samples to generate when
-            creating the CVT. Otherwise, this must be a (num_samples, measure_dim) array
-            where samples[i] is a sample to use when creating the CVT. It can be useful
-            to pass in custom samples when there are restrictions on what samples in the
-            measure space are (physically) possible.
+        centroids: Number of centroids to create during the clustering.
+        ranges: Upper and lower bound of each dimension of the measure space, e.g.,
+            ``[(-1, 1), (-2, 2)]`` indicates the first dimension should have bounds
+            :math:`[-1,1]` (inclusive), and the second dimension should have bounds
+            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
+            ``dims``.
+        samples: If it is an int, this specifies the number of samples to generate
+            before clustering them to create the CVT. These points will be sampled
+            uniformly within the ranges specified above. Alternatively, this argument
+            can be a (num_samples, measure_dim) array of measure space points to
+            cluster. It can be useful to pass in custom samples when there are
+            restrictions on what samples in the measure space are (physically) possible.
+        dtype: Data type of the centroids and samples.
+        seed: Value to seed the random number generator and
+            :func:`sklearn.cluster.k_means`. Pass None to avoid a fixed seed.
+        **k_means_kwargs: Keyword arguments for :func:`sklearn.cluster.k_means`. By
+            default, we pass `n_init=1`, `init="random"`, `algorithm="lloyd"`, and
+            `random_state=seed`.
 
     Returns:
-        TODO: two arrays, one with the centroids and one with the samples.
+        Two arrays. The first is a ``(centroids, measure_dim)`` array of centroids. The
+        second is a ``(samples, measure_dim)`` array of samples that were clustered to
+        create the centroids.
 
     Raises:
         ValueError: The ``samples`` array has the wrong shape.
         RuntimeError: The number of centroids found during k-means clustering is not
             equal to the number of centroids passed in.
     """
+    measure_dim = len(ranges)
+    ranges = list(zip(*ranges))
+    lower_bounds = np.array(ranges[0], dtype=dtype)
+    upper_bounds = np.array(ranges[1], dtype=dtype)
+
     # Apply default args for k-means. Users can easily override these,
     # particularly if they want higher quality clusters.
-    self._k_means_kwargs = {} if k_means_kwargs is None else k_means_kwargs.copy()
-    self._k_means_kwargs.setdefault(
-        # Only run one iter to be fast.
-        "n_init",
-        1,
-    )
-    self._k_means_kwargs.setdefault(
-        # The default "k-means++" takes very long to init.
-        "init",
-        "random",
-    )
-    self._k_means_kwargs.setdefault("algorithm", "lloyd")
-    self._k_means_kwargs.setdefault("random_state", seed)
+
+    # Only run one iter to be fast.
+    k_means_kwargs.setdefault("n_init", 1)
+    # The default "k-means++" takes very long to init.
+    k_means_kwargs.setdefault("init", "random")
+    k_means_kwargs.setdefault("algorithm", "lloyd")
+    k_means_kwargs.setdefault("random_state", seed)
 
     if isinstance(samples, numbers.Integral):
-        samples = self._rng.uniform(
-            self._lower_bounds,
-            self._upper_bounds,
-            size=(samples, self._measure_dim),
-        ).astype(self.dtypes["measures"])
+        rng = np.random.default_rng(seed)
+        samples = rng.uniform(
+            lower_bounds,
+            upper_bounds,
+            size=(samples, measure_dim),
+        ).astype(dtype)
     else:
         # Validate shape of custom samples.
-        samples = np.asarray(samples, dtype=self.dtypes["measures"])
-        if samples.shape[1] != self._measure_dim:
-            raise ValueError(
-                f"Samples has shape {samples.shape} but must be of "
-                f"shape (n_samples, len(ranges)="
-                f"{self._measure_dim})"
-            )
-        self._samples = samples
+        samples = np.asarray(samples, dtype=dtype)
+        check_batch_shape(
+            array=samples,
+            array_name="samples",
+            dim=measure_dim,
+            dim_name="measure_dim",
+            batch_name="num_samples",
+        )
 
-    self._centroids = k_means(samples, centroids, **self._k_means_kwargs)[0]
+    centroid_points = k_means(samples, centroids, **k_means_kwargs)[0]
 
-    if self._centroids.shape[0] < self.cells:
+    if centroid_points.shape[0] < centroids:
         raise RuntimeError(
             "While generating the CVT, k-means clustering found "
-            f"{self._centroids.shape[0]} centroids, but this "
+            f"{centroid_points.shape[0]} centroids, but this "
             f"archive needs {centroids} cells. This most "
             "likely happened because there are too few samples "
             "and/or too many cells."
         )
+
+    return centroid_points, samples
 
 
 class CVTArchive(ArchiveBase):
@@ -157,7 +177,7 @@ class CVTArchive(ArchiveBase):
         centroids: This parameter may be an integer, which indicates the number of
             centroids in the CVT. In this case, the centroids will be automatically
             generated by sampling within the ranges and performing k-means clustering on
-            the points. Alternatively, this parameter can be an (n_centroids,
+            the points. Alternatively, this parameter can be an (num_centroids,
             measure_dim) array with the measure space coordinates of the centroids.
         ranges: Upper and lower bound of each dimension of the measure space, e.g.
             ``[(-1, 1), (-2, 2)]`` indicates the first dimension should have bounds
@@ -174,8 +194,8 @@ class CVTArchive(ArchiveBase):
             *subtracted* from all objectives in the archive, e.g., if your objectives go
             as low as -300, pass in -300 so that each objective will be transformed as
             ``objective - (-300)``.
-        seed: Value to seed the random number generator as well as
-            :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
+        seed: Value to seed the random number generator. Set to None to avoid a fixed
+            seed.
         solution_dtype: Data type of the solutions. Defaults to float64 (numpy's default
             floating point type).
         objective_dtype: Data type of the objectives. Defaults to float64 (numpy's
@@ -274,8 +294,12 @@ class CVTArchive(ArchiveBase):
 
         if isinstance(centroids, numbers.Integral):
             # Generate centroids with k-means.
-            # TODO
-            ...
+            centroids = k_means_centroids(
+                centroids=centroids,
+                ranges=ranges,
+                # Use default value for samples.
+                dtype=self.dtypes["measures"],
+            )
         else:
             # Validate custom centroids.
             centroids = np.asarray(centroids, dtype=self.dtypes["measures"])
@@ -284,7 +308,7 @@ class CVTArchive(ArchiveBase):
                 array_name="centroids",
                 dim=self.measure_dim,
                 dim_name="measure_dim",
-                batch_name="n_centroids",
+                batch_name="num_centroids",
             )
             self._centroids = centroids
 
@@ -418,14 +442,13 @@ class CVTArchive(ArchiveBase):
 
     @property
     def centroids(self) -> np.ndarray:
-        """(n_centroids, measure_dim) array of centroids used in the CVT."""
+        """(num_centroids, measure_dim) array of centroids used in the CVT."""
         return self._centroids
 
     @property
     def samples(self) -> None:
         """DEPRECATED."""
         raise ValueError("samples is deprecated in pyribs 0.9.0")
-
 
     ## dunder methods ##
 
