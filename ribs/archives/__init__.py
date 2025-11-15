@@ -33,6 +33,7 @@ This subpackage also contains several utilities associated with the archives.
     ArchiveStats
     cqd_score
     CQDScoreResult
+    k_means_centroids
 """
 
 from ribs.archives._add_status import AddStatus
@@ -42,7 +43,7 @@ from ribs.archives._archive_stats import ArchiveStats
 from ribs.archives._array_store import ArrayStore
 from ribs.archives._categorical_archive import CategoricalArchive
 from ribs.archives._cqd_score import CQDScoreResult, cqd_score
-from ribs.archives._cvt_archive import CVTArchive
+from ribs.archives._cvt_archive import CVTArchive, k_means_centroids
 from ribs.archives._density_archive import DensityArchive
 from ribs.archives._grid_archive import GridArchive
 from ribs.archives._proximity_archive import ProximityArchive
@@ -62,4 +63,5 @@ __all__ = [
     "ArchiveStats",
     "CQDScoreResult",
     "cqd_score",
+    "k_means_centroids",
 ]
