@@ -37,6 +37,7 @@ def check_batch_shape(
     dim: Int | tuple[Int, ...],
     dim_name: str,
     extra_msg: str = "",
+    batch_name: str = "batch_size",
 ) -> None:
     """Checks that the array has shape (batch_size, dim) or (batch_size, *dim).
 
@@ -50,8 +51,8 @@ def check_batch_shape(
         dim_str = ", ".join(map(str, dim))
         raise ValueError(
             f"Expected {array_name} to be an array with shape "
-            f"(batch_size, {dim_str}) (i.e. shape "
-            f"(batch_size, {dim_name})) but it had shape "
+            f"({batch_name}, {dim_str}) (i.e. shape "
+            f"({batch_name}, {dim_name})) but it had shape "
             f"{array.shape}.{extra_msg}"
         )
 

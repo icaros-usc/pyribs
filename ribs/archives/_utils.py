@@ -41,7 +41,7 @@ def parse_all_dtypes(
     """
     if isinstance(dtype, dict):
         raise ValueError(
-            "Passing a dict as `dtype` is now deprecated. Please use "
+            "Passing a dict as `dtype` is deprecated in pyribs 0.9.0. Please use "
             "`solution_dtype`, `objective_dtype`, and/or `measures_dtype` instead."
         )
 
