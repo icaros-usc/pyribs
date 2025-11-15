@@ -421,6 +421,12 @@ class CVTArchive(ArchiveBase):
         """(n_centroids, measure_dim) array of centroids used in the CVT."""
         return self._centroids
 
+    @property
+    def samples(self) -> None:
+        """DEPRECATED."""
+        raise ValueError("samples is deprecated in pyribs 0.9.0")
+
+
     ## dunder methods ##
 
     def __len__(self) -> int:
