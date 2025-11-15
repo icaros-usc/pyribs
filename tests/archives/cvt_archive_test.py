@@ -170,11 +170,9 @@ def test_chunked_calculation():
 
     archive = CVTArchive(
         solution_dim=0,
-        cells=9,
+        centroids=centroids,
         ranges=[(-1, 1), (-1, 1)],
-        samples=10,
         chunk_size=2,
-        custom_centroids=centroids,
         use_kd_tree=False,
     )
     measure_batch = [
