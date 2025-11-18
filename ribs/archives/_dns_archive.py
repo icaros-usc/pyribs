@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Collection, Iterator
-from typing import Literal, overload
+from typing import Literal, cast, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
-from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
 from scipy.spatial.distance import cdist
 
@@ -107,6 +106,11 @@ class DNSArchive(ArchiveBase):
             capacity=capacity,
         )
 
+        self._space = "measures"
+        self._best_elite: SingleData | None = None
+        self._objective_sum: Float = self.dtypes["objective"].type(0.0)
+        self._stats: ArchiveStats
+
         # Set up constant properties.
         self._k_neighbors = int(k_neighbors)
         self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
@@ -123,7 +127,6 @@ class DNSArchive(ArchiveBase):
         # archive; it is useful for computing qd_score and obj_mean.
         self._best_elite = None
         self._objective_sum = None
-        self._stats = None
         self._stats_reset()
 
     ## Properties inherited from ArchiveBase ##
@@ -148,7 +151,7 @@ class DNSArchive(ArchiveBase):
     ## Roughly ordered by the parameter list in the constructor. ##
 
     @property
-    def best_elite(self) -> SingleData:
+    def best_elite(self) -> SingleData | None:
         """The elite with the highest objective in the archive.
 
         None if there are no elites in the archive.
@@ -209,8 +212,9 @@ class DNSArchive(ArchiveBase):
         Update is based on a new sum of objective values (new_objective_sum) and the
         index of a potential new best elite (new_best_index).
         """
-        _, new_best_elite = self._store.retrieve([new_best_index])
-        new_best_elite = {k: v[0] for k, v in new_best_elite.items()}
+        _, new_best_elite_raw = self._store.retrieve([new_best_index])
+        new_best_elite_dict = cast(BatchData, new_best_elite_raw)
+        new_best_elite = {k: v[0] for k, v in new_best_elite_dict.items()}
 
         if (
             self._stats.obj_max is None
@@ -313,7 +317,7 @@ class DNSArchive(ArchiveBase):
             return np.full(len(measures), np.inf, dtype=self.dtypes["measures"])
 
         # Distances from batch to reference population.
-        D = cdist(measures, self._store.data("measures"))
+        dist = cdist(measures, self._store.data("measures"))
 
         ref_objectives = self._store.data("objective")
         # For each row i, mask columns where ref_objective < obj_i (not fitter or eq).
@@ -323,7 +327,7 @@ class DNSArchive(ArchiveBase):
             if not np.any(mask):
                 scores[i] = np.inf
                 continue
-            dists = D[i, mask]
+            dists = dist[i, mask]
             k = min(self._k_neighbors, dists.shape[0])
             # Take k smallest.
             part = np.partition(dists, k - 1)[:k]
@@ -369,7 +373,10 @@ class DNSArchive(ArchiveBase):
         if cur_size > 0:
             cur = self._store.data(return_type="dict")
         else:
-            cur = {name: np.empty((0, *desc[0]), dtype=desc[1]) for name, desc in self._store.field_desc.items()}  # type: ignore[index]
+            cur = {
+                name: np.empty((0, *desc[0]), dtype=desc[1])
+                for name, desc in self._store.field_desc.items()
+            }  # type: ignore[index]
 
         # Combine.
         combined = {}
@@ -381,24 +388,24 @@ class DNSArchive(ArchiveBase):
             )
 
         # Compute DNS over union.
-        X = combined["measures"]
+        measures = combined["measures"]
         objs = combined["objective"]
 
         # Pairwise distances.
-        if X.shape[0] == 0:
+        if measures.shape[0] == 0:
             dns_scores = np.array([], dtype=self.dtypes["measures"])  # pragma: no cover
         else:
-            D = cdist(X, X)
+            dist = cdist(measures, measures)
             # Exclude self distances.
-            np.fill_diagonal(D, np.inf)
+            np.fill_diagonal(dist, np.inf)
             # For each i, consider only fitter neighbors (obj[j] >= obj[i]).
             fitter_mask = objs[None, :] >= objs[:, None]
             # Replace non-fitter distances with +inf.
-            D_masked = np.where(fitter_mask, D, np.inf)
+            dist_masked = np.where(fitter_mask, dist, np.inf)
             # Compute mean of k smallest along each row (ignoring +inf when <k exist).
-            dns_scores = np.empty(X.shape[0], dtype=self.dtypes["measures"])
-            for i in range(X.shape[0]):
-                row = D_masked[i]
+            dns_scores = np.empty(measures.shape[0], dtype=self.dtypes["measures"])
+            for i in range(measures.shape[0]):
+                row = dist_masked[i]
                 valid = np.isfinite(row)
                 if not np.any(valid):
                     dns_scores[i] = np.inf
@@ -415,7 +422,9 @@ class DNSArchive(ArchiveBase):
         else:
             # Take largest `cap` values.
             survivor_indices = np.argpartition(dns_scores, -cap)[-cap:]
-            survivor_indices = survivor_indices[np.argsort(dns_scores[survivor_indices])]
+            survivor_indices = survivor_indices[
+                np.argsort(dns_scores[survivor_indices])
+            ]
 
         # Build add_info for batch entries.
         batch_size = len(data["measures"])
@@ -430,7 +439,9 @@ class DNSArchive(ArchiveBase):
         add_info["dns"] = dns_scores[batch_indices_in_union]
 
         # Rebuild population as survivors (compact to [0..n-1]).
-        survivors = {name: combined[name][survivor_indices] for name in self._store.field_list}
+        survivors = {
+            name: combined[name][survivor_indices] for name in self._store.field_list
+        }
         self._store.clear()
         if survivors["measures"].shape[0] > 0:
             self._store.add(np.arange(survivors["measures"].shape[0]), survivors)
@@ -439,9 +450,13 @@ class DNSArchive(ArchiveBase):
         if len(self) > 0:
             best_index = int(np.argmax(self._store.data("objective")))
             objective_sum = np.sum(self._store.data("objective"))
-            self._stats_update(np.asarray(objective_sum, dtype=self.dtypes["objective"]), best_index)
+            self._stats_update(
+                np.asarray(objective_sum, dtype=self.dtypes["objective"]), best_index
+            )
             # Refresh KD-tree over measures.
-            self._cur_kd_tree = cKDTree(self._store.data("measures"), **self._ckdtree_kwargs)
+            self._cur_kd_tree = cKDTree(
+                self._store.data("measures"), **self._ckdtree_kwargs
+            )
 
         return add_info
 
@@ -501,7 +516,9 @@ class DNSArchive(ArchiveBase):
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
-        occupied, data = self._store.retrieve(self.index_of(measures))
+        occupied, data = cast(
+            tuple[np.ndarray, BatchData], self._store.retrieve(self.index_of(measures))
+        )
         fill_sentinel_values(occupied, data)
 
         return occupied, data
@@ -512,8 +529,8 @@ class DNSArchive(ArchiveBase):
         check_finite(measures, "measures")
 
         occupied, data = self.retrieve(measures[None])
-
-        return occupied[0], {field: arr[0] for field, arr in data.items()}
+        occupied_flag = bool(occupied[0])
+        return occupied_flag, {field: arr[0] for field, arr in data.items()}
 
     @overload
     def data(
@@ -559,4 +576,4 @@ class DNSArchive(ArchiveBase):
         count = min(int(n), len(self._store))
         selected_indices = self._store.occupied_list[:count]
         _, elites = self._store.retrieve(selected_indices)
-        return elites
+        return cast(BatchData, elites)
