@@ -2,6 +2,8 @@
 
 ## (Forthcoming)
 
+- Add support for Dominated Novelty Search
+
 ### Changelog
 
 #### API
