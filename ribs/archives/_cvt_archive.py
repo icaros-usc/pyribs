@@ -10,7 +10,6 @@ import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
-from scipy.stats.qmc import Halton, Sobol
 from sklearn.cluster import k_means
 
 from ribs._utils import (
@@ -50,9 +49,9 @@ class CVTArchive(ArchiveBase):
 
     To compare the performance of using the k-D tree vs brute force, we ran benchmarks
     where we inserted 1k batches of 100 solutions into a 2D archive with varying numbers
-    of cells. We took the minimum over 5 runs for each data point, as recommended in the
-    docs for :meth:`timeit.Timer.repeat`. Note the logarithmic scales. This plot was
-    generated on a reasonably modern laptop.
+    of cells. We took the minimum over 5 runs for each data point --- minimum is
+    recommended in the docs for :meth:`timeit.Timer.repeat`. Note the logarithmic
+    scales. This plot was generated on a reasonably modern laptop.
 
     .. image:: ../_static/imgs/cvt_add_plot.png
         :alt: Runtime to insert 100k entries into CVTArchive
@@ -67,7 +66,9 @@ class CVTArchive(ArchiveBase):
     reduce execution time. To do this, either (1) construct custom centroids and pass
     them in via the ``custom_centroids`` argument, or (2) access the centroids created
     in the first archive with :attr:`centroids` and pass them into ``custom_centroids``
-    when constructing archives for subsequent experiments.
+    when constructing archives for subsequent experiments. For more information on
+    custom centroids, including different methods for generating centroids, see the
+    tutorial :doc:`/tutorials/centroid_methods`.
 
     .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
         <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds, including the
@@ -123,9 +124,6 @@ class CVTArchive(ArchiveBase):
             ``samples`` will be ignored, and ``archive.samples`` will be None. This can
             be useful when one wishes to use the same CVT across experiments for fair
             comparison.
-        centroid_method: Centroid generation method, as presented in Mouret 2023:
-            https://dl.acm.org/doi/pdf/10.1145/3583133.3590726. Note: Samples are only
-            used when method is "kmeans".
         samples: If it is an int, this specifies the number of samples to generate when
             creating the CVT. Otherwise, this must be a (num_samples, measure_dim) array
             where samples[i] is a sample to use when creating the CVT. It can be useful
@@ -163,9 +161,6 @@ class CVTArchive(ArchiveBase):
         dtype: DTypeLike = None,
         extra_fields: FieldDesc | None = None,
         custom_centroids: ArrayLike = None,
-        centroid_method: Literal[
-            "kmeans", "random", "sobol", "scrambled_sobol", "halton"
-        ] = "kmeans",
         samples: Int | ArrayLike = 100_000,
         k_means_kwargs: dict | None = None,
         use_kd_tree: bool = True,
@@ -242,64 +237,36 @@ class CVTArchive(ArchiveBase):
 
         if custom_centroids is None:
             self._samples = None
-            if centroid_method == "kmeans":
-                if not isinstance(samples, numbers.Integral):
-                    # Validate shape of custom samples.
-                    samples = np.asarray(samples, dtype=self.dtypes["measures"])
-                    if samples.shape[1] != self._measure_dim:
-                        raise ValueError(
-                            f"Samples has shape {samples.shape} but must be of "
-                            f"shape (n_samples, len(ranges)="
-                            f"{self._measure_dim})"
-                        )
-                    self._samples = samples
-                else:
-                    self._samples = self._rng.uniform(
-                        self._lower_bounds,
-                        self._upper_bounds,
-                        size=(samples, self._measure_dim),
-                    ).astype(self.dtypes["measures"])
-
-                self._centroids = k_means(
-                    self._samples, self.cells, **self._k_means_kwargs
-                )[0]
-
-                if self._centroids.shape[0] < self.cells:
-                    raise RuntimeError(
-                        "While generating the CVT, k-means clustering found "
-                        f"{self._centroids.shape[0]} centroids, but this "
-                        f"archive needs {self.cells} cells. This most "
-                        "likely happened because there are too few samples "
-                        "and/or too many cells."
+            if not isinstance(samples, numbers.Integral):
+                # Validate shape of custom samples.
+                samples = np.asarray(samples, dtype=self.dtypes["measures"])
+                if samples.shape[1] != self._measure_dim:
+                    raise ValueError(
+                        f"Samples has shape {samples.shape} but must be of "
+                        f"shape (n_samples, len(ranges)="
+                        f"{self._measure_dim})"
                     )
-            elif centroid_method == "random":
-                # Generates random centroids.
-                self._centroids = self._rng.uniform(
+                self._samples = samples
+            else:
+                self._samples = self._rng.uniform(
                     self._lower_bounds,
                     self._upper_bounds,
-                    size=(self.cells, self._measure_dim),
+                    size=(samples, self._measure_dim),
+                ).astype(self.dtypes["measures"])
+
+            self._centroids = k_means(
+                self._samples, self.cells, **self._k_means_kwargs
+            )[0]
+
+            if self._centroids.shape[0] < self.cells:
+                raise RuntimeError(
+                    "While generating the CVT, k-means clustering found "
+                    f"{self._centroids.shape[0]} centroids, but this "
+                    f"archive needs {self.cells} cells. This most "
+                    "likely happened because there are too few samples "
+                    "and/or too many cells."
                 )
-            elif centroid_method == "sobol":
-                # Generates centroids as a Sobol sequence.
-                sampler = Sobol(d=self._measure_dim, scramble=False)
-                sobol_nums = sampler.random(n=self.cells)
-                self._centroids = self._lower_bounds + sobol_nums * (
-                    self._upper_bounds - self._lower_bounds
-                )
-            elif centroid_method == "scrambled_sobol":
-                # Generates centroids as a scrambled Sobol sequence.
-                sampler = Sobol(d=self._measure_dim, scramble=True)
-                sobol_nums = sampler.random(n=self.cells)
-                self._centroids = self._lower_bounds + sobol_nums * (
-                    self._upper_bounds - self._lower_bounds
-                )
-            elif centroid_method == "halton":
-                # Generates centroids with a Halton sequence.
-                sampler = Halton(d=self._measure_dim)
-                halton_nums = sampler.random(n=self.cells)
-                self._centroids = self._lower_bounds + halton_nums * (
-                    self._upper_bounds - self._lower_bounds
-                )
+
         else:
             # Validate shape of `custom_centroids` when they are provided.
             custom_centroids = np.asarray(
