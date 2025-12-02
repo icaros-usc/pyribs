@@ -2,12 +2,11 @@
 
 ## (Forthcoming)
 
-- Add support for Dominated Novelty Search
-
 ### Changelog
 
 #### API
 
+- Implement Dominated Novelty Search ({pr}`664`)
 - Support multi-dimensional solutions in GaussianEmitter and IsoLineEmitter
   ({pr}`650`)
 - Allow specifying emitter bounds with `lower_bounds` and `upper_bounds`
