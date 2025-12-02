@@ -34,7 +34,8 @@ class DNSArchive(ArchiveBase):
     strictly higher objective ("fitter" neighbors). If no fitter neighbors exist, the
     DNS score is treated as ``+inf``.
 
-    From the DNS paper: Bahlous-Boldi, R, and Faldor, M et Al. https://arxiv.org/abs/2502.00593
+    More info can be found in the `DNS paper <https://arxiv.org/abs/2502.00593>`_ by
+    Bahlous-Boldi, R, and Faldor, M et al.
 
     By default, this archive stores the following data fields: ``solution``,
     ``objective``, ``measures``, and ``index``.
@@ -49,10 +50,17 @@ class DNSArchive(ArchiveBase):
         space: Space in which to compute distances ("measures" or "solution").
         qd_score_offset: Subtracted from objective values when computing QD score.
         seed: Value to seed the random number generator.
-        solution_dtype: Data type of the solutions.
-        objective_dtype: Data type of the objectives.
-        measures_dtype: Data type of the measures.
-        dtype: Shortcut to set all dtypes simultaneously.
+        solution_dtype: Data type of the solutions. Defaults to float64 (numpy's default
+            floating point type).
+        objective_dtype: Data type of the objectives. Defaults to float64 (numpy's
+            default floating point type).
+        measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
+            floating point type).
+        dtype: Shortcut for providing data type of the solutions, objectives, and
+            measures. Defaults to float64 (numpy's default floating point type). This
+            parameter sets all the dtypes simultaneously. To set individual dtypes, pass
+            ``solution_dtype``, ``objective_dtype``, and ``measures_dtype``. Note that
+            ``dtype`` cannot be used at the same time as those parameters.
         extra_fields: Extra fields to store alongside solutions.
         ckdtree_kwargs: Kwargs for :class:`scipy.spatial.cKDTree` used in retrieval.
     """
