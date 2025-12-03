@@ -42,7 +42,7 @@ def k_means_centroids(
     """Generates archive centroids with k-means clustering.
 
     Based on `Vassiliades 2018 <https://ieeexplore.ieee.org/document/8000667>`_, this
-    archive approximately generates a Centroidal Voronoi Tessellation (CVT) with
+    function approximately generates a Centroidal Voronoi Tessellation (CVT) with
     uniformly-sized cells. This is accomplished by sampling ``samples`` points uniformly
     across the measure space range determined by ``ranges``, and then clustering the
     points into ``centroids`` clusters using k-means clustering. The final set of
