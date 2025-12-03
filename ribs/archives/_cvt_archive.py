@@ -32,6 +32,7 @@ from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
 
 
 def k_means_centroids(
+    *,
     centroids: Int,
     ranges: Collection[tuple[Float, Float]],
     samples: Int | ArrayLike = 100_000,
