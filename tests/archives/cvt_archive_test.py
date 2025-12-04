@@ -50,6 +50,19 @@ def test_custom_centroids(use_kd_tree):
     assert (archive.centroids == centroids).all()
 
 
+def test_custom_centroids_bad_shape(use_kd_tree):
+    with pytest.raises(
+        ValueError, match=r"Expected centroids to be an array with shape .*"
+    ):
+        CVTArchive(
+            solution_dim=3,
+            # The centroids are 3D measures, but the ranges specify 2D measures.
+            centroids=np.asarray([[-0.25, -0.25, -0.25], [0.25, 0.25, 0.25]]),
+            ranges=[(-1, 1), (-1, 1)],
+            use_kd_tree=use_kd_tree,
+        )
+
+
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
 def test_add_single_to_archive(data, use_list, add_mode):
     solution = data.solution
