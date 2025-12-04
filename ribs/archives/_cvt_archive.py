@@ -230,6 +230,8 @@ class CVTArchive(ArchiveBase):
             the archive are not allowed.
         samples: For convenience, this argument is passed directly to
             :func:`k_means_centroids` (assuming that function is called).
+        k_means_kwargs: For convenience, this argument is passed directly to
+            :func:`k_means_centroids` (assuming that function is called).
         use_kd_tree: If True, use a k-D tree for finding the closest centroid when
             inserting into the archive. If False, brute force will be used instead.
         ckdtree_kwargs: kwargs for :class:`~scipy.spatial.cKDTree`. By default, we do
@@ -263,6 +265,7 @@ class CVTArchive(ArchiveBase):
         dtype: DTypeLike = None,
         extra_fields: FieldDesc | None = None,
         samples: Int | ArrayLike = 100_000,
+        k_means_kwargs: dict | None = None,
         use_kd_tree: bool = True,
         ckdtree_kwargs: dict | None = None,
         chunk_size: Int = None,
@@ -270,7 +273,6 @@ class CVTArchive(ArchiveBase):
         cells: None = None,
         custom_centroids: None = None,
         centroid_method: None = None,
-        k_means_kwargs: None = None,
     ) -> None:
         if cells is not None:
             raise ValueError(
@@ -286,11 +288,6 @@ class CVTArchive(ArchiveBase):
             raise ValueError(
                 "`centroid_method` is deprecated in pyribs 0.9.0. "
                 "Please generate centroids and pass them in instead."
-            )
-        if k_means_kwargs is not None:
-            raise ValueError(
-                "`k_means_kwargs` is deprecated in pyribs 0.9.0. "
-                "Please use the k_means_centroids helper function instead."
             )
 
         self._rng = np.random.default_rng(seed)
@@ -355,6 +352,7 @@ class CVTArchive(ArchiveBase):
                 samples=samples,
                 dtype=self.dtypes["measures"],
                 seed=seed,
+                k_means_kwargs=k_means_kwargs,
             )
         else:
             # Validate custom centroids.
