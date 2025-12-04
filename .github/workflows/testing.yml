@@ -118,6 +118,8 @@ jobs:
       # installation in CI is very fussy, so it is not commented out.
       # - name: Remove swig
       #   run: sudo apt-get remove swig
+      - name: Install swig
+        run: sudo apt-get install swig
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
