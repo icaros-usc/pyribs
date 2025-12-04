@@ -1,7 +1,10 @@
 """Uses CMA-ME to train agents with linear policies in Lunar Lander.
 
-Install the following dependencies before running this example -- swig must be installed
-before box2d can be installed, hence it is a separate command: pip install swig
+To run this example, first install SWIG (https://swig.org), such as with the system
+package manager (sudo apt-get install swig) or via the Python Package Index (pip install
+swig). SWIG is necessary for box2d, which is a used in the Lunar Lander environment.
+
+After SWIG is installed, install the following Python dependencies:
     pip install ribs[visualize] tqdm "gymnasium[box2d]>=1.0.0" "moviepy>=1.0.0" dask distributed bokeh fire
 
 This script uses the same setup as the tutorial, but it also uses Dask instead of
