@@ -136,17 +136,31 @@ class CVTArchive(ArchiveBase):
     """An archive that tessellates the measure space with centroids.
 
     This archive originates in `Vassiliades 2018
-    <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
-    Tessellation (CVT) to divide an n-dimensional measure space into k cells. The CVT is
-    created by sampling points uniformly from the n-dimensional measure space and using
-    k-means clustering to identify k centroids. When items are inserted into the
-    archive, we identify their cell by identifying the closest centroid in measure space
-    (using Euclidean distance). For k-means clustering, we use
-    :func:`sklearn.cluster.k_means`.
+    <https://ieeexplore.ieee.org/document/8000667>`_. It uses a Centroidal Voronoi
+    Tessellation (CVT) to divide an n-dimensional measure space into k cells. Each cell
+    is represented by a centroid, and when items are inserted into the archive, we
+    identify their cell by finding the closest centroid in measure space.
 
-    By default, finding the closest centroid is done in roughly O(log(number of cells))
-    time using :class:`scipy.spatial.cKDTree`. To switch to brute force, which takes
-    O(number of cells) time, pass ``use_kd_tree=False``.
+    Several options are available for creating the centroids used in the CVT. The
+    default option in this archive is to sample points uniformly in the measure space
+    and then cluster them using k-means clustering; the centroids of the clusters are
+    then used as the centroids of the CVT in this archive. This procedure is implemented
+    in :func:`ribs.archives.k_means_centroids`, which internally calls
+    :func:`sklearn.cluster.k_means` to perform the clustering. For alternative methods
+    of centroid generation, refer to the tutorial :doc:`/tutorials/centroid_methods`.
+
+    If running multiple experiments with this archive, it may be useful to maintain the
+    same centroids across experiments. To do this, we recommend generating the centroids
+    just once, such as by calling :func:`ribs.archives.k_means_centroids`. Then, save
+    the centroids to a file (e.g., with :func:`numpy.save`). When constructing the
+    archive for new experiments, the centroids can be loaded from the file and passed to
+    the archive via the ``centroids`` parameter. More information is available in the
+    aforementioned tutorial.
+
+    Several options are also available for finding the closest centroid in measure
+    space. By default, this procedure uses Euclidean distance and is done in roughly
+    O(log(number of cells)) time using :class:`scipy.spatial.cKDTree`. To switch to
+    brute force, which takes O(number of cells) time, pass ``use_kd_tree=False``.
 
     To compare the performance of using the k-D tree vs brute force, we ran benchmarks
     where we inserted 1k batches of 100 solutions into a 2D archive with varying numbers
@@ -162,15 +176,6 @@ class CVTArchive(ArchiveBase):
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_ in the
     project repo for more information about how this plot was generated.
 
-    Finally, if running multiple experiments, it may be beneficial to use the same
-    centroids across each experiment. Doing so can keep experiments consistent and
-    reduce execution time. To do this, either (1) construct custom centroids and pass
-    them in via the ``custom_centroids`` argument, or (2) access the centroids created
-    in the first archive with :attr:`centroids` and pass them into ``custom_centroids``
-    when constructing archives for subsequent experiments. For more information on
-    custom centroids, including different methods for generating centroids, see the
-    tutorial :doc:`/tutorials/centroid_methods`.
-
     .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
         <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds, including the
         ``learning_rate`` and ``threshold_min`` parameters, refer to our tutorial
@@ -183,8 +188,11 @@ class CVTArchive(ArchiveBase):
         solution_dim: Dimensionality of the solution space. Scalar or multi-dimensional
             solution shapes are allowed by passing an empty tuple or tuple of integers,
             respectively.
-        cells: The number of cells to use in the archive, equivalent to the number of
-            centroids/areas in the CVT.
+        centroids: This parameter may be an integer, which indicates the number of
+            centroids in the CVT. In this case, the centroids will be automatically
+            generated with :func:`ribs.archives.k_means_centroids`. Alternatively, this
+            parameter can be a (num_centroids, measure_dim) array with the measure space
+            coordinates of the centroids.
         ranges: Upper and lower bound of each dimension of the measure space, e.g.
             ``[(-1, 1), (-2, 2)]`` indicates the first dimension should have bounds
             :math:`[-1,1]` (inclusive), and the second dimension should have bounds
@@ -200,8 +208,8 @@ class CVTArchive(ArchiveBase):
             *subtracted* from all objectives in the archive, e.g., if your objectives go
             as low as -300, pass in -300 so that each objective will be transformed as
             ``objective - (-300)``.
-        seed: Value to seed the random number generator as well as
-            :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
+        seed: Value to seed the random number generator. Set to None to avoid a fixed
+            seed.
         solution_dtype: Data type of the solutions. Defaults to float64 (numpy's default
             floating point type).
         objective_dtype: Data type of the objectives. Defaults to float64 (numpy's
@@ -220,37 +228,31 @@ class CVTArchive(ArchiveBase):
             that contains scalar values and a "bar" field that contains 10D values. Note
             that field names must be valid Python identifiers, and names already used in
             the archive are not allowed.
-        custom_centroids: If passed in, this (cells, measure_dim) array will be used as
-            the centroids of the CVT instead of generating new ones. In this case,
-            ``samples`` will be ignored, and ``archive.samples`` will be None. This can
-            be useful when one wishes to use the same CVT across experiments for fair
-            comparison.
-        samples: If it is an int, this specifies the number of samples to generate when
-            creating the CVT. Otherwise, this must be a (num_samples, measure_dim) array
-            where samples[i] is a sample to use when creating the CVT. It can be useful
-            to pass in custom samples when there are restrictions on what samples in the
-            measure space are (physically) possible.
-        k_means_kwargs: kwargs for :func:`~sklearn.cluster.k_means`. By default, we pass
-            `n_init=1`, `init="random"`, `algorithm="lloyd"`, and `random_state=seed`.
+        samples: For convenience, this argument is passed directly to
+            :func:`k_means_centroids` (assuming that function is called).
+        k_means_kwargs: For convenience, this argument is passed directly to
+            :func:`k_means_centroids` (assuming that function is called).
         use_kd_tree: If True, use a k-D tree for finding the closest centroid when
             inserting into the archive. If False, brute force will be used instead.
         ckdtree_kwargs: kwargs for :class:`~scipy.spatial.cKDTree`. By default, we do
             not pass in any kwargs.
         chunk_size: If passed, brute forcing the closest centroid search will chunk the
             distance calculations to compute chunk_size inputs at a time.
+        cells: DEPRECATED.
+        custom_centroids: DEPRECATED.
+        centroid_method: DEPRECATED.
 
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
-        ValueError: The ``samples`` array or the ``custom_centroids`` array has the
-            wrong shape.
+        ValueError: ``centroids`` has the wrong shape.
     """
 
     def __init__(
         self,
         *,
         solution_dim: Int | tuple[Int, ...],
-        cells: Int,
+        centroids: Int | ArrayLike,
         ranges: Collection[tuple[Float, Float]],
         learning_rate: Float | None = None,
         threshold_min: Float = -np.inf,
@@ -261,13 +263,32 @@ class CVTArchive(ArchiveBase):
         measures_dtype: DTypeLike = None,
         dtype: DTypeLike = None,
         extra_fields: FieldDesc | None = None,
-        custom_centroids: ArrayLike = None,
         samples: Int | ArrayLike = 100_000,
         k_means_kwargs: dict | None = None,
         use_kd_tree: bool = True,
         ckdtree_kwargs: dict | None = None,
         chunk_size: Int = None,
+        # Deprecated parameters.
+        cells: None = None,
+        custom_centroids: None = None,
+        centroid_method: None = None,
     ) -> None:
+        if cells is not None:
+            raise ValueError(
+                "`cells` is deprecated in pyribs 0.9.0. "
+                "Please pass in `centroids` instead."
+            )
+        if custom_centroids is not None:
+            raise ValueError(
+                "`custom_centroids` is deprecated in pyribs 0.9.0. "
+                "Please pass in `centroids` instead."
+            )
+        if centroid_method is not None:
+            raise ValueError(
+                "`centroid_method` is deprecated in pyribs 0.9.0. "
+                "Please generate centroids and pass them in instead."
+            )
+
         self._rng = np.random.default_rng(seed)
 
         ArchiveBase.__init__(
@@ -298,13 +319,15 @@ class CVTArchive(ArchiveBase):
                 "threshold": ((), objective_dtype),
                 **extra_fields,
             },
-            capacity=cells,
+            capacity=(
+                centroids if isinstance(centroids, numbers.Integral) else len(centroids)
+            ),
         )
 
         # Set up constant properties.
-        ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
-        self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
+        new_ranges = list(zip(*ranges))
+        self._lower_bounds = np.array(new_ranges[0], dtype=self.dtypes["measures"])
+        self._upper_bounds = np.array(new_ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
             learning_rate, threshold_min, self.dtypes["threshold"]
@@ -320,67 +343,26 @@ class CVTArchive(ArchiveBase):
         self._stats = None
         self._stats_reset()
 
-        # Apply default args for k-means. Users can easily override these, particularly
-        # if they want higher quality clusters.
-        self._k_means_kwargs = {} if k_means_kwargs is None else k_means_kwargs.copy()
-        self._k_means_kwargs.setdefault(
-            # Only run one iter to be fast.
-            "n_init",
-            1,
-        )
-        self._k_means_kwargs.setdefault(
-            # The default "k-means++" takes very long to init.
-            "init",
-            "random",
-        )
-        self._k_means_kwargs.setdefault("algorithm", "lloyd")
-        self._k_means_kwargs.setdefault("random_state", seed)
-
-        if custom_centroids is None:
-            self._samples = None
-            if not isinstance(samples, numbers.Integral):
-                # Validate shape of custom samples.
-                samples = np.asarray(samples, dtype=self.dtypes["measures"])
-                if samples.shape[1] != self._measure_dim:
-                    raise ValueError(
-                        f"Samples has shape {samples.shape} but must be of "
-                        f"shape (n_samples, len(ranges)="
-                        f"{self._measure_dim})"
-                    )
-                self._samples = samples
-            else:
-                self._samples = self._rng.uniform(
-                    self._lower_bounds,
-                    self._upper_bounds,
-                    size=(samples, self._measure_dim),
-                ).astype(self.dtypes["measures"])
-
-            self._centroids = k_means(
-                self._samples, self.cells, **self._k_means_kwargs
-            )[0]
-
-            if self._centroids.shape[0] < self.cells:
-                raise RuntimeError(
-                    "While generating the CVT, k-means clustering found "
-                    f"{self._centroids.shape[0]} centroids, but this "
-                    f"archive needs {self.cells} cells. This most "
-                    "likely happened because there are too few samples "
-                    "and/or too many cells."
-                )
-
-        else:
-            # Validate shape of `custom_centroids` when they are provided.
-            custom_centroids = np.asarray(
-                custom_centroids, dtype=self.dtypes["measures"]
+        if isinstance(centroids, numbers.Integral):
+            # Generate centroids with k-means. Ignore the samples returned.
+            self._centroids, _ = k_means_centroids(
+                centroids=centroids,
+                ranges=ranges,
+                samples=samples,
+                dtype=self.dtypes["measures"],
+                seed=seed,
+                k_means_kwargs=k_means_kwargs,
             )
-            if custom_centroids.shape != (cells, self._measure_dim):
-                raise ValueError(
-                    f"custom_centroids has shape {custom_centroids.shape} but "
-                    f"must be of shape (cells={cells}, len(ranges)="
-                    f"{self._measure_dim})"
-                )
-            self._centroids = custom_centroids
-            self._samples = None
+        else:
+            # Validate custom centroids.
+            self._centroids = np.asarray(centroids, dtype=self.dtypes["measures"])
+            check_batch_shape(
+                array=self._centroids,
+                array_name="centroids",
+                dim=self.measure_dim,
+                dim_name="measure_dim",
+                batch_name="num_centroids",
+            )
 
         self._use_kd_tree = use_kd_tree
         self._centroid_kd_tree = None
@@ -469,16 +451,13 @@ class CVTArchive(ArchiveBase):
 
     @property
     def centroids(self) -> np.ndarray:
-        """(n_centroids, measure_dim) array of centroids used in the CVT."""
+        """(num_centroids, measure_dim) array of centroids used in the CVT."""
         return self._centroids
 
     @property
-    def samples(self) -> np.ndarray:
-        """(num_samples, measure_dim) samples used when creating the CVT.
-
-        None if custom centroids were passed in to the archive.
-        """
-        return self._samples
+    def samples(self) -> None:
+        """DEPRECATED."""
+        raise ValueError("CVTArchive.samples is deprecated in pyribs 0.9.0")
 
     ## dunder methods ##
 

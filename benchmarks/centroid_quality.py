@@ -1,5 +1,9 @@
 """Quantifies the performance of different centroid generation techniques.
 
+NOTE: This script is currently broken since we have moved centroid generation methods
+out of the archive. However, we are keeping the script for future reference. A good
+place for a new version of it would be in the centroid methods tutorial.
+
 To measure how well a generation technique, i.e., random centroids, CVT, etc, performs,
 we measure the probability of generating a random point within a certain region defined
 by the centroid of that region.

@@ -23,7 +23,7 @@ def test_fails_on_unsupported_dims(archive_type):
         ),
         "cvt": lambda: CVTArchive(
             solution_dim=2,
-            cells=100,
+            centroids=100,
             ranges=[(-1, 1)] * 3,
             samples=100,
         ),
@@ -32,7 +32,7 @@ def test_fails_on_unsupported_dims(archive_type):
         ),
         "cvt_3d": lambda: CVTArchive(
             solution_dim=2,
-            cells=100,
+            centroids=100,
             ranges=[(-1, 1)] * 4,
             samples=100,
         ),
@@ -58,7 +58,7 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
         ),
         "cvt": lambda: CVTArchive(
             solution_dim=2,
-            cells=100,
+            centroids=100,
             ranges=[(-1, 1)] * 2,
             samples=100,
         ),
@@ -69,7 +69,7 @@ def test_heatmap_fails_on_invalid_cbar_option(archive_type, invalid_arg_cbar):
         ),
         "cvt_3d": lambda: CVTArchive(
             solution_dim=2,
-            cells=100,
+            centroids=100,
             ranges=[(-1, 1)] * 3,
             samples=100,
         ),
@@ -96,7 +96,7 @@ def test_heatmap_fails_on_invalid_aspect_option(archive_type, invalid_arg_aspect
             solution_dim=2, dims=[20, 20], ranges=[(-1, 1)] * 2
         ),
         "cvt": lambda: CVTArchive(
-            solution_dim=2, cells=100, ranges=[(-1, 1)] * 2, samples=100
+            solution_dim=2, centroids=100, ranges=[(-1, 1)] * 2, samples=100
         ),
         "sliding": lambda: SlidingBoundariesArchive(
             solution_dim=2, dims=[20, 20], ranges=[(-1, 1)] * 2

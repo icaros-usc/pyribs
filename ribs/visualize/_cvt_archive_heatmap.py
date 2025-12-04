@@ -43,9 +43,9 @@ def cvt_archive_heatmap(
     rasterized: bool = False,
     clip: bool | shapely.Polygon = False,
     plot_centroids: bool = False,
-    plot_samples: bool = False,
     ms: float = 1,
     pcm_kwargs: dict | None = None,
+    plot_samples: None = None,
 ) -> None:
     r"""Plots heatmap of a :class:`~ribs.archives.CVTArchive` with 1D or 2D measure space.
 
@@ -156,17 +156,21 @@ def cvt_archive_heatmap(
             polygon can also be passed in to clip the heatmap to a custom shape. See
             :pr:`356` for more info. Only applies to 2D archives.
         plot_centroids: Whether to plot the cluster centroids.
-        plot_samples: Whether to plot the samples used when generating the clusters.
-        ms: Marker size for both centroids and samples.
+        ms: Marker size for centroids.
         pcm_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.pcolormesh`.
             Only applicable to 1D heatmaps. linewidth and edgecolor are set with the
             ``lw`` and ``ec`` args.
+        plot_samples: DEPRECATED.
 
     Raises:
         ValueError: The archive's measure dimension must be 1D or 2D.
-        ValueError: ``plot_samples`` is passed in but the archive does not have samples
-            (e.g., due to using custom centroids during construction).
     """
+    if plot_samples is not None:
+        raise ValueError(
+            "`plot_samples` is deprecated in pyribs 0.9.0, "
+            "as CVTArchive no longer stores samples."
+        )
+
     validate_heatmap_visual_args(
         aspect,
         cbar,
@@ -174,12 +178,6 @@ def cvt_archive_heatmap(
         [1, 2],
         "Heatmap can only be plotted for a 1D or 2D CVTArchive",
     )
-
-    if plot_samples and archive.samples is None:
-        raise ValueError(
-            "Samples are not available for this archive, but "
-            "`plot_samples` was passed in."
-        )
 
     if aspect is None:
         # Handles default aspects for different dims.
@@ -257,16 +255,8 @@ def cvt_archive_heatmap(
             pcm_kwargs=pcm_kwargs,
         )
 
-        # Samples and centroids are plotted at y=0.5 so that they appear along the
-        # center of the diagram.
-        if plot_samples:
-            ax.plot(
-                archive.samples[:, 0],
-                np.full(len(archive.samples), 0.5),
-                "o",
-                c="grey",
-                ms=ms,
-            )
+        # Centroids are plotted at y=0.5 so that they appear along the center of the
+        # diagram.
         if plot_centroids:
             ax.plot(
                 archive.centroids[:, 0],
@@ -291,11 +281,6 @@ def cvt_archive_heatmap(
             clip = shapely.box(
                 lower_bounds[0], lower_bounds[1], upper_bounds[0], upper_bounds[1]
             )
-
-        if plot_samples:
-            samples = archive.samples
-            if transpose_measures:
-                samples = np.flip(samples, axis=1)
 
         # Retrieve and initialize the axis.
         ax = plt.gca() if ax is None else ax
@@ -415,8 +400,6 @@ def cvt_archive_heatmap(
         mappable.set_clim(min_obj, max_obj)
 
         # Plot the sample points and centroids.
-        if plot_samples:
-            ax.plot(samples[:, 0], samples[:, 1], "o", c="grey", ms=ms)
         if plot_centroids:
             ax.plot(centroids[:, 0], centroids[:, 1], "o", c="black", ms=ms)
 

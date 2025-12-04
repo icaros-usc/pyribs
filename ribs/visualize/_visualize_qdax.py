@@ -28,9 +28,8 @@ def _as_cvt_archive(
     # not need to have the solutions available.
     cvt_archive = CVTArchive(
         solution_dim=0,
-        cells=repertoire.centroids.shape[0],
+        centroids=repertoire.centroids,
         ranges=ranges,
-        custom_centroids=repertoire.centroids,
     )
 
     # Fitness is originally (N, 1). Reshape it to (N,).

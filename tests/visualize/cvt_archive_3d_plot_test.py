@@ -29,7 +29,7 @@ def cvt_archive_3d():
     ranges = np.array([(-1, 1), (-1, 1), (-1, 1)])
     archive = CVTArchive(
         solution_dim=3,
-        cells=500,
+        centroids=500,
         ranges=ranges,
         samples=10_000,
         seed=42,
@@ -44,7 +44,7 @@ def cvt_archive_3d_empty():
     ranges = np.array([(-1, 1), (-1, 1), (-1, 1)])
     archive = CVTArchive(
         solution_dim=3,
-        cells=500,
+        centroids=500,
         ranges=ranges,
         samples=10_000,
         seed=42,
@@ -58,32 +58,13 @@ def cvt_archive_3d_rect():
     ranges = [(-1, 1), (-2, 0), (1, 3)]
     archive = CVTArchive(
         solution_dim=3,
-        cells=500,
+        centroids=500,
         ranges=ranges,
         samples=10_000,
         seed=42,
     )
     add_uniform_sphere_3d(archive, *ranges)
     return archive
-
-
-#
-# Argument validation tests
-#
-
-
-def test_no_samples_error():
-    # This archive has no samples since custom centroids were passed in.
-    archive = CVTArchive(
-        solution_dim=2,
-        cells=2,
-        ranges=[(-1, 1), (-1, 1)],
-        custom_centroids=[[0, 0], [1, 1]],
-    )
-
-    # Thus, plotting samples on this archive should fail.
-    with pytest.raises(ValueError):
-        cvt_archive_3d_plot(archive, plot_samples=True)
 
 
 #
@@ -201,17 +182,6 @@ def test_vmin_equals_vmax(cvt_archive_3d):
 def test_plot_centroids(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
     cvt_archive_3d_plot(cvt_archive_3d, plot_centroids=True, cell_alpha=0.1)
-
-
-@image_comparison(
-    baseline_images=["plot_samples"],
-    remove_text=False,
-    extensions=["png"],
-    tol=CVT_IMAGE_TOLERANCE,
-)
-def test_plot_samples(cvt_archive_3d):
-    plt.figure(figsize=(8, 6))
-    cvt_archive_3d_plot(cvt_archive_3d, plot_samples=True, cell_alpha=0.1)
 
 
 @image_comparison(
