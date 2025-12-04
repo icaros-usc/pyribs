@@ -463,7 +463,7 @@ class CVTArchive(ArchiveBase):
     @property
     def samples(self) -> None:
         """DEPRECATED."""
-        raise ValueError("samples is deprecated in pyribs 0.9.0")
+        raise ValueError("CVTArchive.samples is deprecated in pyribs 0.9.0")
 
     ## dunder methods ##
 
