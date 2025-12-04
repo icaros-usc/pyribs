@@ -46,8 +46,8 @@ def k_means_centroids(
     function approximately generates a Centroidal Voronoi Tessellation (CVT) with
     uniformly-sized cells. This is accomplished by sampling ``samples`` points uniformly
     across the measure space range determined by ``ranges``, and then clustering the
-    points into ``centroids`` clusters using k-means clustering. The final set of
-    centroids is used for the CVT.
+    points into ``centroids`` clusters using k-means clustering. The set of cluster
+    centroids output by k-means is used for the CVT.
 
     Args:
         centroids: Number of centroids to create during the clustering.
