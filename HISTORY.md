@@ -6,6 +6,7 @@
 
 #### API
 
+- Implement Dominated Novelty Search ({pr}`664`)
 - Separate centroid generation from init in CVTArchive ({pr}`663`)
   - **Backwards-incompatible:** Replace the `cells` and `custom_centroids`
     parameters with a new `centroids` parameter in CVTArchive
