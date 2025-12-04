@@ -25,6 +25,7 @@
 
 #### Improvements
 
+- Replace cKDTree usage with KDTree ({pr}`669`)
 - Support ProximityArchive in parallel_axes_plot ({pr}`647`)
 - Cast dtype when validating arguments ({pr}`646`)
 - Add type annotations and use ty for type checking ({issue}`624`)

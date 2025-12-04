@@ -9,7 +9,7 @@ from typing import Literal, overload
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
-from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
+from scipy.spatial import KDTree
 from sklearn.cluster import k_means
 
 from ribs._utils import (
@@ -375,7 +375,7 @@ class CVTArchive(ArchiveBase):
         self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
         self._chunk_size = chunk_size
         if self._use_kd_tree:
-            self._centroid_kd_tree = cKDTree(self._centroids, **self._ckdtree_kwargs)
+            self._centroid_kd_tree = KDTree(self._centroids, **self._ckdtree_kwargs)
 
     ## Properties inherited from ArchiveBase ##
 
