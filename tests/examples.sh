@@ -52,6 +52,7 @@ done
 # lunar_lander.py
 #
 
+sudo apt-get install which
 which swig
 install_deps examples/lunar_lander.py
 LUNAR_LANDER_OUTPUT="${TMPDIR}/lunar_lander_output"

@@ -114,8 +114,8 @@ jobs:
       # Previously, we removed SWIG because we wanted to check that the lunar
       # lander tutorial installed SWIG properly; see
       # https://github.com/icaros-usc/pyribs/pull/366
-      - name: Remove swig
-        run: sudo apt-get remove swig
+      # - name: Remove swig
+      #   run: sudo apt-get remove swig
       # - name: Install swig
       #   run: sudo apt-get install swig
       - uses: actions/checkout@v4
