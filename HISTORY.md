@@ -6,6 +6,7 @@
 
 #### API
 
+- Add `k_means_centroids` function ({pr}`665`)
 - **Backwards-incompatible:** Remove `centroid_method` from `CVTArchive`
   ({pr}`662`)
 - Support multi-dimensional solutions in GaussianEmitter and IsoLineEmitter
