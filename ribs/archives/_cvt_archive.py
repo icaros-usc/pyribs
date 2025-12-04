@@ -136,19 +136,31 @@ class CVTArchive(ArchiveBase):
     """An archive that tessellates the measure space with centroids.
 
     This archive originates in `Vassiliades 2018
-    <https://ieeexplore.ieee.org/document/8000667>`_.
+    <https://ieeexplore.ieee.org/document/8000667>`_. It uses a Centroidal Voronoi
+    Tessellation (CVT) to divide an n-dimensional measure space into k cells. Each cell
+    is represented by a centroid, and when items are inserted into the archive, we
+    identify their cell by finding the closest centroid in measure space.
 
-    It uses Centroidal Voronoi
-    Tessellation (CVT) to divide an n-dimensional measure space into k cells. The CVT is
-    created by sampling points uniformly from the n-dimensional measure space and using
-    k-means clustering to identify k centroids. When items are inserted into the
-    archive, we identify their cell by identifying the closest centroid in measure space
-    (using Euclidean distance). For k-means clustering, we use
-    :func:`sklearn.cluster.k_means`.
+    Several options are available for creating the centroids used in the CVT. The
+    default option in this archive is to sample points uniformly in the measure space
+    and then cluster them using k-means clustering; the centroids of the clusters are
+    then used as the centroids of the CVT in this archive. This procedure is implemented
+    in :func:`ribs.archives.k_means_centroids`, which internally calls
+    :func:`sklearn.cluster.k_means` to perform the clustering. For alternative methods
+    of centroid generation, refer to the tutorial :doc:`/tutorials/centroid_methods`.
 
-    By default, finding the closest centroid is done in roughly O(log(number of cells))
-    time using :class:`scipy.spatial.cKDTree`. To switch to brute force, which takes
-    O(number of cells) time, pass ``use_kd_tree=False``.
+    If running multiple experiments with this archive, it may be useful to maintain the
+    same centroids across experiments. To do this, we recommend generating the centroids
+    just once, such as by calling :func:`ribs.archives.k_means_centroids`. Then, save
+    the centroids to a file (e.g., with :func:`numpy.save`). When constructing the
+    archive for new experiments, the centroids can be loaded from the file and passed to
+    the archive via the ``centroids`` parameter. More information is available in the
+    aforementioned tutorial.
+
+    Several options are also available for finding the closest centroid in measure
+    space. By default, this procedure uses Euclidean distance and is done in roughly
+    O(log(number of cells)) time using :class:`scipy.spatial.cKDTree`. To switch to
+    brute force, which takes O(number of cells) time, pass ``use_kd_tree=False``.
 
     To compare the performance of using the k-D tree vs brute force, we ran benchmarks
     where we inserted 1k batches of 100 solutions into a 2D archive with varying numbers
@@ -163,15 +175,6 @@ class CVTArchive(ArchiveBase):
     force. Thus, **we recommend always using the k-D tree.** See `benchmarks/cvt_add.py
     <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_ in the
     project repo for more information about how this plot was generated.
-
-    Finally, if running multiple experiments, it may be beneficial to use the same
-    centroids across each experiment. Doing so can keep experiments consistent and
-    reduce execution time. To do this, either (1) construct custom centroids and pass
-    them in via the ``custom_centroids`` argument, or (2) access the centroids created
-    in the first archive with :attr:`centroids` and pass them into ``custom_centroids``
-    when constructing archives for subsequent experiments. For more information on
-    custom centroids, including different methods for generating centroids, see the
-    tutorial :doc:`/tutorials/centroid_methods`.
 
     .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
         <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds, including the
