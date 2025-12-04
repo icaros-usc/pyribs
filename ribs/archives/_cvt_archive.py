@@ -358,6 +358,7 @@ class CVTArchive(ArchiveBase):
                 ranges=ranges,
                 # Use default value for samples.
                 dtype=self.dtypes["measures"],
+                seed=seed,
             )
         else:
             # Validate custom centroids.

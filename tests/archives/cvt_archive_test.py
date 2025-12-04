@@ -54,6 +54,22 @@ def test_regular_centroids(dtype):
     assert np.all(archive.centroids <= [1, 1])
 
 
+def test_centroids_are_same_with_same_seed():
+    archive = CVTArchive(
+        solution_dim=3,
+        centroids=100,
+        ranges=[(-1, 1), (-1, 1)],
+        seed=42,
+    )
+    archive2 = CVTArchive(
+        solution_dim=3,
+        centroids=100,
+        ranges=[(-1, 1), (-1, 1)],
+        seed=42,
+    )
+    assert np.all(np.isclose(archive.centroids, archive2.centroids))
+
+
 def test_custom_centroids(use_kd_tree):
     centroids = np.asarray([[-0.25, -0.25], [0.25, 0.25]])
     archive = CVTArchive(
