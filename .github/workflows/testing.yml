@@ -111,11 +111,11 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      # Previously, we removed SWIG because we wanted to check that the lunar
-      # lander tutorial installed SWIG properly; see
-      # https://github.com/icaros-usc/pyribs/pull/366
-      # However, this has turned out to be quite troublesome because SWIG
-      # installation in CI is very fussy, so it is now commented out.
+      # We previously removed SWIG to check that the lunar lander example
+      # installed SWIG properly: https://github.com/icaros-usc/pyribs/pull/366
+      # However, SWIG installation in CI is troublesome, so this command is now
+      # commented out, and we use the SWIG that comes pre-installed in the
+      # GitHub Actions container.
       # - name: Remove swig
       #   run: sudo apt-get remove swig
       - uses: actions/checkout@v4
