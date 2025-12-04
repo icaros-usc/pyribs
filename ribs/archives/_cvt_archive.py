@@ -243,7 +243,7 @@ class CVTArchive(ArchiveBase):
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
-        ValueError: `centroids` has the wrong shape.
+        ValueError: ``centroids`` has the wrong shape.
     """
 
     def __init__(
