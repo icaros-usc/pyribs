@@ -52,8 +52,8 @@ done
 # lunar_lander.py
 #
 
-install_deps examples/lunar_lander.py
 which swig
+install_deps examples/lunar_lander.py
 LUNAR_LANDER_OUTPUT="${TMPDIR}/lunar_lander_output"
 python examples/lunar_lander.py --iterations 5 --outdir "${LUNAR_LANDER_OUTPUT}"
 
