@@ -50,7 +50,7 @@ def k_means_centroids(
     centroids output by k-means is used for the CVT.
 
     Args:
-        centroids: Number of centroids to create during the clustering.
+        centroids: Number of centroids to create during clustering.
         ranges: Upper and lower bound of each dimension of the measure space, e.g.,
             ``[(-1, 1), (-2, 2)]`` indicates the first dimension should have bounds
             :math:`[-1,1]` (inclusive), and the second dimension should have bounds
@@ -70,7 +70,7 @@ def k_means_centroids(
             `random_state=seed`. Note that these settings are geared towards quickly
             generating centroids that are "good enough." To create centroids that are
             more uniformly distributed, it may be better to use settings like
-            `init="k-means++"`.
+            `init="k-means++"`, though such settings will require more time to run.
 
     Returns:
         Two arrays. The first is a ``(centroids, measure_dim)`` array of centroids. The
