@@ -39,6 +39,17 @@ def test_properties_are_correct(data):
     unittest.TestCase().assertCountEqual(data.archive.centroids.tolist(), points)  # noqa: PT009
 
 
+@pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
+def test_centroid_dtype(dtype):
+    archive = CVTArchive(
+        solution_dim=3,
+        centroids=100,
+        ranges=[(-1, 1), (-1, 1)],
+        dtype=dtype,
+    )
+    assert archive.centroids.dtype == dtype
+
+
 def test_custom_centroids(use_kd_tree):
     centroids = np.asarray([[-0.25, -0.25], [0.25, 0.25]])
     archive = CVTArchive(
