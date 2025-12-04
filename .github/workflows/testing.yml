@@ -111,10 +111,13 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      # SWIG should not be installed so that we can test that lunar lander is
-      # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
-      - name: Remove swig
-        run: sudo apt-get remove swig
+      # Previously, we removed SWIG because we wanted to check that the lunar
+      # lander tutorial installed SWIG properly; see
+      # https://github.com/icaros-usc/pyribs/pull/366
+      # However, this has turned out to be quite troublesome because SWIG
+      # installation in CI is very fussy, so it is not commented out.
+      # - name: Remove swig
+      #   run: sudo apt-get remove swig
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
@@ -138,10 +141,13 @@ jobs:
     strategy:
       matrix: ${{ fromJSON(needs.tutorials_list.outputs.matrix) }}
     steps:
-      # SWIG should not be installed so that we can test that lunar lander is
-      # installing SWIG properly. See https://github.com/icaros-usc/pyribs/pull/366
-      - name: Remove swig
-        run: sudo apt-get remove swig
+      # Previously, we removed SWIG because we wanted to check that the lunar
+      # lander tutorial installed SWIG properly; see
+      # https://github.com/icaros-usc/pyribs/pull/366
+      # However, this has turned out to be quite troublesome because SWIG
+      # installation in CI is very fussy, so it is not commented out.
+      # - name: Remove swig
+      #   run: sudo apt-get remove swig
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
