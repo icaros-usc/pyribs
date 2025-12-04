@@ -8,7 +8,7 @@ from typing import Literal, overload
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
-from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
+from scipy.spatial import KDTree
 
 from ribs._utils import (
     check_batch_shape,
@@ -193,9 +193,7 @@ class ProximityArchive(ArchiveBase):
         )
 
         # Set up k-D tree with current measures in the archive. Updated on add().
-        self._cur_kd_tree = cKDTree(
-            self._store.data("measures"), **self._ckdtree_kwargs
-        )
+        self._cur_kd_tree = KDTree(self._store.data("measures"), **self._ckdtree_kwargs)
 
         # Set up statistics -- objective_sum is the sum of all objective values in the
         # archive; it is useful for computing qd_score and obj_mean.
@@ -615,7 +613,7 @@ class ProximityArchive(ArchiveBase):
                 self._stats_update(objective_sum, best_index)
 
                 # Make a new tree with the updated solutions.
-                self._cur_kd_tree = cKDTree(
+                self._cur_kd_tree = KDTree(
                     self._store.data("measures"), **self._ckdtree_kwargs
                 )
 
@@ -726,7 +724,7 @@ class ProximityArchive(ArchiveBase):
                 self._stats_update(objective_sum, best_index)
 
                 # Make a new tree with the updated solutions.
-                self._cur_kd_tree = cKDTree(
+                self._cur_kd_tree = KDTree(
                     self._store.data("measures"), **self._ckdtree_kwargs
                 )
 

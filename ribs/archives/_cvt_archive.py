@@ -9,7 +9,7 @@ from typing import Literal, overload
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
-from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
+from scipy.spatial import KDTree
 from sklearn.cluster import k_means
 
 from ribs._utils import (
@@ -29,6 +29,107 @@ from ribs.archives._utils import (
     validate_cma_mae_settings,
 )
 from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
+
+
+def k_means_centroids(
+    *,
+    centroids: Int,
+    ranges: Collection[tuple[Float, Float]],
+    samples: Int | ArrayLike = 100_000,
+    dtype: DTypeLike = np.float64,
+    seed: Int | None = None,
+    k_means_kwargs: dict | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Generates archive centroids with k-means clustering.
+
+    Based on `Vassiliades 2018 <https://ieeexplore.ieee.org/document/8000667>`_, this
+    function approximately generates a Centroidal Voronoi Tessellation (CVT) with
+    uniformly-sized cells. This is accomplished by sampling ``samples`` points uniformly
+    across the measure space range determined by ``ranges``, and then clustering the
+    points into ``centroids`` clusters using k-means clustering. The set of cluster
+    centroids output by k-means is used for the CVT.
+
+    Args:
+        centroids: Number of centroids to create during clustering.
+        ranges: Upper and lower bound of each dimension of the measure space, e.g.,
+            ``[(-1, 1), (-2, 2)]`` indicates the first dimension should have bounds
+            :math:`[-1,1]` (inclusive), and the second dimension should have bounds
+            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
+            ``dims``.
+        samples: If it is an int, this specifies the number of samples to generate
+            before clustering them to create the CVT. These points will be sampled
+            uniformly within the ``ranges`` specified above. Alternatively, this
+            argument can be a (num_samples, measure_dim) array of measure space points
+            to cluster. It can be useful to pass in custom samples when there are
+            restrictions on what samples in the measure space are (physically) possible.
+        dtype: Data type of the centroids and samples.
+        seed: Value to seed the random number generator and
+            :func:`sklearn.cluster.k_means`. Pass None to avoid a fixed seed.
+        k_means_kwargs: Keyword arguments for :func:`sklearn.cluster.k_means`. By
+            default, we pass `n_init=1`, `init="random"`, `algorithm="lloyd"`, and
+            `random_state=seed`. Note that these settings are geared towards quickly
+            generating centroids that are "good enough." To create centroids that are
+            more uniformly distributed, it may be better to use settings like
+            `init="k-means++"`, though such settings will require more time to run.
+
+    Returns:
+        Two arrays. The first is a ``(centroids, measure_dim)`` array of centroids. The
+        second is a ``(samples, measure_dim)`` array of samples that were clustered to
+        create the centroids.
+
+    Raises:
+        ValueError: ``samples`` was passed in as an array, and the array has the wrong
+            shape.
+        RuntimeError: The number of centroids found during k-means clustering is not
+            equal to the number of centroids passed in.
+    """
+    measure_dim = len(ranges)
+    ranges = list(zip(*ranges))
+    lower_bounds = np.array(ranges[0], dtype=dtype)
+    upper_bounds = np.array(ranges[1], dtype=dtype)
+
+    # Apply default args for k-means. Users can override these,
+    # particularly if they want higher quality clusters.
+    k_means_kwargs = {} if k_means_kwargs is None else k_means_kwargs.copy()
+    # By default, the `k_means` function may run the clustering multiple times and
+    # choose the best output. For performance, we just run once.
+    k_means_kwargs.setdefault("n_init", 1)
+    # The default "k-means++" takes very long to init.
+    k_means_kwargs.setdefault("init", "random")
+    k_means_kwargs.setdefault("algorithm", "lloyd")
+    k_means_kwargs.setdefault("random_state", seed)
+
+    if isinstance(samples, numbers.Integral):
+        # Generate random samples in the measure space when `samples` is an integer.
+        rng = np.random.default_rng(seed)
+        samples = rng.uniform(
+            lower_bounds,
+            upper_bounds,
+            size=(samples, measure_dim),
+        ).astype(dtype)
+    else:
+        # Use custom `samples` when `samples` is an array, but check the shape first.
+        samples = np.asarray(samples, dtype=dtype)
+        check_batch_shape(
+            array=samples,
+            array_name="samples",
+            dim=measure_dim,
+            dim_name="measure_dim",
+            batch_name="num_samples",
+        )
+
+    centroid_points = k_means(samples, centroids, **k_means_kwargs)[0]
+
+    if centroid_points.shape[0] < centroids:
+        raise RuntimeError(
+            "While generating the CVT, k-means clustering found "
+            f"{centroid_points.shape[0]} centroids, but this "
+            f"archive needs {centroids} cells. This most "
+            "likely happened because there are too few samples "
+            "and/or too many cells."
+        )
+
+    return centroid_points, samples
 
 
 class CVTArchive(ArchiveBase):
@@ -286,7 +387,7 @@ class CVTArchive(ArchiveBase):
         self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
         self._chunk_size = chunk_size
         if self._use_kd_tree:
-            self._centroid_kd_tree = cKDTree(self._centroids, **self._ckdtree_kwargs)
+            self._centroid_kd_tree = KDTree(self._centroids, **self._ckdtree_kwargs)
 
     ## Properties inherited from ArchiveBase ##
 
