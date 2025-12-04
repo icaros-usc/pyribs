@@ -127,7 +127,8 @@ def test_simultaneous_dtypes():
 
 def test_dtype_dict_deprecated():
     with pytest.raises(
-        ValueError, match=r"Passing a dict as `dtype` is now deprecated\..*"
+        ValueError,
+        match=r"Passing a dict as `dtype` is deprecated in pyribs 0\.9\.0\..*",
     ):
         GridArchive(
             solution_dim=3,
