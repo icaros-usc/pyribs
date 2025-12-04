@@ -241,7 +241,6 @@ class CVTArchive(ArchiveBase):
         cells: DEPRECATED.
         custom_centroids: DEPRECATED.
         centroid_method: DEPRECATED.
-        k_means_kwargs: DEPRECATED.
 
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
