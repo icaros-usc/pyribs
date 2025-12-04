@@ -7,7 +7,7 @@ from typing import Literal, cast, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
-from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
+from scipy.spatial import KDTree
 from scipy.spatial.distance import cdist
 
 from ribs._utils import (
@@ -127,9 +127,7 @@ class DNSArchive(ArchiveBase):
         )
 
         # Set up k-D tree with current measures in the archive. Updated on add().
-        self._cur_kd_tree = cKDTree(
-            self._store.data("measures"), **self._ckdtree_kwargs
-        )
+        self._cur_kd_tree = KDTree(self._store.data("measures"), **self._ckdtree_kwargs)
 
         # Set up statistics -- objective_sum is the sum of all objective values in the
         # archive; it is useful for computing qd_score and obj_mean.
@@ -462,7 +460,7 @@ class DNSArchive(ArchiveBase):
                 np.asarray(objective_sum, dtype=self.dtypes["objective"]), best_index
             )
             # Refresh KD-tree over measures.
-            self._cur_kd_tree = cKDTree(
+            self._cur_kd_tree = KDTree(
                 self._store.data("measures"), **self._ckdtree_kwargs
             )
 
