@@ -8,7 +8,7 @@ the archive and see when the k-D tree becomes faster than brute force.
 
 In this experiment, we construct archives with 10, 50, 100, 500, 1k cells in the measure
 space of [(-1, 1), (-1, 1)] and 100k samples. In each archive, we then time how long it
-takes to add 1k batches of 100 random solutions sampled uniformly at random. from the
+takes to add 1k batches of 100 random solutions sampled uniformly at random from the
 measure space. We run each experiment with brute force and with the k-D tree, 5 times
 each, and take the minimum runtime (see
 https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat).
@@ -90,7 +90,7 @@ def main():
     ref_archives = {
         cells: CVTArchive(
             solution_dim=all_solution_batch.shape[2],
-            cells=cells,
+            centroids=cells,
             ranges=[(-1, 1), (-1, 1)],
             # Use 200k cells to avoid dropping clusters. However, note that we no longer
             # test with 10k cells.
@@ -104,9 +104,8 @@ def main():
         nonlocal archive
         archive = CVTArchive(
             solution_dim=all_solution_batch.shape[2],
-            cells=cells,
+            centroids=ref_archives[cells].centroids,
             ranges=[(-1, 1), (-1, 1)],
-            custom_centroids=ref_archives[cells].centroids,
             use_kd_tree=use_kd_tree,
         )
 

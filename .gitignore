@@ -94,6 +94,9 @@ results/
 # Downloaded by DQD tutorial.
 tutorials/stylegan2-ada-pytorch/
 
+# Created by centroid methods tutorial.
+tutorials/centroids.npy
+
 # Allow matplotlib baseline images.
 !tests/**/*.png
 !tests/**/*.pdf

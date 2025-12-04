@@ -7,6 +7,12 @@
 #### API
 
 - Implement Dominated Novelty Search ({pr}`664`)
+- Separate centroid generation from init in CVTArchive ({pr}`663`)
+  - **Backwards-incompatible:** Replace the `cells` and `custom_centroids`
+    parameters with a new `centroids` parameter in CVTArchive
+  - **Backwards-incompatible:** Remove the `samples` property from CVTArchive
+  - **Backwards-incompatible:** Remove `plot_samples` from `cvt_archive_heatmap`
+    and `cvt_archive_3d_plot`
 - Add `k_means_centroids` function ({pr}`665`)
 - **Backwards-incompatible:** Remove `centroid_method` from `CVTArchive`
   ({pr}`662`)

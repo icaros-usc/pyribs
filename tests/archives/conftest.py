@@ -107,14 +107,13 @@ def get_archive_data(name, *, dtype=np.float64):
         # archive_with_elite should match with centroid (0.5, 0.5).
         cells = 4
         kd_tree = name == "CVTArchive-kd_tree"
-        samples = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
+        centroids = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
         centroid = [0.5, 0.5]
 
         archive = CVTArchive(
             solution_dim=len(solution),
-            cells=4,
+            centroids=centroids,
             ranges=[(-1, 1), (-1, 1)],
-            samples=samples,
             use_kd_tree=kd_tree,
             solution_dtype=dtype,
             objective_dtype=dtype,
@@ -123,9 +122,8 @@ def get_archive_data(name, *, dtype=np.float64):
 
         archive_with_elite = CVTArchive(
             solution_dim=len(solution),
-            cells=4,
+            centroids=centroids,
             ranges=[(-1, 1), (-1, 1)],
-            samples=samples,
             use_kd_tree=kd_tree,
             solution_dtype=dtype,
             objective_dtype=dtype,

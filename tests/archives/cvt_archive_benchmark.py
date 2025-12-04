@@ -9,7 +9,7 @@ def benchmark_init(use_kd_tree, benchmark):
     def init():
         CVTArchive(
             solution_dim=2,
-            cells=1000,
+            centroids=1000,
             ranges=[(-1, 1), (-1, 1)],
             samples=20_000,
             use_kd_tree=use_kd_tree,
@@ -24,7 +24,7 @@ def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
     def setup():
         archive = CVTArchive(
             solution_dim=solution_batch.shape[1],
-            cells=1000,
+            centroids=1000,
             ranges=[(-1, 1), (-1, 1)],
             samples=20_000,
             use_kd_tree=use_kd_tree,

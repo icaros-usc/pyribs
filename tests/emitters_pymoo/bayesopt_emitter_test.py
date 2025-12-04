@@ -68,7 +68,7 @@ def test_wrong_archive_type():
     """BayesianOptimizationEmitter is currently only compatible with
     GridArchive. If it is initialized with a different archive type, it should
     raise NotImplementedError."""
-    archive = CVTArchive(solution_dim=1, cells=100, ranges=[(-1, 1)])
+    archive = CVTArchive(solution_dim=1, centroids=100, ranges=[(-1, 1)], samples=1000)
     with pytest.raises(
         NotImplementedError,
         match=r"archive type CVTArchive not implemented for"

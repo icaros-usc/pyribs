@@ -43,8 +43,8 @@ def cvt_archive_3d_plot(
     elite_ms: float = 100,
     elite_alpha: float = 0.5,
     plot_centroids: bool = False,
-    plot_samples: bool = False,
     ms: float = 1,
+    plot_samples: None = None,
 ) -> None:
     r"""Plots a :class:`~ribs.archives.CVTArchive` with 3D measure space.
 
@@ -203,15 +203,19 @@ def cvt_archive_3d_plot(
         elite_ms: Marker size for plotting elites.
         elite_alpha: Alpha value for plotting elites.
         plot_centroids: Whether to plot the cluster centroids.
-        plot_samples: Whether to plot the samples used when generating the clusters.
-        ms: Marker size for both centroids and samples.
+        ms: Marker size for centroids.
+        plot_samples: DEPRECATED.
 
     Raises:
         ValueError: The archive's measure dimension must be 1D or 2D.
         ValueError: ``measure_order`` is not a permutation of ``[0, 1, 2]``.
-        ValueError: ``plot_samples`` is passed in but the archive does not have samples
-            (e.g., due to using custom centroids during construction).
     """
+    if plot_samples is not None:
+        raise ValueError(
+            "`plot_samples` is deprecated in pyribs 0.9.0, "
+            "as CVTArchive no longer stores samples."
+        )
+
     # We don't have an aspect arg here so we just pass None.
     validate_heatmap_visual_args(
         None,
@@ -220,12 +224,6 @@ def cvt_archive_3d_plot(
         [3],
         "This plot can only be made for a 3D CVTArchive",
     )
-
-    if plot_samples and archive.samples is None:
-        raise ValueError(
-            "Samples are not available for this archive, but "
-            "`plot_samples` was passed in."
-        )
 
     # Try getting the colormap early in case it fails.
     cmap = retrieve_cmap(cmap)
@@ -243,7 +241,6 @@ def cvt_archive_3d_plot(
     lower_bounds = archive.lower_bounds
     upper_bounds = archive.upper_bounds
     centroids = archive.centroids
-    samples = archive.samples
 
     if measure_order is not None:
         if sorted(measure_order) != [0, 1, 2]:
@@ -255,7 +252,6 @@ def cvt_archive_3d_plot(
         lower_bounds = lower_bounds[measure_order]
         upper_bounds = upper_bounds[measure_order]
         centroids = centroids[:, measure_order]
-        samples = samples[:, measure_order]
 
     # Compute objective value range.
     if vmin is None:
@@ -397,8 +393,6 @@ def cvt_archive_3d_plot(
             lw=0.0,
             alpha=elite_alpha,
         )
-    if plot_samples:
-        ax.plot(samples[:, 0], samples[:, 1], samples[:, 2], "o", c="grey", ms=ms)
     if plot_centroids:
         ax.plot(
             centroids[:, 0], centroids[:, 1], centroids[:, 2], "o", c="black", ms=ms

@@ -36,10 +36,9 @@ def cvt_archive_1d():
 
     archive = CVTArchive(
         solution_dim=1,
-        cells=10,
+        centroids=centroids[:, None],
         ranges=[(-1, 1)],
         seed=42,
-        custom_centroids=centroids[:, None],
     )
 
     # Add with gaps -- this way, some cells are left unoccupied so that we can
@@ -58,7 +57,7 @@ def cvt_archive_2d():
     """Deterministically-created CVTArchive."""
     archive = CVTArchive(
         solution_dim=2,
-        cells=100,
+        centroids=100,
         ranges=[(-1, 1), (-1, 1)],
         samples=1000,
         use_kd_tree=True,
@@ -73,7 +72,7 @@ def cvt_archive_2d_empty():
     """Same as above but without solutions."""
     archive = CVTArchive(
         solution_dim=2,
-        cells=100,
+        centroids=100,
         ranges=[(-1, 1), (-1, 1)],
         samples=1000,
         use_kd_tree=True,
@@ -87,7 +86,7 @@ def cvt_archive_2d_long():
     """Same as above, but the measure space is longer in one direction."""
     archive = CVTArchive(
         solution_dim=2,
-        cells=100,
+        centroids=100,
         ranges=[(-2, 2), (-1, 1)],
         samples=1000,
         use_kd_tree=True,
@@ -95,25 +94,6 @@ def cvt_archive_2d_long():
     )
     add_uniform_sphere_2d(archive, (-2, 2), (-1, 1))
     return archive
-
-
-#
-# Argument validation tests
-#
-
-
-def test_no_samples_error():
-    # This archive has no samples since custom centroids were passed in.
-    archive = CVTArchive(
-        solution_dim=2,
-        cells=2,
-        ranges=[(-1, 1), (-1, 1)],
-        custom_centroids=[[0, 0], [1, 1]],
-    )
-
-    # Thus, plotting samples on this archive should fail.
-    with pytest.raises(ValueError):
-        cvt_archive_heatmap(archive, plot_samples=True)
 
 
 #
@@ -242,17 +222,6 @@ def test_vmin_equals_vmax(cvt_archive_2d):
 def test_plot_centroids(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive_2d, plot_centroids=True)
-
-
-@image_comparison(
-    baseline_images=["plot_samples"],
-    remove_text=False,
-    extensions=["png"],
-    tol=CVT_IMAGE_TOLERANCE,
-)
-def test_plot_samples(cvt_archive_2d):
-    plt.figure(figsize=(8, 6))
-    cvt_archive_heatmap(cvt_archive_2d, plot_samples=True)
 
 
 @image_comparison(
@@ -413,13 +382,13 @@ def test_1d_style(cvt_archive_1d):
 
 
 @image_comparison(
-    baseline_images=["1d_with_points"], remove_text=False, extensions=["png"]
+    baseline_images=["1d_with_centroids"], remove_text=False, extensions=["png"]
 )
-def test_1d_with_points():
-    """Adds in centroids and samples to the plot."""
+def test_1d_with_centroids():
+    """Adds in centroids to the plot."""
     archive = CVTArchive(
         solution_dim=1,
-        cells=10,
+        centroids=10,
         ranges=[(-1, 1)],
         seed=42,
         samples=100,
@@ -427,7 +396,7 @@ def test_1d_with_points():
     add_uniform_sphere_1d(archive, (-1, 1))
 
     plt.figure(figsize=(8, 6))
-    cvt_archive_heatmap(archive, plot_centroids=True, plot_samples=True, ms=10.0)
+    cvt_archive_heatmap(archive, plot_centroids=True, ms=10.0)
 
 
 @image_comparison(
@@ -451,7 +420,7 @@ def test_1d_sphere():
     """More complex setting."""
     archive = CVTArchive(
         solution_dim=1,
-        cells=20,
+        centroids=20,
         ranges=[(-1, 1)],
         seed=42,
         samples=100,
