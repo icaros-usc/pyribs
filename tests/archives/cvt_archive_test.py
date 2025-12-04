@@ -40,14 +40,18 @@ def test_properties_are_correct(data):
 
 
 @pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
-def test_centroid_dtype(dtype):
+def test_regular_centroids(dtype):
+    """Check that generating centroids the regular way is alright."""
     archive = CVTArchive(
         solution_dim=3,
         centroids=100,
         ranges=[(-1, 1), (-1, 1)],
         dtype=dtype,
     )
+    assert archive.centroids.shape == (100, 2)
     assert archive.centroids.dtype == dtype
+    assert np.all(archive.centroids >= [-1, -1])
+    assert np.all(archive.centroids <= [1, 1])
 
 
 def test_custom_centroids(use_kd_tree):

@@ -333,9 +333,9 @@ class CVTArchive(ArchiveBase):
         )
 
         # Set up constant properties.
-        ranges = list(zip(*ranges))
-        self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
-        self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
+        new_ranges = list(zip(*ranges))
+        self._lower_bounds = np.array(new_ranges[0], dtype=self.dtypes["measures"])
+        self._upper_bounds = np.array(new_ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(
             learning_rate, threshold_min, self.dtypes["threshold"]
@@ -352,8 +352,8 @@ class CVTArchive(ArchiveBase):
         self._stats_reset()
 
         if isinstance(centroids, numbers.Integral):
-            # Generate centroids with k-means.
-            self._centroids = k_means_centroids(
+            # Generate centroids with k-means. Ignore the samples returned.
+            self._centroids, _ = k_means_centroids(
                 centroids=centroids,
                 ranges=ranges,
                 # Use default value for samples.
