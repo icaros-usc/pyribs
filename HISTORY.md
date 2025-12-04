@@ -6,6 +6,7 @@
 
 #### API
 
+- Add `k_means_centroids` function ({pr}`665`)
 - **Backwards-incompatible:** Remove `centroid_method` from `CVTArchive`
   ({pr}`662`)
 - Support multi-dimensional solutions in GaussianEmitter and IsoLineEmitter
@@ -28,7 +29,7 @@
 - Cast dtype when validating arguments ({pr}`646`)
 - Add type annotations and use ty for type checking ({issue}`624`)
 - Migrate from pylint to ruff for linting ({pr}`605`, {pr}`607`, {pr}`612`,
-  {pr}`619`)
+  {pr}`619`, {pr}`666`)
 - Replace isort with ruff import check ({pr}`603`)
 
 #### Documentation

@@ -32,6 +32,7 @@ from ribs.typing import BatchData, FieldDesc, Float, Int, SingleData
 
 
 def k_means_centroids(
+    *,
     centroids: Int,
     ranges: Collection[tuple[Float, Float]],
     samples: Int | ArrayLike = 100_000,
@@ -42,14 +43,14 @@ def k_means_centroids(
     """Generates archive centroids with k-means clustering.
 
     Based on `Vassiliades 2018 <https://ieeexplore.ieee.org/document/8000667>`_, this
-    archive approximately generates a Centroidal Voronoi Tessellation (CVT) with
+    function approximately generates a Centroidal Voronoi Tessellation (CVT) with
     uniformly-sized cells. This is accomplished by sampling ``samples`` points uniformly
     across the measure space range determined by ``ranges``, and then clustering the
-    points into ``centroids`` clusters using k-means clustering. The final set of
-    centroids is used for the CVT.
+    points into ``centroids`` clusters using k-means clustering. The set of cluster
+    centroids output by k-means is used for the CVT.
 
     Args:
-        centroids: Number of centroids to create during the clustering.
+        centroids: Number of centroids to create during clustering.
         ranges: Upper and lower bound of each dimension of the measure space, e.g.,
             ``[(-1, 1), (-2, 2)]`` indicates the first dimension should have bounds
             :math:`[-1,1]` (inclusive), and the second dimension should have bounds
@@ -69,7 +70,7 @@ def k_means_centroids(
             `random_state=seed`. Note that these settings are geared towards quickly
             generating centroids that are "good enough." To create centroids that are
             more uniformly distributed, it may be better to use settings like
-            `init="k-means++"`.
+            `init="k-means++"`, though such settings will require more time to run.
 
     Returns:
         Two arrays. The first is a ``(centroids, measure_dim)`` array of centroids. The

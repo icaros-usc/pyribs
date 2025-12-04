@@ -50,6 +50,7 @@ from ribs.archives._proximity_archive import ProximityArchive
 from ribs.archives._sliding_boundaries_archive import SlidingBoundariesArchive
 
 __all__ = [
+    # Archives.
     "CategoricalArchive",
     "CVTArchive",
     "DensityArchive",
@@ -57,11 +58,12 @@ __all__ = [
     "ProximityArchive",
     "SlidingBoundariesArchive",
     "ArchiveBase",
+    # Utilities.
     "ArrayStore",
     "AddStatus",
     "ArchiveDataFrame",
     "ArchiveStats",
-    "CQDScoreResult",
     "cqd_score",
+    "CQDScoreResult",
     "k_means_centroids",
 ]
