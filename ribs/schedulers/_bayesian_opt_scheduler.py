@@ -148,7 +148,9 @@ class BayesianOptimizationScheduler(Scheduler):
 
         pos = 0
         this_upscale_res = None
-        for i, (emitter, n) in enumerate(zip(self._emitters, self._num_emitted)):
+        for i, (emitter, n) in enumerate(
+            zip(self._emitters, self._num_emitted, strict=True)
+        ):
             end = pos + n
             upscale_res = emitter.tell(
                 **{

@@ -149,7 +149,7 @@ class CategoricalArchive(ArchiveBase):
         # Set up constant properties.
         self._category_to_idx = [
             # Map from the category names in each dimension to integer indices.
-            dict(zip(measure_dim, range(len(measure_dim))))
+            dict(zip(measure_dim, range(len(measure_dim)), strict=True))
             for measure_dim in categories
         ]
         self._learning_rate, self._threshold_min = validate_cma_mae_settings(

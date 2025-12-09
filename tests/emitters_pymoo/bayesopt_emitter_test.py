@@ -48,6 +48,7 @@ def full_archive_emitter_fixture(archive_fixture, request):
         rng.uniform(-1, 1, (archive_fixture.cells, 4)),
         np.full((100,), archive_fixture.cells),
         all_measures,
+        strict=True,
     ):
         emitter.ask()
         add_info = archive_fixture.add(
@@ -141,6 +142,7 @@ def test_upscale(full_archive_emitter_fixture):
         rng.uniform(-1, 1, (no_improve_tolerance, 4)),
         np.full((no_improve_tolerance,), 100),
         np.zeros((no_improve_tolerance, 2)),
+        strict=True,
     ):
         full_archive_emitter_fixture.ask()
         add_info = full_archive_emitter_fixture.archive.add(

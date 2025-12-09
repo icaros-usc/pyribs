@@ -346,7 +346,7 @@ class Scheduler:
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
-        for emitter, n in zip(self._emitters, self._num_emitted):
+        for emitter, n in zip(self._emitters, self._num_emitted, strict=True):
             end = pos + n
             emitter.tell_dqd(
                 **{
@@ -400,7 +400,7 @@ class Scheduler:
 
         # Keep track of pos because emitters may have different batch sizes.
         pos = 0
-        for emitter, n in zip(self._emitters, self._num_emitted):
+        for emitter, n in zip(self._emitters, self._num_emitted, strict=True):
             end = pos + n
             emitter.tell(
                 **{
