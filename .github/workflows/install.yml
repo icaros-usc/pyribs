@@ -9,6 +9,9 @@ on:
     # Push to the schedule-install branch to test this cron job.
     branches:
       - schedule-install
+  pull_request:
+    branches:
+      - master
 
 defaults:
   run:
