@@ -457,7 +457,9 @@ class BayesianOptimizationEmitter(EmitterBase):
         num_solutions = meas_mus.shape[0]
 
         cell_probs = np.ones((num_solutions, *self.archive.dims))
-        for measure_idx, (mus, stds) in enumerate(zip(meas_mus.T, meas_stds.T)):
+        for measure_idx, (mus, stds) in enumerate(
+            zip(meas_mus.T, meas_stds.T, strict=True)
+        ):
             distribution = norm(loc=mus, scale=stds)
 
             # computes the cdf values at each cell boundary, this has shape
@@ -675,7 +677,7 @@ class BayesianOptimizationEmitter(EmitterBase):
         # probability. This corresponds to the (undesirable) scenario in which
         # a cell that is likely unreachable dominates EJIE.
         for best_prob, attr_val in zip(
-            best_cell_probs[sorted_idx], ejie_attributions[sorted_idx]
+            best_cell_probs[sorted_idx], ejie_attributions[sorted_idx], strict=True
         ):
             if best_prob < 0.5 < attr_val:
                 self._misspec += 1

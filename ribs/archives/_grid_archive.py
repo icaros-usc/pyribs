@@ -159,7 +159,9 @@ class GridArchive(ArchiveBase):
                 f"dims (length {len(self._dims)}) and ranges "
                 f"(length {len(ranges)}) must be the same length"
             )
-        ranges = list(zip(*ranges))  # Rearrange into lower and upper bounds.
+        ranges = list(
+            zip(*ranges, strict=True)
+        )  # Rearrange into lower and upper bounds.
         self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
         self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
@@ -187,7 +189,9 @@ class GridArchive(ArchiveBase):
     ) -> list[np.ndarray]:
         """Computes grid cell boundaries of the archive."""
         boundaries = []
-        for dim, lower_bound, upper_bound in zip(dims, lower_bounds, upper_bounds):
+        for dim, lower_bound, upper_bound in zip(
+            dims, lower_bounds, upper_bounds, strict=True
+        ):
             boundaries.append(np.linspace(lower_bound, upper_bound, dim + 1))
         return boundaries
 

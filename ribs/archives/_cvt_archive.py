@@ -84,7 +84,7 @@ def k_means_centroids(
             equal to the number of centroids passed in.
     """
     measure_dim = len(ranges)
-    ranges = list(zip(*ranges))
+    ranges = list(zip(*ranges, strict=True))
     lower_bounds = np.array(ranges[0], dtype=dtype)
     upper_bounds = np.array(ranges[1], dtype=dtype)
 
@@ -325,7 +325,7 @@ class CVTArchive(ArchiveBase):
         )
 
         # Set up constant properties.
-        new_ranges = list(zip(*ranges))
+        new_ranges = list(zip(*ranges, strict=True))
         self._lower_bounds = np.array(new_ranges[0], dtype=self.dtypes["measures"])
         self._upper_bounds = np.array(new_ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds

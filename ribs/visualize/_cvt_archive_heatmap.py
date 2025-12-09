@@ -305,7 +305,7 @@ def cvt_archive_heatmap(
         # region index of each point.
         region_obj = [None] * len(vor.regions)
         min_obj, max_obj = np.inf, -np.inf
-        pt_to_obj = dict(zip(index_batch, objective_batch))
+        pt_to_obj = dict(zip(index_batch, objective_batch, strict=True))
         for pt_idx, region_idx in enumerate(
             vor.point_region[:-4]
         ):  # Exclude faraway_pts.
@@ -336,7 +336,7 @@ def cvt_archive_heatmap(
         facecolor_objs = []
 
         # Cycle through the regions to set up polygon vertices and facecolors.
-        for region, objective in zip(vor.regions, region_obj):
+        for region, objective in zip(vor.regions, region_obj, strict=True):
             # Checking for -1 is O(n), but n is typically small.
             #
             # We check length since the first region is an empty list by default:

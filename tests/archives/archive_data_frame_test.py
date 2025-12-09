@@ -43,7 +43,7 @@ def df(data):
 
 def test_iterelites(data, df):
     for elite, (solution, objective, measures, index, metadata) in zip(
-        df.iterelites(), zip(*data)
+        df.iterelites(), zip(*data, strict=True), strict=True
     ):
         assert np.isclose(elite["solution"], solution).all()
         assert np.isclose(elite["objective"], objective)

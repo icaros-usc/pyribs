@@ -23,7 +23,7 @@ jobs:
       max-parallel: 12 # All in parallel.
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11"]
+        python-version: ["3.12"]
         command:
           ["pip install ribs[all]", "conda install -c conda-forge pyribs-all"]
     runs-on: ${{ matrix.os }}
@@ -31,6 +31,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
+          channels: conda-forge,defaults
       - name: Install pyribs
         run: ${{ matrix.command }}
       - name: Try importing ribs

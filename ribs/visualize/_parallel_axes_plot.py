@@ -157,7 +157,7 @@ def parallel_axes_plot(
             and isinstance(measure[1], str)  # ty: ignore[non-subscriptable]
             for measure in measure_order
         ):
-            cols, axis_labels = zip(*measure_order)
+            cols, axis_labels = zip(*measure_order, strict=True)
             cols = np.array(cols)
         else:
             raise TypeError(
@@ -232,7 +232,7 @@ def parallel_axes_plot(
     host_ax.spines["right"].set_visible(False)
     host_ax.xaxis.tick_top()
 
-    for elite_ys, objective in zip(normalized_ys, objectives):
+    for elite_ys, objective in zip(normalized_ys, objectives, strict=True):
         # Draw straight lines between the axes in the appropriate color.
         color = cmap(norm(objective))
         host_ax.plot(

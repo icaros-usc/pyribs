@@ -6,6 +6,7 @@
 
 #### API
 
+- Drop Python 3.9 support and add 3.14 support ({pr}`672`)
 - Separate centroid generation from init in CVTArchive ({pr}`663`)
   - **Backwards-incompatible:** Replace the `cells` and `custom_centroids`
     parameters with a new `centroids` parameter in CVTArchive

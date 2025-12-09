@@ -233,7 +233,7 @@ def test_array_bound_correct(archive_fixture, bound_type):
             archive,
             sigma=1,
             x0=x0,
-            bounds=list(zip(lower_bounds, upper_bounds)),
+            bounds=list(zip(lower_bounds, upper_bounds, strict=True)),
         )
     else:
         emitter = GaussianEmitter(
