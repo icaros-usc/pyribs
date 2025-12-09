@@ -47,7 +47,6 @@ class DNSArchive(ArchiveBase):
         measure_dim: Dimensionality of the measure space.
         capacity: Fixed population size to maintain.
         k_neighbors: Number of fitter neighbors to average over when computing DNS.
-        space: Space in which to compute distances ("measures" or "solution").
         qd_score_offset: Subtracted from objective values when computing QD score.
         seed: Value to seed the random number generator.
         solution_dtype: Data type of the solutions. Defaults to float64 (numpy's default
