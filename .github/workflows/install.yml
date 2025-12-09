@@ -23,7 +23,7 @@ jobs:
       max-parallel: 12 # All in parallel.
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11"]
+        python-version: ["3.12"]
         command:
           ["pip install ribs[all]", "conda install -c conda-forge pyribs-all"]
     runs-on: ${{ matrix.os }}
