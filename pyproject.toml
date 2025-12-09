@@ -18,16 +18,16 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "Natural Language :: English",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering",
   "Topic :: Scientific/Engineering :: Mathematics",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.9.0"
+requires-python = ">=3.10.0"
 dependencies = [
   "array_api_compat",
   "numba>=0.51.0",
