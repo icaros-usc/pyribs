@@ -499,7 +499,7 @@ class DNSArchive(ArchiveBase):
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> ArrayLike | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
+    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
     def sample_elites(self, n: Int) -> BatchData:
