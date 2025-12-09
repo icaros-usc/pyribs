@@ -46,8 +46,9 @@ def full_archive_emitter_fixture(archive_fixture, request):
     ).T.reshape(-1, 2)
     for solution, objective, measures in zip(
         rng.uniform(-1, 1, (archive_fixture.cells, 4)),
-        np.full((100,), archive_fixture.cells),
+        np.full(archive_fixture.cells, 100),
         all_measures,
+        strict=True,
     ):
         emitter.ask()
         add_info = archive_fixture.add(
@@ -122,7 +123,7 @@ def test_invalid_upscale_schedule(archive_fixture, wrong_upscale_schedule):
 
 
 def test_upscale(full_archive_emitter_fixture):
-    """If an upcale_schedule is provided during initialization,
+    """If an upscale_schedule is provided during initialization,
     BayesianOptimizationEmitter should return the next resolution on the
     upscale schedule after failing to improve archive coverage for multiple
     iterations. Note that the actual upscaling is handled by
@@ -139,8 +140,9 @@ def test_upscale(full_archive_emitter_fixture):
     )
     for solution, objective, measures in zip(
         rng.uniform(-1, 1, (no_improve_tolerance, 4)),
-        np.full((no_improve_tolerance,), 100),
+        np.full(no_improve_tolerance, 100),
         np.zeros((no_improve_tolerance, 2)),
+        strict=True,
     ):
         full_archive_emitter_fixture.ask()
         add_info = full_archive_emitter_fixture.archive.add(

@@ -67,7 +67,7 @@ def evaluate(net, loader):
             outputs = net(images.to(device))
             _, predicted = torch.max(outputs.to("cpu"), 1)
             correct = (predicted == labels).squeeze()
-            for label, c in zip(labels, correct):
+            for label, c in zip(labels, correct, strict=True):
                 correct_per_num[label] += c.item()
                 total_per_num[label] += 1
 

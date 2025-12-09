@@ -20,7 +20,9 @@ def field_archive(data):
     return GridArchive(
         solution_dim=data.archive.solution_dim,
         dims=data.archive.dims,
-        ranges=list(zip(data.archive.lower_bounds, data.archive.upper_bounds)),
+        ranges=list(
+            zip(data.archive.lower_bounds, data.archive.upper_bounds, strict=True)
+        ),
         extra_fields={"metadata": ((), object), "square": ((2, 2), np.int32)},
     )
 

@@ -223,7 +223,7 @@ class SlidingBoundariesArchive(ArchiveBase):
                 f"dims (length {len(self._dims)}) and ranges "
                 f"(length {len(ranges)}) must be the same length"
             )
-        ranges = list(zip(*ranges))
+        ranges = list(zip(*ranges, strict=True))
         self._lower_bounds = np.array(ranges[0], dtype=self.dtypes["measures"])
         self._upper_bounds = np.array(ranges[1], dtype=self.dtypes["measures"])
         self._interval_size = self._upper_bounds - self._lower_bounds
@@ -241,7 +241,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             dtype=self.dtypes["measures"],
         )
         for i, (dim, lower_bound, upper_bound) in enumerate(
-            zip(self._dims, self._lower_bounds, self._upper_bounds)
+            zip(self._dims, self._lower_bounds, self._upper_bounds, strict=True)
         ):
             self._boundaries[i, : dim + 1] = np.linspace(
                 lower_bound, upper_bound, dim + 1
@@ -354,7 +354,10 @@ class SlidingBoundariesArchive(ArchiveBase):
         cells in dimension ``i``, use ``boundaries[i][:-1]``, and to access all the
         upper bounds, use ``boundaries[i][1:]``.
         """
-        return [bound[: dim + 1] for bound, dim in zip(self._boundaries, self._dims)]
+        return [
+            bound[: dim + 1]
+            for bound, dim in zip(self._boundaries, self._dims, strict=True)
+        ]
 
     ## dunder methods ##
 
@@ -468,7 +471,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         idx_cols = []
         for boundary, dim, measures_col in zip(
-            self._boundaries, self._dims, measures.T
+            self._boundaries, self._dims, measures.T, strict=True
         ):
             idx_col = np.searchsorted(boundary[:dim], measures_col)
             # The maximum index returned by searchsorted is `dim`, and since we subtract
@@ -698,7 +701,10 @@ class SlidingBoundariesArchive(ArchiveBase):
             add_info = self._remap()
             self._lower_bounds = np.array([bound[0] for bound in self._boundaries])
             self._upper_bounds = np.array(
-                [bound[dim] for bound, dim in zip(self._boundaries, self._dims)]
+                [
+                    bound[dim]
+                    for bound, dim in zip(self._boundaries, self._dims, strict=True)
+                ]
             )
             self._interval_size = self._upper_bounds - self._lower_bounds
         else:

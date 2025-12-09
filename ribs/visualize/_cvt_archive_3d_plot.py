@@ -332,14 +332,16 @@ def cvt_archive_3d_plot(
     objs = []  # Also record objective for each ridge so we can color it.
 
     # Map from centroid index to objective.
-    pt_to_obj = dict(zip(index_batch, objective_batch))
+    pt_to_obj = dict(zip(index_batch, objective_batch, strict=True))
 
     # The points in the Voronoi diagram are indexed by their placement in the input
     # list. Above, when we called Voronoi, `centroids` were placed first, so the
     # centroid points all have indices less than len(centroids).
     max_centroid_idx = len(centroids)
 
-    for ridge_points, ridge_vertices in zip(vor.ridge_points, vor.ridge_vertices):
+    for ridge_points, ridge_vertices in zip(
+        vor.ridge_points, vor.ridge_vertices, strict=True
+    ):
         a, b = ridge_points
         # Record the ridge. We are only interested in a ridge if it involves one of our
         # centroid points, hence the check for max_idx.

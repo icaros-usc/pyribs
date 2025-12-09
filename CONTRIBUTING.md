@@ -33,7 +33,7 @@ Ready to contribute? Here's how to set up pyribs for local development.
 
    ```bash
    cd pyribs
-   conda create --prefix ./env python=3.9  # 3.9 is the minimum version pyribs supports.
+   conda create --prefix ./env python=3.10  # 3.10 is the minimum version pyribs supports.
    conda activate ./env
    pip install -e .[all,dev]  # `all` contains dependencies for all extras of pyribs.
                               # `dev` contains development dependencies.
