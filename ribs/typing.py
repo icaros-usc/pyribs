@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 from numpy.typing import DTypeLike
@@ -24,10 +24,10 @@ except ImportError:
 ## General types ##
 
 #: General type for integers.
-Int = Union[int, np.integer]
+Int = int | np.integer
 
 #: General type for floats.
-Float = Union[float, np.floating]
+Float = float | np.floating
 
 #: Represents data about a batch of solutions. The first dimension of each entry should
 #: be the batch dimension.
@@ -46,14 +46,14 @@ Array = np.ndarray
 #: (For array API use only.) Represents a dtype compatible with pyribs.
 DType = np.dtype
 #: (For array API use only.) Represents an array's device.
-Device = Union[str, int]
+Device = str | int
 
 # Modify types based on which array backends are available.
 if is_torch_available:
-    Array = Union[Array, torch.Tensor]
-    DType = Union[DType, torch.dtype]
-    Device = Union[Device, torch.device]
+    Array = Array | torch.Tensor
+    DType = DType | torch.dtype
+    Device = Device | torch.device
 if is_cp_availalbe:
-    Array = Union[Array, cp.ndarray]
-    DType = Union[DType, cp.dtype]
-    Device = Union[Device, cp.cuda.Device]
+    Array = Array | cp.ndarray
+    DType = DType | cp.dtype
+    Device = Device | cp.cuda.Device
