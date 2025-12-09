@@ -7,7 +7,7 @@ from typing import Literal, cast, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
-from scipy.spatial import KDTree
+from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
 from scipy.spatial.distance import cdist
 
 from ribs._utils import (
@@ -34,8 +34,7 @@ class DNSArchive(ArchiveBase):
     strictly higher objective ("fitter" neighbors). If no fitter neighbors exist, the
     DNS score is treated as ``+inf``.
 
-    More info can be found in the `DNS paper <https://arxiv.org/abs/2502.00593>`_ by
-    Bahlous-Boldi, R, and Faldor, M et al.
+    From the DNS paper: Bahlous-Boldi, R, and Faldor, M et Al. https://arxiv.org/abs/2502.00593
 
     By default, this archive stores the following data fields: ``solution``,
     ``objective``, ``measures``, and ``index``.
@@ -50,17 +49,10 @@ class DNSArchive(ArchiveBase):
         space: Space in which to compute distances ("measures" or "solution").
         qd_score_offset: Subtracted from objective values when computing QD score.
         seed: Value to seed the random number generator.
-        solution_dtype: Data type of the solutions. Defaults to float64 (numpy's default
-            floating point type).
-        objective_dtype: Data type of the objectives. Defaults to float64 (numpy's
-            default floating point type).
-        measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
-            floating point type).
-        dtype: Shortcut for providing data type of the solutions, objectives, and
-            measures. Defaults to float64 (numpy's default floating point type). This
-            parameter sets all the dtypes simultaneously. To set individual dtypes, pass
-            ``solution_dtype``, ``objective_dtype``, and ``measures_dtype``. Note that
-            ``dtype`` cannot be used at the same time as those parameters.
+        solution_dtype: Data type of the solutions.
+        objective_dtype: Data type of the objectives.
+        measures_dtype: Data type of the measures.
+        dtype: Shortcut to set all dtypes simultaneously.
         extra_fields: Extra fields to store alongside solutions.
         ckdtree_kwargs: Kwargs for :class:`scipy.spatial.cKDTree` used in retrieval.
     """
@@ -114,11 +106,6 @@ class DNSArchive(ArchiveBase):
             capacity=capacity,
         )
 
-        self._space = "measures"
-        self._best_elite: SingleData | None = None
-        self._objective_sum: Float = self.dtypes["objective"].type(0.0)
-        self._stats: ArchiveStats
-
         # Set up constant properties.
         self._k_neighbors = int(k_neighbors)
         self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
@@ -127,7 +114,9 @@ class DNSArchive(ArchiveBase):
         )
 
         # Set up k-D tree with current measures in the archive. Updated on add().
-        self._cur_kd_tree = KDTree(self._store.data("measures"), **self._ckdtree_kwargs)
+        self._cur_kd_tree = cKDTree(
+            self._store.data("measures"), **self._ckdtree_kwargs
+        )
 
         # Set up statistics -- objective_sum is the sum of all objective values in the
         # archive; it is useful for computing qd_score and obj_mean.
@@ -170,11 +159,6 @@ class DNSArchive(ArchiveBase):
         return self._k_neighbors
 
     @property
-    def space(self) -> str:
-        """Space used for distance calculations ("measures" or "solution")."""
-        return self._space
-
-    @property
     def capacity(self) -> int:
         """Fixed number of solutions stored in this archive."""
         return self._store.capacity
@@ -212,44 +196,6 @@ class DNSArchive(ArchiveBase):
             obj_mean=None,
         )
 
-    def _stats_update(self, new_objective_sum: Float, new_best_index: Float) -> None:
-        """Updates statistics.
-
-        Update is based on a new sum of objective values (new_objective_sum) and the
-        index of a potential new best elite (new_best_index).
-        """
-        _, new_best_elite_raw = self._store.retrieve([new_best_index])
-        new_best_elite_dict = cast(BatchData, new_best_elite_raw)
-        new_best_elite = {k: v[0] for k, v in new_best_elite_dict.items()}
-
-        if (
-            self._stats.obj_max is None
-            or new_best_elite["objective"] > self._stats.obj_max
-        ):
-            self._best_elite = new_best_elite
-            new_obj_max = new_best_elite["objective"]
-        else:
-            new_obj_max = self._stats.obj_max
-
-        self._objective_sum = new_objective_sum
-        new_qd_score = (
-            self._objective_sum
-            - np.asarray(len(self), dtype=self.dtypes["objective"])
-            * self._qd_score_offset
-        )
-        self._stats = ArchiveStats(
-            num_elites=len(self),
-            coverage=np.asarray(len(self) / self.cells, dtype=self.dtypes["objective"]),
-            qd_score=new_qd_score,
-            norm_qd_score=np.asarray(
-                new_qd_score / self.cells, dtype=self.dtypes["objective"]
-            ),
-            obj_max=new_obj_max,
-            obj_mean=np.asarray(
-                self._objective_sum / len(self), dtype=self.dtypes["objective"]
-            ),
-        )
-
     def index_of(self, measures: ArrayLike) -> np.ndarray:
         """Returns the index of the closest solution to the given measures.
 
@@ -274,7 +220,7 @@ class DNSArchive(ArchiveBase):
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
@@ -304,47 +250,47 @@ class DNSArchive(ArchiveBase):
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
-        return self.index_of(measures[None])[0]
+        return int(self.index_of(measures[None])[0])
 
-    def compute_dns(self, measures: ArrayLike, objectives: ArrayLike) -> np.ndarray:
-        """Computes DNS scores for a batch against the current population.
+    def _compute_dns(self, measures: ArrayLike, objectives: ArrayLike) -> np.ndarray:
+        """Computes DNS scores for a current population (evaluation) with respect to itself."""
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
+        objectives = np.asarray(objectives, dtype=self.dtypes["objective"])
+        n_ind = measures.shape[0]
 
-        For each input, finds distances to fitter neighbors (those in the archive with
-        strictly higher objective) and returns the mean distance to the k nearest among
-        them. If no fitter neighbors exist, the score is ``+inf``.
-        """
-        measures = np.asarray(measures)
-        objectives = np.asarray(objectives)
+        if n_ind == 0:
+            return np.zeros(0, dtype=self.dtypes["measures"])
 
-        if self.empty:
-            return np.full(len(measures), np.inf, dtype=self.dtypes["measures"])
+        dist = cdist(measures, measures)
 
-        # Distances from batch to reference population.
-        dist = cdist(measures, self._store.data("measures"))
+        np.fill_diagonal(dist, np.inf)  # exclude self distances
 
-        ref_objectives = self._store.data("objective")
-        # For each row i, mask columns where ref_objective < obj_i (not fitter or eq).
-        scores = np.empty(len(measures), dtype=self.dtypes["measures"])
-        for i, obj in enumerate(objectives):
-            mask = ref_objectives >= obj
-            if not np.any(mask):
-                scores[i] = np.inf
-                continue
-            dists = dist[i, mask]
-            k = min(self._k_neighbors, dists.shape[0])
-            # Take k smallest.
-            part = np.partition(dists, k - 1)[:k]
-            scores[i] = np.mean(part)
-        return scores
+        fitter_mask = objectives[None, :] >= objectives[:, None]
+        dist_fitter = np.where(
+            fitter_mask, dist, np.inf
+        )  # distance to fitter neighbors
 
-    ## Methods for writing to the archive ##
+        k = self._k_neighbors
+        k_eff = min(k, n_ind - 1)  # at most N-1 fitter neighbors
 
-    def _maybe_resize(self, new_size: int) -> None:
-        """No-op for DNSArchive (fixed capacity)."""
-        return
+        # get k smallest
+        part = np.partition(dist_fitter, k_eff - 1)[:, :k_eff]
+
+        finite_mask = np.isfinite(part)
+        counts = finite_mask.sum(axis=1)
+        safe_counts = np.where(counts == 0, 1, counts)
+
+        sums = np.where(finite_mask, part, 0).sum(axis=1)
+        means = sums / safe_counts
+
+        means = np.where(
+            counts == 0, np.inf, means
+        )  # if no fitter neighbors, score is inf
+
+        return means
 
     def add(
         self,
@@ -378,47 +324,19 @@ class DNSArchive(ArchiveBase):
         cur_size = len(self)
         if cur_size > 0:
             cur = self._store.data(return_type="dict")
+
+            # Combine.
+            combined = {}
+            for name in self._store.field_list:
+                combined[name] = (
+                    np.concatenate((cur[name], data[name]), axis=0)
+                    if name in data
+                    else cur[name]
+                )
         else:
-            cur = {
-                name: np.empty((0, *desc[0]), dtype=desc[1])
-                for name, desc in self._store.field_desc.items()
-            }  # type: ignore[index]
+            combined = data
 
-        # Combine.
-        combined = {}
-        for name in self._store.field_list:
-            combined[name] = (
-                np.concatenate((cur[name], data[name]), axis=0)
-                if name in data
-                else cur[name]
-            )
-
-        # Compute DNS over union.
-        measures = combined["measures"]
-        objs = combined["objective"]
-
-        # Pairwise distances.
-        if measures.shape[0] == 0:
-            dns_scores = np.array([], dtype=self.dtypes["measures"])  # pragma: no cover
-        else:
-            dist = cdist(measures, measures)
-            # Exclude self distances.
-            np.fill_diagonal(dist, np.inf)
-            # For each i, consider only fitter neighbors (obj[j] >= obj[i]).
-            fitter_mask = objs[None, :] >= objs[:, None]
-            # Replace non-fitter distances with +inf.
-            dist_masked = np.where(fitter_mask, dist, np.inf)
-            # Compute mean of k smallest along each row (ignoring +inf when <k exist).
-            dns_scores = np.empty(measures.shape[0], dtype=self.dtypes["measures"])
-            for i in range(measures.shape[0]):
-                row = dist_masked[i]
-                valid = np.isfinite(row)
-                if not np.any(valid):
-                    dns_scores[i] = np.inf
-                    continue
-                k = min(self._k_neighbors, np.sum(valid))
-                part = np.partition(row[valid], k - 1)[:k]
-                dns_scores[i] = np.mean(part)
+        dns_scores = self._compute_dns(combined["measures"], combined["objective"])
 
         # Select survivors: top `capacity` by DNS (descending).
         cap = self.capacity
@@ -444,7 +362,6 @@ class DNSArchive(ArchiveBase):
         add_info["status"][batch_survivors] = 2
         add_info["dns"] = dns_scores[batch_indices_in_union]
 
-        # Rebuild population as survivors (compact to [0..n-1]).
         survivors = {
             name: combined[name][survivor_indices] for name in self._store.field_list
         }
@@ -454,13 +371,25 @@ class DNSArchive(ArchiveBase):
 
         # Update stats.
         if len(self) > 0:
-            best_index = int(np.argmax(self._store.data("objective")))
             objective_sum = np.sum(self._store.data("objective"))
-            self._stats_update(
-                np.asarray(objective_sum, dtype=self.dtypes["objective"]), best_index
+            qd_score = objective_sum - len(self) * self._qd_score_offset
+            coverage = len(self) / self.cells
+            norm_qd_score = qd_score / self.cells
+            obj_max = np.max(self._store.data("objective"))
+            obj_mean = np.mean(self._store.data("objective"))
+            # note: QD score it not an informative statistic for DNS, as
+            # it has no predefined archive.
+            self._stats = ArchiveStats(
+                num_elites=len(self),
+                coverage=coverage,
+                qd_score=qd_score,
+                norm_qd_score=norm_qd_score,
+                obj_max=obj_max,
+                obj_mean=obj_mean,
             )
+
             # Refresh KD-tree over measures.
-            self._cur_kd_tree = KDTree(
+            self._cur_kd_tree = cKDTree(
                 self._store.data("measures"), **self._ckdtree_kwargs
             )
 
@@ -518,7 +447,7 @@ class DNSArchive(ArchiveBase):
     ## Refer to ArchiveBase for documentation of these methods. ##
 
     def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, BatchData]:
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
@@ -530,7 +459,7 @@ class DNSArchive(ArchiveBase):
         return occupied, data
 
     def retrieve_single(self, measures: ArrayLike) -> tuple[bool, SingleData]:
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
@@ -570,7 +499,7 @@ class DNSArchive(ArchiveBase):
         self,
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
-    ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
+    ) -> ArrayLike | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
     def sample_elites(self, n: Int) -> BatchData:
