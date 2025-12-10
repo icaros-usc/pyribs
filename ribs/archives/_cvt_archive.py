@@ -11,6 +11,7 @@ from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import KDTree
 from sklearn.cluster import k_means
+from sklearn.neighbors import NearestNeighbors
 
 from ribs._utils import (
     check_batch_shape,
@@ -158,31 +159,38 @@ class CVTArchive(ArchiveBase):
     aforementioned tutorial.
 
     Several options are also available for finding the closest centroid in measure
-    space. By default, this procedure uses Euclidean distance and is done in roughly
-    O(log(number of cells)) time using :class:`scipy.spatial.cKDTree`. To switch to
-    brute force, which takes O(number of cells) time, pass ``use_kd_tree=False``.
+    space; these are set via the ``nearest_neighbors`` parameter:
 
-    To compare the performance of using the k-D tree vs brute force, we ran benchmarks
-    where we inserted 1k batches of 100 solutions into a 2D archive with varying numbers
-    of cells. We took the minimum over 5 runs for each data point --- minimum is
-    recommended in the docs for :meth:`timeit.Timer.repeat`. Note the logarithmic
-    scales. This plot was generated on a reasonably modern laptop.
+    - ``nearest_neighbors="scipy_kd_tree"`` is the default option. It uses
+      :class:`scipy.spatial.cKDTree` to find the nearest neighbors in terms of Euclidean
+      distance in O(log(number of cells)) time.
+    - ``nearest_neighbors="brute_force"`` also uses Euclidean distance but operates in
+      O(number of cells) time.
+    - ``nearest_neighbors="sklearn_nn"`` uses
+      :class:`sklearn.neighbors.NearestNeighbors` to find the nearest neighbors.
 
-    .. image:: ../_static/imgs/cvt_add_plot.png
-        :alt: Runtime to insert 100k entries into CVTArchive
+    .. note:: To compare the performance of the different nearest neighbor methods, we
+        ran benchmarks where we inserted 1k batches of 100 solutions into a 2D archive
+        with varying numbers of cells. We took the minimum over 5 runs for each data
+        point --- minimum is recommended in the docs for :meth:`timeit.Timer.repeat`.
+        Note the logarithmic scales. This plot was generated on a reasonably modern
+        laptop; see `benchmarks/cvt_add.py
+        <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_ in
+        the project repo for more information.
 
-    Across almost all numbers of cells, using the k-D tree is faster than using brute
-    force. Thus, **we recommend always using the k-D tree.** See `benchmarks/cvt_add.py
-    <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_ in the
-    project repo for more information about how this plot was generated.
+        .. image:: ../_static/imgs/cvt_add_plot.png
+            :alt: Runtime to insert 100k entries into CVTArchive
+
+        We hope that the performance differences in this plot serve as a rough guide for
+        choosing nearest neighbor methods, but we note that they are not definitive, as
+        each nearest neighbor method has a wide variety of options that can influence
+        performance. Furthermore, performance is vastly affected by factors like the
+        dimensionality of the measure space and the number of centroids/cells.
 
     .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
         <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds, including the
         ``learning_rate`` and ``threshold_min`` parameters, refer to our tutorial
         :doc:`/tutorials/cma_mae`.
-
-    .. note:: For more information on our choice of k-D tree implementation, see
-        :pr:`38`.
 
     Args:
         solution_dim: Dimensionality of the solution space. Scalar or multi-dimensional
@@ -232,20 +240,27 @@ class CVTArchive(ArchiveBase):
             :func:`k_means_centroids` (assuming that function is called).
         k_means_kwargs: For convenience, this argument is passed directly to
             :func:`k_means_centroids` (assuming that function is called).
-        use_kd_tree: If True, use a k-D tree for finding the closest centroid when
-            inserting into the archive. If False, brute force will be used instead.
-        ckdtree_kwargs: kwargs for :class:`~scipy.spatial.cKDTree`. By default, we do
-            not pass in any kwargs.
+        nearest_neighbors: Method to use for computing nearest neighbors. See earlier in
+            this docstring for more info.
+        ckdtree_kwargs: kwargs for :class:`scipy.spatial.cKDTree`. By default, we do not
+            pass in any kwargs. Only applicable when
+            ``nearest_neighbors="scipy_kd_tree"``.
         chunk_size: If passed, brute forcing the closest centroid search will chunk the
-            distance calculations to compute chunk_size inputs at a time.
+            distance calculations to compute chunk_size inputs at a time. Only
+            applicable when ``nearest_neighbors="brute_force"``.
+        sklearn_nn_kwargs: kwargs for :class:`sklearn.neighbors.NearestNeighbors`. By
+            default, we do not pass in any kwargs. Only applicable when
+            ``nearest_neighbors="sklearn_nn"``.
         cells: DEPRECATED.
         custom_centroids: DEPRECATED.
         centroid_method: DEPRECATED.
+        use_kd_tree: DEPRECATED.
 
     Raises:
         ValueError: Invalid values for learning_rate and threshold_min.
         ValueError: Invalid names in extra_fields.
         ValueError: ``centroids`` has the wrong shape.
+        ValueError: nearest_neighbors has an invalid value.
     """
 
     def __init__(
@@ -265,13 +280,17 @@ class CVTArchive(ArchiveBase):
         extra_fields: FieldDesc | None = None,
         samples: Int | ArrayLike = 100_000,
         k_means_kwargs: dict | None = None,
-        use_kd_tree: bool = True,
+        nearest_neighbors: Literal[
+            "scipy_kd_tree", "brute_force", "sklearn_nn"
+        ] = "scipy_kd_tree",
         ckdtree_kwargs: dict | None = None,
         chunk_size: Int = None,
+        sklearn_nn_kwargs: dict | None = None,
         # Deprecated parameters.
         cells: None = None,
         custom_centroids: None = None,
         centroid_method: None = None,
+        use_kd_tree: None = None,
     ) -> None:
         if cells is not None:
             raise ValueError(
@@ -287,6 +306,11 @@ class CVTArchive(ArchiveBase):
             raise ValueError(
                 "`centroid_method` is deprecated in pyribs 0.9.0. "
                 "Please generate centroids and pass them in instead."
+            )
+        if use_kd_tree is not None:
+            raise ValueError(
+                "`use_kd_tree` is deprecated in pyribs 0.9.0. "
+                "Please use `nearest_neighbors` instead."
             )
 
         self._rng = np.random.default_rng(seed)
@@ -364,12 +388,24 @@ class CVTArchive(ArchiveBase):
                 batch_name="num_centroids",
             )
 
-        self._use_kd_tree = use_kd_tree
-        self._centroid_kd_tree = None
-        self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
-        self._chunk_size = chunk_size
-        if self._use_kd_tree:
+        self._nearest_neighbors = nearest_neighbors
+        if self._nearest_neighbors == "scipy_kd_tree":
+            self._ckdtree_kwargs = (
+                {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
+            )
             self._centroid_kd_tree = KDTree(self._centroids, **self._ckdtree_kwargs)
+        elif self._nearest_neighbors == "brute_force":
+            self._chunk_size = chunk_size
+        elif self._nearest_neighbors == "sklearn_nn":
+            self._sklearn_nn_kwargs = (
+                {} if sklearn_nn_kwargs is None else sklearn_nn_kwargs.copy()
+            )
+            self._sklearn_nn = NearestNeighbors(**self._sklearn_nn_kwargs)
+            self._sklearn_nn.fit(self._centroids)
+        else:
+            raise ValueError(
+                f"Unknown value `{self._nearest_neighbors}` for nearest_neighbors."
+            )
 
     ## Properties inherited from ArchiveBase ##
 
@@ -526,8 +562,8 @@ class CVTArchive(ArchiveBase):
         ``archive.centroids[index_batch[i]]`` holds the coordinates of the centroid
         closest to ``measures[i]``. See :attr:`centroids` for more info.
 
-        The centroid indices are located using either the k-D tree or brute force,
-        depending on the value of ``use_kd_tree`` in the constructor.
+        The centroid indices are located using the method specified by
+        ``nearest_neighbors`` during initialization.
 
         Args:
             measures: (batch_size, :attr:`measure_dim`) array of coordinates in measure
@@ -545,10 +581,10 @@ class CVTArchive(ArchiveBase):
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
-        if self._use_kd_tree:
+        if self._nearest_neighbors == "scipy_kd_tree":
             _, indices = self._centroid_kd_tree.query(measures)
             return indices.astype(np.int32)
-        else:
+        elif self._nearest_neighbors == "brute_force":
             expanded_measures = np.expand_dims(measures, axis=1)
             # Compute indices chunks at a time
             if self._chunk_size is not None and self._chunk_size < measures.shape[0]:
@@ -571,6 +607,18 @@ class CVTArchive(ArchiveBase):
                 # distance with a sqrt.
                 distances = np.sum(np.square(distances), axis=2)
                 return np.argmin(distances, axis=1).astype(np.int32)
+        elif self._nearest_neighbors == "sklearn_nn":
+            if len(measures) == 0:
+                # sklearn's NearestNeighbors expects at least one item.
+                return np.array([], dtype=np.int32)
+            indices = self._sklearn_nn.kneighbors(
+                measures, n_neighbors=1, return_distance=False
+            )
+            return indices.astype(np.int32).squeeze(1)
+        else:
+            raise ValueError(
+                f"Unknown value `{self._nearest_neighbors}` for nearest_neighbors."
+            )
 
     def index_of_single(self, measures: ArrayLike) -> Int:
         """Returns the index of the measures for one solution.

@@ -191,7 +191,7 @@ CONFIG = {
             "kwargs": {
                 "cells": 10000,
                 "samples": 100000,
-                "use_kd_tree": True,
+                "nearest_neighbors": "scipy_kd_tree",
             },
         },
         "result_archive": None,
@@ -217,7 +217,7 @@ CONFIG = {
             "kwargs": {
                 "cells": 10000,
                 "samples": 100000,
-                "use_kd_tree": True,
+                "nearest_neighbors": "scipy_kd_tree",
             },
         },
         "result_archive": None,

@@ -262,6 +262,7 @@ USC. For information on contributing to the repo, see
 - [Sid Srikanth](https://sidsrikanth.com)
 - [Saeed Hedayatian](https://conflictednerd.github.io)
 - [Andrew Dai](https://daia99.github.io/)
+- [Ryan Boldi](https://ryanboldi.github.io)
 - [Stefanos Nikolaidis](https://stefanosnikolaidis.net)
 
 We thank [Amy K. Hoover](http://amykhoover.com/) and

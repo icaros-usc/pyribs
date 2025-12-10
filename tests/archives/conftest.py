@@ -31,9 +31,9 @@ def benchmark_data_10k():
     return n_vals, solution_batch, objective_batch, measures_batch
 
 
-@pytest.fixture(params=[False, True], ids=["brute_force", "kd_tree"])
-def use_kd_tree(request):
-    """Whether to use the KD Tree in CVTArchive."""
+@pytest.fixture(params=["scipy_kd_tree", "brute_force", "sklearn_nn"])
+def nearest_neighbors(request):
+    """Nearest neighbors method in CVTArchive."""
     return request.param
 
 
@@ -50,8 +50,9 @@ def add_mode(request):
 ARCHIVE_NAMES = [
     "CategoricalArchive",
     "GridArchive",
+    "CVTArchive-scipy_kd_tree",
     "CVTArchive-brute_force",
-    "CVTArchive-kd_tree",
+    "CVTArchive-sklearn_nn",
     "SlidingBoundariesArchive",
     "ProximityArchive",
 ]
@@ -106,7 +107,7 @@ def get_archive_data(name, *, dtype=np.float64):
         # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The elite in
         # archive_with_elite should match with centroid (0.5, 0.5).
         cells = 4
-        kd_tree = name == "CVTArchive-kd_tree"
+        nearest_neighbors = name.removeprefix("CVTArchive-")
         centroids = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
         centroid = [0.5, 0.5]
 
@@ -114,7 +115,7 @@ def get_archive_data(name, *, dtype=np.float64):
             solution_dim=len(solution),
             centroids=centroids,
             ranges=[(-1, 1), (-1, 1)],
-            use_kd_tree=kd_tree,
+            nearest_neighbors=nearest_neighbors,
             solution_dtype=dtype,
             objective_dtype=dtype,
             measures_dtype=dtype,
@@ -124,7 +125,7 @@ def get_archive_data(name, *, dtype=np.float64):
             solution_dim=len(solution),
             centroids=centroids,
             ranges=[(-1, 1), (-1, 1)],
-            use_kd_tree=kd_tree,
+            nearest_neighbors=nearest_neighbors,
             solution_dtype=dtype,
             objective_dtype=dtype,
             measures_dtype=dtype,

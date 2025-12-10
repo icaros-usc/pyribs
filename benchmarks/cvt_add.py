@@ -28,6 +28,7 @@ To re-plot the results without re-running the benchmarks, modify plot_times and 
 
 import json
 import timeit
+from collections import defaultdict
 from functools import partial
 
 import matplotlib.pyplot as plt
@@ -36,14 +37,13 @@ import numpy as np
 from ribs.archives import CVTArchive
 
 
-def save_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_times.json"):
+def save_times(n_cells, results, filename="cvt_add_times.json"):
     """Saves a dict of the results to the given file."""
     with open(filename, "w") as file:
         json.dump(
             {
                 "n_cells": n_cells,
-                "brute_force_t": brute_force_t,
-                "kd_tree_t": kd_tree_t,
+                "results": results,
             },
             file,
         )
@@ -53,10 +53,10 @@ def load_times(filename="cvt_add_times.json"):
     """Loads the results from the given file."""
     with open(filename) as file:
         data = json.load(file)
-        return data["n_cells"], data["brute_force_t"], data["kd_tree_t"]
+        return data["n_cells"], data["results"]
 
 
-def plot_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_plot.png"):
+def plot_times(n_cells, results, filename="cvt_add_plot.png"):
     """Plots the results to the given file."""
     fig, ax = plt.subplots(figsize=(4, 4))
     fig.tight_layout()
@@ -64,8 +64,8 @@ def plot_times(n_cells, brute_force_t, kd_tree_t, filename="cvt_add_plot.png"):
     ax.set_xlabel("log(number of cells in archive)")
     ax.set_ylabel("log(time) (s)")
     ax.set_yscale("log")
-    ax.semilogx(n_cells, brute_force_t, "-o", label="Brute Force", c="#304FFE")
-    ax.semilogx(n_cells, kd_tree_t, "-x", label="k-D Tree", c="#e62020")
+    for nearest_neighbors, res_t in results.items():
+        ax.semilogx(n_cells, res_t, "-o", label=nearest_neighbors)
     ax.grid(True, which="major", linestyle="--", linewidth=1)
     ax.legend(loc="upper left")
     fig.savefig(filename, bbox_inches="tight", dpi=120)
@@ -95,18 +95,18 @@ def main():
             # Use 200k cells to avoid dropping clusters. However, note that we no longer
             # test with 10k cells.
             samples=100_000 if cells != 10_000 else 200_000,
-            use_kd_tree=False,
+            nearest_neighbors="brute_force",
         )
         for cells in n_cells
     }
 
-    def setup(cells, use_kd_tree):
+    def setup(cells, nearest_neighbors):
         nonlocal archive
         archive = CVTArchive(
             solution_dim=all_solution_batch.shape[2],
             centroids=ref_archives[cells].centroids,
             ranges=[(-1, 1), (-1, 1)],
-            use_kd_tree=use_kd_tree,
+            nearest_neighbors=nearest_neighbors,
         )
 
     def add_entries():
@@ -119,28 +119,20 @@ def main():
             )
 
     # Run the timing.
-    brute_force_t = []
-    kd_tree_t = []
+    results = defaultdict(list)
     for cells in n_cells:
-        for use_kd_tree in (False, True):
-            print(
-                f"--------------\n"
-                f"Cells: {cells}\n"
-                f"Method: {'k-D Tree' if use_kd_tree else 'Brute Force'}"
-            )
-            setup_func = partial(setup, cells, use_kd_tree)
+        for nearest_neighbors in ("scipy_kd_tree", "brute_force", "sklearn_nn"):
+            print(f"--------------\nCells: {cells}\nMethod: {nearest_neighbors}")
+            setup_func = partial(setup, cells, nearest_neighbors)
             res_t = min(timeit.repeat(add_entries, setup_func, repeat=5, number=1))
             print(f"Time: {res_t} s")
 
-            if use_kd_tree:
-                kd_tree_t.append(res_t)
-            else:
-                brute_force_t.append(res_t)
-        save_times(n_cells, brute_force_t, kd_tree_t, "cvt_add_times.json")
+            results[nearest_neighbors].append(res_t)
+        save_times(n_cells, results, "cvt_add_times.json")
 
     # Save the results.
-    plot_times(n_cells, brute_force_t, kd_tree_t)
-    save_times(n_cells, brute_force_t, kd_tree_t)
+    plot_times(n_cells, results)
+    save_times(n_cells, results)
 
 
 if __name__ == "__main__":

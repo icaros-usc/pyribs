@@ -60,7 +60,7 @@ def cvt_archive_2d():
         centroids=100,
         ranges=[(-1, 1), (-1, 1)],
         samples=1000,
-        use_kd_tree=True,
+        nearest_neighbors="scipy_kd_tree",
         seed=42,
     )
     add_uniform_sphere_2d(archive, (-1, 1), (-1, 1))
@@ -75,7 +75,7 @@ def cvt_archive_2d_empty():
         centroids=100,
         ranges=[(-1, 1), (-1, 1)],
         samples=1000,
-        use_kd_tree=True,
+        nearest_neighbors="scipy_kd_tree",
         seed=42,
     )
     return archive
@@ -89,7 +89,7 @@ def cvt_archive_2d_long():
         centroids=100,
         ranges=[(-2, 2), (-1, 1)],
         samples=1000,
-        use_kd_tree=True,
+        nearest_neighbors="scipy_kd_tree",
         seed=42,
     )
     add_uniform_sphere_2d(archive, (-2, 2), (-1, 1))

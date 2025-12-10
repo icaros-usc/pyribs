@@ -7,6 +7,10 @@
 #### API
 
 - Implement Dominated Novelty Search ({pr}`664`)
+- Add `sklearn_nn` as an option for `nearest_neighbors` in CVTArchive
+  ({pr}`675`)
+- **Backwards-incompatible:** Replace `use_kd_tree` with `nearest_neighbors` in
+  CVTArchive ({pr}`674`)
 - Drop Python 3.9 support and add 3.14 support ({pr}`672`)
 - Separate centroid generation from init in CVTArchive ({pr}`663`)
   - **Backwards-incompatible:** Replace the `cells` and `custom_centroids`
