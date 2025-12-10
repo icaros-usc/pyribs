@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numbers
 from collections.abc import Collection, Iterator
+from pathlib import Path
 from typing import Literal, overload
 
 import numpy as np
@@ -147,8 +148,8 @@ class CVTArchive(ArchiveBase):
     and then cluster them using k-means clustering; the centroids of the clusters are
     then used as the centroids of the CVT in this archive. This procedure is implemented
     in :func:`ribs.archives.k_means_centroids`, which internally calls
-    :func:`sklearn.cluster.k_means` to perform the clustering. For alternative methods
-    of centroid generation, refer to the tutorial :doc:`/tutorials/centroid_methods`.
+    :func:`sklearn.cluster.k_means` to perform the clustering. For more on specifying
+    centroids, refer to the tutorial :doc:`/tutorials/cvt_centroids`.
 
     If running multiple experiments with this archive, it may be useful to maintain the
     same centroids across experiments. To do this, we recommend generating the centroids
@@ -200,7 +201,8 @@ class CVTArchive(ArchiveBase):
             centroids in the CVT. In this case, the centroids will be automatically
             generated with :func:`ribs.archives.k_means_centroids`. Alternatively, this
             parameter can be a (num_centroids, measure_dim) array with the measure space
-            coordinates of the centroids.
+            coordinates of the centroids. Finally, this parameter can specify a file
+            holding the centroids; this file will be read with :func:`numpy.load`.
         ranges: Upper and lower bound of each dimension of the measure space, e.g.
             ``[(-1, 1), (-2, 2)]`` indicates the first dimension should have bounds
             :math:`[-1,1]` (inclusive), and the second dimension should have bounds
@@ -270,7 +272,7 @@ class CVTArchive(ArchiveBase):
         self,
         *,
         solution_dim: Int | tuple[Int, ...],
-        centroids: Int | ArrayLike,
+        centroids: Int | ArrayLike | str | Path,
         ranges: Collection[tuple[Float, Float]],
         learning_rate: Float | None = None,
         threshold_min: Float = -np.inf,
@@ -332,8 +334,8 @@ class CVTArchive(ArchiveBase):
             measure_dim=len(ranges),
         )
 
-        # Set up the ArrayStore, which is a data structure that stores all the elites'
-        # data in arrays sharing a common index.
+        # Set up info for the ArrayStore, which is a data structure that stores all the
+        # elites' data in arrays sharing a common index.
         extra_fields = extra_fields or {}
         reserved_fields = {"solution", "objective", "measures", "threshold", "index"}
         if reserved_fields & extra_fields.keys():
@@ -344,6 +346,36 @@ class CVTArchive(ArchiveBase):
         solution_dtype, objective_dtype, measures_dtype = parse_all_dtypes(
             dtype, solution_dtype, objective_dtype, measures_dtype, np
         )
+
+        # Set up centroids.
+        if isinstance(centroids, numbers.Integral):
+            # Generate centroids with k-means. Ignore the samples returned.
+            self._centroids, _ = k_means_centroids(
+                centroids=centroids,
+                ranges=ranges,
+                samples=samples,
+                dtype=measures_dtype,
+                seed=seed,
+                k_means_kwargs=k_means_kwargs,
+            )
+        else:
+            # Load custom centroids from either a file or array.
+            if isinstance(centroids, (str, Path)):
+                self._centroids = np.load(centroids).astype(measures_dtype)
+            else:
+                self._centroids = np.asarray(centroids, dtype=measures_dtype)
+
+            # Validate custom centroids.
+            check_batch_shape(
+                array=self._centroids,
+                array_name="centroids",
+                dim=self.measure_dim,
+                dim_name="measure_dim",
+                batch_name="num_centroids",
+            )
+
+        # Set up the ArrayStore. It cannot be set up earlier since the capacity depends
+        # on setting up the centroids.
         self._store = ArrayStore(
             field_desc={
                 "solution": (self.solution_dim, solution_dtype),
@@ -353,9 +385,7 @@ class CVTArchive(ArchiveBase):
                 "threshold": ((), objective_dtype),
                 **extra_fields,
             },
-            capacity=(
-                centroids if isinstance(centroids, numbers.Integral) else len(centroids)
-            ),
+            capacity=len(self._centroids),
         )
 
         # Set up constant properties.
@@ -377,27 +407,7 @@ class CVTArchive(ArchiveBase):
         self._stats = None
         self._stats_reset()
 
-        if isinstance(centroids, numbers.Integral):
-            # Generate centroids with k-means. Ignore the samples returned.
-            self._centroids, _ = k_means_centroids(
-                centroids=centroids,
-                ranges=ranges,
-                samples=samples,
-                dtype=self.dtypes["measures"],
-                seed=seed,
-                k_means_kwargs=k_means_kwargs,
-            )
-        else:
-            # Validate custom centroids.
-            self._centroids = np.asarray(centroids, dtype=self.dtypes["measures"])
-            check_batch_shape(
-                array=self._centroids,
-                array_name="centroids",
-                dim=self.measure_dim,
-                dim_name="measure_dim",
-                batch_name="num_centroids",
-            )
-
+        # Set up nearest-neighbor methods.
         self._nearest_neighbors = nearest_neighbors
         if self._nearest_neighbors == "scipy_kd_tree":
             self._kdtree_kwargs = {} if kdtree_kwargs is None else kdtree_kwargs.copy()
