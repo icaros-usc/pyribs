@@ -245,6 +245,9 @@ class CVTArchive(ArchiveBase):
         kdtree_kwargs: kwargs for :class:`scipy.spatial.KDTree`. By default, we do not
             pass in any kwargs. Only applicable when
             ``nearest_neighbors="scipy_kd_tree"``.
+        kdtree_query_kwargs: kwargs for :meth:`scipy.spatial.KDTree.query`, which is
+            called when identifying nearest neighbors. By default, we do not pass in any
+            kwargs. Only applicable when ``nearest_neighbors="scipy_kd_tree"``.
         chunk_size: If passed, brute forcing the closest centroid search will chunk the
             distance calculations to compute chunk_size inputs at a time. Only
             applicable when ``nearest_neighbors="brute_force"``.
@@ -284,6 +287,7 @@ class CVTArchive(ArchiveBase):
             "scipy_kd_tree", "brute_force", "sklearn_nn"
         ] = "scipy_kd_tree",
         kdtree_kwargs: dict | None = None,
+        kdtree_query_kwargs: dict | None = None,
         chunk_size: Int = None,
         sklearn_nn_kwargs: dict | None = None,
         # Deprecated parameters.
@@ -398,6 +402,9 @@ class CVTArchive(ArchiveBase):
         if self._nearest_neighbors == "scipy_kd_tree":
             self._kdtree_kwargs = {} if kdtree_kwargs is None else kdtree_kwargs.copy()
             self._centroid_kd_tree = KDTree(self._centroids, **self._kdtree_kwargs)
+            self._kdtree_query_kwargs = (
+                {} if kdtree_query_kwargs is None else kdtree_query_kwargs.copy()
+            )
         elif self._nearest_neighbors == "brute_force":
             self._chunk_size = chunk_size
         elif self._nearest_neighbors == "sklearn_nn":
@@ -586,7 +593,9 @@ class CVTArchive(ArchiveBase):
         check_finite(measures, "measures")
 
         if self._nearest_neighbors == "scipy_kd_tree":
-            _, indices = self._centroid_kd_tree.query(measures)
+            _, indices = self._centroid_kd_tree.query(
+                measures, **self._kdtree_query_kwargs
+            )
             return indices.astype(np.int32)
         elif self._nearest_neighbors == "brute_force":
             expanded_measures = np.expand_dims(measures, axis=1)
