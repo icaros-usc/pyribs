@@ -36,7 +36,7 @@ archive = CVTArchive(
 ```
 
 Our new tutorial serves as a starting point for using the new archive:
-{doc}`/tutorials/centroid_methods`.
+{doc}`/tutorials/cvt_centroids`.
 
 ### Detailed Changes
 
@@ -50,7 +50,7 @@ in {issue}`621`.
   in the archive initialization itself. As such, **we have removed the
   `centroid_method` parameter as well as these centroid generation methods,**
   and we have instead added a new tutorial that shows different options for
-  generating centroids: {doc}`/tutorials/centroid_methods`.
+  specifying and generating centroids: {doc}`/tutorials/cvt_centroids`.
 
   In a similar vein, it is now possible to generate centroids with the
   {func}`~ribs.archives.k_means_centroids` function, which samples points in a
