@@ -262,7 +262,9 @@ class CVTArchive(ArchiveBase):
         extra_fields: FieldDesc | None = None,
         samples: Int | ArrayLike = 100_000,
         k_means_kwargs: dict | None = None,
-        nearest_neighbors: Literal["scipy_kd_tree", "brute_force"] = "scipy_kd_tree",
+        nearest_neighbors: Literal[
+            "scipy_kd_tree", "brute_force", "sklearn_nn"
+        ] = "scipy_kd_tree",
         ckdtree_kwargs: dict | None = None,
         chunk_size: Int = None,
         sklearn_nn_kwargs: dict | None = None,

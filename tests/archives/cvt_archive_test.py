@@ -212,3 +212,24 @@ def test_chunked_calculation():
     correct_centroids = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8]
 
     assert np.all(closest_centroids == correct_centroids)
+
+
+def test_cosine_distance():
+    archive = CVTArchive(
+        solution_dim=2,
+        centroids=[
+            [0, 10],
+            [1, 0],
+        ],
+        ranges=[(-1, 1), (-1, 1)],
+        nearest_neighbors="sklearn_nn",
+        sklearn_nn_kwargs={
+            "metric": "cosine",
+        },
+    )
+
+    indices = archive.index_of([[0, 1], [1, 0.1]])
+
+    # The first solution is closer to [0, 10] since we are using cosine rather than
+    # Euclidean distance. Similarly, the second solution is closer to [1, 0].
+    assert np.all(indices == [0, 1])
