@@ -7,7 +7,7 @@ from typing import Literal, cast, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
-from scipy.spatial import cKDTree  # ty: ignore[unresolved-import]
+from scipy.spatial import KDTree
 from scipy.spatial.distance import cdist
 
 from ribs._utils import (
@@ -61,7 +61,7 @@ class DNSArchive(ArchiveBase):
             ``solution_dtype``, ``objective_dtype``, and ``measures_dtype``. Note that
             ``dtype`` cannot be used at the same time as those parameters.
         extra_fields: Extra fields to store alongside solutions.
-        ckdtree_kwargs: Kwargs for :class:`scipy.spatial.cKDTree` used in retrieval.
+        kdtree_kwargs: Kwargs for :class:`scipy.spatial.KDTree` used in retrieval.
     """
 
     def __init__(
@@ -78,7 +78,7 @@ class DNSArchive(ArchiveBase):
         measures_dtype: DTypeLike = None,
         dtype: DTypeLike = None,
         extra_fields: FieldDesc | None = None,
-        ckdtree_kwargs: dict | None = None,
+        kdtree_kwargs: dict | None = None,
     ) -> None:
         self._rng = np.random.default_rng(seed)
 
@@ -115,15 +115,13 @@ class DNSArchive(ArchiveBase):
 
         # Set up constant properties.
         self._k_neighbors = int(k_neighbors)
-        self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
+        self._kdtree_kwargs = {} if kdtree_kwargs is None else kdtree_kwargs.copy()
         self._qd_score_offset = np.asarray(
             qd_score_offset, dtype=self.dtypes["objective"]
         )
 
         # Set up k-D tree with current measures in the archive. Updated on add().
-        self._cur_kd_tree = cKDTree(
-            self._store.data("measures"), **self._ckdtree_kwargs
-        )
+        self._cur_kd_tree = KDTree(self._store.data("measures"), **self._kdtree_kwargs)
 
         # Set up statistics -- objective_sum is the sum of all objective values in the
         # archive; it is useful for computing qd_score and obj_mean.
@@ -397,8 +395,8 @@ class DNSArchive(ArchiveBase):
             )
 
             # Refresh KD-tree over measures.
-            self._cur_kd_tree = cKDTree(
-                self._store.data("measures"), **self._ckdtree_kwargs
+            self._cur_kd_tree = KDTree(
+                self._store.data("measures"), **self._kdtree_kwargs
             )
 
         return add_info
