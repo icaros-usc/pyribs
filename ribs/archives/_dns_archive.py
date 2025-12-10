@@ -129,6 +129,7 @@ class DNSArchive(ArchiveBase):
         # archive; it is useful for computing qd_score and obj_mean.
         self._best_elite = None
         self._objective_sum = None
+        self._stats = None
         self._stats_reset()
 
     ## Properties inherited from ArchiveBase ##
