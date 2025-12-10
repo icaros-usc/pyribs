@@ -148,8 +148,8 @@ class CVTArchive(ArchiveBase):
     and then cluster them using k-means clustering; the centroids of the clusters are
     then used as the centroids of the CVT in this archive. This procedure is implemented
     in :func:`ribs.archives.k_means_centroids`, which internally calls
-    :func:`sklearn.cluster.k_means` to perform the clustering. For alternative methods
-    of centroid generation, refer to the tutorial :doc:`/tutorials/centroid_methods`.
+    :func:`sklearn.cluster.k_means` to perform the clustering. For more on specifying
+    centroids, refer to the tutorial :doc:`/tutorials/cvt_centroids`.
 
     If running multiple experiments with this archive, it may be useful to maintain the
     same centroids across experiments. To do this, we recommend generating the centroids

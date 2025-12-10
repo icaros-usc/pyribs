@@ -64,14 +64,15 @@ The following tutorials apply pyribs to a variety of problems:
 :hidden:
 
 tutorials/optuna
-tutorials/centroid_methods
+tutorials/cvt_centroids
 ```
 
 These short-form tutorials demonstrate some of the features of pyribs:
 
 - {doc}`tutorials/optuna`: Details on how pyribs can be integrated with the
   [Optuna](https://optuna.org) framework for hyperparameter optimization.
-- {doc}`tutorials/centroid_methods`
+- {doc}`tutorials/cvt_centroids`: Dives deeper into how centroids operate in
+  CVTArchive and provides alternative methods for generating centroids.
 
 <!-- How MyST handles section labels: https://jupyterbook.org/en/stable/content/references.html -->
 
