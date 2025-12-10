@@ -121,7 +121,7 @@ def main():
     # Run the timing.
     results = defaultdict(list)
     for cells in n_cells:
-        for nearest_neighbors in ("scipy_kd_tree", "brute_force"):
+        for nearest_neighbors in ("scipy_kd_tree", "brute_force", "sklearn_nn"):
             print(f"--------------\nCells: {cells}\nMethod: {nearest_neighbors}")
             setup_func = partial(setup, cells, nearest_neighbors)
             res_t = min(timeit.repeat(add_entries, setup_func, repeat=5, number=1))

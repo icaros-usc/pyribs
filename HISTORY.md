@@ -6,6 +6,8 @@
 
 #### API
 
+- Add `sklearn_nn` as an option for `nearest_neighbors` in CVTArchive
+  ({pr}`675`)
 - **Backwards-incompatible:** Replace `use_kd_tree` with `nearest_neighbors` in
   CVTArchive ({pr}`674`)
 - Drop Python 3.9 support and add 3.14 support ({pr}`672`)
