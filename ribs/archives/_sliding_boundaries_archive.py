@@ -457,7 +457,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         Raises:
             ValueError: ``measures`` is not of shape (batch_size, :attr:`measure_dim`).
         """
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
@@ -498,7 +498,7 @@ class SlidingBoundariesArchive(ArchiveBase):
             ValueError: ``measures`` is not of shape (:attr:`measure_dim`,).
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
         return self.index_of(measures[None])[0]
@@ -720,7 +720,7 @@ class SlidingBoundariesArchive(ArchiveBase):
     ## Refer to ArchiveBase for documentation of these methods. ##
 
     def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, BatchData]:
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
@@ -730,7 +730,7 @@ class SlidingBoundariesArchive(ArchiveBase):
         return occupied, data
 
     def retrieve_single(self, measures: ArrayLike) -> tuple[bool, SingleData]:
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
