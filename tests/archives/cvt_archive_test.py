@@ -217,10 +217,7 @@ def test_chunked_calculation():
 def test_cosine_distance():
     archive = CVTArchive(
         solution_dim=2,
-        centroids=[
-            [0, 10],
-            [1, 0],
-        ],
+        centroids=[[0, 10], [1, 0]],
         ranges=[(-1, 1), (-1, 1)],
         nearest_neighbors="sklearn_nn",
         sklearn_nn_kwargs={
