@@ -9,6 +9,7 @@ https://docs.pyribs.org/en/stable/whats-new.html
 
 #### API
 
+- Allow specifying `centroids` with filenames in CVTArchive ({pr}`679`)
 - Add `kdtree_query_kwargs` parameter to CVTArchive ({pr}`677`)
 - **Backwards-incompatible:** Replace `ckdtree_kwargs` with `kdtree_kwargs` in
   CVTArchive and ProximityArchive ({pr}`676`)
@@ -53,7 +54,7 @@ https://docs.pyribs.org/en/stable/whats-new.html
 
 #### Documentation
 
-- Add tutorial on centroid generation for `CVTArchive` ({pr}`662`)
+- Add tutorial on centroid specification for `CVTArchive` ({pr}`662`, {pr}`680`)
 - Update DQD and QDHF tutorials ({pr}`659`)
 
 ## 0.8.3
