@@ -44,7 +44,7 @@ function test_notebook {
   case "$notebook" in
     tutorials/arm_repertoire.ipynb)
       # Reduce samples so that CVTArchive runs quickly.
-      sed -i 's/use_kd_tree=True,/use_kd_tree=True, samples=10000,/g' "${TMP_FILE}"
+      sed -i 's/centroids=10000,/centroids=10000, samples=10000,/g' "${TMP_FILE}"
       ;;
   esac
 

@@ -11,13 +11,9 @@ from .conftest import get_archive_data
 
 
 @pytest.fixture
-def data(use_kd_tree):
+def data(nearest_neighbors):
     """Data for CVT Archive tests."""
-    return (
-        get_archive_data("CVTArchive-kd_tree")
-        if use_kd_tree
-        else get_archive_data("CVTArchive-brute_force")
-    )
+    return get_archive_data(f"CVTArchive-{nearest_neighbors}")
 
 
 def assert_archive_elite(archive, solution, objective, measures, centroid):
@@ -70,18 +66,18 @@ def test_centroids_are_same_with_same_seed():
     assert np.all(np.isclose(archive.centroids, archive2.centroids))
 
 
-def test_custom_centroids(use_kd_tree):
+def test_custom_centroids(nearest_neighbors):
     centroids = np.asarray([[-0.25, -0.25], [0.25, 0.25]])
     archive = CVTArchive(
         solution_dim=3,
         centroids=centroids,
         ranges=[(-1, 1), (-1, 1)],
-        use_kd_tree=use_kd_tree,
+        nearest_neighbors=nearest_neighbors,
     )
     assert (archive.centroids == centroids).all()
 
 
-def test_custom_centroids_bad_shape(use_kd_tree):
+def test_custom_centroids_bad_shape(nearest_neighbors):
     with pytest.raises(
         ValueError, match=r"Expected centroids to be an array with shape .*"
     ):
@@ -90,7 +86,7 @@ def test_custom_centroids_bad_shape(use_kd_tree):
             # The centroids are 3D measures, but the ranges specify 2D measures.
             centroids=np.asarray([[-0.25, -0.25, -0.25], [0.25, 0.25, 0.25]]),
             ranges=[(-1, 1), (-1, 1)],
-            use_kd_tree=use_kd_tree,
+            nearest_neighbors=nearest_neighbors,
         )
 
 
@@ -189,7 +185,7 @@ def test_chunked_calculation():
         centroids=centroids,
         ranges=[(-1, 1), (-1, 1)],
         chunk_size=2,
-        use_kd_tree=False,
+        nearest_neighbors="brute_force",
     )
     measure_batch = [
         [-1, 1],
