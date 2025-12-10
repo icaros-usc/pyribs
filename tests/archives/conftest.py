@@ -31,7 +31,7 @@ def benchmark_data_10k():
     return n_vals, solution_batch, objective_batch, measures_batch
 
 
-@pytest.fixture(params=["scipy_kd_tree", "brute_force"])
+@pytest.fixture(params=["scipy_kd_tree", "brute_force", "sklearn_nn"])
 def nearest_neighbors(request):
     """Nearest neighbors method in CVTArchive."""
     return request.param
@@ -52,6 +52,7 @@ ARCHIVE_NAMES = [
     "GridArchive",
     "CVTArchive-scipy_kd_tree",
     "CVTArchive-brute_force",
+    "CVTArchive-sklearn_nn",
     "SlidingBoundariesArchive",
     "ProximityArchive",
 ]
