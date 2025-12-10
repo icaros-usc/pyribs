@@ -122,8 +122,8 @@ class ProximityArchive(ArchiveBase):
             that contains scalar values and a "bar" field that contains 10D values. Note
             that field names must be valid Python identifiers, and names already used in
             the archive are not allowed.
-        ckdtree_kwargs: When computing nearest neighbors, we construct a
-            :class:`~scipy.spatial.cKDTree`. This parameter will pass additional kwargs
+        kdtree_kwargs: When computing nearest neighbors, we construct a
+            :class:`~scipy.spatial.KDTree`. This parameter will pass additional kwargs
             when constructing the tree. By default, we do not pass in any kwargs.
 
     Raises:
@@ -146,8 +146,16 @@ class ProximityArchive(ArchiveBase):
         measures_dtype: DTypeLike = None,
         dtype: DTypeLike = None,
         extra_fields: FieldDesc | None = None,
-        ckdtree_kwargs: dict | None = None,
+        kdtree_kwargs: dict | None = None,
+        # Deprecated parameters.
+        ckdtree_kwargs: None = None,
     ) -> None:
+        if ckdtree_kwargs is not None:
+            raise ValueError(
+                "`ckdtree_kwargs` is deprecated in pyribs 0.9.0. "
+                "Please use `kdtree_kwargs` instead."
+            )
+
         self._rng = np.random.default_rng(seed)
 
         ArchiveBase.__init__(
@@ -187,13 +195,13 @@ class ProximityArchive(ArchiveBase):
             novelty_threshold, dtype=self.dtypes["measures"]
         )
         self._local_competition = local_competition
-        self._ckdtree_kwargs = {} if ckdtree_kwargs is None else ckdtree_kwargs.copy()
+        self._kdtree_kwargs = {} if kdtree_kwargs is None else kdtree_kwargs.copy()
         self._qd_score_offset = np.asarray(
             qd_score_offset, dtype=self.dtypes["objective"]
         )
 
         # Set up k-D tree with current measures in the archive. Updated on add().
-        self._cur_kd_tree = KDTree(self._store.data("measures"), **self._ckdtree_kwargs)
+        self._cur_kd_tree = KDTree(self._store.data("measures"), **self._kdtree_kwargs)
 
         # Set up statistics -- objective_sum is the sum of all objective values in the
         # archive; it is useful for computing qd_score and obj_mean.
@@ -614,7 +622,7 @@ class ProximityArchive(ArchiveBase):
 
                 # Make a new tree with the updated solutions.
                 self._cur_kd_tree = KDTree(
-                    self._store.data("measures"), **self._ckdtree_kwargs
+                    self._store.data("measures"), **self._kdtree_kwargs
                 )
 
             return add_info
@@ -725,7 +733,7 @@ class ProximityArchive(ArchiveBase):
 
                 # Make a new tree with the updated solutions.
                 self._cur_kd_tree = KDTree(
-                    self._store.data("measures"), **self._ckdtree_kwargs
+                    self._store.data("measures"), **self._kdtree_kwargs
                 )
 
             return add_info

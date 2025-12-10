@@ -175,6 +175,23 @@ def test_index_of_no_solutions(data):
     assert indices.shape == (0,)
 
 
+def test_kdtree_query_kwargs():
+    archive = CVTArchive(
+        solution_dim=2,
+        centroids=[[0, 1], [1, 0]],
+        ranges=[(-1, 1), (-1, 1)],
+        nearest_neighbors="scipy_kd_tree",
+        kdtree_query_kwargs={
+            "p": 1,
+            "workers": 2,
+        },
+    )
+
+    indices = archive.index_of([[0, 0.5], [0.5, 0]])
+
+    assert np.all(indices == [0, 1])
+
+
 def test_chunked_calculation():
     """Testing accuracy of chunked computation for nearest neighbors."""
     centroids = [
