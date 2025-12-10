@@ -51,7 +51,7 @@
 
 #### Documentation
 
-- Add tutorial on centroid generation for `CVTArchive` ({pr}`662`)
+- Add tutorial on centroid specification for `CVTArchive` ({pr}`662`)
 - Update DQD and QDHF tutorials ({pr}`659`)
 
 ## 0.8.3
