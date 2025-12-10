@@ -6,6 +6,8 @@
 
 #### API
 
+- **Backwards-incompatible:** Replace `ckdtree_kwargs` with `kdtree_kwargs` in
+  CVTArchive and ProximityArchive
 - Add `sklearn_nn` as an option for `nearest_neighbors` in CVTArchive
   ({pr}`675`)
 - **Backwards-incompatible:** Replace `use_kd_tree` with `nearest_neighbors` in
