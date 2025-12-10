@@ -6,6 +6,7 @@
 
 #### API
 
+- Allow specifying `centroids` with filenames in CVTArchive ({pr}`679`)
 - Add `kdtree_query_kwargs` parameter to CVTArchive ({pr}`677`)
 - **Backwards-incompatible:** Replace `ckdtree_kwargs` with `kdtree_kwargs` in
   CVTArchive and ProximityArchive ({pr}`676`)

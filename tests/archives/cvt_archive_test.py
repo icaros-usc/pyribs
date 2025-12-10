@@ -74,7 +74,7 @@ def test_custom_centroids(nearest_neighbors):
         ranges=[(-1, 1), (-1, 1)],
         nearest_neighbors=nearest_neighbors,
     )
-    assert (archive.centroids == centroids).all()
+    assert np.allclose(archive.centroids, centroids)
 
 
 def test_custom_centroids_bad_shape(nearest_neighbors):
@@ -88,6 +88,20 @@ def test_custom_centroids_bad_shape(nearest_neighbors):
             ranges=[(-1, 1), (-1, 1)],
             nearest_neighbors=nearest_neighbors,
         )
+
+
+def test_custom_centroids_from_file(tmp_path):
+    centroids = np.asarray([[-0.25, -0.25], [0.25, 0.25]])
+    file = tmp_path / "centroids.npy"
+    np.save(file, centroids)
+
+    archive = CVTArchive(
+        solution_dim=3,
+        centroids=file,
+        ranges=[(-1, 1), (-1, 1)],
+    )
+
+    assert np.allclose(archive.centroids, centroids)
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])
