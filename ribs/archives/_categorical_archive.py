@@ -738,7 +738,7 @@ class CategoricalArchive(ArchiveBase):
     ## Refer to ArchiveBase for documentation of these methods. ##
 
     def retrieve(self, measures: ArrayLike) -> tuple[np.ndarray, BatchData]:
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
 
         occupied, data = self._store.retrieve(self.index_of(measures))
@@ -747,7 +747,7 @@ class CategoricalArchive(ArchiveBase):
         return occupied, data
 
     def retrieve_single(self, measures: ArrayLike) -> tuple[bool, SingleData]:
-        measures = np.asarray(measures)
+        measures = np.asarray(measures, dtype=self.dtypes["measures"])
         check_shape(measures, "measures", self.measure_dim, "measure_dim")
 
         occupied, data = self.retrieve(measures[None])
