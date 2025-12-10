@@ -169,6 +169,24 @@ class CVTArchive(ArchiveBase):
     - ``nearest_neighbors="sklearn_nn"`` uses
       :class:`sklearn.neighbors.NearestNeighbors` to find the nearest neighbors.
 
+    .. info:: To compare the performance of the different nearest neighbor methods, we
+        ran benchmarks where we inserted 1k batches of 100 solutions into a 2D archive
+        with varying numbers of cells. We took the minimum over 5 runs for each data
+        point --- minimum is recommended in the docs for :meth:`timeit.Timer.repeat`.
+        Note the logarithmic scales. This plot was generated on a reasonably modern
+        laptop; see `benchmarks/cvt_add.py
+        <https://github.com/icaros-usc/pyribs/tree/master/benchmarks/cvt_add.py>`_ in
+        the project repo for more information.
+
+        .. image:: ../_static/imgs/cvt_add_plot.png
+            :alt: Runtime to insert 100k entries into CVTArchive
+
+        We hope that the performance differences in this plot serve as a rough guide for
+        choosing nearest neighbor methods, but we note that they are not definitive, as
+        each nearest neighbor method has a wide variety of options that can influence
+        performance. Furthermore, performance is vastly affected by factors like the
+        dimensionality of the measure space and the number of centroids/cells.
+
     .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
         <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds, including the
         ``learning_rate`` and ``threshold_min`` parameters, refer to our tutorial
