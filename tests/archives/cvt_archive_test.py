@@ -166,6 +166,15 @@ def test_add_single_without_overwrite(data, add_mode):
     )
 
 
+def test_index_of_no_solutions(data):
+    """When no solutions are in the archive, index_of should return empty array.
+
+    Relevant because there's a special case for when nearest_neighbors="sklearn_nn".
+    """
+    indices = data.archive.index_of(np.empty((0, data.archive.measure_dim)))
+    assert indices.shape == (0,)
+
+
 def test_chunked_calculation():
     """Testing accuracy of chunked computation for nearest neighbors."""
     centroids = [
