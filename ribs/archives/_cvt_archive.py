@@ -11,6 +11,7 @@ from numpy.typing import ArrayLike, DTypeLike
 from numpy_groupies import aggregate_nb as aggregate
 from scipy.spatial import KDTree
 from sklearn.cluster import k_means
+from sklearn.neighbors import NearestNeighbors
 
 from ribs._utils import (
     check_batch_shape,
@@ -165,6 +166,8 @@ class CVTArchive(ArchiveBase):
       distance in O(log(number of cells)) time.
     - ``nearest_neighbors="brute_force"`` also uses Euclidean distance but operates in
       O(number of cells) time.
+    - ``nearest_neighbors="sklearn_nn"`` uses
+      :class:`sklearn.neighbors.NearestNeighbors` to find the nearest neighbors.
 
     .. note:: The idea of archive thresholds was introduced in `Fontaine 2023
         <https://arxiv.org/abs/2205.10752>`_. For more info on thresholds, including the
@@ -221,12 +224,15 @@ class CVTArchive(ArchiveBase):
             :func:`k_means_centroids` (assuming that function is called).
         nearest_neighbors: Method to use for computing nearest neighbors. See earlier in
             this docstring for more info.
-        ckdtree_kwargs: kwargs for :class:`~scipy.spatial.cKDTree`. By default, we do
-            not pass in any kwargs. Only applicable when
+        ckdtree_kwargs: kwargs for :class:`scipy.spatial.cKDTree`. By default, we do not
+            pass in any kwargs. Only applicable when
             ``nearest_neighbors="scipy_kd_tree"``.
         chunk_size: If passed, brute forcing the closest centroid search will chunk the
             distance calculations to compute chunk_size inputs at a time. Only
             applicable when ``nearest_neighbors="brute_force"``.
+        sklearn_nn_kwargs: kwargs for :class:`sklearn.neighbors.NearestNeighbors`. By
+            default, we do not pass in any kwargs. Only applicable when
+            ``nearest_neighbors="sklearn_nn"``.
         cells: DEPRECATED.
         custom_centroids: DEPRECATED.
         centroid_method: DEPRECATED.
@@ -259,6 +265,7 @@ class CVTArchive(ArchiveBase):
         nearest_neighbors: Literal["scipy_kd_tree", "brute_force"] = "scipy_kd_tree",
         ckdtree_kwargs: dict | None = None,
         chunk_size: Int = None,
+        sklearn_nn_kwargs: dict | None = None,
         # Deprecated parameters.
         cells: None = None,
         custom_centroids: None = None,
@@ -369,6 +376,12 @@ class CVTArchive(ArchiveBase):
             self._centroid_kd_tree = KDTree(self._centroids, **self._ckdtree_kwargs)
         elif self._nearest_neighbors == "brute_force":
             self._chunk_size = chunk_size
+        elif self._nearest_neighbors == "sklearn_nn":
+            self._sklearn_nn_kwargs = (
+                {} if sklearn_nn_kwargs is None else sklearn_nn_kwargs.copy()
+            )
+            self._sklearn_nn = NearestNeighbors(**self._sklearn_nn_kwargs)
+            self._sklearn_nn.fit(self._centroids)
         else:
             raise ValueError(
                 f"Unknown value `{self._nearest_neighbors}` for nearest_neighbors."
@@ -574,6 +587,14 @@ class CVTArchive(ArchiveBase):
                 # distance with a sqrt.
                 distances = np.sum(np.square(distances), axis=2)
                 return np.argmin(distances, axis=1).astype(np.int32)
+        elif self._nearest_neighbors == "sklearn_nn":
+            if len(measures) == 0:
+                # sklearn's NearestNeighbors expects at least one item.
+                return np.array([], dtype=np.int32)
+            indices = self._sklearn_nn.kneighbors(
+                measures, n_neighbors=1, return_distance=False
+            )
+            return indices.astype(np.int32).squeeze(1)
         else:
             raise ValueError(
                 f"Unknown value `{self._nearest_neighbors}` for nearest_neighbors."
