@@ -159,7 +159,7 @@ class CVTArchive(ArchiveBase):
     aforementioned tutorial.
 
     Several options are also available for finding the closest centroid in measure
-    space; these are set via the `nearest_neighbors` parameter:
+    space; these are set via the ``nearest_neighbors`` parameter:
 
     - ``nearest_neighbors="scipy_kd_tree"`` is the default option. It uses
       :class:`scipy.spatial.cKDTree` to find the nearest neighbors in terms of Euclidean
@@ -169,7 +169,7 @@ class CVTArchive(ArchiveBase):
     - ``nearest_neighbors="sklearn_nn"`` uses
       :class:`sklearn.neighbors.NearestNeighbors` to find the nearest neighbors.
 
-    .. info:: To compare the performance of the different nearest neighbor methods, we
+    .. note:: To compare the performance of the different nearest neighbor methods, we
         ran benchmarks where we inserted 1k batches of 100 solutions into a 2D archive
         with varying numbers of cells. We took the minimum over 5 runs for each data
         point --- minimum is recommended in the docs for :meth:`timeit.Timer.repeat`.
