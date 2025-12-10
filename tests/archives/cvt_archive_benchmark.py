@@ -3,7 +3,7 @@
 from ribs.archives import CVTArchive
 
 
-def benchmark_init(use_kd_tree, benchmark):
+def benchmark_init(nearest_neighbors, benchmark):
     """Construction includes k-means clustering and building a kd-tree."""
 
     def init():
@@ -12,13 +12,13 @@ def benchmark_init(use_kd_tree, benchmark):
             centroids=1000,
             ranges=[(-1, 1), (-1, 1)],
             samples=20_000,
-            use_kd_tree=use_kd_tree,
+            nearest_neighbors=nearest_neighbors,
         )
 
     benchmark(init)
 
 
-def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
+def benchmark_add_10k(nearest_neighbors, benchmark, benchmark_data_10k):
     _, solution_batch, objective_batch, measures_batch = benchmark_data_10k
 
     def setup():
@@ -27,7 +27,7 @@ def benchmark_add_10k(use_kd_tree, benchmark, benchmark_data_10k):
             centroids=1000,
             ranges=[(-1, 1), (-1, 1)],
             samples=20_000,
-            use_kd_tree=use_kd_tree,
+            nearest_neighbors=nearest_neighbors,
         )
 
         # Let numba compile.
