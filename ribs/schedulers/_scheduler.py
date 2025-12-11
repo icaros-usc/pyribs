@@ -234,7 +234,7 @@ class Scheduler:
             data[name] = np.asarray(arr)
             self._check_length(name, arr)
 
-        # Convenient for solutions be part of data, so that everything is just one dict.
+        # Convenient for solutions to be part of data, so that everything is one dict.
         data["solution"] = self._cur_solutions
 
         return data
