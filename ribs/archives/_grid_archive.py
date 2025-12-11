@@ -911,11 +911,16 @@ class GridArchive(ArchiveBase):
     ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
-    def sample_elites(self, n: Int) -> BatchData:
+    def sample_elites(self, n: Int, replace: bool = True) -> BatchData:
         if self.empty:
             raise IndexError("No elements in archive.")
+        if not replace and n > len(self._store):
+            raise ValueError(
+                "Cannot take a larger sample than the number of elites "
+                "in the archive when 'replace=False'"
+            )
 
-        random_indices = self._rng.integers(len(self._store), size=n)
+        random_indices = self._rng.choice(len(self._store), size=n, replace=replace)
         selected_indices = self._store.occupied_list[random_indices]
         _, elites = self._store.retrieve(selected_indices)
         return elites

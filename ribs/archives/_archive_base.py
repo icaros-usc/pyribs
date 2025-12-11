@@ -364,12 +364,11 @@ class ArchiveBase(ABC):
         """
         raise NotImplementedError("`data` has not been implemented in this archive")
 
-    def sample_elites(self, n: Int) -> BatchData:
+    def sample_elites(self, n: Int, replace: bool = True) -> BatchData:
         """Randomly samples elites from the archive.
 
-        Currently, this sampling is done uniformly at random. Furthermore, each sample
-        is done independently, so elites may be repeated in the sample. Additional
-        sampling methods may be supported in the future.
+        Currently, this sampling is done uniformly at random, either with or without
+        replacement. Additional sampling methods may be supported in the future.
 
         Example:
             ::
@@ -382,12 +381,16 @@ class ArchiveBase(ABC):
 
         Args:
             n: Number of elites to sample.
+            replace: Whether to replace the elites when sampling. If True, the elites
+                will be replaced and thus will be sampled independently.
 
         Returns:
             A batch of elites randomly selected from the archive.
 
         Raises:
             IndexError: The archive is empty.
+            ValueError: ``n`` was greater than the number of elites in the archive when
+                ``replace=False``.
         """
         raise NotImplementedError(
             "`sample_elites` has not been implemented in this archive"
