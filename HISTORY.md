@@ -6,6 +6,7 @@
 
 #### API
 
+- Require numpy to be at least 2.0.0 ({pr}`681`)
 - Allow specifying `centroids` with filenames in CVTArchive ({pr}`679`)
 - Add `kdtree_query_kwargs` parameter to CVTArchive ({pr}`677`)
 - **Backwards-incompatible:** Replace `ckdtree_kwargs` with `kdtree_kwargs` in

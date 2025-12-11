@@ -31,7 +31,7 @@ requires-python = ">=3.10.0"
 dependencies = [
   "array_api_compat",
   "numba>=0.51.0",
-  "numpy>=1.22.0",  # numpy>=1.22.0 is when Array API gains support.
+  "numpy>=2.0.0",  # Certain Array API features are only available in 2.0.0 and up.
   "numpy_groupies>=0.9.16",  # Supports Python 3.7 and up.
   "pandas>=1.0.0",
   "scikit-learn>=1.1.0",
