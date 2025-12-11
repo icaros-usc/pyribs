@@ -1108,7 +1108,7 @@ class CVTArchive(ArchiveBase):
         if self.empty:
             raise IndexError("No elements in archive.")
 
-        random_indices = self._rng.integers(len(self._store), size=n, replace=replace)
+        random_indices = self._rng.choice(len(self._store), size=n, replace=replace)
         selected_indices = self._store.occupied_list[random_indices]
         _, elites = self._store.retrieve(selected_indices)
         return elites
