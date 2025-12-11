@@ -6,6 +6,7 @@
 
 #### API
 
+- Implement Dominated Novelty Search ({pr}`664`)
 - Add `replace` parameter to sample_elites in archives ({pr}`682`)
 - Require numpy to be at least 2.0.0 ({pr}`681`)
 - Allow specifying `centroids` with filenames in CVTArchive ({pr}`679`)
