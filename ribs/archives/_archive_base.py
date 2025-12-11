@@ -367,8 +367,8 @@ class ArchiveBase(ABC):
     def sample_elites(self, n: Int, replace: bool = True) -> BatchData:
         """Randomly samples elites from the archive.
 
-        Currently, this sampling is done uniformly at random. Additional sampling
-        methods may be supported in the future.
+        Currently, this sampling is done uniformly at random, either with or without
+        replacement. Additional sampling methods may be supported in the future.
 
         Example:
             ::
