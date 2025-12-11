@@ -158,6 +158,9 @@ emitters = [
 
 ## ✨ Additional Features
 
+- In the archives, {meth}`~ribs.archives.ArchiveBase.sample_elites` now supports
+  the `replace` parameter to indicate whether elites should be replaced when
+  sampling ({pr}`682`)
 - {func}`~ribs.visualize.parallel_axes_plot` now supports plotting
   `ProximityArchive` ({pr}`647`)
 - {class}`~ribs.archives.ArrayStore` now supports backends such as torch and
