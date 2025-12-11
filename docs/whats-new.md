@@ -1,113 +1,178 @@
-# What's New in v0.8.0
+# What's New in v0.9.0
 
-Pyribs v0.8.0 adds support for several new algorithms while making it easier
-than ever to design new ones. Below we highlight some of the most notable
-updates. For the full list of changes, please refer to our History page.
+We are excited to present pyribs 0.9.0, which introduces a host of new features
+intended to make the library more flexible than ever! This release supports
+Python 3.10 and up, with Python 3.9 being dropped due to being end-of-life.
 
-## 🧠 New Algorithms
+## Overhauling CVTArchive
 
-Pyribs v0.8.0 introduces implementations of several new algorithms:
-
-- **Novelty Search**
-  ([Lehman 2011](https://web.archive.org/web/20220707041732/https://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf))
-  via the {class}`~ribs.archives.ProximityArchive`. We illustrate how to run
-  Novelty Search in our new tutorial, {doc}`/tutorials/ns_maze`. Visualization
-  is available via {func}`~ribs.visualize.proximity_archive_plot`.
-  - Thanks to [@gresavage](https://github.com/gresavage) for helping with this
-    implementation!
-- **Density Descent Search**
-  ([Lee 2024](https://dl.acm.org/doi/10.1145/3638529.3654001)) via the
-  {class}`~ribs.archives.DensityArchive`. We illustrate how to run Density
-  Descent Search in {doc}`examples/sphere`.
-- **BOP-Elites**
-  ([Kent 2024](https://ieeexplore.ieee.org/abstract/document/10472301)) via
-  {class}`~ribs.emitters.BayesianOptimizationEmitter` and
-  {class}`~ribs.schedulers.BayesianOptimizationScheduler`. An example of running
-  BOP-Elites is available in the example here: {doc}`examples/bop_elites`.
-  - As part of implementing BOP-Elites, a new
-    {class}`~ribs.archives.GridArchive.retessellate` method has been added to
-    GridArchive to allow changing the layout of the grid.
-  - Thanks to [@szhaovas](https://github.com/szhaovas) for working on this
-    implementation!
-
-We have also added a {class}`~ribs.archives.CategoricalArchive` where the
-measures can be categorical values, e.g., `["Cat", "Dog", "Mouse"]`.
-
-The {doc}`supported-algorithms` page now includes a list of algorithms supported
-in pyribs.
-
-## 📜 Single-File Implementations for Archives
-
-To make it easier to understand current archives and create new archives, we
-have made each archive into a "single-file implementation." Previously,
-{class}`~ribs.archives.ArchiveBase` contained a lot of archive logic. While this
-made it easier to share code between archives, it also made it harder to
-understand each archive's implementation. For instance, the implementation for
-{class}`~ribs.archives.GridArchive` was split between the GridArchive file and
-the ArchiveBase file. In addition, putting logic in ArchiveBase meant that new
-implementations often had to override that logic, which quickly became
-confusing. To overcome these issues, we have refactored ArchiveBase to be an
-interface that contains almost no logic. All logic for archive implementations
-is now placed in each archive's file, and to reduce repeated code, we have added
-various utility functions. We anticipate that it will now be much easier to
-understand how each archive operates.
-
-## 🛠 Flexible Data Handling
-
-Archives now support more flexible data specifications. Notably, solutions are
-no longer restricted to 1D arrays. They can now be scalars or multi-dimensional
-arrays; simply pass the appropriate shape as the
-{attr}`~ribs.archives.ArchiveBase.solution_dim` in the archive. Separate data
-types for the solutions, objectives, and measures are also supported by passing
-in a dict as the `dtype` argument for archives.
-
-For example, the following creates a GridArchive where the solutions can be
-strings!
+This release introduces a number of new features and (unfortunately) breaking
+changes to {class}`~ribs.archives.CVTArchive`. For most users, it should suffice
+to know that an initialization of CVTArchive that once looked like this:
 
 ```python
-archive = GridArchive(
-    solution_dim=(),
-    dims=[10, 20],
-    ranges=[(-1, 1), (-2, 2)],
-    dtype={
-        "solution": object,
-        "objective": np.float32,
-        "measures": np.float32
-    },
-)
+from ribs.archives import CVTArchive
 
-add_info = archive.add(
-    solution=["This is Bob", "Bob says hi", "Good job Bob"],
-    objective=[1.0, 2.0, 3.0],
-    measures=[[0, 0], [0.25, 0.25], [0.5, 0.5]],
+archive = CVTArchive(
+    solution_dim=12,
+    cells=10000,
+    ranges=[(-1, 1), (-1, 1)],
+    use_kd_tree=True,
 )
 ```
 
-## 🚨 Breaking Changes
+Now looks like this. Note that `cells` has been replaced with `centroids`, and
+`use_kd_tree` has been replaced with `nearest_neighbors`.
 
-v0.8.0 includes several **backwards-incompatible changes**, most of which are
-part of an ongoing effort to streamline the library:
+```python
+from ribs.archives import CVTArchive
 
-- `archive.dtype` has been replaced with a more expressive `archive.dtypes`
-  dictionary, since solutions, objectives and measures can now have different
-  dtypes.
-- {class}`~ribs.archives.cqd_score` is now a separate utility function, instead
-  of being a method on the archives.
-- The {attr}`~ribs.archives.ArchiveBase.field_list` and
-  {attr}`~ribs.archives.ArchiveBase.dtypes` properties on current archives
-  include the `index` field, since `index` is no longer a required part of
-  archives.
-- Archive `add` methods and the {class}`~ribs.archives.ArrayStore` have been
-  simplified to no longer use "transforms," which significantly complicated the
-  implementation.
+archive = CVTArchive(
+    solution_dim=12,
+    centroids=10000,
+    ranges=[(-1, 1), (-1, 1)],
+    nearest_neighbors="scipy_kd_tree",
+)
+```
 
-## 🐛 Bug Fixes
+Our new tutorial serves as a starting point for using the new archive:
+{doc}`/tutorials/cvt_centroids`.
 
-In this release, we
-[fixed a bug in BanditScheduler](https://github.com/icaros-usc/pyribs/pull/489)
-thanks to [@Tekexa](https://github.com/Tekexa)! Now,
-{class}`~ribs.schedulers.BanditScheduler` correctly maintains a stable number of
-active emitters.
+### Detailed Changes
+
+Below we provide further details on the changes, with even more detail available
+in {issue}`621`.
+
+- **Centroid generation has been moved out of CVTArchive.** In the past,
+  CVTArchive contained methods for generating centroids that could be specified
+  via the `centroid_method` parameter. However, centroid generation is extremely
+  customizable, and we believe it should be left to the user rather than handled
+  in the archive initialization itself. As such, **we have removed the
+  `centroid_method` parameter as well as these centroid generation methods,**
+  and we have instead added a new tutorial that shows different options for
+  specifying and generating centroids: {doc}`/tutorials/cvt_centroids`.
+
+  In a similar vein, it is now possible to generate centroids with the
+  {func}`~ribs.archives.k_means_centroids` function, which samples points in a
+  measure space and performs k-means clustering to identify the centroids. This
+  function, as well as other workflows with centroids, are included in the above
+  tutorial.
+
+  Finally, since we have separated centroid generation from CVTArchive, **the
+  `samples` property is now deprecated, as is the `plot_samples` parameter** in
+  {func}`~ribs.visualize.cvt_archive_heatmap` and
+  {func}`~ribs.visualize.cvt_archive_3d_plot`.
+
+- **`cells` and `custom_centroids` are now replaced with the `centroids`
+  parameter.** We found that `cells` and `custom_centroids` were redundant with
+  each other. Instead, the new `centroids` parameter can either be an int
+  indicating the number of cells in the archive, or an array-like with the
+  coordinates of the centroids. This supports the separation of centroid
+  generation from CVTArchive by making it easier to specify centroids.
+  Previously, both `cells` and `custom_centroids` had to be specified to use
+  centroids created by the user, but now, only `centroids` is needed.
+
+- **Nearest-neighbor lookup is now more flexible.** Previously, we only
+  supported two methods for nearest-neighbor lookup, via brute-force and via
+  scipy's {class}`~scipy.spatial.KDTree`. To support more methods, **we have
+  deprecated the `use_kd_tree` parameter and replaced it with a new
+  `nearest_neighbors` parameter.** This `nearest_neighbors` parameter can be set
+  to `"scipy_kd_tree"`, `"brute_force"`, or the newest option, `"sklearn_nn"`,
+  which uses scikit-learn's {class}`~sklearn.neighbors.NearestNeighbors`.
+
+  Correspondingly, we have added `sklearn_nn_kwargs` and `kdtree_query_kwargs`,
+  which allow specifying more options to the internal objects used for
+  nearest-neighbor search.
+
+## New dtype Specifications for Archives
+
+Previously, we found specifying separate dtypes for the solution, objective, and
+measures in an archive to be complicated due to requiring passing a dict.
+Instead, we now allow passing in individual dtypes: `solution_dtype`,
+`objective_dtype`, and `measures_dtype`. It is also still possible to pass in
+`dtype` to set all of these at once. For example, the following sets the
+solutions to be objects, while the objective and measures are float32:
+
+```python
+import numpy as np
+
+from ribs.archives import GridArchive
+
+archive = GridArchive(
+    solution_dim=(),
+    dims=[20, 20],
+    ranges=[(1, 10), (1, 10)],
+    solution_dtype=object,
+    objective_dtype=np.float32,
+    measures_dtype=np.float32,
+)
+```
+
+(This example is taken from the tutorial {doc}`tutorials/qdaif`.) For more info,
+see {pr}`639`, {pr}`643`, and {pr}`661`.
+
+## Multi-Dimensional Solutions in Emitters
+
+This release improves support for multi-dimensional solutions in emitters. In
+particular, the {class}`~ribs.emitters.GaussianEmitter` and
+{class}`~ribs.emitters.IsoLineEmitter` can now generate multi-dimensional
+solutions ({pr}`650`). In a similar vein, it is now possible to specify the
+bounds of the solution space in emitters via `lower_bounds` and `upper_bounds`
+({pr}`649`, {pr}`657`). The original `bounds` parameter is still supported but
+cannot be used at the same time. Thus, the following creates a GaussianEmitter
+that generates solutions of shape `(5, 5)` bounded by -1.0 and 1.0 in each
+dimension:
+
+```python
+import numpy as np
+
+from ribs.archives import GridArchive
+from ribs.emitters import GaussianEmitter
+
+archive = GridArchive(
+    solution_dim=(5, 5),
+    dims=[20, 20],
+    ranges=[(-2, 2), (-2, 2)],
+)
+
+emitters = [
+    GaussianEmitter(
+        archive,
+        sigma=0.1,
+        x0=np.zeros((5, 5)),
+        lower_bounds=np.full((5, 5), -1.0),
+        upper_bounds=np.full((5, 5), 1.0),
+        batch_size=64,
+    )
+]
+```
+
+## 🚨 Additional Breaking Changes
+
+- In {class}`~ribs.archives.CVTArchive` and
+  {class}`~ribs.archives.ProximityArchive`, `ckdtree_kwargs` is now referred to
+  as `kdtree_kwargs`, as we have stopped using scipy's cKDTree in favor of
+  KDTree ({pr}`676`)
+- In {class}`~ribs.archives.ArrayStore`, `as_raw_dict` and `from_raw_dict` have
+  been removed as they were not being used ({pr}`575`)
+
+## ✨ Additional Features
+
+- In the archives, {meth}`~ribs.archives.ArchiveBase.sample_elites` now supports
+  the `replace` parameter to indicate whether elites should be replaced when
+  sampling ({pr}`682`)
+- {func}`~ribs.visualize.parallel_axes_plot` now supports plotting
+  `ProximityArchive` ({pr}`647`)
+- {class}`~ribs.archives.ArrayStore` now supports backends such as torch and
+  cupy, drawing from the
+  [Python array API standard](https://data-apis.org/array-api/latest/)
+  ({issue}`570`, {pr}`645`)
+
+## Developer Workflow
+
+Finally, in addition to the above library improvements, we have migrated from
+using yapf and pylint to using [ruff](https://docs.astral.sh/ruff/) and
+[ty](https://docs.astral.sh/ty/) for formatting, linting, and type checking.
 
 ## Past Editions
 
@@ -116,6 +181,7 @@ Past editions of "What's New" are available below.
 ```{toctree}
 :maxdepth: 1
 
+whats-new/v0.8.0
 whats-new/v0.7.0
 whats-new/v0.5.0
 ```
