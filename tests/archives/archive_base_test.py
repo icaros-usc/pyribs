@@ -593,7 +593,8 @@ def test_sample_elites_fails_when_empty(data):
         data.archive.sample_elites(1)
 
 
-def test_sample_elites_with_replacement(data):
+@pytest.mark.parametrize("setting_for_n", ["enough_n", "too_many_n"])
+def test_sample_elites_with_replacement(data, setting_for_n):
     if isinstance(data.archive, CategoricalArchive):
         data.archive.add(
             solution=np.zeros((3, 3)),
@@ -606,8 +607,20 @@ def test_sample_elites_with_replacement(data):
             objective=[1, 2, 3],
             measures=[[-1, -1], [-1, 1], [1, 1]],
         )
-    elites = data.archive.sample_elites(3, replace=False)
-    assert np.allclose(np.sort(elites["objective"]), [1, 2, 3])
+
+    if setting_for_n == "enough_n":
+        # Sampling exactly 3 with replace=False should cause the 3 elites to be sampled.
+        elites = data.archive.sample_elites(3, replace=False)
+        assert np.allclose(np.sort(elites["objective"]), [1, 2, 3])
+    elif setting_for_n == "too_many_n":
+        # Sampling more than the number of elites  with replace=False throws an error.
+        with pytest.raises(
+            ValueError,
+            match=r"Cannot take a larger sample than the number of elites in the archive .*",
+        ):
+            elites = data.archive.sample_elites(4, replace=False)
+    else:
+        raise ValueError
 
 
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)

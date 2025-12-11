@@ -389,6 +389,8 @@ class ArchiveBase(ABC):
 
         Raises:
             IndexError: The archive is empty.
+            ValueError: n was greater than the number of elites in the archive when
+                replace=False -- in this case, at most n elites can be sampled.
         """
         raise NotImplementedError(
             "`sample_elites` has not been implemented in this archive"
