@@ -593,6 +593,23 @@ def test_sample_elites_fails_when_empty(data):
         data.archive.sample_elites(1)
 
 
+def test_sample_elites_with_replacement(data):
+    if isinstance(data.archive, CategoricalArchive):
+        data.archive.add(
+            solution=np.zeros((3, 3)),
+            objective=[1, 2, 3],
+            measures=[["A", "One"], ["A", "Two"], ["A", "Three"]],
+        )
+    else:
+        data.archive.add(
+            solution=np.zeros((3, 3)),
+            objective=[1, 2, 3],
+            measures=[[-1, -1], [-1, 1], [1, 1]],
+        )
+    elites = data.archive.sample_elites(3, replace=False)
+    assert np.allclose(np.sort(elites["objective"]), [1, 2, 3])
+
+
 @pytest.mark.parametrize("name", ARCHIVE_NAMES)
 @pytest.mark.parametrize("with_elite", [True, False], ids=["nonempty", "empty"])
 @pytest.mark.parametrize("dtype", [np.float64, np.float32], ids=["float64", "float32"])
