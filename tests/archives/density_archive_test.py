@@ -32,7 +32,7 @@ def test_dtype():
         bandwidth=2.0,
         dtype=np.float32,
     )
-    assert archive._measure_dtype == np.float32
+    assert archive._measures_dtype == np.float32
 
 
 def test_measures_dtype():
@@ -43,7 +43,7 @@ def test_measures_dtype():
         bandwidth=2.0,
         measures_dtype=np.float32,
     )
-    assert archive._measure_dtype == np.float32
+    assert archive._measures_dtype == np.float32
 
 
 def test_simultaneous_dtypes():

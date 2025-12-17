@@ -112,7 +112,7 @@ class DensityArchive(ArchiveBase):
         dtype: DTypeLike = None,
     ) -> None:
         self._rng = np.random.default_rng(seed)
-        _, _, self._measure_dtype = parse_all_dtypes(
+        _, _, self._measures_dtype = parse_all_dtypes(
             dtype, None, None, measures_dtype, np
         )
 
@@ -124,7 +124,7 @@ class DensityArchive(ArchiveBase):
         )
 
         # Buffer for storing the measures.
-        self._buffer = np.empty((buffer_size, measure_dim), dtype=self._measure_dtype)
+        self._buffer = np.empty((buffer_size, measure_dim), dtype=self._measures_dtype)
         # Number of occupied entries in the buffer.
         self._n_occupied = 0
         # Acceptance threshold for the buffer.
@@ -178,7 +178,7 @@ class DensityArchive(ArchiveBase):
         Returns:
             ``(batch_size,)`` array of density values of the input solutions.
         """
-        measures = np.asarray(measures, dtype=self._measure_dtype)
+        measures = np.asarray(measures, dtype=self._measures_dtype)
 
         if self._density_method == "kde":
             # Use self.buffer instead of self._buffer since self.buffer only contains
@@ -187,7 +187,7 @@ class DensityArchive(ArchiveBase):
                 measures,
                 self.buffer,
                 self._bandwidth,
-            ).astype(self._measure_dtype)
+            ).astype(self._measures_dtype)
         elif self._density_method == "kde_sklearn":
             if self.buffer.shape[0] == 0:
                 return np.zeros(measures.shape[0], dtype=measures.dtype)
@@ -196,7 +196,7 @@ class DensityArchive(ArchiveBase):
                 bandwidth=self._bandwidth,
                 **self._sklearn_kwargs,
             ).fit(self.buffer)
-            return kde.score_samples(measures).astype(self._measure_dtype)
+            return kde.score_samples(measures).astype(self._measures_dtype)
         else:
             raise ValueError(f"Unknown density_method '{self._density_method}'")
 
@@ -241,7 +241,7 @@ class DensityArchive(ArchiveBase):
             ValueError: The array arguments do not match their specified shapes.
             ValueError: ``measures`` has non-finite values (inf or NaN).
         """
-        measures = np.asarray(measures, dtype=self._measure_dtype)
+        measures = np.asarray(measures, dtype=self._measures_dtype)
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim", "")
         check_finite(measures, "measures")
         batch_size = len(measures)
