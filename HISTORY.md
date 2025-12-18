@@ -1,6 +1,9 @@
 # History
 
-## (Forthcoming)
+## 0.9.0
+
+To learn about this release, see our page on What's New in v0.9.0:
+https://docs.pyribs.org/en/stable/whats-new.html
 
 ### Changelog
 
@@ -107,7 +110,7 @@ This release makes some minor updates to 0.8.0.
 ## 0.8.0
 
 To learn about this release, see our page on What's New in v0.8.0:
-https://docs.pyribs.org/en/stable/whats-new.html
+https://docs.pyribs.org/en/stable/whats-new/v0.8.0.html
 
 ### Changelog
 
