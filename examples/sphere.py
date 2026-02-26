@@ -79,6 +79,10 @@ DDS:
 - `dds_kde_sklearn`: Density Descent Search using scikit-learn's KernelDensity as the
   density estimator.
 
+DMS:
+- `dms`: Discount Model Search (Tjanaka 2026, https://discount-models.github.io/), with
+  the MLP discount model proposed in the paper.
+
 Outputs are saved in the `sphere_output/` directory by default. The archive is saved as
 a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are saved as
 `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about the run are also saved in
@@ -120,6 +124,7 @@ from ribs.archives import (
     ArchiveBase,
     CVTArchive,
     DensityArchive,
+    DiscountArchive,
     GridArchive,
     ProximityArchive,
 )
@@ -633,7 +638,6 @@ CONFIG = {
                     "selection_rule": "mu",
                     "restart_rule": "basic",
                     "batch_size": 36,
-                    "es": "sep_cma_es",
                 },
                 "num_emitters": 15,
             }
@@ -821,6 +825,47 @@ CONFIG = {
                 "kwargs": {
                     "sigma0": 1.5,
                     "ranker": "density",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {},
+        },
+    },
+    ## DMS ##
+    "dms": {
+        # Hyperparameters from DMS paper: https://discount-models.github.io/
+        "is_dqd": False,
+        # In DMS, the DiscountArchive does not store any solutions, so emitters
+        # must use the result archive instead.
+        "pass_result_archive_to_emitters": True,
+        "archive": {
+            "class": DiscountArchive,
+            "kwargs": {
+                "learning_rate": 0.01,
+                "threshold_min": 0,
+                "initial_train_points": 1000,
+                "empty_points": 100,
+                "train_freq": 1,  # Train on every iteration.
+            },
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
+            },
+        },
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "imp",
                     "selection_rule": "mu",
                     "restart_rule": "basic",
                     "batch_size": 36,
