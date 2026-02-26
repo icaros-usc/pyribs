@@ -14,6 +14,7 @@ inheriting from :class:`~ribs.archives.ArchiveBase`.
     CategoricalArchive
     CVTArchive
     DensityArchive
+    DiscountArchive
     GridArchive
     ProximityArchive
     SlidingBoundariesArchive
@@ -45,15 +46,17 @@ from ribs.archives._categorical_archive import CategoricalArchive
 from ribs.archives._cqd_score import CQDScoreResult, cqd_score
 from ribs.archives._cvt_archive import CVTArchive, k_means_centroids
 from ribs.archives._density_archive import DensityArchive
+from ribs.archives._discount_archive import DiscountArchive
 from ribs.archives._grid_archive import GridArchive
 from ribs.archives._proximity_archive import ProximityArchive
 from ribs.archives._sliding_boundaries_archive import SlidingBoundariesArchive
 
 __all__ = [
     # Archives.
-    "CategoricalArchive",
     "CVTArchive",
+    "CategoricalArchive",
     "DensityArchive",
+    "DiscountArchive",
     "GridArchive",
     "ProximityArchive",
     "SlidingBoundariesArchive",
