@@ -53,8 +53,8 @@ from ribs.archives._sliding_boundaries_archive import SlidingBoundariesArchive
 
 __all__ = [
     # Archives.
-    "CVTArchive",
     "CategoricalArchive",
+    "CVTArchive",
     "DensityArchive",
     "DiscountArchive",
     "GridArchive",

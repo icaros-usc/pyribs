@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+from abc import ABC
+from pathlib import Path
+
 import numpy as np
 import torch
+import tqdm
 from numpy.typing import ArrayLike, DTypeLike
-from src.models.discount_model_base import DiscountModelBase
+from omegaconf import DictConfig
+from torch import nn
+from torch.utils.data import DataLoader, TensorDataset
 
 from ribs._utils import validate_batch
 from ribs.archives._archive_base import ArchiveBase
@@ -67,7 +73,7 @@ class DiscountArchive(ArchiveBase):
         measure_dim: Int,
         learning_rate: Float,
         threshold_min: Float,
-        discount_model: DiscountModelBase,
+        discount_model: DiscountModelManager,
         device: torch.device,
         result_archive: GridArchive | CVTArchive,
         initial_train_points: Int,
@@ -142,7 +148,7 @@ class DiscountArchive(ArchiveBase):
         return self._threshold_min
 
     @property
-    def discount_model(self) -> DiscountModelBase:
+    def discount_model(self) -> DiscountModelManager:
         """The discount model managed by this archive."""
         return self._discount_model
 
