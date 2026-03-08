@@ -128,6 +128,7 @@ from ribs.archives import (
     GridArchive,
     ProximityArchive,
 )
+from ribs.archives.discount_models import MLP, DiscountModelManager
 from ribs.emitters import (
     EvolutionStrategyEmitter,
     GaussianEmitter,
@@ -844,6 +845,26 @@ CONFIG = {
         # In DMS, the DiscountArchive does not store any solutions, so emitters
         # must use the result archive instead.
         "pass_result_archive_to_emitters": True,
+        "model": {
+            "class": MLP,
+            "kwargs": {
+                "layer_specs": "${eval:'[[${domain.config.measure_dim}, 128], [128, 128], [128, 1]]'}",  # TODO
+                "activation": torch.nn.ReLU,
+                # Inputs to the discount model's network are normalized based on the
+                # bounds of the measure space.
+                "normalize": "negative_one_one",  # "negative_one_one", "zero_one", False
+                "norm_low": "${domain.config.measure_low}",  # TODO
+                "norm_high": "${domain.config.measure_high}",  # TODO
+            },
+        },
+        "optimizer": {
+            "class": None,
+            "kwargs": {
+                "lr": 0.001,
+                "betas": [0.9, 0.999],
+            },
+        },
+        "discount_model_manager": {},
         "archive": {
             "class": DiscountArchive,
             "kwargs": {
@@ -973,6 +994,17 @@ def create_scheduler(
     elif archive_class == DensityArchive:
         archive = archive_class(
             measure_dim=len(bounds),
+            seed=seed,
+            **config["archive"]["kwargs"],
+        )
+    elif archive_class == DiscountArchive:
+        # TODO: Remove device
+        mlp = config["model"]
+        archive = archive_class(
+            solution_dim=solution_dim,
+            measure_dim=len(bounds),
+            discount_model=discount_model,
+            device="cpu",
             seed=seed,
             **config["archive"]["kwargs"],
         )

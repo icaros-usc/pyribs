@@ -2,22 +2,16 @@
 
 from __future__ import annotations
 
-from abc import ABC
-from pathlib import Path
-
 import numpy as np
 import torch
-import tqdm
 from numpy.typing import ArrayLike, DTypeLike
-from omegaconf import DictConfig
-from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
 
 from ribs._utils import validate_batch
 from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._grid_archive import GridArchive
 from ribs.archives._utils import parse_all_dtypes
+from ribs.archives.discount_models import DiscountModelManager
 from ribs.typing import BatchData, Float, Int
 
 _RESULT_ARCHIVE_ERROR = "result_archive must be a GridArchive or CVTArchive."
@@ -232,6 +226,8 @@ class DiscountArchive(ArchiveBase):
         """
         empty_measures = self._sample_empty_archive_centers(self.initial_train_points)
 
+        # TODO: Remove torch usage
+        # TODO: Remove device usage
         train_measures = torch.tensor(
             empty_measures,
             dtype=torch.float32,

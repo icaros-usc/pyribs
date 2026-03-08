@@ -19,6 +19,7 @@ whats-new
 :hidden:
 
 api/ribs.archives
+api/ribs.discount_models
 api/ribs.emitters
 api/ribs.emitters.operators
 api/ribs.emitters.opt
