@@ -1,17 +1,30 @@
-"""Discount models and related utilities."""
+"""Discount models and related utilities.
+
+.. autosummary::
+    :toctree:
+
+    MLP
+    DiscountModelManager
+"""
 
 from __future__ import annotations
 
 import logging
-from abc import ABC
+from collections.abc import Callable, Collection
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import torch
 import tqdm
+from numpy.typing import ArrayLike
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
+
+__all__ = [
+    "MLP",
+    "DiscountModelManager",
+]
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +32,7 @@ log = logging.getLogger(__name__)
 # TODO: Get basic version working in sphere.py (replicate results), then mess with the API.
 # TODO: What do annotations do? Is it enough for addressing torch types?
 # TODO: Try installing in an env without torch
+# TODO: Check IS_TORCH_AVAILABLE within the classes.
 
 if TYPE_CHECKING:
     import torch
@@ -30,27 +44,31 @@ try:
     IS_TORCH_AVAILABLE = True
 except ImportError:
 
-    class nn:  # noqa: N801, D101
+    class nn:  # noqa: N801
         Module: object
 
     IS_TORCH_AVAILABLE = False
 
 
+# TODO: Put normalization in the manager.
 class MLP(nn.Module):
-    """MLP archive.
+    """PyTorch multi-layer perceptron model.
 
-    Feedforward network with identical activations on every layer. There is no
-    activation on the last layer.
+    The MLP has identical activations on every layer, and no activation on the last
+    layer. Each layer can be configured to have biases.
 
-    Some methods return self so that one can do archive = MLPArchive().method()
+    Some methods return ``self`` so that one can call ``model = MLP(...).method()``
 
     Args:
-        layer_specs: List of tuples of (in_shape, out_shape, bias (optional)) for linear
-            layers.
-        activation: Activation layer class, e.g., nn.Tanh
-        normalize: Whether to normalize the inputs. Pass "zero_one" to normalize to [0,
-            1] or "negative_one_one" to normalize to [-1, 1]. Or pass False to indicate
-            no normalization.
+        layer_specs: List of tuples specifying the linear layers. Each tuple can either
+            contain ``(in_features, out_features)`` or ``(in_features, out_features,
+            bias)``, where ``in_features`` and ``out_features`` are integers specifying
+            the input and output shapes of the network, while ``bias`` is a bool
+            indicating whether the layer should have a bias.
+        activation: Activation layer class, e.g., :class:`torch.nn.Tanh`
+        normalize: Whether to normalize the inputs. Pass "zero_one" to normalize to
+            ``[0, 1]`` or "negative_one_one" to normalize to ``[-1, 1]`` (along each
+            dimension). Alternatively, pass None (default) to indicate no normalization.
         norm_low: If normalize is True, this is the lower bound of the inputs for
             normalizing.
         norm_high: If normalize is True, this is the upper bound of the inputs for
@@ -59,11 +77,11 @@ class MLP(nn.Module):
 
     def __init__(
         self,
-        layer_specs,
-        activation,
-        normalize: str | bool = False,
-        norm_low: list[int] | None = None,
-        norm_high: list[int] | None = None,
+        layer_specs: Collection[tuple[int, int] | tuple[int, int, bool]],
+        activation: Callable,  # TODO: How to type this?
+        normalize: Literal["zero_one", "negative_one_one"] | None = None,
+        norm_low: ArrayLike | None = None,
+        norm_high: ArrayLike | None = None,
     ) -> None:
         super().__init__()
 
@@ -84,7 +102,6 @@ class MLP(nn.Module):
         self.norm_high = norm_high
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Normalize inputs to [-1, 1].
         if self.normalize:
             self.norm_low = torch.as_tensor(
                 self.norm_low, device=x.device
@@ -122,6 +139,8 @@ class MLP(nn.Module):
 
         return self
 
+    # TODO: Try to put these methods in the Manager so that we can pass models in more
+    # flexibly.
     def serialize(self):
         """Returns 1D array with all parameters in the model."""
         return nn.utils.parameters_to_vector(self.parameters()).detach().cpu().numpy()
@@ -138,37 +157,49 @@ class MLP(nn.Module):
         )
 
 
-class DiscountModelBase(ABC):
-    """Base class for discount models.
-
-    Each method should try to use settings from the config as much as possible,
-    instead of relying on method parameters. This helps keep the API consistent.
-    """
-
+class DiscountModelManager:
+    # TODO: Rearrange params, use correct int and float types
     def __init__(
         self,
-        cfg: DictConfig,
-        seed: int,
+        model: nn.Module,
         device: torch.device,
+        train_epochs: int,
+        train_batch_size: int,
+        cutoff_loss: float,
     ) -> None:
-        """Initializes from a single config."""
-        self.cfg = cfg
-        self.rng = np.random.default_rng(seed)
+        # TODO: Check for pytorch?
         self.device = device
+        self.model = model
+        # TODO: Move initialization out
+        self.model.initialize(func="pytorch_default")
+        self.model.to(self.device)
+
+        # TODO: Configure optimizer
+        self.optimizer = torch.optim.Adam(
+            lr=0.001,
+            betas=[0.9, 0.999],
+            params=self.model.parameters(),
+        )
+
+        # TODO: How to order these?
+        self.train_epochs = train_epochs
+        self.train_batch_size = train_batch_size
+        # TODO: Rename to train_cutoff_loss?
+        self.cutoff_loss = cutoff_loss
 
     @staticmethod
     def count_params(model: nn.Module) -> int:
         """Utility for counting parameters in a torch model."""
         return sum(p.numel() for p in model.parameters())
 
-    def num_params(self) -> int | dict[str, int]:
+    def num_params(self) -> int:
         """Counts number of parameters in this model.
 
         Returns:
             Number of params, or dict mapping from names of components to number
             of params for each component.
         """
-        raise NotImplementedError
+        return self.count_params(self.model)
 
     def eval(self) -> None:
         """Set the model into eval mode (like in PyTorch).
@@ -188,7 +219,9 @@ class DiscountModelBase(ABC):
             if isinstance(attr, nn.Module):
                 attr.train()
 
-    def training_loop(self, measures: torch.Tensor, targets: torch.Tensor) -> Any:
+    def training_loop(
+        self, measures: torch.Tensor, targets: torch.Tensor
+    ) -> list[float]:
         """Regresses the discount model to match the given targets at the given measures.
 
         Args:
@@ -198,7 +231,40 @@ class DiscountModelBase(ABC):
         Returns:
             Any data associated with training.
         """
-        raise NotImplementedError
+        dataset = TensorDataset(measures, targets)
+        dataloader = DataLoader(
+            dataset,
+            self.train_batch_size,
+            shuffle=True,
+        )
+
+        criterion = nn.MSELoss(reduction="mean")
+
+        all_epoch_loss = []
+
+        for _ in range(1, self.train_epochs + 1):
+            epoch_loss = 0.0
+
+            for b_measures, b_targets in dataloader:
+                cur = self.model(b_measures).squeeze(dim=1)
+
+                self.optimizer.zero_grad()
+                loss = criterion(cur, b_targets)
+                loss.backward()
+                self.optimizer.step()
+
+                # Multiply so that we track the total loss even if batch size
+                # varies.
+                epoch_loss += loss.item() * len(b_measures)
+
+            # Divide by total elements in dataset.
+            epoch_loss /= len(dataloader.dataset)
+            all_epoch_loss.append(epoch_loss)
+
+            if epoch_loss <= self.cutoff_loss:
+                break
+
+        return all_epoch_loss
 
     def inference(self, inputs: torch.Tensor) -> torch.Tensor:
         """Retrieves discount values from the model for the given inputs (i.e., measures).
@@ -212,7 +278,7 @@ class DiscountModelBase(ABC):
         Returns:
             A (len(inputs),) array of discount values.
         """
-        raise NotImplementedError
+        return self.model(inputs)
 
     def chunked_inference(
         self,
@@ -266,7 +332,7 @@ class DiscountModelBase(ABC):
         # pylint: disable-next = no-member
         torch.save(self.model.state_dict(), directory / "model.pth")
 
-    def load(self, directory: str | Path) -> "DiscountModelBase":
+    def load(self, directory: str | Path) -> DiscountModelManager:
         """Loads the model from the given directory.
 
         Default is to load `self.model` from `directory / model.pth`.
@@ -275,66 +341,3 @@ class DiscountModelBase(ABC):
         # pylint: disable-next = no-member
         self.model.load_state_dict(weights)
         return self
-
-
-# TODO: Merge with DiscountModelBase
-class DiscountModelManager(DiscountModelBase):
-    def __init__(self, cfg: DictConfig, seed: int, device: torch.device) -> None:
-        super().__init__(cfg, seed, device)
-
-        self.model = hydra.utils.instantiate(self.cfg.model.args)
-        self.model.initialize(**self.cfg.init.weights)
-        self.model.to(device)
-
-        self.optimizer = hydra.utils.instantiate(
-            self.cfg.optimizer.args,
-            params=self.model.parameters(),
-        )
-
-    def num_params(self) -> int:
-        return self.count_params(self.model)
-
-    def training_loop(
-        self, measures: torch.Tensor, targets: torch.Tensor
-    ) -> list[float]:
-        """Regresses the discount model to match the given targets at the given measures.
-
-        Returns the losses from the training epochs.
-        """
-        dataset = TensorDataset(measures, targets)
-        dataloader = DataLoader(
-            dataset,
-            self.cfg.train.batch_size,
-            shuffle=True,
-        )
-
-        criterion = nn.MSELoss(reduction="mean")
-
-        all_epoch_loss = []
-
-        for _ in range(1, self.cfg.train.epochs + 1):
-            epoch_loss = 0.0
-
-            for b_measures, b_targets in dataloader:
-                cur = self.model(b_measures).squeeze(dim=1)
-
-                self.optimizer.zero_grad()
-                loss = criterion(cur, b_targets)
-                loss.backward()
-                self.optimizer.step()
-
-                # Multiply so that we track the total loss even if batch size
-                # varies.
-                epoch_loss += loss.item() * len(b_measures)
-
-            # Divide by total elements in dataset.
-            epoch_loss /= len(dataloader.dataset)
-            all_epoch_loss.append(epoch_loss)
-
-            if epoch_loss <= self.cfg.train.cutoff_loss:
-                break
-
-        return all_epoch_loss
-
-    def inference(self, inputs: torch.Tensor) -> torch.Tensor:
-        return self.model(inputs)

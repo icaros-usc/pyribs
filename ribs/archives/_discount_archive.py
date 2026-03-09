@@ -11,7 +11,7 @@ from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._cvt_archive import CVTArchive
 from ribs.archives._grid_archive import GridArchive
 from ribs.archives._utils import parse_all_dtypes
-from ribs.archives.discount_models import DiscountModelManager
+from ribs.discount_models import DiscountModelManager
 from ribs.typing import BatchData, Float, Int
 
 _RESULT_ARCHIVE_ERROR = "result_archive must be a GridArchive or CVTArchive."

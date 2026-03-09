@@ -118,6 +118,7 @@ from pathlib import Path
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
+import torch  # TODO: Avoid import?
 import tqdm
 
 from ribs.archives import (
@@ -128,7 +129,7 @@ from ribs.archives import (
     GridArchive,
     ProximityArchive,
 )
-from ribs.archives.discount_models import MLP, DiscountModelManager
+from ribs.discount_models import MLP, DiscountModelManager
 from ribs.emitters import (
     EvolutionStrategyEmitter,
     GaussianEmitter,
@@ -848,27 +849,37 @@ CONFIG = {
         "model": {
             "class": MLP,
             "kwargs": {
-                "layer_specs": "${eval:'[[${domain.config.measure_dim}, 128], [128, 128], [128, 1]]'}",  # TODO
+                # TODO: Move the layer_specs somewhere so that measure dim isn't
+                # hard-coded.
+                "layer_specs": [[2, 128], [128, 128], [128, 1]],
                 "activation": torch.nn.ReLU,
                 # Inputs to the discount model's network are normalized based on the
                 # bounds of the measure space.
                 "normalize": "negative_one_one",  # "negative_one_one", "zero_one", False
-                "norm_low": "${domain.config.measure_low}",  # TODO
-                "norm_high": "${domain.config.measure_high}",  # TODO
+                # TODO: Move the normalization to the manager.
+                "norm_low": [-256.0, -256.0],
+                "norm_high": [256.0, 256.0],
             },
         },
         "optimizer": {
-            "class": None,
+            "class": torch.optim.Adam,
             "kwargs": {
                 "lr": 0.001,
                 "betas": [0.9, 0.999],
             },
         },
-        "discount_model_manager": {},
+        "discount_model_manager": {
+            "class": DiscountModelManager,
+            "kwargs": {
+                "train_epochs": 5,
+                "train_batch_size": 32,
+                "cutoff_loss": 0.05,
+            },
+        },
         "archive": {
             "class": DiscountArchive,
             "kwargs": {
-                "learning_rate": 0.01,
+                "learning_rate": 0.1,
                 "threshold_min": 0,
                 "initial_train_points": 1000,
                 "empty_points": 100,
@@ -925,7 +936,10 @@ def sphere(
     best_obj = 0.0
     worst_obj = (-5.12 - sphere_shift) ** 2 * dim
     raw_obj = np.sum(np.square(solutions - sphere_shift), axis=1)
-    objectives = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
+    #  objectives = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
+    objectives = (raw_obj - worst_obj) / (best_obj - worst_obj)
+    # TODO: Figure out what to do about performance; scaling is a big factor.
+    # TODO: Compare performance logs.
 
     # Compute gradient of the objective.
     objective_grads = -2 * (solutions - sphere_shift)
@@ -981,6 +995,20 @@ def create_scheduler(
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
     initial_sol = np.zeros(solution_dim)
 
+    # Create result archive.
+    if config["result_archive"] is None:
+        result_archive = None
+    else:
+        result_archive = config["result_archive"]["class"](
+            solution_dim=solution_dim,
+            # Note that using ranges here means we assume the result archive is a
+            # GridArchive or CVTArchive. This will need to be modified for other result
+            # archives.
+            ranges=bounds,
+            seed=seed,
+            **config["result_archive"]["kwargs"],
+        )
+
     # Create archive.
     archive_class = config["archive"]["class"]
     if archive_class == ProximityArchive:
@@ -998,12 +1026,22 @@ def create_scheduler(
             **config["archive"]["kwargs"],
         )
     elif archive_class == DiscountArchive:
-        # TODO: Remove device
-        mlp = config["model"]
+        model = config["model"]["class"](
+            **config["model"]["kwargs"],
+        )
+        # TODO: Get device.
+        # TODO: Rename to manager.
+        discount_model = config["discount_model_manager"]["class"](
+            model=model,
+            device="cpu",
+            **config["discount_model_manager"]["kwargs"],
+        )
+        # TODO: Remove device from archive.
         archive = archive_class(
             solution_dim=solution_dim,
             measure_dim=len(bounds),
             discount_model=discount_model,
+            result_archive=result_archive,
             device="cpu",
             seed=seed,
             **config["archive"]["kwargs"],
@@ -1014,20 +1052,6 @@ def create_scheduler(
             ranges=bounds,
             seed=seed,
             **config["archive"]["kwargs"],
-        )
-
-    # Create result archive.
-    if config["result_archive"] is None:
-        result_archive = None
-    else:
-        result_archive = config["result_archive"]["class"](
-            solution_dim=solution_dim,
-            # Note that using ranges here means we assume the result archive is a
-            # GridArchive or CVTArchive. This will need to be modified for other result
-            # archives.
-            ranges=bounds,
-            seed=seed,
-            **config["result_archive"]["kwargs"],
         )
 
     # Usually, emitters take in the archive. However, it may sometimes be necessary to
@@ -1077,12 +1101,12 @@ def save_heatmap(archive: ArchiveBase, heatmap_path: str | Path) -> None:
     """
     if isinstance(archive, GridArchive):
         plt.figure(figsize=(8, 6))
-        grid_archive_heatmap(archive, vmin=0, vmax=100)
+        grid_archive_heatmap(archive, vmin=0, vmax=1)  # TODO: Change back
         plt.tight_layout()
         plt.savefig(heatmap_path)
     elif isinstance(archive, CVTArchive):
         plt.figure(figsize=(16, 12))
-        cvt_archive_heatmap(archive, vmin=0, vmax=100)
+        cvt_archive_heatmap(archive, vmin=0, vmax=1)  # TODO: Change back
         plt.tight_layout()
         plt.savefig(heatmap_path)
     else:
@@ -1147,6 +1171,8 @@ def sphere_main(
     scheduler = create_scheduler(config, algorithm, seed=seed)
     result_archive = scheduler.result_archive
     is_dqd = config["is_dqd"]
+    has_discount_model = config["archive"]["class"] == DiscountArchive
+    print("has_discount_model", has_discount_model)
     itrs = config["itrs"]
     metrics = {
         "QD Score": {
@@ -1162,6 +1188,10 @@ def sphere_main(
     non_logging_time = 0.0
     save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
 
+    # TODO: Where to put?
+    if has_discount_model:
+        scheduler.archive.init_discount_model()
+
     for itr in tqdm.trange(1, itrs + 1):
         itr_start = time.time()
 
@@ -1176,6 +1206,10 @@ def sphere_main(
         objectives, _, measures, _ = sphere(solutions)
         scheduler.tell(objectives, measures)
         non_logging_time += time.time() - itr_start
+
+        # TODO: Where to put? Logging?
+        if has_discount_model:
+            scheduler.archive.train_discount_model()
 
         # Logging and output.
         final_itr = itr == itrs
