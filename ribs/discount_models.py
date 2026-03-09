@@ -168,6 +168,7 @@ class DiscountModelManager:
         cutoff_loss: float,
     ) -> None:
         # TODO: Check for pytorch?
+        # TODO: private attributes?
         self.device = device
         self.model = model
         # TODO: Move initialization out
@@ -219,9 +220,8 @@ class DiscountModelManager:
             if isinstance(attr, nn.Module):
                 attr.train()
 
-    def training_loop(
-        self, measures: torch.Tensor, targets: torch.Tensor
-    ) -> list[float]:
+    # TODO: Update return type?
+    def training_loop(self, measures: ArrayLike, targets: ArrayLike) -> list[float]:
         """Regresses the discount model to match the given targets at the given measures.
 
         Args:
@@ -231,6 +231,18 @@ class DiscountModelManager:
         Returns:
             Any data associated with training.
         """
+        # TODO: Proper casting?
+        measures = torch.tensor(
+            measures,
+            dtype=torch.float32,
+            device=self.device,
+        )
+        targets = torch.tensor(
+            targets,
+            dtype=torch.float32,
+            device=self.device,
+        )
+
         dataset = TensorDataset(measures, targets)
         dataloader = DataLoader(
             dataset,

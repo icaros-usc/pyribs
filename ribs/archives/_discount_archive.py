@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-import torch
 from numpy.typing import ArrayLike, DTypeLike
 
 from ribs._utils import validate_batch
@@ -35,7 +34,6 @@ class DiscountArchive(ArchiveBase):
         threshold_min: Minimum discount value. Used when initializing the discount model
             and when regressing to "empty points."
         discount_model: Model of the discount function.
-        device: PyTorch device where the discount model is located.
         result_archive: The archive storing results for the algorithm. This is used for
             sampling empty points. Currently, only GridArchive and CVTArchive are
             supported.
@@ -68,7 +66,6 @@ class DiscountArchive(ArchiveBase):
         learning_rate: Float,
         threshold_min: Float,
         discount_model: DiscountModelManager,
-        device: torch.device,
         result_archive: GridArchive | CVTArchive,
         initial_train_points: Int,
         empty_points: Int,
@@ -102,7 +99,6 @@ class DiscountArchive(ArchiveBase):
         self._threshold_min = np.asarray(threshold_min, dtype=self.dtypes["measures"])
 
         self._discount_model = discount_model
-        self._device = device
         self._result_archive = result_archive
         if not isinstance(result_archive, (GridArchive, CVTArchive)):
             raise ValueError(_RESULT_ARCHIVE_ERROR)
@@ -145,11 +141,6 @@ class DiscountArchive(ArchiveBase):
     def discount_model(self) -> DiscountModelManager:
         """The discount model managed by this archive."""
         return self._discount_model
-
-    @property
-    def device(self) -> torch.device:
-        """PyTorch device where the discount model is located."""
-        return self._device
 
     @property
     def initial_train_points(self) -> Int:
@@ -225,22 +216,9 @@ class DiscountArchive(ArchiveBase):
             Dict with info from training.
         """
         empty_measures = self._sample_empty_archive_centers(self.initial_train_points)
+        empty_targets = np.full(len(empty_measures), self.threshold_min)
 
-        # TODO: Remove torch usage
-        # TODO: Remove device usage
-        train_measures = torch.tensor(
-            empty_measures,
-            dtype=torch.float32,
-            device=self._device,
-        )
-        train_targets = torch.full(
-            (len(train_measures),),
-            float(self.threshold_min),
-            dtype=torch.float32,
-            device=self._device,
-        )
-
-        losses = self.discount_model.training_loop(train_measures, train_targets)
+        losses = self.discount_model.training_loop(empty_measures, empty_targets)
 
         return {
             # Number of points marked empty.
@@ -286,16 +264,8 @@ class DiscountArchive(ArchiveBase):
             np.full(len(empty_measures), self.threshold_min),
         ]
 
-        train_measures = torch.tensor(
-            np.concatenate(measure_list),
-            dtype=torch.float32,
-            device=self.device,
-        )
-        train_targets = torch.tensor(
-            np.concatenate(target_list),
-            dtype=torch.float32,
-            device=self.device,
-        )
+        train_measures = np.concatenate(measure_list)
+        train_targets = np.concatenate(target_list)
 
         losses = self.discount_model.training_loop(train_measures, train_targets)
 

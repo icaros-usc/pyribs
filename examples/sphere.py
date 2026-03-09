@@ -1042,7 +1042,6 @@ def create_scheduler(
             measure_dim=len(bounds),
             discount_model=discount_model,
             result_archive=result_archive,
-            device="cpu",
             seed=seed,
             **config["archive"]["kwargs"],
         )
