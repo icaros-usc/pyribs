@@ -853,12 +853,6 @@ CONFIG = {
                 # hard-coded.
                 "layer_specs": [[2, 128], [128, 128], [128, 1]],
                 "activation": torch.nn.ReLU,
-                # Inputs to the discount model's network are normalized based on the
-                # bounds of the measure space.
-                "normalize": "negative_one_one",  # "negative_one_one", "zero_one", False
-                # TODO: Move the normalization to the manager.
-                "norm_low": [-256.0, -256.0],
-                "norm_high": [256.0, 256.0],
             },
         },
         "optimizer": {
@@ -872,8 +866,12 @@ CONFIG = {
             "class": DiscountModelManager,
             "kwargs": {
                 "train_epochs": 5,
+                "train_cutoff_loss": 0.05,
                 "train_batch_size": 32,
-                "cutoff_loss": 0.05,
+                "normalize": "negative_one_one",
+                # TODO: Don't hardcode these bounds.
+                "norm_low": [-256.0, -256.0],
+                "norm_high": [256.0, 256.0],
             },
         },
         "archive": {
@@ -939,7 +937,6 @@ def sphere(
     #  objectives = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
     objectives = (raw_obj - worst_obj) / (best_obj - worst_obj)
     # TODO: Figure out what to do about performance; scaling is a big factor.
-    # TODO: Compare performance logs.
 
     # Compute gradient of the objective.
     objective_grads = -2 * (solutions - sphere_shift)
@@ -1026,21 +1023,25 @@ def create_scheduler(
             **config["archive"]["kwargs"],
         )
     elif archive_class == DiscountArchive:
-        model = config["model"]["class"](
-            **config["model"]["kwargs"],
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = config["model"]["class"](**config["model"]["kwargs"])
+        model.to(device)
+        optimizer = config["optimizer"]["class"](
+            **config["optimizer"]["kwargs"],
+            params=model.parameters(),
         )
-        # TODO: Get device.
         # TODO: Rename to manager.
-        discount_model = config["discount_model_manager"]["class"](
-            model=model,
-            device="cpu",
+        discount_model_manager = config["discount_model_manager"]["class"](
+            model,
+            optimizer,
+            device,
             **config["discount_model_manager"]["kwargs"],
         )
-        # TODO: Remove device from archive.
+        # TODO: Which args should be kwarg?
         archive = archive_class(
             solution_dim=solution_dim,
             measure_dim=len(bounds),
-            discount_model=discount_model,
+            discount_model=discount_model_manager,
             result_archive=result_archive,
             seed=seed,
             **config["archive"]["kwargs"],

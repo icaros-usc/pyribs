@@ -65,6 +65,7 @@ class DiscountArchive(ArchiveBase):
         measure_dim: Int,
         learning_rate: Float,
         threshold_min: Float,
+        # TODO: Rename to manager
         discount_model: DiscountModelManager,
         result_archive: GridArchive | CVTArchive,
         initial_train_points: Int,
