@@ -178,7 +178,6 @@ class DiscountModelManager:
         norm_low: ArrayLike | None = None,
         norm_high: ArrayLike | None = None,
     ) -> None:
-        # TODO: Check for pytorch?
         self.model = model
         self.optimizer = optimizer
         self.device = device
@@ -210,7 +209,6 @@ class DiscountModelManager:
         else:
             return x
 
-    # TODO: Update return type?
     def training_loop(self, measures: ArrayLike, targets: ArrayLike) -> list[float]:
         """Regresses the discount model to match the given targets at the given measures.
 
@@ -223,7 +221,10 @@ class DiscountModelManager:
             targets: (batch_size,) array of target values for the discount function.
 
         Returns:
-            Any data associated with training.
+            A list with the total MSE loss accumulated on each epoch, normalized
+            (divided) by the size of the dataset. Strictly speaking, the model is
+            updated after every batch is passed through it, so this is not the loss that
+            one would obtain if the measures were all passed through the model at once.
         """
         normalized_measures = self._normalize_inputs(measures)
         targets = torch.asarray(targets, dtype=torch.float32, device=self.device)
@@ -263,7 +264,7 @@ class DiscountModelManager:
         measures: ArrayLike,
         batch_size: int | None = None,
     ) -> np.ndarray:
-        """Computes discount values using the model.
+        """Computes discount values at the given measures using the model.
 
         This method also puts the model in eval mode and uses :class:`torch.no_grad`.
 
@@ -273,6 +274,9 @@ class DiscountModelManager:
                 inputs at a time. This can be useful if, for instance, the model is very
                 large and there is insufficient memory to handle many inputs
                 simultaneously.
+
+        Returns:
+            The discount values at the input measures.
         """
         if batch_size is None:
             batch_size = len(measures)
