@@ -1,5 +1,13 @@
 # History
 
+## 0.10.0
+
+### Changelog
+
+#### Improvements
+
+- Fix pandas dtype in test for CategoricalArchive ({pr}`686`)
+
 ## 0.9.0
 
 To learn about this release, see our page on What's New in v0.9.0:
