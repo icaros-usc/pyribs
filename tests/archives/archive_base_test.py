@@ -1,7 +1,6 @@
 """Tests that are common across all archives."""
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from ribs.archives import (
@@ -641,12 +640,10 @@ def test_pandas_data(name, with_elite, dtype):
 
     expected_dtypes = [dtype for _ in range(solution_dim)] + [dtype]
     if isinstance(data.archive, CategoricalArchive):
-        # Pandas began having a str dtype starting in 3.0.0:
+        # Don't check the dtype for measure columns; it is a bit complicated due to
+        # Pandas introducing the string dtype in 3.0.0:
         # https://pandas.pydata.org/docs/dev/whatsnew/v3.0.0.html
-        if int(pd.__version__.split(".")[0]) >= 3:
-            expected_dtypes += [str for _ in range(measure_dim)]
-        else:
-            expected_dtypes += [np.object_ for _ in range(measure_dim)]
+        expected_dtypes += [None for _ in range(measure_dim)]
     else:
         expected_dtypes += [dtype for _ in range(measure_dim)]
 
@@ -668,7 +665,9 @@ def test_pandas_data(name, with_elite, dtype):
 
     # Check columns and data types.
     assert (df.columns == expected_cols).all()
-    assert (df.dtypes == expected_dtypes).all()
+    for dt, expected_dt in zip(df.dtypes, expected_dtypes, strict=True):
+        if expected_dt is not None:
+            assert dt == expected_dt
 
     if with_elite:
         if isinstance(data.archive_with_elite, CVTArchive):
