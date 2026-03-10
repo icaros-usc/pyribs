@@ -49,8 +49,6 @@ class MLP(nn.Module):
     The MLP has identical activations on every layer, and no activation on the last
     layer. Each layer can be configured to have biases.
 
-    Some methods return ``self`` so that one can call ``model = MLP(...).method()``
-
     Args:
         layer_specs: List of tuples specifying the linear layers. Each tuple can either
             contain ``(in_features, out_features)`` or ``(in_features, out_features,
@@ -68,10 +66,12 @@ class MLP(nn.Module):
         super().__init__()
 
         layers = []
-        for i, shape in enumerate(layer_specs):
+        for i, spec in enumerate(layer_specs):
             layers.append(
                 nn.Linear(
-                    shape[0], shape[1], bias=shape[2] if len(shape) == 3 else True
+                    in_features=spec[0],
+                    out_features=spec[1],
+                    bias=spec[2] if len(spec) == 3 else True,
                 )
             )
             if i != len(layer_specs) - 1:
@@ -122,11 +122,7 @@ class MLP(nn.Module):
         )
 
     def num_params(self) -> int:
-        """Counts number of parameters in the model.
-
-        Returns:
-            Total number of parameters in the model.
-        """
+        """Counts number of parameters in the model."""
         return sum(p.numel() for p in self.model.parameters())
 
 
@@ -154,11 +150,11 @@ class DiscountModelManager:
         train_cutoff_loss: See ``train_epochs``.
         train_batch_size: During each epoch of :meth:`training_loop`, the dataset of
             measures and targets will be used to train the model with this batch size.
-        normalize: Whether to normalize the inputs. Pass "zero_one" to normalize to
-            ``[0, 1]`` or "negative_one_one" to normalize to ``[-1, 1]`` (along each
-            dimension). To normalize to these values, we linearly transform from the
-            range defined by ``norm_low`` and ``norm_high``, described below.
-            Alternatively, pass None (default) to indicate no normalization.
+        normalize: Whether to normalize the inputs. Pass None (default) to indicate no
+            normalization. Alternatively, pass "zero_one" to normalize to ``[0, 1]`` or
+            "negative_one_one" to normalize to ``[-1, 1]`` (along each dimension). To
+            normalize to these values, we linearly transform from the range defined by
+            ``norm_low`` and ``norm_high``, described below.
         norm_low: If ``normalize`` is True, this is the lower bound of the inputs for
             normalizing.
         norm_high: If ``normalize`` is True, this is the upper bound of the inputs for
@@ -197,24 +193,21 @@ class DiscountModelManager:
     def _normalize_inputs(self, x: ArrayLike) -> torch.Tensor:
         """Applies normalization to the given inputs."""
         x = torch.asarray(x, device=self.device, dtype=torch.float32)
-        if self.normalize:
-            if self.normalize == "negative_one_one":
-                return (
-                    2.0 * (x - self.norm_low) / (self.norm_high - self.norm_low) - 1.0
-                )
-            elif self.normalize == "zero_one":
-                return (x - self.norm_low) / (self.norm_high - self.norm_low)
-            else:
-                raise ValueError(f"Unknown normalization method {self.normalize}.")
-        else:
+        if self.normalize is None:
             return x
+        elif self.normalize == "negative_one_one":
+            return 2.0 * (x - self.norm_low) / (self.norm_high - self.norm_low) - 1.0
+        elif self.normalize == "zero_one":
+            return (x - self.norm_low) / (self.norm_high - self.norm_low)
+        else:
+            raise ValueError(f"Unknown normalization method {self.normalize}.")
 
     def training_loop(self, measures: ArrayLike, targets: ArrayLike) -> list[float]:
         """Regresses the discount model to match the given targets at the given measures.
 
         Training proceeds until either (1) the total loss on each epoch is less than the
         ``train_cutoff_loss``, or (2) the number of epochs reaches ``train_epochs``. The
-        loss function used during training is the :class:`~torch.nn.MSELoss`.
+        loss function used during training is :class:`~torch.nn.MSELoss`.
 
         Args:
             measures: (batch_size, measure_dim) array of measure values.

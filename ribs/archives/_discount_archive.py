@@ -285,6 +285,8 @@ class DiscountArchive(ArchiveBase):
 
     ## Methods for writing to the archive ##
 
+    # TODO: Cast to correct dtypes; test for this!
+
     def add(
         self,
         solution: ArrayLike,
