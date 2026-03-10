@@ -41,7 +41,9 @@ from collections.abc import Callable
 import numpy as np
 
 from ribs.archives import ArchiveBase
-from ribs.emitters import EmitterBase
+from ribs.emitters._emitter_base import (
+    EmitterBase,  # Avoid cyclic import since `rankers` is under `ribs.emitters`.
+)
 from ribs.typing import BatchData, Int
 
 # Since the docstrings in this module are auto-generated, Ruff does not see them.
@@ -98,7 +100,7 @@ class RankerBase(ABC):
         self._rng = np.random.default_rng(seed)
 
     @abstractmethod
-    def rank(
+    def rank(  # pylint: disable = missing-function-docstring
         self,
         emitter: EmitterBase,
         archive: ArchiveBase,
@@ -114,6 +116,7 @@ Generates a batch of indices that represents an ordering of ``data["solution"]``
 {_RANK_ARGS}
     """
 
+    # pylint: disable-next = missing-function-docstring
     def reset(self, emitter: EmitterBase, archive: ArchiveBase) -> None:
         pass
 

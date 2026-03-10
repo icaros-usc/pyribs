@@ -286,7 +286,7 @@ class Scheduler:
             warnings.warn(self._EMPTY_WARNING.format(name="archive"), stacklevel=3)
         if (
             self._result_archive is not None
-            and result_archive_empty_before
+            and result_archive_empty_before  # pylint: disable = possibly-used-before-assignment
             and self.result_archive.empty
         ):
             warnings.warn(

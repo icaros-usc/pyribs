@@ -14,7 +14,7 @@ from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
 from matplotlib.typing import ColorType
 from pandas import DataFrame
-from scipy.spatial import Voronoi
+from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 from ribs.archives import ArchiveDataFrame, CVTArchive
 from ribs.visualize._utils import (

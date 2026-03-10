@@ -463,7 +463,7 @@ class ProximityArchive(ArchiveBase):
                 )
 
         if use_local_competition:
-            return novelty, local_competition_scores
+            return novelty, local_competition_scores  # pylint: disable = used-before-assignment
         else:
             return novelty
 

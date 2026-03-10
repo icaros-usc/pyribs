@@ -10,16 +10,16 @@ from numpy.typing import DTypeLike
 try:
     import torch
 
-    is_torch_available = True
+    IS_TORCH_AVAILABLE = True
 except ImportError:
-    is_torch_available = False
+    IS_TORCH_AVAILABLE = False
 
 try:
     import cupy as cp
 
-    is_cp_availalbe = True
+    IS_CP_AVAILALBE = True
 except ImportError:
-    is_cp_availalbe = False
+    IS_CP_AVAILALBE = False
 
 ## General types ##
 
@@ -49,11 +49,11 @@ DType = np.dtype
 Device = str | int
 
 # Modify types based on which array backends are available.
-if is_torch_available:
+if IS_TORCH_AVAILABLE:
     Array = Array | torch.Tensor
     DType = DType | torch.dtype
     Device = Device | torch.device
-if is_cp_availalbe:
+if IS_CP_AVAILALBE:
     Array = Array | cp.ndarray
     DType = DType | cp.dtype
     Device = Device | cp.cuda.Device

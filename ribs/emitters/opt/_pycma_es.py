@@ -89,7 +89,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             # We do not want to import at the top because that would require cma to
             # always be installed, as cma would be imported whenever this class is
             # imported.
-            import cma
+            import cma  # pylint: disable = import-outside-toplevel
         except ImportError as e:
             raise ImportError(
                 "pycma must be installed -- please run `pip install cma` or "

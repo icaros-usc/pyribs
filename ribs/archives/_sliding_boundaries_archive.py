@@ -481,7 +481,7 @@ class SlidingBoundariesArchive(ArchiveBase):
 
         # We cannot use `grid_to_int_index` since that takes in an array of indices, not
         # index columns.
-        return np.ravel_multi_index(idx_cols, self._dims).astype(np.int32)
+        return np.ravel_multi_index(idx_cols, self._dims).astype(np.int32)  # pylint: disable = no-member
 
     def index_of_single(self, measures: ArrayLike) -> Int:
         """Returns the index of the measures for one solution.

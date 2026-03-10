@@ -14,7 +14,7 @@ from matplotlib.typing import ColorType
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from mpl_toolkits.mplot3d.axes3d import Axes3D
 from pandas import DataFrame
-from scipy.spatial import Voronoi
+from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 from ribs.archives import ArchiveDataFrame, CVTArchive
 from ribs.visualize._utils import (
