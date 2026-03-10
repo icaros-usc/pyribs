@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Collection
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -21,9 +21,6 @@ __all__ = [
     "MLP",
     "DiscountModelManager",
 ]
-
-if TYPE_CHECKING:
-    import torch
 
 try:
     import torch
