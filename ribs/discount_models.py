@@ -13,10 +13,7 @@ from collections.abc import Callable, Collection
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
-import torch
 from numpy.typing import ArrayLike
-from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
 
 from ribs.typing import Float, Int
 
@@ -25,20 +22,20 @@ __all__ = [
     "DiscountModelManager",
 ]
 
-# TODO: Check IS_TORCH_AVAILABLE within the classes.
-
 if TYPE_CHECKING:
     import torch
 
 try:
     import torch
     from torch import nn
+    from torch.utils.data import DataLoader, TensorDataset
 
     IS_TORCH_AVAILABLE = True
 except ImportError:
 
     class nn:  # noqa: N801
-        Module: object
+        class Module:
+            pass
 
     IS_TORCH_AVAILABLE = False
 
@@ -63,6 +60,9 @@ class MLP(nn.Module):
         layer_specs: Collection[tuple[int, int] | tuple[int, int, bool]],
         activation: Callable,
     ) -> None:
+        if not IS_TORCH_AVAILABLE:
+            raise ImportError("PyTorch must be installed to use the MLP.")
+
         super().__init__()
 
         layers = []
@@ -174,6 +174,11 @@ class DiscountModelManager:
         norm_low: ArrayLike | None = None,
         norm_high: ArrayLike | None = None,
     ) -> None:
+        if not IS_TORCH_AVAILABLE:
+            raise ImportError(
+                "PyTorch must be installed to use the DiscountModelManager."
+            )
+
         self.model = model
         self.optimizer = optimizer
         self.device = device
