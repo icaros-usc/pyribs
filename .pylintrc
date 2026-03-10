@@ -56,7 +56,7 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=suppressed-message,arguments-differ,wildcard-import,locally-disabled,duplicate-code,no-else-return,no-else-raise,line-too-long,too-many-public-methods
+disable=suppressed-message,arguments-differ,wildcard-import,locally-disabled,duplicate-code,no-else-return,no-else-raise,line-too-long
 
 
 [REPORTS]
@@ -288,7 +288,7 @@ exclude-protected=_asdict,_fields,_replace,_source,_make
 max-args=9999
 
 # Maximum number of positional arguments.
-max-positional-arguments=10
+max-positional-arguments=5
 
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore
@@ -316,7 +316,7 @@ max-attributes=100
 min-public-methods=0
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=9999
 
 # Maximum number of boolean expressions in a if statement
 max-bool-expr=5
