@@ -343,12 +343,7 @@ class DiscountArchive(ArchiveBase):
             },
         )
 
-        discount = (
-            self.discount_model.chunked_inference(data["measures"])
-            .detach()
-            .cpu()
-            .numpy()
-        )
+        discount = self.discount_model.inference(data["measures"])
 
         added = data["objective"] > discount
         status = 2 * added

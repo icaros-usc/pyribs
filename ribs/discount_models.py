@@ -121,13 +121,20 @@ class MLP(nn.Module):
             [p.grad.cpu().detach().numpy().ravel() for p in self.parameters()]
         )
 
+    def num_params(self) -> int:
+        """Counts number of parameters in the model.
+
+        Returns:
+            Total number of parameters in the model.
+        """
+        return sum(p.numel() for p in self.model.parameters())
+
 
 class DiscountModelManager:
     """Wraps a PyTorch model so it can be used as a discount model.
 
     This class handles operations like training the model to match new discount model
-    targets (in :meth:`training_loop`) and performing inference (in :meth:`inference`
-    and :meth:`chunked_inference`).
+    targets (in :meth:`training_loop`) and performing inference (in :meth:`inference`).
 
     .. note::
         This class assumes all data passed in is of type :class:`torch.float32`.
@@ -203,22 +210,6 @@ class DiscountModelManager:
         else:
             return x
 
-    def num_params(self) -> int:
-        """Counts number of parameters in the model.
-
-        Returns:
-            Total number of parameters in the model.
-        """
-        return sum(p.numel() for p in self.model.parameters())
-
-    def eval(self) -> None:
-        """Sets the model into eval mode (like in PyTorch)."""
-        self.model.eval()
-
-    def train(self) -> None:
-        """Sets the model into train mode (like in PyTorch)."""
-        self.model.train()
-
     # TODO: Update return type?
     def training_loop(self, measures: ArrayLike, targets: ArrayLike) -> list[float]:
         """Regresses the discount model to match the given targets at the given measures.
@@ -235,7 +226,7 @@ class DiscountModelManager:
             Any data associated with training.
         """
         normalized_measures = self._normalize_inputs(measures)
-        targets = torch.tensor(targets, dtype=torch.float32, device=self.device)
+        targets = torch.asarray(targets, dtype=torch.float32, device=self.device)
 
         dataset = TensorDataset(normalized_measures, targets)
         dataloader = DataLoader(dataset, self.train_batch_size, shuffle=True)
@@ -267,49 +258,39 @@ class DiscountModelManager:
 
         return all_epoch_loss
 
-    def inference(self, inputs: torch.Tensor) -> torch.Tensor:
-        """Retrieves discount values from the model for the given inputs (i.e., measures).
+    def inference(
+        self,
+        measures: ArrayLike,
+        batch_size: int | None = None,
+    ) -> np.ndarray:
+        """Computes discount values using the model.
 
-        Note that this method does NOT put the model in eval mode or use
-        no_grad.
+        This method also puts the model in eval mode and uses :class:`torch.no_grad`.
 
         Args:
-            inputs: Inputs to the model, typically of (batch_size, input_dim).
-
-        Returns:
-            A (len(inputs),) array of discount values.
-        """
-        return self.model(self._normalize_inputs(inputs))
-
-    # TODO: docstring
-    def chunked_inference(
-        self,
-        inputs: np.ndarray | torch.Tensor,
-        batch_size: int | None = None,
-    ) -> torch.Tensor:
-        """Passes in the given inputs to the model in chunks.
-
-        This method also puts the model in eval mode and uses no_grad when
-        running the inference.
+            measures: Inputs to the model of size (batch_size, measure_dim).
+            batch_size: If passed in, the model will only be passed ``batch_size``
+                inputs at a time. This can be useful if, for instance, the model is very
+                large and there is insufficient memory to handle many inputs
+                simultaneously.
         """
         if batch_size is None:
-            batch_size = len(inputs)
+            batch_size = len(measures)
 
+        normalized_measures = self._normalize_inputs(measures)
         dataloader = DataLoader(
-            dataset=TensorDataset(
-                torch.tensor(inputs, dtype=torch.float32, device=self.device)
-            ),
+            dataset=TensorDataset(normalized_measures),
             batch_size=batch_size,
             shuffle=False,
         )
 
-        self.eval()
+        self.model.eval()
         discounts = []
-        for (b_inputs,) in dataloader:
-            with torch.no_grad():
-                b_discounts = self.inference(b_inputs)
+        with torch.no_grad():
+            for (b_norm_measures,) in dataloader:
+                b_discounts = self.model(b_norm_measures)
             discounts.append(b_discounts)
-        self.train()
+        self.model.train()
 
         # Concatenate all the chunks together.
         discounts = torch.cat(discounts, dim=0)
@@ -318,4 +299,4 @@ class DiscountModelManager:
         if discounts.ndim == 2:
             discounts = discounts.squeeze(dim=1)
 
-        return discounts
+        return discounts.detach().cpu().numpy()
