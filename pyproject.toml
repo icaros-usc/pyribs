@@ -54,6 +54,8 @@ all = [
   ### Extra dependencies used by various components. ###
   "cma",
   "pymoo",
+  # PyTorch (torch) is used in the discount models and could be included here, but since
+  # it is so heavy, we leave it to users to install on their own.
 ]
 dev = [
   # Tools
