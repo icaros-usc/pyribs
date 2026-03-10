@@ -70,6 +70,7 @@ def get_archive_data(name, *, dtype=np.float64):
     ARCHIVE_NAMES.
     """
     # All local variables are captured at the end.
+    # pylint: disable = possibly-unused-variable
 
     # Characteristics of a single solution to insert into archive_with_elite.
     solution = np.array([1.0, 2.0, 3.0])
@@ -107,7 +108,7 @@ def get_archive_data(name, *, dtype=np.float64):
         # 0.5), (-0.5, 0.5), (-0.5, -0.5), and (0.5, -0.5). The elite in
         # archive_with_elite should match with centroid (0.5, 0.5).
         cells = 4
-        nearest_neighbors = name.removeprefix("CVTArchive-")
+        cur_nn = name.removeprefix("CVTArchive-")
         centroids = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
         centroid = [0.5, 0.5]
 
@@ -115,7 +116,7 @@ def get_archive_data(name, *, dtype=np.float64):
             solution_dim=len(solution),
             centroids=centroids,
             ranges=[(-1, 1), (-1, 1)],
-            nearest_neighbors=nearest_neighbors,
+            nearest_neighbors=cur_nn,
             solution_dtype=dtype,
             objective_dtype=dtype,
             measures_dtype=dtype,
@@ -125,7 +126,7 @@ def get_archive_data(name, *, dtype=np.float64):
             solution_dim=len(solution),
             centroids=centroids,
             ranges=[(-1, 1), (-1, 1)],
-            nearest_neighbors=nearest_neighbors,
+            nearest_neighbors=cur_nn,
             solution_dtype=dtype,
             objective_dtype=dtype,
             measures_dtype=dtype,

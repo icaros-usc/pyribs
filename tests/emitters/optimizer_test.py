@@ -62,6 +62,7 @@ def test_init_with_get_grad_opt(grad_opt_name):
 
     assert grad_opt.theta == theta0
 
+    # pylint: disable = protected-access
     grad_opt = cast(GradientAscentOpt | AdamOpt, grad_opt)
     assert grad_opt._lr == lr
     if grad_opt_name == "adam":

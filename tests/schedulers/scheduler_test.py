@@ -9,6 +9,8 @@ from ribs.schedulers import BanditScheduler, Scheduler
 
 from ..archives.grid_archive_test import assert_archive_elites
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture
 def scheduler_fixture():

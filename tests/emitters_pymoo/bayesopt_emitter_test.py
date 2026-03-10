@@ -6,6 +6,8 @@ import pytest
 from ribs.archives import CVTArchive, GridArchive
 from ribs.emitters import BayesianOptimizationEmitter
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture
 def archive_fixture():

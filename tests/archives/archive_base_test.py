@@ -13,6 +13,8 @@ from ribs.archives import (
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
+# pylint: disable = redefined-outer-name
+
 MAE_ARCHIVES = (
     CategoricalArchive,
     CVTArchive,
