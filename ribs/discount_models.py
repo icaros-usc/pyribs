@@ -46,6 +46,11 @@ class MLP(nn.Module):
     The MLP has identical activations on every layer, and no activation on the last
     layer. Each layer can be configured to have biases.
 
+    .. note::
+
+        This model requires `PyTorch <https://pytorch.org/>`_ to be installed, e.g., by
+        running ``pip install torch``.
+
     Args:
         layer_specs: List of tuples specifying the linear layers. Each tuple can either
             contain ``(in_features, out_features)`` or ``(in_features, out_features,
@@ -129,11 +134,19 @@ class MLP(nn.Module):
 class DiscountModelManager:
     """Wraps a PyTorch model so it can be used as a discount model.
 
-    This class handles operations like training the model to match new discount model
+    This class handles operations like training the model to match new discount value
     targets (in :meth:`training_loop`) and performing inference (in :meth:`inference`).
 
     .. note::
-        This class assumes all data passed in is of type :class:`torch.float32`.
+
+        This class assumes all input and output data is of type float32, which is the
+        default type in PyTorch. If different data types are needed, one solution may be
+        to cast the data before/after calls to this class.
+
+    .. note::
+
+        This class requires `PyTorch <https://pytorch.org/>`_ to be installed, e.g., by
+        running ``pip install torch``.
 
     Args:
         model: A PyTorch model that can take in batches of measures and output batches
@@ -141,7 +154,8 @@ class DiscountModelManager:
             the desired device.
         optimizer: A PyTorch optimizer that is set up to optimize the model's
             parameters. We use this to train the discount model to output new discount
-            model targets.
+            value targets. The optimizer state is maintained across calls to
+            :meth:`training_loop`.
         device: A PyTorch device for placing tensors during training.
         train_epochs: When :meth:`training_loop` is called, the model will train until
             either (1) the total loss on each epoch is less than the
@@ -219,10 +233,10 @@ class DiscountModelManager:
             targets: (batch_size,) array of target values for the discount function.
 
         Returns:
-            A list with the total MSE loss accumulated on each epoch, normalized
-            (divided) by the size of the dataset. Strictly speaking, the model is
-            updated after every batch is passed through it, so this is not the loss that
-            one would obtain if the measures were all passed through the model at once.
+            A list with the total MSE loss accumulated on each epoch, normalized/divided
+            by the size of the dataset. Strictly speaking, the model is updated after
+            every batch is passed through it, so this is not the loss that one would
+            obtain if the measures were all passed through the model at once.
         """
         normalized_measures = self._normalize_inputs(measures)
         targets = torch.asarray(targets, dtype=torch.float32, device=self.device)
@@ -267,7 +281,7 @@ class DiscountModelManager:
         This method also puts the model in eval mode and uses :class:`torch.no_grad`.
 
         Args:
-            measures: Inputs to the model of size (batch_size, measure_dim).
+            measures: Inputs to the model of size (n_measures, measure_dim).
             batch_size: If passed in, the model will only be passed ``batch_size``
                 inputs at a time. This can be useful if, for instance, the model is very
                 large and there is insufficient memory to handle many inputs
