@@ -98,7 +98,7 @@ def save_heatmap(archive: GridArchive, heatmap_path: str | Path) -> None:
     plt.close(plt.gcf())
 
 
-def main(
+def main(  # pylint: disable = too-many-positional-arguments
     iterations: int = 1000,
     solution_dim: int = 4,
     search_nrestarts: int = 5,
@@ -223,7 +223,7 @@ def main(
 
     # Convert metrics to Python scalars by calling .item(), since each stats value is a
     # 0-D array by default, and JSON cannot serialize 0-D arrays.
-    for metric in metrics:
+    for metric in metrics:  # pylint: disable = consider-using-dict-items
         metrics[metric]["y"] = [
             m if isinstance(m, (int, float)) else m.item() for m in metrics[metric]["y"]
         ]
