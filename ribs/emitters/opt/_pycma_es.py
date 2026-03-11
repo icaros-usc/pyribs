@@ -89,14 +89,14 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
             # We do not want to import at the top because that would require cma to
             # always be installed, as cma would be imported whenever this class is
             # imported.
-            import cma
+            import cma  # pylint: disable = import-outside-toplevel
         except ImportError as e:
             raise ImportError(
                 "pycma must be installed -- please run `pip install cma` or "
                 "`conda install cma`"
             ) from e
         else:
-            self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)  # ty: ignore[possibly-unbound-attribute]
+            self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)
 
     def check_stop(self, ranking_values: np.ndarray) -> bool:
         """Checks if the optimization should stop and be reset.

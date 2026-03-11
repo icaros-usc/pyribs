@@ -14,7 +14,7 @@ from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
 from matplotlib.typing import ColorType
 from pandas import DataFrame
-from scipy.spatial import Voronoi
+from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 from ribs.archives import ArchiveDataFrame, CVTArchive
 from ribs.visualize._utils import (
@@ -284,8 +284,8 @@ def cvt_archive_heatmap(
 
         # Retrieve and initialize the axis.
         ax = plt.gca() if ax is None else ax
-        ax.set_xlim(lower_bounds[0], upper_bounds[0])  # ty: ignore[invalid-argument-type]
-        ax.set_ylim(lower_bounds[1], upper_bounds[1])  # ty: ignore[invalid-argument-type]
+        ax.set_xlim(lower_bounds[0], upper_bounds[0])
+        ax.set_ylim(lower_bounds[1], upper_bounds[1])
         ax.set_aspect(aspect)
 
         # Add faraway points so that the edge regions of the Voronoi diagram are filled

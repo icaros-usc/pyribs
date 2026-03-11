@@ -15,6 +15,8 @@ from ribs.emitters.rankers import (
     TwoStageRandomDirectionRanker,
 )
 
+# pylint: disable = redefined-outer-name
+
 
 @pytest.fixture
 def emitter():
@@ -120,7 +122,8 @@ def test_two_stage_random_direction(emitter):
         solution_batch[1:], objective_batch[1:], measures_batch[1:]
     )
     add_info = {
-        key: np.concatenate(([first_info[key]], second_info[key])) for key in first_info
+        key: np.concatenate(([first_info[key]], second_info[key]))
+        for key in first_info  # pylint: disable = consider-using-dict-items
     }
 
     ranker = TwoStageRandomDirectionRanker()

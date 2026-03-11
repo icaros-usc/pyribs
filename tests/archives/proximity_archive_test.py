@@ -7,6 +7,8 @@ from numpy.testing import assert_allclose, assert_equal
 from ribs.archives import AddStatus, ProximityArchive
 from tests.archives.conftest import get_archive_data
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture
 def data():

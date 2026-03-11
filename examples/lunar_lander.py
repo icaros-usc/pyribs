@@ -433,7 +433,7 @@ def lunar_lander_main(
     # Outputs.
     scheduler.archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
     save_ccdf(scheduler.archive, str(outdir / "archive_ccdf.png"))
-    save_heatmap(scheduler.archive, str(outdir / "heatmap.png"))  # ty: ignore[invalid-argument-type]
+    save_heatmap(scheduler.archive, str(outdir / "heatmap.png"))
     save_metrics(outdir, metrics)
 
 

@@ -14,7 +14,7 @@ from matplotlib.typing import ColorType
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from mpl_toolkits.mplot3d.axes3d import Axes3D
 from pandas import DataFrame
-from scipy.spatial import Voronoi
+from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 from ribs.archives import ArchiveDataFrame, CVTArchive
 from ribs.visualize._utils import (
@@ -272,7 +272,7 @@ def cvt_archive_3d_plot(
 
     # Default ax behavior.
     if ax is None:
-        ax: Axes3D = plt.axes(projection="3d")  # ty: ignore[invalid-assignment]
+        ax: Axes3D = plt.axes(projection="3d")
 
     ax.set_xlim(lower_bounds[0], upper_bounds[0])
     ax.set_ylim(lower_bounds[1], upper_bounds[1])

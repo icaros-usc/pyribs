@@ -5,6 +5,8 @@ import pytest
 
 from ribs.archives import ArchiveDataFrame
 
+# pylint: disable = redefined-outer-name
+
 
 @pytest.fixture
 def data():

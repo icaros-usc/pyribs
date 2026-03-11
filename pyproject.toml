@@ -60,7 +60,7 @@ all = [
 dev = [
   # Tools
   "ruff>=0.13.0",
-  "ty",
+  "pylint",
   "pre-commit",
 
   # Testing

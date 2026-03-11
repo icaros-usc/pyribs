@@ -7,6 +7,8 @@ from array_api_compat import numpy as np
 
 from ribs.archives import ArrayStore
 
+# pylint: disable = redefined-outer-name
+
 
 def test_init_reserved_field(xp_and_device):
     xp, device = xp_and_device

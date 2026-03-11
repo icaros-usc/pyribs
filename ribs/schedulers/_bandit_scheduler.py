@@ -304,8 +304,8 @@ class BanditScheduler:
         )
         return self._cur_solutions
 
-    _check_length = Scheduler._check_length
-    _validate_tell_data = Scheduler._validate_tell_data
+    _check_length = Scheduler._check_length  # pylint: disable = protected-access
+    _validate_tell_data = Scheduler._validate_tell_data  # pylint: disable = protected-access
 
     def tell_dqd(
         self,
@@ -395,14 +395,17 @@ class BanditScheduler:
         # Warn the user if nothing was inserted into the archives -- these warnings use
         # stacklevel=2 so that it's clear the error comes from tell().
         if archive_empty_before and self.archive.empty:
+            # pylint: disable-next = protected-access
             warnings.warn(Scheduler._EMPTY_WARNING.format(name="archive"), stacklevel=2)
         if (
             self._result_archive is not None
-            and result_archive_empty_before
+            and result_archive_empty_before  # pylint: disable = possibly-used-before-assignment
             and self.result_archive.empty
         ):
             warnings.warn(
-                Scheduler._EMPTY_WARNING.format(name="result_archive"), stacklevel=2
+                # pylint: disable-next = protected-access
+                Scheduler._EMPTY_WARNING.format(name="result_archive"),
+                stacklevel=2,
             )
 
         # Keep track of pos because emitters may have different batch sizes.
