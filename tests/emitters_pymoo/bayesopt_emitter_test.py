@@ -78,7 +78,7 @@ def test_wrong_archive_type():
         r" BayesianOptimizationEmitter\. Expected GridArchive\.",
     ):
         BayesianOptimizationEmitter(
-            archive,  # ty: ignore[invalid-argument-type]
+            archive,
             lower_bounds=[-1],
             upper_bounds=[1],
             num_initial_samples=1,

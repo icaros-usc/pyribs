@@ -250,7 +250,7 @@ Ranks the solutions based on projection onto a direction in the archive.
     """
 
     def reset(self, emitter: EmitterBase, archive: ArchiveBase) -> None:
-        ranges = archive.upper_bounds - archive.lower_bounds  # ty: ignore[unresolved-attribute]
+        ranges = archive.upper_bounds - archive.lower_bounds
         measure_dim = len(ranges)
         unscaled_dir = self._rng.standard_normal(measure_dim)
         self._target_measure_dir = unscaled_dir * ranges
@@ -324,7 +324,7 @@ direction in the archive.
     """
 
     def reset(self, emitter: EmitterBase, archive: ArchiveBase) -> None:
-        ranges = archive.upper_bounds - archive.lower_bounds  # ty: ignore[unresolved-attribute]
+        ranges = archive.upper_bounds - archive.lower_bounds
         measure_dim = len(ranges)
         unscaled_dir = self._rng.standard_normal(measure_dim)
         self._target_measure_dir = unscaled_dir * ranges

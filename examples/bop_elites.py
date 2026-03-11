@@ -209,7 +209,7 @@ def main(  # pylint: disable = too-many-positional-arguments
             )
 
             save_heatmap(
-                scheduler.result_archive,  # ty: ignore[invalid-argument-type]
+                scheduler.result_archive,
                 logdir / f"heatmap_{i:08d}.png",
             )
 

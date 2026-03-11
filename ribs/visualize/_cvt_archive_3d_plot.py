@@ -272,7 +272,7 @@ def cvt_archive_3d_plot(
 
     # Default ax behavior.
     if ax is None:
-        ax: Axes3D = plt.axes(projection="3d")  # ty: ignore[invalid-assignment]
+        ax: Axes3D = plt.axes(projection="3d")
 
     ax.set_xlim(lower_bounds[0], upper_bounds[0])
     ax.set_ylim(lower_bounds[1], upper_bounds[1])

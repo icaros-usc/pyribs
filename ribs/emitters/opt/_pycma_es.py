@@ -96,7 +96,7 @@ class PyCMAEvolutionStrategy(EvolutionStrategyBase):
                 "`conda install cma`"
             ) from e
         else:
-            self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)  # ty: ignore[possibly-unbound-attribute]
+            self._es = cma.CMAEvolutionStrategy(x0, self.sigma0, self._opts)
 
     def check_stop(self, ranking_values: np.ndarray) -> bool:
         """Checks if the optimization should stop and be reset.

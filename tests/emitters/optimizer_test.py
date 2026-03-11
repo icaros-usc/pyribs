@@ -34,10 +34,10 @@ def test_init_with_get_es(es_name):
 
     # Technically, these attributes are not part of the API, but all of our ES's have
     # them.
-    assert es.batch_size == es_kwargs["batch_size"]  # ty: ignore[unresolved-attribute]
-    assert es.sigma0 == es_kwargs["sigma0"]  # ty: ignore[unresolved-attribute]
-    assert es.solution_dim == es_kwargs["solution_dim"]  # ty: ignore[unresolved-attribute]
-    assert es.dtype == es_kwargs["dtype"]  # ty: ignore[unresolved-attribute]
+    assert es.batch_size == es_kwargs["batch_size"]
+    assert es.sigma0 == es_kwargs["sigma0"]
+    assert es.solution_dim == es_kwargs["solution_dim"]
+    assert es.dtype == es_kwargs["dtype"]
 
 
 # Gradient Optimizer Tests

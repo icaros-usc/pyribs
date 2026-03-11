@@ -286,7 +286,7 @@ class ArrayStore(PickleXPMixin):
         if is_numpy_array(arr):
             return arr
         elif is_torch_array(arr):
-            return arr.cpu().detach().numpy()  # ty: ignore[possibly-unbound-attribute]
+            return arr.cpu().detach().numpy()
         elif is_cupy_array(arr):
             return cp.asnumpy(arr)
         else:
@@ -456,17 +456,17 @@ class ArrayStore(PickleXPMixin):
             if single_field:
                 data = arr
             elif return_type == "dict":
-                data[name] = arr  # ty: ignore[invalid-assignment]
+                data[name] = arr
             elif return_type == "tuple":
-                data.append(arr)  # ty: ignore[possibly-unbound-attribute]
+                data.append(arr)
             elif return_type == "pandas":
                 arr = self._convert_to_numpy(arr)
 
                 if len(arr.shape) == 1:  # Scalar entries.
-                    data[name] = arr  # ty: ignore[invalid-assignment]
+                    data[name] = arr
                 elif len(arr.shape) == 2:  # 1D array entries.
                     for i in range(arr.shape[1]):
-                        data[f"{name}_{i}"] = arr[:, i]  # ty: ignore[invalid-assignment]
+                        data[f"{name}_{i}"] = arr[:, i]
                 else:
                     raise ValueError(
                         f"Field `{name}` has shape {arr.shape[1:]} -- "
@@ -475,7 +475,7 @@ class ArrayStore(PickleXPMixin):
 
         # Postprocess return data.
         if return_type == "tuple":
-            data = tuple(data)  # ty: ignore[invalid-argument-type]
+            data = tuple(data)
         elif return_type == "pandas":
             occupied = self._convert_to_numpy(occupied)
 

@@ -64,7 +64,7 @@ def test_init_fails_with_non_list():
     emitters = GaussianEmitter(archive, sigma=1, x0=[0.0, 0.0], batch_size=1)
 
     with pytest.raises(TypeError):
-        Scheduler(archive, emitters)  # ty: ignore[invalid-argument-type]
+        Scheduler(archive, emitters)
 
 
 def test_init_fails_with_no_emitters():
