@@ -252,7 +252,9 @@ class DiscountArchive(ArchiveBase):
         train the discount model with this data.
 
         Returns:
-            Dict with info from training.
+            Info from training. See :meth:`train_discount_model` for info on this dict.
+            The format is identical, but note that "solution_measures" and
+            "solution_targets" are arrays of length 0.
         """
         empty_measures = self._sample_empty_archive_centers(self.init_train_points)
         empty_targets = np.full(len(empty_measures), self.threshold_min)
@@ -262,73 +264,73 @@ class DiscountArchive(ArchiveBase):
         )
 
         return {
-            # Number of points marked empty.
-            "n_empty": len(empty_measures),
-            # New measures from the emitters.
-            "new_measures": np.empty((0, self.measure_dim)),
-            # Measures that were marked as empty.
+            "solution_measures": np.empty((0, self.measure_dim)),
+            "solution_targets": np.empty((0,)),
             "empty_measures": empty_measures,
-            # Training losses.
-            "losses": losses,
-            # Training epochs.
             "epochs": len(losses),
+            "losses": losses,
         }
+        # TODO: Test output shapes.
 
-    # TODO: Docstring.
     def train_discount_model(self) -> dict:
-        """Trains the discount model based on information from evaluations.
+        """Trains the discount model.
 
-        Some of the data for training is cached when calling :meth:`add` and retrieved
-        in this method.
+        The training process is described in Section 5 of `Tjanaka 2026
+        <https://discount-models.github.io/>`_. The first data source for training the
+        discount model comes from solutions sampled by the emitters -- this data is
+        cached in the archive during a prior call to :meth:`add`, which happens inside
+        the scheduler's :meth:`~ribs.schedulers.Scheduler.tell` method. The second data
+        source, "empty points", are sampled from the centers of unoccupied cells in the
+        result archive. The number of empty points is controlled by the
+        :prop:`empty_points` property.
 
         Returns:
-            Dict with info from training.
+            Info from training. The dict contains the following keys:
+
+            - "solution_measures": Measures associated with solutions sampled by the
+              emitters, i.e., measures that were passed into :meth:`add`.
+            - "solution_targets": Target discount values for the aforementioned
+              measures. Note that the target for empty points is always
+              :prop:`threshold_min`.
+            - "empty_measures": The empty points sampled from the result archive. Note
+              that the number of points may be fewer than :prop:`empty_points` if the
+              result archive did not have enough unoccupied cells.
+            - "epochs": Number of epochs for which the discount model was trained.
+            - "losses": Loss from each epoch of training the discount model.
         """
         data = self._cached_data
         add_info = self._cached_add_info
 
         empty_measures = self._sample_empty_archive_centers(self.empty_points)
-        n_empty = len(empty_measures)
 
-        measure_list = [
-            data["measures"],
-            empty_measures,
-        ]
-        target_list = [
-            # Measures from the data result in the threshold update rule.
-            np.where(
-                data["objective"] > add_info["discount"],
-                (1.0 - self.learning_rate) * add_info["discount"]
-                + self.learning_rate * data["objective"],
-                add_info["discount"],
-            ),
-            # Empty measures get threshold_min.
-            np.full(len(empty_measures), self.threshold_min),
-        ]
+        # Measures from the solutions result in the threshold update rule adapted from
+        # CMA-MAE (Equation 1 in Tjanaka 2026).
+        solution_targets = np.where(
+            data["objective"] > add_info["discount"],
+            (1.0 - self.learning_rate) * add_info["discount"]
+            + self.learning_rate * data["objective"],
+            add_info["discount"],
+        )
 
-        train_measures = np.concatenate(measure_list)
-        train_targets = np.concatenate(target_list)
+        # Empty measures get threshold_min.
+        empty_targets = np.full(len(empty_measures), self.threshold_min)
+
+        train_measures = np.concatenate((data["measures"], empty_measures))
+        train_targets = np.concatenate((solution_targets, empty_targets))
 
         losses = self.discount_model_manager.training_loop(
             train_measures, train_targets
         )
 
         return {
-            # Number of points marked empty.
-            "n_empty": n_empty,
-            # New measures from the emitters.
-            "new_measures": data["measures"],
-            # Measures that were marked as empty.
+            "solution_measures": data["measures"],
+            "solution_targets": solution_targets,
             "empty_measures": empty_measures,
-            # Training losses.
-            "losses": losses,
-            # Training epochs.
             "epochs": len(losses),
+            "losses": losses,
         }
 
     ## Methods for writing to the archive ##
-
-    # TODO: Cast to correct dtypes; test for this!
 
     def add(
         self,
@@ -388,10 +390,11 @@ class DiscountArchive(ArchiveBase):
             },
         )
 
+        # TODO: Cast dtypes coming out of here.
         discount = self.discount_model_manager.inference(data["measures"])
 
         added = data["objective"] > discount
-        status = 2 * added
+        status = (2 * added).astype(np.int32)
         value = data["objective"] - discount
         add_info = {"status": status, "value": value, "discount": discount}
         self._cached_data = data
