@@ -7,6 +7,8 @@ from ribs.archives import AddStatus, GridArchive
 
 from .conftest import get_archive_data
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture
 def data():
@@ -75,6 +77,7 @@ def assert_archive_elites(
                 measures_match = True
 
             index_match = (
+                # pylint: disable-next = possibly-used-before-assignment
                 grid_indices_batch is None or data["index"][j] == index_batch[i]
             )
 

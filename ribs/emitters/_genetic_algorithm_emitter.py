@@ -103,7 +103,7 @@ class GeneticAlgorithmEmitter(EmitterBase):
             **(operator_kwargs if operator_kwargs is not None else {}),
             # We assume the class takes in a seed, but this is technically not part of
             # the API.
-            seed=seed,  # ty: ignore[unknown-argument]
+            seed=seed,
         )
 
     @property

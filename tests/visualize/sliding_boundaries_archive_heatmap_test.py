@@ -11,6 +11,8 @@ from matplotlib.testing.decorators import image_comparison
 from ribs.archives import SlidingBoundariesArchive
 from ribs.visualize import sliding_boundaries_archive_heatmap
 
+# pylint: disable = redefined-outer-name
+
 #
 # Fixtures
 #

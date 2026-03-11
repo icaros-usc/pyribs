@@ -267,7 +267,7 @@ def xp_namespace(xp: ModuleType | None) -> ModuleType:
     For more context, see:
     https://github.com/data-apis/array-api-compat/issues/342
     """
-    return np_compat if xp is None else array_namespace(xp.empty(0))  # ty: ignore[unresolved-attribute]
+    return np_compat if xp is None else array_namespace(xp.empty(0))
 
 
 class PickleXPMixin:

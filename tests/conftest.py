@@ -29,7 +29,7 @@ except ImportError:
 
 try:
     import cupy as cp
-    from cupy_backends.cuda.api.runtime import (  # ty: ignore[unresolved-import]
+    from cupy_backends.cuda.api.runtime import (
         CUDARuntimeError,
     )
 

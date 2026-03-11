@@ -21,9 +21,8 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     env:
-      # TODO (#609): Remove skip if possible.
-      # Skip ty since it is not yet ready for pre-commit
-      SKIP: ty
+      # Skip pylint since not all of our code passes pylint.
+      SKIP: pylint
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
