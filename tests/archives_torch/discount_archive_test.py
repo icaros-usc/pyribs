@@ -14,8 +14,14 @@ from ribs.discount_models import MLP, DiscountModelManager
 # pylint: disable = redefined-outer-name
 
 
+@pytest.fixture(params=[np.float64, np.float32], ids=["float64", "float32"])
+def dtype(request):
+    """Fixture for archive dtype."""
+    return request.param
+
+
 @pytest.fixture
-def archive():
+def archive(dtype):
     """Builds a DiscountArchive with a small MLP."""
     result_archive = GridArchive(
         solution_dim=3, dims=[10, 10], ranges=[(-1, 1), (-1, 1)]
@@ -40,16 +46,13 @@ def archive():
         result_archive=result_archive,
         init_train_points=100,
         empty_points=10,
+        dtype=dtype,
     )
 
 
-def test_attrs(archive):
+def test_attrs(archive, dtype):
     assert not archive.empty
-    assert archive.dtypes == {
-        "solution": np.float64,
-        "objective": np.float64,
-        "measures": np.float64,
-    }
+    assert archive.dtypes == {"solution": dtype, "objective": dtype, "measures": dtype}
     assert archive.learning_rate == 0.1
     assert archive.threshold_min == 0.0
     assert archive.init_train_points == 100
@@ -72,6 +75,25 @@ def test_init_discount_model(archive):
     assert len(info["losses"]) == info["epochs"]
 
 
+def test_add(archive, dtype):
+    archive.init_discount_model()
+    add_info = archive.add(
+        solution=[[1, 2, 3], [4, 5, 6]],
+        objective=[
+            10.0,  # Should be high enough that the solutions are considered NEW.
+            -10.0,  # Should be low enough that the solution is considered NOT_ADDED.
+        ],
+        measures=[[0, 0], [1, 1]],
+    )
+
+    assert add_info["status"].dtype == np.int32
+    assert (add_info["status"] == [2, 0]).all()
+    assert add_info["value"].dtype == dtype
+    assert add_info["value"].shape == (2,)
+    assert add_info["discount"].dtype == dtype
+    assert add_info["discount"].shape == (2,)
+
+
 def test_train_discount_model(archive):
     archive.init_discount_model()
     archive.add(
@@ -90,11 +112,10 @@ def test_train_discount_model(archive):
         "losses",
     }
     assert info["solution_measures"].shape == (2, 2)
+    assert np.allclose(info["solution_measures"], [[0, 0], [1, 1]])
     assert info["solution_targets"].shape == (2,)
+    # It's difficult to know what the value of solution_targets should be since the
+    # discount model is not guaranteed to output a discount value of `threshold_min`
+    # everywhere.
     assert info["empty_measures"].shape == (10, 2)
     assert len(info["losses"]) == info["epochs"]
-
-
-# TODO: test dtypes
-def test_add():
-    pass

@@ -389,8 +389,10 @@ class DiscountArchive(ArchiveBase):
             },
         )
 
-        # TODO: Cast dtypes coming out of here.
         discount = self.discount_model_manager.inference(data["measures"])
+
+        # Cast so that we can remain faithful to the archive's dtypes.
+        discount = discount.astype(self.dtypes["objective"])
 
         added = data["objective"] > discount
         status = (2 * added).astype(np.int32)
