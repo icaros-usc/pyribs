@@ -49,7 +49,8 @@ def test_normalization_params(normalize):
             )
 
 
-def test_normalize_inputs():
+@pytest.mark.parametrize("normalize", [None, "zero_one", "negative_one_one"])
+def test_normalize_inputs(normalize):
     model = MLP(layer_specs=[(4, 16), (16, 1)], activation=nn.ReLU)
     optimizer = torch.optim.Adam(params=model.parameters())
     device = torch.device("cpu")
@@ -60,7 +61,7 @@ def test_normalize_inputs():
         train_epochs=5,
         train_cutoff_loss=0.05,
         train_batch_size=32,
-        normalize="negative_one_one",
+        normalize=normalize,
         norm_low=[-2, -5],
         norm_high=[3, 5],
     )
@@ -78,10 +79,46 @@ def test_normalize_inputs():
 
     assert isinstance(normalized, torch.Tensor)
     assert normalized.device == device
-    assert torch.allclose(
-        normalized,
-        torch.asarray(
-            [[-1.0, -1.0], [1.0, 1.0], [0.0, 0.0], [1.0, -1.0], [-2.0, 2.0]],
-            device=device,
-        ),
-    )
+
+    if normalize is None:
+        assert torch.allclose(
+            normalized,
+            torch.asarray(
+                [
+                    [-2.0, -5.0],
+                    [3.0, 5.0],
+                    [0.5, 0.0],
+                    [3.0, -5.0],
+                    [-4.5, 10.0],
+                ],
+                device=device,
+            ),
+        )
+    elif normalize == "zero_one":
+        assert torch.allclose(
+            normalized,
+            torch.asarray(
+                [
+                    [0.0, 0.0],
+                    [1.0, 1.0],
+                    [0.5, 0.5],
+                    [1.0, 0.0],
+                    [-0.5, 1.5],
+                ],
+                device=device,
+            ),
+        )
+    elif normalize == "negative_one_one":
+        assert torch.allclose(
+            normalized,
+            torch.asarray(
+                [
+                    [-1.0, -1.0],
+                    [1.0, 1.0],
+                    [0.0, 0.0],
+                    [1.0, -1.0],
+                    [-2.0, 2.0],
+                ],
+                device=device,
+            ),
+        )
