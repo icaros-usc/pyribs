@@ -1027,8 +1027,8 @@ def create_scheduler(
         model = config["model"]["class"](**config["model"]["kwargs"])
         model.to(device)
         optimizer = config["optimizer"]["class"](
-            **config["optimizer"]["kwargs"],
             params=model.parameters(),
+            **config["optimizer"]["kwargs"],
         )
         # TODO: Rename to manager.
         discount_model_manager = config["discount_model_manager"]["class"](

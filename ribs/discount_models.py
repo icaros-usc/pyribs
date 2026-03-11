@@ -203,12 +203,21 @@ class DiscountModelManager:
         self.train_batch_size = train_batch_size
 
         self.normalize = normalize
-        self.norm_low = torch.asarray(
-            norm_low, device=self.device, dtype=torch.float32
-        ).requires_grad_(False)
-        self.norm_high = torch.asarray(
-            norm_high, device=self.device, dtype=torch.float32
-        ).requires_grad_(False)
+        if self.normalize is None:
+            self.norm_low = None
+            self.norm_high = None
+        else:
+            if norm_low is None or norm_high is None:
+                raise ValueError(
+                    "If normalize is not None, norm_low "
+                    "and norm_high must be passed in."
+                )
+            self.norm_low = torch.asarray(
+                norm_low, device=self.device, dtype=torch.float32
+            ).requires_grad_(False)
+            self.norm_high = torch.asarray(
+                norm_high, device=self.device, dtype=torch.float32
+            ).requires_grad_(False)
 
     def _normalize_inputs(self, x: ArrayLike) -> torch.Tensor:
         """Places x on the manager's device and normalizes it."""

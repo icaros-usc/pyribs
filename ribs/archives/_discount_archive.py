@@ -270,7 +270,6 @@ class DiscountArchive(ArchiveBase):
             "epochs": len(losses),
             "losses": losses,
         }
-        # TODO: Test output shapes.
 
     def train_discount_model(self) -> dict:
         """Trains the discount model.
@@ -289,14 +288,14 @@ class DiscountArchive(ArchiveBase):
 
             - "solution_measures": Measures associated with solutions sampled by the
               emitters, i.e., measures that were passed into :meth:`add`.
-            - "solution_targets": Target discount values for the aforementioned
+            - "solution_targets": Array of target discount values for the aforementioned
               measures. Note that the target for empty points is always
               :prop:`threshold_min`.
-            - "empty_measures": The empty points sampled from the result archive. Note
-              that the number of points may be fewer than :prop:`empty_points` if the
-              result archive did not have enough unoccupied cells.
+            - "empty_measures": Array of empty points sampled from the result archive.
+              Note that the number of points may be fewer than :prop:`empty_points` if
+              the result archive did not have enough unoccupied cells.
             - "epochs": Number of epochs for which the discount model was trained.
-            - "losses": Loss from each epoch of training the discount model.
+            - "losses": List with loss from each epoch of training the discount model.
         """
         data = self._cached_data
         add_info = self._cached_add_info
