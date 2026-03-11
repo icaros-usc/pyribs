@@ -20,7 +20,7 @@ def archive():
     result_archive = GridArchive(
         solution_dim=3, dims=[10, 10], ranges=[(-1, 1), (-1, 1)]
     )
-    model = MLP([[2, 16], [16, 1]], nn.ReLU)
+    model = MLP(layer_specs=[(2, 16), (16, 1)], activation=nn.ReLU)
     optimizer = torch.optim.Adam(params=model.parameters())
     device = torch.device("cpu")
     discount_model_manager = DiscountModelManager(

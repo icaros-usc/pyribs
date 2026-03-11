@@ -209,8 +209,7 @@ class DiscountModelManager:
         else:
             if norm_low is None or norm_high is None:
                 raise ValueError(
-                    "If normalize is not None, norm_low "
-                    "and norm_high must be passed in."
+                    "If normalize is not None, norm_low and norm_high must be passed in."
                 )
             self.norm_low = torch.asarray(
                 norm_low, device=self.device, dtype=torch.float32
