@@ -13,6 +13,9 @@
    {%- if name == "ArchiveDataFrame" %}
    :no-inherited-members:
    :members:
+   {%- elif name == "DiscountArchive" %}
+   :no-inherited-members:
+   :members: add, init_discount_model, train_discount_model, empty, discount_model_manager, dtypes, empty_points, init_train_points, learning_rate, threshold_min
    {%- elif name == "DensityArchive" %}
    :no-inherited-members:
    :members: add, compute_density, buffer, empty, measure_dim, objective_dim, solution_dim
@@ -26,6 +29,10 @@
    {% if name == "ArchiveDataFrame" %}
        ~{{ name }}.get_field
        ~{{ name }}.iterelites
+   {% elif name == "DiscountArchive" %}
+       ~{{ name }}.add
+       ~{{ name }}.init_discount_model
+       ~{{ name }}.train_discount_model
    {% elif name == "DensityArchive" %}
        ~{{ name }}.add
        ~{{ name }}.compute_density
@@ -53,6 +60,14 @@
 
    .. autosummary::
    {% if name == "ArchiveDataFrame" %}
+   {% elif name == "DiscountArchive" %}
+       ~{{ name }}.discount_model_manager
+       ~{{ name }}.dtypes
+       ~{{ name }}.empty
+       ~{{ name }}.empty_points
+       ~{{ name }}.init_train_points
+       ~{{ name }}.learning_rate
+       ~{{ name }}.threshold_min
    {% elif name == "DensityArchive" %}
        ~{{ name }}.buffer
        ~{{ name }}.empty

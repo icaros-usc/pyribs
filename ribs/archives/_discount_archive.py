@@ -16,6 +16,10 @@ from ribs.typing import BatchData, Float, Int
 _RESULT_ARCHIVE_ERROR = "result_archive must be a GridArchive or CVTArchive."
 
 
+# Developer Note: The documentation for this class is hacked. To list new methods,
+# manually modify the template in docs/_templates/autosummary/class.rst
+
+
 class DiscountArchive(ArchiveBase):
     """Archive that represents the discount function with a model.
 
