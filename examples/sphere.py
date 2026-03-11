@@ -1041,7 +1041,7 @@ def create_scheduler(
         archive = archive_class(
             solution_dim=solution_dim,
             measure_dim=len(bounds),
-            discount_model=discount_model_manager,
+            discount_model_manager=discount_model_manager,
             result_archive=result_archive,
             seed=seed,
             **config["archive"]["kwargs"],
