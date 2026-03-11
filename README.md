@@ -17,7 +17,8 @@ implements the highly modular _Rapid Illumination of Behavior Space (RIBS)_
 framework for QD optimization. Pyribs is also the official implementation of
 Covariance Matrix Adaptation MAP-Elites (CMA-ME), Covariance Matrix Adaptation
 MAP-Elites via a Gradient Arborescence (CMA-MEGA), Covariance Matrix Adaptation
-MAP-Annealing (CMA-MAE), and scalable variants of CMA-MAE.
+MAP-Annealing (CMA-MAE), scalable variants of CMA-MAE, and Discount Model Search
+(DMS).
 
 ## Community
 
@@ -377,6 +378,17 @@ papers:
     pages={6771-6778},
     keywords={Covariance matrices;Training;Neural networks;Legged locomotion;Reinforcement learning;Evolutionary robotics;Evolutionary robotics;reinforcement learning},
     doi={10.1109/LRA.2023.3313012}
+  }
+  ```
+- **Discount Model Search:** [Tjanaka 2026](https://discount-models.github.io/)
+  ```
+  @inproceedings{
+    tjanaka2026discount,
+    title={Discount Model Search for Quality Diversity Optimization in High-Dimensional Measure Spaces},
+    author={Bryon Tjanaka and Henry Chen and Matthew C. Fontaine and Stefanos Nikolaidis},
+    booktitle={The Fourteenth International Conference on Learning Representations},
+    year={2026},
+    url={https://openreview.net/forum?id=m6Hv0yZO3n}
   }
   ```
 
