@@ -46,16 +46,19 @@ jobs:
       - name: Install core deps
         run: pip install .[dev]
       # Torch and cupy are tricky, so we only install them on ubuntu. They are
-      # only used for testing array API stuff.
+      # both used for testing array API stuff. Torch is also involved in
+      # components like discount models.
       - name: Install torch
         if: matrix.os == 'ubuntu-latest'
         run: pip install torch
+      - name: Test components that depend on torch
+        if: matrix.os == 'ubuntu-latest'
+        run: pytest tests/discount_models tests/archives_torch
       - name: Install cupy
         if: matrix.os == 'ubuntu-latest'
         run: pip install cupy-cuda12x
       - name: Test core
-        run: >
-          pytest tests/archives tests/emitters tests/schedulers
+        run: pytest tests/archives tests/emitters tests/schedulers
       - name: Install visualize dep
         run: pip install .[visualize]
       - name: Test visualize extra
