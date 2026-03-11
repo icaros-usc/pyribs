@@ -19,6 +19,9 @@
    {%- elif name == "DensityArchive" %}
    :no-inherited-members:
    :members: add, compute_density, buffer, empty, measure_dim, objective_dim, solution_dim
+   {%- elif name == "MLP" %}
+   :no-inherited-members:
+   :members: deserialize, forward, gradient, num_params, serialize
    {% endif %}
 
    {% block methods %}
@@ -36,6 +39,12 @@
    {% elif name == "DensityArchive" %}
        ~{{ name }}.add
        ~{{ name }}.compute_density
+   {% elif name == "MLP" %}
+       ~{{ name }}.deserialize
+       ~{{ name }}.forward
+       ~{{ name }}.gradient
+       ~{{ name }}.num_params
+       ~{{ name }}.serialize
    {% else %}
      {% for item in all_methods %}
        {%- if not item.startswith('_') or item in ['__len__',
@@ -55,12 +64,14 @@
    {% endblock %}
 
    {% block attributes %}
-   {% if attributes %}
+   {# Put the class name in this if statement if it does not have any attributes. #}
+   {% if name == "ArchiveDataFrame" %}
+   {% elif name == "MLP" %}
+   {% elif attributes %}
    .. rubric:: {{ _('Attributes') }}
 
    .. autosummary::
-   {% if name == "ArchiveDataFrame" %}
-   {% elif name == "DiscountArchive" %}
+   {% if name == "DiscountArchive" %}
        ~{{ name }}.discount_model_manager
        ~{{ name }}.dtypes
        ~{{ name }}.empty

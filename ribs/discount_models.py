@@ -37,6 +37,10 @@ except ImportError:
     IS_TORCH_AVAILABLE = False
 
 
+# Developer Note: The documentation for this class is hacked. To list new methods,
+# manually modify the template in docs/_templates/autosummary/class.rst
+
+
 class MLP(nn.Module):
     """PyTorch multi-layer perceptron model.
 
