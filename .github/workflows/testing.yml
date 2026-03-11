@@ -45,6 +45,9 @@ jobs:
           channels: conda-forge,defaults
       - name: Install core deps
         run: pip install .[dev]
+      - name: Tests when torch is not available
+        if: matrix.os == 'ubuntu-latest'
+        run: pytest tests/torch_not_available_test.py
       # Torch and cupy are tricky, so we only install them on ubuntu. They are
       # both used for testing array API stuff. Torch is also involved in
       # components like discount models.
