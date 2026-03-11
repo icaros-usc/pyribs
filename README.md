@@ -123,6 +123,19 @@ python -c "import ribs; print(ribs.__version__)"
 
 You should see a version number in the output.
 
+### PyTorch Dependency
+
+Some components of pyribs, such as `ribs.discount_models`, depend on PyTorch.
+Since PyTorch is a large package, we do not include it in the pyribs
+dependencies by default, and we leave it to users to install PyTorch on their
+own. To this end, we recommend referring to the
+[PyTorch installation guide](https://pytorch.org/get-started/locally/). One
+installation command that may work for many users is:
+
+```bash
+pip install torch
+```
+
 ## Usage
 
 Here we show an example application of CMA-ME in pyribs. To initialize the
