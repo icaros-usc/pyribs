@@ -89,6 +89,10 @@ class MLP(nn.Module):
         """Passes the inputs through the MLP."""
         return self.model(x)
 
+    def num_params(self) -> int:
+        """Counts number of parameters in the model."""
+        return sum(p.numel() for p in self.model.parameters())
+
     def serialize(self) -> np.ndarray:
         """Returns 1D array with all parameters in the model.
 
@@ -126,10 +130,6 @@ class MLP(nn.Module):
         return np.concatenate(
             [p.grad.cpu().detach().numpy().ravel() for p in self.parameters()]
         )
-
-    def num_params(self) -> int:
-        """Counts number of parameters in the model."""
-        return sum(p.numel() for p in self.model.parameters())
 
 
 class DiscountModelManager:
