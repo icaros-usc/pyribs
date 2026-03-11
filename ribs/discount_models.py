@@ -211,7 +211,7 @@ class DiscountModelManager:
         ).requires_grad_(False)
 
     def _normalize_inputs(self, x: ArrayLike) -> torch.Tensor:
-        """Applies normalization to the given inputs."""
+        """Places x on the manager's device and normalizes it."""
         x = torch.asarray(x, device=self.device, dtype=torch.float32)
         if self.normalize is None:
             return x
