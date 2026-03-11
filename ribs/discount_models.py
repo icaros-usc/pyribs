@@ -29,7 +29,7 @@ try:
 
     IS_TORCH_AVAILABLE = True
 except ImportError:
-
+    # pylint: disable = invalid-name, missing-class-docstring
     class nn:  # noqa: N801
         class Module:
             pass
