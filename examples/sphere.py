@@ -843,6 +843,7 @@ CONFIG = {
     "dms": {
         # Hyperparameters from DMS paper: https://discount-models.github.io/
         "is_dqd": False,
+        # TODO: We could put train_freq somewhere here.
         # In DMS, the DiscountArchive does not store any solutions, so emitters
         # must use the result archive instead.
         "pass_result_archive_to_emitters": True,
@@ -879,9 +880,8 @@ CONFIG = {
             "kwargs": {
                 "learning_rate": 0.1,
                 "threshold_min": 0,
-                "initial_train_points": 1000,
+                "init_train_points": 1000,
                 "empty_points": 100,
-                "train_freq": 1,  # Train on every iteration.
             },
         },
         "result_archive": {
