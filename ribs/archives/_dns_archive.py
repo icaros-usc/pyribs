@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Collection, Iterator
-from typing import Literal, cast, overload
+from typing import Literal, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
@@ -127,6 +127,7 @@ class DNSArchive(ArchiveBase):
         # archive; it is useful for computing qd_score and obj_mean.
         self._best_elite = None
         self._objective_sum = None
+        self._stats = None
         self._stats_reset()
 
     ## Properties inherited from ArchiveBase ##
@@ -459,10 +460,7 @@ class DNSArchive(ArchiveBase):
         check_batch_shape(measures, "measures", self.measure_dim, "measure_dim")
         check_finite(measures, "measures")
 
-        occupied, data = cast(
-            tuple[np.ndarray, BatchData],
-            self._store.retrieve(self.index_of(measures)),
-        )
+        occupied, data = self._store.retrieve(self.index_of(measures))
         fill_sentinel_values(occupied, data)
 
         return occupied, data
@@ -509,10 +507,7 @@ class DNSArchive(ArchiveBase):
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
     ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
-        return cast(
-            np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame,
-            self._store.data(fields, return_type),
-        )
+        return self._store.data(fields, return_type)
 
     def sample_elites(self, n: Int, replace: bool = True) -> BatchData:
         if self.empty:
@@ -526,4 +521,4 @@ class DNSArchive(ArchiveBase):
         random_indices = self._rng.choice(len(self._store), size=n, replace=replace)
         selected_indices = self._store.occupied_list[random_indices]
         _, elites = self._store.retrieve(selected_indices)
-        return cast(BatchData, elites)
+        return elites
