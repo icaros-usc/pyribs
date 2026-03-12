@@ -14,6 +14,22 @@ from ribs.discount_models import MLP, DiscountModelManager
 # pylint: disable = redefined-outer-name
 
 
+def compute_grid_centers(archive: GridArchive) -> np.ndarray:
+    """Computes the center in measure space of each grid cell in the archive."""
+    grid_indices = archive.int_to_grid_index(np.arange(archive.cells))
+    return (
+        (grid_indices + 0.5) / archive.dims
+    ) * archive.interval_size + archive.lower_bounds
+
+
+def check_all_measures_in_set(measures: np.ndarray, reference: np.ndarray) -> bool:
+    """Checks that every measure in measures exists in reference."""
+    for m in measures:
+        is_close = np.abs(reference - m[None]) < 1e-3
+        # Collapse along axis 1 to require that all components be equal.
+        assert np.any(np.all(is_close, axis=1))
+
+
 @pytest.fixture(params=[np.float64, np.float32], ids=["float64", "float32"])
 def dtype(request):
     """Fixture for archive dtype."""
@@ -21,11 +37,14 @@ def dtype(request):
 
 
 @pytest.fixture
-def archive(dtype):
+def result_archive():
+    """Fixture for the result archive."""
+    return GridArchive(solution_dim=3, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
+
+
+@pytest.fixture
+def archive(dtype, result_archive):
     """Builds a DiscountArchive with a small MLP."""
-    result_archive = GridArchive(
-        solution_dim=3, dims=[10, 10], ranges=[(-1, 1), (-1, 1)]
-    )
     model = MLP(layer_specs=[(2, 16), (16, 1)], activation=nn.ReLU)
     optimizer = torch.optim.Adam(params=model.parameters())
     device = torch.device("cpu")
@@ -59,7 +78,7 @@ def test_attrs(archive, dtype):
     assert archive.empty_points == 10
 
 
-def test_init_discount_model(archive):
+def test_init_discount_model(archive, result_archive):
     info = archive.init_discount_model()
 
     assert info.keys() == {
@@ -74,27 +93,14 @@ def test_init_discount_model(archive):
     assert info["empty_measures"].shape == (100, 2)
     assert len(info["losses"]) == info["epochs"]
 
-
-def test_add(archive, dtype):
-    archive.init_discount_model()
-    add_info = archive.add(
-        solution=[[1, 2, 3], [4, 5, 6]],
-        objective=[
-            10.0,  # Should be high enough that the solutions are considered NEW.
-            -10.0,  # Should be low enough that the solution is considered NOT_ADDED.
-        ],
-        measures=[[0, 0], [1, 1]],
+    # All the empty measures should be unique and contained in the archive centers.
+    assert np.unique(info["empty_measures"], axis=0).shape == (100, 2)
+    check_all_measures_in_set(
+        info["empty_measures"], compute_grid_centers(result_archive)
     )
 
-    assert add_info["status"].dtype == np.int32
-    assert (add_info["status"] == [2, 0]).all()
-    assert add_info["value"].dtype == dtype
-    assert add_info["value"].shape == (2,)
-    assert add_info["discount"].dtype == dtype
-    assert add_info["discount"].shape == (2,)
 
-
-def test_train_discount_model(archive):
+def test_train_discount_model(archive, result_archive):
     archive.init_discount_model()
     archive.add(
         solution=[[1, 2, 3], [4, 5, 6]],
@@ -119,3 +125,28 @@ def test_train_discount_model(archive):
     # everywhere.
     assert info["empty_measures"].shape == (10, 2)
     assert len(info["losses"]) == info["epochs"]
+
+    # All the empty measures should be unique.
+    assert np.unique(info["empty_measures"], axis=0).shape == (10, 2)
+    check_all_measures_in_set(
+        info["empty_measures"], compute_grid_centers(result_archive)
+    )
+
+
+def test_add(archive, dtype):
+    archive.init_discount_model()
+    add_info = archive.add(
+        solution=[[1, 2, 3], [4, 5, 6]],
+        objective=[
+            10.0,  # Should be high enough that the solutions are considered NEW.
+            -10.0,  # Should be low enough that the solution is considered NOT_ADDED.
+        ],
+        measures=[[0, 0], [1, 1]],
+    )
+
+    assert add_info["status"].dtype == np.int32
+    assert (add_info["status"] == [2, 0]).all()
+    assert add_info["value"].dtype == dtype
+    assert add_info["value"].shape == (2,)
+    assert add_info["discount"].dtype == dtype
+    assert add_info["discount"].shape == (2,)
