@@ -164,3 +164,81 @@ def test_normalize(normalize_measures):
                 device=device,
             ),
         )
+
+
+@pytest.mark.parametrize("normalize_discount", [None, "zero_one", "negative_one_one"])
+def test_unnormalize(normalize_discount):
+    model = MLP(layer_specs=[(4, 16), (16, 1)], activation=nn.ReLU)
+    optimizer = torch.optim.Adam(params=model.parameters())
+    device = torch.device("cpu")
+    discount_model_manager = DiscountModelManager(
+        model=model,
+        optimizer=optimizer,
+        device=device,
+        train_epochs=5,
+        train_cutoff_loss=0.05,
+        train_batch_size=32,
+        normalize_discount=normalize_discount,
+        discount_low=[-2, -5],
+        discount_high=[3, 5],
+    )
+
+    target = torch.asarray(
+        [
+            [-2.0, -5.0],
+            [3.0, 5.0],
+            [0.5, 0.0],
+            [3.0, -5.0],
+            [-4.5, 10.0],
+        ],
+        device=device,
+    )
+
+    if normalize_discount is None:
+        # pylint: disable-next = protected-access
+        unnormalized = discount_model_manager._unnormalize(
+            target,
+            discount_model_manager.normalize_discount,
+            discount_model_manager.discount_low,
+            discount_model_manager.discount_high,
+        )
+    elif normalize_discount == "zero_one":
+        # pylint: disable-next = protected-access
+        unnormalized = discount_model_manager._unnormalize(
+            torch.asarray(
+                [
+                    [0.0, 0.0],
+                    [1.0, 1.0],
+                    [0.5, 0.5],
+                    [1.0, 0.0],
+                    [-0.5, 1.5],
+                ],
+                device=device,
+            ),
+            discount_model_manager.normalize_discount,
+            discount_model_manager.discount_low,
+            discount_model_manager.discount_high,
+        )
+    elif normalize_discount == "negative_one_one":
+        # pylint: disable-next = protected-access
+        unnormalized = discount_model_manager._unnormalize(
+            torch.asarray(
+                [
+                    [-1.0, -1.0],
+                    [1.0, 1.0],
+                    [0.0, 0.0],
+                    [1.0, -1.0],
+                    [-2.0, 2.0],
+                ],
+                device=device,
+            ),
+            discount_model_manager.normalize_discount,
+            discount_model_manager.discount_low,
+            discount_model_manager.discount_high,
+        )
+    else:
+        raise ValueError("Unknown value for normalize_discount.")
+
+    assert isinstance(unnormalized, torch.Tensor)
+    assert unnormalized.device == device
+    assert torch.allclose(unnormalized, target)
