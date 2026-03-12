@@ -8,24 +8,29 @@ import pytest
 import torch
 from torch import nn
 
-from ribs.archives import DiscountArchive, GridArchive
+from ribs.archives import CVTArchive, DiscountArchive, GridArchive
 from ribs.discount_models import MLP, DiscountModelManager
 
 # pylint: disable = redefined-outer-name
 
 
-def compute_grid_centers(archive: GridArchive) -> np.ndarray:
+def compute_archive_centers(archive: GridArchive | CVTArchive) -> np.ndarray:
     """Computes the center in measure space of each grid cell in the archive."""
-    grid_indices = archive.int_to_grid_index(np.arange(archive.cells))
-    return (
-        (grid_indices + 0.5) / archive.dims
-    ) * archive.interval_size + archive.lower_bounds
+    if isinstance(archive, GridArchive):
+        grid_indices = archive.int_to_grid_index(np.arange(archive.cells))
+        return (
+            (grid_indices + 0.5) / archive.dims
+        ) * archive.interval_size + archive.lower_bounds
+    elif isinstance(archive, CVTArchive):
+        return archive.centroids
+    else:
+        raise ValueError("Cannot compute centers for this archive.")
 
 
 def check_all_measures_in_set(measures: np.ndarray, reference: np.ndarray) -> bool:
     """Checks that every measure in measures exists in reference."""
     for m in measures:
-        is_close = np.abs(reference - m[None]) < 1e-3
+        is_close = np.abs(reference - m[None]) < 1e-5
         # Collapse along axis 1 to require that all components be equal.
         assert np.any(np.all(is_close, axis=1))
 
@@ -36,10 +41,18 @@ def dtype(request):
     return request.param
 
 
-@pytest.fixture
-def result_archive():
+@pytest.fixture(params=["GridArchive", "CVTArchive"])
+def result_archive(request):
     """Fixture for the result archive."""
-    return GridArchive(solution_dim=3, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
+    if request.param == "GridArchive":
+        return GridArchive(solution_dim=3, dims=[10, 10], ranges=[(-1, 1), (-1, 1)])
+    else:
+        rng = np.random.default_rng(42)
+        return CVTArchive(
+            solution_dim=3,
+            centroids=rng.uniform(low=[-1, -1], high=[1, 1], size=(100, 2)),
+            ranges=[(-1, 1), (-1, 1)],
+        )
 
 
 @pytest.fixture
@@ -96,7 +109,7 @@ def test_init_discount_model(archive, result_archive):
     # All the empty measures should be unique and contained in the archive centers.
     assert np.unique(info["empty_measures"], axis=0).shape == (100, 2)
     check_all_measures_in_set(
-        info["empty_measures"], compute_grid_centers(result_archive)
+        info["empty_measures"], compute_archive_centers(result_archive)
     )
 
 
@@ -129,7 +142,7 @@ def test_train_discount_model(archive, result_archive):
     # All the empty measures should be unique.
     assert np.unique(info["empty_measures"], axis=0).shape == (10, 2)
     check_all_measures_in_set(
-        info["empty_measures"], compute_grid_centers(result_archive)
+        info["empty_measures"], compute_archive_centers(result_archive)
     )
 
 
