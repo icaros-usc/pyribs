@@ -127,7 +127,6 @@ class DNSArchive(ArchiveBase):
         # archive; it is useful for computing qd_score and obj_mean.
         self._best_elite = None
         self._objective_sum = None
-        self._stats = None
         self._stats_reset()
 
     ## Properties inherited from ArchiveBase ##
@@ -261,7 +260,7 @@ class DNSArchive(ArchiveBase):
         check_finite(measures, "measures")
         return int(self.index_of(measures[None])[0])
 
-    def _compute_dns(self, measures: ArrayLike, objectives: ArrayLike) -> np.ndarray:
+    def compute_dns(self, measures: ArrayLike, objectives: ArrayLike) -> np.ndarray:
         """Computes DNS scores for a current population (evaluation) with respect to itself."""
         measures = np.asarray(measures, dtype=self.dtypes["measures"])
         objectives = np.asarray(objectives, dtype=self.dtypes["objective"])
@@ -334,15 +333,16 @@ class DNSArchive(ArchiveBase):
             # Combine.
             combined = {}
             for name in self._store.field_list:
-                combined[name] = (
-                    np.concatenate((cur[name], data[name]), axis=0)
-                    if name in data
-                    else cur[name]
-                )
+                if name not in data:
+                    raise ValueError(
+                        f"Field '{name}' is in the archive but was not passed "
+                        f"in the batch data. All fields must be provided."
+                    )
+                combined[name] = np.concatenate((cur[name], data[name]), axis=0)
         else:
             combined = data
 
-        dns_scores = self._compute_dns(combined["measures"], combined["objective"])
+        dns_scores = self.compute_dns(combined["measures"], combined["objective"])
 
         # Select survivors: top `capacity` by DNS (descending).
         cap = self.capacity
@@ -383,7 +383,7 @@ class DNSArchive(ArchiveBase):
             norm_qd_score = qd_score / self.cells
             obj_max = np.max(self._store.data("objective"))
             obj_mean = np.mean(self._store.data("objective"))
-            # note: QD score it not an informative statistic for DNS, as
+            # note: QD score is not an informative statistic for DNS, as
             # it has no predefined archive.
             self._stats = ArchiveStats(
                 num_elites=len(self),
@@ -398,6 +398,8 @@ class DNSArchive(ArchiveBase):
             self._cur_kd_tree = KDTree(
                 self._store.data("measures"), **self._kdtree_kwargs
             )
+        else:
+            self._stats_reset()
 
         return add_info
 
@@ -458,7 +460,8 @@ class DNSArchive(ArchiveBase):
         check_finite(measures, "measures")
 
         occupied, data = cast(
-            tuple[np.ndarray, BatchData], self._store.retrieve(self.index_of(measures))
+            tuple[np.ndarray, BatchData],
+            self._store.retrieve(self.index_of(measures)),
         )
         fill_sentinel_values(occupied, data)
 
@@ -506,15 +509,21 @@ class DNSArchive(ArchiveBase):
         fields: None | Collection[str] | str = None,
         return_type: Literal["dict", "tuple", "pandas"] = "dict",
     ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
-        return self._store.data(fields, return_type)
+        return cast(
+            np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame,
+            self._store.data(fields, return_type),
+        )
 
-    def sample_elites(self, n: Int) -> BatchData:
+    def sample_elites(self, n: Int, replace: bool = True) -> BatchData:
         if self.empty:
             raise IndexError("No elements in archive.")
+        if not replace and n > len(self._store):
+            raise ValueError(
+                "Cannot take a larger sample than the number of elites "
+                "in the archive when 'replace=False'"
+            )
 
-        # Deterministic selection: return the first n elites (in storage order).
-        # If n >= current population size, this returns the entire population.
-        count = min(int(n), len(self._store))
-        selected_indices = self._store.occupied_list[:count]
+        random_indices = self._rng.choice(len(self._store), size=n, replace=replace)
+        selected_indices = self._store.occupied_list[random_indices]
         _, elites = self._store.retrieve(selected_indices)
         return cast(BatchData, elites)
