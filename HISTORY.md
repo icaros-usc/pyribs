@@ -4,6 +4,10 @@
 
 ### Changelog
 
+#### API
+
+- Implement Discount Model Search ({pr}`685`)
+
 #### Improvements
 
 - Add back pylint and remove ty ({pr}`687`)

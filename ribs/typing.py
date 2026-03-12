@@ -17,9 +17,9 @@ except ImportError:
 try:
     import cupy as cp
 
-    IS_CP_AVAILALBE = True
+    IS_CP_AVAILABLE = True
 except ImportError:
-    IS_CP_AVAILALBE = False
+    IS_CP_AVAILABLE = False
 
 ## General types ##
 
@@ -53,7 +53,7 @@ if IS_TORCH_AVAILABLE:
     Array = Array | torch.Tensor
     DType = DType | torch.dtype
     Device = Device | torch.device
-if IS_CP_AVAILALBE:
+if IS_CP_AVAILABLE:
     Array = Array | cp.ndarray
     DType = DType | cp.dtype
     Device = Device | cp.cuda.Device

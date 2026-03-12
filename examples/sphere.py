@@ -1,7 +1,7 @@
 """Runs various QD algorithms on the sphere linear projection benchmark.
 
 Install the following dependencies before running this example:
-    pip install ribs[visualize] tqdm fire
+    pip install ribs[visualize] torch tqdm fire
 
 The sphere function in this example is adapted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to the range
@@ -79,6 +79,13 @@ DDS:
 - `dds_kde_sklearn`: Density Descent Search using scikit-learn's KernelDensity as the
   density estimator.
 
+DMS:
+- `dms`: Discount Model Search (Tjanaka 2026, https://discount-models.github.io/), with
+  the MLP discount model proposed in that paper. Note that the results presented in
+  Tjanaka 2026 were with a version of the sphere domain that normalized the objectives
+  to [0, 1], whereas this script uses objectives in [0, 100]. To convert results,
+  multiply the QD Score from that paper by 100.
+
 Outputs are saved in the `sphere_output/` directory by default. The archive is saved as
 a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are saved as
 `{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about the run are also saved in
@@ -114,15 +121,18 @@ from pathlib import Path
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 import tqdm
 
 from ribs.archives import (
     ArchiveBase,
     CVTArchive,
     DensityArchive,
+    DiscountArchive,
     GridArchive,
     ProximityArchive,
 )
+from ribs.discount_models import MLP, DiscountModelManager
 from ribs.emitters import (
     EvolutionStrategyEmitter,
     GaussianEmitter,
@@ -633,7 +643,6 @@ CONFIG = {
                     "selection_rule": "mu",
                     "restart_rule": "basic",
                     "batch_size": 36,
-                    "es": "sep_cma_es",
                 },
                 "num_emitters": 15,
             }
@@ -833,6 +842,75 @@ CONFIG = {
             "kwargs": {},
         },
     },
+    ## DMS ##
+    "dms": {
+        # Hyperparameters from DMS paper: https://discount-models.github.io/
+        "is_dqd": False,
+        # In DMS, the DiscountArchive does not store any solutions, so emitters
+        # must use the result archive instead.
+        "pass_result_archive_to_emitters": True,
+        "model": {
+            "class": MLP,
+            "kwargs": {
+                # The `None` is filled in with measure_dim in `create_scheduler`.
+                "layer_specs": [[None, 128], [128, 128], [128, 1]],
+                "activation": torch.nn.ReLU,
+            },
+        },
+        "optimizer": {
+            "class": torch.optim.Adam,
+            "kwargs": {
+                "lr": 0.001,
+                "betas": [0.9, 0.999],
+            },
+        },
+        "discount_model_manager": {
+            "class": DiscountModelManager,
+            "kwargs": {
+                "train_epochs": 5,
+                "train_cutoff_loss": 0.05,
+                "train_batch_size": 32,
+                "normalize_measures": "negative_one_one",
+                # Normalizing the discounts speeds up the algorithm because the discount
+                # model requires less training to match the targets, since they are
+                # between 0-1 instead of 0-100 -- neural networks generally work better
+                # with inputs around -1 to 1.
+                "normalize_discount": "zero_one",
+            },
+        },
+        "archive": {
+            "class": DiscountArchive,
+            "kwargs": {
+                "learning_rate": 0.1,
+                "threshold_min": 0,
+                "init_train_points": 1000,
+                "empty_points": 100,
+            },
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
+            },
+        },
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "imp",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {},
+        },
+    },
 }
 
 
@@ -913,7 +991,23 @@ def create_scheduler(
     solution_dim = config["dim"]
     max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
+    obj_low = 0.0  # There is actually no lower bound, but this is a good value.
+    obj_high = 100.0
     initial_sol = np.zeros(solution_dim)
+
+    # Create result archive.
+    if config["result_archive"] is None:
+        result_archive = None
+    else:
+        result_archive = config["result_archive"]["class"](
+            solution_dim=solution_dim,
+            # Note that using ranges here means we assume the result archive is a
+            # GridArchive or CVTArchive. This will need to be modified for other result
+            # archives.
+            ranges=bounds,
+            seed=seed,
+            **config["result_archive"]["kwargs"],
+        )
 
     # Create archive.
     archive_class = config["archive"]["class"]
@@ -931,26 +1025,43 @@ def create_scheduler(
             seed=seed,
             **config["archive"]["kwargs"],
         )
+    elif archive_class == DiscountArchive:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # Fill in measure_dim in the config.
+        config["model"]["kwargs"]["layer_specs"][0][0] = len(bounds)
+
+        model = config["model"]["class"](**config["model"]["kwargs"])
+        model.to(device)
+
+        optimizer = config["optimizer"]["class"](
+            params=model.parameters(),
+            **config["optimizer"]["kwargs"],
+        )
+        discount_model_manager = config["discount_model_manager"]["class"](
+            model=model,
+            optimizer=optimizer,
+            device=device,
+            measures_low=[b[0] for b in bounds],
+            measures_high=[b[1] for b in bounds],
+            discount_low=obj_low,
+            discount_high=obj_high,
+            **config["discount_model_manager"]["kwargs"],
+        )
+        archive = archive_class(
+            solution_dim=solution_dim,
+            measure_dim=len(bounds),
+            discount_model_manager=discount_model_manager,
+            result_archive=result_archive,
+            seed=seed,
+            **config["archive"]["kwargs"],
+        )
     else:
         archive = archive_class(
             solution_dim=solution_dim,
             ranges=bounds,
             seed=seed,
             **config["archive"]["kwargs"],
-        )
-
-    # Create result archive.
-    if config["result_archive"] is None:
-        result_archive = None
-    else:
-        result_archive = config["result_archive"]["class"](
-            solution_dim=solution_dim,
-            # Note that using ranges here means we assume the result archive is a
-            # GridArchive or CVTArchive. This will need to be modified for other result
-            # archives.
-            ranges=bounds,
-            seed=seed,
-            **config["result_archive"]["kwargs"],
         )
 
     # Usually, emitters take in the archive. However, it may sometimes be necessary to
@@ -1015,7 +1126,7 @@ def save_heatmap(archive: ArchiveBase, heatmap_path: str | Path) -> None:
     plt.close(plt.gcf())
 
 
-def sphere_main(  # pylint: disable = too-many-positional-arguments
+def sphere_main(
     algorithm: str,
     dim: int = 100,
     itrs: int = 10000,
@@ -1070,6 +1181,7 @@ def sphere_main(  # pylint: disable = too-many-positional-arguments
     scheduler = create_scheduler(config, algorithm, seed=seed)
     result_archive = scheduler.result_archive
     is_dqd = config["is_dqd"]
+    has_discount_model = config["archive"]["class"] == DiscountArchive
     itrs = config["itrs"]
     metrics = {
         "QD Score": {
@@ -1085,6 +1197,9 @@ def sphere_main(  # pylint: disable = too-many-positional-arguments
     non_logging_time = 0.0
     save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
 
+    if has_discount_model:
+        scheduler.archive.init_discount_model()
+
     for itr in tqdm.trange(1, itrs + 1):
         itr_start = time.time()
 
@@ -1099,6 +1214,9 @@ def sphere_main(  # pylint: disable = too-many-positional-arguments
         objectives, _, measures, _ = sphere(solutions)
         scheduler.tell(objectives, measures)
         non_logging_time += time.time() - itr_start
+
+        if has_discount_model:
+            scheduler.archive.train_discount_model()
 
         # Logging and output.
         final_itr = itr == itrs
