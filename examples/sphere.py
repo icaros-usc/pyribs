@@ -81,9 +81,9 @@ DDS:
 
 DMS:
 - `dms`: Discount Model Search (Tjanaka 2026, https://discount-models.github.io/), with
-  the MLP discount model proposed in the paper. Note that the results presented in
+  the MLP discount model proposed in that paper. Note that the results presented in
   Tjanaka 2026 were with a version of the sphere domain that normalized the objectives
-  to [0, 1], whereas this domain has the objective in [0, 100]. To convert results,
+  to [0, 1], whereas this script uses objectives in [0, 100]. To convert results,
   multiply the QD Score from that paper by 100.
 
 Outputs are saved in the `sphere_output/` directory by default. The archive is saved as
@@ -1027,9 +1027,13 @@ def create_scheduler(
         )
     elif archive_class == DiscountArchive:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        config["model"]["kwargs"]["layer_specs"][0][0] = len(bounds)  # Add measure_dim.
+
+        # Fill in measure_dim in the config.
+        config["model"]["kwargs"]["layer_specs"][0][0] = len(bounds)
+
         model = config["model"]["class"](**config["model"]["kwargs"])
         model.to(device)
+
         optimizer = config["optimizer"]["class"](
             params=model.parameters(),
             **config["optimizer"]["kwargs"],
