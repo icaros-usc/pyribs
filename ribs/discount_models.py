@@ -142,7 +142,8 @@ class DiscountModelManager:
 
         This class assumes all input and output data is of type float32, which is the
         default type in PyTorch. If different data types are needed, one solution may be
-        to cast the data before/after calls to this class.
+        to cast the data before/after calls to this class (as is done in
+        :class:`~ribs.archives.DiscountArchive`).
 
     .. note::
 
@@ -169,11 +170,11 @@ class DiscountModelManager:
             indicate no normalization. Alternatively, pass "zero_one" to normalize to
             ``[0, 1]`` or "negative_one_one" to normalize to ``[-1, 1]`` (along each
             dimension). To normalize to these values, we linearly transform from the
-            range defined by ``measures_low`` and ``norm_high``, described below.
+            range defined by ``measures_low`` and ``measures_high``, described below.
         measures_low: If ``normalize_measures`` is set, this is the lower bound of the
             measures for normalizing.
         measures_high: If ``normalize_measures`` is set, this is the upper bound of the
-            inputs for normalizing.
+            measures for normalizing.
         normalize_discount: Whether to normalize the discount values. Pass None
             (default) to indicate no normalization. During training, the targets are
             linearly transformed to a target range such as [0, 1], and during inference,
@@ -275,7 +276,7 @@ class DiscountModelManager:
     ) -> torch.Tensor:
         """Unnormalizes x to the given range.
 
-        x is assumed to already be a torch Tensor on the manager's device.
+        x is assumed to already be a torch.Tensor on the manager's device.
         """
         if normalize is None:
             return x
@@ -347,7 +348,8 @@ class DiscountModelManager:
     ) -> np.ndarray:
         """Computes discount values at the given measures using the model.
 
-        This method also puts the model in eval mode and uses :class:`torch.no_grad`.
+        This method also temporarily puts the model in eval mode and uses
+        :class:`torch.no_grad`.
 
         Args:
             measures: Inputs to the model of size (n_measures, measure_dim).
