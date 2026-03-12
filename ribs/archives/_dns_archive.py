@@ -298,6 +298,8 @@ class DNSArchive(ArchiveBase):
 
         return means
 
+    ## Methods for writing to the archive ##
+
     def add(
         self,
         solution: ArrayLike,
