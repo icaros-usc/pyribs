@@ -463,7 +463,7 @@ class ProximityArchive(ArchiveBase):
                 )
 
         if use_local_competition:
-            return novelty, local_competition_scores
+            return novelty, local_competition_scores  # pylint: disable = used-before-assignment
         else:
             return novelty
 
@@ -702,7 +702,7 @@ class ProximityArchive(ArchiveBase):
                 # first elite will be inserted if there is a tie. See their default
                 # numpy implementation for more info:
                 # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
-                archive_argmax = aggregate(  # ty: ignore[call-non-callable]
+                archive_argmax = aggregate(
                     indices, data["objective"], func="argmax", fill_value=-1
                 )
                 should_insert = archive_argmax[archive_argmax != -1]

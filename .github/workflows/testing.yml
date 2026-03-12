@@ -21,9 +21,8 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     env:
-      # TODO (#609): Remove skip if possible.
-      # Skip ty since it is not yet ready for pre-commit
-      SKIP: ty
+      # Skip pylint since not all of our code passes pylint.
+      SKIP: pylint
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
@@ -46,17 +45,23 @@ jobs:
           channels: conda-forge,defaults
       - name: Install core deps
         run: pip install .[dev]
+      - name: Tests when torch is not available
+        if: matrix.os == 'ubuntu-latest'
+        run: pytest tests/torch_not_available_test.py
       # Torch and cupy are tricky, so we only install them on ubuntu. They are
-      # only used for testing array API stuff.
+      # both used for testing array API stuff. Torch is also involved in
+      # components like discount models.
       - name: Install torch
         if: matrix.os == 'ubuntu-latest'
         run: pip install torch
+      - name: Test components that depend on torch
+        if: matrix.os == 'ubuntu-latest'
+        run: pytest tests/discount_models tests/archives_torch
       - name: Install cupy
         if: matrix.os == 'ubuntu-latest'
         run: pip install cupy-cuda12x
       - name: Test core
-        run: >
-          pytest tests/archives tests/emitters tests/schedulers
+        run: pytest tests/archives tests/emitters tests/schedulers
       - name: Install visualize dep
         run: pip install .[visualize]
       - name: Test visualize extra
@@ -95,7 +100,7 @@ jobs:
           python-version: "3.12"
           channels: conda-forge,defaults
       - name: Install deps
-        run: pip install .[all,dev]
+        run: pip install .[all,dev] torch
       - name: Test coverage
         env:
           NUMBA_DISABLE_JIT: 1

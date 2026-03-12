@@ -1,5 +1,19 @@
 # History
 
+## 0.10.0
+
+### Changelog
+
+#### API
+
+- Implement Discount Model Search ({pr}`685`)
+- Implement Dominated Novelty Search ({pr}`664`)
+
+#### Improvements
+
+- Add back pylint and remove ty ({pr}`687`)
+- Fix pandas dtype in test for CategoricalArchive ({pr}`686`)
+
 ## 0.9.0
 
 To learn about this release, see our page on What's New in v0.9.0:
@@ -9,7 +23,6 @@ https://docs.pyribs.org/en/stable/whats-new.html
 
 #### API
 
-- Implement Dominated Novelty Search ({pr}`664`)
 - Add `replace` parameter to sample_elites in archives ({pr}`682`)
 - Require numpy to be at least 2.0.0 ({pr}`681`)
 - Allow specifying `centroids` with filenames in CVTArchive ({pr}`679`)

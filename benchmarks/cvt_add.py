@@ -39,7 +39,7 @@ from ribs.archives import CVTArchive
 
 def save_times(n_cells, results, filename="cvt_add_times.json"):
     """Saves a dict of the results to the given file."""
-    with open(filename, "w") as file:
+    with open(filename, "w", encoding="utf-8") as file:
         json.dump(
             {
                 "n_cells": n_cells,
@@ -51,7 +51,7 @@ def save_times(n_cells, results, filename="cvt_add_times.json"):
 
 def load_times(filename="cvt_add_times.json"):
     """Loads the results from the given file."""
-    with open(filename) as file:
+    with open(filename, encoding="utf-8") as file:
         data = json.load(file)
         return data["n_cells"], data["results"]
 
@@ -112,7 +112,7 @@ def main():
     def add_entries():
         nonlocal archive
         for i in range(n_batches):
-            archive.add(  # ty: ignore[unresolved-attribute]
+            archive.add(
                 all_solution_batch[i],
                 all_objective_batch[i],
                 all_measures_batch[i],

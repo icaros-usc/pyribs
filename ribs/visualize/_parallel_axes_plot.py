@@ -152,9 +152,9 @@ def parallel_axes_plot(
             cols = np.array(measure_order)
             axis_labels = [f"measure_{i}" for i in cols]
         elif all(
-            len(measure) == 2  # ty: ignore[non-subscriptable,invalid-argument-type]
-            and isinstance(measure[0], int)  # ty: ignore[non-subscriptable]
-            and isinstance(measure[1], str)  # ty: ignore[non-subscriptable]
+            len(measure) == 2
+            and isinstance(measure[0], int)
+            and isinstance(measure[1], str)
             for measure in measure_order
         ):
             cols, axis_labels = zip(*measure_order, strict=True)
@@ -179,7 +179,7 @@ def parallel_axes_plot(
 
     # Compute lower and upper bounds; take them from the archive if possible.
     if hasattr(archive, "lower_bounds"):
-        lower_bounds: np.ndarray = archive.lower_bounds  # ty: ignore[invalid-assignment]
+        lower_bounds: np.ndarray = archive.lower_bounds
     elif len(measures) > 0:
         lower_bounds = np.min(measures, axis=0) - 0.01
     else:
@@ -187,7 +187,7 @@ def parallel_axes_plot(
         lower_bounds = np.full(archive.measure_dim, -0.01)
 
     if hasattr(archive, "upper_bounds"):
-        upper_bounds: np.ndarray = archive.upper_bounds  # ty: ignore[invalid-assignment]
+        upper_bounds: np.ndarray = archive.upper_bounds
     elif len(measures) > 0:
         upper_bounds = np.max(measures, axis=0) + 0.01
     else:

@@ -13,6 +13,8 @@ from ribs.archives import (
 
 from .conftest import ARCHIVE_NAMES, get_archive_data
 
+# pylint: disable = redefined-outer-name
+
 MAE_ARCHIVES = (
     CategoricalArchive,
     CVTArchive,
@@ -318,7 +320,7 @@ def test_best_elite_extended(add_mode):
     assert archive.best_elite["objective"].shape == ()
     assert archive.best_elite["measures"].shape == (2,)
     assert archive.best_elite["threshold"].shape == ()
-    assert archive.stats.obj_max.shape == ()  # ty: ignore[possibly-unbound-attribute]
+    assert archive.stats.obj_max.shape == ()
 
     assert np.isclose(archive.best_elite["solution"], [1, 2, 3]).all()
     assert np.isclose(archive.best_elite["objective"], 1.0)
@@ -640,7 +642,10 @@ def test_pandas_data(name, with_elite, dtype):
 
     expected_dtypes = [dtype for _ in range(solution_dim)] + [dtype]
     if isinstance(data.archive, CategoricalArchive):
-        expected_dtypes += [np.object_ for _ in range(measure_dim)]
+        # Don't check the dtype for measure columns; it is a bit complicated due to
+        # Pandas introducing the string dtype in 3.0.0:
+        # https://pandas.pydata.org/docs/dev/whatsnew/v3.0.0.html
+        expected_dtypes += [None for _ in range(measure_dim)]
     else:
         expected_dtypes += [dtype for _ in range(measure_dim)]
 
@@ -662,7 +667,9 @@ def test_pandas_data(name, with_elite, dtype):
 
     # Check columns and data types.
     assert (df.columns == expected_cols).all()
-    assert (df.dtypes == expected_dtypes).all()
+    for dt, expected_dt in zip(df.dtypes, expected_dtypes, strict=True):
+        if expected_dt is not None:
+            assert dt == expected_dt
 
     if with_elite:
         if isinstance(data.archive_with_elite, CVTArchive):

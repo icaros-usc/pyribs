@@ -1,4 +1,4 @@
-"""Tests for theshold update in archive."""
+"""Tests for threshold update in archive."""
 
 import numpy as np
 import pytest
@@ -12,10 +12,12 @@ ARCHIVES = pytest.mark.parametrize(
 
 
 def update_threshold(threshold, f_val, learning_rate):
+    """Rule for updating a single threshold."""
     return (1.0 - learning_rate) * threshold + learning_rate * f_val
 
 
 def calc_geom(base_value, exponent):
+    """Helper for computing batch updates."""
     if base_value == 1.0:
         return exponent
     top = 1 - base_value**exponent
@@ -24,6 +26,7 @@ def calc_geom(base_value, exponent):
 
 
 def calc_expected_threshold(additions, cell_value, learning_rate):
+    """Rule for computing updated thresholds with batch updates."""
     k = len(additions)
     geom = calc_geom(1.0 - learning_rate, k)
     f_star = sum(additions)
@@ -39,6 +42,7 @@ def test_threshold_update_for_one_cell(learning_rate, archive):
     objective = np.array([0.1, 0.3, 0.9, 400.0, 42.0])
     indices = np.zeros(5, dtype=np.int32)
 
+    # pylint: disable-next = protected-access
     result_test = archive._compute_thresholds(
         indices, objective, cur_threshold, learning_rate, np.float64
     )
@@ -74,6 +78,7 @@ def test_threshold_update_for_multiple_cells(learning_rate, archive):
     )  # 15 values.
     indices = np.repeat([0, 1, 2], 5)
 
+    # pylint: disable-next = protected-access
     result_test = archive._compute_thresholds(
         indices, objective, cur_threshold, learning_rate, np.float64
     )
@@ -97,6 +102,7 @@ def test_threshold_update_for_empty_objective_and_index(archive):
     objective = np.array([])  # Empty objective.
     indices = np.array([], dtype=np.int32)  # Empty index.
 
+    # pylint: disable-next = protected-access
     new_threshold = archive._compute_thresholds(
         indices, objective, cur_threshold, 0.1, np.float64
     )

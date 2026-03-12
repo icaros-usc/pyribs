@@ -11,6 +11,8 @@ from ribs.emitters import (
     IsoLineEmitter,
 )
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture(
     params=[
