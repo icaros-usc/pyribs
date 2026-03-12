@@ -1182,7 +1182,6 @@ def sphere_main(
     result_archive = scheduler.result_archive
     is_dqd = config["is_dqd"]
     has_discount_model = config["archive"]["class"] == DiscountArchive
-    print("has_discount_model", has_discount_model)
     itrs = config["itrs"]
     metrics = {
         "QD Score": {
