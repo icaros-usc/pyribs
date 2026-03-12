@@ -1,4 +1,4 @@
-"Tests for the DNSArchive."
+"""Tests for the DNSArchive."""
 
 import numpy as np
 
