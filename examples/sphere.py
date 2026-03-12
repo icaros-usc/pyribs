@@ -81,7 +81,10 @@ DDS:
 
 DMS:
 - `dms`: Discount Model Search (Tjanaka 2026, https://discount-models.github.io/), with
-  the MLP discount model proposed in the paper.
+  the MLP discount model proposed in the paper. Note that the results presented in
+  Tjanaka 2026 were with a version of the sphere domain that normalized the objectives
+  to [0, 1], whereas this domain has the objective in [0, 100]. To convert results,
+  multiply the QD Score from that paper by 100.
 
 Outputs are saved in the `sphere_output/` directory by default. The archive is saved as
 a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are saved as
@@ -867,7 +870,12 @@ CONFIG = {
                 "train_epochs": 5,
                 "train_cutoff_loss": 0.05,
                 "train_batch_size": 32,
-                "normalize": "negative_one_one",
+                "normalize_measures": "negative_one_one",
+                # Normalizing the discounts speeds up the algorithm because the discount
+                # model requires less training to match the targets, since they are
+                # between 0-1 instead of 0-100 -- neural networks generally work better
+                # with inputs around -1 to 1.
+                "normalize_discount": "zero_one",
             },
         },
         "archive": {
@@ -983,6 +991,8 @@ def create_scheduler(
     solution_dim = config["dim"]
     max_bound = solution_dim / 2 * 5.12
     bounds = [(-max_bound, max_bound), (-max_bound, max_bound)]
+    obj_low = 0.0  # There is actually no lower bound, but this is a good value.
+    obj_high = 100.0
     initial_sol = np.zeros(solution_dim)
 
     # Create result archive.
@@ -1028,8 +1038,10 @@ def create_scheduler(
             model=model,
             optimizer=optimizer,
             device=device,
-            norm_low=[b[0] for b in bounds],
-            norm_high=[b[1] for b in bounds],
+            measures_low=[b[0] for b in bounds],
+            measures_high=[b[1] for b in bounds],
+            discount_low=obj_low,
+            discount_high=obj_high,
             **config["discount_model_manager"]["kwargs"],
         )
         archive = archive_class(

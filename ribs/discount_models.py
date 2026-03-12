@@ -165,15 +165,25 @@ class DiscountModelManager:
         train_cutoff_loss: See ``train_epochs``.
         train_batch_size: During each epoch of :meth:`training_loop`, the dataset of
             measures and targets will be used to train the model with this batch size.
-        normalize: Whether to normalize the inputs. Pass None (default) to indicate no
-            normalization. Alternatively, pass "zero_one" to normalize to ``[0, 1]`` or
-            "negative_one_one" to normalize to ``[-1, 1]`` (along each dimension). To
-            normalize to these values, we linearly transform from the range defined by
-            ``norm_low`` and ``norm_high``, described below.
-        norm_low: If ``normalize`` is True, this is the lower bound of the inputs for
-            normalizing.
-        norm_high: If ``normalize`` is True, this is the upper bound of the inputs for
-            normalizing.
+        normalize_measures: Whether to normalize the measures. Pass None (default) to
+            indicate no normalization. Alternatively, pass "zero_one" to normalize to
+            ``[0, 1]`` or "negative_one_one" to normalize to ``[-1, 1]`` (along each
+            dimension). To normalize to these values, we linearly transform from the
+            range defined by ``measures_low`` and ``norm_high``, described below.
+        measures_low: If ``normalize_measures`` is set, this is the lower bound of the
+            measures for normalizing.
+        measures_high: If ``normalize_measures`` is set, this is the upper bound of the
+            inputs for normalizing.
+        normalize_discount: Whether to normalize the discount values. Pass None
+            (default) to indicate no normalization. During training, the targets are
+            linearly transformed to a target range such as [0, 1], and during inference,
+            the discount values output by the model are un-normalized before being
+            returned. Pass "zero_one" to set the range to [0, 1], and "negative_one_one"
+            to set the range to [-1, 1].
+        discount_low: If ``normalize_discount`` is set, this is the lower bound of the
+            discount values for normalizing.
+        discount_high: If ``normalize_discount`` is set, this is the upper bound of the
+            discount values for normalizing.
     """
 
     def __init__(
@@ -185,9 +195,12 @@ class DiscountModelManager:
         train_epochs: Int,
         train_cutoff_loss: Float,
         train_batch_size: Int,
-        normalize: Literal["zero_one", "negative_one_one"] | None = None,
-        norm_low: ArrayLike | None = None,
-        norm_high: ArrayLike | None = None,
+        normalize_measures: Literal["zero_one", "negative_one_one"] | None = None,
+        measures_low: ArrayLike | None = None,
+        measures_high: ArrayLike | None = None,
+        normalize_discount: Literal["zero_one", "negative_one_one"] | None = None,
+        discount_low: Float | None = None,
+        discount_high: Float | None = None,
     ) -> None:
         if not IS_TORCH_AVAILABLE:
             raise ImportError(
@@ -195,6 +208,7 @@ class DiscountModelManager:
             )
 
         self.model = model
+        self.model.train()  # Assume the model is in train mode by default.
         self.optimizer = optimizer
         self.device = device
 
@@ -202,33 +216,75 @@ class DiscountModelManager:
         self.train_cutoff_loss = train_cutoff_loss
         self.train_batch_size = train_batch_size
 
-        self.normalize = normalize
-        if self.normalize is None:
-            self.norm_low = None
-            self.norm_high = None
+        self.normalize_measures = normalize_measures
+        if self.normalize_measures is None:
+            self.measures_low = None
+            self.measures_high = None
         else:
-            if norm_low is None or norm_high is None:
+            if measures_low is None or measures_high is None:
                 raise ValueError(
-                    "If normalize is not None, norm_low and norm_high must be passed in."
+                    "If normalize_measures is not None, measures_low and measures_high must be passed in."
                 )
-            self.norm_low = torch.asarray(
-                norm_low, device=self.device, dtype=torch.float32
+            self.measures_low = torch.asarray(
+                measures_low, device=self.device, dtype=torch.float32
             ).requires_grad_(False)
-            self.norm_high = torch.asarray(
-                norm_high, device=self.device, dtype=torch.float32
+            self.measures_high = torch.asarray(
+                measures_high, device=self.device, dtype=torch.float32
             ).requires_grad_(False)
 
-    def _normalize_inputs(self, x: ArrayLike) -> torch.Tensor:
+        self.normalize_discount = normalize_discount
+        if self.normalize_discount is None:
+            self.discount_low = discount_low
+            self.discount_high = discount_high
+        else:
+            if discount_low is None or discount_high is None:
+                raise ValueError(
+                    "If normalize_discount is not None, discount_low and discount_high must be passed in."
+                )
+            self.discount_low = torch.asarray(
+                discount_low, device=self.device, dtype=torch.float32
+            ).requires_grad_(False)
+            self.discount_high = torch.asarray(
+                discount_high, device=self.device, dtype=torch.float32
+            ).requires_grad_(False)
+
+    def _normalize(
+        self,
+        x: ArrayLike,
+        normalize: Literal["zero_one", "negative_one_one"] | None,
+        low: torch.Tensor,
+        high: torch.Tensor,
+    ) -> torch.Tensor:
         """Places x on the manager's device and normalizes it."""
         x = torch.asarray(x, device=self.device, dtype=torch.float32)
-        if self.normalize is None:
+        if normalize is None:
             return x
-        elif self.normalize == "negative_one_one":
-            return 2.0 * (x - self.norm_low) / (self.norm_high - self.norm_low) - 1.0
-        elif self.normalize == "zero_one":
-            return (x - self.norm_low) / (self.norm_high - self.norm_low)
+        elif normalize == "negative_one_one":
+            return 2.0 * (x - low) / (high - low) - 1.0
+        elif normalize == "zero_one":
+            return (x - low) / (high - low)
         else:
-            raise ValueError(f"Unknown normalization method {self.normalize}.")
+            raise ValueError(f"Unknown normalization method {normalize}.")
+
+    def _unnormalize(
+        self,
+        x: torch.Tensor,
+        normalize: Literal["zero_one", "negative_one_one"] | None,
+        low: torch.Tensor,
+        high: torch.Tensor,
+    ) -> torch.Tensor:
+        """Unnormalizes x to the given range.
+
+        x is assumed to already be a torch Tensor on the manager's device.
+        """
+        if normalize is None:
+            return x
+        elif normalize == "negative_one_one":
+            return (x + 1.0) / 2.0 * (high - low) + low
+        elif normalize == "zero_one":
+            return x * (high - low) + low
+        else:
+            raise ValueError(f"Unknown normalization method {normalize}.")
 
     def training_loop(self, measures: ArrayLike, targets: ArrayLike) -> list[float]:
         """Regresses the discount model to match the given targets at the given measures.
@@ -247,10 +303,14 @@ class DiscountModelManager:
             every batch is passed through it, so this is not the loss that one would
             obtain if the measures were all passed through the model at once.
         """
-        normalized_measures = self._normalize_inputs(measures)
-        targets = torch.asarray(targets, dtype=torch.float32, device=self.device)
+        normalized_measures = self._normalize(
+            measures, self.normalize_measures, self.measures_low, self.measures_high
+        )
+        normalized_targets = self._normalize(
+            targets, self.normalize_discount, self.discount_low, self.discount_high
+        )
 
-        dataset = TensorDataset(normalized_measures, targets)
+        dataset = TensorDataset(normalized_measures, normalized_targets)
         dataloader = DataLoader(dataset, self.train_batch_size, shuffle=True)
 
         criterion = nn.MSELoss(reduction="mean")
@@ -260,11 +320,11 @@ class DiscountModelManager:
         for _ in range(1, self.train_epochs + 1):
             epoch_loss = 0.0
 
-            for b_norm_measures, b_targets in dataloader:
+            for b_norm_measures, b_norm_targets in dataloader:
                 cur = self.model(b_norm_measures).squeeze(dim=1)
 
                 self.optimizer.zero_grad()
-                loss = criterion(cur, b_targets)
+                loss = criterion(cur, b_norm_targets)
                 loss.backward()
                 self.optimizer.step()
 
@@ -302,7 +362,9 @@ class DiscountModelManager:
         if batch_size is None:
             batch_size = len(measures)
 
-        normalized_measures = self._normalize_inputs(measures)
+        normalized_measures = self._normalize(
+            measures, self.normalize_measures, self.measures_low, self.measures_high
+        )
         dataloader = DataLoader(
             dataset=TensorDataset(normalized_measures),
             batch_size=batch_size,
@@ -317,8 +379,11 @@ class DiscountModelManager:
             discounts.append(b_discounts)
         self.model.train()
 
-        # Concatenate all the chunks together.
+        # Concatenate all the chunks together and unnormalize them.
         discounts = torch.cat(discounts, dim=0)
+        discounts = self._unnormalize(
+            discounts, self.normalize_discount, self.discount_low, self.discount_high
+        )
 
         # Turn (X, 1) into (X,).
         if discounts.ndim == 2:

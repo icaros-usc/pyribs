@@ -10,13 +10,13 @@ from torch import nn
 from ribs.discount_models import MLP, DiscountModelManager
 
 
-@pytest.mark.parametrize("normalize", [None, "zero_one", "negative_one_one"])
-def test_normalization_params(normalize):
+@pytest.mark.parametrize("normalize_measures", [None, "zero_one", "negative_one_one"])
+def test_measure_norm_params(normalize_measures):
     model = MLP(layer_specs=[(4, 16), (16, 1)], activation=nn.ReLU)
     optimizer = torch.optim.Adam(params=model.parameters())
     device = torch.device("cpu")
 
-    if normalize is None:
+    if normalize_measures is None:
         # No normalization, so nothing happens.
         DiscountModelManager(
             model=model,
@@ -25,16 +25,16 @@ def test_normalization_params(normalize):
             train_epochs=5,
             train_cutoff_loss=0.05,
             train_batch_size=32,
-            normalize=normalize,
-            norm_low=None,
-            norm_high=None,
+            normalize_measures=normalize_measures,
+            measures_low=None,
+            measures_high=None,
         )
     else:
-        # normalize is passed in but norm_low and norm_high are not, which should result
-        # in an error.
+        # normalize_measures is passed in but measures_low and measures_high are not,
+        # which should result in an error.
         with pytest.raises(
             ValueError,
-            match=r"If normalize is not None,.*",
+            match=r"If normalize_measures is not None,.*",
         ):
             DiscountModelManager(
                 model=model,
@@ -43,14 +43,53 @@ def test_normalization_params(normalize):
                 train_epochs=5,
                 train_cutoff_loss=0.05,
                 train_batch_size=32,
-                normalize=normalize,
-                norm_low=None,
-                norm_high=None,
+                normalize_measures=normalize_measures,
+                measures_low=None,
+                measures_high=None,
             )
 
 
-@pytest.mark.parametrize("normalize", [None, "zero_one", "negative_one_one"])
-def test_normalize_inputs(normalize):
+@pytest.mark.parametrize("normalize_discount", [None, "zero_one", "negative_one_one"])
+def test_discount_norm_params(normalize_discount):
+    model = MLP(layer_specs=[(4, 16), (16, 1)], activation=nn.ReLU)
+    optimizer = torch.optim.Adam(params=model.parameters())
+    device = torch.device("cpu")
+
+    if normalize_discount is None:
+        # No normalization, so nothing happens.
+        DiscountModelManager(
+            model=model,
+            optimizer=optimizer,
+            device=device,
+            train_epochs=5,
+            train_cutoff_loss=0.05,
+            train_batch_size=32,
+            normalize_discount=normalize_discount,
+            discount_low=None,
+            discount_high=None,
+        )
+    else:
+        # normalize_discount is passed in but discount_low and discount_high are not,
+        # which should result in an error.
+        with pytest.raises(
+            ValueError,
+            match=r"If normalize_discount is not None,.*",
+        ):
+            DiscountModelManager(
+                model=model,
+                optimizer=optimizer,
+                device=device,
+                train_epochs=5,
+                train_cutoff_loss=0.05,
+                train_batch_size=32,
+                normalize_discount=normalize_discount,
+                discount_low=None,
+                discount_high=None,
+            )
+
+
+@pytest.mark.parametrize("normalize_measures", [None, "zero_one", "negative_one_one"])
+def test_normalize(normalize_measures):
     model = MLP(layer_specs=[(4, 16), (16, 1)], activation=nn.ReLU)
     optimizer = torch.optim.Adam(params=model.parameters())
     device = torch.device("cpu")
@@ -61,26 +100,29 @@ def test_normalize_inputs(normalize):
         train_epochs=5,
         train_cutoff_loss=0.05,
         train_batch_size=32,
-        normalize=normalize,
-        norm_low=[-2, -5],
-        norm_high=[3, 5],
+        normalize_measures=normalize_measures,
+        measures_low=[-2, -5],
+        measures_high=[3, 5],
     )
 
     # pylint: disable-next = protected-access
-    normalized = discount_model_manager._normalize_inputs(
+    normalized = discount_model_manager._normalize(
         [
             [-2.0, -5.0],
             [3.0, 5.0],
             [0.5, 0.0],
             [3.0, -5.0],
             [-4.5, 10.0],
-        ]
+        ],
+        discount_model_manager.normalize_measures,
+        discount_model_manager.measures_low,
+        discount_model_manager.measures_high,
     )
 
     assert isinstance(normalized, torch.Tensor)
     assert normalized.device == device
 
-    if normalize is None:
+    if normalize_measures is None:
         assert torch.allclose(
             normalized,
             torch.asarray(
@@ -94,7 +136,7 @@ def test_normalize_inputs(normalize):
                 device=device,
             ),
         )
-    elif normalize == "zero_one":
+    elif normalize_measures == "zero_one":
         assert torch.allclose(
             normalized,
             torch.asarray(
@@ -108,7 +150,7 @@ def test_normalize_inputs(normalize):
                 device=device,
             ),
         )
-    elif normalize == "negative_one_one":
+    elif normalize_measures == "negative_one_one":
         assert torch.allclose(
             normalized,
             torch.asarray(
