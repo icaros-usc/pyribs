@@ -15,7 +15,7 @@ from ribs.discount_models import MLP, DiscountModelManager
 
 
 def compute_archive_centers(archive: GridArchive | CVTArchive) -> np.ndarray:
-    """Computes the center in measure space of each grid cell in the archive."""
+    """Computes the center in measure space of each cell in the archive."""
     if isinstance(archive, GridArchive):
         grid_indices = archive.int_to_grid_index(np.arange(archive.cells))
         return (
