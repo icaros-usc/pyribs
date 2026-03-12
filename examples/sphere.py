@@ -1,7 +1,7 @@
 """Runs various QD algorithms on the sphere linear projection benchmark.
 
 Install the following dependencies before running this example:
-    pip install ribs[visualize] tqdm fire
+    pip install ribs[visualize] torch tqdm fire
 
 The sphere function in this example is adapted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to the range
@@ -118,7 +118,7 @@ from pathlib import Path
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
-import torch  # TODO: Avoid import?
+import torch
 import tqdm
 
 from ribs.archives import (
@@ -843,16 +843,14 @@ CONFIG = {
     "dms": {
         # Hyperparameters from DMS paper: https://discount-models.github.io/
         "is_dqd": False,
-        # TODO: We could put train_freq somewhere here.
         # In DMS, the DiscountArchive does not store any solutions, so emitters
         # must use the result archive instead.
         "pass_result_archive_to_emitters": True,
         "model": {
             "class": MLP,
             "kwargs": {
-                # TODO: Move the layer_specs somewhere so that measure dim isn't
-                # hard-coded.
-                "layer_specs": [[2, 128], [128, 128], [128, 1]],
+                # The `None` is filled in with measure_dim in `create_scheduler`.
+                "layer_specs": [[None, 128], [128, 128], [128, 1]],
                 "activation": torch.nn.ReLU,
             },
         },
@@ -870,9 +868,6 @@ CONFIG = {
                 "train_cutoff_loss": 0.05,
                 "train_batch_size": 32,
                 "normalize": "negative_one_one",
-                # TODO: Don't hardcode these bounds.
-                "norm_low": [-256.0, -256.0],
-                "norm_high": [256.0, 256.0],
             },
         },
         "archive": {
@@ -934,9 +929,7 @@ def sphere(
     best_obj = 0.0
     worst_obj = (-5.12 - sphere_shift) ** 2 * dim
     raw_obj = np.sum(np.square(solutions - sphere_shift), axis=1)
-    #  objectives = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
-    objectives = (raw_obj - worst_obj) / (best_obj - worst_obj)
-    # TODO: Figure out what to do about performance; scaling is a big factor.
+    objectives = (raw_obj - worst_obj) / (best_obj - worst_obj) * 100
 
     # Compute gradient of the objective.
     objective_grads = -2 * (solutions - sphere_shift)
@@ -1024,20 +1017,21 @@ def create_scheduler(
         )
     elif archive_class == DiscountArchive:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        config["model"]["kwargs"]["layer_specs"][0][0] = len(bounds)  # Add measure_dim.
         model = config["model"]["class"](**config["model"]["kwargs"])
         model.to(device)
         optimizer = config["optimizer"]["class"](
             params=model.parameters(),
             **config["optimizer"]["kwargs"],
         )
-        # TODO: Rename to manager.
         discount_model_manager = config["discount_model_manager"]["class"](
-            model,
-            optimizer,
-            device,
+            model=model,
+            optimizer=optimizer,
+            device=device,
+            norm_low=[b[0] for b in bounds],
+            norm_high=[b[1] for b in bounds],
             **config["discount_model_manager"]["kwargs"],
         )
-        # TODO: Which args should be kwarg?
         archive = archive_class(
             solution_dim=solution_dim,
             measure_dim=len(bounds),
@@ -1101,12 +1095,12 @@ def save_heatmap(archive: ArchiveBase, heatmap_path: str | Path) -> None:
     """
     if isinstance(archive, GridArchive):
         plt.figure(figsize=(8, 6))
-        grid_archive_heatmap(archive, vmin=0, vmax=1)  # TODO: Change back
+        grid_archive_heatmap(archive, vmin=0, vmax=100)
         plt.tight_layout()
         plt.savefig(heatmap_path)
     elif isinstance(archive, CVTArchive):
         plt.figure(figsize=(16, 12))
-        cvt_archive_heatmap(archive, vmin=0, vmax=1)  # TODO: Change back
+        cvt_archive_heatmap(archive, vmin=0, vmax=100)
         plt.tight_layout()
         plt.savefig(heatmap_path)
     else:
@@ -1116,7 +1110,7 @@ def save_heatmap(archive: ArchiveBase, heatmap_path: str | Path) -> None:
     plt.close(plt.gcf())
 
 
-def sphere_main(  # pylint: disable = too-many-positional-arguments
+def sphere_main(
     algorithm: str,
     dim: int = 100,
     itrs: int = 10000,
@@ -1188,7 +1182,6 @@ def sphere_main(  # pylint: disable = too-many-positional-arguments
     non_logging_time = 0.0
     save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
 
-    # TODO: Where to put?
     if has_discount_model:
         scheduler.archive.init_discount_model()
 
@@ -1207,7 +1200,6 @@ def sphere_main(  # pylint: disable = too-many-positional-arguments
         scheduler.tell(objectives, measures)
         non_logging_time += time.time() - itr_start
 
-        # TODO: Where to put? Logging?
         if has_discount_model:
             scheduler.archive.train_discount_model()
 
