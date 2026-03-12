@@ -7,6 +7,7 @@
 #### API
 
 - Implement Discount Model Search ({pr}`685`)
+- Implement Dominated Novelty Search ({pr}`664`)
 
 #### Improvements
 
