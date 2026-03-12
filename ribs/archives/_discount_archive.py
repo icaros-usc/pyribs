@@ -61,10 +61,10 @@ class DiscountArchive(ArchiveBase):
         (during the main loop of their algorithm, *after* calling
         :meth:`~ribs.schedulers.Scheduler.tell`).
 
-        We adopt this API because training methods can be computationally intensive.
-        Allowing the user to call the method enables them to control exactly when the
-        training happens; furthermore, they can collect information like training
-        statistics. Otherwise, the discount model training would be placed in
+        We adopt this API because the training methods can be computationally intensive.
+        Allowing the user to call the methods themselves enables them to control exactly
+        when the training happens; furthermore, they can collect information like
+        training statistics. Otherwise, the discount model training would be placed in
         ``__init__()`` and ``add()``, potentially causing those methods to take a long
         time.
 
@@ -147,9 +147,8 @@ class DiscountArchive(ArchiveBase):
         self._init_train_points = init_train_points
         self._empty_points = empty_points
 
-        # This data is cached during add() so that it can be used during training.
-        # Calling add() does not call train_discount_model(), so this data cannot be
-        # passed otherwise.
+        # The data and add_info are cached during add() so that they can be used in
+        # train_discount_model().
         self._cached_data = None
         self._cached_add_info = None
 
@@ -245,9 +244,9 @@ class DiscountArchive(ArchiveBase):
     def init_discount_model(self) -> dict:
         """Initializes the discount model so that it outputs threshold_min everywhere.
 
-        To obtain measure values, this method samples :prop:`init_train_points` centers
+        To obtain measure values, this method samples :attr:`init_train_points` centers
         from the result archive. The discount value target for each measure is set to
-        :prop:`threshold_min`. Finally,
+        :attr:`threshold_min`. Finally,
         :meth:`ribs.discount_models.DiscountModelManager.training_loop` is called to
         train the discount model with this data.
 
@@ -281,18 +280,18 @@ class DiscountArchive(ArchiveBase):
         the scheduler's :meth:`~ribs.schedulers.Scheduler.tell` method. The second data
         source, "empty points", are sampled from the centers of unoccupied cells in the
         result archive. The number of empty points is controlled by the
-        :prop:`empty_points` property.
+        :attr:`empty_points` property.
 
         Returns:
             Info from training. The dict contains the following keys:
 
             - "solution_measures": Measures associated with solutions sampled by the
-              emitters, i.e., measures that were passed into :meth:`add`.
+              emitters, i.e., measures that were previously passed into :meth:`add`.
             - "solution_targets": Array of target discount values for the aforementioned
-              measures. Note that the target for empty points is always
-              :prop:`threshold_min`.
+              "solution_measures". Note that the target for empty points is always
+              :attr:`threshold_min`, so we do not include an "empty_targets" key.
             - "empty_measures": Array of empty points sampled from the result archive.
-              Note that the number of points may be fewer than :prop:`empty_points` if
+              Note that the number of points may be fewer than :attr:`empty_points` if
               the result archive did not have enough unoccupied cells.
             - "epochs": Number of epochs for which the discount model was trained.
             - "losses": List with loss from each epoch of training the discount model.
