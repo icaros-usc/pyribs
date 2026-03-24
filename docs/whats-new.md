@@ -108,8 +108,8 @@ archive = GridArchive(
 )
 ```
 
-(This example is taken from the tutorial {doc}`tutorials/qdaif`.) For more info,
-see {pr}`639`, {pr}`643`, and {pr}`661`.
+(This example is taken from the tutorial {doc}`/tutorials/qdaif`.) For more
+info, see {pr}`639`, {pr}`643`, and {pr}`661`.
 
 ## Multi-Dimensional Solutions in Emitters
 

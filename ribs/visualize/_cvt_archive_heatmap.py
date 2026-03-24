@@ -71,7 +71,7 @@ def cvt_archive_heatmap(
             >>> from ribs.visualize import cvt_archive_heatmap
             >>> # Populate the archive with the negative sphere function.
             >>> archive = CVTArchive(solution_dim=2,
-            ...                      cells=100, ranges=[(-1, 1), (-1, 1)])
+            ...                      centroids=100, ranges=[(-1, 1), (-1, 1)])
             >>> x = np.random.uniform(-1, 1, 10000)
             >>> y = np.random.uniform(-1, 1, 10000)
             >>> archive.add(solution=np.stack((x, y), axis=1),
@@ -96,7 +96,7 @@ def cvt_archive_heatmap(
             >>> from ribs.visualize import cvt_archive_heatmap
             >>> # Populate the archive with the negative sphere function.
             >>> archive = CVTArchive(solution_dim=2,
-            ...                      cells=20, ranges=[(-1, 1)])
+            ...                      centroids=20, ranges=[(-1, 1)])
             >>> x = np.random.uniform(-1, 1, 1000)
             >>> archive.add(solution=np.stack((x, x), axis=1),
             ...             objective=-x**2,

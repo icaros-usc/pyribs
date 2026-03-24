@@ -73,7 +73,7 @@ def cvt_archive_3d_plot(
             >>> from ribs.visualize import cvt_archive_3d_plot
             >>> # Populate the archive with the negative sphere function.
             >>> archive = CVTArchive(solution_dim=2,
-            ...                      cells=500,
+            ...                      centroids=500,
             ...                      ranges=[(-2, 0), (-2, 0), (-2, 0)])
             >>> x = np.random.uniform(-2, 0, 5000)
             >>> y = np.random.uniform(-2, 0, 5000)
@@ -98,7 +98,7 @@ def cvt_archive_3d_plot(
             >>> from ribs.visualize import cvt_archive_3d_plot
             >>> # Populate the archive with the negative sphere function.
             >>> archive = CVTArchive(solution_dim=2,
-            ...                      cells=500,
+            ...                      centroids=500,
             ...                      ranges=[(-2, 0), (-2, 0), (-2, 0)])
             >>> x = np.random.uniform(-2, 0, 5000)
             >>> y = np.random.uniform(-2, 0, 5000)
@@ -123,7 +123,7 @@ def cvt_archive_3d_plot(
             >>> from ribs.visualize import cvt_archive_3d_plot
             >>> # Populate the archive with the negative sphere function.
             >>> archive = CVTArchive(solution_dim=2,
-            ...                      cells=100,
+            ...                      centroids=100,
             ...                      ranges=[(-2, 0), (-2, 0), (-2, 0)])
             >>> x = np.random.uniform(-2, 0, 1000)
             >>> y = np.random.uniform(-2, 0, 1000)
@@ -148,7 +148,7 @@ def cvt_archive_3d_plot(
             >>> from ribs.visualize import cvt_archive_3d_plot
             >>> # Populate the archive with the negative sphere function.
             >>> archive = CVTArchive(solution_dim=2,
-            ...                      cells=100,
+            ...                      centroids=100,
             ...                      ranges=[(-2, 0), (-2, 0), (-2, 0)])
             >>> x = np.random.uniform(-2, 0, 1000)
             >>> y = np.random.uniform(-2, 0, 1000)
