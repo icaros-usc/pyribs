@@ -11,6 +11,7 @@
 
 #### Improvements
 
+- Fix various docs errors ({pr}`688`)
 - Add back pylint and remove ty ({pr}`687`)
 - Fix pandas dtype in test for CategoricalArchive ({pr}`686`)
 
