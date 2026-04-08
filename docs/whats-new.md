@@ -1,14 +1,34 @@
-# What's New in v0.9.0
+# What's New in v0.10.0
 
-We are excited to present pyribs 0.9.0, which introduces a host of new features
-intended to make the library more flexible than ever! This release supports
-Python 3.10 and up, with Python 3.9 being dropped due to being end-of-life.
+We are excited to present pyribs 0.10.0! Compared to 0.8.0, pyribs now has new
+algorithms and features intended to make the library more flexible than ever!
+This release supports Python 3.10 and up, with Python 3.9 being dropped due to
+being end-of-life.
+
+## New Algorithms
+
+Pyribs v0.10.0 introduces implementations of two new algorithms:
+
+- **Discount Model Search (DMS)**
+  ([Tjanaka 2026](https://discount-models.github.io/)) is now supported with the
+  introduction of the {class}`~ribs.archives.DiscountArchive` and
+  {class}`~ribs.discount_models.DiscountModelManager`. We include an example of
+  how to run DMS in {doc}`/examples/sphere`, with more examples available in the
+  [DMS repository](https://github.com/icaros-usc/discount-models).
+- We have begun adding support for **Dominated Novelty Search (DNS)**
+  ([Bahlous-Boldi 2025](https://arxiv.org/abs/2502.00593)) through the addition
+  of the {class}`~ribs.archives.DNSArchive`.
+  - Thanks to [@ryanboldi](https://github.com/ryanboldi) for contributing this
+    implementation in {pr}`664`!
+
+The {doc}`/supported-algorithms` page includes a list of algorithms supported in
+pyribs.
 
 ## Overhauling CVTArchive
 
-This release introduces a number of new features and (unfortunately) breaking
-changes to {class}`~ribs.archives.CVTArchive`. For most users, it should suffice
-to know that an initialization of CVTArchive that once looked like this:
+We introduce a number of new features and (unfortunately) breaking changes to
+{class}`~ribs.archives.CVTArchive`. For most users, it should suffice to know
+that an initialization of CVTArchive that once looked like this:
 
 ```python
 from ribs.archives import CVTArchive
@@ -90,8 +110,9 @@ Previously, we found specifying separate dtypes for the solution, objective, and
 measures in an archive to be complicated due to requiring passing a dict.
 Instead, we now allow passing in individual dtypes: `solution_dtype`,
 `objective_dtype`, and `measures_dtype`. It is also still possible to pass in
-`dtype` to set all of these at once. For example, the following sets the
-solutions to be objects, while the objective and measures are float32:
+`dtype` to set all of these at once, but `dtype` can no longer be a dict. For
+example, the following sets the solutions to be objects, while the objective and
+measures are float32:
 
 ```python
 import numpy as np
@@ -171,8 +192,8 @@ emitters = [
 ## Developer Workflow
 
 Finally, in addition to the above library improvements, we have migrated from
-using yapf and pylint to using [ruff](https://docs.astral.sh/ruff/) and
-[ty](https://docs.astral.sh/ty/) for formatting, linting, and type checking.
+using yapf and pylint to using [ruff](https://docs.astral.sh/ruff/) and pylint
+for formatting, linting, and type checking.
 
 ## Past Editions
 
