@@ -13,6 +13,7 @@ name of a ranker, e.g., "ImprovementRanker", or the abbreviated name of a ranker
 * ``density``: :class:`DensityRanker`
 * ``imp``: :class:`ImprovementRanker`
 * ``nov``: :class:`NoveltyRanker`
+* ``nslc``: :class:`NSLCRanker`
 * ``obj``: :class:`ObjectiveRanker`
 * ``rd``: :class:`RandomDirectionRanker`
 * ``2imp``: :class:`TwoStageImprovementRanker`
@@ -25,6 +26,7 @@ name of a ranker, e.g., "ImprovementRanker", or the abbreviated name of a ranker
     DensityRanker
     ImprovementRanker
     NoveltyRanker
+    NSLCRanker
     ObjectiveRanker
     RandomDirectionRanker
     TwoStageImprovementRanker
@@ -53,6 +55,7 @@ __all__ = [
     "DensityRanker",
     "ImprovementRanker",
     "NoveltyRanker",
+    "NSLCRanker",
     "ObjectiveRanker",
     "RandomDirectionRanker",
     "TwoStageImprovementRanker",
@@ -441,10 +444,163 @@ Ranks solutions based on density in measure space.
     """
 
 
+class NSLCRanker(RankerBase):
+    """Ranks solutions with Novelty Search with Local Competition.
+
+    This ranker implements the selection strategy from Novelty Search with Local
+    Competition (NSLC) in `Lehman 2011b
+    <https://web.archive.org/web/20111206122453/http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
+    Solutions are ranked via non-dominated sorting over two objectives:
+
+    1. Novelty (higher is better) -- the average distance in measure space to the
+       k-nearest neighbors in the archive.
+    2. Local competition (higher is better) -- the number of nearest neighbors the
+       solution beats on the objective.
+
+    Within each non-dominated front, solutions are further ordered by crowding
+    distance (higher is better), mirroring NSGA-II (`Deb 2002
+    <https://ieeexplore.ieee.org/document/996017>`_). This rewards both exploration
+    (novelty) and local exploitation (beating nearby elites) without requiring a
+    weighted combination of the two.
+
+    This ranker can only be used with archives that return both ``novelty`` and
+    ``local_competition`` fields from their ``add`` method. Currently, this is
+    :meth:`ribs.archives.ProximityArchive.add` when the archive is constructed with
+    ``local_competition=True``.
+    """
+
+    def rank(
+        self,
+        emitter: EmitterBase,
+        archive: ArchiveBase,
+        data: BatchData,
+        add_info: BatchData,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        novelty = np.asarray(add_info["novelty"], dtype=np.float64)
+        local_competition = np.asarray(add_info["local_competition"], dtype=np.float64)
+        n = len(novelty)
+
+        # Both objectives are "higher is better"; we negate to cast to the standard
+        # "lower dominates" form expected by non-dominated sorting.
+        costs = np.stack((-novelty, -local_competition), axis=-1)
+
+        fronts = _fast_non_dominated_sort(costs)
+
+        order = np.empty(n, dtype=np.int64)
+        cursor = 0
+        for front in fronts:
+            if len(front) == 1:
+                order[cursor] = front[0]
+                cursor += 1
+                continue
+
+            # Within a front, order by crowding distance (descending) to prefer
+            # boundary solutions and preserve diversity among ties.
+            crowding = _crowding_distance(costs[front])
+            sorted_front = front[np.argsort(-crowding, kind="stable")]
+            order[cursor : cursor + len(front)] = sorted_front
+            cursor += len(front)
+
+        ranking_values = np.stack((novelty, local_competition), axis=-1)
+        return order, ranking_values
+
+    rank.__doc__ = f"""
+Ranks solutions by non-dominated sorting over (novelty, local_competition), breaking
+ties within a front by crowding distance.
+
+{_RANK_ARGS}
+    """
+
+
+def _fast_non_dominated_sort(costs: np.ndarray) -> list[np.ndarray]:
+    """Computes non-dominated fronts for a batch of 2D cost vectors.
+
+    Uses the "fast non-dominated sort" algorithm from NSGA-II (Deb 2002). A solution
+    ``i`` dominates ``j`` if ``costs[i] <= costs[j]`` element-wise and ``costs[i] <
+    costs[j]`` in at least one dimension.
+
+    Args:
+        costs: ``(batch_size, n_objectives)`` array of costs to minimize.
+
+    Returns:
+        A list of 1D numpy arrays. Each array contains the indices belonging to one
+        front; earlier fronts dominate later fronts.
+    """
+    n = len(costs)
+    domination_count = np.zeros(n, dtype=np.int64)
+    dominated_sets: list[list[int]] = [[] for _ in range(n)]
+    fronts: list[list[int]] = [[]]
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            # Check if i dominates j or vice versa. Two solutions that are equal on
+            # all objectives do not dominate each other and end up in the same front.
+            leq_ij = np.all(costs[i] <= costs[j])
+            leq_ji = np.all(costs[j] <= costs[i])
+            lt_ij = np.any(costs[i] < costs[j])
+            lt_ji = np.any(costs[j] < costs[i])
+
+            if leq_ij and lt_ij:
+                dominated_sets[i].append(j)
+                domination_count[j] += 1
+            elif leq_ji and lt_ji:
+                dominated_sets[j].append(i)
+                domination_count[i] += 1
+
+        if domination_count[i] == 0:
+            fronts[0].append(i)
+
+    current = 0
+    while fronts[current]:
+        next_front: list[int] = []
+        for i in fronts[current]:
+            for j in dominated_sets[i]:
+                domination_count[j] -= 1
+                if domination_count[j] == 0:
+                    next_front.append(j)
+        current += 1
+        fronts.append(next_front)
+
+    # Drop the trailing empty sentinel and cast each front to an array for indexing.
+    return [np.asarray(front, dtype=np.int64) for front in fronts[:-1]]
+
+
+def _crowding_distance(costs: np.ndarray) -> np.ndarray:
+    """Computes NSGA-II crowding distance for solutions within a single front.
+
+    Boundary solutions (min or max on any objective) receive an infinite crowding
+    distance so they are always preserved first.
+
+    Args:
+        costs: ``(front_size, n_objectives)`` array of costs to minimize.
+
+    Returns:
+        ``(front_size,)`` array of crowding distances.
+    """
+    front_size, n_objectives = costs.shape
+    distance = np.zeros(front_size, dtype=np.float64)
+
+    for m in range(n_objectives):
+        values = costs[:, m]
+        order = np.argsort(values, kind="stable")
+        distance[order[0]] = np.inf
+        distance[order[-1]] = np.inf
+        value_range = values[order[-1]] - values[order[0]]
+        if value_range == 0:
+            continue
+        for k in range(1, front_size - 1):
+            distance[order[k]] += (
+                values[order[k + 1]] - values[order[k - 1]]
+            ) / value_range
+
+    return distance
+
+
 _NAME_TO_RANKER_MAP = {
     "DensityRanker": DensityRanker,
     "ImprovementRanker": ImprovementRanker,
     "NoveltyRanker": NoveltyRanker,
+    "NSLCRanker": NSLCRanker,
     "ObjectiveRanker": ObjectiveRanker,
     "RandomDirectionRanker": RandomDirectionRanker,
     "TwoStageImprovementRanker": TwoStageImprovementRanker,
@@ -453,6 +609,7 @@ _NAME_TO_RANKER_MAP = {
     "density": DensityRanker,
     "imp": ImprovementRanker,
     "nov": NoveltyRanker,
+    "nslc": NSLCRanker,
     "obj": ObjectiveRanker,
     "rd": RandomDirectionRanker,
     "2imp": TwoStageImprovementRanker,
