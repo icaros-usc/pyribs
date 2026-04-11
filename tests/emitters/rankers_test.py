@@ -8,11 +8,13 @@ from ribs.archives import DensityArchive, GridArchive, ProximityArchive
 from ribs.emitters.rankers import (
     DensityRanker,
     NoveltyRanker,
+    NSLCRanker,
     ObjectiveRanker,
     RandomDirectionRanker,
     TwoStageImprovementRanker,
     TwoStageObjectiveRanker,
     TwoStageRandomDirectionRanker,
+    _get_ranker,
 )
 
 # pylint: disable = redefined-outer-name
@@ -256,3 +258,146 @@ def test_density_ranker(emitter):
     )
     assert (indices == [3, 1, 0, 2]).all()
     assert_allclose(ranking_values, [0.5, 0.3, 0.7, 0.1])
+
+
+def _nslc_archive():
+    return ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=3,
+        novelty_threshold=0.01,
+        local_competition=True,
+    )
+
+
+def test_nslc_ranker_single_front(emitter):
+    # All four solutions are mutually non-dominated: each is strictly better than
+    # every other on exactly one of the two objectives (novelty or local
+    # competition). They share one front, and crowding distance decides the order.
+    # Solutions 0 and 3 are the boundary points (extreme on at least one
+    # objective) and should rank ahead of the interior points 1 and 2.
+    ranker = NSLCRanker()
+    archive = _nslc_archive()
+
+    novelty = np.array([1.0, 0.6, 0.4, 0.2])
+    local_competition = np.array([0.0, 0.3, 0.6, 1.0])
+
+    indices, ranking_values = ranker.rank(
+        emitter=emitter,
+        archive=archive,
+        data={
+            "solution": [[1, 2, 3]] * 4,
+            "measures": [[0, 0], [0.3, 0.3], [0.6, 0.6], [1.0, 1.0]],
+        },
+        add_info={
+            "novelty": novelty,
+            "local_competition": local_competition,
+        },
+    )
+
+    # All members are in the first front.
+    assert set(indices.tolist()) == {0, 1, 2, 3}
+    # Boundary points (0 and 3) have infinite crowding distance and rank first.
+    assert set(indices[:2].tolist()) == {0, 3}
+
+    expected_ranking = np.stack((novelty, local_competition), axis=-1)
+    assert_allclose(ranking_values, expected_ranking)
+
+
+def test_nslc_ranker_dominated(emitter):
+    # Solution 0 dominates everything: strictly highest novelty AND strictly
+    # highest local competition. Solutions 1 and 2 form the second front (mutually
+    # non-dominated). Solution 3 is dominated by all others and forms the third
+    # front.
+    ranker = NSLCRanker()
+    archive = _nslc_archive()
+
+    indices, _ = ranker.rank(
+        emitter=emitter,
+        archive=archive,
+        data={
+            "solution": [[1, 2, 3]] * 4,
+            "measures": [[0, 0], [0, 0], [0, 0], [0, 0]],
+        },
+        add_info={
+            "novelty": np.array([1.0, 0.7, 0.5, 0.1]),
+            "local_competition": np.array([5.0, 2.0, 3.0, 0.0]),
+        },
+    )
+
+    # Front 0: {0}. Front 1: {1, 2}. Front 2: {3}.
+    assert indices[0] == 0
+    assert set(indices[1:3].tolist()) == {1, 2}
+    assert indices[3] == 3
+
+
+def test_nslc_ranker_ties_stable(emitter):
+    # Two identical points (index 0 and 1) plus one dominated point (index 2).
+    # Identical points do not dominate each other, so they share the first front.
+    # The dominated point forms its own front.
+    ranker = NSLCRanker()
+    archive = _nslc_archive()
+
+    indices, _ = ranker.rank(
+        emitter=emitter,
+        archive=archive,
+        data={
+            "solution": [[1, 2, 3]] * 3,
+            "measures": [[0, 0], [0, 0], [0, 0]],
+        },
+        add_info={
+            "novelty": np.array([1.0, 1.0, 0.2]),
+            "local_competition": np.array([2.0, 2.0, 0.0]),
+        },
+    )
+
+    assert set(indices[:2].tolist()) == {0, 1}
+    assert indices[2] == 2
+
+
+def test_nslc_ranker_with_proximity_archive(emitter):
+    # End-to-end smoke test: fill a ProximityArchive(local_competition=True),
+    # then add a batch, take its add_info, and feed it to NSLCRanker.
+    archive = _nslc_archive()
+    seed_solution = np.array([1, 2, 3], dtype=np.float64)
+
+    # Seed with a few solutions so novelty queries have neighbors to compare to.
+    archive.add(
+        solution=np.tile(seed_solution, (4, 1)),
+        objective=np.array([0.0, 1.0, 2.0, 3.0]),
+        measures=np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0], [3.0, 3.0]]),
+    )
+
+    batch_solution = np.tile(seed_solution, (3, 1))
+    batch_objective = np.array([5.0, 0.0, 2.5])
+    batch_measures = np.array([[0.5, 0.5], [5.0, 5.0], [2.5, 2.5]])
+    add_info = archive.add(batch_solution, batch_objective, batch_measures)
+
+    # Sanity-check that ProximityArchive produced the fields NSLC needs.
+    assert "novelty" in add_info
+    assert "local_competition" in add_info
+
+    ranker = NSLCRanker()
+    indices, ranking_values = ranker.rank(
+        emitter=emitter,
+        archive=archive,
+        data={
+            "solution": batch_solution,
+            "objective": batch_objective,
+            "measures": batch_measures,
+        },
+        add_info=add_info,
+    )
+
+    # The ranker should return a valid permutation with the expected shapes.
+    assert sorted(indices.tolist()) == [0, 1, 2]
+    assert ranking_values.shape == (3, 2)
+
+
+def test_nslc_ranker_name_lookup():
+    # Verify that the ranker is registered under both its full name and the
+    # abbreviation, and that _get_ranker returns an NSLCRanker instance.
+    full = _get_ranker("NSLCRanker", seed=0)
+    short = _get_ranker("nslc", seed=0)
+    assert isinstance(full, NSLCRanker)
+    assert isinstance(short, NSLCRanker)
