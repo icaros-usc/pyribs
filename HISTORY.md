@@ -1,5 +1,13 @@
 # History
 
+## (Unreleased)
+
+### Changelog
+
+#### API
+
+- Add `NSLCRanker` for Novelty Search with Local Competition
+
 ## 0.10.0
 
 ### Changelog
