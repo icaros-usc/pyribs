@@ -450,24 +450,61 @@ class NSLCRanker(RankerBase):
     This ranker implements the selection strategy from Novelty Search with Local
     Competition (NSLC) in `Lehman 2011b
     <https://web.archive.org/web/20111206122453/http://eplex.cs.ucf.edu/papers/lehman_gecco11.pdf>`_.
-    Solutions are ranked via non-dominated sorting over two objectives:
+    The core idea is to rank solutions by non-dominated sorting on two objectives:
 
     1. Novelty (higher is better) -- the average distance in measure space to the
        k-nearest neighbors in the archive.
-    2. Local competition (higher is better) -- the number of nearest neighbors the
-       solution beats on the objective.
+    2. Local competition (higher is better) -- the number of k-nearest neighbors
+       that the solution outperforms on the objective.
 
-    Within each non-dominated front, solutions are further ordered by crowding
-    distance (higher is better), mirroring NSGA-II (`Deb 2002
-    <https://ieeexplore.ieee.org/document/996017>`_). This rewards both exploration
-    (novelty) and local exploitation (beating nearby elites) without requiring a
-    weighted combination of the two.
+    NSLC is built on top of NSGA-II (`Deb 2002
+    <https://ieeexplore.ieee.org/document/996017>`_), so this ranker runs NSGA-II's
+    fast non-dominated sort to partition solutions into Pareto fronts.
+
+    **Tie-breaking within a front.** Lehman & Stanley's original NSLC replaces
+    NSGA-II's crowding distance with a third "genotypic diversity" objective on the
+    grounds that two solutions with identical novelty and local competition scores
+    may nevertheless differ substantially in other ways. The third objective is
+    domain-specific (their ERO setup counts genotypes with the same number of outer
+    graph nodes). This ranker supports both tie-breakers:
+
+    - If ``diversity_field`` is ``None`` (the default), NSGA-II's standard crowding
+      distance in (novelty, local competition) space is used to order each front.
+      This is the practical default used by modern NSLC implementations and does
+      not require additional information from the emitter or archive.
+    - If ``diversity_field`` is set to a string ``name``, the ranker will look up
+      ``name`` first in ``add_info`` and then in ``data`` and use those values as a
+      third "higher is better" objective in the non-dominated sort, reproducing
+      Lehman & Stanley's 3-objective formulation. This is the paper-faithful mode
+      and is intended for users who can provide a principled genotypic-diversity
+      signal for their domain.
 
     This ranker can only be used with archives that return both ``novelty`` and
     ``local_competition`` fields from their ``add`` method. Currently, this is
     :meth:`ribs.archives.ProximityArchive.add` when the archive is constructed with
     ``local_competition=True``.
+
+    Args:
+        seed: Passed through to :class:`RankerBase`; unused by this ranker but kept
+            for API consistency with other rankers.
+        diversity_field: Optional name of an additional "higher is better" diversity
+            objective to include in the non-dominated sort. When provided, the field
+            is looked up first in ``add_info`` and then in ``data``. When ``None``,
+            NSGA-II crowding distance is used as the within-front tiebreaker.
     """
+
+    def __init__(
+        self,
+        seed: Int | None = None,
+        diversity_field: str | None = None,
+    ) -> None:
+        super().__init__(seed)
+        self._diversity_field = diversity_field
+
+    @property
+    def diversity_field(self) -> str | None:
+        """Name of the optional third objective field, or ``None``."""
+        return self._diversity_field
 
     def rank(
         self,
@@ -476,13 +513,59 @@ class NSLCRanker(RankerBase):
         data: BatchData,
         add_info: BatchData,
     ) -> tuple[np.ndarray, np.ndarray]:
+        if "novelty" not in add_info:
+            raise KeyError(
+                "NSLCRanker requires a 'novelty' field in add_info. Use an archive "
+                "that returns novelty from add(), such as ProximityArchive."
+            )
+        if "local_competition" not in add_info:
+            raise KeyError(
+                "NSLCRanker requires a 'local_competition' field in add_info. Use "
+                "ProximityArchive with local_competition=True."
+            )
+
         novelty = np.asarray(add_info["novelty"], dtype=np.float64)
         local_competition = np.asarray(add_info["local_competition"], dtype=np.float64)
+
+        if novelty.shape != local_competition.shape:
+            raise ValueError(
+                "'novelty' and 'local_competition' in add_info must have the same "
+                f"shape; got {novelty.shape} and {local_competition.shape}."
+            )
+
+        # Optional third objective -- see class docstring. When set, we look it up
+        # in add_info first so archive-provided diversity scores take precedence
+        # over emitter-provided ones.
+        extra_objective = None
+        if self._diversity_field is not None:
+            if self._diversity_field in add_info:
+                extra_objective = np.asarray(
+                    add_info[self._diversity_field], dtype=np.float64
+                )
+            elif self._diversity_field in data:
+                extra_objective = np.asarray(
+                    data[self._diversity_field], dtype=np.float64
+                )
+            else:
+                raise KeyError(
+                    f"diversity_field='{self._diversity_field}' was not found in "
+                    "add_info or data. Provide the field when calling the ranker or "
+                    "set diversity_field=None to fall back to crowding distance."
+                )
+            if extra_objective.shape != novelty.shape:
+                raise ValueError(
+                    f"diversity_field '{self._diversity_field}' has shape "
+                    f"{extra_objective.shape}; expected {novelty.shape}."
+                )
+
         n = len(novelty)
 
-        # Both objectives are "higher is better"; we negate to cast to the standard
-        # "lower dominates" form expected by non-dominated sorting.
-        costs = np.stack((-novelty, -local_competition), axis=-1)
+        # All objectives are "higher is better"; negate them to cast to the standard
+        # "lower dominates" form expected by fast non-dominated sort.
+        if extra_objective is None:
+            costs = np.stack((-novelty, -local_competition), axis=-1)
+        else:
+            costs = np.stack((-novelty, -local_competition, -extra_objective), axis=-1)
 
         fronts = _fast_non_dominated_sort(costs)
 
@@ -494,19 +577,33 @@ class NSLCRanker(RankerBase):
                 cursor += 1
                 continue
 
-            # Within a front, order by crowding distance (descending) to prefer
-            # boundary solutions and preserve diversity among ties.
-            crowding = _crowding_distance(costs[front])
-            sorted_front = front[np.argsort(-crowding, kind="stable")]
+            if extra_objective is None:
+                # 2-objective mode: use NSGA-II crowding distance as the tiebreaker.
+                crowding = _crowding_distance(costs[front])
+                sorted_front = front[np.argsort(-crowding, kind="stable")]
+            else:
+                # 3-objective mode (paper-faithful): the third objective already
+                # provides a within-front ordering signal. Fall back to crowding
+                # distance to break any remaining ties so the order is fully
+                # determined.
+                crowding = _crowding_distance(costs[front])
+                sorted_front = front[np.argsort(-crowding, kind="stable")]
+
             order[cursor : cursor + len(front)] = sorted_front
             cursor += len(front)
 
-        ranking_values = np.stack((novelty, local_competition), axis=-1)
+        if extra_objective is None:
+            ranking_values = np.stack((novelty, local_competition), axis=-1)
+        else:
+            ranking_values = np.stack(
+                (novelty, local_competition, extra_objective), axis=-1
+            )
         return order, ranking_values
 
     rank.__doc__ = f"""
-Ranks solutions by non-dominated sorting over (novelty, local_competition), breaking
-ties within a front by crowding distance.
+Ranks solutions by fast non-dominated sort over (novelty, local_competition) -- plus
+an optional third diversity objective when ``diversity_field`` is set -- and breaks
+ties within each front with NSGA-II crowding distance.
 
 {_RANK_ARGS}
     """

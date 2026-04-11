@@ -261,6 +261,7 @@ def test_density_ranker(emitter):
 
 
 def _nslc_archive():
+    """Build a ProximityArchive configured for use with NSLCRanker tests."""
     return ProximityArchive(
         solution_dim=3,
         measure_dim=2,
@@ -401,3 +402,229 @@ def test_nslc_ranker_name_lookup():
     short = _get_ranker("nslc", seed=0)
     assert isinstance(full, NSLCRanker)
     assert isinstance(short, NSLCRanker)
+
+
+def test_nslc_ranker_interior_crowding_ordering(emitter):
+    # Five points on the non-dominated front. Each strictly better than every
+    # other on one of the two objectives => single front. The interior points
+    # (1, 2, 3) all have finite crowding distance and should be ordered by the
+    # *density* of their neighbors: an interior point whose two neighbors on the
+    # front are far apart gets a larger crowding distance than one with close
+    # neighbors.
+    #
+    # Front shape in (novelty, LC) space (both higher-is-better):
+    #
+    #    idx: 0     1     2     3     4
+    #    nov: 1.00  0.80  0.55  0.30  0.00
+    #    LC : 0.00  0.20  0.55  0.80  1.00
+    #
+    # Boundaries 0 and 4 get +inf crowding. Among interior 1, 2, 3 we compare the
+    # sum of normalized gaps on both objectives. Point 2 has the widest neighbor
+    # gap on both objectives, so it should outrank 1 and 3.
+    ranker = NSLCRanker()
+    archive = _nslc_archive()
+
+    indices, _ = ranker.rank(
+        emitter=emitter,
+        archive=archive,
+        data={
+            "solution": [[1, 2, 3]] * 5,
+            "measures": [[0, 0]] * 5,
+        },
+        add_info={
+            "novelty": np.array([1.0, 0.8, 0.55, 0.3, 0.0]),
+            "local_competition": np.array([0.0, 0.2, 0.55, 0.8, 1.0]),
+        },
+    )
+
+    # All five are in the first front.
+    assert sorted(indices.tolist()) == [0, 1, 2, 3, 4]
+    # The two boundary points come first (they have infinite crowding distance).
+    assert set(indices[:2].tolist()) == {0, 4}
+    # Among interior points, point 2 has the widest neighbor gaps so it should
+    # come before points 1 and 3.
+    interior = indices[2:].tolist()
+    assert interior[0] == 2
+
+
+def test_nslc_ranker_single_solution(emitter):
+    # Batch size 1: single solution forms its own front by itself. The ranker
+    # should return a length-1 index array pointing at index 0 and a length-1
+    # ranking_values array with the right shape.
+    ranker = NSLCRanker()
+    archive = _nslc_archive()
+
+    indices, ranking_values = ranker.rank(
+        emitter=emitter,
+        archive=archive,
+        data={
+            "solution": [[1, 2, 3]],
+            "measures": [[0, 0]],
+        },
+        add_info={
+            "novelty": np.array([0.42]),
+            "local_competition": np.array([3.0]),
+        },
+    )
+
+    assert indices.tolist() == [0]
+    assert ranking_values.shape == (1, 2)
+    assert_allclose(ranking_values, [[0.42, 3.0]])
+
+
+def test_nslc_ranker_missing_novelty(emitter):
+    # add_info without 'novelty' should raise a KeyError with a clear message
+    # that tells the user how to fix it.
+    ranker = NSLCRanker()
+    archive = _nslc_archive()
+
+    with pytest.raises(KeyError, match="novelty"):
+        ranker.rank(
+            emitter=emitter,
+            archive=archive,
+            data={
+                "solution": [[1, 2, 3]] * 2,
+                "measures": [[0, 0]] * 2,
+            },
+            add_info={
+                "local_competition": np.array([1, 2]),
+            },
+        )
+
+
+def test_nslc_ranker_missing_local_competition(emitter):
+    # add_info without 'local_competition' should raise a KeyError hinting at
+    # local_competition=True on ProximityArchive.
+    ranker = NSLCRanker()
+    archive = _nslc_archive()
+
+    with pytest.raises(KeyError, match="local_competition"):
+        ranker.rank(
+            emitter=emitter,
+            archive=archive,
+            data={
+                "solution": [[1, 2, 3]] * 2,
+                "measures": [[0, 0]] * 2,
+            },
+            add_info={
+                "novelty": np.array([1.0, 0.5]),
+            },
+        )
+
+
+def test_nslc_ranker_three_objective_paper_faithful(emitter):
+    # Paper-faithful 3-objective NSLC: pass diversity_field to pull a third
+    # higher-is-better objective from add_info. With identical (novelty, LC)
+    # scores, the diversity objective is what decides the ordering.
+    ranker = NSLCRanker(diversity_field="diversity")
+    assert ranker.diversity_field == "diversity"
+    archive = _nslc_archive()
+
+    indices, ranking_values = ranker.rank(
+        emitter=emitter,
+        archive=archive,
+        data={
+            "solution": [[1, 2, 3]] * 3,
+            "measures": [[0, 0]] * 3,
+        },
+        add_info={
+            # All three solutions tie on (novelty, local_competition). Without a
+            # third objective they'd all be in the same front and crowding
+            # distance would rank them arbitrarily. With the diversity objective,
+            # solution 2 strictly dominates 1, which strictly dominates 0, so
+            # the resulting order is [2, 1, 0].
+            "novelty": np.array([0.5, 0.5, 0.5]),
+            "local_competition": np.array([1.0, 1.0, 1.0]),
+            "diversity": np.array([0.1, 0.5, 0.9]),
+        },
+    )
+
+    assert indices.tolist() == [2, 1, 0]
+    assert ranking_values.shape == (3, 3)
+    # ranking_values should echo the raw objectives in (novelty, LC, diversity)
+    # order for each solution.
+    assert_allclose(
+        ranking_values,
+        np.stack(
+            (
+                np.array([0.5, 0.5, 0.5]),
+                np.array([1.0, 1.0, 1.0]),
+                np.array([0.1, 0.5, 0.9]),
+            ),
+            axis=-1,
+        ),
+    )
+
+
+def test_nslc_ranker_three_objective_from_data(emitter):
+    # When the diversity objective is produced by the emitter rather than the
+    # archive, the ranker should fall back to looking it up in `data`.
+    ranker = NSLCRanker(diversity_field="geno_diversity")
+    archive = _nslc_archive()
+
+    indices, _ = ranker.rank(
+        emitter=emitter,
+        archive=archive,
+        data={
+            "solution": [[1, 2, 3]] * 3,
+            "measures": [[0, 0]] * 3,
+            "geno_diversity": np.array([0.2, 0.9, 0.5]),
+        },
+        add_info={
+            "novelty": np.array([0.5, 0.5, 0.5]),
+            "local_competition": np.array([1.0, 1.0, 1.0]),
+        },
+    )
+
+    # Tied on (novelty, LC); geno_diversity strictly orders them, so index 1
+    # (highest diversity) should be first.
+    assert indices[0] == 1
+
+
+def test_nslc_ranker_three_objective_missing_field(emitter):
+    # Requesting a diversity_field that isn't in add_info *or* data should raise
+    # a helpful KeyError rather than a silent NumPy error.
+    ranker = NSLCRanker(diversity_field="mystery")
+    archive = _nslc_archive()
+
+    with pytest.raises(KeyError, match="mystery"):
+        ranker.rank(
+            emitter=emitter,
+            archive=archive,
+            data={
+                "solution": [[1, 2, 3]] * 2,
+                "measures": [[0, 0]] * 2,
+            },
+            add_info={
+                "novelty": np.array([1.0, 0.5]),
+                "local_competition": np.array([2.0, 1.0]),
+            },
+        )
+
+
+def test_nslc_ranker_shape_mismatch(emitter):
+    # If novelty and local_competition arrive with mismatched shapes, the ranker
+    # should raise a ValueError before attempting to sort garbage.
+    ranker = NSLCRanker()
+    archive = _nslc_archive()
+
+    with pytest.raises(ValueError, match="shape"):
+        ranker.rank(
+            emitter=emitter,
+            archive=archive,
+            data={
+                "solution": [[1, 2, 3]] * 2,
+                "measures": [[0, 0]] * 2,
+            },
+            add_info={
+                "novelty": np.array([1.0, 0.5]),
+                "local_competition": np.array([2.0, 1.0, 0.3]),  # wrong size
+            },
+        )
+
+
+def test_nslc_ranker_defaults():
+    # The default constructor should leave diversity_field as None, which means
+    # we're operating in the 2-objective + crowding-distance mode.
+    ranker = NSLCRanker()
+    assert ranker.diversity_field is None
