@@ -6,7 +6,7 @@
 
 #### API
 
-- Add `DDS-CNF` density method to `DensityArchive`
+- Add `DDS-CNF` density method to `DensityArchive` ({pr}`691`)
 
 ## 0.10.0
 
