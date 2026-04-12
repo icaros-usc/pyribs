@@ -1,5 +1,13 @@
 # History
 
+## (Unreleased)
+
+### Changelog
+
+#### API
+
+- Add `DDS-CNF` density method to `DensityArchive`
+
 ## 0.10.0
 
 ### Changelog
