@@ -14,6 +14,7 @@ name of a ranker, e.g., "ImprovementRanker", or the abbreviated name of a ranker
 * ``imp``: :class:`ImprovementRanker`
 * ``nov``: :class:`NoveltyRanker`
 * ``nslc``: :class:`NSLCRanker`
+* ``nslc_classic``: :class:`NSLCClassicRanker`
 * ``obj``: :class:`ObjectiveRanker`
 * ``rd``: :class:`RandomDirectionRanker`
 * ``2imp``: :class:`TwoStageImprovementRanker`
@@ -27,6 +28,7 @@ name of a ranker, e.g., "ImprovementRanker", or the abbreviated name of a ranker
     ImprovementRanker
     NoveltyRanker
     NSLCRanker
+    NSLCClassicRanker
     ObjectiveRanker
     RandomDirectionRanker
     TwoStageImprovementRanker
@@ -56,6 +58,7 @@ __all__ = [
     "ImprovementRanker",
     "NoveltyRanker",
     "NSLCRanker",
+    "NSLCClassicRanker",
     "ObjectiveRanker",
     "RandomDirectionRanker",
     "TwoStageImprovementRanker",
@@ -491,6 +494,10 @@ class NSLCRanker(RankerBase):
             objective to include in the non-dominated sort. When provided, the field
             is looked up first in ``add_info`` and then in ``data``. When ``None``,
             NSGA-II crowding distance is used as the within-front tiebreaker.
+
+    See Also:
+        NSLCClassicRanker: A variant that uses the standard ``genotypic_diversity``
+        field for the third objective, implementing the paper-faithful NSLC algorithm.
     """
 
     def __init__(
@@ -577,17 +584,12 @@ class NSLCRanker(RankerBase):
                 cursor += 1
                 continue
 
-            if extra_objective is None:
-                # 2-objective mode: use NSGA-II crowding distance as the tiebreaker.
-                crowding = _crowding_distance(costs[front])
-                sorted_front = front[np.argsort(-crowding, kind="stable")]
-            else:
-                # 3-objective mode (paper-faithful): the third objective already
-                # provides a within-front ordering signal. Fall back to crowding
-                # distance to break any remaining ties so the order is fully
-                # determined.
-                crowding = _crowding_distance(costs[front])
-                sorted_front = front[np.argsort(-crowding, kind="stable")]
+            # Use NSGA-II crowding distance as the within-front tiebreaker.
+            # In 2-objective mode, this is computed on (novelty, local_competition).
+            # In 3-objective mode, this is computed on all three objectives, which
+            # naturally favors solutions spread out in the diversity dimension.
+            crowding = _crowding_distance(costs[front])
+            sorted_front = front[np.argsort(-crowding, kind="stable")]
 
             order[cursor : cursor + len(front)] = sorted_front
             cursor += len(front)
@@ -607,6 +609,39 @@ ties within each front with NSGA-II crowding distance.
 
 {_RANK_ARGS}
     """
+
+
+class NSLCClassicRanker(NSLCRanker):
+    """Ranks solutions with the paper-faithful NSLC algorithm using genotypic diversity.
+
+    This ranker is a variant of :class:`NSLCRanker` that automatically uses the
+    ``genotypic_diversity`` field as the third objective in the non-dominated sort,
+    implementing Lehman & Stanley's original NSLC algorithm. This is the paper-faithful
+    mode that uses three objectives:
+
+    1. Novelty (higher is better)
+    2. Local competition (higher is better)
+    3. Genotypic diversity (higher is better)
+
+    This ranker is intended for users who can provide a genotypic-diversity signal
+    for their domain. If the ``genotypic_diversity`` field is not available from the
+    archive or emitter, the ranker will raise a KeyError at ranking time.
+
+    For the practical 2-objective version that uses NSGA-II crowding distance instead,
+    use :class:`NSLCRanker`.
+
+    This ranker can only be used with archives that return both ``novelty`` and
+    ``local_competition`` fields from their ``add`` method. Currently, this is
+    :meth:`ribs.archives.ProximityArchive.add` when the archive is constructed with
+    ``local_competition=True``.
+
+    Args:
+        seed: Passed through to :class:`RankerBase`; unused by this ranker but kept
+            for API consistency with other rankers.
+    """
+
+    def __init__(self, seed: Int | None = None) -> None:
+        super().__init__(seed, diversity_field="genotypic_diversity")
 
 
 def _fast_non_dominated_sort(costs: np.ndarray) -> list[np.ndarray]:
@@ -698,6 +733,7 @@ _NAME_TO_RANKER_MAP = {
     "ImprovementRanker": ImprovementRanker,
     "NoveltyRanker": NoveltyRanker,
     "NSLCRanker": NSLCRanker,
+    "NSLCClassicRanker": NSLCClassicRanker,
     "ObjectiveRanker": ObjectiveRanker,
     "RandomDirectionRanker": RandomDirectionRanker,
     "TwoStageImprovementRanker": TwoStageImprovementRanker,
@@ -707,6 +743,7 @@ _NAME_TO_RANKER_MAP = {
     "imp": ImprovementRanker,
     "nov": NoveltyRanker,
     "nslc": NSLCRanker,
+    "nslc_classic": NSLCClassicRanker,
     "obj": ObjectiveRanker,
     "rd": RandomDirectionRanker,
     "2imp": TwoStageImprovementRanker,

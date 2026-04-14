@@ -8,6 +8,7 @@ from ribs.archives import DensityArchive, GridArchive, ProximityArchive
 from ribs.emitters.rankers import (
     DensityRanker,
     NoveltyRanker,
+    NSLCClassicRanker,
     NSLCRanker,
     ObjectiveRanker,
     RandomDirectionRanker,
@@ -628,3 +629,90 @@ def test_nslc_ranker_defaults():
     # we're operating in the 2-objective + crowding-distance mode.
     ranker = NSLCRanker()
     assert ranker.diversity_field is None
+
+
+def test_nslc_classic_ranker_diversity_field():
+    # NSLCClassicRanker should always use "genotypic_diversity" as the diversity field.
+    ranker = NSLCClassicRanker()
+    assert ranker.diversity_field == "genotypic_diversity"
+
+
+def test_nslc_classic_ranker_name_lookup():
+    # Verify that NSLCClassicRanker is registered under both its full name and the
+    # abbreviation, and that _get_ranker returns an NSLCClassicRanker instance.
+    full = _get_ranker("NSLCClassicRanker", seed=0)
+    short = _get_ranker("nslc_classic", seed=0)
+    assert isinstance(full, NSLCClassicRanker)
+    assert isinstance(short, NSLCClassicRanker)
+    assert full.diversity_field == "genotypic_diversity"
+    assert short.diversity_field == "genotypic_diversity"
+
+
+def test_nslc_classic_ranker_three_objective(emitter):
+    # Test that NSLCClassicRanker properly uses the genotypic_diversity field
+    # when it's available.
+    archive = _nslc_archive()
+    seed_solution = np.array([1, 2, 3], dtype=np.float64)
+
+    # Seed with a few solutions.
+    archive.add(
+        solution=np.tile(seed_solution, (4, 1)),
+        objective=np.array([0.0, 1.0, 2.0, 3.0]),
+        measures=np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0], [3.0, 3.0]]),
+    )
+
+    batch_solution = np.tile(seed_solution, (3, 1))
+    batch_objective = np.array([5.0, 0.0, 2.5])
+    batch_measures = np.array([[0.5, 0.5], [5.0, 5.0], [2.5, 2.5]])
+    add_info = archive.add(batch_solution, batch_objective, batch_measures)
+
+    # Add the genotypic_diversity field that NSLCClassicRanker expects.
+    add_info["genotypic_diversity"] = np.array([10.0, 5.0, 15.0])
+
+    ranker = NSLCClassicRanker()
+    indices, ranking_values = ranker.rank(
+        emitter=emitter,
+        archive=archive,
+        data={
+            "solution": batch_solution,
+            "objective": batch_objective,
+            "measures": batch_measures,
+        },
+        add_info=add_info,
+    )
+
+    # The ranker should return a valid permutation with 3 ranking values.
+    assert sorted(indices.tolist()) == [0, 1, 2]
+    assert ranking_values.shape == (3, 3)  # 3 objectives: novelty, local_competition, diversity
+
+
+def test_nslc_classic_ranker_missing_genotypic_diversity(emitter):
+    # NSLCClassicRanker should raise an error if genotypic_diversity is not provided.
+    archive = _nslc_archive()
+    seed_solution = np.array([1, 2, 3], dtype=np.float64)
+
+    archive.add(
+        solution=np.tile(seed_solution, (4, 1)),
+        objective=np.array([0.0, 1.0, 2.0, 3.0]),
+        measures=np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0], [3.0, 3.0]]),
+    )
+
+    batch_solution = np.tile(seed_solution, (3, 1))
+    batch_objective = np.array([5.0, 0.0, 2.5])
+    batch_measures = np.array([[0.5, 0.5], [5.0, 5.0], [2.5, 2.5]])
+    add_info = archive.add(batch_solution, batch_objective, batch_measures)
+
+    # Note: not adding genotypic_diversity field
+
+    ranker = NSLCClassicRanker()
+    with pytest.raises(KeyError, match="genotypic_diversity"):
+        ranker.rank(
+            emitter=emitter,
+            archive=archive,
+            data={
+                "solution": batch_solution,
+                "objective": batch_objective,
+                "measures": batch_measures,
+            },
+            add_info=add_info,
+        )
