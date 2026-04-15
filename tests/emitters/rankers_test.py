@@ -683,10 +683,13 @@ def test_nslc_classic_ranker_three_objective(emitter):
 
     # The ranker should return a valid permutation with 3 ranking values.
     assert sorted(indices.tolist()) == [0, 1, 2]
-    assert ranking_values.shape == (3, 3)  # 3 objectives: novelty, local_competition, diversity
+    assert ranking_values.shape == (
+        3,
+        3,
+    )  # 3 objectives: novelty, local_competition, diversity
 
 
-def test_nslc_classic_ranker_missing_genotypic_diversity(emitter):
+def test_nslc_classic_ranker_missing_field(emitter):
     # NSLCClassicRanker should raise an error if genotypic_diversity is not provided.
     archive = _nslc_archive()
     seed_solution = np.array([1, 2, 3], dtype=np.float64)
