@@ -6,6 +6,7 @@
 
 #### API
 
+- Add PyTorch to ribs[all] deps ({pr}`692`)
 - Add `NSLCRanker` for Novelty Search with Local Competition ({pr}`690`)
 
 ## 0.10.0
