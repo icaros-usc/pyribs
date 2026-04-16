@@ -1,5 +1,13 @@
 # History
 
+## (Forthcoming)
+
+### Changelog
+
+#### API
+
+- Add `NSLCRanker` for Novelty Search with Local Competition ({pr}`690`)
+
 ## 0.10.0
 
 ### Changelog

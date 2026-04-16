@@ -68,6 +68,9 @@ Novelty Search:
 - `ns_cma`: Novelty Search with CMA-ES; implemented using a ProximityArchive with
   EvolutionStrategyEmitter. Results are stored in a passive GridArchive. Note that the
   objective will not be optimized in this case.
+- `nslc`: Novelty Search with Local Competition (NSLC); uses a ProximityArchive with
+  EvolutionStrategyEmitter and NSLCRanker to rank solutions by novelty and local
+  competition.
 - `nslc_cma_imp`: EvolutionStrategyEmitter with a ProximityArchive with local
   competition turned on. Thus, the archive returns two-stage improvement information
   that is fed to the EvolutionStrategyEmitter just like in CMA-ME.
@@ -714,6 +717,41 @@ CONFIG = {
                     "ranker": "nov",
                     "selection_rule": "mu",
                     "restart_rule": "basic",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {},
+        },
+    },
+    "nslc": {
+        "is_dqd": False,
+        "archive": {
+            "class": ProximityArchive,
+            "kwargs": {
+                "k_neighbors": 15,
+                # Note: This is untuned.
+                "novelty_threshold": 0.037 * 100,
+                "local_competition": True,
+            },
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
+            },
+        },
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 0.5,
+                    "ranker": "nslc",
+                    "selection_rule": "filter",
+                    "restart_rule": "no_improvement",
                     "batch_size": 36,
                 },
                 "num_emitters": 15,
