@@ -71,23 +71,21 @@ class _CNFDensityEstimator:
     Args:
         measure_dim: Dimensionality of the feature space that the CNF models.
         lr: Learning rate for the Adam optimizer used during fine-tuning.
-        train_steps: Number of gradient steps taken every time the estimator
-            is asked to refit on a new buffer.
-        batch_size: Mini-batch size used for stochastic gradient steps. If the
-            buffer is smaller than ``batch_size``, the entire buffer is used
-            as the batch.
-        min_buffer_size: Minimum number of points in the buffer before the
-            flow is trained at all. Calls before this threshold is reached
-            are no-ops and density queries return zeros.
-        device: Torch device on which the CNF lives. Strings like ``"cpu"``,
-            ``"cuda"``, or an instance of :class:`torch.device` are accepted.
-        seed: Seed for the torch random number generator controlling the
-            CNF's weight initialization and any stochastic training steps.
-        cnf_kwargs: Additional keyword arguments forwarded to
-            :class:`zuko.flows.CNF`. ``features`` is set automatically from
-            ``measure_dim`` and cannot be overridden. Defaults are chosen to
-            match the small-MLP architecture used in the DDS paper
-            experiments (``hidden_features=(64, 64)``).
+        train_steps: Number of gradient steps taken every time the estimator is asked to
+            refit on a new buffer.
+        batch_size: Mini-batch size used for stochastic gradient steps. If the buffer is
+            smaller than ``batch_size``, the entire buffer is used as the batch.
+        min_buffer_size: Minimum number of points in the buffer before the flow is
+            trained at all. Calls before this threshold is reached are no-ops and
+            density queries return zeros.
+        device: Torch device on which the CNF lives. Strings like ``"cpu"``, ``"cuda"``,
+            or an instance of :class:`torch.device` are accepted.
+        seed: Seed for the torch random number generator controlling the CNF's weight
+            initialization and any stochastic training steps.
+        cnf_kwargs: Additional keyword arguments forwarded to :class:`zuko.flows.CNF`.
+            ``features`` is set automatically from ``measure_dim`` and cannot be
+            overridden. Defaults are chosen to match the small-MLP architecture used in
+            the DDS paper experiments (``hidden_features=(64, 64)``).
     """
 
     def __init__(
@@ -258,37 +256,36 @@ class DensityArchive(ArchiveBase):
     Args:
         measure_dim: Dimension of the measure space.
         buffer_size: Size of the buffer of measures.
-        density_method: Method for computing density. Supports ``"kde"`` (KDE
-            -- kernel density estimator), ``"kde_sklearn"`` (KDE using
+        density_method: Method for computing density. Supports ``"kde"`` (KDE -- kernel
+            density estimator), ``"kde_sklearn"`` (KDE using
             :class:`sklearn.neighbors.KernelDensity`), and ``"cnf"`` (continuous
             normalizing flow, i.e. DDS-CNF from `Lee 2024
-            <https://arxiv.org/abs/2312.11331>`_). When ``"kde_sklearn"`` is used,
-            this archive computes *log density* rather than density; see
-            :meth:`sklearn.neighbors.KernelDensity.score_samples`. When ``"cnf"``
-            is used, this archive also returns *log density* since that is what
-            the flow models directly. ``"cnf"`` requires the ``flows`` optional
-            dependency group (``pip install ribs[flows]``), which brings in
-            ``torch`` and ``zuko``.
+            <https://arxiv.org/abs/2312.11331>`_). When ``"kde_sklearn"`` is used, this
+            archive computes *log density* rather than density; see
+            :meth:`sklearn.neighbors.KernelDensity.score_samples`. When ``"cnf"`` is
+            used, this archive also returns *log density* since that is what the flow
+            models directly. ``"cnf"`` requires the ``flows`` optional dependency group
+            (``pip install ribs[flows]``), which brings in ``torch`` and ``zuko``.
         bandwidth: Bandwidth when using ``kde`` or ``kde_sklearn`` as the
-            ``density_method``. Ignored for ``"cnf"``.
+            ``density_method``.
         sklearn_kwargs: kwargs for :class:`sklearn.neighbors.KernelDensity` when using
             ``"kde_sklearn"`` as the ``density_method``. Note that bandwidth is already
             passed in via the ``bandwidth`` parameter above.
-        cnf_kwargs: Additional keyword arguments forwarded to
-            :class:`zuko.flows.CNF` when ``density_method="cnf"``. ``features`` is
-            set automatically from ``measure_dim`` and cannot be overridden.
-            Defaults to ``{"hidden_features": (64, 64)}``.
+        cnf_kwargs: Additional keyword arguments forwarded to :class:`zuko.flows.CNF`
+            when ``density_method="cnf"``. ``features`` is set automatically from
+            ``measure_dim`` and cannot be overridden. Defaults to ``{"hidden_features":
+            (64, 64)}``.
         cnf_lr: Adam learning rate used to fine-tune the CNF during each call to
             :meth:`add` when ``density_method="cnf"``. Defaults to ``1e-3``.
-        cnf_train_steps: Number of Adam steps taken every time the CNF is
-            fine-tuned on the buffer. Defaults to ``100``.
-        cnf_batch_size: Mini-batch size used when fine-tuning the CNF. Defaults
-            to ``256``. If the buffer has fewer points, the entire buffer is used.
-        cnf_min_buffer_size: Minimum number of points in the buffer before the
-            CNF is trained. Before this threshold, the flow stays untrained and
-            density queries return zeros. Defaults to ``128``.
-        cnf_device: Torch device on which the CNF lives when
-            ``density_method="cnf"``. Defaults to ``"cpu"``.
+        cnf_train_steps: Number of Adam steps taken every time the CNF is fine-tuned on
+            the buffer. Defaults to ``100``.
+        cnf_batch_size: Mini-batch size used when fine-tuning the CNF. Defaults to
+            ``256``. If the buffer has fewer points, the entire buffer is used.
+        cnf_min_buffer_size: Minimum number of points in the buffer before the CNF is
+            trained. Before this threshold, the flow stays untrained and density queries
+            return zeros. Defaults to ``128``.
+        cnf_device: Torch device on which the CNF lives when ``density_method="cnf"``.
+            Defaults to ``"cpu"``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
         measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
