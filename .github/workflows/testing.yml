@@ -78,9 +78,9 @@ jobs:
       - name: Test pymoo extra
         run: pytest tests/emitters_pymoo tests/schedulers_pymoo
       - name: Install zuko
-        # Depends on torch, so only runs on Ubuntu.
+        # Zuko depends on torch, which we only install on Ubuntu.
         if: matrix.os == 'ubuntu-latest'
-        run: pip install zuko
+        run: pip install zuko>=1.0.0
       - name: Test zuko extra
         if: matrix.os == 'ubuntu-latest'
         run: pytest tests/archives_zuko
