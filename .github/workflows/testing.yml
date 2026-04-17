@@ -100,7 +100,7 @@ jobs:
           python-version: "3.12"
           channels: conda-forge,defaults
       - name: Install deps
-        run: pip install .[all,dev] torch
+        run: pip install .[all,dev]
       - name: Test coverage
         env:
           NUMBA_DISABLE_JIT: 1
