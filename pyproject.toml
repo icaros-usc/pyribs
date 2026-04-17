@@ -46,25 +46,16 @@ visualize = [
   "matplotlib>=3.0.0",
   "shapely>=2.0.0",
 ]
-flows = [
-  # Continuous normalizing flow density estimator for DDS-CNF (Lee et al. 2024).
-  "torch",
-  "zuko>=1.0.0",
-]
 all = [
   ### visualize ###
   "matplotlib>=3.0.0",
   "shapely>=2.0.0",
 
-  ### flows ###
-  "torch",
-  "zuko>=1.0.0",
-
   ### Extra dependencies used by various components. ###
   "cma",
   "pymoo",
-  # PyTorch (torch) is used in components like discount models and could be included
-  # here, but since it is so large, we leave it to users to install on their own.
+  "torch", # Fairly loose since there are many ways to install PyTorch.
+  "zuko>=1.0.0",
 ]
 dev = [
   # Tools
