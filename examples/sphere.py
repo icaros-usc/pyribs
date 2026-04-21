@@ -90,7 +90,7 @@ DMS:
   multiply the QD Score from that paper by 100.
 
 By default, outputs are saved in a directory called
-`sphere_output/{algorithm_dim}/YYYY-MM-DD_HH-MM-SS_seed-{seed}`, where
+`logs/sphere_{algorithm_dim}/YYYY-MM-DD_HH-MM-SS_seed-{seed}`, where
 YYYY-MM-DD_HH-MM-SS is a timestamp. This directory contains the following outputs:
 - The archive is saved as a CSV named `archive.csv`
 - Snapshots of the heatmap are saved as `heatmap_{iteration}.png`.
@@ -102,8 +102,8 @@ To generate a video of the heatmap from the heatmap images, use a tool like ffmp
 example, the following will generate a 6 FPS (Frames Per Second) video showing the
 heatmap for an example run of cma_me_imp with 100 dims.
 
-    ffmpeg -r 6 -i "sphere_output/cma_me_imp_100/2026-04-21_04-51-31_seed-None/heatmap_%*.png" \
-        sphere_output/cma_me_imp_100/2026-04-21_04-51-31_seed-None/heatmap_video.mp4
+    ffmpeg -r 6 -i "logs/sphere_cma_me_imp_100/2026-04-21_04-51-31_seed-None/heatmap_%*.png" \
+        logs/sphere_cma_me_imp_100/2026-04-21_04-51-31_seed-None/heatmap_video.mp4
 
 Usage (see sphere_main function for all args or run `python sphere.py --help`):
     python sphere.py ALGORITHM
@@ -1226,8 +1226,8 @@ def sphere_main(
     # Initialize logdir.
     outdir = (
         (
-            Path("sphere_output")
-            / name
+            Path("logs")
+            / f"{Path(__file__).stem}_{name}"
             / datetime.now().strftime(f"%Y-%m-%d_%H-%M-%S_seed-{seed}")
         )
         if outdir is None
