@@ -89,27 +89,32 @@ DMS:
   to [0, 1], whereas this script uses objectives in [0, 100]. To convert results,
   multiply the QD Score from that paper by 100.
 
-Outputs are saved in the `sphere_output/` directory by default. The archive is saved as
-a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are saved as
-`{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about the run are also saved in
-`{algorithm}_{dim}_metrics.json`, and plots of the metrics are saved in PNG's with the
-name `{algorithm}_{dim}_metric_name.png`.
+By default, outputs are saved in a directory called
+`sphere_output/{algorithm_dim}/YYYY-MM-DD_HH-MM-SS_seed-{seed}`, where
+YYYY-MM-DD_HH-MM-SS is a timestamp. This directory contains the following outputs:
+- The archive is saved as a CSV named `archive.csv`
+- Snapshots of the heatmap are saved as `heatmap_{iteration}.png`.
+- Metrics from the run are saved in `metrics.json`
+- Plots of the metrics are saved in PNG's with the name `{metric_name}.png`.
+- The log messages from the run are saved in `out.log`.
 
 To generate a video of the heatmap from the heatmap images, use a tool like ffmpeg. For
 example, the following will generate a 6 FPS (Frames Per Second) video showing the
-heatmap for cma_me_imp with 100 dims.
+heatmap for an example run of cma_me_imp with 100 dims.
 
-    ffmpeg -r 6 -i "sphere_output/cma_me_imp_100_heatmap_%*.png" \
-        sphere_output/cma_me_imp_100_heatmap_video.mp4
+    ffmpeg -r 6 -i "sphere_output/cma_me_imp_100/2026-04-21_04-51-31_seed-None/heatmap_%*.png" \
+        sphere_output/cma_me_imp_100/2026-04-21_04-51-31_seed-None/heatmap_video.mp4
 
 Usage (see sphere_main function for all args or run `python sphere.py --help`):
     python sphere.py ALGORITHM
+
 Example:
     python sphere.py map_elites
 
     # To make numpy and sklearn run single-threaded, set env variables for BLAS
     # and OpenMP:
     OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere.py map_elites 100
+
 Help:
     python sphere.py --help
 """
@@ -1281,9 +1286,7 @@ def sphere_main(
         final_itr = itr == itrs
         if itr % log_freq == 0 or final_itr:
             if final_itr:
-                result_archive.data(return_type="pandas").to_csv(
-                    outdir / f"{name}_archive.csv"
-                )
+                result_archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
 
             # Record and display metrics.
             metrics["QD Score"]["x"].append(itr)
@@ -1297,7 +1300,7 @@ def sphere_main(
                 metrics["QD Score"]["y"][-1],
             )
 
-            save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{itr:05d}.png"))
+            save_heatmap(result_archive, str(outdir / f"heatmap_{itr:05d}.png"))
 
     # Plot metrics.
     log.info("Algorithm Time (Excludes Logging and Setup): {}s", non_logging_time)
@@ -1305,7 +1308,7 @@ def sphere_main(
         plt.plot(values["x"], values["y"])
         plt.title(metric)
         plt.xlabel("Iteration")
-        plt.savefig(str(outdir / f"{name}_{metric.lower().replace(' ', '_')}.png"))
+        plt.savefig(str(outdir / f"{metric.lower().replace(' ', '_')}.png"))
         plt.clf()
 
     # Convert metrics to Python scalars by calling .item(), since each stats value is a
@@ -1316,7 +1319,7 @@ def sphere_main(
         ]
 
     # Save metrics to JSON.
-    with (outdir / f"{name}_metrics.json").open("w") as file:
+    with (outdir / "metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
 
 
