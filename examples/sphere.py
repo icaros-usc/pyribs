@@ -1194,7 +1194,8 @@ def sphere_main(
         grid_dims: Grid dimensions for GridArchive.
         learning_rate: The archive learning rate.
         es: If passed, this will set the ES for all EvolutionStrategyEmitter instances.
-        outdir: Directory to save output.
+        outdir: Directory to save output. If not provided, it will be automatically set
+            to `logs/sphere/{algorithm}_{dim}/YYYY-MM-DD_HH-MM-SS_seed-{seed}`.
         log_freq: Number of iterations to wait before recording metrics and saving
             heatmap.
         seed: Seed for the algorithm. By default, there is no seed.
@@ -1223,7 +1224,7 @@ def sphere_main(
     if es is not None:
         name += f"_{es}"
 
-    # Initialize logging directory.
+    # Initialize output directory.
     outdir = (
         (
             Path("logs")
@@ -1283,25 +1284,23 @@ def sphere_main(
         if has_discount_model:
             scheduler.archive.train_discount_model()
 
-        # Logging and output.
-        final_itr = itr == itrs
-        if itr % log_freq == 0 or final_itr:
-            if final_itr:
-                result_archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
+        # Logging.
+        metrics["QD Score"]["x"].append(itr)
+        metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
+        metrics["Archive Coverage"]["x"].append(itr)
+        metrics["Archive Coverage"]["y"].append(result_archive.stats.coverage)
 
-            # Record and display metrics.
-            metrics["QD Score"]["x"].append(itr)
-            metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
-            metrics["Archive Coverage"]["x"].append(itr)
-            metrics["Archive Coverage"]["y"].append(result_archive.stats.coverage)
+        if itr % log_freq == 0 or itr == itrs:
             log.info(
                 "Itr {} | Coverage: {:.3%} QD Score: {:.3f}",
                 itr,
                 metrics["Archive Coverage"]["y"][-1],
                 metrics["QD Score"]["y"][-1],
             )
-
             save_heatmap(result_archive, str(outdir / f"heatmap_{itr:05d}.png"))
+
+    # Save archive as a CSV.
+    result_archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
 
     # Plot metrics.
     log.info("Algorithm Time (Excludes Logging and Setup): {}s", non_logging_time)
