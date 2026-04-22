@@ -4,19 +4,21 @@ BOP-Elites was introduced in Kent 2024:
 https://ieeexplore.ieee.org/abstract/document/10472301
 
 Install the following dependencies before running this example:
-    pip install ribs[visualize] pymoo tqdm fire
+    pip install ribs[visualize] pymoo tqdm fire loguru
 """
 
 from __future__ import annotations
 
 import json
 import time
+from datetime import datetime
 from pathlib import Path
 
 import fire
 import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
+from loguru import logger as log
 
 from ribs.archives import GridArchive
 from ribs.emitters import BayesianOptimizationEmitter
@@ -111,13 +113,28 @@ def main(  # pylint: disable = too-many-positional-arguments
     batch_size: int = 8,
     num_emitters: int = 1,
     seed: int = 42,
-    outdir: str = "test_logs",
+    outdir: str | None = None,
     log_every: int = 20,
 ) -> None:
     """Main function for running BOP-Elites on the sphere domain."""
-    # logdir for saving experiment data
-    logdir = Path(outdir)
-    logdir.mkdir(exist_ok=True)
+    # Initialize output directory.
+    outdir = (
+        (
+            Path("logs")
+            / Path(__file__).stem
+            / datetime.now().strftime(f"%Y-%m-%d_%H-%M-%S_seed-{seed}")
+        )
+        if outdir is None
+        else Path(outdir)
+    )
+    outdir.mkdir(parents=True, exist_ok=False)
+
+    # Initialize loggers --
+    # https://loguru.readthedocs.io/en/stable/resources/recipes.html#interoperability-with-tqdm-iterations
+    log.remove()
+    log.add(lambda msg: tqdm.tqdm.write(msg, end=""), colorize=True)
+    log.add(outdir / "out.log")  # Save logs in outdir.
+    log.info("Saving outputs to: {}", outdir)
 
     # The main grid archive that interacts with BOP-Elites. We start at the lowest
     # resolution from ``upscale_schedule``.
@@ -179,46 +196,45 @@ def main(  # pylint: disable = too-many-positional-arguments
         },
     }
 
-    for i in tqdm.trange(1, iterations + 1):
+    for itr in tqdm.trange(1, iterations + 1):
         itr_start_time = time.time()
 
         solutions = scheduler.ask()
         objectives, _, measures, _ = sphere(solutions)
         scheduler.tell(objectives, measures)
 
-        final_itr = i == iterations
-        if i % log_every == 0 or final_itr:
-            if final_itr:
-                scheduler.result_archive.data(return_type="pandas").to_csv(
-                    logdir / "final_archive.csv"
-                )
+        # Metrics.
+        metrics["QD Score"]["x"].append(itr)
+        metrics["QD Score"]["y"].append(scheduler.result_archive.stats.qd_score)
+        metrics["Archive Coverage"]["x"].append(itr)
+        metrics["Archive Coverage"]["y"].append(scheduler.result_archive.stats.coverage)
+        metrics["Itr. Time"]["x"].append(itr)
+        metrics["Itr. Time"]["y"].append(time.time() - itr_start_time)
 
-            metrics["QD Score"]["x"].append(i)
-            metrics["QD Score"]["y"].append(scheduler.result_archive.stats.qd_score)
-            metrics["Archive Coverage"]["x"].append(i)
-            metrics["Archive Coverage"]["y"].append(
-                scheduler.result_archive.stats.coverage
+        # Logging.
+        if itr % log_every == 0 or itr == iterations:
+            log.info(
+                "Itr {} | Coverage: {:.3%} QD Score: {:.3f}",
+                itr,
+                metrics["Archive Coverage"]["y"][-1],
+                metrics["QD Score"]["y"][-1],
             )
-            metrics["Itr. Time"]["x"].append(i)
-            metrics["Itr. Time"]["y"].append(time.time() - itr_start_time)
-
-            tqdm.tqdm.write(
-                f"Iteration {i} | Archive Coverage: "
-                f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
-                f"QD Score: {metrics['QD Score']['y'][-1]:.3f}"
-            )
-
             save_heatmap(
                 scheduler.result_archive,
-                logdir / f"heatmap_{i:08d}.png",
+                outdir / f"heatmap_{itr:08d}.png",
             )
+
+    # Save archive as a CSV.
+    scheduler.result_archive.data(return_type="pandas").to_csv(
+        outdir / "final_archive.csv"
+    )
 
     # Plot metrics.
     for metric, values in metrics.items():
         plt.plot(values["x"], values["y"])
         plt.title(metric)
         plt.xlabel("Iteration")
-        plt.savefig(str(logdir / f"{metric.lower().replace(' ', '_')}.png"))
+        plt.savefig(str(outdir / f"{metric.lower().replace(' ', '_')}.png"))
         plt.clf()
 
     # Convert metrics to Python scalars by calling .item(), since each stats value is a
@@ -229,7 +245,7 @@ def main(  # pylint: disable = too-many-positional-arguments
         ]
 
     # Save metrics to JSON.
-    with (logdir / "metrics.json").open("w") as file:
+    with (outdir / "metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
 
 

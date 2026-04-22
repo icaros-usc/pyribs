@@ -250,7 +250,7 @@ def run_search(
         # Send the results back to the scheduler.
         scheduler.tell(objs, meas)
 
-        # Logging.
+        # Metrics.
         elapsed_time = time.time() - start_time
         metrics["Max Score"]["x"].append(itr)
         metrics["Max Score"]["y"].append(scheduler.archive.stats.obj_max)
@@ -259,6 +259,7 @@ def run_search(
         metrics["QD Score"]["x"].append(itr)
         metrics["QD Score"]["y"].append(scheduler.archive.stats.qd_score)
 
+        # Logging.
         if itr % log_freq == 0 or itr == iterations:
             log.info(
                 "> {} itrs completed after {:.2f} s\n"
@@ -469,8 +470,8 @@ def lunar_lander_main(
 
     # Outputs.
     scheduler.archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
-    save_ccdf(scheduler.archive, str(outdir / "archive_ccdf.png"))
-    save_heatmap(scheduler.archive, str(outdir / "heatmap.png"))
+    save_ccdf(scheduler.archive, outdir / "archive_ccdf.png")
+    save_heatmap(scheduler.archive, outdir / "heatmap.png")
     save_metrics(outdir, metrics)
 
 
