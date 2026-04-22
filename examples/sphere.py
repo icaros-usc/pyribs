@@ -90,8 +90,8 @@ DMS:
   multiply the QD Score from that paper by 100.
 
 By default, outputs are saved in a directory called
-`logs/sphere/{algorithm_dim}/YYYY-MM-DD_HH-MM-SS_seed-{seed}`, where
-YYYY-MM-DD_HH-MM-SS is a timestamp. This directory contains the following outputs:
+`logs/sphere/{algorithm}_{dim}/YYYY-MM-DD_HH-MM-SS_seed-{seed}`, where
+YYYY-MM-DD_HH-MM-SS is a timestamp. The directory contains the following outputs:
 - The archive is saved as a CSV named `archive.csv`
 - Snapshots of the heatmap are saved as `heatmap_{iteration}.png`.
 - Metrics from the run are saved in `metrics.json`
@@ -1223,7 +1223,7 @@ def sphere_main(
     if es is not None:
         name += f"_{es}"
 
-    # Initialize logdir.
+    # Initialize logging directory.
     outdir = (
         (
             Path("logs")
