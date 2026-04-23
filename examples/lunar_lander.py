@@ -16,8 +16,8 @@ You should not need much familiarity with Dask to read this example. However, if
 would like to know more about Dask, we recommend referring to the quickstart for Dask
 distributed: https://distributed.dask.org/en/latest/quickstart.html.
 
-This script creates an output directory (defaults to `lunar_lander_output/`, see the
---outdir flag) with the following files:
+This script creates an output directory (see the --outdir flag) with the following
+files:
 
     - archive.csv: The CSV representation of the final archive, obtained with data().
     - archive_ccdf.png: A plot showing the (unnormalized) complementary cumulative
