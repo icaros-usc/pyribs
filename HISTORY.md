@@ -11,7 +11,7 @@
 
 #### Improvements
 
-- Tutorial and example edits ({pr}`695`)
+- Edits for tutorials and examples ({pr}`695`)
 - Update logging, outputs, and metrics in examples ({pr}`694`)
 
 ## 0.10.0
