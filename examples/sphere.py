@@ -1,7 +1,7 @@
 """Runs various QD algorithms on the sphere linear projection benchmark.
 
 Install the following dependencies before running this example:
-    pip install ribs[visualize] torch tqdm fire
+    pip install ribs[visualize] torch tqdm fire loguru
 
 The sphere function in this example is adapted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to the range
@@ -89,27 +89,32 @@ DMS:
   to [0, 1], whereas this script uses objectives in [0, 100]. To convert results,
   multiply the QD Score from that paper by 100.
 
-Outputs are saved in the `sphere_output/` directory by default. The archive is saved as
-a CSV named `{algorithm}_{dim}_archive.csv`, while snapshots of the heatmap are saved as
-`{algorithm}_{dim}_heatmap_{iteration}.png`. Metrics about the run are also saved in
-`{algorithm}_{dim}_metrics.json`, and plots of the metrics are saved in PNG's with the
-name `{algorithm}_{dim}_metric_name.png`.
+By default, outputs are saved in a directory called
+`logs/sphere/{algorithm}_{dim}/YYYY-MM-DD_HH-MM-SS_seed-{seed}`, where
+YYYY-MM-DD_HH-MM-SS is a timestamp. The directory contains the following outputs:
+- The archive is saved as a CSV named `archive.csv`
+- Snapshots of the heatmap are saved as `heatmap_{iteration}.png`.
+- Metrics from the run are saved in `metrics.json`
+- Plots of the metrics are saved in PNG's with the name `{metric_name}.png`.
+- The log messages from the run are saved in `out.log`.
 
 To generate a video of the heatmap from the heatmap images, use a tool like ffmpeg. For
 example, the following will generate a 6 FPS (Frames Per Second) video showing the
-heatmap for cma_me_imp with 100 dims.
+heatmap for an example run of cma_me_imp with 100 dims.
 
-    ffmpeg -r 6 -i "sphere_output/cma_me_imp_100_heatmap_%*.png" \
-        sphere_output/cma_me_imp_100_heatmap_video.mp4
+    ffmpeg -r 6 -i "logs/sphere/cma_me_imp_100/2026-04-21_04-51-31_seed-None/heatmap_%*.png" \
+        logs/sphere/cma_me_imp_100/2026-04-21_04-51-31_seed-None/heatmap_video.mp4
 
 Usage (see sphere_main function for all args or run `python sphere.py --help`):
     python sphere.py ALGORITHM
+
 Example:
     python sphere.py map_elites
 
     # To make numpy and sklearn run single-threaded, set env variables for BLAS
     # and OpenMP:
     OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere.py map_elites 100
+
 Help:
     python sphere.py --help
 """
@@ -119,6 +124,7 @@ from __future__ import annotations
 import copy
 import json
 import time
+from datetime import datetime
 from pathlib import Path
 
 import fire
@@ -126,6 +132,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import tqdm
+from loguru import logger as log
 
 from ribs.archives import (
     ArchiveBase,
@@ -1133,9 +1140,12 @@ def create_scheduler(
         **config["scheduler"]["kwargs"],
     )
 
-    print(
-        f"Create {scheduler.__class__.__name__} for {algorithm} "
-        f"using solution dim {solution_dim} and {len(emitters)} emitters."
+    log.info(
+        "Create {} for {} using solution dim {} and {} emitters.",
+        scheduler.__class__.__name__,
+        algorithm,
+        solution_dim,
+        len(emitters),
     )
     return scheduler
 
@@ -1171,7 +1181,7 @@ def sphere_main(
     grid_dims: tuple[int, int] | None = None,
     learning_rate: float | None = None,
     es: str | None = None,
-    outdir: str = "sphere_output",
+    outdir: str | None = None,
     log_freq: int = 250,
     seed: int | None = None,
 ) -> None:
@@ -1184,7 +1194,8 @@ def sphere_main(
         grid_dims: Grid dimensions for GridArchive.
         learning_rate: The archive learning rate.
         es: If passed, this will set the ES for all EvolutionStrategyEmitter instances.
-        outdir: Directory to save output.
+        outdir: Directory to save output. If not provided, it will be automatically set
+            to `logs/sphere/{algorithm}_{dim}/YYYY-MM-DD_HH-MM-SS_seed-{seed}`.
         log_freq: Number of iterations to wait before recording metrics and saving
             heatmap.
         seed: Seed for the algorithm. By default, there is no seed.
@@ -1212,9 +1223,26 @@ def sphere_main(
     name = f"{algorithm}_{config['dim']}"
     if es is not None:
         name += f"_{es}"
-    outdir: Path = Path(outdir)
-    if not outdir.is_dir():
-        outdir.mkdir()
+
+    # Initialize output directory.
+    outdir = (
+        (
+            Path("logs")
+            / Path(__file__).stem
+            / name
+            / datetime.now().strftime(f"%Y-%m-%d_%H-%M-%S_seed-{seed}")
+        )
+        if outdir is None
+        else Path(outdir)
+    )
+    outdir.mkdir(parents=True, exist_ok=False)
+
+    # Initialize loggers --
+    # https://loguru.readthedocs.io/en/stable/resources/recipes.html#interoperability-with-tqdm-iterations
+    log.remove()
+    log.add(lambda msg: tqdm.tqdm.write(msg, end=""), colorize=True)
+    log.add(outdir / "out.log")  # Save logs in outdir.
+    log.info("Saving outputs to: {}", outdir)
 
     scheduler = create_scheduler(config, algorithm, seed=seed)
     result_archive = scheduler.result_archive
@@ -1233,7 +1261,7 @@ def sphere_main(
     }
 
     non_logging_time = 0.0
-    save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{0:05d}.png"))
+    save_heatmap(result_archive, outdir / f"heatmap_{0:05d}.png")
 
     if has_discount_model:
         scheduler.archive.init_discount_model()
@@ -1256,34 +1284,32 @@ def sphere_main(
         if has_discount_model:
             scheduler.archive.train_discount_model()
 
-        # Logging and output.
-        final_itr = itr == itrs
-        if itr % log_freq == 0 or final_itr:
-            if final_itr:
-                result_archive.data(return_type="pandas").to_csv(
-                    outdir / f"{name}_archive.csv"
-                )
+        # Metrics.
+        metrics["QD Score"]["x"].append(itr)
+        metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
+        metrics["Archive Coverage"]["x"].append(itr)
+        metrics["Archive Coverage"]["y"].append(result_archive.stats.coverage)
 
-            # Record and display metrics.
-            metrics["QD Score"]["x"].append(itr)
-            metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
-            metrics["Archive Coverage"]["x"].append(itr)
-            metrics["Archive Coverage"]["y"].append(result_archive.stats.coverage)
-            tqdm.tqdm.write(
-                f"Iteration {itr} | Archive Coverage: "
-                f"{metrics['Archive Coverage']['y'][-1] * 100:.3f}% "
-                f"QD Score: {metrics['QD Score']['y'][-1]:.3f}"
+        # Logging.
+        if itr % log_freq == 0 or itr == itrs:
+            log.info(
+                "Itr {} | Coverage: {:.3%} QD Score: {:.3f}",
+                itr,
+                metrics["Archive Coverage"]["y"][-1],
+                metrics["QD Score"]["y"][-1],
             )
+            save_heatmap(result_archive, outdir / f"heatmap_{itr:05d}.png")
 
-            save_heatmap(result_archive, str(outdir / f"{name}_heatmap_{itr:05d}.png"))
+    # Save archive as a CSV.
+    result_archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
 
     # Plot metrics.
-    print(f"Algorithm Time (Excludes Logging and Setup): {non_logging_time}s")
+    log.info("Algorithm Time (Excludes Logging and Setup): {}s", non_logging_time)
     for metric, values in metrics.items():
         plt.plot(values["x"], values["y"])
         plt.title(metric)
         plt.xlabel("Iteration")
-        plt.savefig(str(outdir / f"{name}_{metric.lower().replace(' ', '_')}.png"))
+        plt.savefig(str(outdir / f"{metric.lower().replace(' ', '_')}.png"))
         plt.clf()
 
     # Convert metrics to Python scalars by calling .item(), since each stats value is a
@@ -1294,7 +1320,7 @@ def sphere_main(
         ]
 
     # Save metrics to JSON.
-    with (outdir / f"{name}_metrics.json").open("w") as file:
+    with (outdir / "metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
 
 
