@@ -1,4 +1,20 @@
-"""Runs multiple trials of algorithms in sphere.py."""
+r"""Runs multiple trials of algorithms in sphere.py.
+
+Usage:
+    # To run all algorithms at once. Use OPENBLAS_NUM_THREADS and OMP_NUM_THREADS to
+    # make sure each run only takes up a single thread. Otherwise, they would use many
+    # threads and create a lot of contention.
+    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere_multirun.py \
+        --algos=ALL --trials=20 --max-workers=40
+
+    # To run just a single algorithm.
+    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere_multirun.py \
+        --algos=cma_mae --trials=20 --max-workers=40
+
+    # To run two algorithms for 5000 itrs.
+    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere_multirun.py \
+        --algos=cma_mae,dms --trials=20 --max-workers=40 --itrs=5000
+"""
 
 import collections
 import concurrent.futures
@@ -108,11 +124,15 @@ def main(
                     outdir=outdir / algo / f"{trial:02d}_seed-{trial_seed}",
                     seed=trial_seed,
                     itrs=itrs,
+                    verbose=False,
+                    save_archive=False,
                 )
                 future_to_info[f] = (algo, trial, trial_seed)
 
         # Collect all results.
-        for f in concurrent.futures.as_completed(future_to_info.keys()):
+        for i, f in enumerate(
+            concurrent.futures.as_completed(future_to_info.keys()), start=1
+        ):
             algo, trial, trial_seed = future_to_info[f]
             try:
                 res = f.result()
@@ -121,12 +141,22 @@ def main(
                 results["Seed"].append(trial_seed)
                 for metric, val in res.items():
                     results[metric].append(val)
+                log.info(
+                    "{}/{} (SUCCESS): {} trial {}, seed {}",
+                    i,
+                    len(future_to_info),
+                    algo,
+                    trial,
+                    trial_seed,
+                )
             except Exception as e:  # pylint: disable = broad-exception-caught
                 # Any uncaught exception is costly because it kills the whole run.
-                log.exception(
-                    "Failed trial {} of {} with seed {}:\n{}",
-                    trial,
+                log.info(
+                    "{}/{} (FAILURE): {} trial {}, seed {}\n{}",
+                    i,
+                    len(future_to_info),
                     algo,
+                    trial,
                     trial_seed,
                     e,
                 )
