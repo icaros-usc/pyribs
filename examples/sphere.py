@@ -1184,7 +1184,7 @@ def sphere_main(
     outdir: str | None = None,
     log_freq: int = 250,
     seed: int | None = None,
-) -> None:
+) -> dict[str, float]:
     """Demo on the Sphere function.
 
     Args:
@@ -1254,7 +1254,7 @@ def sphere_main(
             "x": [0],
             "y": [result_archive.stats.qd_score],
         },
-        "Archive Coverage": {
+        "Coverage": {
             "x": [0],
             "y": [result_archive.stats.coverage],
         },
@@ -1287,15 +1287,15 @@ def sphere_main(
         # Metrics.
         metrics["QD Score"]["x"].append(itr)
         metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
-        metrics["Archive Coverage"]["x"].append(itr)
-        metrics["Archive Coverage"]["y"].append(result_archive.stats.coverage)
+        metrics["Coverage"]["x"].append(itr)
+        metrics["Coverage"]["y"].append(result_archive.stats.coverage)
 
         # Logging.
         if itr % log_freq == 0 or itr == itrs:
             log.info(
                 "Itr {} | Coverage: {:.3%} QD Score: {:.3f}",
                 itr,
-                metrics["Archive Coverage"]["y"][-1],
+                metrics["Coverage"]["y"][-1],
                 metrics["QD Score"]["y"][-1],
             )
             save_heatmap(result_archive, outdir / f"heatmap_{itr:05d}.png")
@@ -1322,6 +1322,12 @@ def sphere_main(
     # Save metrics to JSON.
     with (outdir / "metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
+
+    # Return a summary of metrics.
+    return {
+        "QD Score": metrics["QD Score"]["y"][-1],
+        "Coverage": metrics["Coverage"]["y"][-1],
+    }
 
 
 if __name__ == "__main__":
