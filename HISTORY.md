@@ -4,6 +4,8 @@
 
 ### Changelog
 
+- Fix incorrect insertion of non-novel solutions in ProximityArchive.add when no improving solutions are present
+
 #### API
 
 - Add PyTorch to ribs[all] deps ({pr}`692`)

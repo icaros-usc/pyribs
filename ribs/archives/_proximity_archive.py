@@ -679,14 +679,14 @@ class ProximityArchive(ArchiveBase):
             add_info["novelty"] = novelty
             add_info["local_competition"] = local_competition
 
-            if np.any(improve_existing):
-                # Select all solutions that can be inserted due to beating their
-                # neighbors -- at this point, there are still conflicts in the
-                # insertions, e.g., multiple solutions can map to index 0.
-                indices = indices[improve_existing]
-                data = {name: arr[improve_existing] for name, arr in data.items()}
-                cur_objective = cur_objective[improve_existing]
+            # Select all solutions that can be inserted due to beating their
+            # neighbors -- at this point, there are still conflicts in the
+            # insertions, e.g., multiple solutions can map to index 0.
+            indices = indices[improve_existing]
+            data = {name: arr[improve_existing] for name, arr in data.items()}
+            cur_objective = cur_objective[improve_existing]
 
+            if np.any(improve_existing):
                 # Retrieve indices of solutions that _should_ be inserted into the
                 # archive. Currently, multiple solutions may be inserted at each archive
                 # index, but we only want to insert the maximum among these solutions.
