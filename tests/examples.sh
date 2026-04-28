@@ -48,6 +48,13 @@ for algo in "${SPHERE_ALGOS[@]}"; do
 done
 
 #
+# sphere_multirun.py
+#
+
+install_deps examples/sphere_multirun.py
+python examples/sphere_multirun.py --algos=map_elites,line_map_elites --trials=2 --itrs=10 --outdir="${TMP_DIR}/sphere_multirun_output"
+
+#
 # lunar_lander.py
 #
 
