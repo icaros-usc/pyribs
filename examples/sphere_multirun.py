@@ -1,5 +1,8 @@
 r"""Runs multiple trials of algorithms in sphere.py and computes statistics.
 
+Install the following dependencies before running this example:
+    pip install ribs[visualize] torch tqdm fire loguru tabulate
+
 Usage:
     # To run all algorithms at once. Use OPENBLAS_NUM_THREADS and OMP_NUM_THREADS to
     # make sure each run only takes up a single thread. Otherwise, they would use many

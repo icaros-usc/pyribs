@@ -1,7 +1,7 @@
 """Runs various QD algorithms on the sphere linear projection benchmark.
 
 Install the following dependencies before running this example:
-    pip install ribs[visualize] torch tqdm fire loguru
+    pip install ribs[visualize] torch tqdm fire loguru tabulate
 
 The sphere function in this example is adapted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to the range
