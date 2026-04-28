@@ -90,6 +90,7 @@ dask-worker-space/
 !tutorials/_static/**/*
 !tutorials/mnist/*
 !readme_assets/*
+logs/
 results/
 
 # Downloaded by DQD tutorial.

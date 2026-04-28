@@ -1,7 +1,7 @@
 """Runs various QD algorithms on the sphere linear projection benchmark.
 
 Install the following dependencies before running this example:
-    pip install ribs[visualize] torch tqdm fire loguru
+    pip install ribs[visualize] torch tqdm fire loguru tabulate
 
 The sphere function in this example is adapted from Section 4 of Fontaine 2020
 (https://arxiv.org/abs/1912.02400). Namely, each solution value is clipped to the range
@@ -209,8 +209,7 @@ CONFIG = {
         "archive": {
             "class": CVTArchive,
             "kwargs": {
-                "cells": 10000,
-                "samples": 100000,
+                "centroids": 10000,
                 "nearest_neighbors": "scipy_kd_tree",
             },
         },
@@ -235,8 +234,7 @@ CONFIG = {
         "archive": {
             "class": CVTArchive,
             "kwargs": {
-                "cells": 10000,
-                "samples": 100000,
+                "centroids": 10000,
                 "nearest_neighbors": "scipy_kd_tree",
             },
         },
@@ -1176,6 +1174,7 @@ def save_heatmap(archive: ArchiveBase, heatmap_path: str | Path) -> None:
 
 def sphere_main(
     algorithm: str,
+    *,
     dim: int = 100,
     itrs: int = 10000,
     grid_dims: tuple[int, int] | None = None,
@@ -1184,7 +1183,9 @@ def sphere_main(
     outdir: str | None = None,
     log_freq: int = 250,
     seed: int | None = None,
-) -> None:
+    verbose: bool = True,
+    save_archive: bool = True,
+) -> dict[str, float]:
     """Demo on the Sphere function.
 
     Args:
@@ -1199,6 +1200,10 @@ def sphere_main(
         log_freq: Number of iterations to wait before recording metrics and saving
             heatmap.
         seed: Seed for the algorithm. By default, there is no seed.
+        verbose: Whether to write outputs to the terminal, such as the progress bar and
+            log messages. Otherwise, log messages are just written to a file.
+        save_archive: Whether to save the archive as a CSV file. This can require a lot
+            of time and is often not very useful.
     """
     config = copy.deepcopy(CONFIG[algorithm])
 
@@ -1240,7 +1245,8 @@ def sphere_main(
     # Initialize loggers --
     # https://loguru.readthedocs.io/en/stable/resources/recipes.html#interoperability-with-tqdm-iterations
     log.remove()
-    log.add(lambda msg: tqdm.tqdm.write(msg, end=""), colorize=True)
+    if verbose:
+        log.add(lambda msg: tqdm.tqdm.write(msg, end=""), colorize=True)
     log.add(outdir / "out.log")  # Save logs in outdir.
     log.info("Saving outputs to: {}", outdir)
 
@@ -1254,7 +1260,7 @@ def sphere_main(
             "x": [0],
             "y": [result_archive.stats.qd_score],
         },
-        "Archive Coverage": {
+        "Coverage": {
             "x": [0],
             "y": [result_archive.stats.coverage],
         },
@@ -1266,7 +1272,7 @@ def sphere_main(
     if has_discount_model:
         scheduler.archive.init_discount_model()
 
-    for itr in tqdm.trange(1, itrs + 1):
+    for itr in tqdm.trange(1, itrs + 1) if verbose else range(1, itrs + 1):
         itr_start = time.time()
 
         if is_dqd:
@@ -1287,21 +1293,22 @@ def sphere_main(
         # Metrics.
         metrics["QD Score"]["x"].append(itr)
         metrics["QD Score"]["y"].append(result_archive.stats.qd_score)
-        metrics["Archive Coverage"]["x"].append(itr)
-        metrics["Archive Coverage"]["y"].append(result_archive.stats.coverage)
+        metrics["Coverage"]["x"].append(itr)
+        metrics["Coverage"]["y"].append(result_archive.stats.coverage)
 
         # Logging.
         if itr % log_freq == 0 or itr == itrs:
             log.info(
                 "Itr {} | Coverage: {:.3%} QD Score: {:.3f}",
                 itr,
-                metrics["Archive Coverage"]["y"][-1],
+                metrics["Coverage"]["y"][-1],
                 metrics["QD Score"]["y"][-1],
             )
             save_heatmap(result_archive, outdir / f"heatmap_{itr:05d}.png")
 
     # Save archive as a CSV.
-    result_archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
+    if save_archive:
+        result_archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
 
     # Plot metrics.
     log.info("Algorithm Time (Excludes Logging and Setup): {}s", non_logging_time)
@@ -1322,6 +1329,12 @@ def sphere_main(
     # Save metrics to JSON.
     with (outdir / "metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
+
+    # Return a summary of metrics.
+    return {
+        "QD Score": metrics["QD Score"]["y"][-1],
+        "Coverage": metrics["Coverage"]["y"][-1],
+    }
 
 
 if __name__ == "__main__":
