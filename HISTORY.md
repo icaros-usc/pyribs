@@ -12,6 +12,7 @@
 #### Documentation
 
 - Add script for running sphere over multiple trials ({pr}`696`)
+- Add Sphinx role for github badges ({pr}`697`)
 - Edits for tutorials and examples ({pr}`695`)
 - Update logging, outputs, and metrics in examples ({pr}`694`)
 
