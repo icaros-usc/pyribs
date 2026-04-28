@@ -40,6 +40,7 @@ def make_link_node(rawtext, app, link_type, slug, options):
 
 
 def github_link_role(
+    # pylint: disable = unused-argument
     name,
     rawtext,
     text,
@@ -90,8 +91,38 @@ def github_link_role(
     return [node], []
 
 
+def github_badge_role(
+    # pylint: disable = unused-argument
+    name,  # noqa: ARG001
+    rawtext,  # noqa: ARG001
+    text,
+    lineno,  # noqa: ARG001
+    inliner,  # noqa: ARG001
+    options=None,
+    content=(),  # noqa: ARG001
+):
+    """Link to a GitHub resource with a badge."""
+    options = options or {}
+
+    # The 'text' passed to the role is the URL
+    url = utils.unescape(text)
+
+    # Badge HTML template
+    badge_html = (
+        f'<a href="{url}" target="_blank" rel="noopener noreferrer">'
+        f'<img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" '
+        f'alt="Open in GitHub"/></a>'
+    )
+
+    # Create a raw node that tells Sphinx to treat this as literal HTML
+    node = nodes.raw("", badge_html, format="html")
+
+    return [node], []
+
+
 def setup(app):
     """Installs the extension."""
     app.add_role("issue", github_link_role)
     app.add_role("pr", github_link_role)
+    app.add_role("gh-badge", github_badge_role)
     app.add_config_value("github_repo_url", None, "env")

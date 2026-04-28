@@ -5,7 +5,7 @@ package manager (sudo apt-get install swig) or via the Python Package Index (pip
 swig). SWIG is necessary for box2d, which is a used in the Lunar Lander environment.
 
 After SWIG is installed, install the following Python dependencies:
-    pip install ribs[visualize] tqdm "gymnasium[box2d]>=1.0.0" "moviepy>=1.0.0" dask distributed bokeh fire
+    pip install ribs[visualize] tqdm "gymnasium[box2d]>=1.0.0" "moviepy>=1.0.0" dask distributed bokeh fire loguru
 
 This script uses the same setup as the tutorial, but it also uses Dask instead of
 Python's multiprocessing to parallelize evaluations on a single machine and adds in a
@@ -16,8 +16,8 @@ You should not need much familiarity with Dask to read this example. However, if
 would like to know more about Dask, we recommend referring to the quickstart for Dask
 distributed: https://distributed.dask.org/en/latest/quickstart.html.
 
-This script creates an output directory (defaults to `lunar_lander_output/`, see the
---outdir flag) with the following files:
+This script creates an output directory (see the --outdir flag) with the following
+files:
 
     - archive.csv: The CSV representation of the final archive, obtained with data().
     - archive_ccdf.png: A plot showing the (unnormalized) complementary cumulative
@@ -53,6 +53,7 @@ from __future__ import annotations
 
 import json
 import time
+from datetime import datetime
 from pathlib import Path
 
 import fire
@@ -62,6 +63,7 @@ import numpy as np
 import pandas as pd
 import tqdm
 from dask.distributed import Client, LocalCluster
+from loguru import logger as log
 
 from ribs.archives import ArchiveBase, ArchiveDataFrame, GridArchive
 from ribs.emitters import EvolutionStrategyEmitter
@@ -207,7 +209,7 @@ def run_search(
         the iteration and y is the value of the metric. Think of each entry as the x's
         and y's for a matplotlib plot.
     """
-    print(
+    log.info(
         "> Starting search.\n"
         "  - Open Dask's dashboard at http://localhost:8787 to monitor workers."
     )
@@ -248,20 +250,27 @@ def run_search(
         # Send the results back to the scheduler.
         scheduler.tell(objs, meas)
 
+        # Metrics.
+        elapsed_time = time.time() - start_time
+        metrics["Max Score"]["x"].append(itr)
+        metrics["Max Score"]["y"].append(scheduler.archive.stats.obj_max)
+        metrics["Archive Size"]["x"].append(itr)
+        metrics["Archive Size"]["y"].append(len(scheduler.archive))
+        metrics["QD Score"]["x"].append(itr)
+        metrics["QD Score"]["y"].append(scheduler.archive.stats.qd_score)
+
         # Logging.
         if itr % log_freq == 0 or itr == iterations:
-            elapsed_time = time.time() - start_time
-            metrics["Max Score"]["x"].append(itr)
-            metrics["Max Score"]["y"].append(scheduler.archive.stats.obj_max)
-            metrics["Archive Size"]["x"].append(itr)
-            metrics["Archive Size"]["y"].append(len(scheduler.archive))
-            metrics["QD Score"]["x"].append(itr)
-            metrics["QD Score"]["y"].append(scheduler.archive.stats.qd_score)
-            tqdm.tqdm.write(
-                f"> {itr} itrs completed after {elapsed_time:.2f} s\n"
-                f"  - Max Score: {metrics['Max Score']['y'][-1]}\n"
-                f"  - Archive Size: {metrics['Archive Size']['y'][-1]}\n"
-                f"  - QD Score: {metrics['QD Score']['y'][-1]}"
+            log.info(
+                "> {} itrs completed after {:.2f} s\n"
+                "  - Max Score: {}\n"
+                "  - Archive Size: {}\n"
+                "  - QD Score: {}",
+                itr,
+                elapsed_time,
+                metrics["Max Score"]["y"][-1],
+                metrics["Archive Size"]["y"][-1],
+                metrics["QD Score"]["y"][-1],
             )
 
     return metrics
@@ -366,13 +375,18 @@ def run_evaluation(outdir: Path, env_seed: int, seed: int | None) -> None:
     for idx in indices:
         model = solutions[idx]
         reward, impact_x_pos, impact_y_vel = simulate(model, env_seed, video_env)
-        print(
-            f"=== Index {idx} ===\n"
+        log.info(
+            "=== Index {} ===\n"
             "Model:\n"
-            f"{model}\n"
-            f"Reward: {reward}\n"
-            f"Impact x-pos: {impact_x_pos}\n"
-            f"Impact y-vel: {impact_y_vel}\n"
+            "{}\n"
+            "Reward: {}\n"
+            "Impact x-pos: {}\n"
+            "Impact y-vel: {}\n",
+            idx,
+            model,
+            reward,
+            impact_x_pos,
+            impact_y_vel,
         )
 
     video_env.close()
@@ -387,7 +401,7 @@ def lunar_lander_main(
     batch_size: int = 30,
     sigma0: float = 1.0,
     seed: int | None = None,
-    outdir: str = "lunar_lander_output",
+    outdir: str | None = None,
     run_eval: bool = False,
 ) -> None:
     """Uses CMA-ME to train linear agents in Lunar Lander.
@@ -403,18 +417,42 @@ def lunar_lander_main(
         batch_size: Batch size of each emitter.
         sigma0: Initial step size of each emitter.
         seed: Random seed for the pyribs components.
-        outdir: Directory for Lunar Lander output.
+        outdir: Directory to save output. If not provided, it will be automatically set
+            to `logs/lunar_lander/YYYY-MM-DD_HH-MM-SS_seed-{seed}`.
         run_eval: Pass this flag to run an evaluation of 10 random solutions selected
             from the archive in the `outdir`.
     """
-    outdir: Path = Path(outdir)
-
     if run_eval:
+        if outdir is None:
+            raise ValueError("outdir must be provided to run an eval.")
+        outdir = Path(outdir)
+        log.remove()
+        log.add(lambda msg: tqdm.tqdm.write(msg, end=""), colorize=True)
+        # Save logs in eval.log in outdir. If `run_eval` is used with the same outdir
+        # again, the new logs will be appended to eval.log.
+        log.add(outdir / "eval.log")
+        log.info("Evaluating solutions in {}", outdir)
         run_evaluation(outdir, env_seed, seed)
         return
 
-    # Make the directory here so that it is not made when running eval.
-    outdir.mkdir(exist_ok=True)
+    # Initialize output directory.
+    outdir = (
+        (
+            Path("logs")
+            / Path(__file__).stem
+            / datetime.now().strftime(f"%Y-%m-%d_%H-%M-%S_seed-{seed}")
+        )
+        if outdir is None
+        else Path(outdir)
+    )
+    outdir.mkdir(parents=True, exist_ok=False)
+
+    # Initialize loggers --
+    # https://loguru.readthedocs.io/en/stable/resources/recipes.html#interoperability-with-tqdm-iterations
+    log.remove()
+    log.add(lambda msg: tqdm.tqdm.write(msg, end=""), colorize=True)
+    log.add(outdir / "out.log")  # Save logs in outdir.
+    log.info("Saving outputs to: {}", outdir)
 
     # Setup Dask. The client connects to a "cluster" running on this machine. The
     # cluster manages concurrent worker processes. If using Dask across many workers, we
@@ -432,8 +470,8 @@ def lunar_lander_main(
 
     # Outputs.
     scheduler.archive.data(return_type="pandas").to_csv(outdir / "archive.csv")
-    save_ccdf(scheduler.archive, str(outdir / "archive_ccdf.png"))
-    save_heatmap(scheduler.archive, str(outdir / "heatmap.png"))
+    save_ccdf(scheduler.archive, outdir / "archive_ccdf.png")
+    save_heatmap(scheduler.archive, outdir / "heatmap.png")
     save_metrics(outdir, metrics)
 
 

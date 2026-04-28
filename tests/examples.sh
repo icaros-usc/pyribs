@@ -10,9 +10,8 @@ set -e  # Exit if any of the commands fail.
 set -x  # Print out commands as they are run.
 
 TMPDIR="./examples_tmp"
-if [ ! -d "${TMPDIR}" ]; then
-  mkdir "${TMPDIR}"
-fi
+rm -rf ${TMPDIR}
+mkdir "${TMPDIR}"
 
 function install_deps() {
   # Loop through all instances of `pip install` in the script and run the
@@ -44,9 +43,16 @@ for algo in CONFIG:
 for algo in "${SPHERE_ALGOS[@]}"; do
   # CVT excluded since it takes a while to build the archive.
   if [[ "$algo" != @(cvt_map_elites|line_cvt_map_elites) ]]; then
-    python examples/sphere.py "$algo" --itrs 10 --outdir "${SPHERE_OUTPUT}"
+    python examples/sphere.py "$algo" --itrs 10 --outdir "${SPHERE_OUTPUT}/${algo}"
   fi
 done
+
+#
+# sphere_multirun.py
+#
+
+install_deps examples/sphere_multirun.py
+python examples/sphere_multirun.py --algos=map_elites,line_map_elites --trials=2 --itrs=10 --outdir="${TMPDIR}/sphere_multirun_output"
 
 #
 # lunar_lander.py

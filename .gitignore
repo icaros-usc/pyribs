@@ -83,12 +83,14 @@ ENV/
 *.gif
 *.csv
 *.pth
+*.log
 MNIST/
 dask-worker-space/
 !docs/_static/**/*
 !tutorials/_static/**/*
 !tutorials/mnist/*
 !readme_assets/*
+logs/
 results/
 
 # Downloaded by DQD tutorial.
