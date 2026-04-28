@@ -200,8 +200,8 @@ Also, prefer to link to the paper's website, rather than just the PDF.
 
 1. For documenting dependencies, the Installation page in `docs/installation.md`
    is the complete guide. Other installation instructions such as in README.md
-   and the pyribs website (https://pyribs.org/#installation) should describe as
-   much installation as necessary and then point back to this guide.
+   and the pyribs website (https://pyribs.org/#installation) should describe
+   some subset of the installation and then point back to this guide.
 
 ### Deploying
 
