@@ -1,4 +1,4 @@
-r"""Runs multiple trials of algorithms in sphere.py.
+r"""Runs multiple trials of algorithms in sphere.py and computes statistics.
 
 Usage:
     # To run all algorithms at once. Use OPENBLAS_NUM_THREADS and OMP_NUM_THREADS to
@@ -69,7 +69,7 @@ def main(
     seed: int | None = None,
     max_workers: int | None = None,
 ) -> None:
-    """Runs multiple trials of algorithms in sphere.py.
+    """Runs multiple trials of algorithms in sphere.py and computes statistics.
 
     Args:
         algos: Algorithms to evaluate. On the command line, this can be passed as a
