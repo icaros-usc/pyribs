@@ -44,13 +44,13 @@ def aggregate_results(results: dict[list], outdir: Path) -> None:
 
     summary_df = pd.DataFrame(index=metrics_mean.index)
     summary_df["QD Score"] = [
-        f"{mean:.2f}±{std:.2f}"
+        f"{mean:,.2f}±{std:,.2f}"
         for mean, std in zip(
             metrics_mean["QD Score"], metrics_std["QD Score"], strict=True
         )
     ]
     summary_df["Coverage"] = [
-        f"{mean * 100:.2f}±{std:.2%}"
+        f"{mean * 100:,.2f}±{std:,.2%}"
         for mean, std in zip(
             metrics_mean["Coverage"], metrics_std["Coverage"], strict=True
         )
