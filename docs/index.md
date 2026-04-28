@@ -7,6 +7,7 @@
 ```{toctree}
 :hidden:
 
+installation
 tutorials
 examples
 supported-algorithms

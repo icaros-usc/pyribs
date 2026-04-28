@@ -196,6 +196,13 @@ their source is shown in the docs. To create an example:
 When referencing papers, refer to them as `Lastname YEAR`, e.g. `Smith 2004`.
 Also, prefer to link to the paper's website, rather than just the PDF.
 
+### Adding Dependencies
+
+1. For documenting dependencies, the Installation page in `docs/installation.md`
+   is the complete guide. Other installation instructions such as in README.md
+   and the pyribs website (https://pyribs.org/#installation) should describe as
+   much installation as necessary and then point back to this guide.
+
 ### Deploying
 
 We roughly follow the trunk-based release model described
