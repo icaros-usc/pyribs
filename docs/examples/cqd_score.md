@@ -7,6 +7,8 @@ metric that accounts for tradeoffs between objective values and distance to
 desired measure values. Notably, the CQD Score does not depend on the
 discretization/tessellation of the archive.
 
+{gh-badge}`https://github.com/icaros-usc/pyribs/blob/master/examples/cqd_score.py`
+
 ```{eval-rst}
 .. literalinclude:: ../../examples/cqd_score.py
     :language: python
