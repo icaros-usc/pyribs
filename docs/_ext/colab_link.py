@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_colab_link(
+    # pylint: disable = unused-argument
     app,
     pagename,
     templatename,  # noqa: ARG001
@@ -33,7 +34,7 @@ def add_colab_link(
         button_html = f"""\
 <p>
   <a href="{colab_url}" target="_blank" rel="noopener noreferrer">
-    <img src="https://colab.research.google.com/assets/colab-badge.svg" f'alt="Open in Colab"/>
+    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
   </a>
 </p>
 """
