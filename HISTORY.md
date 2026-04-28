@@ -11,7 +11,7 @@
 
 #### Documentation
 
-- Add script for running sphere multiple times ({pr}`696`)
+- Add script for running sphere over multiple trials ({pr}`696`)
 - Edits for tutorials and examples ({pr}`695`)
 - Update logging, outputs, and metrics in examples ({pr}`694`)
 
