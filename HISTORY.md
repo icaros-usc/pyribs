@@ -12,6 +12,7 @@
 
 #### Documentation
 
+- Document process for adding new dependencies ({pr}`699`)
 - Add script for running sphere over multiple trials ({pr}`696`)
 - Add Sphinx role for github badges ({pr}`697`)
 - Edits for tutorials and examples ({pr}`695`)

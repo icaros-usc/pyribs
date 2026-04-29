@@ -115,7 +115,7 @@ For more specific installation commands (e.g., installing from Conda or
 installing from source), visit the
 [installation selector](https://pyribs.org/#installation) on our website.
 
-To test your installation, import pyribs and print the version with this
+To quickly test your installation, import pyribs and print the version with this
 command:
 
 ```bash
