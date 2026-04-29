@@ -113,8 +113,7 @@ pip install ribs
 
 For more specific installation commands (e.g., installing from Conda or
 installing from source), visit the
-[installation guide](https://docs.pyribs.org/en/stable/installation.html) in the
-documentation.
+[installation selector](https://pyribs.org/#installation) on our website.
 
 To quickly test your installation, import pyribs and print the version with this
 command:
