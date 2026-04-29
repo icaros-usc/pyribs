@@ -198,10 +198,30 @@ Also, prefer to link to the paper's website, rather than just the PDF.
 
 ### Adding Dependencies
 
-1. For documenting dependencies, the Installation page in `docs/installation.md`
-   is the complete guide. Other installation instructions such as in README.md
-   and the pyribs website (https://pyribs.org/#installation) should describe
-   some subset of the installation and then point back to this guide.
+We anticipate that new components of pyribs may require new dependencies that
+are not necessarily required for the rest of the library. To make it easier for
+users to understand what dependencies are required for their use case, do the
+following when adding a new dependency to pyribs:
+
+1. Add the dependency to the `all` extra (under
+   `[project.optional-dependencies]`) in `pyproject.toml`.
+   - We try not to add new extras because it takes quite a bit of effort to add
+     the corresponding Conda package, e.g., `pyribs-visualize` for
+     `ribs[visualize]`.
+1. Mention the dependency in the documentation/docstring for the component that
+   requires the dependency; see
+   [PyCMAEvolutionStrategy](https://docs.pyribs.org/en/latest/api/ribs.emitters.opt.PyCMAEvolutionStrategy.html)
+   for an example.
+1. Within the component itself, add checks to make sure the dependency is
+   installed; again, refer to PyCMAEvolutionStrategy
+   ([source](https://github.com/icaros-usc/pyribs/blob/master/ribs/emitters/opt/_pycma_es.py))
+   for an example.
+1. Tests that require the dependency should be placed under
+   `tests/XXX_dependency`, e.g., the tests for PyCMAEvolutionStrategy are placed
+   under `tests/emitters_pycma`.
+1. Finally, the test that involves the dependency should be called in
+   `.github/workflows/testing.yml` under the `test:` section, after installing
+   the dependency.
 
 ### Deploying
 
