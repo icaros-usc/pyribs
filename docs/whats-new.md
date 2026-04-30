@@ -26,7 +26,7 @@ Pyribs now supports the following algorithms!
   NSLC is available in {doc}`/examples/sphere`.
   - Thanks to [@efsiatras](https://github.com/efsiatras) for contributing this
     implementation in {pr}`690`!
-- **Density Descent Search with Continuous Normalizing Flows (DDS-CNS)** is now
+- **Density Descent Search with Continuous Normalizing Flows (DDS-CNF)** is now
   supported in the {class}`~ribs.archives.DensityArchive`. An example of how to
   run DDS-CNF is available in {doc}`/examples/sphere`.
   - Thanks again to [@efsiatras](https://github.com/efsiatras) for contributing
