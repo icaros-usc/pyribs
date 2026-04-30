@@ -194,6 +194,10 @@ emitters = [
   cupy, drawing from the
   [Python array API standard](https://data-apis.org/array-api/latest/)
   ({issue}`570`, {pr}`645`)
+- Logging, outputs, and metrics have been updated in the examples ({pr}`694`).
+  For example, the Sphere example ({doc}`/examples/sphere`) now has more
+  flexible output directories, and it also uses
+  [loguru](https://loguru.readthedocs.io/en/stable/) for logging.
 
 ## Developer Workflow
 
