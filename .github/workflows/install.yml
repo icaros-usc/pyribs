@@ -34,6 +34,10 @@ jobs:
           channels: conda-forge,defaults
       - name: Install pyribs
         run: ${{ matrix.command }}
+      - name: Which pip
+        run: which pip
+      - name: Which python
+        run: which python
       - name: Try importing ribs
         run: |
           python -c "import ribs; import ribs.visualize; print(ribs.__version__)"
