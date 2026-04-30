@@ -43,10 +43,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           channels: conda-forge,defaults
-      - name: Which pip
-        run: which pip
-      - name: Which python
-        run: which python
       - name: Install core deps
         run: pip install .[dev]
       - name: Tests when torch is not available
