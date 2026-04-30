@@ -1,6 +1,6 @@
 # History
 
-## (Forthcoming)
+## 0.11.0
 
 ### Changelog
 
