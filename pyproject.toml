@@ -54,9 +54,8 @@ all = [
   ### Extra dependencies used by various components. ###
   "cma",
   "pymoo",
-
-  # Since there are many ways to install PyTorch, we keep our dependency fairly loose.
-  "torch",
+  "torch", # Fairly loose since there are many ways to install PyTorch.
+  "zuko>=1.0.0",
 ]
 dev = [
   # Tools

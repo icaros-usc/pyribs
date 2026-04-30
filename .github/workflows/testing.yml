@@ -77,6 +77,13 @@ jobs:
         run: pip install pymoo
       - name: Test pymoo extra
         run: pytest tests/emitters_pymoo tests/schedulers_pymoo
+      - name: Install zuko
+        # Zuko depends on torch, which we only install on Ubuntu.
+        if: matrix.os == 'ubuntu-latest'
+        run: pip install zuko>=1.0.0
+      - name: Test zuko extra
+        if: matrix.os == 'ubuntu-latest'
+        run: pytest tests/archives_zuko
   visualize_qdax:
     runs-on: ubuntu-latest
     steps:
