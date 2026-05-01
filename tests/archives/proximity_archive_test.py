@@ -831,3 +831,37 @@ def test_lc_add_batch_replace_same_cell():
     )
     assert_equal(add_info["local_competition"], [1, 1, 2, 0])
     assert_allclose(add_info["value"], [1, 2, 3, 0])
+
+
+def test_add_novel_and_not_novel_no_improve_bug():
+    archive = ProximityArchive(
+        solution_dim=3,
+        measure_dim=2,
+        k_neighbors=1,
+        novelty_threshold=1.0,
+        local_competition=True,
+    )
+
+    # Initial solution
+    archive.add([[1, 1, 1]], [10.0], [[0, 0]])
+
+    # Add batch:
+    # Solution [2, 2, 2] is not_novel_enough and has a lower objective so it shouldn't be added.
+    # Solution [3, 3, 3] should be novel_enough so it should be added.
+    add_info = archive.add(
+        solution=[[2, 2, 2], [3, 3, 3]],
+        objective=[5.0, 10.0],
+        measures=[[0.1, 0.0], [5.0, 5.0]],
+    )
+
+    assert_equal(add_info["status"], [0, 2])
+
+    # We should have exactly 2 solutions total: original and the new novel one.
+    assert len(archive) == 2
+    assert_archive_elites(
+        archive=archive,
+        batch_size=2,
+        solution_batch=[[1, 1, 1], [3, 3, 3]],
+        objective_batch=[10.0, 10.0],
+        measures_batch=[[0, 0], [5.0, 5.0]],
+    )
