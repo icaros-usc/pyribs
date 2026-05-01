@@ -4,6 +4,11 @@
 
 ### Changelog
 
+#### Bugs
+
+- Fix incorrect insertion of non-novel solutions in ProximityArchive.add when no
+  improving solutions are present ({pr}`704`)
+
 #### API
 
 - Add `DDS-CNF` density method to `DensityArchive` ({pr}`691`)
