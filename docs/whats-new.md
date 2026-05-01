@@ -35,6 +35,15 @@ Pyribs now supports the following algorithms!
 The {doc}`/supported-algorithms` page includes a list of algorithms supported in
 pyribs.
 
+## 🐛 Bug Fixes
+
+In {pr}`704`, [@zibasPk](https://github.com/zibasPk) fixed a bug that occurred
+when using {class}`~ribs.archives.ProximityArchive` with local competition. In
+short, if there were solutions that were novel enough to be added to the
+archive, then solutions that were not novel enough could be added despite being
+low-performing. In this case, the solutions that are not novel enough should
+only be added if they outperform their nearest neighbor in the archive.
+
 ## Overhauling CVTArchive
 
 We introduce a number of new features and (unfortunately) breaking changes to
