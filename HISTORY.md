@@ -4,7 +4,10 @@
 
 ### Changelog
 
-- Fix incorrect insertion of non-novel solutions in ProximityArchive.add when no improving solutions are present
+#### Bugs
+
+- Fix incorrect insertion of non-novel solutions in ProximityArchive.add when no
+  improving solutions are present ({pr}`704`)
 
 #### API
 
