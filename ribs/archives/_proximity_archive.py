@@ -652,20 +652,23 @@ class ProximityArchive(ArchiveBase):
             # Separate out the non-novel data for further processing. Solutions that
             # were not novel enough have the potential to replace their nearest
             # neighbors in the archive.
-            data = {name: arr[not_novel_enough] for name, arr in data.items()}
-            indices = (
-                self.index_of(data["measures"])
+            not_novel_data = {name: arr[not_novel_enough] for name, arr in data.items()}
+            not_novel_indices = (
+                self.index_of(not_novel_data["measures"])
                 if n_not_novel_enough > 0
                 else np.array([], dtype=np.int32)
             )
 
+            # No longer used.
+            del data
+
             # All entries are occupied since these solutions were not novel, and their
             # index from `index_of` is the index of their nearest neighbor.
-            _, cur_data = self._store.retrieve(indices)
+            _, cur_data = self._store.retrieve(not_novel_indices)
             cur_objective = cur_data["objective"]
 
-            # Can only be used to index `data` and `indices`.
-            improve_existing = data["objective"] > cur_objective
+            # Can only be used to index `not_novel_data` and `not_novel_indices`.
+            improve_existing = not_novel_data["objective"] > cur_objective
 
             # Information to return about the addition.
             add_info = {}
@@ -675,18 +678,25 @@ class ProximityArchive(ArchiveBase):
             add_info["status"][not_novel_enough] = improve_existing
             add_info["value"] = np.empty(batch_size, dtype=self.dtypes["objective"])
             add_info["value"][novel_enough] = novel_data["objective"]
-            add_info["value"][not_novel_enough] = data["objective"] - cur_objective
+            add_info["value"][not_novel_enough] = (
+                not_novel_data["objective"] - cur_objective
+            )
             add_info["novelty"] = novelty
             add_info["local_competition"] = local_competition
 
-            if np.any(improve_existing):
-                # Select all solutions that can be inserted due to beating their
-                # neighbors -- at this point, there are still conflicts in the
-                # insertions, e.g., multiple solutions can map to index 0.
-                indices = indices[improve_existing]
-                data = {name: arr[improve_existing] for name, arr in data.items()}
-                cur_objective = cur_objective[improve_existing]
+            # Select all solutions that can be inserted due to beating their neighbors
+            # -- at this point, there are still conflicts in the insertions, e.g.,
+            # multiple solutions can map to index 0. Note that we need to filter this
+            # data here (instead of in the if statement) because the not_novel_data is
+            # always used when adding to the archive in the next if statement; see
+            # https://github.com/icaros-usc/pyribs/pull/704/ for more info.
+            not_novel_indices = not_novel_indices[improve_existing]
+            not_novel_data = {
+                name: arr[improve_existing] for name, arr in not_novel_data.items()
+            }
+            cur_objective = cur_objective[improve_existing]
 
+            if np.any(improve_existing):
                 # Retrieve indices of solutions that _should_ be inserted into the
                 # archive. Currently, multiple solutions may be inserted at each archive
                 # index, but we only want to insert the maximum among these solutions.
@@ -703,20 +713,29 @@ class ProximityArchive(ArchiveBase):
                 # numpy implementation for more info:
                 # https://github.com/ml31415/numpy-groupies/blob/master/numpy_groupies/aggregate_numpy.py#L107
                 archive_argmax = aggregate(
-                    indices, data["objective"], func="argmax", fill_value=-1
+                    not_novel_indices,
+                    not_novel_data["objective"],
+                    func="argmax",
+                    fill_value=-1,
                 )
                 should_insert = archive_argmax[archive_argmax != -1]
 
                 # Select only solutions that will be inserted into the archive.
-                indices = indices[should_insert]
-                data = {name: arr[should_insert] for name, arr in data.items()}
+                not_novel_indices = not_novel_indices[should_insert]
+                not_novel_data = {
+                    name: arr[should_insert] for name, arr in not_novel_data.items()
+                }
                 cur_objective = cur_objective[should_insert]
 
             if np.any(improve_existing) or n_novel_enough > 0:
-                combined_indices = np.concatenate((indices, novel_indices), axis=0)
+                combined_indices = np.concatenate(
+                    (not_novel_indices, novel_indices), axis=0
+                )
                 combined_data = {
-                    name: np.concatenate((data[name], novel_data[name]), axis=0)
-                    for name in data
+                    name: np.concatenate(
+                        (not_novel_data[name], novel_data[name]), axis=0
+                    )
+                    for name in novel_data
                 }
                 # Insert the solutions that improved over their neighbors, as well as
                 # the solutions that are novel.
@@ -726,7 +745,7 @@ class ProximityArchive(ArchiveBase):
                 objective_sum = (
                     self._objective_sum
                     + np.sum(novel_data["objective"])
-                    + np.sum(data["objective"] - cur_objective)
+                    + np.sum(not_novel_data["objective"] - cur_objective)
                 )
                 best_index = combined_indices[np.argmax(combined_data["objective"])]
                 self._stats_update(objective_sum, best_index)
