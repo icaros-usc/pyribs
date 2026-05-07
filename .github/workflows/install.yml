@@ -30,6 +30,7 @@ jobs:
     steps:
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: "24.0.0"
           python-version: ${{ matrix.python-version }}
           channels: conda-forge,defaults
       - name: Install pyribs
