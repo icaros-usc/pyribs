@@ -17,6 +17,11 @@ defaults:
     # https://github.com/marketplace/actions/setup-miniconda#important
     shell: bash -el {0}
 
+env:
+  # See https://github.com/icaros-usc/pyribs/pull/702 and
+  # https://github.com/conda-incubator/setup-miniconda/issues/501
+  MINICONDA_VERSION: "py312_26.1.1-1"
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -27,6 +32,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: ${{ env.MINICONDA_VERSION }}
           python-version: "3.12"
           channels: conda-forge,defaults
       - uses: pre-commit/action@v3.0.0
@@ -41,6 +47,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: ${{ env.MINICONDA_VERSION }}
           python-version: ${{ matrix.python-version }}
           channels: conda-forge,defaults
       - name: Install core deps
@@ -83,6 +90,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: ${{ env.MINICONDA_VERSION }}
           python-version: "3.12"
           channels: conda-forge,defaults
       - name: Install deps
@@ -97,6 +105,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: ${{ env.MINICONDA_VERSION }}
           python-version: "3.12"
           channels: conda-forge,defaults
       - name: Install deps
@@ -115,6 +124,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: ${{ env.MINICONDA_VERSION }}
           python-version: "3.12"
           channels: conda-forge,defaults
       - name: Install deps
@@ -134,6 +144,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: ${{ env.MINICONDA_VERSION }}
           python-version: "3.12"
           channels: conda-forge,defaults
       - name: Install deps
@@ -158,6 +169,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: ${{ env.MINICONDA_VERSION }}
           python-version: "3.12"
           channels: conda-forge,defaults
       - name: Install deps
@@ -173,6 +185,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: ${{ env.MINICONDA_VERSION }}
           python-version: "3.12"
           channels: conda-forge,defaults
       - name: Install deps
@@ -196,6 +209,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: ${{ env.MINICONDA_VERSION }}
           python-version: "3.10"
           channels: conda-forge,defaults
       - name: Install dependencies

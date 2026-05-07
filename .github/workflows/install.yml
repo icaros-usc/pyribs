@@ -17,6 +17,11 @@ defaults:
     # https://github.com/marketplace/actions/setup-miniconda#important
     shell: bash -el {0}
 
+env:
+  # See https://github.com/icaros-usc/pyribs/pull/702 and
+  # https://github.com/conda-incubator/setup-miniconda/issues/501
+  MINICONDA_VERSION: "py312_26.1.1-1"
+
 jobs:
   test:
     strategy:
@@ -30,6 +35,7 @@ jobs:
     steps:
       - uses: conda-incubator/setup-miniconda@v4
         with:
+          miniconda-version: ${{ env.MINICONDA_VERSION }}
           python-version: ${{ matrix.python-version }}
           channels: conda-forge,defaults
       - name: Install pyribs
