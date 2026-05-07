@@ -18,7 +18,8 @@ defaults:
     shell: bash -el {0}
 
 env:
-  # See https://github.com/icaros-usc/pyribs/pull/702
+  # See https://github.com/icaros-usc/pyribs/pull/702 and
+  # https://github.com/conda-incubator/setup-miniconda/issues/501
   MINICONDA_VERSION: "py312_26.1.1-1"
 
 jobs:
