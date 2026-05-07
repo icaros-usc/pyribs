@@ -6,7 +6,7 @@
 
 #### Bugs
 
-- Pin Miniconda version in CI ({pr}`705`)
+- Pin Miniconda version in CI ({pr}`706`)
 - Fix incorrect insertion of non-novel solutions in ProximityArchive.add when no
   improving solutions are present ({pr}`704`)
 
