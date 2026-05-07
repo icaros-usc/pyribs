@@ -17,6 +17,10 @@ defaults:
     # https://github.com/marketplace/actions/setup-miniconda#important
     shell: bash -el {0}
 
+env:
+  # See https://github.com/icaros-usc/pyribs/pull/702
+  MINICONDA_VERSION: "py312_26.1.1-1"
+
 jobs:
   test:
     strategy:
@@ -30,15 +34,11 @@ jobs:
     steps:
       - uses: conda-incubator/setup-miniconda@v4
         with:
-          miniconda-version: "py312_26.1.1-1"
+          miniconda-version: ${{ MINICONDA_VERSION }}
           python-version: ${{ matrix.python-version }}
           channels: conda-forge,defaults
       - name: Install pyribs
         run: ${{ matrix.command }}
-      - name: Which pip
-        run: which pip
-      - name: Which python
-        run: which python
       - name: Try importing ribs
         run: |
           python -c "import ribs; import ribs.visualize; print(ribs.__version__)"
