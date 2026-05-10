@@ -14,9 +14,16 @@ from ribs.archives._archive_base import ArchiveBase
 from ribs.archives._utils import parse_all_dtypes
 from ribs.typing import BatchData, Float, Int
 
-_FLOWS_EXTRA_HINT = (
-    "DDS-CNF requires the 'flows' optional dependency group. "
-    "Install it with `pip install ribs[flows]` (which brings in torch and zuko)."
+try:
+    import torch
+    import zuko
+
+    IS_ZUKO_AVAILABLE = True
+except ImportError:
+    IS_ZUKO_AVAILABLE = False
+
+ZUKO_IMPORT_ERROR = (
+    'When density_method="cnf" in DensityArchive, PyTorch and Zuko must be installed.'
 )
 
 
@@ -58,15 +65,14 @@ def gaussian_kde_measures(
 class _CNFDensityEstimator:
     """Continuous normalizing flow density estimator for DDS-CNF.
 
-    This is a small, self-contained helper that owns a
-    :class:`zuko.flows.CNF` and an :class:`torch.optim.Adam` optimizer, and
-    knows how to incrementally fine-tune the flow on a feature buffer via
-    maximum likelihood. It is intentionally not exposed in the public API --
-    construct one implicitly by passing ``density_method="cnf"`` to
+    This is a small, self-contained helper that owns a :class:`zuko.flows.CNF` and an
+    :class:`torch.optim.Adam` optimizer, and knows how to incrementally fine-tune the
+    flow on a feature buffer via maximum likelihood. It is intentionally not exposed in
+    the public API -- construct one implicitly by passing ``density_method="cnf"`` to
     :class:`DensityArchive`.
 
-    The flow is built lazily on first training so that importing this module
-    does not require torch or zuko to be installed.
+    The flow is built lazily on first training so that importing this module does not
+    require torch or zuko to be installed.
 
     Args:
         measure_dim: Dimensionality of the feature space that the CNF models.
@@ -96,20 +102,12 @@ class _CNFDensityEstimator:
         train_steps: int,
         batch_size: int,
         min_buffer_size: int,
-        device: Any,
+        device: torch.device,
         seed: int | None,
         cnf_kwargs: dict | None,
     ) -> None:
-        # Lazy import keeps torch/zuko optional. If either is missing, surface a
-        # clear install hint instead of a bare ModuleNotFoundError.
-        try:
-            import torch  # pylint: disable = import-outside-toplevel
-            import zuko  # pylint: disable = import-outside-toplevel
-        except ImportError as exc:
-            raise ImportError(_FLOWS_EXTRA_HINT) from exc
-
-        self._torch = torch
-        self._zuko = zuko
+        if not IS_ZUKO_AVAILABLE:
+            raise ImportError(ZUKO_IMPORT_ERROR)
 
         self._measure_dim = int(measure_dim)
         self._lr = float(lr)
@@ -153,8 +151,6 @@ class _CNFDensityEstimator:
 
     def _build(self) -> None:
         """Construct the CNF and its optimizer on first use."""
-        torch = self._torch
-        zuko = self._zuko
         # Seed weight init from our local generator to avoid polluting the
         # global torch RNG state used by the rest of the user's program.
         state = torch.random.get_rng_state()
@@ -183,7 +179,6 @@ class _CNFDensityEstimator:
         if self._flow is None:
             self._build()
 
-        torch = self._torch
         # `DensityArchive.buffer` is a read-only view; torch emits a warning if
         # we hand it to `as_tensor` directly, so copy into a writable array.
         data = torch.as_tensor(
@@ -220,7 +215,6 @@ class _CNFDensityEstimator:
         if not self._fitted or self._flow is None:
             return np.zeros(measures.shape[0], dtype=np.float64)
 
-        torch = self._torch
         data = torch.as_tensor(measures, dtype=torch.float32, device=self._device)
         self._flow.eval()
         with torch.no_grad():
@@ -253,19 +247,24 @@ class DensityArchive(ArchiveBase):
     separate ``result_archive`` (see :class:`~ribs.schedulers.Scheduler`) will store
     solutions when using this archive.
 
+    .. note::
+
+        When `density_method="cnf"`, this class requires `PyTorch
+        <https://pytorch.org/>`_ and `Zuko <https://zuko.readthedocs.io/>`_ to be
+        installed, e.g., by running ``pip install torch zuko>=1.0.0``.
+
     Args:
         measure_dim: Dimension of the measure space.
         buffer_size: Size of the buffer of measures.
         density_method: Method for computing density. Supports ``"kde"`` (KDE -- kernel
             density estimator), ``"kde_sklearn"`` (KDE using
             :class:`sklearn.neighbors.KernelDensity`), and ``"cnf"`` (continuous
-            normalizing flow, i.e. DDS-CNF from `Lee 2024
+            normalizing flow, i.e., DDS-CNF from `Lee 2024
             <https://arxiv.org/abs/2312.11331>`_). When ``"kde_sklearn"`` is used, this
             archive computes *log density* rather than density; see
             :meth:`sklearn.neighbors.KernelDensity.score_samples`. When ``"cnf"`` is
             used, this archive also returns *log density* since that is what the flow
-            models directly. ``"cnf"`` requires the ``flows`` optional dependency group
-            (``pip install ribs[flows]``), which brings in ``torch`` and ``zuko``.
+            models directly. ``"cnf"`` requires installing torch and zuko.
         bandwidth: Bandwidth when using ``kde`` or ``kde_sklearn`` as the
             ``density_method``.
         sklearn_kwargs: kwargs for :class:`sklearn.neighbors.KernelDensity` when using
@@ -312,7 +311,7 @@ class DensityArchive(ArchiveBase):
         cnf_train_steps: Int = 100,
         cnf_batch_size: Int = 256,
         cnf_min_buffer_size: Int = 128,
-        cnf_device: Any = "cpu",
+        cnf_device: torch.device = "cpu",
         seed: Int | None = None,
         measures_dtype: DTypeLike = None,
         dtype: DTypeLike = None,
@@ -342,7 +341,7 @@ class DensityArchive(ArchiveBase):
         self._density_method = density_method
         self._cnf_estimator: _CNFDensityEstimator | None = None
         if self._density_method == "kde":
-            # Kernel density estimation
+            # Kernel density estimation.
             self._bandwidth = bandwidth
         elif self._density_method == "kde_sklearn":
             self._bandwidth = bandwidth
@@ -350,12 +349,13 @@ class DensityArchive(ArchiveBase):
                 {} if sklearn_kwargs is None else sklearn_kwargs.copy()
             )
         elif self._density_method == "cnf":
-            # Continuous normalizing flow density estimator (DDS-CNF,
-            # Lee et al. 2024). The estimator starts untrained; the flow is
-            # fitted at the end of each add() call once the buffer has at
-            # least `cnf_min_buffer_size` points.
+            # Continuous normalizing flow density estimator (DDS-CNF, Lee et al. 2024).
+            # The estimator begins untrained, and the flow is fitted at the end of each
+            # add() call once the buffer has at least `cnf_min_buffer_size` points.
+            if not IS_ZUKO_AVAILABLE:
+                raise ImportError(ZUKO_IMPORT_ERROR)
             self._cnf_estimator = _CNFDensityEstimator(
-                measure_dim=int(measure_dim),
+                measure_dim=self.measure_dim,
                 lr=float(cnf_lr),
                 train_steps=int(cnf_train_steps),
                 batch_size=int(cnf_batch_size),
@@ -420,12 +420,14 @@ class DensityArchive(ArchiveBase):
             ).fit(self.buffer)
             return kde.score_samples(measures).astype(self._measures_dtype)
         elif self._density_method == "cnf":
-            # The CNF returns log-density (this matches kde_sklearn's
-            # semantics). Before the estimator has been fit -- i.e., during the
-            # first add() call or before the buffer crosses
-            # `cnf_min_buffer_size` -- this returns zeros, mirroring how KDE
-            # returns zeros on an empty buffer.
-            assert self._cnf_estimator is not None
+            # The CNF returns log-density (matching kde_sklearn's semantics). Before the
+            # estimator has been fit, i.e., during the first add() call or before the
+            # buffer crosses `cnf_min_buffer_size`, this returns zeros, mirroring how
+            # KDE returns zeros on an empty buffer.
+            if self._cnf_estimator is None:
+                raise RuntimeError(
+                    'cnf_estimator should not be None when density_method="cnf"'
+                )
             return self._cnf_estimator.log_density(measures).astype(
                 self._measures_dtype
             )
@@ -468,8 +470,7 @@ class DensityArchive(ArchiveBase):
               estimator was updated. Note that when ``"kde_sklearn"`` or ``"cnf"`` is
               used as the ``density_method``, *log density* is computed rather than
               density; see :meth:`sklearn.neighbors.KernelDensity.score_samples` for
-              the ``kde_sklearn`` case and the class-level docstring for the
-              ``cnf`` case.
+              ``"kde_sklearn"`` and the class-level docstring for ``"cnf"``.
 
         Raises:
             ValueError: The array arguments do not match their specified shapes.
@@ -517,13 +518,16 @@ class DensityArchive(ArchiveBase):
             n_remaining -= skip
             self._n_skip -= skip
 
-        # For DDS-CNF, Algorithm 1 line 12 of Lee et al. 2024 calls for the
-        # density estimator to be refit on the updated buffer at the end of
-        # every iteration. We fine-tune the CNF here so that the next
-        # compute_density() call uses an up-to-date flow. KDE methods do not
-        # need this step because they are non-parametric.
+        # For DDS-CNF, Algorithm 1 line 12 of Lee et al. 2024 calls for the density
+        # estimator to be refit on the updated buffer at the end of every iteration. We
+        # fine-tune the CNF here so that the next compute_density() call uses an
+        # up-to-date flow. KDE methods do not need this step because they are
+        # non-parametric.
         if self._density_method == "cnf":
-            assert self._cnf_estimator is not None
+            if self._cnf_estimator is None:
+                raise RuntimeError(
+                    'cnf_estimator should not be None when density_method="cnf"'
+                )
             self._cnf_estimator.fit(self.buffer)
 
         return add_info

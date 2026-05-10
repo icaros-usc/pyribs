@@ -8,7 +8,6 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-import ribs.archives._density_archive as _density_archive_module
 from ribs.archives import DensityArchive
 
 
@@ -216,22 +215,3 @@ def test_cnf_unknown_method_still_raises():
     # method names.
     with pytest.raises(ValueError, match="Unknown density_method"):
         DensityArchive(measure_dim=2, density_method="not_a_method")  # pyright: ignore
-
-
-def test_cnf_import_error_hint_is_actionable(monkeypatch):
-    # If torch or zuko is missing, DDS-CNF should raise an ImportError whose
-    # message tells the user exactly how to install the flows extra. We
-    # simulate the missing-dep case by monkeypatching the estimator's
-    # constructor to raise the same ImportError the real lazy import would.
-    mod = _density_archive_module
-
-    def failing_init(self, **kwargs):  # noqa: ARG001
-        raise ImportError(mod._FLOWS_EXTRA_HINT)  # pylint: disable = protected-access
-
-    monkeypatch.setattr(
-        mod._CNFDensityEstimator,  # pylint: disable = protected-access
-        "__init__",
-        failing_init,
-    )
-    with pytest.raises(ImportError, match=r"pip install ribs\[flows\]"):
-        DensityArchive(measure_dim=2, density_method="cnf")
