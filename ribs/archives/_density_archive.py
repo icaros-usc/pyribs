@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
@@ -140,28 +140,21 @@ class _CNFDensityEstimator:
         if seed is not None:
             self._generator.manual_seed(int(seed))
 
-        self._flow: Any = None
-        self._optimizer: Any = None
+        # Seed weight init from our local generator to avoid polluting the
+        # global torch RNG state used by the rest of the user's program.
+        state = torch.random.get_rng_state()
+        torch.random.manual_seed(int(self._generator.initial_seed()))
+        self._flow = zuko.flows.CNF(features=self._measure_dim, **self._cnf_kwargs).to(
+            self._device
+        )
+        torch.random.set_rng_state(state)
+        self._optimizer = torch.optim.Adam(self._flow.parameters(), lr=self._lr)
         self._fitted: bool = False
 
     @property
     def fitted(self) -> bool:
         """Whether the flow has been trained on any data yet."""
         return self._fitted
-
-    def _build(self) -> None:
-        """Construct the CNF and its optimizer on first use."""
-        # Seed weight init from our local generator to avoid polluting the
-        # global torch RNG state used by the rest of the user's program.
-        state = torch.random.get_rng_state()
-        try:
-            torch.random.manual_seed(int(self._generator.initial_seed()))
-            self._flow = zuko.flows.CNF(
-                features=self._measure_dim, **self._cnf_kwargs
-            ).to(self._device)
-        finally:
-            torch.random.set_rng_state(state)
-        self._optimizer = torch.optim.Adam(self._flow.parameters(), lr=self._lr)
 
     def fit(self, buffer: np.ndarray) -> None:
         """Fine-tune the flow on the current feature buffer.
@@ -176,13 +169,9 @@ class _CNFDensityEstimator:
         """
         if buffer.shape[0] < self._min_buffer_size:
             return
-        if self._flow is None:
-            self._build()
 
-        # `DensityArchive.buffer` is a read-only view; torch emits a warning if
-        # we hand it to `as_tensor` directly, so copy into a writable array.
-        data = torch.as_tensor(
-            np.array(buffer, copy=True), dtype=torch.float32, device=self._device
+        data = torch.asarray(
+            buffer, copy=True, dtype=torch.float32, device=self._device
         )
         n = data.shape[0]
         effective_batch = min(self._batch_size, n)
@@ -212,7 +201,7 @@ class _CNFDensityEstimator:
         Returns:
             ``(batch_size,)`` array of log-density values in float64.
         """
-        if not self._fitted or self._flow is None:
+        if not self._fitted:
             return np.zeros(measures.shape[0], dtype=np.float64)
 
         data = torch.as_tensor(measures, dtype=torch.float32, device=self._device)
