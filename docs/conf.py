@@ -314,6 +314,7 @@ intersphinx_mapping = {
     "cma": ("https://cma-es.github.io/apidocs-pycma/", None),
     "cupy": ("https://docs.cupy.dev/en/stable/", None),
     "torch": ("https://docs.pytorch.org/docs/main/", None),
+    "zuko": ("https://zuko.readthedocs.io/stable/", None),
 }
 
 # -- Small custom extensions -------------------------------------------------
