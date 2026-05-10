@@ -243,7 +243,9 @@ from `master` into the corresponding release branch.
    ```bash
    make tutorial_links
    ```
-   See [#300](https://github.com/icaros-usc/pyribs/pull/300) for why we do this.
+   Make sure to commit these changes on the `release/` branch you just checked
+   out. See [#300](https://github.com/icaros-usc/pyribs/pull/300) for why we do
+   this.
 1. (Optional) On the release branch, run `make release-test`. This uploads the
    code to TestPyPI to check that the deployment works. If this fails, make
    fixes as appropriate.

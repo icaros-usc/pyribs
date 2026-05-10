@@ -1,13 +1,13 @@
-# What's New in v0.10.0
+# What's New in v0.11.0
 
-We are excited to present pyribs 0.10.0! Compared to 0.8.0, pyribs now has new
+We are excited to present pyribs 0.11.0! Compared to 0.8.0, pyribs now has new
 algorithms and features intended to make the library more flexible than ever!
 This release supports Python 3.10 and up, with Python 3.9 being dropped due to
 being end-of-life.
 
 ## New Algorithms
 
-Pyribs v0.10.0 introduces implementations of two new algorithms:
+Pyribs now supports the following algorithms!
 
 - **Discount Model Search (DMS)**
   ([Tjanaka 2026](https://discount-models.github.io/)) is now supported with the
@@ -20,9 +20,30 @@ Pyribs v0.10.0 introduces implementations of two new algorithms:
   of the {class}`~ribs.archives.DNSArchive`.
   - Thanks to [@ryanboldi](https://github.com/ryanboldi) for contributing this
     implementation in {pr}`664`!
+- **Novelty Search with Local Competition (NSLC)** is now supported via the
+  {class}`~ribs.emitters.rankers.NSLCRanker` and
+  {class}`~ribs.emitters.rankers.NSLCClassicRanker`. An example of how to run
+  NSLC is available in {doc}`/examples/sphere`.
+  - Thanks to [@efsiatras](https://github.com/efsiatras) for contributing this
+    implementation in {pr}`690`!
+- **Density Descent Search with Continuous Normalizing Flows (DDS-CNF)** is now
+  supported in the {class}`~ribs.archives.DensityArchive`. An example of how to
+  run DDS-CNF is available in {doc}`/examples/sphere`.
+  - Thanks again to [@efsiatras](https://github.com/efsiatras) for contributing
+    this implementation in {pr}`691`!
 
 The {doc}`/supported-algorithms` page includes a list of algorithms supported in
 pyribs.
+
+## 🐛 Bug Fixes
+
+- {pr}`704` fixed a bug that occurred when using
+  {class}`~ribs.archives.ProximityArchive` with local competition. In short, if
+  there were solutions that were novel enough to be added to the archive, then
+  solutions that were not novel enough could be added despite being
+  low-performing. In this case, the solutions that are not novel enough should
+  only be added if they outperform their nearest neighbor in the archive. Thanks
+  [@zibasPk](https://github.com/zibasPk) for identifying and fixing this bug!
 
 ## Overhauling CVTArchive
 
@@ -188,6 +209,10 @@ emitters = [
   cupy, drawing from the
   [Python array API standard](https://data-apis.org/array-api/latest/)
   ({issue}`570`, {pr}`645`)
+- Logging, outputs, and metrics have been updated in the examples ({pr}`694`).
+  For example, the Sphere example ({doc}`/examples/sphere`) now has more
+  flexible output directories, and it also uses
+  [loguru](https://loguru.readthedocs.io/en/stable/) for logging.
 
 ## Developer Workflow
 
