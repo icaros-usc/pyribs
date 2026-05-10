@@ -184,7 +184,7 @@ class _CNFDensityEstimator:
             )
             batch = data[idx]
             loss = -self._flow().log_prob(batch).mean()
-            self._optimizer.zero_grad(set_to_none=True)
+            self._optimizer.zero_grad()
             loss.backward()
             self._optimizer.step()
 
