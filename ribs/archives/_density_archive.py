@@ -264,16 +264,15 @@ class DensityArchive(ArchiveBase):
             ``measure_dim`` and cannot be overridden. Defaults to ``{"hidden_features":
             (64, 64)}``.
         cnf_lr: Adam learning rate used to fine-tune the CNF during each call to
-            :meth:`add` when ``density_method="cnf"``. Defaults to ``1e-3``.
+            :meth:`add` when ``density_method="cnf"``.
         cnf_train_steps: Number of Adam steps taken every time the CNF is fine-tuned on
-            the buffer. Defaults to ``100``.
-        cnf_batch_size: Mini-batch size used when fine-tuning the CNF. Defaults to
-            ``256``. If the buffer has fewer points, the entire buffer is used.
+            the buffer.
+        cnf_batch_size: Mini-batch size used when fine-tuning the CNF. If the buffer has
+            fewer points, the entire buffer is used.
         cnf_min_buffer_size: Minimum number of points in the buffer before the CNF is
             trained. Before this threshold, the flow stays untrained and density queries
-            return zeros. Defaults to ``128``.
+            return zeros.
         cnf_device: Torch device on which the CNF lives when ``density_method="cnf"``.
-            Defaults to ``"cpu"``.
         seed: Value to seed the random number generator. Set to None to avoid a fixed
             seed.
         measures_dtype: Data type of the measures. Defaults to float64 (numpy's default
