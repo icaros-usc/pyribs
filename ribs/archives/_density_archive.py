@@ -259,10 +259,10 @@ class DensityArchive(ArchiveBase):
         sklearn_kwargs: kwargs for :class:`sklearn.neighbors.KernelDensity` when using
             ``"kde_sklearn"`` as the ``density_method``. Note that bandwidth is already
             passed in via the ``bandwidth`` parameter above.
-        cnf_kwargs: Additional keyword arguments forwarded to :class:`zuko.flows.CNF`
-            when ``density_method="cnf"``. ``features`` is set automatically from
-            ``measure_dim`` and cannot be overridden. Defaults to ``{"hidden_features":
-            (64, 64)}``.
+        cnf_kwargs: Additional keyword arguments forwarded to
+            :class:`zuko.flows.continuous.CNF` when ``density_method="cnf"``.
+            ``features`` is set automatically from ``measure_dim`` and cannot be
+            overridden. Defaults to ``{"hidden_features": (64, 64)}``.
         cnf_lr: Adam learning rate used to fine-tune the CNF during each call to
             :meth:`add` when ``density_method="cnf"``.
         cnf_train_steps: Number of Adam steps taken every time the CNF is fine-tuned on
