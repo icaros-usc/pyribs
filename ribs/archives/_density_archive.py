@@ -249,7 +249,7 @@ class DensityArchive(ArchiveBase):
 
     .. note::
 
-        When `density_method="cnf"`, this class requires `PyTorch
+        When ``density_method="cnf"``, this class requires `PyTorch
         <https://pytorch.org/>`_ and `Zuko <https://zuko.readthedocs.io/>`_ to be
         installed, e.g., by running ``pip install torch zuko>=1.0.0``.
 
@@ -469,7 +469,8 @@ class DensityArchive(ArchiveBase):
               density values of the measure passed in, before the buffer or density
               estimator was updated. Note that when ``"kde_sklearn"`` or ``"cnf"`` is
               used as the ``density_method``, *log density* is computed rather than
-              density; see :meth:`sklearn.neighbors.KernelDensity.score_samples` for
+              density. For more info, see
+              :meth:`sklearn.neighbors.KernelDensity.score_samples` for
               ``"kde_sklearn"`` and the class-level docstring for ``"cnf"``.
 
         Raises:
