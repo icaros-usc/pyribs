@@ -887,6 +887,43 @@ CONFIG = {
             "kwargs": {},
         },
     },
+    "dds_cnf": {
+        # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
+        "is_dqd": False,
+        # In DDS, the DensityArchive does not store any solutions, so emitters
+        # must use the result archive instead.
+        "pass_result_archive_to_emitters": True,
+        "archive": {
+            "class": DensityArchive,
+            "kwargs": {
+                "buffer_size": 10000,
+                "density_method": "cnf",
+            },
+        },
+        "result_archive": {
+            "class": GridArchive,
+            "kwargs": {
+                "dims": (100, 100),
+            },
+        },
+        "emitters": [
+            {
+                "class": EvolutionStrategyEmitter,
+                "kwargs": {
+                    "sigma0": 1.5,
+                    "ranker": "density",
+                    "selection_rule": "mu",
+                    "restart_rule": "basic",
+                    "batch_size": 36,
+                },
+                "num_emitters": 15,
+            }
+        ],
+        "scheduler": {
+            "class": Scheduler,
+            "kwargs": {},
+        },
+    },
     ## DMS ##
     "dms": {
         # Hyperparameters from DMS paper: https://discount-models.github.io/

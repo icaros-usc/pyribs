@@ -296,7 +296,7 @@ class DensityArchive(ArchiveBase):
         sklearn_kwargs: dict | None = None,
         cnf_kwargs: dict | None = None,
         cnf_lr: Float = 1e-3,
-        cnf_train_steps: Int = 100,
+        cnf_train_steps: Int = 20,
         cnf_batch_size: Int = 256,
         cnf_min_buffer_size: Int = 128,
         cnf_device: torch.device = "cpu",
