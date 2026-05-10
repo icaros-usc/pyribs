@@ -76,10 +76,12 @@ Novelty Search:
   that is fed to the EvolutionStrategyEmitter just like in CMA-ME.
 
 DDS:
-- `dds`: Density Descent Search (Lee 2024; https://arxiv.org/abs/2312.11331) with a KDE
-  as the density estimator. Uses DensityArchive and EvolutionStrategyEmitter with
+- `dds_kde`: Density Descent Search (Lee 2024; https://arxiv.org/abs/2312.11331) with a
+  KDE as the density estimator. Uses DensityArchive and EvolutionStrategyEmitter with
   DensityRanker.
 - `dds_kde_sklearn`: Density Descent Search using scikit-learn's KernelDensity as the
+  density estimator.
+- `dds_cnf`: Density Descent Search using a Continuous Normalizing Flow (CNF) as the
   density estimator.
 
 DMS:
@@ -803,7 +805,7 @@ CONFIG = {
         },
     },
     ## DDS ##
-    "dds": {
+    "dds_kde": {
         # Hyperparameters from DDS paper: https://arxiv.org/abs/2312.11331
         "is_dqd": False,
         # In DDS, the DensityArchive does not store any solutions, so emitters
