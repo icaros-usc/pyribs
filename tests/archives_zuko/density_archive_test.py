@@ -214,4 +214,4 @@ def test_cnf_unknown_method_still_raises():
     # Ensure adding the CNF branch didn't break the error path for bad
     # method names.
     with pytest.raises(ValueError, match="Unknown density_method"):
-        DensityArchive(measure_dim=2, density_method="not_a_method")  # pyright: ignore
+        DensityArchive(measure_dim=2, density_method="not_a_method")
