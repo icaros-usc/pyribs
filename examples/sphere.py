@@ -1373,7 +1373,7 @@ def sphere_main(
     with (outdir / "metrics.json").open("w") as file:
         json.dump(metrics, file, indent=2)
 
-    # Return a summary of metrics.
+    # Return a summary of metrics. Note that Fire automatically prints these to stdout.
     return {
         "QD Score": metrics["QD Score"]["y"][-1],
         "Coverage": metrics["Coverage"]["y"][-1],
