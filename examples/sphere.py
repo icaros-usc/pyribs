@@ -898,9 +898,10 @@ CONFIG = {
             "kwargs": {
                 "buffer_size": 10000,
                 "density_method": "cnf",
-                "cnf_train_steps": 10,
+                "cnf_train_steps": 5,
+                "cnf_batch_size": 32,
                 "cnf_kwargs": {
-                    "hidden_features": (64, 64, 64),
+                    "hidden_features": (64, 64),
                 },
             },
         },
