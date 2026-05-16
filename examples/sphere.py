@@ -1102,9 +1102,13 @@ def create_scheduler(
             **config["archive"]["kwargs"],
         )
     elif archive_class == DensityArchive:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         archive = archive_class(
             measure_dim=len(bounds),
             seed=seed,
+            # The device is simply ignored if we are running dds_kde.
+            cnf_device=device,
             **config["archive"]["kwargs"],
         )
     elif archive_class == DiscountArchive:
