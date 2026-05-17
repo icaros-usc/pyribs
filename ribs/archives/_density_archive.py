@@ -220,10 +220,11 @@ class DensityArchive(ArchiveBase):
 
     This archive originates in Density Descent Search in `Lee 2024
     <https://dl.acm.org/doi/10.1145/3638529.3654001>`_. It maintains a buffer of
-    measures, and using that buffer, it builds a density estimator such as a KDE. The
-    density estimator indicates which areas of measure space have, for instance, a high
-    density of solutions -- to improve exploration, an algorithm would need to target
-    areas with a low density of solutions.
+    measures, and using that buffer, it builds a density estimator such as a `KDE
+    <https://en.wikipedia.org/wiki/Kernel_density_estimation>`_. The density estimator
+    indicates which areas of measure space have, for instance, a high density of
+    solutions -- to improve exploration, an algorithm would need to target areas with a
+    low density of solutions.
 
     Incoming solutions are added to the buffer with `reservoir sampling
     <https://en.wikipedia.org/wiki/Reservoir_sampling>`_, specifically as described in
