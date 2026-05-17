@@ -35,8 +35,8 @@ when running each algorithm on this benchmark for 10,000 iterations.
 | dds_cnf<sup>1</sup> |        325,247.96 ± ?? |    68.48 ± ??% |
 | dms                 |  700,776.58 ± 8,525.05 |  95.99 ± 1.43% |
 
-<sup>1</sup>Due to computational cost, we only ran `dds_cnf` once (it takes ~10
-hours). See {pr}`707` for more info.
+<sup>1</sup>Due to computational cost, `dds_cnf` was only run for 1 trial (it
+takes ~19 hours). See {pr}`707` for more info.
 
 ## sphere.py
 
