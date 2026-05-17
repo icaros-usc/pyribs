@@ -42,7 +42,7 @@ for algo in CONFIG:
 # Test each algorithm.
 for algo in "${SPHERE_ALGOS[@]}"; do
   # CVT excluded since it takes a while to build the archive.
-  if [[ "$algo" != @(cvt_map_elites|line_cvt_map_elites) ]]; then
+  if [[ "$algo" != @(cvt_map_elites|line_cvt_map_elites|dds_cnf) ]]; then
     python examples/sphere.py "$algo" --itrs 10 --outdir "${SPHERE_OUTPUT}/${algo}"
   fi
 done

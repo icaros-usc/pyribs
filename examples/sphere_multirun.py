@@ -10,6 +10,10 @@ Usage:
     OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere_multirun.py \
         --algos=ALL --trials=20 --max-workers=40
 
+    # Excludes certain algorithms.
+    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere_multirun.py \
+        --algos=ALMOST_ALL --trials=20 --max-workers=40
+
     # To run just a single algorithm.
     OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python sphere_multirun.py \
         --algos=cma_mae --trials=20 --max-workers=40
@@ -78,7 +82,7 @@ def main(
         algos: Algorithms to evaluate. On the command line, this can be passed as a
             single algorithm name, e.g., "cma_mae". It can also be a comma-separated
             list, e.g., "cma_mae,dms". Finally, it can be "ALL", to indicate running all
-            algorithms in sphere.py.
+            algorithms in sphere.py, or "ALMOST_ALL", to exclude certain algorithms.
         trials: Number of trials to run each algorithm.
         itrs: Iterations to run the algorithm.
         outdir: Directory to save output. If not provided, it will be automatically set
@@ -110,10 +114,16 @@ def main(
     if isinstance(algos, str):
         if algos == "ALL":  # Run all available algos.
             algo_list = list(sphere.CONFIG)
+        elif algos == "ALMOST_ALL":
+            # Exclude dds_cnf since it takes a very long time to run.
+            algo_list = list(sphere.CONFIG)
+            algo_list.remove("dds_cnf")
         else:
             algo_list = [algos]
     else:
         algo_list = algos
+
+    log.info("Evaluating {} algorithm(s): {}", len(algo_list), algo_list)
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         # Submit all jobs simultaneously.
