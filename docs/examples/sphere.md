@@ -30,9 +30,13 @@ when running each algorithm on this benchmark for 10,000 iterations.
 | ns_cma              | 149,414.31 ± 10,034.15 |  18.51 ± 1.26% |
 | nslc                |  510,085.20 ± 2,693.40 |  63.11 ± 0.39% |
 | nslc_cma_imp        |  539,365.47 ± 2,916.88 |  68.20 ± 0.46% |
-| dds                 | 344,447.87 ± 40,153.65 |  72.72 ± 3.21% |
+| dds_kde             | 344,447.87 ± 40,153.65 |  72.72 ± 3.21% |
 | dds_kde_sklearn     | 325,402.21 ± 36,203.61 |  75.88 ± 3.15% |
+| dds_cnf<sup>1</sup> |         325247.96 ± ?? |    68.48 ± ??% |
 | dms                 |  700,776.58 ± 8,525.05 |  95.99 ± 1.43% |
+
+<sup>1</sup>Due to computational cost, we only ran `dds_cnf` once (it takes ~10
+hours). See {pr}`707` for more info.
 
 ## sphere.py
 
