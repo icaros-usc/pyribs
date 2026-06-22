@@ -8,6 +8,10 @@
 
 - Implement `novelty_threshold` decay in `ProximityArchive` ({pr}`709`)
 
+#### Improvements
+
+- Migrate pylint config to pyproject.toml and format pyproject.toml ({pr}`710`)
+
 ## 0.11.0
 
 ### Changelog
