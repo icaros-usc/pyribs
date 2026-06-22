@@ -81,13 +81,23 @@ def proximity_archive_2d_long():
 #
 
 
-@image_comparison(baseline_images=["2d"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["2d"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_2d(proximity_archive_2d):
     plt.figure(figsize=(8, 6))
     proximity_archive_plot(proximity_archive_2d, cmap=[[0.5, 0.5, 0.5]], cbar=None)
 
 
-@image_comparison(baseline_images=["2d"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["2d"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_2d_custom_axis(proximity_archive_2d):
     _, ax = plt.subplots(figsize=(8, 6))
     proximity_archive_plot(
@@ -95,14 +105,22 @@ def test_2d_custom_axis(proximity_archive_2d):
     )
 
 
-@image_comparison(baseline_images=["2d_long"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["2d_long"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_2d_long(proximity_archive_2d_long):
     plt.figure(figsize=(8, 6))
     proximity_archive_plot(proximity_archive_2d_long, cmap=[[0.5, 0.5, 0.5]], cbar=None)
 
 
 @image_comparison(
-    baseline_images=["2d_long_square"], remove_text=False, extensions=["png"]
+    baseline_images=["2d_long_square"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_2d_long_square(proximity_archive_2d_long):
     plt.figure(figsize=(8, 6))
@@ -112,7 +130,10 @@ def test_2d_long_square(proximity_archive_2d_long):
 
 
 @image_comparison(
-    baseline_images=["2d_long_transpose"], remove_text=False, extensions=["png"]
+    baseline_images=["2d_long_transpose"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_2d_long_transpose(proximity_archive_2d_long):
     plt.figure(figsize=(8, 6))
@@ -124,7 +145,12 @@ def test_2d_long_transpose(proximity_archive_2d_long):
     )
 
 
-@image_comparison(baseline_images=["bounds"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["bounds"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_bounds(proximity_archive_2d):
     plt.figure(figsize=(8, 6))
     proximity_archive_plot(
@@ -136,7 +162,12 @@ def test_bounds(proximity_archive_2d):
     )
 
 
-@image_comparison(baseline_images=["limits"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["limits"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_limits(proximity_archive_2d_obj):
     # Negative sphere function should have range (-2, 0). These limits should
     # give a more uniform-looking archive.
@@ -148,6 +179,7 @@ def test_limits(proximity_archive_2d_obj):
     baseline_images=["bounds_and_limits_when_empty"],
     remove_text=False,
     extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_bounds_and_limits_when_empty(proximity_archive_2d_empty):
     plt.figure(figsize=(8, 6))
@@ -159,7 +191,12 @@ def test_bounds_and_limits_when_empty(proximity_archive_2d_empty):
     )
 
 
-@image_comparison(baseline_images=["rasterized"], remove_text=False, extensions=["pdf"])
+@image_comparison(
+    baseline_images=["rasterized"],
+    remove_text=False,
+    extensions=["pdf"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_rasterized(proximity_archive_2d):
     plt.figure(figsize=(8, 6))
     proximity_archive_plot(proximity_archive_2d, rasterized=True)

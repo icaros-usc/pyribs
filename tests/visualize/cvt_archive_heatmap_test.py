@@ -108,6 +108,7 @@ def cvt_archive_2d_long():
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_2d(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -119,6 +120,7 @@ def test_2d(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_2d_custom_axis(cvt_archive_2d):
     _, ax = plt.subplots(figsize=(8, 6))
@@ -130,6 +132,7 @@ def test_2d_custom_axis(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_2d_long(cvt_archive_2d_long):
     plt.figure(figsize=(8, 6))
@@ -141,6 +144,7 @@ def test_2d_long(cvt_archive_2d_long):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_2d_long_square(cvt_archive_2d_long):
     plt.figure(figsize=(8, 6))
@@ -152,6 +156,7 @@ def test_2d_long_square(cvt_archive_2d_long):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_2d_long_transpose(cvt_archive_2d_long):
     plt.figure(figsize=(8, 6))
@@ -163,6 +168,7 @@ def test_2d_long_transpose(cvt_archive_2d_long):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_limits(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -170,7 +176,10 @@ def test_limits(cvt_archive_2d):
 
 
 @image_comparison(
-    baseline_images=["limits_when_empty"], remove_text=False, extensions=["png"]
+    baseline_images=["limits_when_empty"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_limits_when_empty(cvt_archive_2d_empty):
     plt.figure(figsize=(8, 6))
@@ -187,6 +196,7 @@ def test_limits_when_empty(cvt_archive_2d_empty):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_listed_cmap(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -198,6 +208,7 @@ def test_listed_cmap(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_coolwarm_cmap(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -209,6 +220,7 @@ def test_coolwarm_cmap(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_vmin_equals_vmax(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -220,6 +232,7 @@ def test_vmin_equals_vmax(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_plot_centroids(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -231,13 +244,19 @@ def test_plot_centroids(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_voronoi_style(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive_2d, lw=3.0, ec="grey")
 
 
-@image_comparison(baseline_images=["rasterized"], remove_text=False, extensions=["pdf"])
+@image_comparison(
+    baseline_images=["rasterized"],
+    remove_text=False,
+    extensions=["pdf"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_rasterized(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive_2d, rasterized=True)
@@ -248,6 +267,7 @@ def test_rasterized(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_plot_with_df(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -266,6 +286,7 @@ def test_plot_with_df(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_noclip(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -279,6 +300,7 @@ def test_noclip(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_clip(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -292,6 +314,7 @@ def test_clip(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_clip_polygon(cvt_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -321,6 +344,7 @@ def test_clip_polygon(cvt_archive_2d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_clip_polygon_with_hole(cvt_archive_2d):
     """This test will force some cells to be split in two."""
@@ -371,20 +395,33 @@ def test_clip_polygon_with_hole(cvt_archive_2d):
 #
 
 
-@image_comparison(baseline_images=["1d"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["1d"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_1d(cvt_archive_1d):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive_1d)
 
 
-@image_comparison(baseline_images=["1d_style"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["1d_style"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_1d_style(cvt_archive_1d):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive_1d, lw=3.0, ec="grey")
 
 
 @image_comparison(
-    baseline_images=["1d_with_centroids"], remove_text=False, extensions=["png"]
+    baseline_images=["1d_with_centroids"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_1d_with_centroids():
     """Adds in centroids to the plot."""
@@ -402,7 +439,10 @@ def test_1d_with_centroids():
 
 
 @image_comparison(
-    baseline_images=["1d_aspect_greater_than_1"], remove_text=False, extensions=["png"]
+    baseline_images=["1d_aspect_greater_than_1"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_1d_aspect_greater_than_1(cvt_archive_1d):
     plt.figure(figsize=(8, 6))
@@ -410,14 +450,22 @@ def test_1d_aspect_greater_than_1(cvt_archive_1d):
 
 
 @image_comparison(
-    baseline_images=["1d_aspect_less_than_1"], remove_text=False, extensions=["png"]
+    baseline_images=["1d_aspect_less_than_1"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_1d_aspect_less_than_1(cvt_archive_1d):
     plt.figure(figsize=(8, 6))
     cvt_archive_heatmap(cvt_archive_1d, aspect=0.1)
 
 
-@image_comparison(baseline_images=["1d_sphere"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["1d_sphere"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_1d_sphere():
     """More complex setting."""
     archive = CVTArchive(

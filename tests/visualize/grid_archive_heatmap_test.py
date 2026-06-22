@@ -96,26 +96,44 @@ def grid_archive_3d_empty():
 #
 
 
-@image_comparison(baseline_images=["2d"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["2d"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_2d(grid_archive_2d):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_2d)
 
 
-@image_comparison(baseline_images=["2d"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["2d"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_2d_custom_axis(grid_archive_2d):
     _, ax = plt.subplots(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_2d, ax=ax)
 
 
-@image_comparison(baseline_images=["2d_long"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["2d_long"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_2d_long(grid_archive_2d_long):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_2d_long)
 
 
 @image_comparison(
-    baseline_images=["2d_long_square"], remove_text=False, extensions=["png"]
+    baseline_images=["2d_long_square"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_2d_long_square(grid_archive_2d_long):
     plt.figure(figsize=(8, 6))
@@ -123,14 +141,22 @@ def test_2d_long_square(grid_archive_2d_long):
 
 
 @image_comparison(
-    baseline_images=["2d_long_transpose"], remove_text=False, extensions=["png"]
+    baseline_images=["2d_long_transpose"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_2d_long_transpose(grid_archive_2d_long):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_2d_long, transpose_measures=True)
 
 
-@image_comparison(baseline_images=["limits"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["limits"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_limits(grid_archive_2d):
     # Negative sphere function should have range (-2, 0). These limits should
     # give a more uniform-looking archive.
@@ -139,7 +165,10 @@ def test_limits(grid_archive_2d):
 
 
 @image_comparison(
-    baseline_images=["limits_when_empty"], remove_text=False, extensions=["png"]
+    baseline_images=["limits_when_empty"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_limits_when_empty(grid_archive_2d_empty):
     plt.figure(figsize=(8, 6))
@@ -152,7 +181,10 @@ def test_limits_when_empty(grid_archive_2d_empty):
 
 
 @image_comparison(
-    baseline_images=["listed_cmap"], remove_text=False, extensions=["png"]
+    baseline_images=["listed_cmap"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_listed_cmap(grid_archive_2d):
     # cmap consists of primary red, green, and blue.
@@ -161,14 +193,22 @@ def test_listed_cmap(grid_archive_2d):
 
 
 @image_comparison(
-    baseline_images=["coolwarm_cmap"], remove_text=False, extensions=["png"]
+    baseline_images=["coolwarm_cmap"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_coolwarm_cmap(grid_archive_2d):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_2d, cmap="coolwarm")
 
 
-@image_comparison(baseline_images=["boundaries"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["boundaries"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_boundaries(grid_archive_2d):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(
@@ -177,7 +217,10 @@ def test_boundaries(grid_archive_2d):
 
 
 @image_comparison(
-    baseline_images=["equal_aspect"], remove_text=False, extensions=["png"]
+    baseline_images=["equal_aspect"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_equal_aspect(grid_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -185,7 +228,10 @@ def test_equal_aspect(grid_archive_2d):
 
 
 @image_comparison(
-    baseline_images=["aspect_greater_than_1"], remove_text=False, extensions=["png"]
+    baseline_images=["aspect_greater_than_1"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_aspect_greater_than_1(grid_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -193,35 +239,54 @@ def test_aspect_greater_than_1(grid_archive_2d):
 
 
 @image_comparison(
-    baseline_images=["aspect_less_than_1"], remove_text=False, extensions=["png"]
+    baseline_images=["aspect_less_than_1"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_aspect_less_than_1(grid_archive_2d):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_2d, aspect=0.5)
 
 
-@image_comparison(baseline_images=["no_cbar"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["no_cbar"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_no_cbar(grid_archive_2d):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_2d, cbar=None)
 
 
 @image_comparison(
-    baseline_images=["custom_cbar_axis"], remove_text=False, extensions=["png"]
+    baseline_images=["custom_cbar_axis"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_custom_cbar_axis(grid_archive_2d):
     _, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 6))
     grid_archive_heatmap(grid_archive_2d, ax=ax1, cbar=ax2)
 
 
-@image_comparison(baseline_images=["rasterized"], remove_text=False, extensions=["pdf"])
+@image_comparison(
+    baseline_images=["rasterized"],
+    remove_text=False,
+    extensions=["pdf"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_rasterized(grid_archive_2d):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_2d, rasterized=True)
 
 
 @image_comparison(
-    baseline_images=["plot_with_df"], remove_text=False, extensions=["png"]
+    baseline_images=["plot_with_df"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_plot_with_df(grid_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -235,14 +300,22 @@ def test_plot_with_df(grid_archive_2d):
 #
 
 
-@image_comparison(baseline_images=["1d"], remove_text=False, extensions=["png"])
+@image_comparison(
+    baseline_images=["1d"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
+)
 def test_1d(grid_archive_1d):
     plt.figure(figsize=(8, 6))
     grid_archive_heatmap(grid_archive_1d)
 
 
 @image_comparison(
-    baseline_images=["1d_limits_when_empty"], remove_text=False, extensions=["png"]
+    baseline_images=["1d_limits_when_empty"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_1d_limits_when_empty(grid_archive_1d_empty):
     plt.figure(figsize=(8, 6))
@@ -255,7 +328,10 @@ def test_1d_limits_when_empty(grid_archive_1d_empty):
 
 
 @image_comparison(
-    baseline_images=["1d_aspect_greater_than_1"], remove_text=False, extensions=["png"]
+    baseline_images=["1d_aspect_greater_than_1"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_1d_aspect_greater_than_1(grid_archive_1d):
     plt.figure(figsize=(8, 6))
@@ -263,7 +339,10 @@ def test_1d_aspect_greater_than_1(grid_archive_1d):
 
 
 @image_comparison(
-    baseline_images=["1d_aspect_less_than_1"], remove_text=False, extensions=["png"]
+    baseline_images=["1d_aspect_less_than_1"],
+    remove_text=False,
+    extensions=["png"],
+    style=["classic", "_classic_test_patch"],
 )
 def test_1d_aspect_less_than_1(grid_archive_1d):
     plt.figure(figsize=(8, 6))

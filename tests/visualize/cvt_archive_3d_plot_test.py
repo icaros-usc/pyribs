@@ -79,6 +79,7 @@ def cvt_archive_3d_rect():
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_3d(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -90,6 +91,7 @@ def test_3d(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_3d_custom_axis(cvt_archive_3d):
     ax = plt.axes(projection="3d")
@@ -101,6 +103,7 @@ def test_3d_custom_axis(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_3d_rect(cvt_archive_3d_rect):
     plt.figure(figsize=(8, 6))
@@ -112,6 +115,7 @@ def test_3d_rect(cvt_archive_3d_rect):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_3d_rect_reorder(cvt_archive_3d_rect):
     plt.figure(figsize=(8, 6))
@@ -123,6 +127,7 @@ def test_3d_rect_reorder(cvt_archive_3d_rect):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_limits(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -134,6 +139,7 @@ def test_limits(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_limits_when_empty(cvt_archive_3d_empty):
     plt.figure(figsize=(8, 6))
@@ -150,6 +156,7 @@ def test_limits_when_empty(cvt_archive_3d_empty):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_listed_cmap(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -161,6 +168,7 @@ def test_listed_cmap(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_coolwarm_cmap(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -172,6 +180,7 @@ def test_coolwarm_cmap(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_vmin_equals_vmax(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -183,6 +192,7 @@ def test_vmin_equals_vmax(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_plot_centroids(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -194,6 +204,7 @@ def test_plot_centroids(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_voronoi_style(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -205,6 +216,7 @@ def test_voronoi_style(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_cell_alpha(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -216,6 +228,7 @@ def test_cell_alpha(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_transparent(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -227,6 +240,7 @@ def test_transparent(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_plot_elites(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -238,6 +252,7 @@ def test_plot_elites(cvt_archive_3d):
     remove_text=False,
     extensions=["png"],
     tol=CVT_IMAGE_TOLERANCE,
+    style=["classic", "_classic_test_patch"],
 )
 def test_plot_with_df(cvt_archive_3d):
     plt.figure(figsize=(8, 6))
