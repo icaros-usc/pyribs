@@ -29,7 +29,7 @@ jobs:
       # Skip pylint since not all of our code passes pylint.
       SKIP: pylint
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
           miniconda-version: ${{ env.MINICONDA_VERSION }}
@@ -44,7 +44,7 @@ jobs:
         python-version: ["3.12"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
           miniconda-version: ${{ env.MINICONDA_VERSION }}
@@ -94,7 +94,7 @@ jobs:
   visualize_qdax:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
           miniconda-version: ${{ env.MINICONDA_VERSION }}
@@ -109,7 +109,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
           miniconda-version: ${{ env.MINICONDA_VERSION }}
@@ -128,7 +128,7 @@ jobs:
   benchmarks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
           miniconda-version: ${{ env.MINICONDA_VERSION }}
@@ -148,7 +148,7 @@ jobs:
       # GitHub Actions container.
       # - name: Remove swig
       #   run: sudo apt-get remove swig
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
           miniconda-version: ${{ env.MINICONDA_VERSION }}
@@ -163,7 +163,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: set-matrix
         run: |
           echo "$(bash tests/tutorials_list.sh)" >> $GITHUB_OUTPUT
@@ -173,7 +173,7 @@ jobs:
     strategy:
       matrix: ${{ fromJSON(needs.tutorials_list.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
           miniconda-version: ${{ env.MINICONDA_VERSION }}
@@ -189,7 +189,7 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
           miniconda-version: ${{ env.MINICONDA_VERSION }}
@@ -213,7 +213,7 @@ jobs:
       ]
     if: startsWith(github.ref, 'refs/tags')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
           miniconda-version: ${{ env.MINICONDA_VERSION }}
