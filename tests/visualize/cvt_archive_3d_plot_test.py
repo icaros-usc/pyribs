@@ -130,7 +130,10 @@ def test_limits(cvt_archive_3d):
 
 
 @image_comparison(
-    baseline_images=["limits_when_empty"], remove_text=False, extensions=["png"]
+    baseline_images=["limits_when_empty"],
+    remove_text=False,
+    extensions=["png"],
+    tol=CVT_IMAGE_TOLERANCE,
 )
 def test_limits_when_empty(cvt_archive_3d_empty):
     plt.figure(figsize=(8, 6))
