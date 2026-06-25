@@ -6,6 +6,7 @@
 
 #### API
 
+- Add `__str__` for Scheduler ({pr}`712`)
 - Implement `novelty_threshold` decay in `ProximityArchive` ({pr}`709`)
 
 #### Improvements
