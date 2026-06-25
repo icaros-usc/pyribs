@@ -123,6 +123,21 @@ class Scheduler:
         # The number of solutions created by each emitter.
         self._num_emitted = [None for _ in self._emitters]
 
+    def __str__(self) -> str:
+        """Returns pretty string representation of the scheduler."""
+        output = [f"{self.__class__.__name__}("]
+        output.append(f"  archive={self.archive.__class__.__name__},")
+        output.append("  emitters=[")
+        for e in self.emitters:
+            output.append(f"    {e.__class__.__name__},")
+        output.append("  ],")
+        if self._result_archive is not None:
+            output.append(f"  result_archive={self.result_archive.__class__.__name__},")
+        if self._add_mode != "batch":
+            output.append(f'  add_mode="{self._add_mode}",')
+        output.append(")")
+        return "\n".join(output)
+
     @property
     def archive(self) -> ArchiveBase:
         """Archive for storing solutions found in this scheduler."""
