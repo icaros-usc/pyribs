@@ -11,7 +11,7 @@
 #### Improvements
 
 - Regenerate ribs.visualize baseline images due to recent update with matplotlib
-  ({pr}`711`)
+  ({pr}`711`, {pr}`713`)
 - Migrate pylint config to pyproject.toml and format pyproject.toml ({pr}`710`)
 
 ## 0.11.0
