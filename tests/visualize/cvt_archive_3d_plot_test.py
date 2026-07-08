@@ -94,6 +94,7 @@ def test_3d(cvt_archive_3d):
     style="mpl20",
 )
 def test_3d_custom_axis(cvt_archive_3d):
+    plt.figure(figsize=(8, 6))
     ax = plt.axes(projection="3d")
     cvt_archive_3d_plot(cvt_archive_3d, ax=ax)
 
