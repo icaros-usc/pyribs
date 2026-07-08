@@ -76,7 +76,7 @@ def sliding_archive_2d_long():
     baseline_images=["2d"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_2d(sliding_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -87,7 +87,7 @@ def test_2d(sliding_archive_2d):
     baseline_images=["2d"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_2d_custom_axis(sliding_archive_2d):
     _, ax = plt.subplots(figsize=(8, 6))
@@ -98,7 +98,7 @@ def test_2d_custom_axis(sliding_archive_2d):
     baseline_images=["2d_long"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_2d_long(sliding_archive_2d_long):
     plt.figure(figsize=(8, 6))
@@ -109,7 +109,7 @@ def test_2d_long(sliding_archive_2d_long):
     baseline_images=["2d_long_square"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_2d_long_square(sliding_archive_2d_long):
     plt.figure(figsize=(8, 6))
@@ -120,7 +120,7 @@ def test_2d_long_square(sliding_archive_2d_long):
     baseline_images=["2d_long_transpose"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_2d_long_transpose(sliding_archive_2d_long):
     plt.figure(figsize=(8, 6))
@@ -131,7 +131,7 @@ def test_2d_long_transpose(sliding_archive_2d_long):
     baseline_images=["limits"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_limits(sliding_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -142,7 +142,7 @@ def test_limits(sliding_archive_2d):
     baseline_images=["limits_when_empty"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_limits_when_empty(sliding_archive_2d_empty):
     plt.figure(figsize=(8, 6))
@@ -158,7 +158,7 @@ def test_limits_when_empty(sliding_archive_2d_empty):
     baseline_images=["listed_cmap"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_listed_cmap(sliding_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -171,7 +171,7 @@ def test_listed_cmap(sliding_archive_2d):
     baseline_images=["coolwarm_cmap"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_coolwarm_cmap(sliding_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -182,7 +182,7 @@ def test_coolwarm_cmap(sliding_archive_2d):
     baseline_images=["boundaries"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_boundaries(sliding_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -193,7 +193,7 @@ def test_boundaries(sliding_archive_2d):
     baseline_images=["mismatch_xy_with_boundaries"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_mismatch_xy_with_boundaries():
     """There was a bug caused by the boundary lines being assigned incorrectly.
@@ -212,7 +212,7 @@ def test_mismatch_xy_with_boundaries():
     baseline_images=["rasterized"],
     remove_text=False,
     extensions=["pdf"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_rasterized(sliding_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -225,7 +225,7 @@ def test_rasterized(sliding_archive_2d):
     baseline_images=["plot_with_df"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_plot_with_df(sliding_archive_2d):
     plt.figure(figsize=(8, 6))

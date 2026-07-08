@@ -26,7 +26,7 @@ from .proximity_archive_plot_test import (  # pylint: disable = unused-import
     baseline_images=["2d"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_2d(grid_archive_2d):
     plt.figure(figsize=(8, 6))
@@ -37,7 +37,7 @@ def test_2d(grid_archive_2d):
     baseline_images=["3d"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_3d(grid_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -48,7 +48,7 @@ def test_3d(grid_archive_3d):
     baseline_images=["3d"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_3d_custom_ax(grid_archive_3d):
     _, ax = plt.subplots(figsize=(8, 6))
@@ -59,7 +59,7 @@ def test_3d_custom_ax(grid_archive_3d):
     baseline_images=["3d_custom_order"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_3d_custom_order(grid_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -70,7 +70,7 @@ def test_3d_custom_order(grid_archive_3d):
     baseline_images=["3d_custom_names"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_3d_custom_names(grid_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -83,7 +83,7 @@ def test_3d_custom_names(grid_archive_3d):
     baseline_images=["3d_coolwarm"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_3d_coolwarm_cmap(grid_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -94,7 +94,7 @@ def test_3d_coolwarm_cmap(grid_archive_3d):
     baseline_images=["3d_width2_alpha2"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_3d_width2_alpha2(grid_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -105,7 +105,7 @@ def test_3d_width2_alpha2(grid_archive_3d):
     baseline_images=["3d_custom_objective_limits"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_3d_custom_objective_limits(grid_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -116,7 +116,7 @@ def test_3d_custom_objective_limits(grid_archive_3d):
     baseline_images=["3d_limits_when_empty"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_3d_limits_when_empty(grid_archive_3d_empty):
     plt.figure(figsize=(8, 6))
@@ -130,7 +130,7 @@ def test_3d_limits_when_empty(grid_archive_3d_empty):
     # This image seems to have tiny differences for some reason, so make the
     # tolerance a bit higher.
     tol=1.0,
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_3d_sorted(grid_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -141,7 +141,7 @@ def test_3d_sorted(grid_archive_3d):
     baseline_images=["3d_vertical_cbar"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_3d_vertical_cbar(grid_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -152,7 +152,7 @@ def test_3d_vertical_cbar(grid_archive_3d):
     baseline_images=["plot_with_df"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_plot_with_df(grid_archive_3d):
     plt.figure(figsize=(8, 6))
@@ -165,7 +165,7 @@ def test_plot_with_df(grid_archive_3d):
     baseline_images=["proximity_archive"],
     remove_text=False,
     extensions=["png"],
-    style=["classic", "_classic_test_patch"],
+    style="mpl20",
 )
 def test_proximity_archive(proximity_archive_2d_obj):
     plt.figure(figsize=(8, 6))
