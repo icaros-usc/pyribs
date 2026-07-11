@@ -91,7 +91,6 @@ dev = [
 dev-array-api = [
   # Extras when working with the Array API. These can be pretty heavy, so they are
   # separate from `dev`.
-  "torch",
   "cupy-cuda12x",
 ]
 
