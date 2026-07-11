@@ -89,6 +89,17 @@ def test_basic(archive_2d):
     extensions=["png"],
     style="mpl20",
 )
+def test_basic_custom_ax(archive_2d):
+    _, ax = plt.subplots(figsize=(8, 6))
+    archive_histogram(archive_2d, ax=ax)
+
+
+@image_comparison(
+    baseline_images=["basic"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
 def test_basic_with_df(archive_2d):
     plt.figure(figsize=(8, 6))
     df = archive_2d.data(["objective"], return_type="pandas")
@@ -105,3 +116,188 @@ def test_3d_archive(grid_archive_3d):
     """Try using a 3D archive just to make sure the visualization is invariant to dimensions."""
     plt.figure(figsize=(8, 6))
     archive_histogram(grid_archive_3d)
+
+
+@image_comparison(
+    baseline_images=["custom_bins_int"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_custom_bins_int(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, bins=10)
+
+
+@image_comparison(
+    baseline_images=["custom_bins_list"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_custom_bins_list(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, bins=[-2, -0.5, 0.0])
+
+
+@image_comparison(
+    baseline_images=["vmin"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_vmin(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, vmin=-5, vmax=None)
+
+
+@image_comparison(
+    baseline_images=["vmax"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_vmax(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, vmin=None, vmax=5)
+
+
+@image_comparison(
+    baseline_images=["vmin_vmax"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_vmin_vmax(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, vmin=-5, vmax=-1)
+
+
+@image_comparison(
+    baseline_images=["ylim"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_ylim(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, ylim=300)
+
+
+@image_comparison(
+    baseline_images=["color"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_color(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, color="red")
+
+
+@image_comparison(
+    baseline_images=["cmap"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_cmap(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, cmap="magma")
+
+
+@image_comparison(
+    baseline_images=["cmap"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_cmap_overrides_color(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, color="red", cmap="magma")
+
+
+@image_comparison(
+    baseline_images=["rasterized"],
+    remove_text=False,
+    extensions=["pdf"],
+    style="mpl20",
+)
+def test_rasterized(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, rasterized=True)
+
+
+@image_comparison(
+    baseline_images=["integration"],
+    remove_text=False,
+    extensions=["pdf"],
+    style="mpl20",
+)
+def test_integration(archive_2d):
+    """Test combination of a couple of the features above."""
+    plt.figure(figsize=(8, 6))
+    archive_histogram(
+        archive_2d,
+        bins=50,
+        vmin=-2.5,
+        vmax=0.5,
+        ylim=500,
+        cmap="magma",
+        rasterized=True,
+    )
+
+
+@image_comparison(
+    baseline_images=["cdf"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_cdf(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, cumulative=True)
+
+
+@image_comparison(
+    baseline_images=["ccdf"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_ccdf(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, cumulative=-1)
+
+
+@image_comparison(
+    baseline_images=["ccdf_histtype"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_ccdf_histtype(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, cumulative=-1, histtype="bar")
+
+
+@image_comparison(
+    baseline_images=["ccdf_linewidth"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_ccdf_linewidth(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, cumulative=-1, color="red", linewidth=5.0)
+
+
+@image_comparison(
+    baseline_images=["hist_kwargs"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_hist_kwargs(archive_2d):
+    plt.figure(figsize=(8, 6))
+    archive_histogram(archive_2d, bins=20, hist_kwargs={"edgecolor": "red"})
