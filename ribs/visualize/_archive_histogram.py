@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Literal
 
 import matplotlib.colors
 import matplotlib.pyplot as plt
@@ -25,31 +24,17 @@ def archive_histogram(
     vmin: float | None = None,
     vmax: float | None = None,
     ylim: float | None = None,
-    cumulative: bool | Literal[-1] = False,
-    histtype: Literal["bar", "barstacked", "step", "stepfilled"] | None = None,
     color: ColorType = "#7e57c2",
     cmap: str | Sequence[ColorType] | matplotlib.colors.Colormap | None = None,
-    linewidth: float | None = None,
     rasterized: bool = False,
     hist_kwargs: dict | None = None,
 ) -> None:
-    r"""Plots a histogram, CDF, or CCDF of the objective values in an archive.
+    r"""Plots a histogram of the objective values in an archive.
 
     In short, this function is a wrapper around Matplotlib's
     :func:`~matplotlib.pyplot.hist`. It calls ``hist`` with objective values retrieved
     from the archive and then applies a number of (opinionated) customizations. As such,
     many of this function's arguments are shared with ``hist``.
-
-    This function can be configured to plot either the histogram, `CDF
-    <https://en.wikipedia.org/wiki/Cumulative_distribution_function>`_, or `CCDF
-    <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Complementary_cumulative_distribution_function_(tail_distribution)>`_
-    of objective values. See the ``cumulative`` parameter for more details.
-
-    .. info::
-
-        The idea of using a CCDF to evaluate QD algorithms was introduced and formalized
-        in `Vassiliades
-        2018 <https://arxiv.org/abs/1610.05729>`_.
 
     Examples:
         .. plot::
@@ -96,13 +81,6 @@ def archive_histogram(
             objective value in the archive is used.
         ylim: If provided, this is used to set the top ylimit (i.e., the upper bound of
             the y-axis) for the histogram.
-        cumulative: By default, a histogram is drawn. If this is set to True, then the
-            CDF will be drawn. If set to -1, then the CCDF will be drawn. See
-            :func:`~matplotlib.pyplot.hist` for more info.
-        histtype: The type of histogram to draw. See :func:`~matplotlib.pyplot.hist` for
-            more info. We deviate from the default in ``hist`` -- if ``cumulative`` is
-            True, then ``histtype`` defaults to ``bar``; otherwise, it defaults to
-            ``step``.
         color: Color of the histogram bars. Defaults to the pyribs theme color. Refer to
             this `Matplotlib page
             <https://matplotlib.org/stable/users/explain/colors/colors.html>`_ for more
@@ -115,8 +93,6 @@ def archive_histogram(
             :class:`~matplotlib.colors.Colormap` object. For example, "magma" is the
             default used in the Pyribs heatmap visualizations. If both ``color`` and
             ``cmap`` are passed in, the ``cmap`` will take precedence.
-        linewidth: If passed in, this sets the linewidth for the plot. This is most
-            useful if plotting a CDF or CCDF.
         rasterized: Whether to rasterize the bars of the histogram. This can be useful
             for saving to a vector format like PDF. Essentially, only the bars will be
             converted to a raster graphic, so that they will not have to be individually
@@ -162,11 +138,6 @@ def archive_histogram(
     # Set up grid lines on y-axis.
     ax.grid(color="0.9", linestyle="-", axis="y")
 
-    # Set default histtype.
-    if histtype is None:
-        # True and -1 both evaluate to True here, indicating CDF/CCDF.
-        histtype = "step" if cumulative else "bar"
-
     # Plot the histogram.
     hist_kwargs = {} if hist_kwargs is None else hist_kwargs.copy()
     hist_kwargs.update(
@@ -174,11 +145,8 @@ def archive_histogram(
         {
             "bins": bins,
             "range": (vmin, vmax),
-            "cumulative": cumulative,
-            "histtype": histtype,
             "color": color,
-            # `hist` passes these to Matplotlib's Patch as kwargs.
-            "linewidth": linewidth,
+            # `hist` passes this to Matplotlib's Patch as kwargs.
             "rasterized": rasterized,
         }
     )

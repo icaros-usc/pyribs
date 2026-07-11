@@ -249,50 +249,6 @@ def test_integration(archive_2d):
 
 
 @image_comparison(
-    baseline_images=["cdf"],
-    remove_text=False,
-    extensions=["png"],
-    style="mpl20",
-)
-def test_cdf(archive_2d):
-    plt.figure(figsize=(8, 6))
-    archive_histogram(archive_2d, cumulative=True)
-
-
-@image_comparison(
-    baseline_images=["ccdf"],
-    remove_text=False,
-    extensions=["png"],
-    style="mpl20",
-)
-def test_ccdf(archive_2d):
-    plt.figure(figsize=(8, 6))
-    archive_histogram(archive_2d, cumulative=-1)
-
-
-@image_comparison(
-    baseline_images=["ccdf_histtype"],
-    remove_text=False,
-    extensions=["png"],
-    style="mpl20",
-)
-def test_ccdf_histtype(archive_2d):
-    plt.figure(figsize=(8, 6))
-    archive_histogram(archive_2d, cumulative=-1, histtype="bar")
-
-
-@image_comparison(
-    baseline_images=["ccdf_linewidth"],
-    remove_text=False,
-    extensions=["png"],
-    style="mpl20",
-)
-def test_ccdf_linewidth(archive_2d):
-    plt.figure(figsize=(8, 6))
-    archive_histogram(archive_2d, cumulative=-1, color="red", linewidth=5.0)
-
-
-@image_comparison(
     baseline_images=["hist_kwargs"],
     remove_text=False,
     extensions=["png"],
