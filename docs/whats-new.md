@@ -1,9 +1,9 @@
-# What's New in v0.11.0
+# What's New from v0.8.0 to v0.12.0
 
-We are excited to present pyribs 0.11.0! Compared to 0.8.0, pyribs now has new
-algorithms and features intended to make the library more flexible than ever!
-This release supports Python 3.10 and up, with Python 3.9 being dropped due to
-being end-of-life.
+We are excited to present pyribs 0.12.0! Compared to 0.8.0, the past few
+releases of pyribs have introduced algorithms and features intended to make the
+library more flexible than ever! This release supports Python 3.10 and up, with
+Python 3.9 being dropped due to being end-of-life.
 
 ## New Algorithms
 
@@ -26,6 +26,10 @@ Pyribs now supports the following algorithms!
   NSLC is available in {doc}`/examples/sphere`.
   - Thanks to [@efsiatras](https://github.com/efsiatras) for contributing this
     implementation in {pr}`690`!
+- **Novelty Search with Threshold Decay:** `ProximityArchive` now includes
+  support for automatically decaying the `novelty_threshold` across iterations.
+  - Thanks to [Alejandro Marrero](https://github.com/amarrerod) for implementing
+    this in {pr}`709`!
 - **Density Descent Search with Continuous Normalizing Flows (DDS-CNF)** is now
   supported in the {class}`~ribs.archives.DensityArchive`. An example of how to
   run DDS-CNF is available in {doc}`/examples/sphere`.
@@ -34,6 +38,39 @@ Pyribs now supports the following algorithms!
 
 The {doc}`/supported-algorithms` page includes a list of algorithms supported in
 pyribs.
+
+## New Visualizations
+
+- {func}`ribs.visualize.archive_histogram` now supports plotting a histogram of
+  an archive. Here's an example where the histogram bars are colored based on
+  their objective value!
+
+  ```{eval-rst}
+  .. plot::
+      :context: close-figs
+
+      import numpy as np
+      import matplotlib.pyplot as plt
+      from ribs.archives import GridArchive
+      from ribs.visualize import archive_histogram
+
+      # Populate the archive with the negative sphere function.
+      archive = GridArchive(solution_dim=2,
+                            dims=[100, 100],
+                            ranges=[(-1, 1), (-1, 1)])
+      x = np.random.uniform(-1, 1, 10000)
+      y = np.random.uniform(-1, 1, 10000)
+      archive.add(solution=np.stack((x, y), axis=1),
+                  objective=-(x**2 + y**2),
+                  measures=np.stack((x, y), axis=1))
+
+      # Plot a histogram of the archive.
+      plt.figure(figsize=(8, 6))
+      archive_histogram(archive, cmap="magma")
+      plt.xlabel("Objective")
+      plt.ylabel("Num. Elites")
+      plt.show()
+  ```
 
 ## 🐛 Bug Fixes
 
