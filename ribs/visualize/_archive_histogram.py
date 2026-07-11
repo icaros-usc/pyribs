@@ -40,7 +40,7 @@ def archive_histogram(
         .. plot::
             :context: close-figs
 
-            Histogram of a 2D GridArchive
+            Basic Histogram of a 2D GridArchive
 
             >>> import numpy as np
             >>> import matplotlib.pyplot as plt
@@ -58,6 +58,62 @@ def archive_histogram(
             >>> # Plot a histogram of the archive.
             >>> plt.figure(figsize=(8, 6))
             >>> archive_histogram(archive)
+            >>> plt.xlabel("Objective")
+            >>> plt.ylabel("Num. Elites")
+            >>> plt.show()
+
+        .. plot::
+            :context: close-figs
+
+            Histogram Where Bars Are Colored With a Colormap
+
+            >>> import numpy as np
+            >>> import matplotlib.pyplot as plt
+            >>> from ribs.archives import GridArchive
+            >>> from ribs.visualize import archive_histogram
+            >>> # Populate the archive with the negative sphere function.
+            >>> archive = GridArchive(solution_dim=2,
+            ...                       dims=[100, 100],
+            ...                       ranges=[(-1, 1), (-1, 1)])
+            >>> x = np.random.uniform(-1, 1, 10000)
+            >>> y = np.random.uniform(-1, 1, 10000)
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2),
+            ...             measures=np.stack((x, y), axis=1))
+            >>> # Plot a histogram of the archive.
+            >>> plt.figure(figsize=(8, 6))
+            >>> archive_histogram(archive, cmap="magma")
+            >>> plt.xlabel("Objective")
+            >>> plt.ylabel("Num. Elites")
+            >>> plt.show()
+
+        .. plot::
+            :context: close-figs
+
+            Histogram with More Customizations
+
+            >>> import numpy as np
+            >>> import matplotlib.pyplot as plt
+            >>> from ribs.archives import GridArchive
+            >>> from ribs.visualize import archive_histogram
+            >>> # Populate the archive with the negative sphere function.
+            >>> archive = GridArchive(solution_dim=2,
+            ...                       dims=[100, 100],
+            ...                       ranges=[(-1, 1), (-1, 1)])
+            >>> x = np.random.uniform(-1, 1, 10000)
+            >>> y = np.random.uniform(-1, 1, 10000)
+            >>> archive.add(solution=np.stack((x, y), axis=1),
+            ...             objective=-(x**2 + y**2),
+            ...             measures=np.stack((x, y), axis=1))
+            >>> # Plot a histogram of the archive.
+            >>> plt.figure(figsize=(8, 6))
+            >>> archive_histogram(
+            >>>     archive,
+            >>>     bins=50,  # Only use 50 bins.
+            >>>     vmin=-2.5,  # Minimum objective value.
+            >>>     vmax=0.5,  # Maximum objective value.
+            >>>     ylim=400,  # Set the top of the y-axis.
+            >>> )
             >>> plt.xlabel("Objective")
             >>> plt.ylabel("Num. Elites")
             >>> plt.show()
@@ -101,8 +157,8 @@ def archive_histogram(
         hist_kwargs: Additional kwargs to pass to :func:`~matplotlib.pyplot.hist`. Note
             that since ``hist`` calls :func:`numpy.histogram`, some of these arguments
             may ultimately go to ``histogram``. Note that we already pass the following
-            parameters: ``bins``, ``range`` (via ``vmin`` and ``vmax``), ``cumulative``,
-            and ``color``.
+            parameters: ``bins``, ``range`` (via ``vmin`` and ``vmax``), ``color``, and
+            ``rasterized``.
 
     Raises:
         AttributeError: The data() method is not implemented on the given archive, which
@@ -138,6 +194,10 @@ def archive_histogram(
     # Set up grid lines on y-axis.
     ax.grid(color="0.9", linestyle="-", axis="y")
 
+    # Set the top of the y-axis.
+    if ylim is not None:
+        ax.set_ylim(top=ylim)
+
     # Plot the histogram.
     hist_kwargs = {} if hist_kwargs is None else hist_kwargs.copy()
     hist_kwargs.update(
@@ -151,9 +211,6 @@ def archive_histogram(
         }
     )
     _bin_counts, bin_edges, patches = ax.hist(objectives, **hist_kwargs)
-
-    if ylim is not None:
-        ax.set_ylim(top=ylim)
 
     # Color the histogram with a cmap. Inspiration from:
     # https://stackoverflow.com/questions/51347451/how-to-fill-histogram-with-color-gradient-where-a-fixed-point-represents-the-mid
