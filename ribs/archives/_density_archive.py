@@ -260,8 +260,8 @@ class DensityArchive(ArchiveBase):
             density estimator), ``"kde_sklearn"`` (KDE using
             :class:`sklearn.neighbors.KernelDensity`), and ``"cnf"`` (continuous
             normalizing flow, i.e., DDS-CNF from `Lee 2024
-            <https://arxiv.org/abs/2312.11331>`_). When ``"kde_sklearn"`` is used, this
-            archive computes *log density* rather than density; see
+            <https://dl.acm.org/doi/10.1145/3638529.3654001>`_). When ``"kde_sklearn"``
+            is used, this archive computes *log density* rather than density; see
             :meth:`sklearn.neighbors.KernelDensity.score_samples`. When ``"cnf"`` is
             used, this archive also returns *log density* since that is what the flow
             models directly. ``"cnf"`` requires installing torch and zuko.
