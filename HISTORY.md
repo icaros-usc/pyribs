@@ -6,6 +6,7 @@
 
 #### API
 
+- Add `archive_histogram` to visualize objective values in archives ({pr}`714`)
 - Implement `novelty_threshold` decay in `ProximityArchive` ({pr}`709`)
 
 #### Improvements
