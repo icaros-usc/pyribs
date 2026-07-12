@@ -61,106 +61,113 @@ def cvt_archive_3d_plot(
     ``plot_centroids=False`` or even removing the lines completely with ``lw=0``.
 
     Examples:
+        3D Plot with Solid Cells
 
         .. plot::
             :context: close-figs
 
-            3D Plot with Solid Cells
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import CVTArchive
+            from ribs.visualize import cvt_archive_3d_plot
 
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import CVTArchive
-            >>> from ribs.visualize import cvt_archive_3d_plot
-            >>> # Populate the archive with the negative sphere function.
-            >>> archive = CVTArchive(solution_dim=2,
-            ...                      centroids=500,
-            ...                      ranges=[(-2, 0), (-2, 0), (-2, 0)])
-            >>> x = np.random.uniform(-2, 0, 5000)
-            >>> y = np.random.uniform(-2, 0, 5000)
-            >>> z = np.random.uniform(-2, 0, 5000)
-            >>> archive.add(solution=np.stack((x, y), axis=1),
-            ...             objective=-(x**2 + y**2 + z**2),
-            ...             measures=np.stack((x, y, z), axis=1))
-            >>> # Plot the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> cvt_archive_3d_plot(archive)
-            >>> plt.title("Negative sphere function with 3D measures")
-            >>> plt.show()
+            # Populate the archive with the negative sphere function.
+            archive = CVTArchive(solution_dim=2,
+                                 centroids=500,
+                                 ranges=[(-2, 0), (-2, 0), (-2, 0)])
+            x = np.random.uniform(-2, 0, 5000)
+            y = np.random.uniform(-2, 0, 5000)
+            z = np.random.uniform(-2, 0, 5000)
+            archive.add(solution=np.stack((x, y), axis=1),
+                        objective=-(x**2 + y**2 + z**2),
+                        measures=np.stack((x, y, z), axis=1))
 
-        .. plot::
-            :context: close-figs
+            # Plot the archive.
+            plt.figure(figsize=(8, 6))
+            cvt_archive_3d_plot(archive)
+            plt.title("Negative sphere function with 3D measures")
+            plt.show()
 
-            3D Plot with Translucent Cells
-
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import CVTArchive
-            >>> from ribs.visualize import cvt_archive_3d_plot
-            >>> # Populate the archive with the negative sphere function.
-            >>> archive = CVTArchive(solution_dim=2,
-            ...                      centroids=500,
-            ...                      ranges=[(-2, 0), (-2, 0), (-2, 0)])
-            >>> x = np.random.uniform(-2, 0, 5000)
-            >>> y = np.random.uniform(-2, 0, 5000)
-            >>> z = np.random.uniform(-2, 0, 5000)
-            >>> archive.add(solution=np.stack((x, y), axis=1),
-            ...             objective=-(x**2 + y**2 + z**2),
-            ...             measures=np.stack((x, y, z), axis=1))
-            >>> # Plot the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> cvt_archive_3d_plot(archive, cell_alpha=0.1)
-            >>> plt.title("Negative sphere function with 3D measures")
-            >>> plt.show()
+        3D Plot with Translucent Cells
 
         .. plot::
             :context: close-figs
 
-            3D "Wireframe" (Shading Turned Off)
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import CVTArchive
+            from ribs.visualize import cvt_archive_3d_plot
 
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import CVTArchive
-            >>> from ribs.visualize import cvt_archive_3d_plot
-            >>> # Populate the archive with the negative sphere function.
-            >>> archive = CVTArchive(solution_dim=2,
-            ...                      centroids=100,
-            ...                      ranges=[(-2, 0), (-2, 0), (-2, 0)])
-            >>> x = np.random.uniform(-2, 0, 1000)
-            >>> y = np.random.uniform(-2, 0, 1000)
-            >>> z = np.random.uniform(-2, 0, 1000)
-            >>> archive.add(solution=np.stack((x, y), axis=1),
-            ...             objective=-(x**2 + y**2 + z**2),
-            ...             measures=np.stack((x, y, z), axis=1))
-            >>> # Plot the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> cvt_archive_3d_plot(archive, cell_alpha=0.0)
-            >>> plt.title("Negative sphere function with 3D measures")
-            >>> plt.show()
+            # Populate the archive with the negative sphere function.
+            archive = CVTArchive(solution_dim=2,
+                                 centroids=500,
+                                 ranges=[(-2, 0), (-2, 0), (-2, 0)])
+            x = np.random.uniform(-2, 0, 5000)
+            y = np.random.uniform(-2, 0, 5000)
+            z = np.random.uniform(-2, 0, 5000)
+            archive.add(solution=np.stack((x, y), axis=1),
+                        objective=-(x**2 + y**2 + z**2),
+                        measures=np.stack((x, y, z), axis=1))
+
+            # Plot the archive.
+            plt.figure(figsize=(8, 6))
+            cvt_archive_3d_plot(archive, cell_alpha=0.1)
+            plt.title("Negative sphere function with 3D measures")
+            plt.show()
+
+        3D "Wireframe" (Shading Turned Off)
 
         .. plot::
             :context: close-figs
 
-            3D Wireframe with Elites as Scatter Plot
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import CVTArchive
+            from ribs.visualize import cvt_archive_3d_plot
 
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import CVTArchive
-            >>> from ribs.visualize import cvt_archive_3d_plot
-            >>> # Populate the archive with the negative sphere function.
-            >>> archive = CVTArchive(solution_dim=2,
-            ...                      centroids=100,
-            ...                      ranges=[(-2, 0), (-2, 0), (-2, 0)])
-            >>> x = np.random.uniform(-2, 0, 1000)
-            >>> y = np.random.uniform(-2, 0, 1000)
-            >>> z = np.random.uniform(-2, 0, 1000)
-            >>> archive.add(solution=np.stack((x, y), axis=1),
-            ...             objective=-(x**2 + y**2 + z**2),
-            ...             measures=np.stack((x, y, z), axis=1))
-            >>> # Plot the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> cvt_archive_3d_plot(archive, cell_alpha=0.0, plot_elites=True)
-            >>> plt.title("Negative sphere function with 3D measures")
-            >>> plt.show()
+            # Populate the archive with the negative sphere function.
+            archive = CVTArchive(solution_dim=2,
+                                 centroids=100,
+                                 ranges=[(-2, 0), (-2, 0), (-2, 0)])
+            x = np.random.uniform(-2, 0, 1000)
+            y = np.random.uniform(-2, 0, 1000)
+            z = np.random.uniform(-2, 0, 1000)
+            archive.add(solution=np.stack((x, y), axis=1),
+                        objective=-(x**2 + y**2 + z**2),
+                        measures=np.stack((x, y, z), axis=1))
+
+            # Plot the archive.
+            plt.figure(figsize=(8, 6))
+            cvt_archive_3d_plot(archive, cell_alpha=0.0)
+            plt.title("Negative sphere function with 3D measures")
+            plt.show()
+
+        3D Wireframe with Elites as Scatter Plot
+
+        .. plot::
+            :context: close-figs
+
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import CVTArchive
+            from ribs.visualize import cvt_archive_3d_plot
+
+            # Populate the archive with the negative sphere function.
+            archive = CVTArchive(solution_dim=2,
+                                 centroids=100,
+                                 ranges=[(-2, 0), (-2, 0), (-2, 0)])
+            x = np.random.uniform(-2, 0, 1000)
+            y = np.random.uniform(-2, 0, 1000)
+            z = np.random.uniform(-2, 0, 1000)
+            archive.add(solution=np.stack((x, y), axis=1),
+                        objective=-(x**2 + y**2 + z**2),
+                        measures=np.stack((x, y, z), axis=1))
+
+            # Plot the archive.
+            plt.figure(figsize=(8, 6))
+            cvt_archive_3d_plot(archive, cell_alpha=0.0, plot_elites=True)
+            plt.title("Negative sphere function with 3D measures")
+            plt.show()
 
     Args:
         archive: A 3D :class:`~ribs.archives.CVTArchive`.
