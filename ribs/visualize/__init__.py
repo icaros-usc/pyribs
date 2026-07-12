@@ -14,6 +14,7 @@ object-oriented API, pass the `ax` parameter to these functions.
 .. autosummary::
     :toctree:
 
+    archive_ecdf
     archive_histogram
     cvt_archive_3d_plot
     cvt_archive_heatmap
@@ -25,6 +26,7 @@ object-oriented API, pass the `ax` parameter to these functions.
     qdax_repertoire_heatmap
 """
 
+from ribs.visualize._archive_ecdf import archive_ecdf
 from ribs.visualize._archive_histogram import archive_histogram
 from ribs.visualize._cvt_archive_3d_plot import cvt_archive_3d_plot
 from ribs.visualize._cvt_archive_heatmap import cvt_archive_heatmap
@@ -40,6 +42,7 @@ from ribs.visualize._visualize_qdax import (
 )
 
 __all__ = [
+    "archive_ecdf",
     "archive_histogram",
     "cvt_archive_3d_plot",
     "cvt_archive_heatmap",
