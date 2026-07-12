@@ -18,6 +18,7 @@
 
 #### Documentation
 
+- Remove doctest syntax in examples in ribs.visualize docs ({pr}`718`)
 - Use correct link for Lee 2024 in DensityArchive ({pr}`716`)
 
 ## 0.11.0
