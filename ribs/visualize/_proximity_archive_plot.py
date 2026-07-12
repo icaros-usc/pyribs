@@ -44,64 +44,68 @@ def proximity_archive_plot(
     value (objective values default to 0 in the ``ProximityArchive``).
 
     Examples:
-        .. plot::
-            :context: close-figs
-
-            Single color plot for diversity optimization settings.
-
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import ProximityArchive
-            >>> from ribs.visualize import proximity_archive_plot
-            >>> archive = ProximityArchive(solution_dim=2,
-            ...                            measure_dim=2,
-            ...                            k_neighbors=5,
-            ...                            novelty_threshold=0.1,
-            ...                            seed=42)
-            >>> for _ in range(10):
-            ...     x = np.random.uniform(-1, 1, 100)
-            ...     y = np.random.uniform(-1, 1, 100)
-            ...     archive.add(solution=np.stack((x, y), axis=1),
-            ...                 # Objectives default to 0 in this case.
-            ...                 objective=None,
-            ...                 measures=np.stack((x, y), axis=1))
-            >>> # Plot the archive.
-            >>> plt.figure(figsize=(6, 6))
-            >>> # Notice that the colormap is just a single RGB array, and the
-            ... # colorbar is removed since it is just one color.
-            >>> proximity_archive_plot(archive, cmap=[[0.5, 0.5, 0.5]],
-            ...                        cbar=None)
-            >>> plt.xlabel("x coords")
-            >>> plt.ylabel("y coords")
-            >>> plt.show()
+        Single-color plot for diversity optimization settings.
 
         .. plot::
             :context: close-figs
 
-            Plot where the objective has been recorded while using the archive.
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import ProximityArchive
+            from ribs.visualize import proximity_archive_plot
 
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import ProximityArchive
-            >>> from ribs.visualize import proximity_archive_plot
-            >>> archive = ProximityArchive(solution_dim=2,
-            ...                            measure_dim=2,
-            ...                            k_neighbors=5,
-            ...                            novelty_threshold=0.1,
-            ...                            seed=42)
-            >>> for _ in range(10):
-            ...     x = np.random.uniform(-1, 1, 100)
-            ...     y = np.random.uniform(-1, 1, 100)
-            ...     archive.add(solution=np.stack((x, y), axis=1),
-            ...                 objective=-(x**2 + y**2),
-            ...                 measures=np.stack((x, y), axis=1))
-            >>> # Plot the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> proximity_archive_plot(archive)
-            >>> plt.title("Negative sphere function")
-            >>> plt.xlabel("x coords")
-            >>> plt.ylabel("y coords")
-            >>> plt.show()
+            archive = ProximityArchive(solution_dim=2,
+                                       measure_dim=2,
+                                       k_neighbors=5,
+                                       novelty_threshold=0.1,
+                                       seed=42)
+            for _ in range(10):
+                x = np.random.uniform(-1, 1, 100)
+                y = np.random.uniform(-1, 1, 100)
+                archive.add(solution=np.stack((x, y), axis=1),
+                            # Objectives default to 0 in this case.
+                            objective=None,
+                            measures=np.stack((x, y), axis=1))
+
+            # Plot the archive.
+            plt.figure(figsize=(6, 6))
+            # Notice that the colormap is just a single RGB array, and the
+            # colorbar is removed since it is just one color.
+            proximity_archive_plot(archive, cmap=[[0.5, 0.5, 0.5]],
+                                   cbar=None)
+            plt.xlabel("x coords")
+            plt.ylabel("y coords")
+            plt.show()
+
+        Plot where the objective has been recorded while using the archive.
+
+        .. plot::
+            :context: close-figs
+
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import ProximityArchive
+            from ribs.visualize import proximity_archive_plot
+
+            archive = ProximityArchive(solution_dim=2,
+                                       measure_dim=2,
+                                       k_neighbors=5,
+                                       novelty_threshold=0.1,
+                                       seed=42)
+            for _ in range(10):
+                x = np.random.uniform(-1, 1, 100)
+                y = np.random.uniform(-1, 1, 100)
+                archive.add(solution=np.stack((x, y), axis=1),
+                            objective=-(x**2 + y**2),
+                            measures=np.stack((x, y), axis=1))
+
+            # Plot the archive.
+            plt.figure(figsize=(8, 6))
+            proximity_archive_plot(archive)
+            plt.title("Negative sphere function")
+            plt.xlabel("x coords")
+            plt.ylabel("y coords")
+            plt.show()
 
     Args:
         archive: A 2D :class:`~ribs.archives.ProximityArchive`.

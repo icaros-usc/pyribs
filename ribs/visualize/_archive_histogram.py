@@ -37,86 +37,92 @@ def archive_histogram(
     many of this function's arguments are shared with ``hist``.
 
     Examples:
-        .. plot::
-            :context: close-figs
-
-            Basic Histogram of a 2D GridArchive
-
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import GridArchive
-            >>> from ribs.visualize import archive_histogram
-            >>> # Populate the archive with the negative sphere function.
-            >>> archive = GridArchive(solution_dim=2,
-            ...                       dims=[100, 100],
-            ...                       ranges=[(-1, 1), (-1, 1)])
-            >>> x = np.random.uniform(-1, 1, 10000)
-            >>> y = np.random.uniform(-1, 1, 10000)
-            >>> archive.add(solution=np.stack((x, y), axis=1),
-            ...             objective=-(x**2 + y**2),
-            ...             measures=np.stack((x, y), axis=1))
-            >>> # Plot a histogram of the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> archive_histogram(archive)
-            >>> plt.xlabel("Objective")
-            >>> plt.ylabel("Num. Elites")
-            >>> plt.show()
+        Basic Histogram of a 2D GridArchive
 
         .. plot::
             :context: close-figs
 
-            Histogram Where Bars Are Colored With a Colormap
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import GridArchive
+            from ribs.visualize import archive_histogram
 
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import GridArchive
-            >>> from ribs.visualize import archive_histogram
-            >>> # Populate the archive with the negative sphere function.
-            >>> archive = GridArchive(solution_dim=2,
-            ...                       dims=[100, 100],
-            ...                       ranges=[(-1, 1), (-1, 1)])
-            >>> x = np.random.uniform(-1, 1, 10000)
-            >>> y = np.random.uniform(-1, 1, 10000)
-            >>> archive.add(solution=np.stack((x, y), axis=1),
-            ...             objective=-(x**2 + y**2),
-            ...             measures=np.stack((x, y), axis=1))
-            >>> # Plot a histogram of the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> archive_histogram(archive, cmap="magma")
-            >>> plt.xlabel("Objective")
-            >>> plt.ylabel("Num. Elites")
-            >>> plt.show()
+            # Populate the archive with the negative sphere function.
+            archive = GridArchive(solution_dim=2,
+                                  dims=[100, 100],
+                                  ranges=[(-1, 1), (-1, 1)])
+            x = np.random.uniform(-1, 1, 10000)
+            y = np.random.uniform(-1, 1, 10000)
+            archive.add(solution=np.stack((x, y), axis=1),
+                        objective=-(x**2 + y**2),
+                        measures=np.stack((x, y), axis=1))
+
+            # Plot a histogram of the archive.
+            plt.figure(figsize=(8, 6))
+            archive_histogram(archive)
+            plt.xlabel("Objective")
+            plt.ylabel("Num. Elites")
+            plt.show()
+
+        Histogram Where Bars Are Colored With a Colormap
 
         .. plot::
             :context: close-figs
 
-            Histogram with More Customizations
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import GridArchive
+            from ribs.visualize import archive_histogram
 
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import GridArchive
-            >>> from ribs.visualize import archive_histogram
-            >>> # Populate the archive with the negative sphere function.
-            >>> archive = GridArchive(solution_dim=2,
-            ...                       dims=[100, 100],
-            ...                       ranges=[(-1, 1), (-1, 1)])
-            >>> x = np.random.uniform(-1, 1, 10000)
-            >>> y = np.random.uniform(-1, 1, 10000)
-            >>> archive.add(solution=np.stack((x, y), axis=1),
-            ...             objective=-(x**2 + y**2),
-            ...             measures=np.stack((x, y), axis=1))
-            >>> # Plot a histogram of the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> archive_histogram(
-            >>>     archive,
-            >>>     bins=50,  # Only use 50 bins.
-            >>>     vmin=-2.5,  # Minimum objective value.
-            >>>     vmax=0.5,  # Maximum objective value.
-            >>>     ylim=400,  # Set the top of the y-axis.
-            >>> )
-            >>> plt.xlabel("Objective")
-            >>> plt.ylabel("Num. Elites")
-            >>> plt.show()
+            # Populate the archive with the negative sphere function.
+            archive = GridArchive(solution_dim=2,
+                                  dims=[100, 100],
+                                  ranges=[(-1, 1), (-1, 1)])
+            x = np.random.uniform(-1, 1, 10000)
+            y = np.random.uniform(-1, 1, 10000)
+            archive.add(solution=np.stack((x, y), axis=1),
+                        objective=-(x**2 + y**2),
+                        measures=np.stack((x, y), axis=1))
+
+            # Plot a histogram of the archive.
+            plt.figure(figsize=(8, 6))
+            archive_histogram(archive, cmap="magma")
+            plt.xlabel("Objective")
+            plt.ylabel("Num. Elites")
+            plt.show()
+
+        Histogram with More Customizations
+
+        .. plot::
+            :context: close-figs
+
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import GridArchive
+            from ribs.visualize import archive_histogram
+
+            # Populate the archive with the negative sphere function.
+            archive = GridArchive(solution_dim=2,
+                                  dims=[100, 100],
+                                  ranges=[(-1, 1), (-1, 1)])
+            x = np.random.uniform(-1, 1, 10000)
+            y = np.random.uniform(-1, 1, 10000)
+            archive.add(solution=np.stack((x, y), axis=1),
+                        objective=-(x**2 + y**2),
+                        measures=np.stack((x, y), axis=1))
+
+            # Plot a histogram of the archive.
+            plt.figure(figsize=(8, 6))
+            archive_histogram(
+                archive,
+                bins=50,  # Only use 50 bins.
+                vmin=-2.5,  # Minimum objective value.
+                vmax=0.5,  # Maximum objective value.
+                ylim=400,  # Set the top of the y-axis.
+            )
+            plt.xlabel("Objective")
+            plt.ylabel("Num. Elites")
+            plt.show()
 
     Args:
         archive: An archive that can provide its objective values via the

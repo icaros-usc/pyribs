@@ -64,30 +64,32 @@ def parallel_axes_plot(
         .. plot::
             :context: close-figs
 
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import GridArchive
-            >>> from ribs.visualize import parallel_axes_plot
-            >>> # Populate the archive with the negative sphere function.
-            >>> archive = GridArchive(
-            ...               solution_dim=3, dims=[20, 20, 20, 20, 20],
-            ...               ranges=[(-1, 1), (-1, 1), (-1, 1),
-            ...                       (-1, 1), (-1, 1)],
-            ...           )
-            >>> for x in np.linspace(-1, 1, 10):
-            ...     for y in np.linspace(0, 1, 10):
-            ...         for z in np.linspace(-1, 1, 10):
-            ...             archive.add_single(
-            ...                 solution=np.array([x,y,z]),
-            ...                 objective=-(x**2 + y**2 + z**2),
-            ...                 measures=np.array([0.5*x,x,y,z,-0.5*z]),
-            ...             )
-            >>> # Plot a heatmap of the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> parallel_axes_plot(archive)
-            >>> plt.title("Negative sphere function")
-            >>> plt.ylabel("axis values")
-            >>> plt.show()
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import GridArchive
+            from ribs.visualize import parallel_axes_plot
+
+            # Populate the archive with the negative sphere function.
+            archive = GridArchive(
+                          solution_dim=3, dims=[20, 20, 20, 20, 20],
+                          ranges=[(-1, 1), (-1, 1), (-1, 1),
+                                  (-1, 1), (-1, 1)],
+                      )
+            for x in np.linspace(-1, 1, 10):
+                for y in np.linspace(0, 1, 10):
+                    for z in np.linspace(-1, 1, 10):
+                        archive.add_single(
+                            solution=np.array([x,y,z]),
+                            objective=-(x**2 + y**2 + z**2),
+                            measures=np.array([0.5*x,x,y,z,-0.5*z]),
+                        )
+
+            # Plot a heatmap of the archive.
+            plt.figure(figsize=(8, 6))
+            parallel_axes_plot(archive)
+            plt.title("Negative sphere function")
+            plt.ylabel("axis values")
+            plt.show()
 
     Args:
         archive: Pyribs archive. If the archive has the ``lower_bounds`` and

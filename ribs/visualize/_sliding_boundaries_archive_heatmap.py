@@ -48,30 +48,32 @@ def sliding_boundaries_archive_heatmap(
         .. plot::
             :context: close-figs
 
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import SlidingBoundariesArchive
-            >>> from ribs.visualize import sliding_boundaries_archive_heatmap
-            >>> archive = SlidingBoundariesArchive(solution_dim=2,
-            ...                                    dims=[10, 20],
-            ...                                    ranges=[(-1, 1), (-1, 1)],
-            ...                                    seed=42)
-            >>> # Populate the archive with the negative sphere function.
-            >>> xy = np.clip(np.random.standard_normal((1000, 2)), -1.5, 1.5)
-            >>> archive.add(solution=xy,
-            ...             objective=-np.sum(xy**2, axis=1),
-            ...             measures=xy)
-            >>> # Plot heatmaps of the archive.
-            >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
-            >>> fig.suptitle("Negative sphere function")
-            >>> sliding_boundaries_archive_heatmap(archive, ax=ax1,
-            ...                                    boundary_lw=0.5)
-            >>> sliding_boundaries_archive_heatmap(archive, ax=ax2)
-            >>> ax1.set_title("With boundaries")
-            >>> ax2.set_title("Without boundaries")
-            >>> ax1.set(xlabel='x coords', ylabel='y coords')
-            >>> ax2.set(xlabel='x coords', ylabel='y coords')
-            >>> plt.show()
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import SlidingBoundariesArchive
+            from ribs.visualize import sliding_boundaries_archive_heatmap
+
+            # Populate the archive with the negative sphere function.
+            archive = SlidingBoundariesArchive(solution_dim=2,
+                                               dims=[10, 20],
+                                               ranges=[(-1, 1), (-1, 1)],
+                                               seed=42)
+            xy = np.clip(np.random.standard_normal((1000, 2)), -1.5, 1.5)
+            archive.add(solution=xy,
+                        objective=-np.sum(xy**2, axis=1),
+                        measures=xy)
+
+            # Plot heatmaps of the archive.
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
+            fig.suptitle("Negative sphere function")
+            sliding_boundaries_archive_heatmap(archive, ax=ax1,
+                                               boundary_lw=0.5)
+            sliding_boundaries_archive_heatmap(archive, ax=ax2)
+            ax1.set_title("With boundaries")
+            ax2.set_title("Without boundaries")
+            ax1.set(xlabel='x coords', ylabel='y coords')
+            ax2.set(xlabel='x coords', ylabel='y coords')
+            plt.show()
 
     Args:
         archive: A 2D :class:`~ribs.archives.SlidingBoundariesArchive`.
