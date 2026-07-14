@@ -28,16 +28,12 @@ def archive_ecdf(
     This function is a thin wrapper around Seaborn's :func:`~seaborn.ecdfplot` that
     extracts the objective values from the archive and then passes them as data. All
     kwargs are also passed directly to ``ecdfplot``. Similar to other pyribs
-    visualization functions, one can also pass in the archive and a ``df`` extracted
-    from the archive's :meth:`~ribs.archives.ArchiveBase.data` method.
-
-    .. info::
-
-        The idea of using a CCDF to evaluate QD algorithms was introduced and formalized
-        in `Vassiliades
-        2018 <https://arxiv.org/abs/1610.05729>`_.
+    visualization functions, one can also pass in the archive and a ``df`` previously
+    extracted from the archive's :meth:`~ribs.archives.ArchiveBase.data` method.
 
     Examples:
+        ECDF of a GridArchive
+
         .. plot::
             :context: close-figs
 
@@ -48,7 +44,7 @@ def archive_ecdf(
 
             # Populate the archive with the negative sphere function.
             archive = GridArchive(solution_dim=2,
-                                  dims=[100, 100],
+                                  dims=[10, 10],
                                   ranges=[(-1, 1), (-1, 1)])
             x = np.random.uniform(-1, 1, 10000)
             y = np.random.uniform(-1, 1, 10000)
@@ -56,7 +52,34 @@ def archive_ecdf(
                         objective=-(x**2 + y**2),
                         measures=np.stack((x, y), axis=1))
 
-            # Plot a CCDF of the archive.
+            # Plot ECDF of the archive.
+            plt.figure(figsize=(8, 6))
+            archive_ecdf(archive, stat="count")
+            plt.xlabel("Objective")
+            plt.ylabel("Num. Elites")
+            plt.show()
+
+        ECCDF of a GridArchive
+
+        .. plot::
+            :context: close-figs
+
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import GridArchive
+            from ribs.visualize import archive_ecdf
+
+            # Populate the archive with the negative sphere function.
+            archive = GridArchive(solution_dim=2,
+                                  dims=[10, 10],
+                                  ranges=[(-1, 1), (-1, 1)])
+            x = np.random.uniform(-1, 1, 10000)
+            y = np.random.uniform(-1, 1, 10000)
+            archive.add(solution=np.stack((x, y), axis=1),
+                        objective=-(x**2 + y**2),
+                        measures=np.stack((x, y), axis=1))
+
+            # Plot ECCDF of the archive. Note the use of `complementary`.
             plt.figure(figsize=(8, 6))
             archive_ecdf(archive, complementary=True, stat="count")
             plt.xlabel("Objective")
