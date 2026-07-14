@@ -41,36 +41,38 @@ pyribs.
 
 ## New Visualizations
 
-- {func}`ribs.visualize.archive_histogram` now supports plotting a histogram of
-  an archive. Here's an example where the histogram bars are colored based on
-  their objective value!
+{func}`ribs.visualize.archive_histogram` and {func}`ribs.visualize.archive_ecdf`
+now support plotting a histogram and empirical cumulative distribution function
+(ECDF) of an archive. Here's an example of these two functions, where the
+histogram bars are colored based on their objective value!
 
-  ```{eval-rst}
-  .. plot::
-      :context: close-figs
+```{eval-rst}
+.. plot::
+    :context: close-figs
 
-      import numpy as np
-      import matplotlib.pyplot as plt
-      from ribs.archives import GridArchive
-      from ribs.visualize import archive_histogram
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from ribs.archives import GridArchive
+    from ribs.visualize import archive_histogram, archive_ecdf
 
-      # Populate the archive with the negative sphere function.
-      archive = GridArchive(solution_dim=2,
-                            dims=[100, 100],
-                            ranges=[(-1, 1), (-1, 1)])
-      x = np.random.uniform(-1, 1, 10000)
-      y = np.random.uniform(-1, 1, 10000)
-      archive.add(solution=np.stack((x, y), axis=1),
-                  objective=-(x**2 + y**2),
-                  measures=np.stack((x, y), axis=1))
+    # Populate the archive with the negative sphere function.
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
+    x = np.random.uniform(-1, 1, 10000)
+    y = np.random.uniform(-1, 1, 10000)
+    archive.add(solution=np.stack((x, y), axis=1),
+                objective=-(x**2 + y**2),
+                measures=np.stack((x, y), axis=1))
 
-      # Plot a histogram of the archive.
-      plt.figure(figsize=(8, 6))
-      archive_histogram(archive, cmap="magma")
-      plt.xlabel("Objective")
-      plt.ylabel("Num. Elites")
-      plt.show()
-  ```
+    # Plot a histogram and ECCDF of the archive.
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
+    archive_histogram(archive, ax=ax1, cmap="magma")
+    ax1.set(title="Histogram", xlabel="Objective", ylabel="Num. Elites")
+    archive_ecdf(archive, ax=ax2, complementary=True, stat="count", color="#7e57c2")
+    ax2.set(title="ECCDF", xlabel="Objective", ylabel="Num. Elites")
+    plt.show()
+```
 
 ## 🐛 Bug Fixes
 
