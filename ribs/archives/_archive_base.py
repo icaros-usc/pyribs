@@ -298,10 +298,10 @@ class ArchiveBase(ABC):
 
         .. versionchanged:: 0.12.0
             When ``fields`` is a single str and ``return_type`` is "dict", "tuple",
-            or "pandas", we now return a dict, tuple, or ArchiveDataFrame with only
-            that field. Previously, ``return_type`` was simply ignored. Furthermore,
-            the default of ``return_type`` is now None, and it is set depending on
-            the type of ``fields``. See :pr:`721` for more info.
+            or "pandas", we now return a dict, tuple, or ArchiveDataFrame with only that
+            field. Previously, ``return_type`` was ignored in that case. Furthermore,
+            the default of ``return_type`` is now None, and it is set depending on the
+            type of ``fields``. See :pr:`721` for more info.
 
         Args:
             fields: List of fields to include, such as ``"solution"``, ``"objective"``,

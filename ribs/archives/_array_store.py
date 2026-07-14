@@ -345,10 +345,10 @@ class ArrayStore(PickleXPMixin):
 
         .. versionchanged:: 0.12.0
             When ``fields`` is a single str and ``return_type`` is "dict", "tuple",
-            or "pandas", we now return a dict, tuple, or ArchiveDataFrame with only
-            that field. Previously, ``return_type`` was simply ignored. Furthermore,
-            the default of ``return_type`` is now None, and it is set depending on
-            the type of ``fields``. See :pr:`721` for more info.
+            or "pandas", we now return a dict, tuple, or ArchiveDataFrame with only that
+            field. Previously, ``return_type`` was ignored in that case. Furthermore,
+            the default of ``return_type`` is now None, and it is set depending on the
+            type of ``fields``. See :pr:`721` for more info.
 
         .. seealso::
             :meth:`ribs.archives.ArchiveBase.data` is often implemented with a call to
