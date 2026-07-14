@@ -258,74 +258,102 @@ class ArchiveBase(ABC):
     def data(
         self,
         fields: str,
-        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+        return_type: None = None,
     ) -> np.ndarray: ...
 
     @overload
     def data(
         self,
         fields: None | Collection[str] = None,
+        return_type: None = None,
+    ) -> BatchData: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["dict"] = "dict",
     ) -> BatchData: ...
 
     @overload
     def data(
         self,
-        fields: None | Collection[str] = None,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["tuple"] = "tuple",
     ) -> tuple[np.ndarray]: ...
 
     @overload
     def data(
         self,
-        fields: None | Collection[str] = None,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["pandas"] = "pandas",
     ) -> ArchiveDataFrame: ...
 
     def data(
         self,
         fields: None | Collection[str] | str = None,
-        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+        return_type: None | Literal["dict", "tuple", "pandas"] = None,
     ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         """Returns data of the elites in the archive.
+
+        .. versionchanged:: 0.12.0
+            When ``fields`` is a single str and ``return_type`` is "dict", "tuple",
+            or "pandas", we now return a dict, tuple, or ArchiveDataFrame with only
+            that field. Previously, ``return_type`` was simply ignored. Furthermore,
+            the default of ``return_type`` is now None, and it is set depending on
+            the type of ``fields``.
 
         Args:
             fields: List of fields to include, such as ``"solution"``, ``"objective"``,
                 ``"measures"``, and other fields in the archive. This can also be a
-                single str indicating a field name.
-            return_type: Data to return; see below. Ignored if ``fields`` is a str.
+                single str indicating a field name. The default of None indicates that
+                all fields in the archive should be included.
+            return_type: Data to return; see below. If ``fields`` is a str and this is
+                None, a single array is returned. If ``fields`` is a collection of str
+                or None, then this defaults to "dict".
 
         Returns:
             The data for all elites in the archive. All data returned by this method
             will be a copy, i.e., the data will not update as the archive changes. If
-            ``fields`` was a single str, the returned data will just be an array holding
-            data for the given field, such as::
+            ``fields`` is a single str and ``return_type`` is None, the returned data
+            will just be an array holding data for the given field, such as::
 
                   measures = archive.data("measures")
 
             Otherwise, the returned data can take the following forms, depending on the
             ``return_type`` argument:
 
-            - ``return_type="dict"``: Dict mapping from the field name to the field data
-              at the given indices. An example is::
+            - ``return_type="dict"`` or ``return_type=None``: Dict mapping from the
+              field name to the field data at the given indices. Some examples::
 
-                  {
-                    "solution": [[1.0, 1.0, ...], ...],
-                    "objective": [1.5, ...],
-                    "measures": [[1.0, 2.0], ...],
-                    ...
-                  }
+                  data = archive.data()  # return_type=None
+                  data = archive.data(["solution", "objective", "measures"])  # return_type=None
+                  data = archive.data(return_type="dict")  # fields=None
+                  data = archive.data(["solution", "objective", "measures"], return_type="dict")
+
+                  # {
+                  #   "solution": [[1.0, 1.0, ...], ...],
+                  #   "objective": [1.5, ...],
+                  #   "measures": [[1.0, 2.0], ...],
+                  #   ...
+                  # }
+
+                  data = archive.data("measures", return_type="dict")
+
+                  # {
+                  #   "measures": [[1.0, 2.0], ...],
+                  # }
 
               The keys in this dict can be modified with the ``fields`` arg; duplicate
-              fields will be ignored since the dict stores unique keys.
+              fields will be ignored since the dict stores unique keys. This is the
+              default return type when ``fields`` is None or a collection of str.
 
             - ``return_type="tuple"``: Tuple of arrays matching the field order in
-              ``fields``. For instance, if ``fields`` is ``["objective", "measures"]``,
-              this method would return a tuple of ``(objective_arr, measures_arr)`` that
-              could be unpacked as::
+              ``fields``. Some examples with unpacking::
 
-                  objective, measures = archive.data(["objective", "measures"],
-                                                     return_type="tuple")
+                  solutions, objectives, measures = archive.data(return_type="tuple")  # fields=None
+                  objectives, measures = archive.data(["objective", "measures"], return_type="tuple")
+                  (solutions,) = archive.data("solution", return_type="tuple")
 
               Unlike with the ``dict`` return type, duplicate fields will show up as
               duplicate entries in the tuple, e.g., ``fields=["objective",
