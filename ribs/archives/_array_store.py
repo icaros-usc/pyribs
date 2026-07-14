@@ -298,6 +298,7 @@ class ArrayStore(PickleXPMixin):
     @overload
     def retrieve(
         self,
+        indices: ArrayLike,
         fields: str,
         return_type: None = None,
     ) -> Array: ...
@@ -305,6 +306,7 @@ class ArrayStore(PickleXPMixin):
     @overload
     def retrieve(
         self,
+        indices: ArrayLike,
         fields: None | Collection[str] = None,
         return_type: None = None,
     ) -> dict[str, Array]: ...
