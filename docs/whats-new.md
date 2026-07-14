@@ -237,6 +237,9 @@ emitters = [
 
 ## ✨ Additional Features
 
+- In the archives, {meth}`~ribs.archives.ArchiveBase.data` now returns an object
+  of the corresponding type when `fields` is a single str and
+  `return_type="dict"|"tuple"|"pandas"`` ({pr}`721`)
 - In the archives, {meth}`~ribs.archives.ArchiveBase.sample_elites` now supports
   the `replace` parameter to indicate whether elites should be replaced when
   sampling ({pr}`682`)
