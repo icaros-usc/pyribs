@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from ribs.archives import (
+    ArchiveDataFrame,
     CategoricalArchive,
     CVTArchive,
     GridArchive,
@@ -696,3 +697,55 @@ def test_pandas_data(name, with_elite, dtype):
         # Comparing the df to the list of expected data seems to make things be
         # marked unequal when the dtypes are mixed between object and scalar.
         assert list(df.iloc[0, : len(expected_data)]) == expected_data
+
+
+@pytest.mark.parametrize("name", ARCHIVE_NAMES)
+@pytest.mark.parametrize("return_type", [None, "dict", "tuple", "pandas"])
+def test_data_with_single_field(name, return_type):
+    """Test behaviors when a single field name is passed in."""
+    data = get_archive_data(name, dtype=np.float64)
+
+    res = data.archive_with_elite.data("objective", return_type=return_type)
+
+    if return_type is None:
+        assert np.allclose(res, np.asarray([data.objective]))
+    elif return_type == "dict":
+        assert isinstance(res, dict)
+        assert res.keys() == {"objective"}
+        assert np.allclose(res["objective"], np.asarray([data.objective]))
+    elif return_type == "tuple":
+        assert isinstance(res, tuple)
+        assert len(res) == 1
+        assert np.allclose(res[0], np.asarray([data.objective]))
+    elif return_type == "pandas":
+        assert isinstance(res, ArchiveDataFrame)
+        assert res.columns == ["objective"]
+        assert np.allclose(res["objective"], np.asarray([data.objective]))
+
+
+@pytest.mark.parametrize("name", ARCHIVE_NAMES)
+@pytest.mark.parametrize("fields", [None, "objective", ["objective", "measures"]])
+def test_data_with_return_type_none(name, fields):
+    """Test behaviors when return_type is None."""
+    data = get_archive_data(name, dtype=np.float64)
+
+    res = data.archive_with_elite.data(fields, return_type=None)
+
+    if fields is None:
+        assert isinstance(res, dict)
+        if isinstance(data.archive_with_elite, MAE_ARCHIVES):
+            assert res.keys() == {
+                "solution",
+                "objective",
+                "measures",
+                "threshold",
+                "index",
+            }
+        else:
+            assert res.keys() == {"solution", "objective", "measures", "index"}
+    elif fields == "objective":
+        assert isinstance(res, np.ndarray)
+        assert np.allclose(res, np.asarray([data.objective]))
+    elif fields == ["objective", "measures"]:
+        assert isinstance(res, dict)
+        assert res.keys() == {"objective", "measures"}
