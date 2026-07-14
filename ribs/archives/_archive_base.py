@@ -301,7 +301,7 @@ class ArchiveBase(ABC):
             or "pandas", we now return a dict, tuple, or ArchiveDataFrame with only
             that field. Previously, ``return_type`` was simply ignored. Furthermore,
             the default of ``return_type`` is now None, and it is set depending on
-            the type of ``fields``.
+            the type of ``fields``. See :pr:`721` for more info.
 
         Args:
             fields: List of fields to include, such as ``"solution"``, ``"objective"``,
@@ -324,12 +324,14 @@ class ArchiveBase(ABC):
             ``return_type`` argument:
 
             - ``return_type="dict"`` or ``return_type=None``: Dict mapping from the
-              field name to the field data at the given indices. Some examples::
+              field name to the field data at the given indices. The keys in this dict
+              can be modified with the ``fields`` arg; duplicate fields will be ignored
+              since the dict stores unique keys. This is the default return type when
+              ``fields`` is None or a collection of str. Some examples::
 
-                  data = archive.data()  # return_type=None
-                  data = archive.data(["solution", "objective", "measures"])  # return_type=None
+                  # Both of these retrieve all data in the archive.
+                  data = archive.data()  # fields=None, return_type=None
                   data = archive.data(return_type="dict")  # fields=None
-                  data = archive.data(["solution", "objective", "measures"], return_type="dict")
 
                   # {
                   #   "solution": [[1.0, 1.0, ...], ...],
@@ -338,15 +340,22 @@ class ArchiveBase(ABC):
                   #   ...
                   # }
 
+                  # Both of these only retrieve the specified fields.
+                  data = archive.data(["objective", "measures"])  # return_type=None
+                  data = archive.data(["objective", "measures"], return_type="dict")
+
+                  # {
+                  #   "objective": [1.5, ...],
+                  #   "measures": [[1.0, 2.0], ...],
+                  # }
+
+                  # Both of these retrieve only a single field.
                   data = archive.data("measures", return_type="dict")
+                  data = archive.data(["measures"], return_type="dict")
 
                   # {
                   #   "measures": [[1.0, 2.0], ...],
                   # }
-
-              The keys in this dict can be modified with the ``fields`` arg; duplicate
-              fields will be ignored since the dict stores unique keys. This is the
-              default return type when ``fields`` is None or a collection of str.
 
             - ``return_type="tuple"``: Tuple of arrays matching the field order in
               ``fields``. Some examples with unpacking::
