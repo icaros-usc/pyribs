@@ -6,6 +6,8 @@
 
 #### API
 
+- Support fields as a single str for return_type="dict"|"tuple"|"pandas" in
+  archive.data() ({pr}`721`)
 - Add `archive_ecdf` to visualize ECDF and ECCDF of archives ({pr}`719`)
 - Add `archive_histogram` to visualize objective values in archives ({pr}`714`)
 - Implement `novelty_threshold` decay in `ProximityArchive` ({pr}`709`)
