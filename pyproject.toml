@@ -40,11 +40,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-visualize = ["matplotlib>=3.0.0", "shapely>=2.0.0"]
+visualize = [
+  "matplotlib>=3.0.0",
+  "shapely>=2.0.0",
+  "seaborn>=0.11.0",   # ecdfplot() was introduced in this version.
+]
 all = [
   ### visualize ###
   "matplotlib>=3.0.0",
   "shapely>=2.0.0",
+  "seaborn>=0.11.0",
 
   ### Extra dependencies used by various components. ###
   "cma",
