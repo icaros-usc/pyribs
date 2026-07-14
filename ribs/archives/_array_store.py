@@ -300,7 +300,7 @@ class ArrayStore(PickleXPMixin):
         self,
         indices: ArrayLike,
         fields: str,
-        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+        return_type: None = None,
     ) -> Array: ...
 
     @overload
@@ -308,6 +308,14 @@ class ArrayStore(PickleXPMixin):
         self,
         indices: ArrayLike,
         fields: None | Collection[str] = None,
+        return_type: None = None,
+    ) -> dict[str, Array]: ...
+
+    @overload
+    def retrieve(
+        self,
+        indices: ArrayLike,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["dict"] = "dict",
     ) -> dict[str, Array]: ...
 
@@ -315,7 +323,7 @@ class ArrayStore(PickleXPMixin):
     def retrieve(
         self,
         indices: ArrayLike,
-        fields: None | Collection[str] = None,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["tuple"] = "tuple",
     ) -> tuple[Array]: ...
 
@@ -323,7 +331,7 @@ class ArrayStore(PickleXPMixin):
     def retrieve(
         self,
         indices: ArrayLike,
-        fields: None | Collection[str] = None,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["pandas"] = "pandas",
     ) -> ArchiveDataFrame: ...
 
@@ -331,9 +339,20 @@ class ArrayStore(PickleXPMixin):
         self,
         indices: ArrayLike,
         fields: None | Collection[str] | str = None,
-        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+        return_type: None | Literal["dict", "tuple", "pandas"] = None,
     ) -> Array | dict[str, Array] | tuple[Array] | ArchiveDataFrame:
         """Collects data at the given indices.
+
+        .. versionchanged:: 0.12.0
+            When ``fields`` is a single str and ``return_type`` is "dict", "tuple",
+            or "pandas", we now return a dict, tuple, or ArchiveDataFrame with only that
+            field. Previously, ``return_type`` was ignored in that case. Furthermore,
+            the default of ``return_type`` is now None, and it is set depending on the
+            type of ``fields``. See :pr:`721` for more info.
+
+        .. seealso::
+            :meth:`ribs.archives.ArchiveBase.data` is often implemented with a call to
+            :meth:`data`, which ultimately calls this method.
 
         Args:
             indices: List of indices at which to collect data.
@@ -356,9 +375,9 @@ class ArrayStore(PickleXPMixin):
             below should be ignored.
 
             The second element is **data**, the data at the given indices. If ``fields``
-            was a single str, this will just be an array holding data for the given
-            field. Otherwise, this data can take the following forms, depending on the
-            ``return_type`` argument:
+            is a single str and ``return_type`` is None, this will just be an array
+            holding data for the given field. Otherwise, this data can take the
+            following forms, depending on the ``return_type`` argument:
 
             - ``return_type="dict"``: Dict mapping from the field name to the field data
               at the given indices. For instance, if we have an ``objective`` field and
@@ -420,13 +439,25 @@ class ArrayStore(PickleXPMixin):
             ValueError: Passed ``return_type="pandas"`` when one of the fields has >1D
                 data.
         """
-        single_field = isinstance(fields, str)
         indices = self._xp.asarray(indices, dtype=self._xp.int32, device=self._device)
 
         # Induces copy (in numpy, at least).
         occupied = self._props["occupied"][indices]
 
+        single_field = isinstance(fields, str)
+
+        # Compute default value for return_type.
+        if return_type is None:
+            return_type = "single" if single_field else "dict"
+
+        # Normalize `fields` to be an iterable.
         if single_field:
+            fields = [fields]
+        elif fields is None:
+            fields: Iterator[str] = itertools.chain(self._fields, ["index"])
+
+        # Set up return values for data.
+        if return_type == "single":
             data = None
         elif return_type in ("dict", "pandas"):
             data = {}
@@ -434,11 +465,6 @@ class ArrayStore(PickleXPMixin):
             data = []
         else:
             raise ValueError(f"Invalid return_type {return_type}.")
-
-        if single_field:
-            fields = [fields]
-        elif fields is None:
-            fields: Iterator[str] = itertools.chain(self._fields, ["index"])
 
         for name in fields:
             # Collect array data.
@@ -453,7 +479,7 @@ class ArrayStore(PickleXPMixin):
                 raise ValueError(f"`{name}` is not a field in this ArrayStore.")
 
             # Accumulate data into the return type.
-            if single_field:
+            if return_type == "single":
                 data = arr
             elif return_type == "dict":
                 data[name] = arr
@@ -488,34 +514,41 @@ class ArrayStore(PickleXPMixin):
     def data(
         self,
         fields: str,
-        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+        return_type: None = None,
     ) -> Array: ...
 
     @overload
     def data(
         self,
         fields: None | Collection[str] = None,
+        return_type: None = None,
+    ) -> dict[str, Array]: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["dict"] = "dict",
     ) -> dict[str, Array]: ...
 
     @overload
     def data(
         self,
-        fields: None | Collection[str] = None,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["tuple"] = "tuple",
     ) -> tuple[Array]: ...
 
     @overload
     def data(
         self,
-        fields: None | Collection[str] = None,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["pandas"] = "pandas",
     ) -> ArchiveDataFrame: ...
 
     def data(
         self,
         fields: None | Collection[str] | str = None,
-        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+        return_type: None | Literal["dict", "tuple", "pandas"] = None,
     ) -> Array | dict[str, Array] | tuple[Array] | ArchiveDataFrame:
         """Retrieves data for all entries in the store.
 

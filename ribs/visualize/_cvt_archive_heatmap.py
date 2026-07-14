@@ -59,54 +59,57 @@ def cvt_archive_heatmap(
     ``plot_centroids=False`` or even removing the lines completely with ``lw=0``.
 
     Examples:
+        Heatmap of a 2D CVTArchive
 
         .. plot::
             :context: close-figs
 
-            Heatmap of a 2D CVTArchive
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import CVTArchive
+            from ribs.visualize import cvt_archive_heatmap
 
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import CVTArchive
-            >>> from ribs.visualize import cvt_archive_heatmap
-            >>> # Populate the archive with the negative sphere function.
-            >>> archive = CVTArchive(solution_dim=2,
-            ...                      centroids=100, ranges=[(-1, 1), (-1, 1)])
-            >>> x = np.random.uniform(-1, 1, 10000)
-            >>> y = np.random.uniform(-1, 1, 10000)
-            >>> archive.add(solution=np.stack((x, y), axis=1),
-            ...             objective=-(x**2 + y**2),
-            ...             measures=np.stack((x, y), axis=1))
-            >>> # Plot a heatmap of the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> cvt_archive_heatmap(archive)
-            >>> plt.title("Negative sphere function with 2D measures")
-            >>> plt.xlabel("x coords")
-            >>> plt.ylabel("y coords")
-            >>> plt.show()
+            # Populate the archive with the negative sphere function.
+            archive = CVTArchive(solution_dim=2,
+                                 centroids=100, ranges=[(-1, 1), (-1, 1)])
+            x = np.random.uniform(-1, 1, 10000)
+            y = np.random.uniform(-1, 1, 10000)
+            archive.add(solution=np.stack((x, y), axis=1),
+                        objective=-(x**2 + y**2),
+                        measures=np.stack((x, y), axis=1))
+
+            # Plot a heatmap of the archive.
+            plt.figure(figsize=(8, 6))
+            cvt_archive_heatmap(archive)
+            plt.title("Negative sphere function with 2D measures")
+            plt.xlabel("x coords")
+            plt.ylabel("y coords")
+            plt.show()
+
+        Heatmap of a 1D CVTArchive
 
         .. plot::
             :context: close-figs
 
-            Heatmap of a 1D CVTArchive
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import CVTArchive
+            from ribs.visualize import cvt_archive_heatmap
 
-            >>> import numpy as np
-            >>> import matplotlib.pyplot as plt
-            >>> from ribs.archives import CVTArchive
-            >>> from ribs.visualize import cvt_archive_heatmap
-            >>> # Populate the archive with the negative sphere function.
-            >>> archive = CVTArchive(solution_dim=2,
-            ...                      centroids=20, ranges=[(-1, 1)])
-            >>> x = np.random.uniform(-1, 1, 1000)
-            >>> archive.add(solution=np.stack((x, x), axis=1),
-            ...             objective=-x**2,
-            ...             measures=x[:, None])
-            >>> # Plot a heatmap of the archive.
-            >>> plt.figure(figsize=(8, 6))
-            >>> cvt_archive_heatmap(archive)
-            >>> plt.title("Negative sphere function with 1D measures")
-            >>> plt.xlabel("x coords")
-            >>> plt.show()
+            # Populate the archive with the negative sphere function.
+            archive = CVTArchive(solution_dim=2,
+                                 centroids=20, ranges=[(-1, 1)])
+            x = np.random.uniform(-1, 1, 1000)
+            archive.add(solution=np.stack((x, x), axis=1),
+                        objective=-x**2,
+                        measures=x[:, None])
+
+            # Plot a heatmap of the archive.
+            plt.figure(figsize=(8, 6))
+            cvt_archive_heatmap(archive)
+            plt.title("Negative sphere function with 1D measures")
+            plt.xlabel("x coords")
+            plt.show()
 
     Args:
         archive: A 1D or 2D :class:`~ribs.archives.CVTArchive`.

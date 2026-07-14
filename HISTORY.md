@@ -6,6 +6,9 @@
 
 #### API
 
+- Support fields as a single str for return_type="dict"|"tuple"|"pandas" in
+  archive.data() ({pr}`721`)
+- Add `archive_ecdf` to visualize ECDF and ECCDF of archives ({pr}`719`)
 - Add `archive_histogram` to visualize objective values in archives ({pr}`714`)
 - Implement `novelty_threshold` decay in `ProximityArchive` ({pr}`709`)
 
@@ -18,6 +21,7 @@
 
 #### Documentation
 
+- Remove doctest syntax in examples in ribs.visualize docs ({pr}`718`)
 - Use correct link for Lee 2024 in DensityArchive ({pr}`716`)
 
 ## 0.11.0

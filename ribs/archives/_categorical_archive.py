@@ -758,34 +758,41 @@ class CategoricalArchive(ArchiveBase):
     def data(
         self,
         fields: str,
-        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+        return_type: None = None,
     ) -> np.ndarray: ...
 
     @overload
     def data(
         self,
         fields: None | Collection[str] = None,
+        return_type: None = None,
+    ) -> BatchData: ...
+
+    @overload
+    def data(
+        self,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["dict"] = "dict",
     ) -> BatchData: ...
 
     @overload
     def data(
         self,
-        fields: None | Collection[str] = None,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["tuple"] = "tuple",
     ) -> tuple[np.ndarray]: ...
 
     @overload
     def data(
         self,
-        fields: None | Collection[str] = None,
+        fields: None | Collection[str] | str = None,
         return_type: Literal["pandas"] = "pandas",
     ) -> ArchiveDataFrame: ...
 
     def data(
         self,
         fields: None | Collection[str] | str = None,
-        return_type: Literal["dict", "tuple", "pandas"] = "dict",
+        return_type: None | Literal["dict", "tuple", "pandas"] = None,
     ) -> np.ndarray | BatchData | tuple[np.ndarray] | ArchiveDataFrame:
         return self._store.data(fields, return_type)
 
