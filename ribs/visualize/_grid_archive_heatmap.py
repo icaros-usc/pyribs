@@ -102,7 +102,7 @@ def grid_archive_heatmap(
 
     Args:
         archive: A 1D or 2D :class:`~ribs.archives.GridArchive`.
-        ax: Axes on which to plot the heatmap.  If ``None``, the current axis will be
+        ax: Axes on which to plot the heatmap. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
             currently in the archive. This data can be obtained by, for instance,

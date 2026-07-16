@@ -127,7 +127,7 @@ def archive_histogram(
     Args:
         archive: An archive that can provide its objective values via the
             :meth:`~ribs.archives.ArchiveBase.data` method.
-        ax: Axes on which to plot the histogram.  If ``None``, the current axis will be
+        ax: Axes on which to plot the histogram. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
             currently in the archive. This data can be obtained by, for instance,
