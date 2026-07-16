@@ -15,6 +15,7 @@
 
 #### Improvements
 
+- Unify logic for computing vmin and vmax in ribs.visualize ({pr}`724`)
 - Remove torch from dev-array-api extra since it is in the all extra ({pr}`715`)
 - Regenerate ribs.visualize baseline images due to recent update with matplotlib
   ({pr}`711`, {pr}`713`)
