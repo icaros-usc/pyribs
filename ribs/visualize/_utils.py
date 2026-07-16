@@ -229,8 +229,7 @@ def archive_heatmap_1d(
 
     # Create the plot.
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-    vmin = np.nanmin(cell_objectives) if vmin is None and not archive.empty else vmin
-    vmax = np.nanmax(cell_objectives) if vmax is None and not archive.empty else vmax
+    vmin, vmax = compute_vmin_vmax(vmin, vmax, cell_objectives)
     t = ax.pcolormesh(
         cell_boundaries,
         # y-bounds; needs a sensible default so that aspect ratio is consistent.

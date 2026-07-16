@@ -15,6 +15,7 @@ from pandas import DataFrame
 from ribs.archives import ArchiveDataFrame, GridArchive
 from ribs.visualize._utils import (
     archive_heatmap_1d,
+    compute_vmin_vmax,
     retrieve_cmap,
     set_cbar,
     validate_df,
@@ -218,16 +219,7 @@ def grid_archive_heatmap(
 
         # Create the plot.
         pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-        vmin = (
-            np.min(objective_batch)
-            if vmin is None and len(objective_batch) > 0
-            else vmin
-        )
-        vmax = (
-            np.max(objective_batch)
-            if vmax is None and len(objective_batch) > 0
-            else vmax
-        )
+        vmin, vmax = compute_vmin_vmax(vmin, vmax, objective_batch)
         t = ax.pcolormesh(
             x_bounds,
             y_bounds,
