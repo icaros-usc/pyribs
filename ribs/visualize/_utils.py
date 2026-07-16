@@ -87,6 +87,72 @@ def set_cbar(
         cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
 
 
+# Use this offset to prevent vmin and vmax from being too close to each other.
+OBJECTIVE_OFFSET = 0.1
+
+
+def compute_vmin_vmax(
+    objectives: np.ndarray,
+    vmin: float | None = None,
+    vmax: float | None = None,
+) -> tuple[float, float]:
+    """Computes vmin and vmax based on the user's args and objectives in the archive."""
+    has_objectives = len(objectives) > 0
+
+    # Cache min and max objectives.
+    if has_objectives:
+        min_obj = np.min(objectives)
+        max_obj = np.max(objectives)
+    else:
+        min_obj = None
+        max_obj = None
+
+    # Use strict equality here rather than isclose. isclose checks for a small
+    # difference, and we are okay with tiny differences.
+    min_obj_equals_max_obj = min_obj == max_obj
+
+    # Determine new_vmin and new_vmax. This depends on four conditions:
+    # 1. What is the value of vmin?
+    # 2. What is the value of vmax? (This is combined with (1) in the branches.)
+    # 3. Are there any objectives present?
+    # 4. Assuming there are objectives present, are they too close to each other?
+    if vmin is None and vmax is None:
+        if len(objectives) > 0:
+            # Neither vmin nor vmax were passed in, and there are objectives in the
+            # archive, so we use min_obj and max_obj.
+            if min_obj_equals_max_obj:
+                # Move the objectives apart since they are equal.
+                return (min_obj - OBJECTIVE_OFFSET, max_obj + OBJECTIVE_OFFSET)
+            else:
+                # Here, the objectives are far away, so set them directly.
+                return (min_obj, max_obj)
+        else:
+            # Neither vmin nor vmax were passed in, and there are no objectives, so we
+            # can choose any default value.
+            return (-OBJECTIVE_OFFSET, OBJECTIVE_OFFSET)
+    elif vmin is not None and vmax is None:
+        # vmin is passed in but vmax is not.
+        if len(objectives) > 0:
+            # TODO: Check how max_obj compares to vmin.
+            pass
+        else:
+            pass
+    elif vmin is None and vmax is not None:
+        # vmax is passed in but vmin is not.
+        if len(objectives) > 0:
+            # TODO: Check how min_obj compares to vmax.
+            pass
+        else:
+            pass
+    elif vmin is not None and vmax is not None:
+        # Both vmin and vmax are passed in, so we just take them as is.
+        if vmax < vmin:
+            raise ValueError(
+                f"vmax ({vmax}) must be greater than or equal to vmin ({vmin})"
+            )
+        return (vmin, vmax)
+
+
 def archive_heatmap_1d(
     archive: GridArchive | CVTArchive,
     *,
