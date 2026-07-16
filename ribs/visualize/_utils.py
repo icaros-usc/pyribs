@@ -91,36 +91,42 @@ def set_cbar(
 OBJECTIVE_OFFSET = 0.1
 
 
-def compute_vmin_vmax(
+def compute_vmin_vmax(  # pylint: disable = too-many-return-statements
     objectives: np.ndarray,
     vmin: float | None = None,
     vmax: float | None = None,
 ) -> tuple[float, float]:
-    """Computes vmin and vmax based on the user's args and objectives in the archive."""
+    """Computes vmin and vmax based on the user's args and objectives in the archive.
+
+    Raises:
+        ValueError: vmin and vmax were both passed in, but vmin is greater than vmax (it
+            must be less than or equal to vmax).
+
+    Returns:
+        Tuple containing the new vmin and vmax.
+    """
     has_objectives = len(objectives) > 0
 
     # Cache min and max objectives.
     if has_objectives:
-        min_obj = np.min(objectives)
-        max_obj = np.max(objectives)
+        min_obj = np.nanmin(objectives)
+        max_obj = np.nanmax(objectives)
     else:
         min_obj = None
         max_obj = None
 
-    # Use strict equality here rather than isclose. isclose checks for a small
-    # difference, and we are okay with tiny differences.
-    min_obj_equals_max_obj = min_obj == max_obj
-
-    # Determine new_vmin and new_vmax. This depends on four conditions:
+    # Determine new_vmin and new_vmax. This depends on three conditions:
     # 1. What is the value of vmin?
     # 2. What is the value of vmax? (This is combined with (1) in the branches.)
     # 3. Are there any objectives present?
-    # 4. Assuming there are objectives present, are they too close to each other?
     if vmin is None and vmax is None:
-        if len(objectives) > 0:
+        if has_objectives:
             # Neither vmin nor vmax were passed in, and there are objectives in the
             # archive, so we use min_obj and max_obj.
-            if min_obj_equals_max_obj:
+            if min_obj == max_obj:
+                # We use strict equality here rather than isclose. isclose checks for a tiny
+                # difference, and we are okay with tiny differences.
+                #
                 # Move the objectives apart since they are equal.
                 return (min_obj - OBJECTIVE_OFFSET, max_obj + OBJECTIVE_OFFSET)
             else:
@@ -131,21 +137,31 @@ def compute_vmin_vmax(
             # can choose any default value.
             return (-OBJECTIVE_OFFSET, OBJECTIVE_OFFSET)
     elif vmin is not None and vmax is None:
-        # vmin is passed in but vmax is not.
-        if len(objectives) > 0:
-            # TODO: Check how max_obj compares to vmin.
-            pass
+        # vmin is passed in, but we need to decide how to set vmax.
+        if has_objectives:
+            if vmin < max_obj:
+                # Ideally, we can just use max_obj as vmax.
+                return (vmin, max_obj)
+            else:
+                # However, if vmin >= max_obj, we choose our own default.
+                return (vmin, vmin + 2.0 * OBJECTIVE_OFFSET)
         else:
-            pass
+            # If there are no objectives, we choose our own default.
+            return (vmin, vmin + 2.0 * OBJECTIVE_OFFSET)
     elif vmin is None and vmax is not None:
-        # vmax is passed in but vmin is not.
-        if len(objectives) > 0:
-            # TODO: Check how min_obj compares to vmax.
-            pass
+        # vmax is passed in, but we need to decide how to set vmin.
+        if has_objectives:
+            if min_obj < vmax:
+                # Ideally, we can just use min_obj as vmin.
+                return (min_obj, vmax)
+            else:
+                # However, if min_obj is >= vmax, we choose our own default.
+                return (vmax - 2.0 * OBJECTIVE_OFFSET, vmax)
         else:
-            pass
-    elif vmin is not None and vmax is not None:
-        # Both vmin and vmax are passed in, so we just take them as is.
+            # If there are no objectives, we choose our own default.
+            return (vmax - 2.0 * OBJECTIVE_OFFSET, vmax)
+    else:  # vmin is not None and vmax is not None
+        # Both vmin and vmax are passed in. Take them as is, subject to verification.
         if vmax < vmin:
             raise ValueError(
                 f"vmax ({vmax}) must be greater than or equal to vmin ({vmin})"
