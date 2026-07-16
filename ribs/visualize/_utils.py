@@ -92,20 +92,25 @@ OBJECTIVE_OFFSET = 0.1
 
 
 def compute_vmin_vmax(  # pylint: disable = too-many-return-statements
+    vmin: float | None,
+    vmax: float | None,
     objectives: np.ndarray,
-    vmin: float | None = None,
-    vmax: float | None = None,
 ) -> tuple[float, float]:
     """Computes vmin and vmax based on the user's args and objectives in the archive.
+
+    Args:
+        vmin: User-supplied value for vmin.
+        vmax: User-supplied value for vmax.
+        objectives: Array of objective values. NaN values are ignored.
+
+    Returns:
+        Tuple containing the new vmin and vmax.
 
     Raises:
         ValueError: vmin and vmax were both passed in, but vmin is greater than vmax (it
             must be less than or equal to vmax).
-
-    Returns:
-        Tuple containing the new vmin and vmax.
     """
-    has_objectives = len(objectives) > 0
+    has_objectives = np.count_nonzero(~np.isnan(objectives))
 
     # Cache min and max objectives.
     if has_objectives:
