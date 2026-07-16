@@ -14,6 +14,7 @@ from pandas import DataFrame
 
 from ribs.archives import ArchiveDataFrame, SlidingBoundariesArchive
 from ribs.visualize._utils import (
+    compute_vmin_vmax,
     retrieve_cmap,
     set_cbar,
     validate_df,
@@ -161,12 +162,7 @@ def sliding_boundaries_archive_heatmap(
     ax.set_aspect(aspect)
 
     # Create the plot.
-    vmin = (
-        np.min(objective_batch) if vmin is None and len(objective_batch) > 0 else vmin
-    )
-    vmax = (
-        np.max(objective_batch) if vmax is None and len(objective_batch) > 0 else vmax
-    )
+    vmin, vmax = compute_vmin_vmax(vmin, vmax, objective_batch)
     t = ax.scatter(
         x,
         y,

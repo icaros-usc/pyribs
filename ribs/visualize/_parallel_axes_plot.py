@@ -20,7 +20,12 @@ from ribs.archives import (
     ProximityArchive,
     SlidingBoundariesArchive,
 )
-from ribs.visualize._utils import retrieve_cmap, set_cbar, validate_df
+from ribs.visualize._utils import (
+    compute_vmin_vmax,
+    retrieve_cmap,
+    set_cbar,
+    validate_df,
+)
 
 
 def parallel_axes_plot(
@@ -200,8 +205,7 @@ def parallel_axes_plot(
     upper_bounds = upper_bounds[cols]
 
     host_ax = plt.gca() if ax is None else ax  # Try to get current axis.
-    vmin = df["objective"].min() if vmin is None else vmin
-    vmax = df["objective"].max() if vmax is None else vmax
+    vmin, vmax = compute_vmin_vmax(vmin, vmax, df["objective"])
     norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
     if sort_archive:
         df = df.sort_values("objective")
