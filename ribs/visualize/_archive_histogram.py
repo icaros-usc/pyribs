@@ -6,13 +6,12 @@ from collections.abc import Sequence
 
 import matplotlib.colors
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.typing import ColorType
 from pandas import DataFrame
 
 from ribs.archives import ArchiveBase, ArchiveDataFrame
-from ribs.visualize._utils import retrieve_cmap, validate_df
+from ribs.visualize._utils import compute_vmin_vmax, retrieve_cmap, validate_df
 
 
 def archive_histogram(
@@ -182,16 +181,7 @@ def archive_histogram(
         df = validate_df(df)
         objectives = df["objective"]
 
-    # Compute vmin and vmax.
-    if len(objectives) == 0:
-        # Sensible defaults when there is no elite in the archive. The colorbar for the
-        # heatmap functions usually defaults to -0.1 and 0.1 when no objectives exist in
-        # the archive.
-        vmin = -0.1 if vmin is None else vmin
-        vmax = 0.1 if vmax is None else vmax
-    else:
-        vmin = np.min(objectives) if vmin is None else vmin
-        vmax = np.max(objectives) if vmax is None else vmax
+    vmin, vmax = compute_vmin_vmax(vmin, vmax, objectives)
 
     # Initialize axis.
     ax = plt.gca() if ax is None else ax
