@@ -10,12 +10,12 @@
   archive.data() ({pr}`721`)
 - Add `archive_ecdf` to visualize ECDF and ECCDF of archives ({pr}`719`)
 - Add `archive_histogram` to visualize objective values in archives ({pr}`714`,
-  {pr}`723`)
+  {pr}`724`)
 - Implement `novelty_threshold` decay in `ProximityArchive` ({pr}`709`)
 
 #### Improvements
 
-- Unify logic for computing vmin and vmax in ribs.visualize ({pr}`724`)
+- Unify logic for computing vmin and vmax in ribs.visualize ({pr}`725`)
 - Remove torch from dev-array-api extra since it is in the all extra ({pr}`715`)
 - Regenerate ribs.visualize baseline images due to recent update with matplotlib
   ({pr}`711`, {pr}`713`)
