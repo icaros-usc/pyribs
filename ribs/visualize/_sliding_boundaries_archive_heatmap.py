@@ -77,7 +77,7 @@ def sliding_boundaries_archive_heatmap(
 
     Args:
         archive: A 2D :class:`~ribs.archives.SlidingBoundariesArchive`.
-        ax: Axes on which to plot the heatmap.  If ``None``, the current axis will be
+        ax: Axes on which to plot the heatmap. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
             currently in the archive. This data can be obtained by, for instance,

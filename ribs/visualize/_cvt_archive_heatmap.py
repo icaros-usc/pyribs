@@ -113,7 +113,7 @@ def cvt_archive_heatmap(
 
     Args:
         archive: A 1D or 2D :class:`~ribs.archives.CVTArchive`.
-        ax: Axes on which to plot the heatmap.  If ``None``, the current axis will be
+        ax: Axes on which to plot the heatmap. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
             currently in the archive. This data can be obtained by, for instance,
@@ -151,7 +151,7 @@ def cvt_archive_heatmap(
             raster graphic so that the archive cells will not have to be individually
             rendered. Meanwhile, the surrounding axes, particularly text labels, will
             remain in vector format.
-        clip: Clip the heatmap cells to a given polygon.  By default, we draw the cells
+        clip: Clip the heatmap cells to a given polygon. By default, we draw the cells
             along the outer edges of the heatmap as polygons that extend beyond the
             archive bounds, but these polygons are hidden because we set the axis limits
             to be the archive bounds. Passing `clip=True` will clip the heatmap such
