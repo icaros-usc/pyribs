@@ -183,8 +183,15 @@ def archive_histogram(
         objectives = df["objective"]
 
     # Compute vmin and vmax.
-    vmin = np.min(objectives) if vmin is None and len(objectives) > 0 else vmin
-    vmax = np.max(objectives) if vmax is None and len(objectives) > 0 else vmax
+    if len(objectives) == 0:
+        # Sensible defaults when there is no elite in the archive. The colorbar for the
+        # heatmap functions usually defaults to -0.1 and 0.1 when no objectives exist in
+        # the archive.
+        vmin = -0.1 if vmin is None else vmin
+        vmax = 0.1 if vmax is None else vmax
+    else:
+        vmin = np.min(objectives) if vmin is None else vmin
+        vmax = np.max(objectives) if vmax is None else vmax
 
     # Initialize axis.
     ax = plt.gca() if ax is None else ax
