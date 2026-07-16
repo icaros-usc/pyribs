@@ -101,7 +101,7 @@ def compute_vmin_vmax(  # pylint: disable = too-many-return-statements
     Args:
         vmin: User-supplied value for vmin.
         vmax: User-supplied value for vmax.
-        objectives: Array of objective values. NaN values are ignored.
+        objectives: Array of objective values.
 
     Returns:
         Tuple containing the new vmin and vmax.
@@ -110,12 +110,12 @@ def compute_vmin_vmax(  # pylint: disable = too-many-return-statements
         ValueError: vmin and vmax were both passed in, but vmin is greater than vmax (it
             must be less than or equal to vmax).
     """
-    has_objectives = np.count_nonzero(~np.isnan(objectives))
+    has_objectives = len(objectives) > 0
 
     # Cache min and max objectives.
     if has_objectives:
-        min_obj = np.nanmin(objectives)
-        max_obj = np.nanmax(objectives)
+        min_obj = np.min(objectives)
+        max_obj = np.max(objectives)
     else:
         min_obj = None
         max_obj = None
@@ -229,7 +229,9 @@ def archive_heatmap_1d(
 
     # Create the plot.
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-    vmin, vmax = compute_vmin_vmax(vmin, vmax, cell_objectives)
+    vmin, vmax = compute_vmin_vmax(
+        vmin, vmax, cell_objectives[~np.isnan(cell_objectives)]
+    )
     t = ax.pcolormesh(
         cell_boundaries,
         # y-bounds; needs a sensible default so that aspect ratio is consistent.
