@@ -11,6 +11,7 @@ from matplotlib.axes import Axes
 from pandas import DataFrame
 
 from ribs.archives import ArchiveBase, ArchiveDataFrame
+from ribs.visualize._utils import compute_vmin_vmax
 
 
 def aggregate_cdf(
@@ -51,23 +52,7 @@ def aggregate_cdf(
     # TODO: Proper data retrieval.
     objectives = [archive.data("objective") for archive in archives]
 
-    # TODO: Computation.
-    # Compute vmin and vmax.
-
-    # TODO: Use common vmin_vmax util.
-    if vmin is None:
-        min_objs = [np.inf if len(objs) == 0 else np.min(objs) for objs in objectives]
-        # TODO: check for inf?
-        vmin = np.min(min_objs)
-    else:
-        pass
-
-    max_objs = [np.inf if len(objs) == 0 else np.max(objs) for objs in objectives]
-
-    vmax = np.max(max_objs)
-
-    vmin = np.min(objectives) if vmin is None and len(objectives) > 0 else vmin
-    vmax = np.max(objectives) if vmax is None and len(objectives) > 0 else vmax
+    vmin, vmax = compute_vmin_vmax(vmin, vmax, np.concatenate(objectives))
 
     # Initialize axis.
     ax = plt.gca() if ax is None else ax
