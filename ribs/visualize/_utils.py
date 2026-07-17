@@ -87,6 +87,99 @@ def set_cbar(
         cbar.figure.colorbar(t, ax=cbar, **cbar_kwargs)
 
 
+# Use this offset to prevent vmin and vmax from being too close to each other.
+OBJECTIVE_OFFSET = 0.1
+
+
+def compute_vmin_vmax(  # pylint: disable = too-many-return-statements
+    vmin: float | None,
+    vmax: float | None,
+    objectives: np.ndarray,
+) -> tuple[float, float]:
+    """Computes vmin and vmax based on the user's args and objectives in the archive.
+
+    Args:
+        vmin: User-supplied value for vmin.
+        vmax: User-supplied value for vmax.
+        objectives: Array of objective values.
+
+    Returns:
+        Tuple containing the new vmin and vmax.
+
+    Raises:
+        ValueError: vmin and vmax were both passed in, but vmin is greater than vmax (it
+            must be less than or equal to vmax).
+    """
+    has_objectives = len(objectives) > 0
+
+    # Cache min and max objectives.
+    if has_objectives:
+        min_obj = np.min(objectives)
+        max_obj = np.max(objectives)
+    else:
+        min_obj = None
+        max_obj = None
+
+    # Determine new_vmin and new_vmax. This depends on three conditions:
+    # 1. What is the value of vmin?
+    # 2. What is the value of vmax? (This is combined with (1) in the branches.)
+    # 3. Are there any objectives present?
+    # The guiding principle is that we should always return reasonable and valid values
+    # for vmin and vmax. The values are valid if vmin < vmax (strictly less than; equal
+    # is not okay).
+    if vmin is None and vmax is None:
+        if has_objectives:
+            # Neither vmin nor vmax were passed in, and there are objectives in the
+            # archive, so we use min_obj and max_obj.
+            if min_obj == max_obj:
+                # We use strict equality here rather than isclose. isclose checks for a tiny
+                # difference, and we are okay with tiny differences.
+                #
+                # Move the objectives apart since they are equal.
+                return (min_obj - OBJECTIVE_OFFSET, max_obj + OBJECTIVE_OFFSET)
+            else:
+                # Here, the objectives are far enough away, so set them directly.
+                return (min_obj, max_obj)
+        else:
+            # Neither vmin nor vmax were passed in, and there are no objectives, so we
+            # can choose any default value.
+            return (-OBJECTIVE_OFFSET, OBJECTIVE_OFFSET)
+    elif vmin is not None and vmax is None:
+        # vmin is passed in, but we need to decide how to set vmax.
+        if has_objectives:
+            if vmin < max_obj:
+                # Ideally, we can just use max_obj as vmax.
+                return (vmin, max_obj)
+            else:
+                # However, if vmin >= max_obj, we choose our own default.
+                return (vmin, vmin + 2.0 * OBJECTIVE_OFFSET)
+        else:
+            # If there are no objectives, we choose our own default.
+            return (vmin, vmin + 2.0 * OBJECTIVE_OFFSET)
+    elif vmin is None and vmax is not None:
+        # vmax is passed in, but we need to decide how to set vmin.
+        if has_objectives:
+            if min_obj < vmax:
+                # Ideally, we can just use min_obj as vmin.
+                return (min_obj, vmax)
+            else:
+                # However, if min_obj is >= vmax, we choose our own default.
+                return (vmax - 2.0 * OBJECTIVE_OFFSET, vmax)
+        else:
+            # If there are no objectives, we choose our own default.
+            return (vmax - 2.0 * OBJECTIVE_OFFSET, vmax)
+    else:  # vmin is not None and vmax is not None
+        # Both vmin and vmax are passed in. Take them as is, subject to verification.
+        if vmax < vmin:
+            raise ValueError(
+                f"vmax ({vmax}) must be greater than or equal to vmin ({vmin})"
+            )
+        elif vmin == vmax:
+            # If they're equal, set a sensible default range.
+            return (vmin - OBJECTIVE_OFFSET, vmax + OBJECTIVE_OFFSET)
+        return (vmin, vmax)
+
+
 def archive_heatmap_1d(
     archive: GridArchive | CVTArchive,
     *,
@@ -142,8 +235,9 @@ def archive_heatmap_1d(
 
     # Create the plot.
     pcm_kwargs = {} if pcm_kwargs is None else pcm_kwargs
-    vmin = np.nanmin(cell_objectives) if vmin is None and not archive.empty else vmin
-    vmax = np.nanmax(cell_objectives) if vmax is None and not archive.empty else vmax
+    vmin, vmax = compute_vmin_vmax(
+        vmin, vmax, cell_objectives[~np.isnan(cell_objectives)]
+    )
     t = ax.pcolormesh(
         cell_boundaries,
         # y-bounds; needs a sensible default so that aspect ratio is consistent.

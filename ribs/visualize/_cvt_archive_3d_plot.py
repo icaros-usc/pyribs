@@ -18,6 +18,7 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 
 from ribs.archives import ArchiveDataFrame, CVTArchive
 from ribs.visualize._utils import (
+    compute_vmin_vmax,
     retrieve_cmap,
     set_cbar,
     validate_df,
@@ -260,22 +261,7 @@ def cvt_archive_3d_plot(
         upper_bounds = upper_bounds[measure_order]
         centroids = centroids[:, measure_order]
 
-    # Compute objective value range.
-    if vmin is None:
-        # Defaulting to -inf (and inf for max_obj) allows the computations after this to
-        # proceed smoothly.
-        min_obj = np.min(objective_batch) if len(objective_batch) > 0 else -np.inf
-    else:
-        min_obj = vmin
-
-    if vmax is None:
-        max_obj = np.max(objective_batch) if len(objective_batch) > 0 else np.inf
-    else:
-        max_obj = vmax
-
-    # If the min and max are the same, we set a sensible default range.
-    if min_obj == max_obj:
-        min_obj, max_obj = min_obj - 0.01, max_obj + 0.01
+    vmin, vmax = compute_vmin_vmax(vmin, vmax, objective_batch)
 
     # Default ax behavior.
     if ax is None:
@@ -368,9 +354,7 @@ def cvt_archive_3d_plot(
     objs = np.asarray(objs)
     cmap_idx = ~np.isnan(objs)
     cmap_objs = objs[cmap_idx]
-    normalized_objs = np.clip(
-        (np.asarray(cmap_objs) - min_obj) / (max_obj - min_obj), 0.0, 1.0
-    )
+    normalized_objs = np.clip((np.asarray(cmap_objs) - vmin) / (vmax - vmin), 0.0, 1.0)
 
     # Create an array of facecolors in RGBA format that defaults to transparent white.
     facecolors = np.full((len(objs), 4), [1.0, 1.0, 1.0, 0.0])
@@ -397,8 +381,8 @@ def cvt_archive_3d_plot(
             s=elite_ms,
             c=objective_batch,
             cmap=cmap,
-            vmin=min_obj,
-            vmax=max_obj,
+            vmin=vmin,
+            vmax=vmax,
             lw=0.0,
             alpha=elite_alpha,
         )
@@ -409,5 +393,5 @@ def cvt_archive_3d_plot(
 
     # Create color bar.
     mappable = ScalarMappable(cmap=cmap)
-    mappable.set_clim(min_obj, max_obj)
+    mappable.set_clim(vmin, vmax)
     set_cbar(mappable, ax, cbar, cbar_kwargs)
