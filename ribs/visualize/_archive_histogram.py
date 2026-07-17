@@ -6,13 +6,12 @@ from collections.abc import Sequence
 
 import matplotlib.colors
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.typing import ColorType
 from pandas import DataFrame
 
 from ribs.archives import ArchiveBase, ArchiveDataFrame
-from ribs.visualize._utils import retrieve_cmap, validate_df
+from ribs.visualize._utils import compute_vmin_vmax, retrieve_cmap, validate_df
 
 
 def archive_histogram(
@@ -127,7 +126,7 @@ def archive_histogram(
     Args:
         archive: An archive that can provide its objective values via the
             :meth:`~ribs.archives.ArchiveBase.data` method.
-        ax: Axes on which to plot the histogram.  If ``None``, the current axis will be
+        ax: Axes on which to plot the histogram. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
             currently in the archive. This data can be obtained by, for instance,
@@ -182,9 +181,7 @@ def archive_histogram(
         df = validate_df(df)
         objectives = df["objective"]
 
-    # Compute vmin and vmax.
-    vmin = np.min(objectives) if vmin is None and len(objectives) > 0 else vmin
-    vmax = np.max(objectives) if vmax is None and len(objectives) > 0 else vmax
+    vmin, vmax = compute_vmin_vmax(vmin, vmax, objectives)
 
     # Initialize axis.
     ax = plt.gca() if ax is None else ax

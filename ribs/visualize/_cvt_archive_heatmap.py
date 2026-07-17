@@ -19,6 +19,7 @@ from scipy.spatial import Voronoi  # pylint: disable=no-name-in-module
 from ribs.archives import ArchiveDataFrame, CVTArchive
 from ribs.visualize._utils import (
     archive_heatmap_1d,
+    compute_vmin_vmax,
     retrieve_cmap,
     set_cbar,
     validate_df,
@@ -113,7 +114,7 @@ def cvt_archive_heatmap(
 
     Args:
         archive: A 1D or 2D :class:`~ribs.archives.CVTArchive`.
-        ax: Axes on which to plot the heatmap.  If ``None``, the current axis will be
+        ax: Axes on which to plot the heatmap. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
             currently in the archive. This data can be obtained by, for instance,
@@ -151,7 +152,7 @@ def cvt_archive_heatmap(
             raster graphic so that the archive cells will not have to be individually
             rendered. Meanwhile, the surrounding axes, particularly text labels, will
             remain in vector format.
-        clip: Clip the heatmap cells to a given polygon.  By default, we draw the cells
+        clip: Clip the heatmap cells to a given polygon. By default, we draw the cells
             along the outer edges of the heatmap as polygons that extend beyond the
             archive bounds, but these polygons are hidden because we set the axis limits
             to be the archive bounds. Passing `clip=True` will clip the heatmap such
@@ -307,24 +308,14 @@ def cvt_archive_heatmap(
         # Calculate objective value for each region. `vor.point_region` contains the
         # region index of each point.
         region_obj = [None] * len(vor.regions)
-        min_obj, max_obj = np.inf, -np.inf
         pt_to_obj = dict(zip(index_batch, objective_batch, strict=True))
         for pt_idx, region_idx in enumerate(
             vor.point_region[:-4]
         ):  # Exclude faraway_pts.
             if region_idx != -1 and pt_idx in pt_to_obj:
-                obj = pt_to_obj[pt_idx]
-                min_obj = min(min_obj, obj)
-                max_obj = max(max_obj, obj)
-                region_obj[region_idx] = obj
+                region_obj[region_idx] = pt_to_obj[pt_idx]
 
-        # Override objective value range.
-        min_obj = min_obj if vmin is None else vmin
-        max_obj = max_obj if vmax is None else vmax
-
-        # If the min and max are the same, we set a sensible default range.
-        if min_obj == max_obj:
-            min_obj, max_obj = min_obj - 0.01, max_obj + 0.01
+        vmin, vmax = compute_vmin_vmax(vmin, vmax, objective_batch)
 
         # Vertices of all cells.
         vertices = []
@@ -381,7 +372,7 @@ def cvt_archive_heatmap(
         # Compute facecolors from the cmap. We first normalize the objectives and clip
         # them to [0, 1].
         normalized_objs = np.clip(
-            (np.asarray(facecolor_objs) - min_obj) / (max_obj - min_obj), 0.0, 1.0
+            (np.asarray(facecolor_objs) - vmin) / (vmax - vmin), 0.0, 1.0
         )
         facecolors = np.asarray(facecolors)
         facecolors[facecolor_cmap_mask] = cmap(normalized_objs)
@@ -400,7 +391,7 @@ def cvt_archive_heatmap(
 
         # Create a colorbar.
         mappable = ScalarMappable(cmap=cmap)
-        mappable.set_clim(min_obj, max_obj)
+        mappable.set_clim(vmin, vmax)
 
         # Plot the sample points and centroids.
         if plot_centroids:

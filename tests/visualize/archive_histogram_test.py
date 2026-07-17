@@ -249,6 +249,44 @@ def test_integration(archive_2d):
 
 
 @image_comparison(
+    baseline_images=["empty"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_empty_archive():
+    plt.figure(figsize=(8, 6))
+    archive = GridArchive(solution_dim=2, dims=[100, 100], ranges=[(-1, 1), (-1, 1)])
+    archive_histogram(
+        archive,
+        bins=50,
+        vmin=-2.5,
+        vmax=0.5,
+        ylim=500,
+        cmap="magma",
+        rasterized=True,
+    )
+
+
+@image_comparison(
+    baseline_images=["empty_no_vmin_vmax"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_empty_archive_no_vmin_vmax():
+    plt.figure(figsize=(8, 6))
+    archive = GridArchive(solution_dim=2, dims=[100, 100], ranges=[(-1, 1), (-1, 1)])
+    archive_histogram(
+        archive,
+        bins=50,
+        ylim=500,
+        cmap="magma",
+        rasterized=True,
+    )
+
+
+@image_comparison(
     baseline_images=["hist_kwargs"],
     remove_text=False,
     extensions=["png"],
