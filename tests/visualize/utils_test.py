@@ -55,6 +55,9 @@ class TestVminVmax:
     def test_yes_vmin_yes_vmax(self, objectives):
         assert_allclose(compute_vmin_vmax(-2.0, 2.0, objectives), (-2.0, 2.0))
 
+    def test_yes_vmin_yes_vmax_equal(self, objectives):
+        assert_allclose(compute_vmin_vmax(-2.0, -2.0, objectives), (-2.1, -1.9))
+
     def test_yes_vmin_yes_vmax_error(self, objectives):
         """vmin and vmax invalid since vmax < vmin"""
         with pytest.raises(

@@ -124,6 +124,9 @@ def compute_vmin_vmax(  # pylint: disable = too-many-return-statements
     # 1. What is the value of vmin?
     # 2. What is the value of vmax? (This is combined with (1) in the branches.)
     # 3. Are there any objectives present?
+    # The guiding principle is that we should always return reasonable and valid values
+    # for vmin and vmax. The values are valid if vmin < vmax (strictly less than; equal
+    # is not okay).
     if vmin is None and vmax is None:
         if has_objectives:
             # Neither vmin nor vmax were passed in, and there are objectives in the
@@ -135,7 +138,7 @@ def compute_vmin_vmax(  # pylint: disable = too-many-return-statements
                 # Move the objectives apart since they are equal.
                 return (min_obj - OBJECTIVE_OFFSET, max_obj + OBJECTIVE_OFFSET)
             else:
-                # Here, the objectives are far away, so set them directly.
+                # Here, the objectives are far enough away, so set them directly.
                 return (min_obj, max_obj)
         else:
             # Neither vmin nor vmax were passed in, and there are no objectives, so we
@@ -171,6 +174,9 @@ def compute_vmin_vmax(  # pylint: disable = too-many-return-statements
             raise ValueError(
                 f"vmax ({vmax}) must be greater than or equal to vmin ({vmin})"
             )
+        elif vmin == vmax:
+            # If they're equal, set a sensible default range.
+            return (vmin - OBJECTIVE_OFFSET, vmax + OBJECTIVE_OFFSET)
         return (vmin, vmax)
 
 
