@@ -1,4 +1,4 @@
-"""Provides aggregate_cdf."""
+"""Provides aggregate_histogram."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from ribs.archives import ArchiveBase, ArchiveDataFrame
 from ribs.visualize._utils import compute_vmin_vmax
 
 
-def aggregate_cdf(
+def aggregate_histogram(
     archives: Collection[ArchiveBase],
     ax: Axes | None = None,
     dfs: Collection[DataFrame] | Collection[ArchiveDataFrame] | None = None,
@@ -79,13 +79,6 @@ def aggregate_cdf(
 
     # TODO: spread parameter.
     spread_cdf = cdf.std(axis=0)
-
-    print(histograms.shape)
-    print(agg_cdf.shape)
-    print(spread_cdf.shape)
-
-    print(agg_cdf[40:45])
-    print(spread_cdf[40:45])
 
     patch = ax.stairs(values=agg_cdf, edges=bin_edges)
     ax.stairs(
