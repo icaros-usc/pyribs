@@ -15,6 +15,9 @@ from ribs.archives import ArchiveBase, ArchiveDataFrame
 from ribs.visualize._utils import compute_vmin_vmax, validate_df
 
 
+# TODO: Describe what a CDF/CCDF is and how we aggregate.
+# TODO: Review argument descriptions.
+# TODO: Examples.
 # TODO: Support more errorbars.
 # TODO: None default for estimator and errorbar?
 def aggregate_cdf(
@@ -24,22 +27,26 @@ def aggregate_cdf(
     bins: int | Sequence[float] | str | None = 100,
     vmin: float | None = None,
     vmax: float | None = None,
-    cumulative: bool | Literal[-1] = False,
+    cumulative: bool | Literal[-1] = True,
     estimator: Literal["mean", "median"] = "mean",
     errorbar: Literal["se", "sd"] = "sd",
     show_edges: bool = True,
 ) -> None:
     """Plots a CDF/CCDF aggregated over multiple archives.
 
+    This function also has limited support for plotting histograms by setting the
+    `cumulative` parameter to False.
+
     .. info::
 
-        The idea of using a CCDF to evaluate QD algorithms was introduced and formalized
-        in `Vassiliades
+        The idea of using a CDF/CCDF to evaluate QD algorithms was introduced and
+        formalized in `Vassiliades
         2018 <https://arxiv.org/abs/1610.05729>`_.
 
     Args:
-        archives: Archives to aggregate for the CDF.
-        ax: Axes on which to plot the CDF. If ``None``, the current axis will be used.
+        archives: Archives to aggregate for the CDF/CCDF.
+        ax: Axes on which to plot the CDF/CCDF. If ``None``, the current axis will be
+            used.
         dfs: If provided, we will plot data from this sequence of dataframes instead of
             the data currently in the archives. This data can be obtained by, for
             instance, calling :meth:`ribs.archives.ArchiveBase.data` with
@@ -47,23 +54,22 @@ def aggregate_cdf(
             :class:`~ribs.archives.ArchiveDataFrame`. Note that, at a minimum, each
             dataframe must contain a column for "objective". The number of dataframes
             must be the same as the number of archives.
-        bins: Bins for the CDF. The default of 100 indicates that the histogram will
-            consist of 100 equally-sized bins. See :func:`~matplotlib.pyplot.hist` for
-            more info.
+        bins: Bins for the CDF/CCDF. The default of 100 indicates that there will be 100
+            equally-sized bins.
         vmin: Minimum objective value to use in the plot. If ``None``, the minimum
             objective value across all the archives is used.
         vmax: Maximum objective value to use in the plot. If ``None``, the maximum
             objective value across all the archives is used.
-        cumulative: Pass False to plot a regular histogram, True to plot a CDF, and -1
-            to pass a CCDF.
-        estimator: Method for aggregating the histogram or CDF/CCDF across the multiple
+        cumulative: Pass True to plot a CDF, -1 to plot a CCDF, and False to plot a
+            histogram.
+        estimator: Method for aggregating the CDF/CCDF or histogram across the multiple
             archives. For example, if "mean" is passed, we count the number of entries
             in each histogram bin for each archive, and the final plot shows the mean
             number of entries in each bin.
-        errorbar: Method for computing the errorbar for the histogram or CDF/CCDF. For
+        errorbar: Method for computing the errorbar for the CDF/CCDF or histogram. For
             example, if "sd" is passed, we display an errorbar showing the standard
             deviation of the number of entries in each histogram bin.
-        show_edges: Whether to show the edges of the histogram or CDF/CCDF.
+        show_edges: Whether to show the edges of the CDF/CCDF or histogram.
     """
     if dfs is None:
         objectives = []
