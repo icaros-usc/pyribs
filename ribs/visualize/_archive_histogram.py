@@ -37,8 +37,8 @@ def archive_histogram(
 
     .. note::
         This function is intended to plot a single archive, similar to heatmap
-        functions. To aggregate multiple archives into a single histogram or CDF/CCDF,
-        see :func:`~ribs.visualize.aggregate_histogram`.
+        functions. To aggregate multiple archives into a CDF/CCDF or histogram, see
+        :func:`~ribs.visualize.aggregate_cdf`.
 
     Examples:
         Basic Histogram of a 2D GridArchive

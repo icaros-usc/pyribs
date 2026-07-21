@@ -1,4 +1,4 @@
-"""Provides aggregate_histogram."""
+"""Provides aggregate_cdf."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from ribs.visualize._utils import compute_vmin_vmax, validate_df
 
 # TODO: Support more errorbars.
 # TODO: None default for estimator and errorbar?
-def aggregate_histogram(
+def aggregate_cdf(
     archives: Collection[ArchiveBase],
     ax: Axes | None = None,
     dfs: Collection[DataFrame] | Collection[ArchiveDataFrame] | None = None,
@@ -29,7 +29,7 @@ def aggregate_histogram(
     errorbar: Literal["se", "sd"] = "sd",
     show_edges: bool = True,
 ) -> None:
-    """Plots a histogram or CDF/CCDF aggregated over multiple archives.
+    """Plots a CDF/CCDF aggregated over multiple archives.
 
     .. info::
 
@@ -72,7 +72,7 @@ def aggregate_histogram(
                 objectives.append(archive.data("objective"))
             except NotImplementedError as e:
                 raise AttributeError(
-                    "To use aggregate_histogram, each archive must have the data() method."
+                    "To use aggregate_cdf, each archive must have the data() method."
                 ) from e
     else:
         if len(dfs) != len(archives):

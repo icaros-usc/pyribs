@@ -1,4 +1,4 @@
-"""Tests for aggregate_histogram.
+"""Tests for aggregate_cdf.
 
 See README.md for instructions on writing tests.
 """
@@ -9,7 +9,7 @@ import pytest
 from matplotlib.testing.decorators import image_comparison
 
 from ribs.archives import GridArchive
-from ribs.visualize import aggregate_histogram
+from ribs.visualize import aggregate_cdf
 
 # pylint: disable=redefined-outer-name
 
@@ -70,7 +70,7 @@ def simple_archives():
 )
 def test_basic_histogram(simple_archives):
     plt.figure(figsize=(8, 6))
-    aggregate_histogram(simple_archives, bins=3)
+    aggregate_cdf(simple_archives, bins=3)
 
 
 @image_comparison(
@@ -81,7 +81,7 @@ def test_basic_histogram(simple_archives):
 )
 def test_basic_cdf(simple_archives):
     plt.figure(figsize=(8, 6))
-    aggregate_histogram(simple_archives, bins=3, cumulative=True)
+    aggregate_cdf(simple_archives, bins=3, cumulative=True)
 
 
 # TODO: vmin and vmax
