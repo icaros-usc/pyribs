@@ -1,6 +1,9 @@
 # History
 
-## (Forthcoming)
+## 0.12.0
+
+To learn more about this release, see our What's New page!
+https://docs.pyribs.org/en/stable/whats-new.html
 
 ### Changelog
 
