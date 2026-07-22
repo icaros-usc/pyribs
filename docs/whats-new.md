@@ -41,14 +41,26 @@ pyribs.
 
 ## New Visualizations
 
-{func}`ribs.visualize.archive_histogram` and {func}`ribs.visualize.archive_ecdf`
-now support plotting a histogram and empirical cumulative distribution function
-(ECDF) of an archive. Here's an example of these two functions, where the
-histogram bars are colored based on their objective value!
+We introduce new functions for plotting the distribution of objective values in
+one or more archives:
+
+- {func}`ribs.visualize.archive_histogram` plots the histogram of objective
+  values in a **single archive**. It has a similar purpose to heatmap functions,
+  in that it is intended to operate on just one archive at a time.
+- {func}`ribs.visualize.archive_ecdf` plots the empirical cumulative
+  distribution function (ECDF) of objective values in a **single archive**.
+- {func}`ribs.visualize.aggregate_cdf` plots the CDF or CCDF of objective
+  values, aggregated over **multiple archives**. This is useful for
+  understanding how well a QD algorithm performs across multiple runs.
+
+Below are examples of these three functions -- in particular, the histogram bars
+are colored based on their objective value!
 
 ```{eval-rst}
 .. plot::
     :context: close-figs
+
+    """Demonstration of archive_histogram and archive_ecdf."""
 
     import numpy as np
     import matplotlib.pyplot as plt
@@ -72,6 +84,43 @@ histogram bars are colored based on their objective value!
     archive_ecdf(archive, ax=ax2, complementary=True, stat="count", color="#7e57c2")
     ax2.set(title="ECCDF", xlabel="Objective", ylabel="Num. Elites")
     plt.show()
+
+.. plot::
+    :context: close-figs
+
+    """Demonstration of aggregate_cdf."""
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from ribs.archives import GridArchive
+    from ribs.visualize import aggregate_cdf
+
+    # Populate 5 archives with slightly offset versions of the negative sphere
+    # function.
+    archives = []
+    for i in range(5):
+        archive = GridArchive(
+            solution_dim=2, ranges=[(-1, 1), (-1, 1)], dims=[100, 100]
+        )
+        xxs, yys = np.meshgrid(np.linspace(-1, 1, 100), np.linspace(-1, 1, 100))
+        xxs, yys = xxs.ravel(), yys.ravel()
+        coords = np.stack((xxs, yys), axis=1)
+        archive.add(
+            solution=coords,
+            objective=-(xxs**2 + yys**2) + 0.2 * i,  # Negative sphere, with offset.
+            measures=coords,
+        )
+        archives.append(archive)
+
+    plt.figure(figsize=(8, 6))
+    line, _ = aggregate_cdf(archives, cumulative=True)
+    line.set_label("CDF using Mean and Std")
+    line, _ = aggregate_cdf(archives, cumulative=True, estimator="median", errorbar="iqr")
+    line.set_label("CDF using Median and IQR")
+    plt.title("CDF")
+    plt.xlabel("Objective Value")
+    plt.ylabel("Num. Elites")
+    plt.legend()
 ```
 
 ## 🐛 Bug Fixes
