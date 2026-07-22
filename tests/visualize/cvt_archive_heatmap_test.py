@@ -192,6 +192,96 @@ def test_limits_when_empty(cvt_archive_2d_empty):
 
 
 @image_comparison(
+    baseline_images=["limits_no_vmin"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_limits_no_vmin(cvt_archive_2d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive_2d,
+        vmin=None,
+        vmax=2.0,
+    )
+
+
+@image_comparison(
+    baseline_images=["limits_no_vmin_low_vmax"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_limits_no_vmin_low_vmax(cvt_archive_2d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive_2d,
+        vmin=None,
+        vmax=-3.0,  # Below min objective in the archive.
+    )
+
+
+@image_comparison(
+    baseline_images=["limits_no_vmin_when_empty"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_limits_no_vmin_when_empty(cvt_archive_2d_empty):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive_2d_empty,
+        vmin=None,
+        vmax=2.0,
+    )
+
+
+@image_comparison(
+    baseline_images=["limits_no_vmax"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_limits_no_vmax(cvt_archive_2d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive_2d,
+        vmin=-10.0,
+        vmax=None,
+    )
+
+
+@image_comparison(
+    baseline_images=["limits_no_vmax_high_vmin"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_limits_no_vmax_high_vmin(cvt_archive_2d):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive_2d,
+        vmin=1.0,  # Above max objective in the archive.
+        vmax=None,
+    )
+
+
+@image_comparison(
+    baseline_images=["limits_no_vmax_when_empty"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_limits_no_vmax_when_empty(cvt_archive_2d_empty):
+    plt.figure(figsize=(8, 6))
+    cvt_archive_heatmap(
+        cvt_archive_2d_empty,
+        vmin=-10.0,
+        vmax=None,
+    )
+
+
+@image_comparison(
     baseline_images=["listed_cmap"],
     remove_text=False,
     extensions=["png"],

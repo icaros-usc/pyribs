@@ -14,6 +14,7 @@ from pandas import DataFrame
 
 from ribs.archives import ArchiveDataFrame, SlidingBoundariesArchive
 from ribs.visualize._utils import (
+    compute_vmin_vmax,
     retrieve_cmap,
     set_cbar,
     validate_df,
@@ -77,7 +78,7 @@ def sliding_boundaries_archive_heatmap(
 
     Args:
         archive: A 2D :class:`~ribs.archives.SlidingBoundariesArchive`.
-        ax: Axes on which to plot the heatmap.  If ``None``, the current axis will be
+        ax: Axes on which to plot the heatmap. If ``None``, the current axis will be
             used.
         df: If provided, we will plot data from this argument instead of the data
             currently in the archive. This data can be obtained by, for instance,
@@ -161,12 +162,7 @@ def sliding_boundaries_archive_heatmap(
     ax.set_aspect(aspect)
 
     # Create the plot.
-    vmin = (
-        np.min(objective_batch) if vmin is None and len(objective_batch) > 0 else vmin
-    )
-    vmax = (
-        np.max(objective_batch) if vmax is None and len(objective_batch) > 0 else vmax
-    )
+    vmin, vmax = compute_vmin_vmax(vmin, vmax, objective_batch)
     t = ax.scatter(
         x,
         y,
