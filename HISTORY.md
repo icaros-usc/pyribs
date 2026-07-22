@@ -6,6 +6,7 @@
 
 #### API
 
+- Add `aggregate_cdf` to visualize CDF/CCDF of multiple archives ({pr}`722`)
 - Support fields as a single str for return_type="dict"|"tuple"|"pandas" in
   archive.data() ({pr}`721`)
 - Add `archive_ecdf` to visualize ECDF and ECCDF of archives ({pr}`719`)
