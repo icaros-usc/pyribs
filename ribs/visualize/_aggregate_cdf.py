@@ -16,7 +16,6 @@ from ribs.visualize._utils import compute_vmin_vmax, validate_df
 
 
 # TODO: Examples.
-# TODO: Support more errorbars.
 def aggregate_cdf(
     archives: Collection[ArchiveBase],
     ax: Axes | None = None,
@@ -26,7 +25,7 @@ def aggregate_cdf(
     vmin: float | None = None,
     vmax: float | None = None,
     estimator: Literal["mean", "median"] = "mean",
-    errorbar: None | Literal["se", "sd"] = "sd",
+    errorbar: None | Literal["se", "sd", "iqr"] = "sd",
     show_edges: bool = True,
 ) -> None:
     """Plots a CDF/CCDF aggregated over multiple archives.
@@ -80,10 +79,16 @@ def aggregate_cdf(
             number of entries in each bin.
         errorbar: Method for computing the errorbar for the CDF/CCDF or histogram. For
             example, if "sd" is passed, we display an errorbar showing the standard
-            deviation of the number of entries in each histogram bin. Pass None to hide
-            the errorbar.
+            deviation of the number of entries in each histogram bin. Options are "sd"
+            (standard deviation), "se" (standard error of the mean), "iqr"
+            (interquartile range, i.e., the interval from the 25th to 75th percentile),
+            and None (no error bar).
         show_edges: Whether to show the left and right edges of the CDF/CCDF or
             histogram (these show up as vertical lines).
+
+    Raises:
+        AttributeError: The data() method is not implemented on one of the archives.
+        ValueError: Number of dfs passed in is not the same as the number of archives.
     """
     if dfs is None:
         objectives = []
@@ -130,19 +135,26 @@ def aggregate_cdf(
 
     # Aggregate values with `estimator`.
     if estimator == "mean":
-        agg_hist = histograms.mean(axis=0)
+        agg_hist = np.mean(histograms, axis=0)
     elif estimator == "median":
-        agg_hist = histograms.median(axis=0)
+        agg_hist = np.median(histograms, axis=0)
     else:
         raise ValueError(f"Unknown estimator {estimator}")
 
     # Compute errors/spread with `errorbar`.
     if errorbar is None:
-        err_hist = np.zeros_like(histograms)
+        err_low = histograms
+        err_high = histograms
     elif errorbar == "sd":
-        err_hist = histograms.std(axis=0)
+        std_hist = histograms.std(axis=0)
+        err_low = agg_hist - std_hist
+        err_high = agg_hist + std_hist
     elif errorbar == "se":
-        err_hist = scipy.stats.sem(histograms, axis=0)
+        sem_hist = scipy.stats.sem(histograms, axis=0)
+        err_low = agg_hist - sem_hist
+        err_high = agg_hist + sem_hist
+    elif errorbar == "iqr":
+        err_low, err_high = np.percentile(histograms, (25, 75), axis=0)
     else:
         raise ValueError(f"Unknown errorbar {errorbar}")
 
@@ -153,9 +165,9 @@ def aggregate_cdf(
     )
     if errorbar is not None:
         ax.stairs(
-            values=agg_hist + err_hist,
+            values=err_high,
             edges=bin_edges,
-            baseline=agg_hist - err_hist,
+            baseline=err_low,
             fill=True,
             alpha=0.2,
             color=patch.get_edgecolor(),
