@@ -1,9 +1,9 @@
-# What's New in v0.11.0
+# What's New from v0.8.0 to v0.12.0
 
-We are excited to present pyribs 0.11.0! Compared to 0.8.0, pyribs now has new
-algorithms and features intended to make the library more flexible than ever!
-This release supports Python 3.10 and up, with Python 3.9 being dropped due to
-being end-of-life.
+We are excited to present pyribs 0.12.0! Compared to 0.8.0, the past few
+releases of pyribs have introduced algorithms and features intended to make the
+library more flexible than ever! This release supports Python 3.10 and up, with
+Python 3.9 being dropped due to being end-of-life.
 
 ## New Algorithms
 
@@ -26,6 +26,10 @@ Pyribs now supports the following algorithms!
   NSLC is available in {doc}`/examples/sphere`.
   - Thanks to [@efsiatras](https://github.com/efsiatras) for contributing this
     implementation in {pr}`690`!
+- **Novelty Search with Threshold Decay:** `ProximityArchive` now includes
+  support for automatically decaying the `novelty_threshold` across iterations.
+  - Thanks to [Alejandro Marrero](https://github.com/amarrerod) for implementing
+    this in {pr}`709`!
 - **Density Descent Search with Continuous Normalizing Flows (DDS-CNF)** is now
   supported in the {class}`~ribs.archives.DensityArchive`. An example of how to
   run DDS-CNF is available in {doc}`/examples/sphere`.
@@ -34,6 +38,90 @@ Pyribs now supports the following algorithms!
 
 The {doc}`/supported-algorithms` page includes a list of algorithms supported in
 pyribs.
+
+## New Visualizations
+
+We introduce new functions for plotting the distribution of objective values in
+one or more archives:
+
+- {func}`ribs.visualize.archive_histogram` plots the histogram of objective
+  values in a **single archive**. It has a similar purpose to heatmap functions,
+  in that it is intended to operate on just one archive at a time.
+- {func}`ribs.visualize.archive_ecdf` plots the empirical cumulative
+  distribution function (ECDF) of objective values in a **single archive**.
+- {func}`ribs.visualize.aggregate_cdf` plots the CDF or CCDF of objective
+  values, aggregated over **multiple archives**. This is useful for
+  understanding how well a QD algorithm performs across multiple runs.
+
+Below are examples of these three functions -- in particular, the histogram bars
+are colored based on their objective value!
+
+```{eval-rst}
+.. plot::
+    :context: close-figs
+
+    """Demonstration of archive_histogram and archive_ecdf."""
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from ribs.archives import GridArchive
+    from ribs.visualize import archive_histogram, archive_ecdf
+
+    # Populate the archive with the negative sphere function.
+    archive = GridArchive(solution_dim=2,
+                          dims=[100, 100],
+                          ranges=[(-1, 1), (-1, 1)])
+    x = np.random.uniform(-1, 1, 10000)
+    y = np.random.uniform(-1, 1, 10000)
+    archive.add(solution=np.stack((x, y), axis=1),
+                objective=-(x**2 + y**2),
+                measures=np.stack((x, y), axis=1))
+
+    # Plot a histogram and ECCDF of the archive.
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,6))
+    archive_histogram(archive, ax=ax1, cmap="magma")
+    ax1.set(title="Histogram", xlabel="Objective", ylabel="Num. Elites")
+    archive_ecdf(archive, ax=ax2, complementary=True, stat="count", color="#7e57c2")
+    ax2.set(title="ECCDF", xlabel="Objective", ylabel="Num. Elites")
+    plt.show()
+
+.. plot::
+    :context: close-figs
+
+    """Demonstration of aggregate_cdf."""
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from ribs.archives import GridArchive
+    from ribs.visualize import aggregate_cdf
+
+    # Populate 5 archives with slightly offset versions of the negative sphere
+    # function.
+    archives = []
+    for i in range(5):
+        archive = GridArchive(
+            solution_dim=2, ranges=[(-1, 1), (-1, 1)], dims=[100, 100]
+        )
+        xxs, yys = np.meshgrid(np.linspace(-1, 1, 100), np.linspace(-1, 1, 100))
+        xxs, yys = xxs.ravel(), yys.ravel()
+        coords = np.stack((xxs, yys), axis=1)
+        archive.add(
+            solution=coords,
+            objective=-(xxs**2 + yys**2) + 0.2 * i,  # Negative sphere, with offset.
+            measures=coords,
+        )
+        archives.append(archive)
+
+    plt.figure(figsize=(8, 6))
+    line, _ = aggregate_cdf(archives, cumulative=True)
+    line.set_label("CDF using Mean and Std")
+    line, _ = aggregate_cdf(archives, cumulative=True, estimator="median", errorbar="iqr")
+    line.set_label("CDF using Median and IQR")
+    plt.title("CDF")
+    plt.xlabel("Objective Value")
+    plt.ylabel("Num. Elites")
+    plt.legend()
+```
 
 ## 🐛 Bug Fixes
 
@@ -200,6 +288,9 @@ emitters = [
 
 ## ✨ Additional Features
 
+- In the archives, {meth}`~ribs.archives.ArchiveBase.data` now returns an object
+  of the corresponding type when `fields` is a single str and
+  `return_type="dict"|"tuple"|"pandas"` ({pr}`721`)
 - In the archives, {meth}`~ribs.archives.ArchiveBase.sample_elites` now supports
   the `replace` parameter to indicate whether elites should be replaced when
   sampling ({pr}`682`)
