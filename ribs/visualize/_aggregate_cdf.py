@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 from matplotlib.axes import Axes
+from matplotlib.patches import StepPatch
 from pandas import DataFrame
 
 from ribs.archives import ArchiveBase, ArchiveDataFrame
@@ -26,7 +27,7 @@ def aggregate_cdf(
     estimator: Literal["mean", "median"] = "mean",
     errorbar: None | Literal["se", "sd", "iqr"] = "sd",
     show_edges: bool = True,
-) -> None:
+) -> tuple[StepPatch, StepPatch]:
     """Plots a CDF/CCDF aggregated over multiple archives.
 
     Generally, the `CDF (cumulative distribution function)
@@ -52,6 +53,60 @@ def aggregate_cdf(
         The idea of using a CDF/CCDF to evaluate QD algorithms was introduced and
         formalized in `Vassiliades
         2018 <https://arxiv.org/abs/1610.05729>`_.
+
+    Examples:
+        .. plot::
+            :context: close-figs
+
+            import numpy as np
+            import matplotlib.pyplot as plt
+            from ribs.archives import GridArchive
+            from ribs.visualize import aggregate_cdf
+
+            # Populate 5 archives with slightly offset versions of the negative sphere
+            # function.
+            archives = []
+            for i in range(5):
+                archive = GridArchive(
+                    solution_dim=2, ranges=[(-1, 1), (-1, 1)], dims=[100, 100]
+                )
+                xxs, yys = np.meshgrid(np.linspace(-1, 1, 100), np.linspace(-1, 1, 100))
+                xxs, yys = xxs.ravel(), yys.ravel()
+                coords = np.stack((xxs, yys), axis=1)
+                archive.add(
+                    solution=coords,
+                    objective=-(xxs**2 + yys**2) + i,  # Negative sphere, offset by i.
+                    measures=coords,
+                )
+                archives.append(archive)
+
+            plt.figure(figsize=(8, 6))
+            line, _ = aggregate_cdf(archives, cumulative=True, estimator="mean", errorbar="se")
+            line.set_label("CDF using Mean and SEM")
+            line, _ = aggregate_cdf(archives, cumulative=True, estimator="median", errorbar="iqr")
+            line.set_label("CDF using Median and IQR")
+            plt.title("CDF")
+            plt.xlabel("Objective Value")
+            plt.ylabel("Num. Elites")
+            plt.legend()
+
+            plt.figure(figsize=(8, 6))
+            aggregate_cdf(archives, cumulative=-1, estimator="median", errorbar="iqr", vmin=-3, vmax=5)
+            plt.title("CCDF with Median and IQR, and Using Custom Bounds (vmin/vmax)")
+            plt.xlabel("Objective Value")
+            plt.ylabel("Num. Elites")
+
+            plt.figure(figsize=(8, 6))
+            aggregate_cdf(archives, cumulative=False)
+            plt.title("Histogram")
+            plt.xlabel("Objective Value")
+            plt.ylabel("Num. Elites")
+
+            plt.figure(figsize=(8, 6))
+            aggregate_cdf(archives[:1], cumulative=False)
+            plt.title("Histogram of Just One Archive")
+            plt.xlabel("Objective Value")
+            plt.ylabel("Num. Elites")
 
     Args:
         archives: Archives to aggregate for the CDF/CCDF.
@@ -84,6 +139,10 @@ def aggregate_cdf(
             and None (no error bar).
         show_edges: Whether to show the left and right edges of the CDF/CCDF or
             histogram (these show up as vertical lines).
+
+    Returns:
+        Tuple of two Matplotlib patches. The first patch is for the line, while the
+        second is for the errorbar.
 
     Raises:
         AttributeError: The data() method is not implemented on one of the archives.
@@ -158,7 +217,7 @@ def aggregate_cdf(
         raise ValueError(f"Unknown errorbar {errorbar}")
 
     # Plot the line.
-    patch = ax.stairs(
+    line_patch = ax.stairs(
         values=agg_hist,
         edges=bin_edges,
         baseline=0 if show_edges else None,
@@ -166,11 +225,15 @@ def aggregate_cdf(
 
     # Plot errorbar with same color as the line, but transparent.
     if errorbar is not None:
-        ax.stairs(
+        errorbar_patch = ax.stairs(
             values=err_high,
             edges=bin_edges,
             baseline=err_low,
             fill=True,
             alpha=0.2,
-            color=patch.get_edgecolor(),
+            color=line_patch.get_edgecolor(),
         )
+    else:
+        errorbar_patch = None
+
+    return line_patch, errorbar_patch
