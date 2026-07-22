@@ -141,6 +141,25 @@ def test_basic_cdf_with_dfs(three_archives):
     )
 
 
+@image_comparison(
+    baseline_images=["cdf_with_labels"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_cdf_with_labels(three_archives):
+    """Take advantage of the patches returned from the function."""
+    plt.figure(figsize=(8, 6))
+    line, errorbar = aggregate_cdf(
+        three_archives,
+        bins=3,
+        cumulative=True,
+    )
+    line.set_label("Mean")
+    errorbar.set_label("Error Bar")
+    plt.legend()
+
+
 def test_wrong_num_dfs(three_archives):
     plt.figure(figsize=(8, 6))
     with pytest.raises(
