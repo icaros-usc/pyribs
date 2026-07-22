@@ -15,7 +15,6 @@ from ribs.archives import ArchiveBase, ArchiveDataFrame
 from ribs.visualize._utils import compute_vmin_vmax, validate_df
 
 
-# TODO: Examples.
 def aggregate_cdf(
     archives: Collection[ArchiveBase],
     ax: Axes | None = None,
@@ -158,11 +157,14 @@ def aggregate_cdf(
     else:
         raise ValueError(f"Unknown errorbar {errorbar}")
 
+    # Plot the line.
     patch = ax.stairs(
         values=agg_hist,
         edges=bin_edges,
         baseline=0 if show_edges else None,
     )
+
+    # Plot errorbar with same color as the line, but transparent.
     if errorbar is not None:
         ax.stairs(
             values=err_high,
