@@ -75,14 +75,14 @@ def aggregate_cdf(
                 coords = np.stack((xxs, yys), axis=1)
                 archive.add(
                     solution=coords,
-                    objective=-(xxs**2 + yys**2) + i,  # Negative sphere, offset by i.
+                    objective=-(xxs**2 + yys**2) + 0.2 * i,  # Negative sphere, with offset.
                     measures=coords,
                 )
                 archives.append(archive)
 
             plt.figure(figsize=(8, 6))
-            line, _ = aggregate_cdf(archives, cumulative=True, estimator="mean", errorbar="se")
-            line.set_label("CDF using Mean and SEM")
+            line, _ = aggregate_cdf(archives, cumulative=True)
+            line.set_label("CDF using Mean and Std")
             line, _ = aggregate_cdf(archives, cumulative=True, estimator="median", errorbar="iqr")
             line.set_label("CDF using Median and IQR")
             plt.title("CDF")
@@ -91,7 +91,7 @@ def aggregate_cdf(
             plt.legend()
 
             plt.figure(figsize=(8, 6))
-            aggregate_cdf(archives, cumulative=-1, estimator="median", errorbar="iqr", vmin=-3, vmax=5)
+            aggregate_cdf(archives, cumulative=-1, estimator="median", errorbar="iqr", vmin=-3, vmax=3)
             plt.title("CCDF with Median and IQR, and Using Custom Bounds (vmin/vmax)")
             plt.xlabel("Objective Value")
             plt.ylabel("Num. Elites")
