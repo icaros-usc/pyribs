@@ -63,17 +63,6 @@ def simple_archives():
 
 
 @image_comparison(
-    baseline_images=["basic_histogram"],
-    remove_text=False,
-    extensions=["png"],
-    style="mpl20",
-)
-def test_basic_histogram(simple_archives):
-    plt.figure(figsize=(8, 6))
-    aggregate_cdf(simple_archives, bins=3)
-
-
-@image_comparison(
     baseline_images=["basic_cdf"],
     remove_text=False,
     extensions=["png"],
@@ -82,6 +71,28 @@ def test_basic_histogram(simple_archives):
 def test_basic_cdf(simple_archives):
     plt.figure(figsize=(8, 6))
     aggregate_cdf(simple_archives, bins=3, cumulative=True)
+
+
+@image_comparison(
+    baseline_images=["basic_ccdf"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_basic_ccdf(simple_archives):
+    plt.figure(figsize=(8, 6))
+    aggregate_cdf(simple_archives, bins=3, cumulative=-1)
+
+
+@image_comparison(
+    baseline_images=["basic_histogram"],
+    remove_text=False,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_basic_histogram(simple_archives):
+    plt.figure(figsize=(8, 6))
+    aggregate_cdf(simple_archives, bins=3, cumulative=False)
 
 
 # TODO: vmin and vmax
