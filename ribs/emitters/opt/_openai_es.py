@@ -129,6 +129,7 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
             batch_size = self.batch_size
 
         self._solutions = np.empty((batch_size, self.solution_dim), dtype=self.dtype)
+        self.noise = np.empty_like(self._solutions)
 
         # Resampling method for bound constraints -> sample new solutions until
         # all solutions are within bounds.
@@ -146,19 +147,21 @@ class OpenAIEvolutionStrategy(EvolutionStrategyBase):
                 noise_half = self._rng.standard_normal(
                     (batch_size // 2, self.solution_dim), dtype=self.dtype
                 )
-                self.noise = np.concatenate((noise_half, -noise_half))
+                noise = np.concatenate((noise_half, -noise_half))
             else:
-                self.noise = self._rng.standard_normal(
+                noise = self._rng.standard_normal(
                     (len(remaining_indices), self.solution_dim), dtype=self.dtype
                 )
 
-            new_solutions = self.adam_opt.theta[None] + self.sigma0 * self.noise
+            new_solutions = self.adam_opt.theta[None] + self.sigma0 * noise
             out_of_bounds = np.logical_or(
                 new_solutions < np.expand_dims(self.lower_bounds, axis=0),
                 new_solutions > np.expand_dims(self.upper_bounds, axis=0),
             )
 
             self._solutions[remaining_indices] = new_solutions
+            # Keep each perturbation aligned with its solution across resampling.
+            self.noise[remaining_indices] = noise
 
             # Find indices in remaining_indices that are still out of bounds
             # (out_of_bounds indicates whether each value in each solution is

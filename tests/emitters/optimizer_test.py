@@ -10,6 +10,7 @@ from ribs.emitters.opt import (
     _NAME_TO_GRAD_OPT_MAP,
     AdamOpt,
     GradientAscentOpt,
+    OpenAIEvolutionStrategy,
     _get_es,
     _get_grad_opt,
 )
@@ -38,6 +39,47 @@ def test_init_with_get_es(es_name):
     assert es.sigma0 == es_kwargs["sigma0"]
     assert es.solution_dim == es_kwargs["solution_dim"]
     assert es.dtype == es_kwargs["dtype"]
+
+
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+@pytest.mark.parametrize("mode", ["bounded", "unbounded", "mirrored"])
+def test_openai_es_update_uses_sampled_perturbations(dtype, mode):
+    x0 = np.array([0.9, 0.8, 0.7], dtype=dtype)
+    sigma = 0.5
+    es = OpenAIEvolutionStrategy(
+        sigma0=sigma,
+        solution_dim=3,
+        batch_size=16,
+        seed=42,
+        dtype=dtype,
+        lower_bounds=-1.0 if mode == "bounded" else -np.inf,
+        upper_bounds=1.0 if mode == "bounded" else np.inf,
+        mirror_sampling=mode == "mirrored",
+        beta1=0.0,
+        beta2=0.0,
+        epsilon=1.0,
+        lr=0.1,
+    )
+    es.reset(x0)
+    solutions = es.ask()
+    if mode == "bounded":
+        assert np.all(solutions >= -1.0)
+        assert np.all(solutions <= 1.0)
+
+    objectives = solutions @ np.array([1.0, 2.0, 3.0])
+    ranking_indices = np.argsort(-objectives)
+    weights = np.empty(len(solutions))
+    weights[ranking_indices[::-1]] = np.linspace(-0.5, 0.5, len(solutions))
+    # Reconstruct the estimator from evaluated solutions, independently of es.noise.
+    gradient = np.sum((solutions - x0) * weights[:, None], axis=0)
+    gradient /= len(solutions) * sigma**2
+    if mode == "mirrored":
+        gradient *= 2  # Preserve the mirrored estimator's existing scaling.
+    expected_theta = x0 + 0.1 * gradient / (np.abs(gradient) + 1.0)
+
+    es.tell(ranking_indices, objectives[ranking_indices], num_parents=8)
+
+    np.testing.assert_allclose(es.adam_opt.theta, expected_theta, atol=1e-7)
 
 
 # Gradient Optimizer Tests
