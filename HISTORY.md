@@ -7,6 +7,10 @@ https://docs.pyribs.org/en/stable/whats-new.html
 
 ### Changelog
 
+#### Bugs
+
+- Preserve buffered evaluations when SlidingBoundariesArchive inputs are modified.
+
 #### API
 
 - Add `aggregate_cdf` to visualize CDF/CCDF of multiple archives ({pr}`722`)

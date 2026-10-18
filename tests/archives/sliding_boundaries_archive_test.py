@@ -97,6 +97,52 @@ def test_add_without_overwrite(data):
     )
 
 
+@pytest.mark.parametrize("changed_field", ["solution", "objective", "measures", "foo"])
+def test_remap_preserves_original_inputs(add_mode, changed_field):
+    archive = SlidingBoundariesArchive(
+        solution_dim=2,
+        dims=[2],
+        ranges=[(0, 1)],
+        remap_frequency=3,
+        buffer_capacity=3,
+        extra_fields={"foo": ((2,), np.float64)},
+    )
+    first = {
+        "solution": np.array([1.0, 2.0]),
+        "objective": np.array(1.0),
+        "measures": np.array([0.1]),
+        "foo": np.array([3.0, 4.0]),
+    }
+    second = {
+        "solution": np.array([5.0, 6.0]),
+        "objective": np.array(2.0),
+        "measures": np.array([0.4]),
+        "foo": np.array([7.0, 8.0]),
+    }
+    expected = {name: np.stack([value, second[name]]) for name, value in first.items()}
+
+    def insert(data):
+        if add_mode == "single":
+            archive.add_single(**data)
+        else:
+            archive.add(
+                **{name: np.expand_dims(value, 0) for name, value in data.items()}
+            )
+
+    insert(first)
+    insert(second)  # Replaces first in the initial grid cell.
+    first[changed_field][...] = 10.0
+    # Remapping separates first and second into different cells and recovers first.
+    insert(
+        {"solution": [0.0, 0.0], "objective": 0.0, "measures": [0.8], "foo": [0.0, 0.0]}
+    )
+
+    actual = archive.data()
+    order = np.argsort(actual["measures"][:, 0])
+    for name, values in expected.items():
+        np.testing.assert_array_equal(actual[name][order], values)
+
+
 def test_initial_remap():
     """Checks that boundaries and entries are correct after initial remap."""
     # remap_frequency is (10 + 1) * (20 + 1)
