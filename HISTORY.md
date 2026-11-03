@@ -1,5 +1,14 @@
 # History
 
+## (Forthcoming)
+
+### Changelog
+
+#### Bugs
+
+- Fix reservoir sampling of the `DensityArchive` buffer when one `add` replaces
+  several measures ({issue}`729`, {pr}`730`)
+
 ## 0.12.0
 
 To learn more about this release, see our What's New page!

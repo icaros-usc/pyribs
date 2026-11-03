@@ -505,18 +505,22 @@ class DensityArchive(ArchiveBase):
         else:
             remaining_measures = measures
 
-        # Replace measures in the buffer using reservoir sampling.
+        # Replace measures in the buffer using reservoir sampling: skip
+        # self._n_skip measures, put the next one in a random slot of the buffer,
+        # and draw the next number of measures to skip. i is the position in
+        # remaining_measures.
         n_remaining = remaining_measures.shape[0]
-        while n_remaining > 0:
-            # Done with skipping, replace measures.
-            if self._n_skip < n_remaining:
-                replace = self._rng.integers(buffer_size)
-                self._buffer[replace] = remaining_measures[self._n_skip]
-                self._w *= np.exp(np.log(self._rng.uniform()) / buffer_size)
-                self._n_skip = int(np.log(self._rng.uniform()) / np.log(1 - self._w))
-            skip = min(self._n_skip, n_remaining)
-            n_remaining -= skip
-            self._n_skip -= skip
+        i = 0
+        while i + self._n_skip < n_remaining:
+            i += self._n_skip
+            replace = self._rng.integers(buffer_size)
+            self._buffer[replace] = remaining_measures[i]
+            i += 1
+            self._w *= np.exp(np.log(self._rng.uniform()) / buffer_size)
+            self._n_skip = int(np.log(self._rng.uniform()) / np.log(1 - self._w))
+        # The rest of the batch is skipped; the skips left carry over to the next
+        # call.
+        self._n_skip -= n_remaining - i
 
         # For DDS-CNF, Algorithm 1 line 12 of Lee et al. 2024 calls for the density
         # estimator to be refit on the updated buffer at the end of every iteration. We
