@@ -41,8 +41,10 @@ def _buffer_after(batch_sizes, seed, buffer_size=100):
 
 
 def test_reservoir_independent_of_batch_size():
-    # Reservoir sampling draws the same random numbers however the measures are
-    # split into batches, so the buffer should be the same.
+    # Test that the buffer is the same even when different batch sizes are used while
+    # inserting into the archive. The buffer should always be the same because reservoir
+    # sampling always adds solutions one at a time, and it is using the same random seed
+    # in all these cases.
     one_at_a_time = _buffer_after([1] * 2_000, seed=42)
     one_batch = _buffer_after([100, 1_900], seed=42)
     uneven = _buffer_after([37, 63, 500, 1, 999, 400], seed=42)
@@ -61,8 +63,10 @@ def test_reservoir_is_uniform_sample():
         assert len(np.unique(buffer)) == 100
         means.append(buffer.mean())
 
-    # The standard error of the mean over 50 seeds is about 41.
-    assert abs(np.mean(means) - 5049.5) < 200
+    # The standard error of the mean (SEM) over 50 seeds is about 41. 145 is
+    # approximately 3.5 * SEM, which should capture the correct value in 99.95% of the
+    # cases.
+    assert abs(np.mean(means) - 5049.5) < 145.0
 
 
 def test_dtype():
