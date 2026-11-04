@@ -32,7 +32,7 @@ when running each algorithm on this benchmark for 10,000 iterations.
 | nslc_cma_imp        |  539,365.47 ± 2,916.88 |  68.20 ± 0.46% |
 | dds_kde             | 396,199.56 ± 25,225.61 |  80.09 ± 1.87% |
 | dds_kde_sklearn     | 399,284.32 ± 27,007.58 |  80.04 ± 2.68% |
-| dds_cnf<sup>1</sup> |        325,247.96 ± ?? |    68.48 ± ??% |
+| dds_cnf<sup>1</sup> |         320865.68 ± ?? |    74.46 ± ??% |
 | dms                 |  700,776.58 ± 8,525.05 |  95.99 ± 1.43% |
 
 <sup>1</sup>Due to computational cost, `dds_cnf` was only run for 1 trial (it
