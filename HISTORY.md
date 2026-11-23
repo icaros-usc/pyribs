@@ -1,13 +1,13 @@
 # History
 
-## (Forthcoming)
+## 0.12.2
 
 ### Changelog
 
 #### Documentation
 
-- Note how the learning rates of `SeparableCMAEvolutionStrategy` differ from pycma
-  ({issue}`731`, {pr}`735`)
+- Note how the learning rates of `SeparableCMAEvolutionStrategy` differ from
+  pycma ({issue}`731`, {pr}`735`)
 
 ## 0.12.1
 
