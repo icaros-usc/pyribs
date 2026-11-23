@@ -57,6 +57,14 @@ class SeparableCMAEvolutionStrategy(EvolutionStrategyBase):
 
     Refer to :class:`EvolutionStrategyBase` for usage instruction.
 
+    .. note::
+
+        The learning rates of the covariance update differ from those of pycma's
+        ``CMA_diagonal`` mode (see
+        `#731 <https://github.com/icaros-usc/pyribs/issues/731>`_). For pycma's own
+        separable CMA-ES, use :class:`PyCMAEvolutionStrategy` with
+        ``opts={"CMA_diagonal": True}``.
+
     Args:
         sigma0: Initial step size.
         batch_size: Number of solutions to evaluate at a time. If None, we calculate a
